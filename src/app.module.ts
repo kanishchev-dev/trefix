@@ -16,6 +16,7 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { validationSchema } from './config/validation.schema';
 import { HealthModule } from './modules/health/health.module';
+import mailerConfig from './modules/mailer/config/mailer.config';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import storageConfig from './modules/storage/config/storage.config';
@@ -26,7 +27,7 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, storageConfig],
+      load: [appConfig, databaseConfig, storageConfig, mailerConfig],
       validationSchema,
     }),
     HealthModule,

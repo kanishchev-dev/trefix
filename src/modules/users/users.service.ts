@@ -31,7 +31,7 @@ export class UsersService {
     const user = await this.userModel.create({ ...createUserDto });
 
     // Emit event as per guidelines
-    this.eventEmitter.emit('user.created', new UserCreatedEvent(user.id, user.email));
+    this.eventEmitter.emit('user.created', new UserCreatedEvent(user.id, user.email, user.firstName, user.lastName));
 
     return user;
   }

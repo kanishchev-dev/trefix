@@ -1,14 +1,13 @@
-import { Queue } from 'bullmq';
-
+import { MailerService } from '@/modules/mailer/mailer.service';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
 
 import { UserCreatedEvent } from '../events/user-created.event';
 import { UserCreatedListener } from './user-created.listener';
 
 describe('UserCreatedListener', () => {
-  const queue = {
-    add: jest.fn().mockResolvedValue(undefined),
-  } as unknown as Queue;
+  const mailerService = {
+    send: jest.fn().mockResolvedValue(undefined),
+  } as unknown as MailerService;
 
   const realtimeService = {
     emitToRoom: jest.fn(),
@@ -18,23 +17,19 @@ describe('UserCreatedListener', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    listener = new UserCreatedListener(queue, realtimeService);
+    listener = new UserCreatedListener(mailerService, realtimeService);
   });
 
-  it('enqueues onboarding work and publishes a realtime user.created event', async () => {
-    const event = new UserCreatedEvent('user-1', 'user@example.com');
+  it('sends the welcome email and publishes a realtime user.created event', async () => {
+    const event = new UserCreatedEvent('user-1', 'user@example.com', 'John', 'Doe');
 
     await listener.handleUserCreatedEvent(event);
 
-    expect(queue.add).toHaveBeenCalledWith(
-      'send-welcome-email',
-      { userId: 'user-1', email: 'user@example.com' },
+    expect(mailerService.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000,
-        },
+        to: 'user@example.com',
+        subject: 'Welcome to Trefix',
+        template: 'users/welcome',
       }),
     );
     expect(realtimeService.emitToRoom).toHaveBeenCalledWith('users', 'user.created', event);

@@ -1,8 +1,7 @@
-import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Queue } from 'bullmq';
 
+import { MailerService } from '@/modules/mailer/mailer.service';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
 
 import { UserCreatedEvent } from '../events/user-created.event';
@@ -12,8 +11,7 @@ export class UserCreatedListener {
   private readonly logger = new Logger(UserCreatedListener.name);
 
   constructor(
-    @InjectQueue('user-onboarding')
-    private readonly onboardingQueue: Queue,
+    private readonly mailerService: MailerService,
     private readonly realtimeService: RealtimeService,
   ) {}
 
@@ -21,21 +19,16 @@ export class UserCreatedListener {
   async handleUserCreatedEvent(event: UserCreatedEvent): Promise<void> {
     this.logger.log(`Handling user.created event for user: ${event.email}`);
 
-    // As per guidelines: listener puts task into queue for I/O heavy operations
-    await this.onboardingQueue.add(
-      'send-welcome-email',
-      {
-        userId: event.userId,
+    await this.mailerService.send({
+      to: event.email,
+      subject: 'Welcome to Trefix',
+      template: 'users/welcome',
+      data: {
+        firstName: event.firstName,
+        lastName: event.lastName,
         email: event.email,
       },
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000,
-        },
-      },
-    );
+    });
 
     this.realtimeService.emitToRoom('users', 'user.created', event);
   }
