@@ -1,0 +1,7 @@
+{
+  "HELLO": "Hello",
+  "ERRORS": {
+    "INTERNAL": "Internal server error",
+    "NOT_FOUND": "Resource not found"
+  }
+}

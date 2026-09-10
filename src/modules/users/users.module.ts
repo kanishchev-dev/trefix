@@ -1,0 +1,21 @@
+import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+import { SequelizeModule } from '@nestjs/sequelize';
+
+import { User } from './entities/user.entity';
+import { UserCreatedListener } from './listeners/user-created.listener';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+
+@Module({
+  imports: [
+    SequelizeModule.forFeature([User]),
+    BullModule.registerQueue({
+      name: 'user-onboarding',
+    }),
+  ],
+  controllers: [UsersController],
+  providers: [UsersService, UserCreatedListener],
+  exports: [UsersService],
+})
+export class UsersModule {}
