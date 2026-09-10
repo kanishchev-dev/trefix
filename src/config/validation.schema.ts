@@ -11,6 +11,13 @@ export const validationSchema = Joi.object({
   DB_DATABASE: Joi.string().required(),
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
+  S3_ENDPOINT: Joi.string().uri().required(),
+  S3_REGION: Joi.string().required(),
+  S3_BUCKET: Joi.string().required(),
+  S3_ACCESS_KEY: Joi.string().required(),
+  S3_SECRET_KEY: Joi.string().required(),
+  S3_FORCE_PATH_STYLE: Joi.boolean().default(true),
+  STORAGE_MAX_FILE_SIZE: Joi.number().positive().integer().default(52428800),
   JWT_SECRET: Joi.string().required(),
   JWT_EXPIRATION: Joi.string().default('1h'),
 });

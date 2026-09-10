@@ -1,10 +1,36 @@
 import { ConfigService } from '@nestjs/config';
-import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Socket } from 'socket.io';
 
 import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeService } from './realtime.service';
+
+jest.mock('@nestjs/websockets', () => ({
+  ConnectedSocket: (): (() => undefined) => (): undefined => undefined,
+  MessageBody: (): (() => undefined) => (): undefined => undefined,
+  OnGatewayConnection: (): (() => undefined) => (): undefined => undefined,
+  OnGatewayDisconnect: (): (() => undefined) => (): undefined => undefined,
+  OnGatewayInit: (): (() => undefined) => (): undefined => undefined,
+  SubscribeMessage: (): (() => undefined) => (): undefined => undefined,
+  WebSocketGateway: (): (() => undefined) => (): undefined => undefined,
+  WsException: class WsException extends Error {
+    private readonly errorPayload: unknown;
+
+    constructor(error: unknown) {
+      super(
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: unknown }).message)
+          : String(error),
+      );
+      this.errorPayload = error;
+    }
+
+    getError(): unknown {
+      return this.errorPayload;
+    }
+  },
+}));
 
 describe('RealtimeGateway', () => {
   let gateway: RealtimeGateway;
@@ -12,6 +38,7 @@ describe('RealtimeGateway', () => {
   const mockRealtimeService = {
     attachServer: jest.fn(),
     getUserRoom: jest.fn((userId: string) => `user:${userId}`),
+    getRoom: jest.fn((room: string) => `room:${room}`),
   };
 
   const mockJwtService = {
@@ -22,7 +49,7 @@ describe('RealtimeGateway', () => {
     get: jest.fn(),
   };
 
-  const createClient = (overrides: Partial<Socket> = {}) =>
+  const createClient = (overrides: Partial<Socket> = {}): Socket =>
     ({
       id: 'socket-1',
       data: {},

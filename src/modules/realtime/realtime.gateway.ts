@@ -1,4 +1,6 @@
+import { Logger, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
@@ -8,8 +10,6 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { JwtService } from '@nestjs/jwt';
-import { Logger, UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 
 import {
@@ -23,11 +23,9 @@ import {
   REALTIME_OUTBOUND_ERROR_EVENT,
 } from './constants/realtime.constants';
 import { REALTIME_ROOM_PERMISSION_MAP } from './constants/realtime-permissions.constants';
-import {
-  RealtimeAuthDto,
-  RealtimeCommandDto,
-  RealtimeSubscriptionDto,
-} from './dto';
+import { RealtimeAuthDto, RealtimeCommandDto, RealtimeSubscriptionDto } from './dto';
+import { RealtimeWsException } from './exceptions/realtime-ws.exception';
+import { WsAuthGuard } from './guards/ws-auth.guard';
 import {
   RealtimeAuthPayload,
   RealtimeAuthResult,
@@ -35,9 +33,7 @@ import {
   RealtimeSocketData,
   RealtimeUserContext,
 } from './interfaces/realtime-event.interface';
-import { RealtimeWsException } from './exceptions/realtime-ws.exception';
 import { RealtimeService } from './realtime.service';
-import { WsAuthGuard } from './guards/ws-auth.guard';
 
 interface JwtSocketPayload {
   sub?: string;
@@ -86,7 +82,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
 
   @UseGuards(WsAuthGuard)
   @SubscribeMessage(REALTIME_INBOUND_AUTH_EVENT)
-  async handleAuth(@ConnectedSocket() client: Socket, @MessageBody() payload: RealtimeAuthDto): Promise<RealtimeAuthResult> {
+  async handleAuth(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: RealtimeAuthDto,
+  ): Promise<RealtimeAuthResult> {
     const result = await this.authenticate(client, payload);
     this.applyAuth(client, result);
     return result;
@@ -131,10 +130,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     };
   }
 
-  private async authenticate(
-    client: Socket,
-    payload?: Partial<RealtimeAuthPayload>,
-  ): Promise<RealtimeAuthResult> {
+  private async authenticate(client: Socket, payload?: Partial<RealtimeAuthPayload>): Promise<RealtimeAuthResult> {
     const token = this.extractToken(client, payload);
 
     if (!token) {
@@ -234,11 +230,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         return;
       }
 
-      throw new RealtimeWsException(
-        'WS_ROOM_FORBIDDEN',
-        `Access to room "${room}" is forbidden.`,
-        { room },
-      );
+      throw new RealtimeWsException('WS_ROOM_FORBIDDEN', `Access to room "${room}" is forbidden.`, { room });
     });
   }
 

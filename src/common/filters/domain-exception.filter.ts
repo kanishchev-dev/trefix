@@ -16,32 +16,34 @@ export class DomainExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-
     const traceId = requestContext.getStore()?.get('traceId') || 'no-trace-id';
-    const lang = request.headers['accept-language'] || 'en';
+    const acceptLanguage = request.headers['accept-language'];
+    const lang = Array.isArray(acceptLanguage) ? acceptLanguage[0] : acceptLanguage || 'en';
 
-    let message = exception instanceof HttpException ? exception.getResponse() : 'Internal server error';
+    const responseMessage = exception instanceof HttpException ? exception.getResponse() : 'Internal server error';
+    let message =
+      typeof responseMessage === 'object'
+        ? String((responseMessage as Record<string, unknown>).message || 'Internal server error')
+        : String(responseMessage);
 
-    if (typeof message === 'object') {
-      message = (message as Record<string, unknown>).message as string;
-    }
-
-    const code = (exception as Record<string, unknown>).code || 'INTERNAL_ERROR';
+    const code =
+      typeof exception === 'object' && exception !== null && 'code' in exception
+        ? String((exception as Record<string, unknown>).code)
+        : 'INTERNAL_ERROR';
 
     try {
-      // Try translating the code directly (if it's a full key like 'permissions.ERRORS.NOT_FOUND')
-      // or fallback to common.ERRORS prefix
-      let translated = await this.i18n.translate(String(code), {
+      let translated = (await this.i18n.translate(String(code), {
         lang,
         defaultValue: '',
-      });
+      })) as string;
 
       if (!translated) {
-        translated = await this.i18n.translate(`common.ERRORS.${String(code)}`, {
+        translated = (await this.i18n.translate(`common.ERRORS.${String(code)}`, {
           lang,
-          defaultValue: message as string,
-        });
+          defaultValue: message,
+        })) as string;
       }
+
       message = translated;
     } catch {
       // Fallback to original message
@@ -52,7 +54,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
       path: request.url,
       message,
-      code: String(code),
+      code,
       traceId,
     };
 
@@ -62,7 +64,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : '',
       );
     } else {
-      this.logger.warn(`[${traceId}] ${request.method} ${request.url} - ${status} - ${String(message)}`);
+      this.logger.warn(`[${traceId}] ${request.method} ${request.url} - ${status} - ${message}`);
     }
 
     response.status(status).json(errorResponse);

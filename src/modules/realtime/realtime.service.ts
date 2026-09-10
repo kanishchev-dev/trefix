@@ -63,11 +63,23 @@ export class RealtimeService implements OnApplicationShutdown {
   }
 
   emitToRoom<TData>(room: string, event: string, data: TData): boolean {
-    return this.emitToTargets((envelope) => this.server?.to(this.getRoom(room)).emit(event, envelope) ?? false, event, data, 'room', room);
+    return this.emitToTargets(
+      (envelope) => this.server?.to(this.getRoom(room)).emit(event, envelope) ?? false,
+      event,
+      data,
+      'room',
+      room,
+    );
   }
 
   emitToUser<TData>(userId: string, event: string, data: TData): boolean {
-    return this.emitToTargets((envelope) => this.server?.to(this.getUserRoom(userId)).emit(event, envelope) ?? false, event, data, 'user', userId);
+    return this.emitToTargets(
+      (envelope) => this.server?.to(this.getUserRoom(userId)).emit(event, envelope) ?? false,
+      event,
+      data,
+      'user',
+      userId,
+    );
   }
 
   emitToUsers<TData>(userIds: readonly string[], event: string, data: TData): boolean {
@@ -78,7 +90,13 @@ export class RealtimeService implements OnApplicationShutdown {
     }
 
     const rooms = uniqueUserIds.map((userId) => this.getUserRoom(userId));
-    return this.emitToTargets((envelope) => this.server?.to(rooms).emit(event, envelope) ?? false, event, data, 'users', uniqueUserIds);
+    return this.emitToTargets(
+      (envelope) => this.server?.to(rooms).emit(event, envelope) ?? false,
+      event,
+      data,
+      'users',
+      uniqueUserIds,
+    );
   }
 
   async onApplicationShutdown(): Promise<void> {

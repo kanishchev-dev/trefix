@@ -18,17 +18,20 @@ import { validationSchema } from './config/validation.schema';
 import { HealthModule } from './modules/health/health.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
+import storageConfig from './modules/storage/config/storage.config';
+import { StorageModule } from './modules/storage/storage.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, storageConfig],
       validationSchema,
     }),
     HealthModule,
     UsersModule,
+    StorageModule,
     PermissionsModule,
     RealtimeModule,
     LoggerModule.forRootAsync({
@@ -58,19 +61,24 @@ import { UsersModule } from './modules/users/users.module';
         synchronize: configService.get<string>('NODE_ENV') === 'test',
       }),
     }),
-    RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return {
-          closeClient: true,
-          config: {
-            host: configService.get<string>('REDIS_HOST') || 'localhost',
-            port: configService.get<number>('REDIS_PORT') || 6379,
-          },
-        };
+    RedisModule.forRootAsync(
+      {
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (...args: unknown[]) => {
+          const configService = args[0] as ConfigService;
+
+          return {
+            closeClient: true,
+            config: {
+              host: configService.get<string>('REDIS_HOST') || 'localhost',
+              port: configService.get<number>('REDIS_PORT') || 6379,
+            },
+          };
+        },
       },
-    }, true),
+      true,
+    ),
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
