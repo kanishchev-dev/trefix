@@ -1,0 +1,12 @@
+export const REALTIME_NAMESPACE = '/realtime';
+export const REALTIME_INBOUND_AUTH_EVENT = 'realtime.auth';
+export const REALTIME_INBOUND_SUBSCRIBE_EVENT = 'realtime.subscribe';
+export const REALTIME_INBOUND_UNSUBSCRIBE_EVENT = 'realtime.unsubscribe';
+export const REALTIME_INBOUND_COMMAND_EVENT = 'realtime.command';
+export const REALTIME_INBOUND_PING_EVENT = 'realtime.ping';
+export const REALTIME_OUTBOUND_EVENT = 'realtime.event';
+export const REALTIME_OUTBOUND_ERROR_EVENT = 'realtime.error';
+export const REALTIME_OUTBOUND_AUTHENTICATED_EVENT = 'realtime.authenticated';
+export const REALTIME_OUTBOUND_PONG_EVENT = 'realtime.pong';
+export const REALTIME_USER_ROOM_PREFIX = 'user:';
+export const REALTIME_ROOM_PREFIX = 'room:';

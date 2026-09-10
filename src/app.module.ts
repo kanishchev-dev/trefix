@@ -17,6 +17,7 @@ import databaseConfig from './config/database.config';
 import { validationSchema } from './config/validation.schema';
 import { HealthModule } from './modules/health/health.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -29,6 +30,7 @@ import { UsersModule } from './modules/users/users.module';
     HealthModule,
     UsersModule,
     PermissionsModule,
+    RealtimeModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -61,13 +63,14 @@ import { UsersModule } from './modules/users/users.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
+          closeClient: true,
           config: {
             host: configService.get<string>('REDIS_HOST') || 'localhost',
             port: configService.get<number>('REDIS_PORT') || 6379,
           },
         };
       },
-    }),
+    }, true),
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],

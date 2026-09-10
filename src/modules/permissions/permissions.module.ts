@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { RealtimeModule } from '@/modules/realtime/realtime.module';
 import { User } from '@/modules/users/entities/user.entity';
 
 import { Permission } from './entities/permission.entity';
@@ -22,6 +23,7 @@ import { PermissionsService } from './permissions.service';
       UserPermissionGroup,
       User,
     ]),
+    RealtimeModule,
   ],
   controllers: [PermissionsController],
   providers: [PermissionsService, PermissionsListener],

@@ -2,8 +2,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { RealtimeModule } from '@/modules/realtime/realtime.module';
+
 import { User } from './entities/user.entity';
 import { UserCreatedListener } from './listeners/user-created.listener';
+import { UserDeletedListener } from './listeners/user-deleted.listener';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -13,9 +16,10 @@ import { UsersService } from './users.service';
     BullModule.registerQueue({
       name: 'user-onboarding',
     }),
+    RealtimeModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, UserCreatedListener],
+  providers: [UsersService, UserCreatedListener, UserDeletedListener],
   exports: [UsersService],
 })
 export class UsersModule {}

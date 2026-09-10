@@ -3,6 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Queue } from 'bullmq';
 
+import { RealtimeService } from '@/modules/realtime/realtime.service';
+
 import { UserCreatedEvent } from '../events/user-created.event';
 
 @Injectable()
@@ -12,6 +14,7 @@ export class UserCreatedListener {
   constructor(
     @InjectQueue('user-onboarding')
     private readonly onboardingQueue: Queue,
+    private readonly realtimeService: RealtimeService,
   ) {}
 
   @OnEvent('user.created')
@@ -33,5 +36,7 @@ export class UserCreatedListener {
         },
       },
     );
+
+    this.realtimeService.emitToRoom('users', 'user.created', event);
   }
 }
