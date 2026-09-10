@@ -16,6 +16,7 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { validationSchema } from './config/validation.schema';
 import { HealthModule } from './modules/health/health.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     HealthModule,
     UsersModule,
+    PermissionsModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -54,7 +56,6 @@ import { UsersModule } from './modules/users/users.module';
         synchronize: configService.get<string>('NODE_ENV') === 'test',
       }),
     }),
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -66,8 +67,7 @@ import { UsersModule } from './modules/users/users.module';
           },
         };
       },
-    }) as any,
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    }),
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],

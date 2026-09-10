@@ -22,7 +22,17 @@ describe('UsersController', () => {
           provide: UsersService,
           useValue: {
             create: jest.fn().mockResolvedValue(mockUser),
-            findAll: jest.fn().mockResolvedValue([mockUser]),
+            findAll: jest.fn().mockResolvedValue({
+              data: [mockUser],
+              meta: {
+                total: 1,
+                page: 1,
+                limit: 10,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPreviousPage: false,
+              },
+            }),
             findOne: jest.fn().mockResolvedValue(mockUser),
             remove: jest.fn().mockResolvedValue(undefined),
           },
@@ -48,9 +58,9 @@ describe('UsersController', () => {
   });
 
   describe('findAll', () => {
-    it('should return all users', async () => {
+    it('should return paginated users', async () => {
       const result = await controller.findAll();
-      expect(result).toEqual([mockUser]);
+      expect(result.data).toEqual([mockUser]);
       expect(service.findAll).toHaveBeenCalled();
     });
   });

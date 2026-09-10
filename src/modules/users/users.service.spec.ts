@@ -25,7 +25,7 @@ describe('UsersService', () => {
           provide: getModelToken(User),
           useValue: {
             create: jest.fn().mockResolvedValue(mockUser),
-            findAll: jest.fn().mockResolvedValue([mockUser]),
+            findAndCountAll: jest.fn().mockResolvedValue({ rows: [mockUser], count: 1 }),
             findByPk: jest.fn().mockResolvedValue(mockUser),
           },
         },
@@ -59,10 +59,14 @@ describe('UsersService', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of users', async () => {
+    it('should return a paginated list of users', async () => {
       const result = await service.findAll();
-      expect(result).toEqual([mockUser]);
-      expect(model.findAll).toHaveBeenCalled();
+      expect(result.data).toEqual([mockUser]);
+      expect(result.meta.total).toBe(1);
+      expect(model.findAndCountAll).toHaveBeenCalledWith({
+        limit: 10,
+        offset: 0,
+      });
     });
   });
 

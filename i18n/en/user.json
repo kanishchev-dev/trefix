@@ -1,0 +1,5 @@
+{
+  "ERRORS": {
+    "USER_NOT_FOUND": "User with ID {id} not found"
+  }
+}

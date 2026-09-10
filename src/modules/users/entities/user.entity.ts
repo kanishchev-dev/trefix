@@ -1,5 +1,10 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { BelongsToMany, Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
+
+import { Permission } from '@/modules/permissions/entities/permission.entity';
+import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
+import { UserPermission } from '@/modules/permissions/entities/user-permission.entity';
+import { UserPermissionGroup } from '@/modules/permissions/entities/user-permission-group.entity';
 
 @Table({
   tableName: 'users',
@@ -32,4 +37,10 @@ export class User extends Model {
     allowNull: false,
   })
   lastName!: string;
+
+  @BelongsToMany(() => Permission, () => UserPermission)
+  individualPermissions!: Permission[];
+
+  @BelongsToMany(() => PermissionGroup, () => UserPermissionGroup)
+  permissionGroups!: PermissionGroup[];
 }

@@ -29,10 +29,19 @@ export class DomainExceptionFilter implements ExceptionFilter {
     const code = (exception as Record<string, unknown>).code || 'INTERNAL_ERROR';
 
     try {
-      const translated = await this.i18n.translate(`common.ERRORS.${String(code)}`, {
+      // Try translating the code directly (if it's a full key like 'permissions.ERRORS.NOT_FOUND')
+      // or fallback to common.ERRORS prefix
+      let translated = await this.i18n.translate(String(code), {
         lang,
-        defaultValue: message as string,
+        defaultValue: '',
       });
+
+      if (!translated) {
+        translated = await this.i18n.translate(`common.ERRORS.${String(code)}`, {
+          lang,
+          defaultValue: message as string,
+        });
+      }
       message = translated;
     } catch {
       // Fallback to original message
