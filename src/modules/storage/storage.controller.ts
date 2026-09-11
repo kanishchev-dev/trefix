@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   Param,
@@ -14,17 +13,19 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
 import { tmpdir } from 'os';
 import { extname } from 'path';
 
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
+
 import { StorageFileResponseDto } from './dto/storage-file-response.dto';
 import { UploadStorageFileDto } from './dto/upload-storage-file.dto';
 import { StorageFile } from './entities/storage-file.entity';
-import { StorageAccessContextRequiredException } from './exceptions/storage-access-context-required.exception';
 import { StorageUploadedFile } from './interfaces/storage-uploaded-file.interface';
 import { STORAGE_DEFAULT_MAX_UPLOAD_SIZE_BYTES } from './storage.constants';
 import { StorageService } from './storage.service';
@@ -53,6 +54,7 @@ const uploadStorage = diskStorage({
 });
 
 @ApiTags('Storage')
+@ApiBearerAuth()
 @Controller({
   path: 'storage',
   version: '1',
@@ -63,7 +65,6 @@ export class StorageController {
   @Post('files')
   @ApiOperation({ summary: 'Upload a file' })
   @ApiConsumes('multipart/form-data')
-  @ApiHeader({ name: 'x-user-id', required: true, description: 'Current user identifier' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -88,12 +89,10 @@ export class StorageController {
   async upload(
     @UploadedFile() file: StorageUploadedFile,
     @Body() body: UploadStorageFileDto,
-    @Headers('x-user-id') userId: string | string[] | undefined,
+    @CurrentUser() user: AuthUserContext,
   ): Promise<StorageFileResponseDto> {
-    const requesterUserId = this.resolveRequesterUserId(userId);
-
     const createdFile = await this.storageService.uploadFile(file, {
-      uploaderUserId: requesterUserId,
+      uploaderUserId: user.id,
       scopeType: body.scopeType,
       scopeId: body.scopeId,
       folder: body.folder,
@@ -104,17 +103,14 @@ export class StorageController {
 
   @Get('files/:id')
   @ApiOperation({ summary: 'Download a file' })
-  @ApiHeader({ name: 'x-user-id', required: true, description: 'Current user identifier' })
   @ApiResponse({ status: 200, description: 'File stream' })
   async download(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string | string[] | undefined,
+    @CurrentUser() user: AuthUserContext,
     @Res({ passthrough: true }) response: Response,
   ): Promise<StreamableFile> {
-    const requesterUserId = this.resolveRequesterUserId(userId);
-
     const { file, stream } = await this.storageService.getFile(id, {
-      requesterUserId,
+      requesterUserId: user.id,
     });
 
     response.setHeader('Content-Type', file.mimeType);
@@ -127,24 +123,11 @@ export class StorageController {
   @Delete('files/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a file' })
-  @ApiHeader({ name: 'x-user-id', required: true, description: 'Current user identifier' })
   @ApiResponse({ status: 204, description: 'File deleted' })
-  async delete(@Param('id') id: string, @Headers('x-user-id') userId: string | string[] | undefined): Promise<void> {
-    const requesterUserId = this.resolveRequesterUserId(userId);
-
+  async delete(@Param('id') id: string, @CurrentUser() user: AuthUserContext): Promise<void> {
     await this.storageService.deleteFile(id, {
-      requesterUserId,
+      requesterUserId: user.id,
     });
-  }
-
-  private resolveRequesterUserId(userId: string | string[] | undefined): string {
-    const normalizedUserId = Array.isArray(userId) ? userId[0] : userId;
-
-    if (!normalizedUserId) {
-      throw new StorageAccessContextRequiredException();
-    }
-
-    return normalizedUserId;
   }
 
   private toResponseDto(file: StorageFile): StorageFileResponseDto {

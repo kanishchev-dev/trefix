@@ -66,7 +66,7 @@ describe('RealtimeGateway', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockConfigService.get.mockImplementation((key: string) => (key === 'JWT_SECRET' ? 'secret' : undefined));
+    mockConfigService.get.mockImplementation((key: string) => (key === 'JWT_ACCESS_SECRET' ? 'secret' : undefined));
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

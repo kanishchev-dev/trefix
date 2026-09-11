@@ -40,7 +40,16 @@ export class RealtimeService implements OnApplicationShutdown {
     const subClient = redisClient.duplicate();
     this.pubClient = pubClient;
     this.subClient = subClient;
-    server.adapter(createAdapter(pubClient, subClient));
+
+    const adapterHost = typeof server.adapter === 'function' ? server : (server as Server & { server?: Server }).server;
+    if (typeof adapterHost?.adapter !== 'function') {
+      this.logger.warn(
+        'Realtime Redis adapter is not available on the gateway server object. Running without Redis pub/sub.',
+      );
+      return;
+    }
+
+    adapterHost.adapter(createAdapter(pubClient, subClient));
     this.adapterBound = true;
 
     this.logger.log('Realtime Redis adapter is attached.');

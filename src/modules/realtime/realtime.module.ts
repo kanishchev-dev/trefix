@@ -12,7 +12,7 @@ import { RealtimeService } from './realtime.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.getOrThrow<string>('JWT_SECRET'),
+        secret: configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
       }),
     }),
   ],

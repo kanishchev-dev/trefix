@@ -1,3 +1,4 @@
+import { ApiHideProperty } from '@nestjs/swagger';
 import { BelongsToMany, Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
@@ -38,9 +39,45 @@ export class User extends Model {
   })
   lastName!: string;
 
+  @ApiHideProperty()
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'password_hash',
+  })
+  passwordHash!: string | null;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'email_verified',
+  })
+  emailVerified!: boolean;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'email_verified_at',
+  })
+  emailVerifiedAt!: Date | null;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'password_changed_at',
+  })
+  passwordChangedAt!: Date | null;
+
   @BelongsToMany(() => Permission, () => UserPermission)
   individualPermissions!: Permission[];
 
   @BelongsToMany(() => PermissionGroup, () => UserPermissionGroup)
   permissionGroups!: PermissionGroup[];
+
+  override toJSON(): Record<string, unknown> {
+    const values = { ...this.get() } as Record<string, unknown>;
+    delete values.passwordHash;
+    return values;
+  }
 }

@@ -41,6 +41,7 @@ describe('UsersController (e2e)', () => {
       .overrideProvider(getModelToken(User))
       .useValue({
         create: jest.fn().mockResolvedValue(mockUserInstance),
+        findOne: jest.fn().mockResolvedValue(null),
         findAll: jest.fn().mockResolvedValue([mockUserInstance]),
         findByPk: jest.fn().mockResolvedValue(mockUserInstance),
       })

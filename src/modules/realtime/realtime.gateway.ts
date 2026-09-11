@@ -137,9 +137,9 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       throw new RealtimeWsException('WS_AUTH_MISSING_TOKEN', 'WebSocket token is required.');
     }
 
-    const secret = this.configService.get<string>('JWT_SECRET');
+    const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
     if (!secret) {
-      throw new RealtimeWsException('WS_AUTH_MISCONFIGURED', 'JWT secret is not configured.');
+      throw new RealtimeWsException('WS_AUTH_MISCONFIGURED', 'JWT access secret is not configured.');
     }
 
     const decoded = await this.jwtService.verifyAsync<JwtSocketPayload>(token, { secret });

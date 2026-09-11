@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
+
 import { StorageUploadedFile } from './interfaces/storage-uploaded-file.interface';
 import { StorageController } from './storage.controller';
 import { StorageService } from './storage.service';
@@ -14,6 +16,12 @@ describe('StorageController', () => {
     mimeType: 'image/jpeg',
     size: 1234,
     storageKey: 'users/user-1/avatars/file.jpg',
+  };
+  const mockUser: AuthUserContext = {
+    id: 'user-1',
+    email: 'user@example.com',
+    emailVerified: true,
+    sessionId: 'session-1',
   };
 
   beforeEach(async () => {
@@ -52,7 +60,7 @@ describe('StorageController', () => {
           scopeId: 'user-1',
           folder: 'avatars',
         },
-        'user-1',
+        mockUser,
       );
 
       expect(result).toEqual({
@@ -67,7 +75,7 @@ describe('StorageController', () => {
 
   describe('delete', () => {
     it('should delete a file', async () => {
-      await controller.delete('file-1', 'user-1');
+      await controller.delete('file-1', mockUser);
 
       expect(service.deleteFile).toHaveBeenCalledWith('file-1', {
         requesterUserId: 'user-1',

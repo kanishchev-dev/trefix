@@ -25,6 +25,7 @@ describe('UsersService', () => {
           provide: getModelToken(User),
           useValue: {
             create: jest.fn().mockResolvedValue(mockUser),
+            findOne: jest.fn().mockResolvedValue(null),
             findAndCountAll: jest.fn().mockResolvedValue({ rows: [mockUser], count: 1 }),
             findByPk: jest.fn().mockResolvedValue(mockUser),
           },
@@ -52,7 +53,17 @@ describe('UsersService', () => {
       const dto = { email: 'test@example.com', firstName: 'John', lastName: 'Doe' };
       const result = await service.create(dto);
 
-      expect(model.create).toHaveBeenCalledWith(dto);
+      expect(model.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'test@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          passwordHash: null,
+          emailVerified: false,
+          emailVerifiedAt: null,
+          passwordChangedAt: null,
+        }),
+      );
       expect(eventEmitter.emit).toHaveBeenCalledWith('user.created', expect.anything());
       expect(result).toEqual(mockUser);
     });

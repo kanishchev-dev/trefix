@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
+import { col, fn, UniqueConstraintError, where as sequelizeWhere } from 'sequelize';
 
 import { PaginatedResponseDto, PaginationDto } from '@/common/dto/pagination.dto';
+import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,15 +22,49 @@ export class UsersService {
     private eventEmitter: EventEmitter2,
   ) {}
 
+  async findByEmail(email: string): Promise<User | null> {
+    const normalizedEmail = this.normalizeEmail(email);
+    return this.userModel.findOne({
+      where: sequelizeWhere(fn('lower', col('email')), normalizedEmail),
+    });
+  }
+
   /**
    * Creates a new user in the system.
    * @param createUserDto - User creation data
    * @returns Created user entity
    */
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    this.logger.debug(`Creating user with email: ${createUserDto.email}`);
+  async create(
+    createUserDto: CreateUserDto & {
+      passwordHash?: string | null;
+      emailVerified?: boolean;
+    },
+  ): Promise<User> {
+    const normalizedEmail = this.normalizeEmail(createUserDto.email);
+    this.logger.debug(`Creating user with email: ${normalizedEmail}`);
 
-    const user = await this.userModel.create({ ...createUserDto });
+    const existingUser = await this.findByEmail(normalizedEmail);
+    if (existingUser) {
+      throw new EntityAlreadyExistsException('User', 'email', normalizedEmail);
+    }
+
+    let user: User;
+    try {
+      user = await this.userModel.create({
+        ...createUserDto,
+        email: normalizedEmail,
+        passwordHash: createUserDto.passwordHash ?? null,
+        emailVerified: createUserDto.emailVerified ?? false,
+        emailVerifiedAt: createUserDto.emailVerified ? new Date() : null,
+        passwordChangedAt: createUserDto.passwordHash ? new Date() : null,
+      });
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        throw new EntityAlreadyExistsException('User', 'email', normalizedEmail);
+      }
+
+      throw error;
+    }
 
     // Emit event as per guidelines
     this.eventEmitter.emit('user.created', new UserCreatedEvent(user.id, user.email, user.firstName, user.lastName));
@@ -77,5 +113,41 @@ export class UsersService {
     await user.destroy(); // Soft delete because of paranoid: true
 
     this.eventEmitter.emit('user.deleted', new UserDeletedEvent(id));
+  }
+
+  async updatePasswordHash(id: string, passwordHash: string): Promise<User> {
+    const user = await this.findOne(id);
+    return user.update({
+      passwordHash,
+      passwordChangedAt: new Date(),
+    });
+  }
+
+  async setEmailVerified(id: string, emailVerified: boolean): Promise<User> {
+    const user = await this.findOne(id);
+    return user.update({
+      emailVerified,
+      emailVerifiedAt: emailVerified ? new Date() : null,
+    });
+  }
+
+  async updatePasswordAndVerification(
+    id: string,
+    updates: {
+      passwordHash?: string;
+      emailVerified?: boolean;
+    },
+  ): Promise<User> {
+    const user = await this.findOne(id);
+    return user.update({
+      passwordHash: updates.passwordHash,
+      emailVerified: updates.emailVerified ?? user.emailVerified,
+      emailVerifiedAt: updates.emailVerified ? new Date() : user.emailVerifiedAt,
+      passwordChangedAt: updates.passwordHash ? new Date() : user.passwordChangedAt,
+    });
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
   }
 }

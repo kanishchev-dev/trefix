@@ -3,9 +3,10 @@ import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { redisStore } from 'cache-manager-redis-yet';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
@@ -15,6 +16,8 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { validationSchema } from './config/validation.schema';
+import { AuthModule } from './modules/auth/auth.module';
+import authConfig from './modules/auth/config/auth.config';
 import { HealthModule } from './modules/health/health.module';
 import mailerConfig from './modules/mailer/config/mailer.config';
 import { PermissionsModule } from './modules/permissions/permissions.module';
@@ -27,10 +30,11 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, storageConfig, mailerConfig],
+      load: [appConfig, databaseConfig, storageConfig, mailerConfig, authConfig],
       validationSchema,
     }),
     HealthModule,
+    AuthModule,
     UsersModule,
     StorageModule,
     PermissionsModule,
@@ -119,6 +123,12 @@ import { UsersModule } from './modules/users/users.module';
       },
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
     }),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

@@ -11,7 +11,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PaginatedResponseDto, PaginationDto } from '@/common/dto/pagination.dto';
 
@@ -24,6 +24,7 @@ import { PermissionGroup } from './entities/permission-group.entity';
 import { PermissionsService } from './permissions.service';
 
 @ApiTags('Permissions')
+@ApiBearerAuth()
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}

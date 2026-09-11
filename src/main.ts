@@ -1,4 +1,5 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -17,7 +18,6 @@ async function bootstrap(): Promise<void> {
 
   // Security
   app.use(helmet());
-  app.enableCors();
 
   // Versioning
   app.enableVersioning({
@@ -49,16 +49,23 @@ async function bootstrap(): Promise<void> {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   // Shutdown hooks
   app.enableShutdownHooks();
 
-  const port = process.env.PORT || 3000;
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('app.port') || 3000;
+  const corsOrigins = configService.get<string[]>('app.corsOrigins') || [];
+  app.enableCors({
+    origin: corsOrigins.length > 0 ? corsOrigins : false,
+    credentials: true,
+  });
+
   await app.listen(port);
 
   logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(`Swagger documentation is available at: http://localhost:${port}/api/docs`);
+  logger.log(`Swagger documentation is available at: http://localhost:${port}/docs`);
 }
 
 bootstrap();
