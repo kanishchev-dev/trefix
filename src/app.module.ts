@@ -18,13 +18,15 @@ import databaseConfig from './config/database.config';
 import { validationSchema } from './config/validation.schema';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './modules/auth/config/auth.config';
+import { CoachModule } from './modules/coach/coach.module';
 import { HealthModule } from './modules/health/health.module';
 import mailerConfig from './modules/mailer/config/mailer.config';
 import { PermissionsModule } from './modules/permissions/permissions.module';
-import { SystemSeedModule } from './modules/system-seed/system-seed.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import storageConfig from './modules/storage/config/storage.config';
 import { StorageModule } from './modules/storage/storage.module';
+import { SystemSeedModule } from './modules/system-seed/system-seed.module';
+import { TrainingModule } from './modules/training/training.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -39,8 +41,10 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     StorageModule,
     PermissionsModule,
+    CoachModule,
     SystemSeedModule,
     RealtimeModule,
+    TrainingModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

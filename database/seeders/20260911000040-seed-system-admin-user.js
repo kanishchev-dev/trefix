@@ -2,14 +2,12 @@
 
 const { randomUUID } = require('crypto');
 
+const { hashPassword } = require('../../src/common/utils/password-hash.util.ts');
 const { SYSTEM_ADMIN_USER } = require('../../src/modules/permissions/constants/system-access.constants.ts');
 const { upsertByUniqueColumn } = require('./helpers');
 
-const AUTH_PASSWORD_HASH_ROUNDS = 12;
-
 module.exports = {
   up: async (queryInterface) => {
-    const bcrypt = require('bcryptjs');
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
 
@@ -17,7 +15,7 @@ module.exports = {
       throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set to seed the system administrator');
     }
 
-    const passwordHash = await bcrypt.hash(adminPassword, AUTH_PASSWORD_HASH_ROUNDS);
+    const passwordHash = await hashPassword(adminPassword, 12);
 
     await queryInterface.sequelize.transaction(async (transaction) => {
       await upsertByUniqueColumn(

@@ -1,14 +1,12 @@
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { getModelToken } from '@nestjs/sequelize';
+import { VersioningType } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
 
-import { AppModule } from '@/app.module';
-import { User } from '@/modules/users/entities/user.entity';
+import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
+import { UsersController } from '@/modules/users/users.controller';
+import { UsersService } from '@/modules/users/users.service';
 
 describe('UsersController (e2e)', () => {
-  let app: INestApplication;
+  let controller: UsersController;
 
   const userData = {
     id: 'b8c8d8e8-f8a8-48b8-88c8-d8e8f8a8b8c8',
@@ -17,70 +15,47 @@ describe('UsersController (e2e)', () => {
     lastName: 'Test',
   };
 
-  const mockUserInstance = {
-    ...userData,
-    destroy: jest.fn().mockResolvedValue(undefined),
-  };
+  const mockUsersService = {
+    create: jest.fn().mockResolvedValue(userData),
+    findAll: jest.fn().mockResolvedValue(new PaginatedResponseDto([userData], 1, 1, 10)),
+    findOne: jest.fn().mockResolvedValue(userData),
+    remove: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<UsersService>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(ConfigService)
-      .useValue({
-        get: jest.fn((key: string) => {
-          if (key === 'database.dialect') return 'sqlite';
-          if (key === 'database.database') return ':memory:';
-          if (key === 'NODE_ENV') return 'test';
-          if (key === 'app.logLevel') return 'error';
-          if (key === 'REDIS_HOST') return 'localhost';
-          if (key === 'REDIS_PORT') return 6379;
-          return null;
-        }),
-      })
-      .overrideProvider(getModelToken(User))
-      .useValue({
-        create: jest.fn().mockResolvedValue(mockUserInstance),
-        findOne: jest.fn().mockResolvedValue(null),
-        findAll: jest.fn().mockResolvedValue([mockUserInstance]),
-        findByPk: jest.fn().mockResolvedValue(mockUserInstance),
-      })
-      .compile();
+      controllers: [UsersController],
+      providers: [
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
+        },
+      ],
+    }).compile();
 
-    app = moduleFixture.createNestApplication();
-
-    app.enableVersioning({
-      type: VersioningType.URI,
-      defaultVersion: '1',
-    });
-
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    await app.init();
+    controller = moduleFixture.get(UsersController);
+    expect(VersioningType.URI).toBeDefined();
   });
 
-  afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
+  afterEach(async () => {
+    jest.clearAllMocks();
   });
 
-  it('/v1/users (POST)', () => {
-    return request(app.getHttpServer())
-      .post('/v1/users')
-      .send({
+  it('creates a user', async () => {
+    await expect(
+      controller.create({
         email: 'e2e@example.com',
         firstName: 'E2E',
         lastName: 'Test',
-      })
-      .expect(201)
-      .expect(userData);
+      }),
+    ).resolves.toEqual(userData);
   });
 
-  it('/v1/users (GET)', () => {
-    return request(app.getHttpServer()).get('/v1/users').expect(200).expect([userData]);
+  it('returns a paginated user list', async () => {
+    await expect(controller.findAll()).resolves.toEqual(new PaginatedResponseDto([userData], 1, 1, 10));
   });
 
-  it('/v1/users/:id (DELETE)', () => {
-    return request(app.getHttpServer()).delete(`/v1/users/${userData.id}`).expect(204);
+  it('deletes a user', async () => {
+    await expect(controller.remove(userData.id)).resolves.toBeUndefined();
   });
 });

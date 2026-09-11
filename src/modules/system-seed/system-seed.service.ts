@@ -4,6 +4,7 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { randomUUID } from 'crypto';
 import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 
+import { hashPassword } from '@/common/utils/password-hash.util';
 import appConfig from '@/config/app.config';
 import { Permission } from '@/modules/permissions/entities/permission.entity';
 import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
@@ -15,10 +16,6 @@ import {
   SYSTEM_PERMISSION_CATALOG,
   SYSTEM_PERMISSION_GROUPS,
 } from '../permissions/constants/system-access.constants';
-
-interface BcryptLike {
-  hash(password: string, saltRounds: number): Promise<string>;
-}
 
 @Injectable()
 export class SystemSeedService implements OnApplicationBootstrap {
@@ -280,7 +277,12 @@ export class SystemSeedService implements OnApplicationBootstrap {
     groups: Record<'administrators' | 'registeredUsers', PermissionGroup>,
     transaction: Transaction,
   ): Promise<void> {
-    await this.syncGroupPermissions(groups.administrators, SYSTEM_PERMISSION_GROUPS[0].permissionKeys, permissions, transaction);
+    await this.syncGroupPermissions(
+      groups.administrators,
+      SYSTEM_PERMISSION_GROUPS[0].permissionKeys,
+      permissions,
+      transaction,
+    );
     await this.syncGroupPermissions(
       groups.registeredUsers,
       SYSTEM_PERMISSION_GROUPS[1].permissionKeys,
@@ -307,10 +309,9 @@ export class SystemSeedService implements OnApplicationBootstrap {
   }
 
   private async seedAdminUser(transaction: Transaction): Promise<User> {
-    const bcrypt = require('bcryptjs') as BcryptLike;
     const adminEmail = this.configService.getOrThrow<string>('ADMIN_EMAIL').trim().toLowerCase();
     const adminPassword = this.configService.getOrThrow<string>('ADMIN_PASSWORD');
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
+    const passwordHash = await hashPassword(adminPassword, 12);
 
     const existingAdmin = await this.userModel.findOne({
       where: { systemKey: SYSTEM_ADMIN_USER.systemKey },
@@ -354,11 +355,7 @@ export class SystemSeedService implements OnApplicationBootstrap {
     );
   }
 
-  private async seedAdminAssignment(
-    userId: string,
-    groupId: string,
-    transaction: Transaction,
-  ): Promise<void> {
+  private async seedAdminAssignment(userId: string, groupId: string, transaction: Transaction): Promise<void> {
     const existingAssignment = await this.userPermissionGroupModel.findOne({
       where: {
         userId,
@@ -379,5 +376,4 @@ export class SystemSeedService implements OnApplicationBootstrap {
       { transaction },
     );
   }
-
 }

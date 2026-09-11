@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as bcrypt from 'bcryptjs';
 import { createHash, randomInt, randomUUID } from 'crypto';
 
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { comparePassword, hashPassword } from '@/common/utils/password-hash.util';
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
 import { User } from '@/modules/users/entities/user.entity';
@@ -476,11 +476,11 @@ export class AuthService {
   }
 
   private async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, AUTH_PASSWORD_HASH_ROUNDS);
+    return hashPassword(password, AUTH_PASSWORD_HASH_ROUNDS);
   }
 
   private async verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-    return bcrypt.compare(password, passwordHash);
+    return comparePassword(password, passwordHash);
   }
 
   private hashSecret(value: string): string {

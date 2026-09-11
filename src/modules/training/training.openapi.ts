@@ -1,0 +1,158 @@
+export const TRAINING_ATHLETE_EXAMPLE = {
+  id: 'athlete-1',
+  userId: 'user-1',
+  age: 31,
+  sex: 'male',
+  heightCm: 178,
+  weightKg: 74,
+  experienceLevel: 'intermediate',
+  weeklyMileageKm: 38,
+  sessionsPerWeek: 4,
+  recentRaceResults: [],
+  preferredTrainingDays: ['tuesday', 'thursday', 'saturday'],
+  availableTrainingDays: ['tuesday', 'thursday', 'saturday', 'sunday'],
+  preferredWorkoutDurationMinutes: 50,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: '2026-09-11T00:00:00.000Z',
+};
+
+export const TRAINING_STATE_EXAMPLE = {
+  id: 'state-1',
+  athleteId: 'athlete-1',
+  fitness: 42,
+  fatigue: 28,
+  form: 14,
+  thresholdPaceSecondsPerKm: 270,
+  thresholdHeartRate: 168,
+  vo2max: 56,
+  weeklyLoad: 28,
+  acuteLoad: 28,
+  chronicLoad: 42,
+  recoveryScore: 68,
+  confidence: 0.86,
+  source: 'deterministic_v1',
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: '2026-09-11T00:00:00.000Z',
+};
+
+export const TRAINING_GOAL_EXAMPLE = {
+  id: 'goal-1',
+  athleteId: 'athlete-1',
+  raceDistance: '10k',
+  targetTimeSeconds: 2700,
+  targetDate: '2026-11-01',
+  priority: 5,
+  status: 'active',
+  notes: 'Sub-45 10K target',
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: '2026-09-11T00:00:00.000Z',
+};
+
+export const TRAINING_WORKOUT_EXAMPLE = {
+  id: 'workout-1',
+  athleteId: 'athlete-1',
+  goalId: 'goal-1',
+  planId: 'plan-1',
+  weekNumber: 1,
+  scheduledAt: '2026-09-16T06:30:00.000Z',
+  type: 'interval',
+  phase: 'build',
+  status: 'planned',
+  orderInWeek: 2,
+  durationMinutes: 55,
+  distanceKm: 10.2,
+  target: {
+    paceMinSecondsPerKm: 250,
+    paceMaxSecondsPerKm: 260,
+    zone: 'Z5',
+  },
+  steps: [],
+  actual: null,
+  analysis: null,
+  completedAt: null,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: '2026-09-11T00:00:00.000Z',
+};
+
+export const TRAINING_PLAN_EXAMPLE = {
+  id: 'plan-1',
+  athleteId: 'athlete-1',
+  goalId: 'goal-1',
+  startDate: '2026-09-15',
+  endDate: '2026-11-03',
+  trainingFrequency: 4,
+  weeklyTargetKm: 38,
+  status: 'active',
+  algorithmVersion: 'v1',
+  weeks: [
+    {
+      weekNumber: 1,
+      phase: 'base',
+      weeklyLoadTarget: 32,
+      workoutIds: ['workout-1', 'workout-2'],
+    },
+  ],
+  workouts: [TRAINING_WORKOUT_EXAMPLE],
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: '2026-09-11T00:00:00.000Z',
+};
+
+export const TRAINING_WORKOUT_COMPLETION_EXAMPLE = {
+  workout: TRAINING_WORKOUT_EXAMPLE,
+  analysis: {
+    completion: 0.92,
+    performanceDelta: -0.04,
+    load: 48,
+    expectedLoad: 49,
+    fatigueImpact: 'moderate',
+    confidence: 0.84,
+    analysisVersion: 'analysis-v1',
+  },
+  state: TRAINING_STATE_EXAMPLE,
+  adaptation: {
+    id: 'adaptation-1',
+    athleteId: 'athlete-1',
+    planId: 'plan-1',
+    workoutId: 'workout-1',
+    type: 'KEEP',
+    input: {},
+    decision: { action: 'KEEP', changes: [] },
+    reason: 'stable_load',
+    confidence: 0.87,
+    createdAt: '2026-09-11T00:00:00.000Z',
+  },
+};
+
+export const TRAINING_ADAPTATION_EXAMPLE = {
+  id: 'adaptation-1',
+  athleteId: 'athlete-1',
+  planId: 'plan-1',
+  workoutId: 'workout-1',
+  type: 'REDUCE_INTENSITY',
+  input: {
+    state: TRAINING_STATE_EXAMPLE,
+    analysis: {
+      completion: 0.62,
+      performanceDelta: -0.14,
+      load: 55,
+      expectedLoad: 49,
+      fatigueImpact: 'high',
+      confidence: 0.78,
+      analysisVersion: 'analysis-v1',
+    },
+  },
+  decision: {
+    action: 'REDUCE_INTENSITY',
+    changes: [
+      {
+        workoutId: 'workout-2',
+        type: 'recovery',
+        durationMinutes: 40,
+        distanceKm: 6.8,
+      },
+    ],
+  },
+  reason: 'poor_performance',
+  confidence: 0.91,
+  createdAt: '2026-09-11T00:00:00.000Z',
+};

@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as bcrypt from 'bcryptjs';
 
+import { hashPassword } from '@/common/utils/password-hash.util';
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
 import { UsersService } from '@/modules/users/users.service';
@@ -12,7 +12,7 @@ import { AuthRedisService } from './services/auth-redis.service';
 import { AuthTokenService } from './services/auth-token.service';
 
 async function createPasswordHash(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
+  return hashPassword(password, 12);
 }
 
 describe('AuthService', () => {

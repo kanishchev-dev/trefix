@@ -2,12 +2,12 @@ import { ConfigService } from '@nestjs/config';
 import { getConnectionToken, getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import appConfig from '@/config/app.config';
 import { Permission } from '@/modules/permissions/entities/permission.entity';
 import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
 import { UserPermissionGroup } from '@/modules/permissions/entities/user-permission-group.entity';
 import { User } from '@/modules/users/entities/user.entity';
 
-import appConfig from '@/config/app.config';
 import { SystemSeedService } from './system-seed.service';
 
 describe('SystemSeedService', () => {
@@ -59,7 +59,7 @@ describe('SystemSeedService', () => {
           useValue: userPermissionGroupModel,
         },
       ],
-      }).compile();
+    }).compile();
 
     return module.get<SystemSeedService>(SystemSeedService);
   }
