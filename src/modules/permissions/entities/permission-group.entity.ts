@@ -33,6 +33,22 @@ export class PermissionGroup extends Model {
   })
   description?: string;
 
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    unique: true,
+    field: 'system_key',
+  })
+  systemKey!: string | null;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'is_system',
+  })
+  isSystem!: boolean;
+
   @BelongsToMany(() => Permission, () => PermissionGroupPermission)
   permissions!: Permission[];
 

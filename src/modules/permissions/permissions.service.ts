@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize';
 
 import { PaginatedResponseDto, PaginationDto } from '@/common/dto/pagination.dto';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { SystemEntityDeletionForbiddenException } from '@/common/exceptions/system-entity-deletion-forbidden.exception';
 import { User } from '@/modules/users/entities/user.entity';
 
 import { CreatePermissionDto } from './dto/create-permission.dto';
@@ -175,6 +176,9 @@ export class PermissionsService {
    */
   async removeGroup(id: string): Promise<void> {
     const group = await this.findGroup(id);
+    if (group.isSystem) {
+      throw new SystemEntityDeletionForbiddenException('permission group');
+    }
     const { name } = group;
     await group.destroy();
 

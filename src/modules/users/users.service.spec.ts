@@ -15,6 +15,7 @@ describe('UsersService', () => {
     email: 'test@example.com',
     firstName: 'John',
     lastName: 'Doe',
+    isSystem: false,
   };
 
   beforeEach(async () => {
@@ -90,6 +91,14 @@ describe('UsersService', () => {
 
       expect(user.destroy).toHaveBeenCalled();
       expect(eventEmitter.emit).toHaveBeenCalledWith('user.deleted', expect.anything());
+    });
+
+    it('should forbid deleting a system user', async () => {
+      const user = { ...mockUser, isSystem: true, destroy: jest.fn() };
+      jest.spyOn(service, 'findOne').mockResolvedValue(user as unknown as User);
+
+      await expect(service.remove(mockUser.id)).rejects.toThrow('System user cannot be deleted');
+      expect(user.destroy).not.toHaveBeenCalled();
     });
   });
 });

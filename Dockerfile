@@ -20,6 +20,7 @@ COPY package*.json ./
 RUN npm install --omit=dev --legacy-peer-deps --ignore-scripts && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/i18n ./dist/i18n
 
 EXPOSE 3000
 

@@ -10,6 +10,6 @@ export class AuthUserResponseDto {
   @ApiProperty({ example: true })
   emailVerified!: boolean;
 
-  @ApiPropertyOptional({ isArray: true, example: ['users.read', 'users.write'] })
+  @ApiPropertyOptional({ isArray: true, example: ['users.read', 'users.update'] })
   permissions?: string[];
 }

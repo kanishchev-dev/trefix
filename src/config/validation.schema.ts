@@ -37,4 +37,7 @@ export const validationSchema = Joi.object({
   AUTH_EMAIL_CODE_EXPIRES_IN: Joi.string().default('10m'),
   AUTH_PASSWORD_RESET_EXPIRES_IN: Joi.string().default('15m'),
   AUTH_EMAIL_CODE_RESEND_COOLDOWN: Joi.string().default('60s'),
+  AUTO_SEED_SYSTEM_DATA: Joi.boolean().default(true),
+  ADMIN_EMAIL: Joi.string().email().optional(),
+  ADMIN_PASSWORD: Joi.string().min(8).optional(),
 });

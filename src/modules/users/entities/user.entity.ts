@@ -47,6 +47,24 @@ export class User extends Model {
   })
   passwordHash!: string | null;
 
+  @ApiHideProperty()
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    unique: true,
+    field: 'system_key',
+  })
+  systemKey!: string | null;
+
+  @ApiHideProperty()
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'is_system',
+  })
+  isSystem!: boolean;
+
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,

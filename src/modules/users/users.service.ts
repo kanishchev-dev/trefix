@@ -6,6 +6,7 @@ import { col, fn, UniqueConstraintError, where as sequelizeWhere } from 'sequeli
 import { PaginatedResponseDto, PaginationDto } from '@/common/dto/pagination.dto';
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { SystemEntityDeletionForbiddenException } from '@/common/exceptions/system-entity-deletion-forbidden.exception';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
@@ -109,6 +110,9 @@ export class UsersService {
     this.logger.debug(`Removing user with id: ${id}`);
 
     const user = await this.findOne(id);
+    if (user.isSystem) {
+      throw new SystemEntityDeletionForbiddenException('user');
+    }
 
     await user.destroy(); // Soft delete because of paranoid: true
 

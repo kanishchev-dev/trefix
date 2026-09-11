@@ -187,4 +187,19 @@ describe('PermissionsService', () => {
       );
     });
   });
+
+  describe('removeGroup', () => {
+    it('should forbid deleting a system permission group', async () => {
+      const group = {
+        id: 'group-1',
+        name: 'Administrators',
+        isSystem: true,
+        destroy: jest.fn(),
+      };
+      jest.spyOn(service, 'findGroup').mockResolvedValue(group as unknown as PermissionGroup);
+
+      await expect(service.removeGroup('group-1')).rejects.toThrow('System permission group cannot be deleted');
+      expect(group.destroy).not.toHaveBeenCalled();
+    });
+  });
 });
