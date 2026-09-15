@@ -107,12 +107,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     lineHeight: 28,
-    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
     color: tokens.color.foreground,
   },
   text: {
     fontSize: 15,
     lineHeight: 22,
+    fontFamily: "Inter_400Regular",
     color: tokens.color.mutedForeground,
   },
   row: {
@@ -127,11 +128,12 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
     color: tokens.color.foreground,
   },
   rowSubtitle: {
     fontSize: 13,
+    fontFamily: "Inter_400Regular",
     color: tokens.color.mutedForeground,
   },
   actions: {
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
     color: tokens.color.primaryForeground,
   },
   buttonSecondary: {
@@ -158,11 +160,12 @@ const styles = StyleSheet.create({
   },
   buttonSecondaryText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
     color: tokens.color.foreground,
   },
   helper: {
     fontSize: 13,
+    fontFamily: "Inter_400Regular",
     color: tokens.color.mutedForeground,
   },
 });

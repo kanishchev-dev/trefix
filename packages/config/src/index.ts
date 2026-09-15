@@ -1,6 +1,6 @@
 export const appNames = {
   web: "web",
-  mobile: "workspace mobile",
+  mobile: "Trefix",
 } as const;
 
 export const appName = appNames.web;

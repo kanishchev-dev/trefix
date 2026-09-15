@@ -1,122 +1,114 @@
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+
+import { type ThemeTokens } from "@workspace/tokens";
 
 import type { RootStackParamList } from "../../navigation/types";
-import { tokens } from "@workspace/tokens";
+import { type AppStrings } from "../../shared/lib/i18n";
+import { type AuthSession } from "../../shared/lib/auth";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type Props = NativeStackScreenProps<RootStackParamList, "Home"> & {
+  strings: AppStrings;
+  theme: ThemeTokens;
+  session: AuthSession;
+  onSignOut: () => Promise<void>;
+};
 
-export function HomeScreen({ navigation }: Props) {
+export function HomeScreen({ strings, theme, session, onSignOut }: Props) {
   return (
-    <ScrollView
-      contentContainerStyle={styles.page}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView contentContainerStyle={[styles.root, { backgroundColor: theme.color.background }]} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
-        <Text style={styles.kicker}>workspace</Text>
-        <Text style={styles.title}>
-          React Native, Expo and monorepo-ready by default.
-        </Text>
-        <Text style={styles.lede}>
-          Mobile lives in apps/mobile and follows the same project rules as
-          web: typed data, shared packages and secure storage for secrets.
+        <Text style={[styles.kicker, { color: theme.color.mutedForeground }]}>{strings.appName}</Text>
+        <Text style={[styles.title, { color: theme.color.foreground }]}>{strings.sessionRestored}</Text>
+        <Text style={[styles.lede, { color: theme.color.mutedForeground }]}>
+          {strings.signedInAs} {session.user.email}
         </Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Mobile scaffold is ready</Text>
-        <Text style={styles.cardText}>
-          Navigation is handled with React Navigation, while async preferences
-          and secrets are separated between AsyncStorage and SecureStore.
-        </Text>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.navigate("Settings")}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Open settings</Text>
-        </Pressable>
+      <View style={[styles.panel, { backgroundColor: theme.color.surfaceElevated, borderColor: theme.color.border }]}>
+        <Text style={[styles.cardTitle, { color: theme.color.foreground }]}>{strings.systemTheme}</Text>
+        <Text style={[styles.cardText, { color: theme.color.mutedForeground }]}>{strings.systemThemeDescription}</Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>How to develop</Text>
-        <Text style={styles.cardText}>
-          Start the app with `pnpm --dir apps/mobile dev`, then open Android,
-          iOS or web from the Expo launcher. Shared logic belongs in packages/*,
-          not inside the screen tree.
+      <View style={[styles.panel, { backgroundColor: theme.color.surfaceElevated, borderColor: theme.color.border }]}>
+        <Text style={[styles.cardTitle, { color: theme.color.foreground }]}>{strings.sessionHeading}</Text>
+        <Text style={[styles.cardText, { color: theme.color.mutedForeground }]}>{strings.sessionDescription}</Text>
+        <Text style={[styles.tokenLine, { color: theme.color.mutedForeground }]}>
+          {strings.sessionTokenLabel}: {session.tokens.sessionId}
         </Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>How to test</Text>
-        <Text style={styles.cardText}>
-          Use `pnpm --dir apps/mobile typecheck` for static checks. On-device
-          validation should cover navigation, theme preference and secure
-          storage flows.
-        </Text>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => void onSignOut()}
+        style={({ pressed }) => [
+          styles.logoutButton,
+          { backgroundColor: theme.color.primary },
+          pressed && styles.logoutButtonPressed,
+        ]}
+      >
+        <Text style={[styles.logoutButtonText, { color: theme.color.primaryForeground }]}>{strings.signOut}</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  page: {
+  root: {
     flexGrow: 1,
-    padding: tokens.spacing.page,
-    gap: 20,
-    backgroundColor: tokens.color.background,
+    padding: 24,
+    gap: 18,
   },
   hero: {
-    gap: 12,
+    gap: 10,
+    paddingVertical: 10,
   },
   kicker: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
     letterSpacing: 4,
     textTransform: "uppercase",
-    color: tokens.color.mutedForeground,
   },
   title: {
     fontSize: 36,
     lineHeight: 42,
-    fontWeight: "700",
-    color: tokens.color.foreground,
+    fontFamily: "Inter_800ExtraBold",
   },
   lede: {
     fontSize: 16,
     lineHeight: 24,
-    color: tokens.color.mutedForeground,
+    fontFamily: "Inter_400Regular",
   },
-  card: {
-    gap: 16,
-    padding: tokens.spacing.card,
-    borderRadius: tokens.radius.lg,
-    backgroundColor: tokens.color.surface,
+  panel: {
+    gap: 12,
+    padding: 20,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: tokens.color.border,
   },
   cardTitle: {
-    fontSize: 20,
-    lineHeight: 28,
-    fontWeight: "700",
-    color: tokens.color.foreground,
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
   },
   cardText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: tokens.color.mutedForeground,
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: "Inter_400Regular",
   },
-  button: {
+  tokenLine: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+  },
+  logoutButton: {
     alignSelf: "flex-start",
-    borderRadius: tokens.radius.pill,
-    backgroundColor: tokens.color.primary,
+    borderRadius: 9999,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  buttonText: {
+  logoutButtonPressed: {
+    transform: [{ scale: 0.98 }],
+  },
+  logoutButtonText: {
     fontSize: 15,
-    fontWeight: "600",
-    color: tokens.color.primaryForeground,
+    fontFamily: "Inter_700Bold",
   },
 });
