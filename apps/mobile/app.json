@@ -7,27 +7,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/trefix-logo-dark.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#f2f2f5",
-      "dark": {
-        "image": "./assets/trefix-logo-light.png",
-        "backgroundColor": "#09090b"
-      }
-    },
     "ios": {
       "supportsTablet": true,
       "userInterfaceStyle": "automatic",
-      "splash": {
-        "image": "./assets/trefix-logo-dark.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#f2f2f5",
-        "dark": {
-          "image": "./assets/trefix-logo-light.png",
-          "backgroundColor": "#09090b"
-        }
-      }
+      "bundleIdentifier": "com.kanishchev.workspace-mobile"
     },
     "android": {
       "adaptiveIcon": {
@@ -37,21 +20,26 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "userInterfaceStyle": "automatic",
-      "predictiveBackGestureEnabled": false,
-      "splash": {
-        "image": "./assets/trefix-logo-dark.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#f2f2f5",
-        "dark": {
-          "image": "./assets/trefix-logo-light.png",
-          "backgroundColor": "#09090b"
-        }
-      }
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#f2f2f5",
+          "image": "./assets/trefix-logo-dark.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#09090b",
+            "image": "./assets/trefix-logo-light.png"
+          }
+        }
+      ],
+      "expo-video",
       "expo-secure-store"
     ]
   }
