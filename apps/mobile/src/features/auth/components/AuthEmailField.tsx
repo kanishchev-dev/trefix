@@ -12,6 +12,7 @@ type Props = {
 
 export function AuthEmailField({ theme, onSubmit }: Props) {
   const [email, setEmail] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const normalizedEmail = email.trim();
   const isValidEmail = useMemo(
@@ -47,7 +48,9 @@ export function AuthEmailField({ theme, onSubmit }: Props) {
         autoCorrect={false}
         keyboardType="email-address"
         onChangeText={setEmail}
-        placeholder="Электронная почта"
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={isFocused ? "" : "Электронная почта"}
         placeholderTextColor={theme.color.mutedForeground}
         onSubmitEditing={handleSubmit}
         returnKeyType="send"
@@ -60,8 +63,6 @@ export function AuthEmailField({ theme, onSubmit }: Props) {
             fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
-        textAlign="center"
-        textAlignVertical="center"
         value={email}
       />
 
@@ -83,24 +84,9 @@ export function AuthEmailField({ theme, onSubmit }: Props) {
           <View style={styles.arrowWrap}>
             <View
               style={[
-                styles.arrowLine,
-                { backgroundColor: isValidEmail ? theme.color.background : theme.color.mutedForeground },
-              ]}
-            />
-            <View
-              style={[
-                styles.arrowHeadTop,
+                styles.chevron,
                 {
                   borderTopColor: isValidEmail ? theme.color.background : theme.color.mutedForeground,
-                  borderRightColor: isValidEmail ? theme.color.background : theme.color.mutedForeground,
-                },
-              ]}
-            />
-            <View
-              style={[
-                styles.arrowHeadBottom,
-                {
-                  borderBottomColor: isValidEmail ? theme.color.background : theme.color.mutedForeground,
                   borderRightColor: isValidEmail ? theme.color.background : theme.color.mutedForeground,
                 },
               ]}
@@ -123,9 +109,11 @@ const styles = StyleSheet.create({
   input: {
     ...StyleSheet.absoluteFillObject,
     fontSize: 16,
-    lineHeight: 22,
-    paddingHorizontal: 18,
+    paddingHorizontal: 44,
     paddingVertical: 0,
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   submitButton: {
     position: "absolute",
@@ -133,7 +121,7 @@ const styles = StyleSheet.create({
     top: 11,
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -144,35 +132,18 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   arrowWrap: {
-    width: 16,
-    height: 16,
+    width: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
   },
-  arrowLine: {
-    position: "absolute",
-    width: 12,
-    height: 2,
-    borderRadius: 1,
-  },
-  arrowHeadTop: {
-    position: "absolute",
-    right: 1,
-    top: 2,
-    width: 7,
-    height: 7,
+  chevron: {
+    width: 8,
+    height: 8,
     borderTopWidth: 2,
     borderRightWidth: 2,
+    borderTopRightRadius: 2,
     transform: [{ rotate: "45deg" }],
-  },
-  arrowHeadBottom: {
-    position: "absolute",
-    right: 1,
-    bottom: 2,
-    width: 7,
-    height: 7,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    transform: [{ rotate: "-45deg" }],
+    marginLeft: -2,
   },
 });

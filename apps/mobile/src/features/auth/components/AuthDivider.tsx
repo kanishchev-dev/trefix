@@ -8,7 +8,7 @@ type Props = {
 export function AuthDivider({ theme }: Props) {
   return (
     <View style={styles.dividerRow}>
-      <View style={[styles.dividerLine, { backgroundColor: theme.color.glassBorder }]} />
+      <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
       <Text
         style={[
           styles.dividerText,
@@ -17,7 +17,7 @@ export function AuthDivider({ theme }: Props) {
       >
         или
       </Text>
-      <View style={[styles.dividerLine, { backgroundColor: theme.color.glassBorder }]} />
+      <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
     </View>
   );
 }
@@ -29,10 +29,14 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingTop: 10,
     paddingBottom: 6,
+    alignSelf: "center",
+    width: "60%",
+    maxWidth: 200,
   },
   dividerLine: {
     flex: 1,
-    height: StyleSheet.hairlineWidth,
+    height: 1,
+    opacity: 0.6,
   },
   dividerText: {
     fontSize: 12,
