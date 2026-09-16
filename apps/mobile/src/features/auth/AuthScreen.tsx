@@ -20,6 +20,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { AuthSocialButtons } from "./components/AuthSocialButtons";
 import { AuthDivider } from "./components/AuthDivider";
 import { AuthEmailField } from "./components/AuthEmailField";
+import { type AuthCopy } from "../../locales";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -28,12 +29,13 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
+  copy: AuthCopy;
   email: string;
   onEmailChange: (value: string) => void;
   onSubmitEmail: (value: string) => void;
 };
 
-export function AuthScreen({ theme, themeMode, email, onEmailChange, onSubmitEmail }: Props) {
+export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSubmitEmail }: Props) {
   const insets = useSafeAreaInsets();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const isFocused = useIsFocused();
@@ -122,12 +124,13 @@ export function AuthScreen({ theme, themeMode, email, onEmailChange, onSubmitEma
             <View style={[styles.inputWrapper, isKeyboardVisible && styles.inputWrapperKeyboard]}>
               {!isKeyboardVisible && (
                 <>
-                  <AuthSocialButtons theme={theme} themeMode={themeMode} />
-                  <AuthDivider theme={theme} />
+                  <AuthSocialButtons theme={theme} themeMode={themeMode} copy={copy} />
+                  <AuthDivider theme={theme} copy={copy} />
                 </>
               )}
               <AuthEmailField
                 theme={theme}
+                copy={copy}
                 value={email}
                 onChangeText={onEmailChange}
                 onSubmit={(submittedEmail) => {
@@ -149,19 +152,19 @@ export function AuthScreen({ theme, themeMode, email, onEmailChange, onSubmitEma
                 },
               ]}
             >
-              Нажимая «Продолжить», вы соглашаетесь с{" "}
+              {copy.legal.intro}{" "}
               <Text
                 style={[styles.link, { color: theme.color.foreground }]}
                 onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? "https://trefix.io/terms")}
               >
-                Условиями использования
+                {copy.legal.terms}
               </Text>{" "}
-              и{" "}
+              {copy.legal.conjunction}{" "}
               <Text
                 style={[styles.link, { color: theme.color.foreground }]}
                 onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.io/privacy")}
               >
-                Политикой конфиденциальности
+                {copy.legal.privacy}
               </Text>
               .
             </Text>

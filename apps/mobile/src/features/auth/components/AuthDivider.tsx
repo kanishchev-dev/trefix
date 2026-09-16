@@ -1,11 +1,13 @@
 import { StyleSheet, Text, View } from "react-native";
 import { type ThemeTokens } from "@workspace/tokens";
+import { type AuthCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
+  copy: AuthCopy;
 };
 
-export function AuthDivider({ theme }: Props) {
+export function AuthDivider({ theme, copy }: Props) {
   return (
     <View style={styles.dividerRow}>
       <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
@@ -15,7 +17,7 @@ export function AuthDivider({ theme }: Props) {
           { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
         ]}
       >
-        или
+        {copy.divider}
       </Text>
       <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
     </View>

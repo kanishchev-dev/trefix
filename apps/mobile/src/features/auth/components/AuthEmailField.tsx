@@ -4,15 +4,17 @@ import { GlassView } from "expo-glass-effect";
 
 import { mobileAuthEmailRequestSchema } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
+import { type AuthCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
+  copy: AuthCopy;
   value: string;
   onChangeText: (value: string) => void;
   onSubmit?: (email: string) => void;
 };
 
-export function AuthEmailField({ theme, value, onChangeText, onSubmit }: Props) {
+export function AuthEmailField({ theme, copy, value, onChangeText, onSubmit }: Props) {
   const [isFocused, setIsFocused] = useState(false);
   const normalizedEmail = value.trim();
   const isValidEmail = useMemo(
@@ -42,14 +44,14 @@ export function AuthEmailField({ theme, value, onChangeText, onSubmit }: Props) 
       ]}
     >
       <TextInput
-        accessibilityLabel="Электронная почта"
+        accessibilityLabel={copy.email.accessibilityLabel}
         autoCapitalize="none"
         autoComplete="email"
         autoCorrect={false}
         keyboardType="email-address"
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder={isFocused ? "" : "Электронная почта"}
+        placeholder={isFocused ? "" : copy.email.placeholder}
         placeholderTextColor={theme.color.mutedForeground}
         onChangeText={onChangeText}
         onSubmitEditing={handleSubmit}
@@ -69,7 +71,7 @@ export function AuthEmailField({ theme, value, onChangeText, onSubmit }: Props) 
       {showAction ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Продолжить"
+          accessibilityLabel={copy.email.submitAccessibilityLabel}
           disabled={!isValidEmail}
           onPress={handleSubmit}
           style={({ pressed }) => [

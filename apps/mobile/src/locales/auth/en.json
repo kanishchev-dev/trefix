@@ -1,0 +1,27 @@
+{
+  "socialButtons": {
+    "google": "Continue with Google",
+    "apple": "Continue with Apple"
+  },
+  "divider": "or",
+  "email": {
+    "accessibilityLabel": "Email",
+    "placeholder": "Email",
+    "submitAccessibilityLabel": "Continue"
+  },
+  "legal": {
+    "intro": "By tapping “Continue”, you agree to the",
+    "terms": "Terms of Use",
+    "conjunction": "and",
+    "privacy": "Privacy Policy"
+  },
+  "verification": {
+    "title": "Confirm sign-in",
+    "subtitlePrefix": "We sent a 4-digit code to",
+    "resendCountdownPrefix": "You can request another code in",
+    "resendButton": "Send code again",
+    "resendButtonBusy": "Sending...",
+    "codeAccessibilityLabel": "Verification code",
+    "back": "Back"
+  }
+}

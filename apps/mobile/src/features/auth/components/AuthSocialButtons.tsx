@@ -2,15 +2,17 @@ import { Pressable, StyleSheet, Text, View, Image, type ImageSourcePropType } fr
 import { GlassView } from "expo-glass-effect";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type AuthCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
+  copy: AuthCopy;
   onGooglePress?: () => void;
   onApplePress?: () => void;
 };
 
-export function AuthSocialButtons({ theme, themeMode, onGooglePress, onApplePress }: Props) {
+export function AuthSocialButtons({ theme, themeMode, copy, onGooglePress, onApplePress }: Props) {
   const googleIconSource: ImageSourcePropType =
     themeMode === "dark"
       ? require("../../../../assets/google-icon-dark.png")
@@ -20,7 +22,7 @@ export function AuthSocialButtons({ theme, themeMode, onGooglePress, onApplePres
     <View style={styles.root}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Продолжить с Google"
+        accessibilityLabel={copy.socialButtons.google}
         onPress={onGooglePress}
         style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       >
@@ -43,14 +45,14 @@ export function AuthSocialButtons({ theme, themeMode, onGooglePress, onApplePres
               { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
             ]}
           >
-            Продолжить с Google
+            {copy.socialButtons.google}
           </Text>
         </GlassView>
       </Pressable>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Продолжить с Apple"
+        accessibilityLabel={copy.socialButtons.apple}
         onPress={onApplePress}
         style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       >
@@ -73,7 +75,7 @@ export function AuthSocialButtons({ theme, themeMode, onGooglePress, onApplePres
               { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
             ]}
           >
-            Продолжить с Apple
+            {copy.socialButtons.apple}
           </Text>
         </GlassView>
       </Pressable>

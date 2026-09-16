@@ -12,9 +12,11 @@ import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type ThemeTokens } from "@workspace/tokens";
+import { formatCountdown, type AuthCopy } from "../../locales";
 
 type Props = {
   theme: ThemeTokens;
+  copy: AuthCopy;
   email: string;
   onSubmitCode: (code: string) => void;
 };
@@ -22,7 +24,7 @@ type Props = {
 const CODE_LENGTH = 4;
 const RESEND_AFTER_SECONDS = 59;
 
-export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
+export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Props) {
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const resendTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,7 +128,7 @@ export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
                 },
               ]}
             >
-              Подтвердите вход
+              {copy.verification.title}
             </Text>
 
             <Text
@@ -138,7 +140,7 @@ export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
                 },
               ]}
             >
-              Мы отправили четырёхзначный код на{" "}
+              {copy.verification.subtitlePrefix}{" "}
               <Text style={[styles.subtitleStrong, { color: theme.color.foreground }]}>{email}</Text>
             </Text>
 
@@ -163,7 +165,7 @@ export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
 
             <TextInput
               ref={inputRef}
-              accessibilityLabel="Код подтверждения"
+              accessibilityLabel={copy.verification.codeAccessibilityLabel}
               autoComplete="one-time-code"
               autoCorrect={false}
               keyboardType="number-pad"
@@ -186,7 +188,7 @@ export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
                     },
                   ]}
                 >
-                  Отправить код повторно можно через
+                  {copy.verification.resendCountdownPrefix}
                 </Text>
                 <Text
                   style={[
@@ -197,13 +199,13 @@ export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
                     },
                   ]}
                 >
-                  {formatTime(secondsRemaining)}
+                  {formatCountdown(secondsRemaining)}
                 </Text>
               </View>
             ) : (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Отправить код снова"
+                accessibilityLabel={copy.verification.resendButton}
                 disabled={isResending}
                 onPress={handleResend}
                 style={({ pressed }) => [
@@ -225,7 +227,7 @@ export function AuthVerificationScreen({ theme, email, onSubmitCode }: Props) {
                     },
                   ]}
                 >
-                  {isResending ? "Отправляем..." : "Отправить код снова"}
+                  {isResending ? copy.verification.resendButtonBusy : copy.verification.resendButton}
                 </Text>
               </Pressable>
             )}
@@ -279,12 +281,6 @@ function CodeCell({ theme, value, isActive }: CodeCellProps) {
       ) : null}
     </GlassView>
   );
-}
-
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 const styles = StyleSheet.create({
