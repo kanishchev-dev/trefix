@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
@@ -27,11 +28,15 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
+  email: string;
+  onEmailChange: (value: string) => void;
+  onSubmitEmail: (value: string) => void;
 };
 
-export function AuthScreen({ theme, themeMode }: Props) {
+export function AuthScreen({ theme, themeMode, email, onEmailChange, onSubmitEmail }: Props) {
   const insets = useSafeAreaInsets();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const isFocused = useIsFocused();
 
   const videoPlayer = useVideoPlayer(require("../../../assets/auth-background.mov"), (player) => {
     player.loop = true;
@@ -44,12 +49,19 @@ export function AuthScreen({ theme, themeMode }: Props) {
       : require("../../../assets/trefix-logo-dark.png");
 
   useEffect(() => {
-    void videoPlayer.play();
+    if (isFocused) {
+      void videoPlayer.play();
+      return;
+    }
 
+    videoPlayer.pause();
+  }, [isFocused, videoPlayer]);
+
+  useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
-    const showSubscription = Keyboard.addListener(showEvent, (event) => {
+    const showSubscription = Keyboard.addListener(showEvent, () => {
       LayoutAnimation.configureNext({
         duration: 0,
         update: { type: LayoutAnimation.Types.keyboard },
@@ -60,7 +72,7 @@ export function AuthScreen({ theme, themeMode }: Props) {
       });
       setKeyboardVisible(true);
     });
-    const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
       LayoutAnimation.configureNext({
         duration: 100,
         update: { type: LayoutAnimation.Types.keyboard },
@@ -76,7 +88,7 @@ export function AuthScreen({ theme, themeMode }: Props) {
       showSubscription.remove();
       hideSubscription.remove();
     };
-  }, [videoPlayer]);
+  }, []);
 
   return (
     <View style={[styles.root, { backgroundColor: theme.color.background }]}>
@@ -114,7 +126,15 @@ export function AuthScreen({ theme, themeMode }: Props) {
                   <AuthDivider theme={theme} />
                 </>
               )}
-              <AuthEmailField theme={theme} />
+              <AuthEmailField
+                theme={theme}
+                value={email}
+                onChangeText={onEmailChange}
+                onSubmit={(submittedEmail) => {
+                  onEmailChange(submittedEmail);
+                  onSubmitEmail(submittedEmail);
+                }}
+              />
             </View>
           </KeyboardAvoidingView>
 
@@ -196,5 +216,8 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: "center",
     paddingHorizontal: 10,
+  },
+  link: {
+    textDecorationLine: "none",
   },
 });

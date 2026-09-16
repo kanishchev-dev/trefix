@@ -7,14 +7,14 @@ import { type ThemeTokens } from "@workspace/tokens";
 
 type Props = {
   theme: ThemeTokens;
+  value: string;
+  onChangeText: (value: string) => void;
   onSubmit?: (email: string) => void;
 };
 
-export function AuthEmailField({ theme, onSubmit }: Props) {
-  const [email, setEmail] = useState("");
+export function AuthEmailField({ theme, value, onChangeText, onSubmit }: Props) {
   const [isFocused, setIsFocused] = useState(false);
-
-  const normalizedEmail = email.trim();
+  const normalizedEmail = value.trim();
   const isValidEmail = useMemo(
     () => mobileAuthEmailRequestSchema.safeParse({ email: normalizedEmail }).success,
     [normalizedEmail],
@@ -47,11 +47,11 @@ export function AuthEmailField({ theme, onSubmit }: Props) {
         autoComplete="email"
         autoCorrect={false}
         keyboardType="email-address"
-        onChangeText={setEmail}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={isFocused ? "" : "Электронная почта"}
         placeholderTextColor={theme.color.mutedForeground}
+        onChangeText={onChangeText}
         onSubmitEditing={handleSubmit}
         returnKeyType="send"
         selectionColor={theme.color.foreground}
@@ -63,7 +63,7 @@ export function AuthEmailField({ theme, onSubmit }: Props) {
             fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
-        value={email}
+        value={value}
       />
 
       {showAction ? (
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   input: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     fontSize: 16,
     paddingHorizontal: 44,
     paddingVertical: 0,
