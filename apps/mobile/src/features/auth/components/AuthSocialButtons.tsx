@@ -1,4 +1,13 @@
-import { Pressable, StyleSheet, Text, View, Image, type ImageSourcePropType } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Platform,
+  type ImageSourcePropType,
+} from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { GlassView } from "expo-glass-effect";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
@@ -8,11 +17,25 @@ type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: AuthCopy;
+  isLoading?: boolean;
+  isDisabled?: boolean;
+  showGoogleButton?: boolean;
+  showAppleButton?: boolean;
   onGooglePress?: () => void;
   onApplePress?: () => void;
 };
 
-export function AuthSocialButtons({ theme, themeMode, copy, onGooglePress, onApplePress }: Props) {
+export function AuthSocialButtons({
+  theme,
+  themeMode,
+  copy,
+  isLoading = false,
+  isDisabled = false,
+  showGoogleButton = true,
+  showAppleButton = false,
+  onGooglePress,
+  onApplePress,
+}: Props) {
   const googleIconSource: ImageSourcePropType =
     themeMode === "dark"
       ? require("../../../../assets/google-icon-dark.png")
@@ -20,65 +43,74 @@ export function AuthSocialButtons({ theme, themeMode, copy, onGooglePress, onApp
 
   return (
     <View style={styles.root}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.socialButtons.google}
-        onPress={onGooglePress}
-        style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
-      >
-        <GlassView
-          isInteractive
-          glassEffectStyle="regular"
-          tintColor={theme.color.glassTint}
-          style={[
-            styles.button,
-            {
-              borderColor: theme.color.glassBorder,
-              backgroundColor: theme.color.glassBackground,
-            },
-          ]}
+      {showGoogleButton ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={copy.socialButtons.google}
+          disabled={isLoading || isDisabled}
+          onPress={onGooglePress}
+          style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
         >
-          <Image source={googleIconSource} style={styles.googleIcon} resizeMode="contain" />
-          <Text
+          <GlassView
+            isInteractive
+            glassEffectStyle="regular"
+            tintColor={theme.color.glassTint}
             style={[
-              styles.label,
-              { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+              styles.button,
+              {
+                borderColor: theme.color.glassBorder,
+                backgroundColor: theme.color.glassBackground,
+              },
             ]}
           >
-            {copy.socialButtons.google}
-          </Text>
-        </GlassView>
-      </Pressable>
+            <Image
+              source={googleIconSource}
+              style={styles.googleIcon}
+              resizeMode="contain"
+            />
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.semibold,
+                },
+              ]}
+            >
+              {isLoading
+                ? copy.socialButtons.loading
+                : copy.socialButtons.google}
+            </Text>
+          </GlassView>
+        </Pressable>
+      ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.socialButtons.apple}
-        onPress={onApplePress}
-        style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
-      >
-        <GlassView
-          isInteractive
-          glassEffectStyle="regular"
-          tintColor={theme.color.glassTint}
-          style={[
-            styles.button,
-            {
-              borderColor: theme.color.glassBorder,
-              backgroundColor: theme.color.glassBackground,
-            },
-          ]}
-        >
-          <Text style={[styles.appleGlyph, { color: theme.color.foreground }]}></Text>
-          <Text
+      {showAppleButton && Platform.OS === "ios" ? (
+        <View style={styles.appleButtonWrap}>
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={
+              AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+            }
+            buttonStyle={
+              themeMode === "dark"
+                ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+            }
+            cornerRadius={20}
+            onPress={() => {
+              if (isLoading || isDisabled) {
+                return;
+              }
+
+              onApplePress?.();
+            }}
             style={[
-              styles.label,
-              { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+              styles.appleButton,
+              (isLoading || isDisabled) && styles.appleButtonDisabled,
             ]}
-          >
-            {copy.socialButtons.apple}
-          </Text>
-        </GlassView>
-      </Pressable>
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -108,9 +140,16 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
   },
-  appleGlyph: {
-    fontSize: 20,
-    lineHeight: 20,
+  appleButtonWrap: {
+    alignSelf: "stretch",
+    height: 56,
+  },
+  appleButton: {
+    width: "100%",
+    height: "100%",
+  },
+  appleButtonDisabled: {
+    opacity: 0.5,
   },
   label: {
     fontSize: 16,

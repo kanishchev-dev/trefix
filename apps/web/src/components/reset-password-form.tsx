@@ -8,8 +8,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheckIcon } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
 import { useAuth } from "@/components/auth-provider";
@@ -59,7 +70,10 @@ export function ResetPasswordForm(): ReactElement {
       const flattened = parsed.error.flatten().fieldErrors;
       notifyError(
         "Не удалось изменить пароль",
-        flattened.email?.[0] ?? flattened.code?.[0] ?? flattened.newPassword?.[0] ?? "Проверьте введённые данные",
+        flattened.email?.[0] ??
+          flattened.code?.[0] ??
+          flattened.newPassword?.[0] ??
+          "Проверьте введённые данные",
       );
       return;
     }
@@ -85,7 +99,9 @@ export function ResetPasswordForm(): ReactElement {
         </div>
         <div>
           <CardTitle className="text-2xl">Create a new password</CardTitle>
-          <CardDescription>Enter the recovery code from email and choose a new password.</CardDescription>
+          <CardDescription>
+            Enter the recovery code from email and choose a new password.
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -93,57 +109,82 @@ export function ResetPasswordForm(): ReactElement {
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="admin@example.com"
-                  value={values.email}
-                  onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
-                />
-              </Field>
+              <Input
+                id="email"
+                autoComplete="email"
+                inputMode="email"
+                placeholder="admin@example.com"
+                value={values.email}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }))
+                }
+              />
+            </Field>
 
             <Field>
               <FieldLabel htmlFor="code">Recovery code</FieldLabel>
-                <Input
-                  id="code"
-                  inputMode="numeric"
-                  placeholder="123456"
-                  value={values.code}
-                  onChange={(event) => setValues((current) => ({ ...current, code: event.target.value }))}
-                />
-              </Field>
+              <Input
+                id="code"
+                inputMode="numeric"
+                placeholder="123456"
+                value={values.code}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    code: event.target.value,
+                  }))
+                }
+              />
+            </Field>
 
             <Field>
               <FieldLabel htmlFor="newPassword">New password</FieldLabel>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="At least 8 characters"
-                  value={values.newPassword}
-                  onChange={(event) => setValues((current) => ({ ...current, newPassword: event.target.value }))}
-                />
-              </Field>
+              <Input
+                id="newPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="At least 8 characters"
+                value={values.newPassword}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    newPassword: event.target.value,
+                  }))
+                }
+              />
+            </Field>
 
             <Field>
-              <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Repeat the new password"
-                  value={values.confirmPassword}
-                  onChange={(event) => setValues((current) => ({ ...current, confirmPassword: event.target.value }))}
-                />
-              </Field>
+              <FieldLabel htmlFor="confirmPassword">
+                Confirm password
+              </FieldLabel>
+              <Input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repeat the new password"
+                value={values.confirmPassword}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+              />
+            </Field>
             <Field>
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 {isSubmitting ? "Updating..." : "Reset password"}
               </Button>
               <FieldDescription className="text-center text-slate-500">
                 Back to{" "}
-                <Link href="/login" className="font-medium text-slate-950 underline-offset-4 hover:underline">
+                <Link
+                  href="/login"
+                  className="font-medium text-slate-950 underline-offset-4 hover:underline"
+                >
                   login
                 </Link>
               </FieldDescription>

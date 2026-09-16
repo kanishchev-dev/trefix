@@ -1,7 +1,8 @@
 {
   "socialButtons": {
     "google": "Продолжить с Google",
-    "apple": "Продолжить с Apple"
+    "apple": "Продолжить с Apple",
+    "loading": "Входим..."
   },
   "divider": "или",
   "email": {
@@ -22,6 +23,19 @@
     "resendButton": "Отправить код снова",
     "resendButtonBusy": "Отправляем...",
     "codeAccessibilityLabel": "Код подтверждения",
+    "resendFailed": "Не удалось отправить новый код. Попробуйте еще раз.",
     "back": "Назад"
+  },
+  "status": {
+    "signedIn": "Вы вошли",
+    "logout": "Выйти"
+  },
+  "errors": {
+    "authFailedTitle": "Не удалось войти",
+    "authFailed": "Не удалось отправить код. Попробуйте еще раз.",
+    "verificationFailedTitle": "Не удалось подтвердить вход",
+    "verificationFailed": "Не удалось проверить код. Попробуйте еще раз.",
+    "socialFailedTitle": "Не удалось войти через соцсеть",
+    "socialFailed": "Не удалось завершить вход через соцсеть. Попробуйте еще раз."
   }
 }

@@ -2,7 +2,10 @@
   "expo": {
     "name": "Trefix",
     "slug": "workspace-mobile",
-    "scheme": "workspace-mobile",
+    "scheme": [
+      "workspace-mobile",
+      "workspace-auth"
+    ],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,7 +13,8 @@
     "ios": {
       "supportsTablet": true,
       "userInterfaceStyle": "automatic",
-      "bundleIdentifier": "com.kanishchev.workspace-mobile"
+      "usesAppleSignIn": true,
+      "bundleIdentifier": "Kanishchev.Trefix"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +24,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "userInterfaceStyle": "automatic",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "Kanishchev.Trefix"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,6 +42,13 @@
             "backgroundColor": "#09090b",
             "image": "./assets/trefix-logo-light.png"
           }
+        }
+      ],
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.678050162933-nuf4qfic96t8apc5qbf65udlp4n64582"
         }
       ],
       "expo-video",

@@ -10,16 +10,23 @@ type Props = {
 export function AuthDivider({ theme, copy }: Props) {
   return (
     <View style={styles.dividerRow}>
-      <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
+      <View
+        style={[styles.dividerLine, { backgroundColor: theme.color.border }]}
+      />
       <Text
         style={[
           styles.dividerText,
-          { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+          {
+            color: theme.color.mutedForeground,
+            fontFamily: theme.typography.fontFamily.sans.medium,
+          },
         ]}
       >
         {copy.divider}
       </Text>
-      <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
+      <View
+        style={[styles.dividerLine, { backgroundColor: theme.color.border }]}
+      />
     </View>
   );
 }

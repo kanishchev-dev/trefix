@@ -3,7 +3,8 @@ import type { ApiClientError } from "@workspace/api-client";
 const FRIENDLY_MESSAGES: Record<string, string> = {
   AUTH_INVALID_CREDENTIALS: "Неверный email или пароль",
   AUTH_EMAIL_ALREADY_EXISTS: "Пользователь с таким email уже существует",
-  AUTH_EMAIL_NOT_VERIFIED: "Email не подтверждён. Проверьте письмо или запросите повторную отправку кода",
+  AUTH_EMAIL_NOT_VERIFIED:
+    "Email не подтверждён. Проверьте письмо или запросите повторную отправку кода",
   AUTH_VERIFICATION_CODE_INVALID: "Неверный код подтверждения",
   AUTH_VERIFICATION_CODE_RATE_LIMIT: "Слишком много запросов. Попробуйте позже",
   AUTH_PASSWORD_RESET_CODE_INVALID: "Неверный код восстановления пароля",
@@ -24,7 +25,12 @@ const STATUS_MESSAGES: Record<number, string> = {
 
 export function getFriendlyAuthMessage(error: unknown): string {
   if (isApiClientError(error)) {
-    return FRIENDLY_MESSAGES[error.code ?? ""] || STATUS_MESSAGES[error.status] || error.message || "Произошла ошибка";
+    return (
+      FRIENDLY_MESSAGES[error.code ?? ""] ||
+      STATUS_MESSAGES[error.status] ||
+      error.message ||
+      "Произошла ошибка"
+    );
   }
 
   if (error instanceof Error) {
@@ -36,7 +42,12 @@ export function getFriendlyAuthMessage(error: unknown): string {
 
 export function getFriendlyApiMessage(error: unknown): string {
   if (isApiClientError(error)) {
-    return FRIENDLY_MESSAGES[error.code ?? ""] || STATUS_MESSAGES[error.status] || error.message || "Произошла ошибка";
+    return (
+      FRIENDLY_MESSAGES[error.code ?? ""] ||
+      STATUS_MESSAGES[error.status] ||
+      error.message ||
+      "Произошла ошибка"
+    );
   }
 
   if (error instanceof Error) {

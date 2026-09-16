@@ -1,4 +1,20 @@
-import { ApiClientError, authForgotPasswordSchema, authLoginSchema, authResetPasswordSchema, authRequestEmailVerificationSchema, authTokensSchema, authUserSchema, authVerifyEmailSchema, type AuthForgotPasswordInput, type AuthLoginInput, type AuthResetPasswordInput, type AuthRequestEmailVerificationInput, type AuthTokens, type AuthUser, type AuthVerifyEmailInput } from "@workspace/api-client";
+import {
+  ApiClientError,
+  authForgotPasswordSchema,
+  authLoginSchema,
+  authResetPasswordSchema,
+  authRequestEmailVerificationSchema,
+  authTokensSchema,
+  authUserSchema,
+  authVerifyEmailSchema,
+  type AuthForgotPasswordInput,
+  type AuthLoginInput,
+  type AuthResetPasswordInput,
+  type AuthRequestEmailVerificationInput,
+  type AuthTokens,
+  type AuthUser,
+  type AuthVerifyEmailInput,
+} from "@workspace/api-client";
 
 import { authPaths } from "@/lib/auth";
 
@@ -21,7 +37,11 @@ async function request<TResponse>(
   });
 
   if (!response.ok) {
-    const errorBody = (await response.json().catch(() => null)) as { message?: string; code?: string; statusCode?: number } | null;
+    const errorBody = (await response.json().catch(() => null)) as {
+      message?: string;
+      code?: string;
+      statusCode?: number;
+    } | null;
     throw new ApiClientError(
       errorBody?.message || `Request failed with status ${response.status}`,
       response.status,
@@ -39,7 +59,10 @@ async function request<TResponse>(
 
 export async function login(input: AuthLoginInput): Promise<AuthTokens> {
   const payload = authLoginSchema.parse(input);
-  const response = await request<unknown>(authPaths.login, { method: "POST", body: payload });
+  const response = await request<unknown>(authPaths.login, {
+    method: "POST",
+    body: payload,
+  });
   return authTokensSchema.parse(response);
 }
 
@@ -49,7 +72,9 @@ export async function getCurrentUser(): Promise<AuthUser> {
 }
 
 export async function refreshSession(): Promise<AuthTokens> {
-  const response = await request<unknown>(authPaths.refresh, { method: "POST" });
+  const response = await request<unknown>(authPaths.refresh, {
+    method: "POST",
+  });
   return authTokensSchema.parse(response);
 }
 
@@ -61,14 +86,24 @@ export async function logoutAll(): Promise<void> {
   await request<void>(authPaths.logoutAll, { method: "POST" });
 }
 
-export async function requestPasswordReset(input: AuthForgotPasswordInput): Promise<void> {
+export async function requestPasswordReset(
+  input: AuthForgotPasswordInput,
+): Promise<void> {
   const payload = authForgotPasswordSchema.parse(input);
-  await request<void>(authPaths.passwordResetRequest, { method: "POST", body: payload });
+  await request<void>(authPaths.passwordResetRequest, {
+    method: "POST",
+    body: payload,
+  });
 }
 
-export async function confirmPasswordReset(input: AuthResetPasswordInput): Promise<void> {
+export async function confirmPasswordReset(
+  input: AuthResetPasswordInput,
+): Promise<void> {
   const payload = authResetPasswordSchema.parse(input);
-  await request<void>(authPaths.passwordResetConfirm, { method: "POST", body: payload });
+  await request<void>(authPaths.passwordResetConfirm, {
+    method: "POST",
+    body: payload,
+  });
 }
 
 export async function verifyEmail(input: AuthVerifyEmailInput): Promise<void> {
@@ -76,7 +111,9 @@ export async function verifyEmail(input: AuthVerifyEmailInput): Promise<void> {
   await request<void>(authPaths.emailVerify, { method: "POST", body: payload });
 }
 
-export async function resendVerification(input: AuthRequestEmailVerificationInput): Promise<void> {
+export async function resendVerification(
+  input: AuthRequestEmailVerificationInput,
+): Promise<void> {
   const payload = authRequestEmailVerificationSchema.parse(input);
   await request<void>(authPaths.emailResend, { method: "POST", body: payload });
 }

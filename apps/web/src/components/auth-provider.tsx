@@ -1,9 +1,25 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 
-import type { AuthUser, ApiClientError, AuthLoginInput, AuthForgotPasswordInput, AuthResetPasswordInput, AuthVerifyEmailInput, AuthRequestEmailVerificationInput } from "@workspace/api-client";
+import type {
+  AuthUser,
+  ApiClientError,
+  AuthLoginInput,
+  AuthForgotPasswordInput,
+  AuthResetPasswordInput,
+  AuthVerifyEmailInput,
+  AuthRequestEmailVerificationInput,
+} from "@workspace/api-client";
 
 import {
   confirmPasswordReset,
@@ -35,7 +51,9 @@ type AuthContextValue = {
   requestPasswordRecovery: (input: AuthForgotPasswordInput) => Promise<void>;
   confirmPasswordRecovery: (input: AuthResetPasswordInput) => Promise<void>;
   verifyEmailAddress: (input: AuthVerifyEmailInput) => Promise<void>;
-  resendVerificationEmail: (input: AuthRequestEmailVerificationInput) => Promise<void>;
+  resendVerificationEmail: (
+    input: AuthRequestEmailVerificationInput,
+  ) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -44,7 +62,9 @@ function isApiClientError(error: unknown): error is ApiClientError {
   return Boolean(error && typeof error === "object" && "status" in error);
 }
 
-export function AuthProvider({ children }: Readonly<{ children: ReactNode }>): ReactElement {
+export function AuthProvider({
+  children,
+}: Readonly<{ children: ReactNode }>): ReactElement {
   const router = useRouter();
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -70,7 +90,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>): R
 
         setUser(null);
         setStatus("unauthenticated");
-        setError(isApiClientError(bootstrapError) ? getFriendlyAuthMessage(bootstrapError) : "Не удалось проверить авторизацию");
+        setError(
+          isApiClientError(bootstrapError)
+            ? getFriendlyAuthMessage(bootstrapError)
+            : "Не удалось проверить авторизацию",
+        );
       }
     }
 
@@ -97,7 +121,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>): R
           setUser(tokens.user);
           setStatus("authenticated");
           setError(null);
-          notifySuccess("Вход выполнен", `Добро пожаловать, ${tokens.user.email}`);
+          notifySuccess(
+            "Вход выполнен",
+            `Добро пожаловать, ${tokens.user.email}`,
+          );
           router.replace("/");
           router.refresh();
           return tokens.user;
@@ -156,7 +183,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>): R
       async requestPasswordRecovery(input) {
         try {
           await requestPasswordReset(input);
-          notifySuccess("Письмо отправлено", "Если адрес найден, инструкции уже отправлены на почту");
+          notifySuccess(
+            "Письмо отправлено",
+            "Если адрес найден, инструкции уже отправлены на почту",
+          );
         } catch (requestError) {
           const message = getFriendlyAuthMessage(requestError);
           setError(message);

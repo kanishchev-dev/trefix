@@ -7,7 +7,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
@@ -26,14 +32,19 @@ export function ForgotPasswordForm(): ReactElement {
 
     const parsed = authForgotPasswordSchema.safeParse({ email });
     if (!parsed.success) {
-      notifyError("Не удалось отправить письмо", parsed.error.flatten().fieldErrors.email?.[0] ?? "Проверьте email");
+      notifyError(
+        "Не удалось отправить письмо",
+        parsed.error.flatten().fieldErrors.email?.[0] ?? "Проверьте email",
+      );
       return;
     }
 
     setIsSubmitting(true);
     try {
       await requestPasswordRecovery(parsed.data);
-      router.push(`/reset-password?email=${encodeURIComponent(parsed.data.email)}`);
+      router.push(
+        `/reset-password?email=${encodeURIComponent(parsed.data.email)}`,
+      );
     } catch {
       // Error toast is already shown by AuthProvider.
     } finally {
@@ -46,7 +57,8 @@ export function ForgotPasswordForm(): ReactElement {
       <CardHeader>
         <CardTitle>Recover your account</CardTitle>
         <CardDescription>
-          Enter your email below and we will send recovery instructions to your inbox.
+          Enter your email below and we will send recovery instructions to your
+          inbox.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -69,7 +81,10 @@ export function ForgotPasswordForm(): ReactElement {
               </Button>
               <div className="text-center text-sm text-muted-foreground">
                 Remembered your password?{" "}
-                <Link href="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+                <Link
+                  href="/login"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                >
                   Return to login
                 </Link>
               </div>

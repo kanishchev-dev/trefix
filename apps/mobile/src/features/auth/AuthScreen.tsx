@@ -22,7 +22,10 @@ import { AuthDivider } from "./components/AuthDivider";
 import { AuthEmailField } from "./components/AuthEmailField";
 import { type AuthCopy } from "../../locales";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -31,19 +34,43 @@ type Props = {
   themeMode: ThemeMode;
   copy: AuthCopy;
   email: string;
+  isEmailSubmitting?: boolean;
+  isSocialSubmitting?: boolean;
+  isSocialDisabled?: boolean;
+  showGoogleButton?: boolean;
+  showAppleButton?: boolean;
   onEmailChange: (value: string) => void;
-  onSubmitEmail: (value: string) => void;
+  onSubmitEmail: (value: string) => void | Promise<void>;
+  onGooglePress?: () => void | Promise<void>;
+  onApplePress?: () => void | Promise<void>;
 };
 
-export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSubmitEmail }: Props) {
+export function AuthScreen({
+  theme,
+  themeMode,
+  copy,
+  email,
+  isEmailSubmitting = false,
+  isSocialSubmitting = false,
+  isSocialDisabled = false,
+  showGoogleButton = true,
+  showAppleButton = false,
+  onEmailChange,
+  onSubmitEmail,
+  onGooglePress,
+  onApplePress,
+}: Props) {
   const insets = useSafeAreaInsets();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const isFocused = useIsFocused();
 
-  const videoPlayer = useVideoPlayer(require("../../../assets/auth-background.mov"), (player) => {
-    player.loop = true;
-    player.muted = true;
-  });
+  const videoPlayer = useVideoPlayer(
+    require("../../../assets/auth-background.mov"),
+    (player) => {
+      player.loop = true;
+      player.muted = true;
+    },
+  );
 
   const logoSource =
     themeMode === "dark"
@@ -60,8 +87,10 @@ export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSub
   }, [isFocused, videoPlayer]);
 
   useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const showSubscription = Keyboard.addListener(showEvent, () => {
       LayoutAnimation.configureNext({
@@ -108,10 +137,19 @@ export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSub
       />
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}>
+        <View
+          style={[
+            styles.content,
+            { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 },
+          ]}
+        >
           {/* Header - Static */}
           <View style={styles.logoContainer}>
-            <Image source={logoSource} style={styles.logo} resizeMode="contain" />
+            <Image
+              source={logoSource}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Center - Keyboard Avoiding Area */}
@@ -121,10 +159,25 @@ export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSub
             style={styles.inputZone}
           >
             <View style={styles.spacer} />
-            <View style={[styles.inputWrapper, isKeyboardVisible && styles.inputWrapperKeyboard]}>
+            <View
+              style={[
+                styles.inputWrapper,
+                isKeyboardVisible && styles.inputWrapperKeyboard,
+              ]}
+            >
               {!isKeyboardVisible && (
                 <>
-                  <AuthSocialButtons theme={theme} themeMode={themeMode} copy={copy} />
+                  <AuthSocialButtons
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    isLoading={isSocialSubmitting}
+                    isDisabled={isSocialDisabled}
+                    showGoogleButton={showGoogleButton}
+                    showAppleButton={showAppleButton}
+                    onGooglePress={onGooglePress}
+                    onApplePress={onApplePress}
+                  />
                   <AuthDivider theme={theme} copy={copy} />
                 </>
               )}
@@ -132,6 +185,7 @@ export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSub
                 theme={theme}
                 copy={copy}
                 value={email}
+                isSubmitting={isEmailSubmitting}
                 onChangeText={onEmailChange}
                 onSubmit={(submittedEmail) => {
                   onEmailChange(submittedEmail);
@@ -155,14 +209,24 @@ export function AuthScreen({ theme, themeMode, copy, email, onEmailChange, onSub
               {copy.legal.intro}{" "}
               <Text
                 style={[styles.link, { color: theme.color.foreground }]}
-                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? "https://trefix.io/terms")}
+                onPress={() =>
+                  Linking.openURL(
+                    process.env.EXPO_PUBLIC_TERMS_URL ??
+                      "https://trefix.io/terms",
+                  )
+                }
               >
                 {copy.legal.terms}
               </Text>{" "}
               {copy.legal.conjunction}{" "}
               <Text
                 style={[styles.link, { color: theme.color.foreground }]}
-                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.io/privacy")}
+                onPress={() =>
+                  Linking.openURL(
+                    process.env.EXPO_PUBLIC_PRIVACY_URL ??
+                      "https://trefix.io/privacy",
+                  )
+                }
               >
                 {copy.legal.privacy}
               </Text>

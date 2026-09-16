@@ -1,7 +1,8 @@
 {
   "socialButtons": {
     "google": "Continue with Google",
-    "apple": "Continue with Apple"
+    "apple": "Continue with Apple",
+    "loading": "Signing in..."
   },
   "divider": "or",
   "email": {
@@ -22,6 +23,19 @@
     "resendButton": "Send code again",
     "resendButtonBusy": "Sending...",
     "codeAccessibilityLabel": "Verification code",
+    "resendFailed": "Could not send a new code. Please try again.",
     "back": "Back"
+  },
+  "status": {
+    "signedIn": "Signed in",
+    "logout": "Log out"
+  },
+  "errors": {
+    "authFailedTitle": "Sign-in failed",
+    "authFailed": "Could not send the code. Please try again.",
+    "verificationFailedTitle": "Verification failed",
+    "verificationFailed": "Could not verify the code. Please try again.",
+    "socialFailedTitle": "Social sign-in failed",
+    "socialFailed": "Could not finish social sign-in. Please try again."
   }
 }

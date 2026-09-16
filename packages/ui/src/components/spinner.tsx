@@ -1,5 +1,5 @@
-import { cn } from "cn"
-import { Loader2Icon } from "lucide-react"
+import { cn } from "cn";
+import { Loader2Icon } from "lucide-react";
 
 function Spinner({
   className,
@@ -13,7 +13,7 @@ function Spinner({
       className={cn("size-4 animate-spin", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Spinner }
+export { Spinner };

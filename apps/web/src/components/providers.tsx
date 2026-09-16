@@ -7,7 +7,9 @@ import { TooltipProvider } from "@workspace/ui/components/tooltip";
 
 import { AuthProvider } from "@/components/auth-provider";
 
-export function Providers({ children }: Readonly<{ children: ReactNode }>): ReactElement {
+export function Providers({
+  children,
+}: Readonly<{ children: ReactNode }>): ReactElement {
   return (
     <TooltipProvider>
       <AuthProvider>{children}</AuthProvider>

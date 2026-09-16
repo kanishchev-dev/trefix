@@ -7,7 +7,13 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
@@ -35,7 +41,12 @@ export function LoginForm({
     const parsed = authLoginSchema.safeParse(values);
     if (!parsed.success) {
       const flattened = parsed.error.flatten().fieldErrors;
-      notifyError("Не удалось войти", flattened.email?.[0] ?? flattened.password?.[0] ?? "Проверьте введённые данные");
+      notifyError(
+        "Не удалось войти",
+        flattened.email?.[0] ??
+          flattened.password?.[0] ??
+          "Проверьте введённые данные",
+      );
       return;
     }
 
@@ -55,7 +66,9 @@ export function LoginForm({
       <Card>
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardDescription>
+            Enter your email below to login to your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit}>
@@ -67,13 +80,21 @@ export function LoginForm({
                   type="email"
                   placeholder="john.dow@mail.com"
                   value={values.email}
-                  onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }))
+                  }
                 />
               </Field>
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link href="/forgot-password" className="ml-auto inline-block text-sm underline-offset-4 hover:underline">
+                  <Link
+                    href="/forgot-password"
+                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                  >
                     Forgot your password?
                   </Link>
                 </div>
@@ -82,7 +103,12 @@ export function LoginForm({
                   type="password"
                   placeholder="••••••••••"
                   value={values.password}
-                  onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }))
+                  }
                 />
               </Field>
               <Field>

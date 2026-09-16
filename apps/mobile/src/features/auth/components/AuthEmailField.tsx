@@ -10,15 +10,25 @@ type Props = {
   theme: ThemeTokens;
   copy: AuthCopy;
   value: string;
+  isSubmitting?: boolean;
   onChangeText: (value: string) => void;
   onSubmit?: (email: string) => void;
 };
 
-export function AuthEmailField({ theme, copy, value, onChangeText, onSubmit }: Props) {
+export function AuthEmailField({
+  theme,
+  copy,
+  value,
+  isSubmitting = false,
+  onChangeText,
+  onSubmit,
+}: Props) {
   const [isFocused, setIsFocused] = useState(false);
   const normalizedEmail = value.trim();
   const isValidEmail = useMemo(
-    () => mobileAuthEmailRequestSchema.safeParse({ email: normalizedEmail }).success,
+    () =>
+      mobileAuthEmailRequestSchema.safeParse({ email: normalizedEmail })
+        .success,
     [normalizedEmail],
   );
   const showAction = normalizedEmail.length > 0;
@@ -49,6 +59,7 @@ export function AuthEmailField({ theme, copy, value, onChangeText, onSubmit }: P
         autoComplete="email"
         autoCorrect={false}
         keyboardType="email-address"
+        editable={!isSubmitting}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={isFocused ? "" : copy.email.placeholder}
@@ -72,15 +83,20 @@ export function AuthEmailField({ theme, copy, value, onChangeText, onSubmit }: P
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={copy.email.submitAccessibilityLabel}
-          disabled={!isValidEmail}
+          disabled={!isValidEmail || isSubmitting}
           onPress={handleSubmit}
           style={({ pressed }) => [
             styles.submitButton,
             {
-              backgroundColor: isValidEmail ? theme.color.foreground : theme.color.glassBorder,
+              backgroundColor: isValidEmail
+                ? theme.color.foreground
+                : theme.color.glassBorder,
             },
-            pressed && isValidEmail && styles.submitButtonPressed,
-            !isValidEmail && styles.submitButtonDisabled,
+            pressed &&
+              isValidEmail &&
+              !isSubmitting &&
+              styles.submitButtonPressed,
+            (!isValidEmail || isSubmitting) && styles.submitButtonDisabled,
           ]}
         >
           <View style={styles.arrowWrap}>
@@ -88,8 +104,12 @@ export function AuthEmailField({ theme, copy, value, onChangeText, onSubmit }: P
               style={[
                 styles.chevron,
                 {
-                  borderTopColor: isValidEmail ? theme.color.background : theme.color.mutedForeground,
-                  borderRightColor: isValidEmail ? theme.color.background : theme.color.mutedForeground,
+                  borderTopColor: isValidEmail
+                    ? theme.color.background
+                    : theme.color.mutedForeground,
+                  borderRightColor: isValidEmail
+                    ? theme.color.background
+                    : theme.color.mutedForeground,
                 },
               ]}
             />

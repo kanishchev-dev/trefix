@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   description: "Admin frontend for Trefix",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>): ReactElement {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>): ReactElement {
   return (
     <html lang="ru">
       <body>

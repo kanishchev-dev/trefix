@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react";
-import { Image, Pressable, StyleSheet, View, useColorScheme } from "react-native";
+import {
+  Alert,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+  Platform,
+  useColorScheme,
+} from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
@@ -13,11 +25,36 @@ import {
   Inter_700Bold,
   Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
+import {
+  type AuthTokens,
+  type MobileAuthChallenge,
+} from "@workspace/api-client";
 import { getMobileThemeTokens, type ThemeMode } from "@workspace/tokens";
 
+import { AuthenticatedScreen } from "./src/features/auth/AuthenticatedScreen";
 import { AuthScreen } from "./src/features/auth/AuthScreen";
 import { AuthVerificationScreen } from "./src/features/auth/AuthVerificationScreen";
-import { getAuthCopy, getAppLanguage, type AppLanguage, type AuthCopy } from "./src/locales";
+import {
+  requestEmailOtp,
+  signInWithAppleNative,
+  signInWithGoogleNative,
+  verifyEmailOtp,
+} from "./src/lib/auth-api";
+import {
+  clearAuthSession,
+  loadAuthSession,
+  saveAuthSession,
+} from "./src/lib/auth-session";
+import {
+  getGoogleSigninModule,
+  isGoogleSigninAvailable,
+} from "./src/lib/google-signin";
+import {
+  getAuthCopy,
+  getAppLanguage,
+  type AppLanguage,
+  type AuthCopy,
+} from "./src/locales";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -40,7 +77,12 @@ function VerificationHeader({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.headerRoot, { backgroundColor: "#00000000", paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.headerRoot,
+        { backgroundColor: "#00000000", paddingTop: insets.top },
+      ]}
+    >
       <View style={styles.headerInner}>
         <Pressable
           accessibilityRole="button"
@@ -51,7 +93,11 @@ function VerificationHeader({
           <View style={styles.backChevron} />
         </Pressable>
 
-        <Image source={logoSource} style={styles.headerLogo} resizeMode="contain" />
+        <Image
+          source={logoSource}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
 
         <View style={styles.headerSpacer} />
       </View>
@@ -62,6 +108,18 @@ function VerificationHeader({
 export default function App() {
   const colorScheme = useColorScheme();
   const [email, setEmail] = useState("");
+  const [challenge, setChallenge] = useState<MobileAuthChallenge | null>(null);
+  const [session, setSession] = useState<AuthTokens | null>(null);
+  const [isHydratingSession, setIsHydratingSession] = useState(true);
+  const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
+  const [isVerificationSubmitting, setIsVerificationSubmitting] =
+    useState(false);
+  const [isSocialSubmitting, setIsSocialSubmitting] = useState(false);
+  const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
+  const [isGoogleAuthAvailable, setIsGoogleAuthAvailable] = useState(false);
+  const googleClientId =
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ??
+    "678050162933-nuf4qfic96t8apc5qbf65udlp4n64582.apps.googleusercontent.com";
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -71,12 +129,79 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    let isActive = true;
+
+    async function hydrateSession(): Promise<void> {
+      const storedSession = await loadAuthSession();
+      if (!isActive) {
+        return;
+      }
+
+      setSession(storedSession);
+      setIsHydratingSession(false);
+    }
+
+    void hydrateSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const googleSigninModule = getGoogleSigninModule();
+    if (!googleSigninModule) {
+      setIsGoogleAuthAvailable(false);
+      return;
+    }
+
+    googleSigninModule.GoogleSignin.configure({
+      webClientId: googleClientId,
+      iosClientId: googleClientId,
+      offlineAccess: false,
+    });
+    setIsGoogleAuthAvailable(true);
+  }, [googleClientId]);
+
+  useEffect(() => {
+    if (isGoogleSigninAvailable()) {
+      setIsGoogleAuthAvailable(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function resolveAppleAvailability(): Promise<void> {
+      if (Platform.OS !== "ios") {
+        if (isActive) {
+          setIsAppleAuthAvailable(false);
+        }
+        return;
+      }
+
+      const available = await AppleAuthentication.isAvailableAsync();
+      if (isActive) {
+        setIsAppleAuthAvailable(available);
+      }
+    }
+
+    void resolveAppleAvailability();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const isReady = (fontsLoaded || fontError) && !isHydratingSession;
+
+  useEffect(() => {
+    if (isReady) {
       void SplashScreen.hideAsync();
     }
-  }, [fontError, fontsLoaded]);
+  }, [isReady]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!isReady) {
     return null;
   }
 
@@ -88,6 +213,127 @@ export default function App() {
     themeMode === "dark"
       ? require("./assets/trefix-logo-light.png")
       : require("./assets/trefix-logo-dark.png");
+
+  async function handleEmailSubmit(
+    submittedEmail: string,
+    onSuccess: () => void,
+  ): Promise<void> {
+    const normalizedEmail = submittedEmail.trim();
+
+    setIsEmailSubmitting(true);
+    try {
+      const nextChallenge = await requestEmailOtp(normalizedEmail);
+      setEmail(nextChallenge.email);
+      setChallenge(nextChallenge);
+      onSuccess();
+    } catch (error) {
+      Alert.alert(
+        copy.errors.authFailedTitle,
+        error instanceof Error ? error.message : copy.errors.authFailed,
+      );
+    } finally {
+      setIsEmailSubmitting(false);
+    }
+  }
+
+  async function handleVerificationSubmit(code: string): Promise<void> {
+    const activeChallenge = challenge;
+    if (!activeChallenge) {
+      return;
+    }
+
+    setIsVerificationSubmitting(true);
+    try {
+      const tokens = await verifyEmailOtp(activeChallenge.email, code);
+      await saveAuthSession(tokens);
+      setSession(tokens);
+    } catch (error) {
+      Alert.alert(
+        copy.errors.verificationFailedTitle,
+        error instanceof Error ? error.message : copy.errors.verificationFailed,
+      );
+    } finally {
+      setIsVerificationSubmitting(false);
+    }
+  }
+
+  async function handleResendCode(): Promise<MobileAuthChallenge> {
+    const activeChallenge = challenge;
+    if (!activeChallenge) {
+      throw new Error("Verification challenge is missing");
+    }
+
+    const nextChallenge = await requestEmailOtp(activeChallenge.email);
+    setEmail(nextChallenge.email);
+    setChallenge(nextChallenge);
+    return nextChallenge;
+  }
+
+  async function handleSocialPress(): Promise<void> {
+    setIsSocialSubmitting(true);
+    try {
+      const tokens = await signInWithGoogleNative();
+      if (!tokens) {
+        return;
+      }
+
+      await saveAuthSession(tokens);
+      setSession(tokens);
+    } catch (error) {
+      Alert.alert(
+        copy.errors.socialFailedTitle,
+        error instanceof Error ? error.message : copy.errors.socialFailed,
+      );
+    } finally {
+      setIsSocialSubmitting(false);
+    }
+  }
+
+  async function handleApplePress(): Promise<void> {
+    setIsSocialSubmitting(true);
+    try {
+      const tokens = await signInWithAppleNative();
+      if (!tokens) {
+        return;
+      }
+
+      await saveAuthSession(tokens);
+      setSession(tokens);
+    } catch (error) {
+      Alert.alert(
+        copy.errors.socialFailedTitle,
+        error instanceof Error ? error.message : copy.errors.socialFailed,
+      );
+    } finally {
+      setIsSocialSubmitting(false);
+    }
+  }
+
+  async function handleLogout(): Promise<void> {
+    await clearAuthSession().catch(() => undefined);
+    setSession(null);
+    setChallenge(null);
+    setEmail("");
+  }
+
+  if (session) {
+    return (
+      <SafeAreaProvider>
+        <AuthenticatedScreen
+          theme={theme}
+          themeMode={themeMode}
+          copy={copy}
+          session={session}
+          onLogout={() => {
+            void handleLogout();
+          }}
+        />
+        <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+      </SafeAreaProvider>
+    );
+  }
+
+  const isAuthBusy = isEmailSubmitting || isSocialSubmitting;
 
   return (
     <SafeAreaProvider>
@@ -107,10 +353,23 @@ export default function App() {
                 themeMode={themeMode}
                 copy={copy}
                 email={email}
+                isEmailSubmitting={isAuthBusy}
+                isSocialSubmitting={isSocialSubmitting}
+                isSocialDisabled={isAuthBusy}
+                showGoogleButton={isGoogleAuthAvailable}
+                showAppleButton={isAppleAuthAvailable}
                 onEmailChange={setEmail}
                 onSubmitEmail={(submittedEmail) => {
                   setEmail(submittedEmail);
-                  navigation.navigate("verification");
+                  void handleEmailSubmit(submittedEmail, () =>
+                    navigation.navigate("verification"),
+                  );
+                }}
+                onGooglePress={() => {
+                  void handleSocialPress();
+                }}
+                onApplePress={() => {
+                  void handleApplePress();
                 }}
               />
             )}
@@ -127,7 +386,21 @@ export default function App() {
               ),
             }}
           >
-            {() => <AuthVerificationScreen theme={theme} copy={copy} email={email} onSubmitCode={() => {}} />}
+            {() =>
+              challenge ? (
+                <AuthVerificationScreen
+                  theme={theme}
+                  copy={copy}
+                  email={email}
+                  challenge={challenge}
+                  isSubmitting={isVerificationSubmitting}
+                  onSubmitCode={(submittedCode) => {
+                    void handleVerificationSubmit(submittedCode);
+                  }}
+                  onResendCode={() => handleResendCode()}
+                />
+              ) : null
+            }
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>

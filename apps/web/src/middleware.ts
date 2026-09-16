@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_BASE_URL = process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
+const BACKEND_BASE_URL =
+  process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
 const ACCESS_COOKIE = "trefix_access_token";
 const REFRESH_COOKIE = "trefix_refresh_token";
 const SESSION_COOKIE = "trefix_session_id";
 const PUBLIC_ROUTES = ["/login", "/forgot-password", "/reset-password"];
 
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  return PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 }
 
 function isAssetRoute(pathname: string): boolean {
-  return pathname.startsWith("/_next") || pathname.startsWith("/api") || pathname === "/favicon.ico" || pathname.includes(".");
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname === "/favicon.ico" ||
+    pathname.includes(".")
+  );
 }
 
 function decodeJwtExp(token: string): number | null {
@@ -37,7 +45,17 @@ function clearAuthCookies(response: NextResponse): NextResponse {
   return response;
 }
 
-async function refreshSession(request: NextRequest): Promise<{ ok: boolean; tokens?: { accessToken: string; refreshToken: string; sessionId: string; accessTokenExpiresIn: number } }> {
+async function refreshSession(
+  request: NextRequest,
+): Promise<{
+  ok: boolean;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+    sessionId: string;
+    accessTokenExpiresIn: number;
+  };
+}> {
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
 
   if (!refreshToken) {
@@ -66,7 +84,15 @@ async function refreshSession(request: NextRequest): Promise<{ ok: boolean; toke
   return { ok: true, tokens };
 }
 
-function writeAuthCookies(response: NextResponse, tokens: { accessToken: string; refreshToken: string; sessionId: string; accessTokenExpiresIn: number }): NextResponse {
+function writeAuthCookies(
+  response: NextResponse,
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    sessionId: string;
+    accessTokenExpiresIn: number;
+  },
+): NextResponse {
   const isProduction = process.env.NODE_ENV === "production";
   const refreshMaxAge = 60 * 60 * 24 * 30;
 
@@ -95,7 +121,9 @@ function writeAuthCookies(response: NextResponse, tokens: { accessToken: string;
   return response;
 }
 
-async function ensureActiveSession(request: NextRequest): Promise<{ allowed: boolean; response?: NextResponse }> {
+async function ensureActiveSession(
+  request: NextRequest,
+): Promise<{ allowed: boolean; response?: NextResponse }> {
   const pathname = request.nextUrl.pathname;
 
   if (isAssetRoute(pathname)) {
@@ -105,7 +133,9 @@ async function ensureActiveSession(request: NextRequest): Promise<{ allowed: boo
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   const accessExpiry = accessToken ? decodeJwtExp(accessToken) : null;
-  const accessIsFresh = Boolean(accessToken && accessExpiry && accessExpiry > Date.now());
+  const accessIsFresh = Boolean(
+    accessToken && accessExpiry && accessExpiry > Date.now(),
+  );
 
   if (isPublicRoute(pathname)) {
     if (accessIsFresh || refreshToken) {
@@ -122,7 +152,10 @@ async function ensureActiveSession(request: NextRequest): Promise<{ allowed: boo
 
       if (refreshed?.ok && refreshed.tokens) {
         const response = NextResponse.redirect(new URL("/", request.url));
-        return { allowed: false, response: writeAuthCookies(response, refreshed.tokens) };
+        return {
+          allowed: false,
+          response: writeAuthCookies(response, refreshed.tokens),
+        };
       }
     }
 
@@ -137,7 +170,10 @@ async function ensureActiveSession(request: NextRequest): Promise<{ allowed: boo
     const refreshed = await refreshSession(request).catch(() => null);
     if (refreshed?.ok && refreshed.tokens) {
       const response = NextResponse.next();
-      return { allowed: true, response: writeAuthCookies(response, refreshed.tokens) };
+      return {
+        allowed: true,
+        response: writeAuthCookies(response, refreshed.tokens),
+      };
     }
   }
 

@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const BACKEND_BASE_URL = process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
+const BACKEND_BASE_URL =
+  process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
 const ACCESS_COOKIE = "trefix_access_token";
 const REFRESH_COOKIE = "trefix_refresh_token";
 const SESSION_COOKIE = "trefix_session_id";
@@ -60,7 +61,10 @@ function isProduction() {
   return process.env.NODE_ENV === "production";
 }
 
-function setAuthCookies(response: NextResponse, tokens: AuthTokens): NextResponse {
+function setAuthCookies(
+  response: NextResponse,
+  tokens: AuthTokens,
+): NextResponse {
   const common = {
     httpOnly: true,
     sameSite: "lax" as const,
@@ -110,13 +114,17 @@ async function responseFromBackend(response: Response): Promise<NextResponse> {
   });
 }
 
-async function refreshIfNeeded(request: NextRequest): Promise<AuthTokens | null> {
+async function refreshIfNeeded(
+  request: NextRequest,
+): Promise<AuthTokens | null> {
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   if (!refreshToken) {
     return null;
   }
 
-  const response = await forwardToBackend(request, ["refresh"], "POST", { refreshToken });
+  const response = await forwardToBackend(request, ["refresh"], "POST", {
+    refreshToken,
+  });
   if (!response.ok) {
     return null;
   }
@@ -124,7 +132,9 @@ async function refreshIfNeeded(request: NextRequest): Promise<AuthTokens | null>
   return (await response.json()) as AuthTokens;
 }
 
-async function resolveAccessToken(request: NextRequest): Promise<string | null> {
+async function resolveAccessToken(
+  request: NextRequest,
+): Promise<string | null> {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   if (accessToken) {
     return accessToken;
@@ -136,7 +146,13 @@ async function resolveAccessToken(request: NextRequest): Promise<string | null> 
 
 async function handleMe(request: NextRequest): Promise<NextResponse> {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
-  let response = await forwardToBackend(request, ["me"], "GET", undefined, accessToken);
+  let response = await forwardToBackend(
+    request,
+    ["me"],
+    "GET",
+    undefined,
+    accessToken,
+  );
 
   if (response.status === 401) {
     const refreshedTokens = await refreshIfNeeded(request);
@@ -152,7 +168,13 @@ async function handleMe(request: NextRequest): Promise<NextResponse> {
       return clearAuthCookies(unauthorized);
     }
 
-    response = await forwardToBackend(request, ["me"], "GET", undefined, refreshedTokens.accessToken);
+    response = await forwardToBackend(
+      request,
+      ["me"],
+      "GET",
+      undefined,
+      refreshedTokens.accessToken,
+    );
     const nextResponse = await responseFromBackend(response);
     return setAuthCookies(nextResponse, refreshedTokens);
   }
@@ -189,20 +211,35 @@ async function handleLogin(request: NextRequest): Promise<NextResponse> {
   return setAuthCookies(NextResponse.json(tokens, { status: 200 }), tokens);
 }
 
-async function handleLogout(request: NextRequest, segments: string[]): Promise<NextResponse> {
+async function handleLogout(
+  request: NextRequest,
+  segments: string[],
+): Promise<NextResponse> {
   const accessToken = await resolveAccessToken(request);
-  const response = await forwardToBackend(request, segments, "POST", undefined, accessToken);
+  const response = await forwardToBackend(
+    request,
+    segments,
+    "POST",
+    undefined,
+    accessToken,
+  );
   const nextResponse = await responseFromBackend(response);
   return clearAuthCookies(nextResponse);
 }
 
-async function handleGenericPost(request: NextRequest, segments: string[]): Promise<NextResponse> {
+async function handleGenericPost(
+  request: NextRequest,
+  segments: string[],
+): Promise<NextResponse> {
   const body = await readJsonBody(request);
   const response = await forwardToBackend(request, segments, "POST", body);
   return responseFromBackend(response);
 }
 
-export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await context.params;
   const normalizedPath = path.join("/");
 
@@ -220,7 +257,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
   );
 }
 
-export async function POST(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await context.params;
   const normalizedPath = path.join("/");
 

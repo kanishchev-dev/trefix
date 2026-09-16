@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { type MobileAuthChallenge } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
 import { formatCountdown, type AuthCopy } from "../../locales";
 
@@ -18,26 +20,47 @@ type Props = {
   theme: ThemeTokens;
   copy: AuthCopy;
   email: string;
-  onSubmitCode: (code: string) => void;
+  challenge: MobileAuthChallenge;
+  isSubmitting?: boolean;
+  onSubmitCode: (code: string) => void | Promise<void>;
+  onResendCode: () => Promise<MobileAuthChallenge>;
 };
 
 const CODE_LENGTH = 4;
-const RESEND_AFTER_SECONDS = 59;
 
-export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Props) {
+export function AuthVerificationScreen({
+  theme,
+  copy,
+  email,
+  challenge,
+  isSubmitting = false,
+  onSubmitCode,
+  onResendCode,
+}: Props) {
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const resendTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [code, setCode] = useState("");
-  const [secondsRemaining, setSecondsRemaining] = useState(RESEND_AFTER_SECONDS);
+  const [secondsRemaining, setSecondsRemaining] = useState(
+    challenge.resendAfterSeconds,
+  );
   const [isResending, setIsResending] = useState(false);
 
-  const normalizedCode = useMemo(() => code.replace(/\D/g, "").slice(0, CODE_LENGTH), [code]);
+  const normalizedCode = useMemo(
+    () => code.replace(/\D/g, "").slice(0, CODE_LENGTH),
+    [code],
+  );
   const canSubmit = normalizedCode.length === CODE_LENGTH;
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    setCode("");
+    setSecondsRemaining(challenge.resendAfterSeconds);
+    inputRef.current?.focus();
+  }, [challenge]);
 
   useEffect(() => {
     if (code === normalizedCode) {
@@ -82,13 +105,25 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
     }
 
     setIsResending(true);
-    setCode("");
-    setSecondsRemaining(RESEND_AFTER_SECONDS);
-    inputRef.current?.focus();
-
-    resendTimeoutRef.current = setTimeout(() => {
-      setIsResending(false);
-    }, 450);
+    void onResendCode()
+      .then((nextChallenge) => {
+        setCode("");
+        setSecondsRemaining(nextChallenge.resendAfterSeconds);
+        inputRef.current?.focus();
+      })
+      .catch((error) => {
+        Alert.alert(
+          copy.errors.verificationFailedTitle,
+          error instanceof Error
+            ? error.message
+            : copy.verification.resendFailed,
+        );
+      })
+      .finally(() => {
+        resendTimeoutRef.current = setTimeout(() => {
+          setIsResending(false);
+        }, 450);
+      });
   }
 
   return (
@@ -117,7 +152,12 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
           ))}
         </View>
 
-        <View style={[styles.content, { paddingTop: 32, paddingBottom: insets.bottom + 20 }]}>
+        <View
+          style={[
+            styles.content,
+            { paddingTop: 32, paddingBottom: insets.bottom + 20 },
+          ]}
+        >
           <View style={styles.centerStack}>
             <Text
               style={[
@@ -141,15 +181,30 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
               ]}
             >
               {copy.verification.subtitlePrefix}{" "}
-              <Text style={[styles.subtitleStrong, { color: theme.color.foreground }]}>{email}</Text>
+              <Text
+                style={[
+                  styles.subtitleStrong,
+                  { color: theme.color.foreground },
+                ]}
+              >
+                {email}
+              </Text>
             </Text>
 
-            <Pressable onPress={() => inputRef.current?.focus()} style={styles.codeArea}>
+            <Pressable
+              onPress={() => inputRef.current?.focus()}
+              style={styles.codeArea}
+            >
               <View style={styles.codeRow}>
                 {Array.from({ length: CODE_LENGTH }).map((_, index) => {
                   const digit = normalizedCode[index] ?? "";
-                  const isFocused = normalizedCode.length === index && normalizedCode.length < CODE_LENGTH;
-                  const isActive = isFocused || (index === CODE_LENGTH - 1 && normalizedCode.length === CODE_LENGTH);
+                  const isFocused =
+                    normalizedCode.length === index &&
+                    normalizedCode.length < CODE_LENGTH;
+                  const isActive =
+                    isFocused ||
+                    (index === CODE_LENGTH - 1 &&
+                      normalizedCode.length === CODE_LENGTH);
 
                   return (
                     <CodeCell
@@ -169,6 +224,7 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
               autoComplete="one-time-code"
               autoCorrect={false}
               keyboardType="number-pad"
+              editable={!isSubmitting}
               onChangeText={handleChangeText}
               onSubmitEditing={handleSubmit}
               placeholder=""
@@ -206,7 +262,7 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={copy.verification.resendButton}
-                disabled={isResending}
+                disabled={isResending || isSubmitting}
                 onPress={handleResend}
                 style={({ pressed }) => [
                   styles.resendButton,
@@ -214,8 +270,8 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
                     borderColor: theme.color.border,
                     backgroundColor: theme.color.surface,
                   },
-                  pressed && !isResending && styles.pressed,
-                  isResending && styles.resendButtonBusy,
+                  pressed && !isResending && !isSubmitting && styles.pressed,
+                  (isResending || isSubmitting) && styles.resendButtonBusy,
                 ]}
               >
                 <Text
@@ -227,7 +283,9 @@ export function AuthVerificationScreen({ theme, copy, email, onSubmitCode }: Pro
                     },
                   ]}
                 >
-                  {isResending ? copy.verification.resendButtonBusy : copy.verification.resendButton}
+                  {isResending
+                    ? copy.verification.resendButtonBusy
+                    : copy.verification.resendButton}
                 </Text>
               </Pressable>
             )}
@@ -252,7 +310,9 @@ function CodeCell({ theme, value, isActive }: CodeCellProps) {
       style={[
         styles.codeCell,
         {
-          borderColor: isActive ? theme.color.foreground : theme.color.glassBorder,
+          borderColor: isActive
+            ? theme.color.foreground
+            : theme.color.glassBorder,
           backgroundColor: theme.color.glassBackground,
         },
       ]}

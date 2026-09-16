@@ -13,7 +13,8 @@ const localeMap: Record<AppLanguage, AuthCopy> = {
 };
 
 export function getAppLanguage(): AppLanguage {
-  const languageCode = Localization.getLocales()[0]?.languageCode?.toLowerCase();
+  const languageCode =
+    Localization.getLocales()[0]?.languageCode?.toLowerCase();
   return languageCode === "ru" ? "ru" : "en";
 }
 

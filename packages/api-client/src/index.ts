@@ -50,7 +50,7 @@ export const mobileAuthEmailRequestSchema = z.object({
 
 export const mobileAuthEmailVerifySchema = z.object({
   email: z.string().email(),
-  code: z.string().regex(/^\d{6}$/),
+  code: z.string().regex(/^\d{4}$/),
 });
 
 export const mobileAuthChallengeSchema = z.object({
@@ -72,19 +72,43 @@ export const mobileAuthSocialExchangeSchema = z.object({
   code: z.string().min(1),
 });
 
+export const appleNativeExchangeSchema = z.object({
+  authorizationCode: z.string().min(1),
+});
+
+export const googleNativeExchangeSchema = z.object({
+  idToken: z.string().min(1),
+});
+
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type AuthTokens = z.infer<typeof authTokensSchema>;
 export type AuthLoginInput = z.infer<typeof authLoginSchema>;
 export type AuthForgotPasswordInput = z.infer<typeof authForgotPasswordSchema>;
 export type AuthResetPasswordInput = z.infer<typeof authResetPasswordSchema>;
-export type AuthRequestEmailVerificationInput = z.infer<typeof authRequestEmailVerificationSchema>;
+export type AuthRequestEmailVerificationInput = z.infer<
+  typeof authRequestEmailVerificationSchema
+>;
 export type AuthVerifyEmailInput = z.infer<typeof authVerifyEmailSchema>;
-export type MobileAuthEmailRequestInput = z.infer<typeof mobileAuthEmailRequestSchema>;
-export type MobileAuthEmailVerifyInput = z.infer<typeof mobileAuthEmailVerifySchema>;
+export type MobileAuthEmailRequestInput = z.infer<
+  typeof mobileAuthEmailRequestSchema
+>;
+export type MobileAuthEmailVerifyInput = z.infer<
+  typeof mobileAuthEmailVerifySchema
+>;
 export type MobileAuthChallenge = z.infer<typeof mobileAuthChallengeSchema>;
-export type MobileAuthSocialProvider = z.infer<typeof mobileAuthSocialProviderSchema>;
+export type MobileAuthSocialProvider = z.infer<
+  typeof mobileAuthSocialProviderSchema
+>;
 export type MobileAuthSocialInput = z.infer<typeof mobileAuthSocialSchema>;
-export type MobileAuthSocialExchangeInput = z.infer<typeof mobileAuthSocialExchangeSchema>;
+export type MobileAuthSocialExchangeInput = z.infer<
+  typeof mobileAuthSocialExchangeSchema
+>;
+export type AppleNativeExchangeInput = z.infer<
+  typeof appleNativeExchangeSchema
+>;
+export type GoogleNativeExchangeInput = z.infer<
+  typeof googleNativeExchangeSchema
+>;
 
 export interface ApiErrorShape {
   statusCode?: number;
@@ -100,7 +124,12 @@ export class ApiClientError extends Error {
   readonly code?: string;
   readonly details?: unknown;
 
-  constructor(message: string, status: number, code?: string, details?: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: unknown,
+  ) {
     super(message);
     this.name = "ApiClientError";
     this.status = status;
@@ -110,7 +139,10 @@ export class ApiClientError extends Error {
 }
 
 export function createApiClient({ baseUrl }: ApiClientOptions) {
-  return async function request<TResponse>(input: string, init?: RequestInit): Promise<TResponse> {
+  return async function request<TResponse>(
+    input: string,
+    init?: RequestInit,
+  ): Promise<TResponse> {
     const response = await fetch(`${baseUrl}${input}`, {
       ...init,
       headers: {
@@ -120,7 +152,9 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     });
 
     if (!response.ok) {
-      const errorBody = (await response.json().catch(() => null)) as ApiErrorShape | null;
+      const errorBody = (await response
+        .json()
+        .catch(() => null)) as ApiErrorShape | null;
       throw new ApiClientError(
         errorBody?.message || `Request failed with status ${response.status}`,
         response.status,
