@@ -8,9 +8,9 @@ export class PasswordResetConfirmDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ example: '123456' })
+  @ApiProperty({ example: '1234' })
   @IsNotEmpty()
-  @Matches(/^\d{6}$/)
+  @Matches(/^\d{4}$/)
   code!: string;
 
   @ApiProperty({ example: 'StrongPass123!' })

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class MobileEmailAuthChallengeResponseDto {
+export class EmailOtpChallengeResponseDto {
   @ApiProperty({ example: 'user@example.com' })
   email!: string;
 

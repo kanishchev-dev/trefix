@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Version, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   HealthCheck,
@@ -7,6 +7,8 @@ import {
   HealthIndicatorResult,
   SequelizeHealthIndicator,
 } from '@nestjs/terminus';
+
+import { Public } from '@/common/decorators/public.decorator';
 
 @ApiTags('Health')
 @ApiBearerAuth()
@@ -17,6 +19,8 @@ export class HealthController {
     private db: SequelizeHealthIndicator,
   ) {}
 
+  @Public()
+  @Version(VERSION_NEUTRAL)
   @Get()
   @HealthCheck()
   @ApiOperation({ summary: 'Check application health' })

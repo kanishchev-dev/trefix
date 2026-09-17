@@ -124,7 +124,7 @@ import { UsersModule } from './modules/users/users.module';
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
-        path: path.join(__dirname, '/../i18n/'),
+        path: path.join(__dirname, process.env.NODE_ENV === 'development' ? '/../../i18n/' : '/../i18n/'),
         watch: true,
       },
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],

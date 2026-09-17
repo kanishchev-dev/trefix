@@ -3,15 +3,22 @@ import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 
 import {
+  AUTH_EMAIL_OTP_COOLDOWN_REDIS_PREFIX,
+  AUTH_EMAIL_OTP_REDIS_PREFIX,
   AUTH_EMAIL_VERIFICATION_COOLDOWN_REDIS_PREFIX,
   AUTH_EMAIL_VERIFICATION_REDIS_PREFIX,
   AUTH_PASSWORD_RESET_REDIS_PREFIX,
   AUTH_SESSION_IDS_REDIS_PREFIX,
   AUTH_SESSION_REDIS_PREFIX,
+  AUTH_SOCIAL_RESULT_REDIS_PREFIX,
+  AUTH_SOCIAL_STATE_REDIS_PREFIX,
 } from '../auth.constants';
 import { AuthStorageUnavailableException } from '../exceptions/auth-storage-unavailable.exception';
 import { AuthCodeRecord } from '../interfaces/auth-code-record.interface';
+import { AuthEmailOtpCodeRecord } from '../interfaces/auth-email-otp-code-record.interface';
 import { AuthSessionRecord } from '../interfaces/auth-session.interface';
+import { AuthSocialResultRecord } from '../interfaces/auth-social-result.interface';
+import { AuthSocialStateRecord } from '../interfaces/auth-social-state.interface';
 
 type RedisRotationResult = ['missing'] | ['reused', string] | ['rotated', string];
 
@@ -188,6 +195,80 @@ export class AuthRedisService {
     await this.deleteKeys(this.buildPasswordResetKey(userId));
   }
 
+  async setEmailOtpCode(
+    email: string,
+    record: AuthEmailOtpCodeRecord,
+    ttlMilliseconds: number,
+    cooldownMilliseconds: number,
+  ): Promise<void> {
+    const client = this.getClient();
+    await client
+      .multi()
+      .set(this.buildEmailOtpKey(email), JSON.stringify(record), 'PX', ttlMilliseconds)
+      .set(this.buildEmailOtpCooldownKey(email), '1', 'PX', cooldownMilliseconds)
+      .exec();
+  }
+
+  async getEmailOtpCode(email: string): Promise<AuthEmailOtpCodeRecord | null> {
+    const record = await this.getCodeRecord(this.buildEmailOtpKey(email));
+    if (!record) {
+      return null;
+    }
+
+    return {
+      ...record,
+      email: this.normalizeEmail(email),
+    };
+  }
+
+  async incrementEmailOtpAttempts(email: string, maxAttempts: number): Promise<AuthEmailOtpCodeRecord | null> {
+    const record = await this.incrementCodeAttempts(this.buildEmailOtpKey(email), maxAttempts);
+    if (!record) {
+      return null;
+    }
+
+    return {
+      ...record,
+      email: this.normalizeEmail(email),
+    };
+  }
+
+  async clearEmailOtpCode(email: string): Promise<void> {
+    await this.deleteKeys(this.buildEmailOtpKey(email), this.buildEmailOtpCooldownKey(email));
+  }
+
+  async isEmailOtpCooldownActive(email: string): Promise<boolean> {
+    const client = this.getClient();
+    return (await client.exists(this.buildEmailOtpCooldownKey(email))) === 1;
+  }
+
+  async setSocialState(state: string, record: AuthSocialStateRecord, ttlMilliseconds: number): Promise<void> {
+    const client = this.getClient();
+    await client.set(this.buildSocialStateKey(state), JSON.stringify(record), 'PX', ttlMilliseconds);
+  }
+
+  async getSocialState(state: string): Promise<AuthSocialStateRecord | null> {
+    const record = await this.getJsonRecord<AuthSocialStateRecord>(this.buildSocialStateKey(state));
+    return record;
+  }
+
+  async clearSocialState(state: string): Promise<void> {
+    await this.deleteKeys(this.buildSocialStateKey(state));
+  }
+
+  async setSocialResult(code: string, record: AuthSocialResultRecord, ttlMilliseconds: number): Promise<void> {
+    const client = this.getClient();
+    await client.set(this.buildSocialResultKey(code), JSON.stringify(record), 'PX', ttlMilliseconds);
+  }
+
+  async getSocialResult(code: string): Promise<AuthSocialResultRecord | null> {
+    return this.getJsonRecord<AuthSocialResultRecord>(this.buildSocialResultKey(code));
+  }
+
+  async clearSocialResult(code: string): Promise<void> {
+    await this.deleteKeys(this.buildSocialResultKey(code));
+  }
+
   private async getSessions(sessionIds: string[]): Promise<Array<AuthSessionRecord | null>> {
     const client = this.getClient();
     const pipeline = client.multi();
@@ -205,13 +286,7 @@ export class AuthRedisService {
   }
 
   private async getCodeRecord(key: string): Promise<AuthCodeRecord | null> {
-    const client = this.getClient();
-    const rawRecord = await client.get(key);
-    if (!rawRecord) {
-      return null;
-    }
-
-    return JSON.parse(rawRecord) as AuthCodeRecord;
+    return this.getJsonRecord<AuthCodeRecord>(key);
   }
 
   private async incrementCodeAttempts(key: string, maxAttempts: number): Promise<AuthCodeRecord | null> {
@@ -245,9 +320,35 @@ export class AuthRedisService {
     await client.del(...keys);
   }
 
+  private async getJsonRecord<T>(key: string): Promise<T | null> {
+    const client = this.getClient();
+    const rawRecord = await client.get(key);
+    if (!rawRecord) {
+      return null;
+    }
+
+    return JSON.parse(rawRecord) as T;
+  }
+
   private expiresAtToRemainingTtl(expiresAt: string): number {
     const expiresAtMs = new Date(expiresAt).getTime();
     return Math.max(1, expiresAtMs - Date.now());
+  }
+
+  private buildEmailOtpKey(email: string): string {
+    return `${AUTH_EMAIL_OTP_REDIS_PREFIX}${email}`;
+  }
+
+  private buildEmailOtpCooldownKey(email: string): string {
+    return `${AUTH_EMAIL_OTP_COOLDOWN_REDIS_PREFIX}${email}`;
+  }
+
+  private buildSocialStateKey(state: string): string {
+    return `${AUTH_SOCIAL_STATE_REDIS_PREFIX}${state}`;
+  }
+
+  private buildSocialResultKey(code: string): string {
+    return `${AUTH_SOCIAL_RESULT_REDIS_PREFIX}${code}`;
   }
 
   private getClient(): Redis {
@@ -257,6 +358,10 @@ export class AuthRedisService {
     }
 
     return client;
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
   }
 
   private buildSessionKey(sessionId: string): string {

@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { createHash } from 'crypto';
 
 import { hashPassword } from '@/common/utils/password-hash.util';
 import { MailerService } from '@/modules/mailer/mailer.service';
@@ -41,6 +42,11 @@ describe('AuthService', () => {
     getPasswordResetCode: jest.fn(),
     incrementPasswordResetAttempts: jest.fn(),
     clearPasswordResetCode: jest.fn(),
+    setEmailOtpCode: jest.fn(),
+    getEmailOtpCode: jest.fn(),
+    incrementEmailOtpAttempts: jest.fn(),
+    clearEmailOtpCode: jest.fn(),
+    isEmailOtpCooldownActive: jest.fn(),
   };
 
   const authTokenService = {
@@ -151,5 +157,70 @@ describe('AuthService', () => {
       emailVerified: true,
       sessionId: expect.any(String),
     });
+  });
+
+  it('requests an email OTP code', async () => {
+    usersService.findByEmail.mockResolvedValue(null);
+    authRedisService.isEmailOtpCooldownActive.mockResolvedValue(false);
+    authRedisService.setEmailOtpCode.mockResolvedValue(undefined);
+    mailerService.send.mockResolvedValue({ queued: false });
+
+    const result = await service.requestEmailOtpCode({
+      email: 'otp@example.com',
+    });
+
+    expect(authRedisService.setEmailOtpCode).toHaveBeenCalledWith(
+      'otp@example.com',
+      expect.objectContaining({
+        email: 'otp@example.com',
+        codeHash: expect.any(String),
+      }),
+      expect.any(Number),
+      expect.any(Number),
+    );
+    expect(mailerService.send).toHaveBeenCalled();
+    expect(result.email).toBe('otp@example.com');
+  });
+
+  it('verifies an email OTP code and returns tokens', async () => {
+    const codeHash = createHash('sha256').update('123456').digest('hex');
+    authRedisService.getEmailOtpCode.mockResolvedValue({
+      email: 'otp@example.com',
+      codeHash,
+      attempts: 0,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+    });
+    authRedisService.incrementEmailOtpAttempts.mockResolvedValue(null);
+    authRedisService.clearEmailOtpCode.mockResolvedValue(undefined);
+    usersService.findByEmail.mockResolvedValue({
+      id: 'user-otp',
+      email: 'otp@example.com',
+      passwordHash: null,
+      emailVerified: false,
+    });
+    usersService.setEmailVerified.mockResolvedValue({
+      id: 'user-otp',
+      email: 'otp@example.com',
+      passwordHash: null,
+      emailVerified: true,
+    });
+    usersService.findOne.mockResolvedValue({
+      id: 'user-otp',
+      email: 'otp@example.com',
+      passwordHash: null,
+      emailVerified: true,
+    });
+    authTokenService.signRefreshToken.mockResolvedValue('refresh-token');
+    authTokenService.signAccessToken.mockResolvedValue('access-token');
+    authRedisService.createSession.mockResolvedValue(undefined);
+
+    const result = await service.verifyEmailOtpCode({
+      email: 'otp@example.com',
+      code: '123456',
+    });
+
+    expect(result.tokens.accessToken).toBe('access-token');
+    expect(result.user.email).toBe('otp@example.com');
   });
 });

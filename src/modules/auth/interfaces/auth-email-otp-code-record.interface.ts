@@ -1,5 +1,5 @@
 import { AuthCodeRecord } from './auth-code-record.interface';
 
-export interface AuthMobileEmailCodeRecord extends AuthCodeRecord {
+export interface AuthEmailOtpCodeRecord extends AuthCodeRecord {
   email: string;
 }

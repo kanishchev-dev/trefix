@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createHash, randomInt, randomUUID } from 'crypto';
+import * as jwt from 'jsonwebtoken';
 
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { comparePassword, hashPassword } from '@/common/utils/password-hash.util';
@@ -12,6 +13,7 @@ import { UsersService } from '@/modules/users/users.service';
 
 import {
   AUTH_DEFAULT_DISPLAY_NAME,
+  AUTH_EMAIL_OTP_TEMPLATE,
   AUTH_EMAIL_VERIFICATION_CODE_LENGTH,
   AUTH_EMAIL_VERIFICATION_MAX_ATTEMPTS,
   AUTH_EMAIL_VERIFICATION_TEMPLATE,
@@ -20,17 +22,24 @@ import {
   AUTH_PASSWORD_RESET_MAX_ATTEMPTS,
   AUTH_PASSWORD_RESET_TEMPLATE,
 } from './auth.constants';
+import { AppleNativeExchangeDto } from './dto/apple-native-exchange.dto';
 import { AuthRegisterResponseDto } from './dto/auth-register-response.dto';
 import { AuthUserResponseDto } from './dto/auth-user-response.dto';
 import { AuthVerificationResponseDto } from './dto/auth-verification-response.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { EmailOtpChallengeResponseDto } from './dto/email-otp-challenge-response.dto';
+import { EmailOtpRequestDto } from './dto/email-otp-request.dto';
+import { EmailOtpVerifyDto } from './dto/email-otp-verify.dto';
+import { GoogleNativeExchangeDto } from './dto/google-native-exchange.dto';
 import { LoginDto } from './dto/login.dto';
 import { PasswordResetConfirmDto } from './dto/password-reset-confirm.dto';
 import { PasswordResetRequestDto } from './dto/password-reset-request.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { SocialExchangeDto } from './dto/social-exchange.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { AuthEmailOtpRequestedEvent } from './events/auth-email-otp-requested.event';
 import { AuthEmailVerifiedEvent } from './events/auth-email-verified.event';
 import { AuthPasswordChangedEvent } from './events/auth-password-changed.event';
 import { AuthPasswordResetRequestedEvent } from './events/auth-password-reset-requested.event';
@@ -44,11 +53,15 @@ import { AuthPasswordResetCodeInvalidException } from './exceptions/auth-passwor
 import { AuthPasswordResetTokenExpiredException } from './exceptions/auth-password-reset-token-expired.exception';
 import { AuthRefreshTokenReuseException } from './exceptions/auth-refresh-token-reuse.exception';
 import { AuthSessionNotFoundException } from './exceptions/auth-session-not-found.exception';
+import { AuthSocialFlowInvalidException } from './exceptions/auth-social-flow-invalid.exception';
+import { AuthSocialProviderUnavailableException } from './exceptions/auth-social-provider-unavailable.exception';
 import { AuthTokenInvalidException } from './exceptions/auth-token-invalid.exception';
 import { AuthVerificationCodeInvalidException } from './exceptions/auth-verification-code-invalid.exception';
 import { AuthVerificationCodeRateLimitException } from './exceptions/auth-verification-code-rate-limit.exception';
 import { AuthCodeRecord } from './interfaces/auth-code-record.interface';
+import { AuthEmailOtpCodeRecord } from './interfaces/auth-email-otp-code-record.interface';
 import { AuthSessionRecord } from './interfaces/auth-session.interface';
+import { AuthSocialProvider } from './interfaces/auth-social-provider.interface';
 import { AuthTokenResult } from './interfaces/auth-token-result.interface';
 import { AuthUserContext } from './interfaces/auth-user-context.interface';
 import { AuthRedisService } from './services/auth-redis.service';
@@ -58,6 +71,53 @@ import { parseDurationToMilliseconds } from './utils/duration.util';
 interface AuthenticatedUserResult {
   user: AuthUserContext;
   tokens: AuthTokenResult;
+}
+
+interface SocialProfile {
+  email: string;
+  firstName: string;
+  lastName: string;
+  providerSubject: string;
+}
+
+interface SocialTokenResponse {
+  access_token?: string;
+  expires_in?: number;
+  id_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+}
+
+interface GoogleUserInfoResponse {
+  email?: string;
+  email_verified?: boolean;
+  family_name?: string;
+  given_name?: string;
+  name?: string;
+  sub?: string;
+}
+
+interface GoogleIdTokenPayload {
+  email?: string;
+  email_verified?: boolean | string;
+  family_name?: string;
+  given_name?: string;
+  name?: string;
+  sub?: string;
+}
+
+interface AppleIdTokenPayload {
+  email?: string;
+  email_verified?: boolean | string;
+  family_name?: string;
+  given_name?: string;
+  is_private_email?: boolean | string;
+  name?: string;
+  sub?: string;
+}
+
+interface GoogleCertsResponse {
+  [key: string]: string;
 }
 
 @Injectable()
@@ -96,6 +156,77 @@ export class AuthService {
       user: this.toAuthUserResponse(user),
       emailVerificationRequired: true,
     };
+  }
+
+  async requestEmailOtpCode(dto: EmailOtpRequestDto): Promise<EmailOtpChallengeResponseDto> {
+    const email = this.normalizeEmail(dto.email);
+    if (await this.authRedisService.isEmailOtpCooldownActive(email)) {
+      throw new AuthVerificationCodeRateLimitException();
+    }
+
+    const code = this.generateNumericCode(AUTH_EMAIL_VERIFICATION_CODE_LENGTH);
+    const ttlMilliseconds = this.getEmailVerificationTtlMilliseconds();
+    const record: AuthEmailOtpCodeRecord = {
+      ...this.buildCodeRecord(code, ttlMilliseconds),
+      email,
+    };
+
+    await this.authRedisService.setEmailOtpCode(
+      email,
+      record,
+      ttlMilliseconds,
+      this.getVerificationCooldownMilliseconds(),
+    );
+
+    await this.mailerService.send({
+      to: email,
+      subject: 'Your sign-in code',
+      template: AUTH_EMAIL_OTP_TEMPLATE,
+      data: {
+        code,
+        expiresIn: Math.max(1, Math.ceil(ttlMilliseconds / 60000)),
+      },
+    });
+
+    this.eventEmitter.emit(
+      'auth.email_otp_requested',
+      new AuthEmailOtpRequestedEvent(email, Math.max(1, Math.ceil(ttlMilliseconds / 1000))),
+    );
+
+    return {
+      email,
+      expiresInSeconds: Math.max(1, Math.ceil(ttlMilliseconds / 1000)),
+      resendAfterSeconds: Math.max(1, Math.ceil(this.getVerificationCooldownMilliseconds() / 1000)),
+    };
+  }
+
+  async verifyEmailOtpCode(dto: EmailOtpVerifyDto): Promise<AuthenticatedUserResult> {
+    const email = this.normalizeEmail(dto.email);
+    const record = await this.authRedisService.getEmailOtpCode(email);
+
+    const isValid = await this.verifyCodeRecord(
+      record,
+      dto.code,
+      () => this.authRedisService.incrementEmailOtpAttempts(email, AUTH_EMAIL_VERIFICATION_MAX_ATTEMPTS),
+      () => this.authRedisService.clearEmailOtpCode(email),
+    );
+
+    if (!isValid) {
+      throw new AuthVerificationCodeInvalidException();
+    }
+
+    const user = await this.resolveOrCreateEmailOtpUser(email);
+    if (!user.emailVerified) {
+      await this.usersService.setEmailVerified(user.id, true);
+    }
+
+    const currentUser = await this.usersService.findOne(user.id);
+    this.eventEmitter.emit('auth.email_verified', new AuthEmailVerifiedEvent(currentUser.id, currentUser.email));
+
+    return this.createAuthenticatedSession(currentUser, {
+      userAgent: undefined,
+      ipAddress: undefined,
+    });
   }
 
   async login(
@@ -321,6 +452,88 @@ export class AuthService {
     }
   }
 
+  async buildSocialStartUrl(
+    provider: AuthSocialProvider,
+    redirectUri: string,
+    callbackBaseUrl: string,
+  ): Promise<string> {
+    const normalizedProvider = this.normalizeSocialProvider(provider);
+    const normalizedRedirectUri = this.normalizeRedirectUri(redirectUri);
+    const state = randomUUID();
+
+    await this.authRedisService.setSocialState(
+      state,
+      {
+        provider: normalizedProvider,
+        redirectUri: normalizedRedirectUri,
+        createdAt: new Date().toISOString(),
+      },
+      this.getSocialTtlMilliseconds(),
+    );
+
+    const callbackUri = this.buildSocialCallbackUri(callbackBaseUrl, normalizedProvider);
+    if (normalizedProvider === 'google') {
+      return this.buildGoogleSocialStartUrl(state, callbackUri);
+    }
+
+    return this.buildAppleSocialStartUrl(state, callbackUri);
+  }
+
+  async completeSocialCallback(
+    provider: AuthSocialProvider,
+    code: string,
+    state: string,
+    callbackBaseUrl: string,
+  ): Promise<string> {
+    const stateRecord = await this.authRedisService.getSocialState(state);
+    if (!stateRecord || stateRecord.provider !== provider) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    await this.authRedisService.clearSocialState(state);
+
+    try {
+      const profile = await this.resolveSocialProfile(provider, code, callbackBaseUrl);
+      const authenticatedResult = await this.finalizeSocialSignIn(profile);
+      const handoffCode = randomUUID();
+
+      await this.authRedisService.setSocialResult(
+        handoffCode,
+        {
+          user: authenticatedResult.user,
+          tokens: authenticatedResult.tokens,
+        },
+        this.getSocialTtlMilliseconds(),
+      );
+
+      return this.buildSocialRedirectUri(stateRecord.redirectUri, { code: handoffCode });
+    } catch {
+      return this.buildSocialRedirectUri(stateRecord.redirectUri, {
+        error: 'social_auth_failed',
+      });
+    }
+  }
+
+  async exchangeSocialCode(dto: SocialExchangeDto): Promise<AuthenticatedUserResult> {
+    const record = await this.authRedisService.getSocialResult(dto.code);
+    if (!record) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    await this.authRedisService.clearSocialResult(dto.code);
+    return record;
+  }
+
+  async exchangeNativeAppleCode(dto: AppleNativeExchangeDto): Promise<AuthenticatedUserResult> {
+    const profile = await this.resolveAppleSocialProfile(dto.authorizationCode);
+    return this.finalizeSocialSignIn(profile);
+  }
+
+  async exchangeNativeGoogleCode(dto: GoogleNativeExchangeDto): Promise<AuthenticatedUserResult> {
+    const profile = await this.resolveGoogleNativeProfile(dto.idToken);
+    return this.finalizeSocialSignIn(profile);
+  }
+
   private async createAuthenticatedSession(
     user: User,
     context: { userAgent?: string; ipAddress?: string },
@@ -368,6 +581,366 @@ export class AuthService {
         expiresIn: Math.max(1, Math.ceil(ttlMilliseconds / 60000)),
       },
     });
+  }
+
+  private async resolveOrCreateEmailOtpUser(email: string): Promise<User> {
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const { firstName, lastName } = this.resolveRegistrationName(email);
+    return this.usersService.create({
+      email,
+      firstName,
+      lastName,
+      emailVerified: true,
+    });
+  }
+
+  private async resolveOrCreateSocialUser(email: string): Promise<User> {
+    const normalizedEmail = this.normalizeEmail(email);
+    const existingUser = await this.usersService.findByEmail(normalizedEmail);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const { firstName, lastName } = this.resolveRegistrationName(normalizedEmail);
+    return this.usersService.create({
+      email: normalizedEmail,
+      firstName,
+      lastName,
+      emailVerified: true,
+    });
+  }
+
+  private async resolveSocialProfile(
+    provider: AuthSocialProvider,
+    code: string,
+    callbackBaseUrl: string,
+  ): Promise<SocialProfile> {
+    if (provider === 'google') {
+      return this.resolveGoogleSocialProfile(code, callbackBaseUrl);
+    }
+
+    return this.resolveAppleSocialProfile(code, callbackBaseUrl);
+  }
+
+  private async finalizeSocialSignIn(profile: SocialProfile): Promise<AuthenticatedUserResult> {
+    const user = await this.resolveOrCreateSocialUser(profile.email);
+
+    let currentUser = user;
+    if (!currentUser.emailVerified) {
+      currentUser = await this.usersService.setEmailVerified(currentUser.id, true);
+      this.eventEmitter.emit('auth.email_verified', new AuthEmailVerifiedEvent(currentUser.id, currentUser.email));
+    }
+
+    return this.createAuthenticatedSession(currentUser, {
+      userAgent: undefined,
+      ipAddress: undefined,
+    });
+  }
+
+  private async resolveGoogleSocialProfile(code: string, callbackBaseUrl: string): Promise<SocialProfile> {
+    const callbackUri = this.buildSocialCallbackUri(callbackBaseUrl, 'google');
+    const clientId = this.getSocialConfigValue('auth.googleOAuthClientId');
+    const clientSecret = this.getSocialConfigValue('auth.googleOAuthClientSecret');
+    const tokenResponse = await this.exchangeGoogleSocialCode(code, callbackUri, clientId, clientSecret);
+    const userInfo = await this.fetchGoogleUserInfo(tokenResponse.access_token);
+    const idTokenPayload = tokenResponse.id_token
+      ? this.decodeJwtPayload<GoogleIdTokenPayload>(tokenResponse.id_token)
+      : null;
+
+    const email = userInfo?.email ?? idTokenPayload?.email;
+    if (!email) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    const normalizedEmail = this.normalizeEmail(email);
+    const firstName = userInfo?.given_name ?? idTokenPayload?.given_name ?? '';
+    const lastName = userInfo?.family_name ?? idTokenPayload?.family_name ?? '';
+
+    return {
+      email: normalizedEmail,
+      firstName,
+      lastName,
+      providerSubject: userInfo?.sub ?? idTokenPayload?.sub ?? normalizedEmail,
+    };
+  }
+
+  private async resolveGoogleNativeProfile(idToken: string): Promise<SocialProfile> {
+    const idTokenPayload = await this.verifyGoogleIdToken(idToken);
+    const email = idTokenPayload.email;
+    if (!email) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    const normalizedEmail = this.normalizeEmail(email);
+    const firstName = idTokenPayload.given_name ?? '';
+    const lastName = idTokenPayload.family_name ?? '';
+
+    return {
+      email: normalizedEmail,
+      firstName,
+      lastName,
+      providerSubject: idTokenPayload.sub ?? normalizedEmail,
+    };
+  }
+
+  private async resolveAppleSocialProfile(code: string, callbackBaseUrl?: string): Promise<SocialProfile> {
+    const clientId = this.getSocialConfigValue('auth.appleOAuthClientId');
+    const clientSecret = this.buildAppleClientSecret();
+    const redirectUri = callbackBaseUrl ? this.buildSocialCallbackUri(callbackBaseUrl, 'apple') : undefined;
+    const tokenResponse = await this.exchangeAppleSocialCode(code, redirectUri, clientId, clientSecret);
+    const idTokenPayload = tokenResponse.id_token
+      ? this.decodeJwtPayload<AppleIdTokenPayload>(tokenResponse.id_token)
+      : null;
+
+    const email = idTokenPayload?.email;
+    if (!email) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    const normalizedEmail = this.normalizeEmail(email);
+    const firstName = idTokenPayload?.given_name ?? '';
+    const lastName = idTokenPayload?.family_name ?? '';
+
+    return {
+      email: normalizedEmail,
+      firstName,
+      lastName,
+      providerSubject: idTokenPayload?.sub ?? normalizedEmail,
+    };
+  }
+
+  private async exchangeGoogleSocialCode(
+    code: string,
+    redirectUri: string,
+    clientId: string,
+    clientSecret: string,
+  ): Promise<SocialTokenResponse> {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    return this.parseOAuthTokenResponse<SocialTokenResponse>(response, 'Google');
+  }
+
+  private async exchangeAppleSocialCode(
+    code: string,
+    redirectUri: string | undefined,
+    clientId: string,
+    clientSecret: string,
+  ): Promise<SocialTokenResponse> {
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      grant_type: 'authorization_code',
+    });
+
+    if (redirectUri) {
+      body.set('redirect_uri', redirectUri);
+    }
+
+    const response = await fetch('https://appleid.apple.com/auth/token', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    });
+
+    return this.parseOAuthTokenResponse<SocialTokenResponse>(response, 'Apple');
+  }
+
+  private async fetchGoogleUserInfo(accessToken?: string): Promise<GoogleUserInfoResponse | null> {
+    if (!accessToken) {
+      return null;
+    }
+
+    const response = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as GoogleUserInfoResponse;
+  }
+
+  private async verifyGoogleIdToken(idToken: string): Promise<GoogleIdTokenPayload> {
+    const decodedToken = jwt.decode(idToken, { complete: true });
+    if (
+      !decodedToken ||
+      typeof decodedToken !== 'object' ||
+      !('header' in decodedToken) ||
+      !decodedToken.header ||
+      typeof decodedToken.header !== 'object' ||
+      typeof decodedToken.header.kid !== 'string'
+    ) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    const certsResponse = await fetch('https://www.googleapis.com/oauth2/v1/certs');
+    if (!certsResponse.ok) {
+      throw new AuthSocialFlowInvalidException('Google certificate lookup failed');
+    }
+
+    const certs = (await certsResponse.json()) as GoogleCertsResponse;
+    const publicKey = certs[decodedToken.header.kid];
+    if (!publicKey) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    const audience = this.getSocialConfigValue('auth.googleOAuthClientId');
+    const verified = jwt.verify(idToken, publicKey, {
+      algorithms: ['RS256'],
+      audience,
+      issuer: ['accounts.google.com', 'https://accounts.google.com'],
+    });
+
+    if (!verified || typeof verified !== 'object') {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    return verified as GoogleIdTokenPayload;
+  }
+
+  private buildGoogleSocialStartUrl(state: string, callbackUri: string): string {
+    const clientId = this.getSocialConfigValue('auth.googleOAuthClientId');
+    const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', callbackUri);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('scope', 'openid email profile');
+    url.searchParams.set('state', state);
+    url.searchParams.set('prompt', 'select_account');
+
+    return url.toString();
+  }
+
+  private buildAppleSocialStartUrl(state: string, callbackUri: string): string {
+    const clientId = this.getSocialConfigValue('auth.appleOAuthClientId');
+    const url = new URL('https://appleid.apple.com/auth/authorize');
+
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', callbackUri);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('response_mode', 'form_post');
+    url.searchParams.set('scope', 'name email');
+    url.searchParams.set('state', state);
+
+    return url.toString();
+  }
+
+  private buildSocialCallbackUri(callbackBaseUrl: string, provider: AuthSocialProvider): string {
+    return new URL(`/v1/auth/social/${provider}/callback`, callbackBaseUrl).toString();
+  }
+
+  private buildSocialRedirectUri(redirectUri: string, params: { code?: string; error?: string }): string {
+    const url = new URL(redirectUri);
+    if (params.code) {
+      url.searchParams.set('code', params.code);
+    }
+    if (params.error) {
+      url.searchParams.set('error', params.error);
+    }
+
+    return url.toString();
+  }
+
+  private buildAppleClientSecret(): string {
+    const clientId = this.getSocialConfigValue('auth.appleOAuthClientId');
+    const teamId = this.getSocialConfigValue('auth.appleOAuthTeamId');
+    const keyId = this.getSocialConfigValue('auth.appleOAuthKeyId');
+    const privateKey = this.getSocialConfigValue('auth.appleOAuthPrivateKey');
+    const now = Math.floor(Date.now() / 1000);
+
+    return jwt.sign(
+      {
+        iss: teamId,
+        iat: now,
+        exp: now + 300,
+        aud: 'https://appleid.apple.com',
+        sub: clientId,
+      },
+      privateKey,
+      {
+        algorithm: 'ES256',
+        keyid: keyId,
+        header: {
+          alg: 'ES256',
+          kid: keyId,
+        },
+      },
+    );
+  }
+
+  private async parseOAuthTokenResponse<T>(response: Response, provider: 'Google' | 'Apple'): Promise<T> {
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new AuthSocialFlowInvalidException(`${provider} OAuth failed${body ? `: ${body}` : ''}`);
+    }
+
+    return (await response.json()) as T;
+  }
+
+  private decodeJwtPayload<T>(token: string): T {
+    const decoded = jwt.decode(token);
+    if (!decoded || typeof decoded !== 'object') {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    return decoded as T;
+  }
+
+  private normalizeSocialProvider(provider: AuthSocialProvider): AuthSocialProvider {
+    if (provider === 'google' || provider === 'apple') {
+      return provider;
+    }
+
+    throw new AuthSocialFlowInvalidException();
+  }
+
+  private getSocialConfigValue(key: string): string {
+    const value = this.configService.get<string>(key);
+    if (!value) {
+      throw new AuthSocialProviderUnavailableException();
+    }
+
+    return value;
+  }
+
+  private normalizeRedirectUri(redirectUri: string): string {
+    const normalizedRedirectUri = redirectUri.trim();
+    if (!normalizedRedirectUri.startsWith('workspace-auth://')) {
+      throw new AuthSocialFlowInvalidException();
+    }
+
+    return normalizedRedirectUri;
+  }
+
+  private getSocialTtlMilliseconds(): number {
+    return this.getEmailVerificationTtlMilliseconds();
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
   }
 
   private async verifyCodeRecord(

@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEmail } from 'class-validator';
 
-export class MobileEmailAuthRequestDto {
+export class EmailOtpRequestDto {
   @ApiProperty({ example: 'user@example.com' })
   @Transform(({ value }) => String(value).trim().toLowerCase())
   @IsEmail()
