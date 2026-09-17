@@ -28,6 +28,8 @@ type Props = {
 
 const CODE_LENGTH = 4;
 
+type HighlightState = "normal" | "error" | "success";
+
 export function AuthVerificationScreen({
   theme,
   copy,
@@ -40,11 +42,14 @@ export function AuthVerificationScreen({
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const resendTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSubmittedCode = useRef<string | null>(null);
+
   const [code, setCode] = useState("");
   const [secondsRemaining, setSecondsRemaining] = useState(
     challenge.resendAfterSeconds,
   );
   const [isResending, setIsResending] = useState(false);
+  const [highlightState, setHighlightState] = useState<HighlightState>("normal");
 
   const normalizedCode = useMemo(
     () => code.replace(/\D/g, "").slice(0, CODE_LENGTH),
@@ -59,6 +64,8 @@ export function AuthVerificationScreen({
   useEffect(() => {
     setCode("");
     setSecondsRemaining(challenge.resendAfterSeconds);
+    setHighlightState("normal");
+    lastSubmittedCode.current = null;
     inputRef.current?.focus();
   }, [challenge]);
 
@@ -68,7 +75,31 @@ export function AuthVerificationScreen({
     }
 
     setCode(normalizedCode);
-  }, [code, normalizedCode]);
+    // Reset highlight when user starts typing again
+    if (highlightState === "error") {
+      setHighlightState("normal");
+    }
+  }, [code, normalizedCode, highlightState]);
+
+  useEffect(() => {
+    async function triggerSubmit() {
+      if (
+        normalizedCode.length === CODE_LENGTH &&
+        !isSubmitting &&
+        normalizedCode !== lastSubmittedCode.current
+      ) {
+        lastSubmittedCode.current = normalizedCode;
+        try {
+          await onSubmitCode(normalizedCode);
+          setHighlightState("success");
+        } catch (error) {
+          setHighlightState("error");
+          // Alert is handled by parent or we can add it here if needed
+        }
+      }
+    }
+    void triggerSubmit();
+  }, [normalizedCode, isSubmitting, onSubmitCode]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -155,7 +186,10 @@ export function AuthVerificationScreen({
         <View
           style={[
             styles.content,
-            { paddingTop: 32, paddingBottom: insets.bottom + 20 },
+            {
+              paddingTop: insets.top + 70,
+              paddingBottom: insets.bottom + 20,
+            },
           ]}
         >
           <View style={styles.centerStack}>
@@ -212,6 +246,7 @@ export function AuthVerificationScreen({
                       theme={theme}
                       value={digit}
                       isActive={isActive}
+                      highlightState={highlightState}
                     />
                   );
                 })}
@@ -224,7 +259,7 @@ export function AuthVerificationScreen({
               autoComplete="one-time-code"
               autoCorrect={false}
               keyboardType="number-pad"
-              editable={!isSubmitting}
+              editable={!isSubmitting && highlightState !== "success"}
               onChangeText={handleChangeText}
               onSubmitEditing={handleSubmit}
               placeholder=""
@@ -300,9 +335,26 @@ type CodeCellProps = {
   theme: ThemeTokens;
   value: string;
   isActive: boolean;
+  highlightState: HighlightState;
 };
 
-function CodeCell({ theme, value, isActive }: CodeCellProps) {
+function CodeCell({ theme, value, isActive, highlightState }: CodeCellProps) {
+  const borderColor =
+    highlightState === "error"
+      ? "#ef4444" // danger
+      : highlightState === "success"
+        ? theme.color.foreground // or primary
+        : isActive
+          ? theme.color.foreground
+          : theme.color.glassBorder;
+
+  const overlayColor =
+    highlightState === "error"
+      ? "rgba(239, 68, 68, 0.08)"
+      : highlightState === "success"
+        ? "rgba(0, 0, 0, 0.05)" // placeholder for primary opacity
+        : "transparent";
+
   return (
     <GlassView
       glassEffectStyle="regular"
@@ -310,11 +362,13 @@ function CodeCell({ theme, value, isActive }: CodeCellProps) {
       style={[
         styles.codeCell,
         {
-          borderColor: isActive
-            ? theme.color.foreground
-            : theme.color.glassBorder,
-          backgroundColor: theme.color.glassBackground,
+          borderColor,
+          backgroundColor:
+            overlayColor !== "transparent"
+              ? overlayColor
+              : theme.color.glassBackground,
         },
+        highlightState === "success" && { transform: [{ scale: 1.02 }] },
       ]}
     >
       {value ? (
@@ -322,14 +376,14 @@ function CodeCell({ theme, value, isActive }: CodeCellProps) {
           style={[
             styles.codeDigit,
             {
-              color: theme.color.foreground,
+              color: highlightState === "error" ? "#ef4444" : theme.color.foreground,
               fontFamily: theme.typography.fontFamily.sans.bold,
             },
           ]}
         >
           {value}
         </Text>
-      ) : isActive ? (
+      ) : isActive && highlightState === "normal" ? (
         <View
           style={[
             styles.cursor,

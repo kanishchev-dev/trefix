@@ -8,12 +8,14 @@ import {
   mobileAuthEmailVerifySchema,
   appleNativeExchangeSchema,
   googleNativeExchangeSchema,
+  ApiClientError,
   type AuthTokens,
   type MobileAuthChallenge,
   type MobileAuthEmailRequestInput,
   type MobileAuthEmailVerifyInput,
   type AppleNativeExchangeInput,
   type GoogleNativeExchangeInput,
+  type ApiErrorShape,
 } from "@workspace/api-client";
 
 import { getGoogleSigninModule } from "./google-signin";
@@ -30,29 +32,46 @@ async function request<TResponse>(
   path: string,
   options?: RequestOptions,
 ): Promise<TResponse> {
-  const response = await fetch(`${AUTH_BACKEND_BASE_URL}${path}`, {
-    method: options?.method ?? "GET",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: options?.body ? JSON.stringify(options.body) : undefined,
-  });
+  const url = `${AUTH_BACKEND_BASE_URL}${path}`;
+  console.log(`[AuthAPI] Fetching: ${options?.method ?? "GET"} ${url}`);
 
-  if (!response.ok) {
-    const errorBody = (await response.json().catch(() => null)) as {
-      message?: string;
-      code?: string;
-    } | null;
-    throw new Error(
-      errorBody?.message ?? `Request failed with status ${response.status}`,
-    );
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+  try {
+    const response = await fetch(url, {
+      method: options?.method ?? "GET",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: options?.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    console.log(`[AuthAPI] Response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorBody = (await response
+        .json()
+        .catch(() => null)) as ApiErrorShape | null;
+      throw new ApiClientError(
+        errorBody?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        errorBody?.code,
+        errorBody,
+      );
+    }
+
+    if (response.status === 204) {
+      return undefined as TResponse;
+    }
+
+    return (await response.json()) as TResponse;
+  } catch (error) {
+    console.error(`[AuthAPI] Request error:`, error);
+    throw error;
   }
-
-  if (response.status === 204) {
-    return undefined as TResponse;
-  }
-
-  return (await response.json()) as TResponse;
 }
 
 export async function requestEmailOtp(

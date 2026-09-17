@@ -45,9 +45,7 @@ function clearAuthCookies(response: NextResponse): NextResponse {
   return response;
 }
 
-async function refreshSession(
-  request: NextRequest,
-): Promise<{
+async function refreshSession(request: NextRequest): Promise<{
   ok: boolean;
   tokens?: {
     accessToken: string;

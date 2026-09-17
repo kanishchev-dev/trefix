@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
-  Pressable,
   StyleSheet,
-  View,
   Platform,
   useColorScheme,
 } from "react-native";
@@ -13,10 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
@@ -28,6 +23,7 @@ import {
 import {
   type AuthTokens,
   type MobileAuthChallenge,
+  ApiClientError,
 } from "@workspace/api-client";
 import { getMobileThemeTokens, type ThemeMode } from "@workspace/tokens";
 
@@ -53,7 +49,6 @@ import {
   getAuthCopy,
   getAppLanguage,
   type AppLanguage,
-  type AuthCopy,
 } from "./src/locales";
 
 void SplashScreen.preventAutoHideAsync();
@@ -64,46 +59,6 @@ type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-function VerificationHeader({
-  copy,
-  logoSource,
-  onBackPress,
-}: {
-  copy: AuthCopy;
-  logoSource: number;
-  onBackPress: () => void;
-}) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View
-      style={[
-        styles.headerRoot,
-        { backgroundColor: "#00000000", paddingTop: insets.top },
-      ]}
-    >
-      <View style={styles.headerInner}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.verification.back}
-          onPress={onBackPress}
-          style={styles.backButton}
-        >
-          <View style={styles.backChevron} />
-        </Pressable>
-
-        <Image
-          source={logoSource}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
-
-        <View style={styles.headerSpacer} />
-      </View>
-    </View>
-  );
-}
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -150,24 +105,17 @@ export default function App() {
 
   useEffect(() => {
     const googleSigninModule = getGoogleSigninModule();
-    if (!googleSigninModule) {
-      setIsGoogleAuthAvailable(false);
-      return;
-    }
-
-    googleSigninModule.GoogleSignin.configure({
-      webClientId: googleClientId,
-      iosClientId: googleClientId,
-      offlineAccess: false,
-    });
-    setIsGoogleAuthAvailable(true);
-  }, [googleClientId]);
-
-  useEffect(() => {
-    if (isGoogleSigninAvailable()) {
+    if (googleSigninModule) {
+      googleSigninModule.GoogleSignin.configure({
+        webClientId: googleClientId,
+        iosClientId: googleClientId,
+        offlineAccess: false,
+      });
       setIsGoogleAuthAvailable(true);
+    } else {
+      setIsGoogleAuthAvailable(false);
     }
-  }, []);
+  }, [googleClientId]);
 
   useEffect(() => {
     let isActive = true;
@@ -227,6 +175,22 @@ export default function App() {
       setChallenge(nextChallenge);
       onSuccess();
     } catch (error) {
+      if (
+        error instanceof ApiClientError &&
+        error.code === "AUTH_VERIFICATION_CODE_RATE_LIMITED"
+      ) {
+        // If code was sent recently, allow navigating to verification screen
+        // with estimated countdowns
+        setEmail(normalizedEmail);
+        setChallenge({
+          email: normalizedEmail,
+          expiresInSeconds: 600, // 10 mins default
+          resendAfterSeconds: 60, // 60s default
+        });
+        onSuccess();
+        return;
+      }
+
       Alert.alert(
         copy.errors.authFailedTitle,
         error instanceof Error ? error.message : copy.errors.authFailed,
@@ -252,6 +216,7 @@ export default function App() {
         copy.errors.verificationFailedTitle,
         error instanceof Error ? error.message : copy.errors.verificationFailed,
       );
+      throw error;
     } finally {
       setIsVerificationSubmitting(false);
     }
@@ -346,7 +311,10 @@ export default function App() {
             headerTintColor: theme.color.foreground,
           }}
         >
-          <Stack.Screen name="email" options={{ headerShown: false }}>
+          <Stack.Screen
+            name="email"
+            options={{ headerShown: false, headerBackTitle: "" }}
+          >
             {({ navigation }) => (
               <AuthScreen
                 theme={theme}
@@ -377,13 +345,17 @@ export default function App() {
           <Stack.Screen
             name="verification"
             options={{
-              header: ({ navigation }) => (
-                <VerificationHeader
-                  copy={copy}
-                  logoSource={logoSource}
-                  onBackPress={() => navigation.goBack()}
+              headerTransparent: true,
+              headerBackButtonDisplayMode: "minimal",
+              headerTitle: () => (
+                <Image
+                  source={logoSource}
+                  style={{ width: 160, height: 40 }}
+                  resizeMode="contain"
                 />
               ),
+              headerTintColor: theme.color.foreground,
+              headerBackTitle: "",
             }}
           >
             {() =>
@@ -409,41 +381,4 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  headerRoot: {
-    backgroundColor: "transparent",
-  },
-  headerInner: {
-    height: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backChevron: {
-    width: 10,
-    height: 10,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderTopLeftRadius: 2,
-    transform: [{ rotate: "-45deg" }],
-  },
-  headerLogo: {
-    width: 208,
-    height: 36,
-  },
-  headerSpacer: {
-    position: "absolute",
-    right: 16,
-    width: 32,
-    height: 32,
-  },
-});
+const styles = StyleSheet.create({});

@@ -64,6 +64,8 @@ export function AuthScreen({
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const isFocused = useIsFocused();
 
+  const hasSocialAuth = showGoogleButton || showAppleButton;
+
   const videoPlayer = useVideoPlayer(
     require("../../../assets/auth-background.mov"),
     (player) => {
@@ -165,7 +167,7 @@ export function AuthScreen({
                 isKeyboardVisible && styles.inputWrapperKeyboard,
               ]}
             >
-              {!isKeyboardVisible && (
+              {!isKeyboardVisible && hasSocialAuth && (
                 <>
                   <AuthSocialButtons
                     theme={theme}
@@ -212,7 +214,7 @@ export function AuthScreen({
                 onPress={() =>
                   Linking.openURL(
                     process.env.EXPO_PUBLIC_TERMS_URL ??
-                      "https://trefix.io/terms",
+                      "https://trefix.run/terms",
                   )
                 }
               >
@@ -224,7 +226,7 @@ export function AuthScreen({
                 onPress={() =>
                   Linking.openURL(
                     process.env.EXPO_PUBLIC_PRIVACY_URL ??
-                      "https://trefix.io/privacy",
+                      "https://trefix.run/privacy",
                   )
                 }
               >

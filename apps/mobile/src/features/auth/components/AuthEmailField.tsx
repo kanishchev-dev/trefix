@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { GlassView } from "expo-glass-effect";
 
 import { mobileAuthEmailRequestSchema } from "@workspace/api-client";
@@ -100,19 +106,30 @@ export function AuthEmailField({
           ]}
         >
           <View style={styles.arrowWrap}>
-            <View
-              style={[
-                styles.chevron,
-                {
-                  borderTopColor: isValidEmail
+            {isSubmitting ? (
+              <ActivityIndicator
+                size="small"
+                color={
+                  isValidEmail
                     ? theme.color.background
-                    : theme.color.mutedForeground,
-                  borderRightColor: isValidEmail
-                    ? theme.color.background
-                    : theme.color.mutedForeground,
-                },
-              ]}
-            />
+                    : theme.color.mutedForeground
+                }
+              />
+            ) : (
+              <View
+                style={[
+                  styles.chevron,
+                  {
+                    borderTopColor: isValidEmail
+                      ? theme.color.background
+                      : theme.color.mutedForeground,
+                    borderRightColor: isValidEmail
+                      ? theme.color.background
+                      : theme.color.mutedForeground,
+                  },
+                ]}
+              />
+            )}
           </View>
         </Pressable>
       ) : null}
