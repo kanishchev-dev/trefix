@@ -1,5 +1,5 @@
 // MainLiquidTabBar.tsx
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useEffect, type ReactNode } from "react";
 import {
   LayoutChangeEvent,
   Pressable,
@@ -19,6 +19,12 @@ import Animated, {
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import {
+  Home,
+  LayoutList,
+  BarChart2,
+  Sparkles
+} from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 import { type MainTabKey } from "../main.types";
@@ -70,12 +76,24 @@ export function MainLiquidTabBar({
     {
       key: "today",
       onPress: () => onChangeTab("today"),
-      icon: <TodayIcon theme={theme} active={activeTab === "today"} />,
+      icon: (
+        <Home
+          size={22}
+          color={activeTab === "today" ? theme.color.foreground : theme.color.mutedForeground}
+          strokeWidth={activeTab === "today" ? 2.5 : 2}
+        />
+      ),
     },
     {
       key: "plan",
       onPress: () => onChangeTab("plan"),
-      icon: <PlanIcon theme={theme} active={activeTab === "plan"} />,
+      icon: (
+        <LayoutList
+          size={22}
+          color={activeTab === "plan" ? theme.color.foreground : theme.color.mutedForeground}
+          strokeWidth={activeTab === "plan" ? 2.5 : 2}
+        />
+      ),
     },
     {
       key: "trefix",
@@ -86,7 +104,13 @@ export function MainLiquidTabBar({
     {
       key: "progress",
       onPress: () => onChangeTab("progress"),
-      icon: <ProgressIcon theme={theme} active={activeTab === "progress"} />,
+      icon: (
+        <BarChart2
+          size={22}
+          color={activeTab === "progress" ? theme.color.foreground : theme.color.mutedForeground}
+          strokeWidth={activeTab === "progress" ? 2.5 : 2}
+        />
+      ),
     },
     {
       key: "profile",
@@ -102,22 +126,42 @@ export function MainLiquidTabBar({
   const position = useSharedValue(Math.max(activeIndex, 0));
   const isMoving = useSharedValue(0);
 
-  const handleTabPress = useCallback(
-    (index: number, onPress: () => void) => {
-      onPress();
-      if (index === position.value) return;
-
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-      isMoving.value = withTiming(1, { duration: 100 }, () => {
-        isMoving.value = withTiming(0, { duration: 300 });
-      });
-
-      position.value = withSpring(index, {
+  // Synchronize position with activeTab prop
+  // This ensures that if we navigate away and back, the indicator rolls back to the correct tab
+  useEffect(() => {
+    const targetIndex = tabs.findIndex((t) => t.key !== "trefix" && t.key === activeTab);
+    if (targetIndex !== -1 && targetIndex !== position.value) {
+      position.value = withSpring(targetIndex, {
         damping: 18,
         stiffness: 120,
-        mass: 1,
       });
+    }
+  }, [activeTab, tabs]);
+
+  const handleTabPress = useCallback(
+    (index: number, key: string, onPress: () => void) => {
+      onPress();
+
+      // If it's a functional tab (not the center action), move the indicator
+      if (key !== "trefix") {
+        if (index === position.value) return;
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+        isMoving.value = withTiming(1, { duration: 100 }, () => {
+          isMoving.value = withTiming(0, { duration: 300 });
+        });
+
+        position.value = withSpring(index, {
+          damping: 18,
+          stiffness: 120,
+          mass: 1,
+        });
+      } else {
+        // For the center button, just trigger haptic and scale animation
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        // We don't move 'position' here, so it stays on the previous tab
+      }
     },
     [position, isMoving]
   );
@@ -176,14 +220,12 @@ export function MainLiquidTabBar({
             indicatorAnimatedStyle,
           ]}
         >
-          <GlassView
-            glassEffectStyle="clear"
-            tintColor={theme.color.glassTint}
+          <View
             style={[
               styles.indicator,
               {
-                borderColor: theme.color.glassBorder,
-                backgroundColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)",
+                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.45)",
+                borderColor: "rgba(255,255,255,0.1)",
               },
             ]}
           />
@@ -191,15 +233,15 @@ export function MainLiquidTabBar({
 
         {tabs.map((tab, index) => {
           const active = tab.key !== "trefix" && activeTab === tab.key;
-          return (
-            <TabButton
-              key={tab.key}
-              active={active}
-              badge={tab.badge}
-              onPress={() => handleTabPress(index, tab.onPress)}
-              icon={tab.icon}
-            />
-          );
+            return (
+              <TabButton
+                key={tab.key}
+                active={active}
+                badge={tab.badge}
+                onPress={() => handleTabPress(index, tab.key, tab.onPress)}
+                icon={tab.icon}
+              />
+            );
         })}
       </GlassView>
     </View>
@@ -250,53 +292,15 @@ function TabButton({
   );
 }
 
-/* ---- иконки: только линии, без подложек ---- */
-
-function TodayIcon({ theme, active }: { theme: ThemeTokens; active: boolean }) {
-  return (
-    <View style={styles.iconFrame}>
-      <View style={[styles.house, { borderColor: theme.color.foreground, opacity: active ? 1 : 0.6 }]}>
-        <View style={[styles.houseRoof, { backgroundColor: theme.color.foreground, opacity: active ? 1 : 0.6 }]} />
-      </View>
-    </View>
-  );
-}
-
-function PlanIcon({ theme, active }: { theme: ThemeTokens; active: boolean }) {
-  return (
-    <View style={styles.iconFrame}>
-      <View style={[styles.planFrame, { borderColor: theme.color.foreground, opacity: active ? 1 : 0.6 }]}>
-        <View style={[styles.planLine, { backgroundColor: theme.color.foreground }]} />
-        <View style={[styles.planLine, { backgroundColor: theme.color.foreground }]} />
-      </View>
-    </View>
-  );
-}
-
-function ProgressIcon({ theme, active }: { theme: ThemeTokens; active: boolean }) {
-  return (
-    <View style={styles.iconFrame}>
-      <View style={[styles.progressWrap, { opacity: active ? 1 : 0.6 }]}>
-        <View style={[styles.progressBar, { height: 8, backgroundColor: theme.color.foreground }]} />
-        <View style={[styles.progressBar, { height: 13, backgroundColor: theme.color.foreground }]} />
-        <View style={[styles.progressBar, { height: 18, backgroundColor: theme.color.foreground }]} />
-      </View>
-    </View>
-  );
-}
+/* ---- иконки: Т и Профиль ---- */
 
 function TrefixIcon({ theme }: { theme: ThemeTokens }) {
   return (
-    <View style={[styles.trefixBadge, { borderColor: theme.color.foreground }]}>
-      <Text
-        style={[
-          styles.trefixLabel,
-          { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.extrabold },
-        ]}
-      >
-        Т
-      </Text>
-    </View>
+    <Sparkles
+      size={22}
+      color={theme.color.mutedForeground}
+      strokeWidth={2}
+    />
   );
 }
 
@@ -347,7 +351,7 @@ const styles = StyleSheet.create({
   },
   indicatorSlot: {
     position: "absolute",
-    top: BAR_PADDING,
+    top: (SHELL_HEIGHT - INDICATOR_HEIGHT) / 2 - 1,
     height: INDICATOR_HEIGHT,
   },
   indicator: {
@@ -421,19 +425,6 @@ const styles = StyleSheet.create({
   progressBar: {
     width: 2.8,
     borderRadius: 999,
-  },
-  trefixBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 7,
-    borderWidth: 1.4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  trefixLabel: {
-    fontSize: 12,
-    lineHeight: 13,
-    marginTop: -1,
   },
   profileBadge: {
     width: 20,
