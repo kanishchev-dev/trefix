@@ -1,4 +1,4 @@
-// MainLiquidTabBar.tsx
+// MainTabBar.tsx
 import { useCallback, useMemo, useRef, useEffect, type ReactNode } from "react";
 import {
   LayoutChangeEvent,
@@ -50,7 +50,7 @@ const SHELL_HEIGHT = 64;
 const INDICATOR_HEIGHT = 46;
 const HORIZONTAL_MARGIN = 16;
 
-export function MainLiquidTabBar({
+export function MainTabBar({
   theme,
   activeTab,
   onChangeTab,
@@ -196,7 +196,7 @@ export function MainLiquidTabBar({
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 8) }]}
+      style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 4) }]}
     >
       <GlassView
         glassEffectStyle="regular"

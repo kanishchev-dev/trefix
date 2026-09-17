@@ -3,7 +3,7 @@ import { Animated, Easing, View, StyleSheet } from "react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { MainLiquidTabBar } from "./components/MainLiquidTabBar";
+import { MainTabBar } from "./components/MainTabBar";
 import { type MainTabKey } from "./main.types";
 import { PlanScreen } from "./screens/PlanScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
@@ -63,7 +63,7 @@ export function MainTabsScreen({
         {activeTab === "profile" ? <ProfileScreen theme={theme} /> : null}
       </Animated.View>
 
-      <MainLiquidTabBar
+      <MainTabBar
         theme={theme}
         themeMode={themeMode}
         userEmail={userEmail}
