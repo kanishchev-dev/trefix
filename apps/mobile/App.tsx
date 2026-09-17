@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
-  StyleSheet,
   Platform,
   useColorScheme,
 } from "react-native";
@@ -27,9 +26,10 @@ import {
 } from "@workspace/api-client";
 import { getMobileThemeTokens, type ThemeMode } from "@workspace/tokens";
 
-import { AuthenticatedScreen } from "./src/features/auth/AuthenticatedScreen";
 import { AuthScreen } from "./src/features/auth/AuthScreen";
 import { AuthVerificationScreen } from "./src/features/auth/AuthVerificationScreen";
+import { MainTabsScreen } from "./src/features/main/MainTabsScreen";
+import { TrefixScreen } from "./src/features/main/screens/TrefixScreen";
 import {
   requestEmailOtp,
   signInWithAppleNative,
@@ -37,13 +37,11 @@ import {
   verifyEmailOtp,
 } from "./src/lib/auth-api";
 import {
-  clearAuthSession,
   loadAuthSession,
   saveAuthSession,
 } from "./src/lib/auth-session";
 import {
   getGoogleSigninModule,
-  isGoogleSigninAvailable,
 } from "./src/lib/google-signin";
 import {
   getAuthCopy,
@@ -53,12 +51,18 @@ import {
 
 void SplashScreen.preventAutoHideAsync();
 
-type RootStackParamList = {
+type AuthStackParamList = {
   email: undefined;
   verification: undefined;
 };
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+type MainStackParamList = {
+  main: undefined;
+  trefix: undefined;
+};
+
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const MainStack = createNativeStackNavigator<MainStackParamList>();
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -274,26 +278,47 @@ export default function App() {
     }
   }
 
-  async function handleLogout(): Promise<void> {
-    await clearAuthSession().catch(() => undefined);
-    setSession(null);
-    setChallenge(null);
-    setEmail("");
-  }
-
   if (session) {
     return (
       <SafeAreaProvider>
-        <AuthenticatedScreen
-          theme={theme}
-          themeMode={themeMode}
-          copy={copy}
-          session={session}
-          onLogout={() => {
-            void handleLogout();
-          }}
-        />
-        <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+        <NavigationContainer>
+          <MainStack.Navigator
+            screenOptions={{
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: theme.color.background },
+              headerTitleAlign: "center",
+              headerTintColor: theme.color.foreground,
+            }}
+          >
+            <MainStack.Screen
+              name="main"
+              options={{ headerShown: false, headerBackTitle: "" }}
+            >
+              {({ navigation }) => (
+                <MainTabsScreen
+                  theme={theme}
+                  themeMode={themeMode}
+                  userEmail={session.user.email}
+                  onOpenTrefix={() => {
+                    navigation.navigate("trefix");
+                  }}
+                />
+              )}
+            </MainStack.Screen>
+            <MainStack.Screen
+              name="trefix"
+              options={{
+                headerBackButtonDisplayMode: "minimal",
+                headerTransparent: true,
+                headerTitle: "Трефикс",
+                headerTintColor: theme.color.foreground,
+              }}
+            >
+              {() => <TrefixScreen theme={theme} />}
+            </MainStack.Screen>
+          </MainStack.Navigator>
+          <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+        </NavigationContainer>
       </SafeAreaProvider>
     );
   }
@@ -303,7 +328,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator
+        <AuthStack.Navigator
           screenOptions={{
             headerShadowVisible: false,
             headerStyle: { backgroundColor: theme.color.background },
@@ -311,7 +336,7 @@ export default function App() {
             headerTintColor: theme.color.foreground,
           }}
         >
-          <Stack.Screen
+          <AuthStack.Screen
             name="email"
             options={{ headerShown: false, headerBackTitle: "" }}
           >
@@ -341,8 +366,8 @@ export default function App() {
                 }}
               />
             )}
-          </Stack.Screen>
-          <Stack.Screen
+          </AuthStack.Screen>
+          <AuthStack.Screen
             name="verification"
             options={{
               headerTransparent: true,
@@ -373,12 +398,10 @@ export default function App() {
                 />
               ) : null
             }
-          </Stack.Screen>
-        </Stack.Navigator>
+          </AuthStack.Screen>
+        </AuthStack.Navigator>
       </NavigationContainer>
       <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({});
