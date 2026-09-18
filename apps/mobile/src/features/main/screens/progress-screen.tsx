@@ -1,7 +1,11 @@
+import { StyleSheet, Text } from "react-native";
 import { type ThemeTokens } from "@workspace/tokens";
-
-import { SectionPlaceholderScreen } from "./section-placeholder-screen";
-
+import {
+  HeaderLogo,
+  HeaderMenuButton,
+  HeaderOptionsButton,
+} from "../components/header";
+import { SectionLayout } from "../components/section-layout";
 import { type MainCopy } from "../../../locales";
 
 type Props = {
@@ -11,11 +15,50 @@ type Props = {
 };
 
 export function ProgressScreen({ theme, themeMode, copy }: Props) {
+  const logoSource =
+    themeMode === "dark"
+      ? require("../../../../assets/trefix-logo-light.png")
+      : require("../../../../assets/trefix-logo-dark.png");
+
   return (
-    <SectionPlaceholderScreen
+    <SectionLayout
+      leftAction={
+        <HeaderMenuButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
+      headerCenter={<HeaderLogo source={logoSource} />}
+      rightAction={
+        <HeaderOptionsButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       theme={theme}
       themeMode={themeMode}
-      title={copy.tabs.progress}
-    />
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.extrabold,
+          },
+        ]}
+      >
+        {copy.tabs.progress}
+      </Text>
+    </SectionLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 36,
+    lineHeight: 42,
+    letterSpacing: -1,
+  },
+});

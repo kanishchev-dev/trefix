@@ -7,7 +7,19 @@
   },
   "trefix": {
     "title": "Trefix",
-    "status": "online"
+    "status": "online",
+    "subtitle": "AI coach",
+    "empty": {
+      "title": "AI coach is always here.",
+      "body": "Ask about training, recovery, nutrition, or your progress."
+    },
+    "starters": [
+      "How should I run today?",
+      "What should I do after a hard workout?",
+      "Show my progress",
+      "Build a plan for the week"
+    ],
+    "composerPlaceholder": "Write a message..."
   },
   "profile": {
     "hero": {

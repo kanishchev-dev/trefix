@@ -21,7 +21,6 @@ import { type ThemeTokens } from "@workspace/tokens";
 import { HeaderLogo, HeaderMenuButton, HeaderTextButton } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
 import {
-  formatProfileExpiryDate,
   formatProfileJoinedDate,
   getAppLanguage,
   type MainCopy,
@@ -124,7 +123,6 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
       : require("../../../../assets/trefix-logo-dark.png");
 
   const profileJoinedAt = new Date(2026, 8, 1);
-  const profileExpiresAt = new Date(2026, 8, 30);
   const appVersion = appConfig.expo.version ?? "1.0.0";
 
   return (
@@ -190,46 +188,6 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
             ]}
           >
             {formatProfileJoinedDate(profileJoinedAt, language)}
-          </Text>
-
-          <View
-            style={[
-              styles.subscriptionPill,
-              {
-                backgroundColor:
-                  themeMode === "dark"
-                    ? "rgba(255, 255, 255, 0.08)"
-                    : "rgba(9, 9, 11, 0.06)",
-                borderColor:
-                  themeMode === "dark"
-                    ? "rgba(255, 255, 255, 0.12)"
-                    : "rgba(9, 9, 11, 0.08)",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.subscriptionPillText,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            >
-              {copy.profile.hero.subscription}
-            </Text>
-          </View>
-
-          <Text
-            style={[
-              styles.expiry,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {formatProfileExpiryDate(profileExpiresAt, language)}
           </Text>
         </View>
 
@@ -464,23 +422,6 @@ const styles = StyleSheet.create({
   joined: {
     fontSize: 13,
     lineHeight: 18,
-    textAlign: "center",
-  },
-  subscriptionPill: {
-    minHeight: 36,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  subscriptionPillText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  expiry: {
-    fontSize: 14,
-    lineHeight: 20,
     textAlign: "center",
   },
   section: {

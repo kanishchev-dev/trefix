@@ -316,7 +316,7 @@ export default function App() {
                   }}
                   theme={theme}
                   themeMode={themeMode}
-                  copy={mainCopy}
+                  copy={mainCopy.trefix}
                 />
               )}
             </MainStack.Screen>
