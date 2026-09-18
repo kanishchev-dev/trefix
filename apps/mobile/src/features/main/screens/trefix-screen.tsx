@@ -45,7 +45,13 @@ export function TrefixScreen({ theme, themeMode, copy, onBack }: Props) {
           />
         </View>
       }
-      leftAction={<HeaderBackButton theme={theme} onPress={onBack} />}
+      leftAction={
+        <HeaderBackButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={onBack}
+        />
+      }
       headerCenter={<HeaderTitlePill theme={theme} title={copy.trefix.title} subtitle={copy.trefix.status} />}
       headerContentHeight={72}
       theme={theme}

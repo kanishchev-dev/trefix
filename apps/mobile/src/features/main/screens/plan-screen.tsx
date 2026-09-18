@@ -35,9 +35,21 @@ export function PlanScreen({ theme, themeMode, copy }: Props) {
 
   return (
     <SectionLayout
-      leftAction={<HeaderTemplateButton theme={theme} onPress={() => undefined} />}
+      leftAction={
+        <HeaderTemplateButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       headerCenter={<HeaderLogo source={logoSource} />}
-      rightAction={<HeaderPlusButton theme={theme} onPress={() => undefined} />}
+      rightAction={
+        <HeaderPlusButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       scrollable
       theme={theme}
       themeMode={themeMode}

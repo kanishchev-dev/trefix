@@ -23,9 +23,21 @@ export function SectionPlaceholderScreen({ theme, themeMode, title }: Props) {
 
   return (
     <SectionLayout
-      leftAction={<HeaderMenuButton theme={theme} onPress={() => undefined} />}
+      leftAction={
+        <HeaderMenuButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       headerCenter={<HeaderLogo source={logoSource} />}
-      rightAction={<HeaderOptionsButton theme={theme} onPress={() => undefined} />}
+      rightAction={
+        <HeaderOptionsButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       theme={theme}
       themeMode={themeMode}
     >

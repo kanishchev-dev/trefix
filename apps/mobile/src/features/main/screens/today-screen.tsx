@@ -35,9 +35,21 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
 
   return (
     <SectionLayout
-      leftAction={<HeaderMenuButton theme={theme} onPress={() => undefined} />}
+      leftAction={
+        <HeaderMenuButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       headerCenter={<HeaderLogo source={logoSource} />}
-      rightAction={<HeaderSearchButton theme={theme} onPress={() => undefined} />}
+      rightAction={
+        <HeaderSearchButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => undefined}
+        />
+      }
       scrollable
       theme={theme}
       themeMode={themeMode}

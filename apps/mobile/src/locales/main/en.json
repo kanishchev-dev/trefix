@@ -8,5 +8,34 @@
   "trefix": {
     "title": "Trefix",
     "status": "online"
+  },
+  "profile": {
+    "hero": {
+      "name": "Alex Johnson",
+      "joined": "Registered Sep 2026",
+      "edit": "Edit",
+      "subscription": "Premium",
+      "expires": "Expires Sep 30, 2026",
+      "inactive": "No active subscription",
+      "inactiveHint": "Renew to restore premium access"
+    },
+    "referral": {
+      "title": "Referral code"
+    },
+    "settings": {
+      "title": "Settings",
+      "notifications": "Notifications",
+      "language": "Language",
+      "theme": "Theme"
+    },
+    "legal": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use"
+    },
+    "danger": {
+      "title": "Delete account"
+    },
+    "logout": "Exit app",
+    "version": "Version"
   }
 }

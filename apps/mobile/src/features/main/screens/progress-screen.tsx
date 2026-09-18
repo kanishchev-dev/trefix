@@ -1,3 +1,5 @@
+import { type ThemeTokens } from "@workspace/tokens";
+
 import { SectionPlaceholderScreen } from "./section-placeholder-screen";
 
 import { type MainCopy } from "../../../locales";
