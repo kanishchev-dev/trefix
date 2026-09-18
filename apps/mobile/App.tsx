@@ -284,15 +284,12 @@ export default function App() {
         <NavigationContainer>
           <MainStack.Navigator
             screenOptions={{
-              headerShadowVisible: false,
-              headerStyle: { backgroundColor: theme.color.background },
-              headerTitleAlign: "center",
-              headerTintColor: theme.color.foreground,
+              headerShown: false,
             }}
           >
             <MainStack.Screen
               name="main"
-              options={{ headerShown: false, headerBackTitle: "" }}
+              options={{ headerShown: false }}
             >
               {({ navigation }) => (
                 <MainTabsScreen
@@ -307,14 +304,17 @@ export default function App() {
             </MainStack.Screen>
             <MainStack.Screen
               name="trefix"
-              options={{
-                headerBackButtonDisplayMode: "minimal",
-                headerTransparent: true,
-                headerTitle: "Трефикс",
-                headerTintColor: theme.color.foreground,
-              }}
+              options={{ headerShown: false }}
             >
-              {() => <TrefixScreen theme={theme} />}
+              {({ navigation }) => (
+                <TrefixScreen
+                  onBack={() => {
+                    navigation.goBack();
+                  }}
+                  theme={theme}
+                  themeMode={themeMode}
+                />
+              )}
             </MainStack.Screen>
           </MainStack.Navigator>
           <StatusBar style={themeMode === "dark" ? "light" : "dark"} />

@@ -1,42 +1,49 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
+import {
+  HeaderLogo,
+  HeaderMenuButton,
+  HeaderOptionsButton,
+} from "../components/Header";
+import { SectionScreenShell } from "../components/SectionScreenShell";
 
 type Props = {
   theme: ThemeTokens;
+  themeMode: "light" | "dark";
   title: string;
 };
 
-export function SectionPlaceholderScreen({ theme, title }: Props) {
+export function SectionPlaceholderScreen({ theme, themeMode, title }: Props) {
+  const logoSource =
+    themeMode === "dark"
+      ? require("../../../../assets/trefix-logo-light.png")
+      : require("../../../../assets/trefix-logo-dark.png");
+
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
-      <View style={styles.content}>
-        <Text
-          style={[
-            styles.title,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {title}
-        </Text>
-      </View>
-    </View>
+    <SectionScreenShell
+      leftAction={<HeaderMenuButton theme={theme} onPress={() => undefined} />}
+      headerCenter={<HeaderLogo source={logoSource} />}
+      rightAction={<HeaderOptionsButton theme={theme} onPress={() => undefined} />}
+      theme={theme}
+      themeMode={themeMode}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.extrabold,
+          },
+        ]}
+      >
+        {title}
+      </Text>
+    </SectionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
   title: {
     fontSize: 36,
     lineHeight: 42,

@@ -1,8 +1,16 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { type ThemeTokens } from "@workspace/tokens";
+
+import {
+  HeaderLogo,
+  HeaderMenuButton,
+  HeaderSearchButton,
+} from "../components/Header";
+import { SectionScreenShell } from "../components/SectionScreenShell";
 
 type Props = {
   theme: ThemeTokens;
+  themeMode: "light" | "dark";
 };
 
 const LOREM_IPSUM = `
@@ -17,29 +25,48 @@ Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam t
 Cras mollis scelerisque nunc. Donec odeo. Nam te, metus a faucibus pretium, ante nulla egestas erat, vitae sodales ipsum lectus sit amet enim.
 `.repeat(5);
 
-export function TodayScreen({ theme }: Props) {
+export function TodayScreen({ theme, themeMode }: Props) {
+  const logoSource =
+    themeMode === "dark"
+      ? require("../../../../assets/trefix-logo-light.png")
+      : require("../../../../assets/trefix-logo-dark.png");
+
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
+    <SectionScreenShell
+      leftAction={<HeaderMenuButton theme={theme} onPress={() => undefined} />}
+      headerCenter={<HeaderLogo source={logoSource} />}
+      rightAction={<HeaderSearchButton theme={theme} onPress={() => undefined} />}
+      scrollable
+      theme={theme}
+      themeMode={themeMode}
     >
-      <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.extrabold }]}>
+      <Text
+        style={[
+          styles.title,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.extrabold,
+          },
+        ]}
+      >
         Сегодня
       </Text>
-      <Text style={[styles.text, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+      <Text
+        style={[
+          styles.text,
+          {
+            color: theme.color.mutedForeground,
+            fontFamily: theme.typography.fontFamily.sans.regular,
+          },
+        ]}
+      >
         {LOREM_IPSUM}
       </Text>
-    </ScrollView>
+    </SectionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    paddingTop: 60,
-    paddingBottom: 120, // Enough to scroll past the tab bar
-  },
   title: {
     fontSize: 36,
     marginBottom: 24,

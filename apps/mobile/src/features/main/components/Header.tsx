@@ -1,0 +1,413 @@
+import type { ReactNode, RefObject } from "react";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+} from "react-native";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  ArrowLeft,
+  EllipsisVertical,
+  LayoutGrid,
+  Menu,
+  Plus,
+  Search,
+  Sparkles,
+  SlidersHorizontal,
+} from "lucide-react-native";
+
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+
+const HEADER_CONTENT_HEIGHT = 56;
+const ACTION_SIZE = 40;
+const ACTION_SLOT_WIDTH = 72;
+
+type HeaderProps = {
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  centerContent: ReactNode;
+  blurTarget?: RefObject<View | null>;
+  leftAction?: ReactNode;
+  rightAction?: ReactNode;
+  contentHeight?: number;
+};
+
+type HeaderActionButtonProps = {
+  accessibilityLabel: string;
+  icon: ReactNode;
+  onPress: () => void;
+};
+
+export function HeaderActionButton({
+  accessibilityLabel,
+  icon,
+  onPress,
+}: HeaderActionButtonProps) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      hitSlop={10}
+      onPress={onPress}
+      style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+    >
+      {icon}
+    </Pressable>
+  );
+}
+
+export function Header({
+  theme,
+  themeMode,
+  centerContent,
+  blurTarget,
+  leftAction,
+  rightAction,
+  contentHeight = HEADER_CONTENT_HEIGHT,
+}: HeaderProps) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.root,
+        {
+          height: insets.top + contentHeight,
+          paddingTop: insets.top,
+        },
+      ]}
+    >
+      <MaskedView
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+        maskElement={
+          <LinearGradient
+            colors={[
+              "rgba(0, 0, 0, 1)",
+              "rgba(0, 0, 0, 1)",
+              "rgba(0, 0, 0, 0.95)",
+              "rgba(0, 0, 0, 0.8)",
+              "rgba(0, 0, 0, 0.5)",
+              "rgba(0, 0, 0, 0.25)",
+              "rgba(0, 0, 0, 0.08)",
+              "rgba(0, 0, 0, 0)",
+            ]}
+            locations={[0, 0.55, 0.7, 0.8, 0.88, 0.94, 0.98, 1]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        }
+      >
+        <View style={StyleSheet.absoluteFill}>
+          <BlurView
+            blurMethod="dimezisBlurViewSdk31Plus"
+            blurTarget={blurTarget}
+            intensity={25}
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+            tint="regular"
+          />
+
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: theme.color.background,
+                opacity: themeMode === "dark" ? 0.82 : 0.8,
+              },
+            ]}
+          />
+        </View>
+      </MaskedView>
+
+      <View style={styles.content}>
+        <View pointerEvents="box-none" style={styles.leftSlot}>
+          {leftAction}
+        </View>
+
+        <View pointerEvents="none" style={styles.centerSlot}>
+          {centerContent}
+        </View>
+
+        <View pointerEvents="box-none" style={styles.rightSlot}>
+          {rightAction}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function HeaderBackButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Назад"
+      icon={<ArrowLeft color={theme.color.foreground} size={20} strokeWidth={2.4} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderMenuButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Меню"
+      icon={<Menu color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderSearchButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Поиск"
+      icon={<Search color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderPlusButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Добавить"
+      icon={<Plus color={theme.color.foreground} size={20} strokeWidth={2.4} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderOptionsButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Ещё"
+      icon={<EllipsisVertical color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderFiltersButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Фильтры"
+      icon={<SlidersHorizontal color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderSparklesButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Трефикс"
+      icon={<Sparkles color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderLogo({
+  source,
+}: {
+  source: ImageSourcePropType;
+}) {
+  return <Image source={source} style={styles.logo} resizeMode="contain" />;
+}
+
+export function HeaderTitlePill({
+  theme,
+  title,
+  subtitle,
+}: {
+  theme: ThemeTokens;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <View
+      style={[
+        styles.titlePill,
+        {
+          backgroundColor:
+            theme.color.background === "#09090b"
+              ? "rgba(28, 21, 34, 0.82)"
+              : "rgba(32, 28, 40, 0.8)",
+          borderColor:
+            theme.color.background === "#09090b"
+              ? "rgba(163, 126, 255, 0.2)"
+              : "rgba(129, 92, 214, 0.14)",
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.titlePillTitle,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.extrabold,
+          },
+        ]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.titlePillSubtitle,
+          {
+            color: "#5b8cff",
+            fontFamily: theme.typography.fontFamily.sans.medium,
+          },
+        ]}
+      >
+        {subtitle}
+      </Text>
+    </View>
+  );
+}
+
+export function HeaderTemplateButton({
+  theme,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Действие"
+      icon={<LayoutGrid color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    zIndex: 20,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  leftSlot: {
+    position: "absolute",
+    left: 16,
+    top: 0,
+    bottom: 0,
+    width: ACTION_SLOT_WIDTH,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  rightSlot: {
+    position: "absolute",
+    right: 16,
+    top: 0,
+    bottom: 0,
+    width: ACTION_SLOT_WIDTH,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  centerSlot: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    paddingHorizontal: 88,
+  },
+  logo: {
+    width: 156,
+    height: 36,
+  },
+  titlePill: {
+    minHeight: 78,
+    minWidth: 286,
+    borderRadius: 28,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  titlePillTitle: {
+    fontSize: 30,
+    lineHeight: 34,
+    letterSpacing: -0.6,
+  },
+  titlePillSubtitle: {
+    marginTop: 2,
+    fontSize: 15,
+    lineHeight: 18,
+  },
+  actionButton: {
+    width: ACTION_SIZE,
+    height: ACTION_SIZE,
+    borderRadius: ACTION_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255, 255, 255, 0.18)",
+  },
+  actionButtonPressed: {
+    transform: [{ scale: 0.96 }],
+  },
+});

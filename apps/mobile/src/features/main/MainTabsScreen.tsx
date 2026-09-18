@@ -57,10 +57,18 @@ export function MainTabsScreen({
           },
         ]}
       >
-        {activeTab === "today" ? <TodayScreen theme={theme} /> : null}
-        {activeTab === "plan" ? <PlanScreen theme={theme} /> : null}
-        {activeTab === "progress" ? <ProgressScreen theme={theme} /> : null}
-        {activeTab === "profile" ? <ProfileScreen theme={theme} /> : null}
+        {activeTab === "today" ? (
+          <TodayScreen theme={theme} themeMode={themeMode} />
+        ) : null}
+        {activeTab === "plan" ? (
+          <PlanScreen theme={theme} themeMode={themeMode} />
+        ) : null}
+        {activeTab === "progress" ? (
+          <ProgressScreen theme={theme} themeMode={themeMode} />
+        ) : null}
+        {activeTab === "profile" ? (
+          <ProfileScreen theme={theme} themeMode={themeMode} />
+        ) : null}
       </Animated.View>
 
       <MainTabBar
