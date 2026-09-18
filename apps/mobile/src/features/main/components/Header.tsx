@@ -25,6 +25,8 @@ import {
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 const HEADER_CONTENT_HEIGHT = 56;
+const BACKGROUND_TOP_OFFSET = 0; // Начинаем размытие ровно от границы челки
+const BACKGROUND_TOTAL_HEIGHT = 110; // Оставляем длинный фейд для плавности
 const ACTION_SIZE = 40;
 const ACTION_SLOT_WIDTH = 72;
 
@@ -79,57 +81,75 @@ export function Header({
       style={[
         styles.root,
         {
-          height: insets.top + contentHeight,
-          paddingTop: insets.top,
+          height: insets.top + Math.max(HEADER_CONTENT_HEIGHT, BACKGROUND_TOP_OFFSET + BACKGROUND_TOTAL_HEIGHT),
         },
       ]}
     >
-      <MaskedView
+      <View
         pointerEvents="none"
-        style={StyleSheet.absoluteFill}
-        maskElement={
-          <LinearGradient
-            colors={[
-              "rgba(0, 0, 0, 1)",
-              "rgba(0, 0, 0, 1)",
-              "rgba(0, 0, 0, 0.95)",
-              "rgba(0, 0, 0, 0.8)",
-              "rgba(0, 0, 0, 0.5)",
-              "rgba(0, 0, 0, 0.25)",
-              "rgba(0, 0, 0, 0.08)",
-              "rgba(0, 0, 0, 0)",
-            ]}
-            locations={[0, 0.55, 0.7, 0.8, 0.88, 0.94, 0.98, 1]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        }
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: insets.top + BACKGROUND_TOTAL_HEIGHT,
+        }}
       >
-        <View style={StyleSheet.absoluteFill}>
-          <BlurView
-            blurMethod="dimezisBlurViewSdk31Plus"
-            blurTarget={blurTarget}
-            intensity={25}
-            pointerEvents="none"
-            style={StyleSheet.absoluteFill}
-            tint="regular"
-          />
+        <MaskedView
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+          maskElement={
+            <LinearGradient
+              colors={[
+                "rgba(0, 0, 0, 1)",
+                "rgba(0, 0, 0, 1)",
+                "rgba(0, 0, 0, 0.9)",
+                "rgba(0, 0, 0, 0.7)",
+                "rgba(0, 0, 0, 0.4)",
+                "rgba(0, 0, 0, 0.15)",
+                "rgba(0, 0, 0, 0.05)",
+                "rgba(0, 0, 0, 0)",
+              ]}
+              locations={[0, 0.6, 0.7, 0.8, 0.88, 0.94, 0.98, 1]}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          }
+        >
+          <View style={StyleSheet.absoluteFill}>
+            <BlurView
+              blurMethod="dimezisBlurViewSdk31Plus"
+              blurTarget={blurTarget}
+              intensity={25}
+              pointerEvents="none"
+              style={StyleSheet.absoluteFill}
+              tint="regular"
+            />
 
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: theme.color.background,
-                opacity: themeMode === "dark" ? 0.82 : 0.8,
-              },
-            ]}
-          />
-        </View>
-      </MaskedView>
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: theme.color.background,
+                  opacity: themeMode === "dark" ? 0.82 : 0.8,
+                },
+              ]}
+            />
+          </View>
+        </MaskedView>
+      </View>
 
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          {
+            height: HEADER_CONTENT_HEIGHT,
+            marginTop: insets.top,
+          },
+        ]}
+      >
         <View pointerEvents="box-none" style={styles.leftSlot}>
           {leftAction}
         </View>
@@ -342,7 +362,6 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   content: {
-    flex: 1,
     justifyContent: "center",
   },
   leftSlot: {

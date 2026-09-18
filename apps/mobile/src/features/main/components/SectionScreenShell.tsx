@@ -56,7 +56,7 @@ export function SectionScreenShell({
             contentContainerStyle={[
               styles.scrollContent,
               {
-                paddingTop: 24,
+                paddingTop: insets.top + 78,
                 paddingBottom: insets.bottom + 136,
               },
               contentStyle,
