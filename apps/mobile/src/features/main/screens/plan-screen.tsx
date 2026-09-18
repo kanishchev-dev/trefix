@@ -5,12 +5,14 @@ import {
   HeaderLogo,
   HeaderPlusButton,
   HeaderTemplateButton,
-} from "../components/Header";
-import { SectionScreenShell } from "../components/SectionScreenShell";
+} from "../components/header";
+import { SectionLayout } from "../components/section-layout";
+import { type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: "light" | "dark";
+  copy: MainCopy;
 };
 
 const LOREM_IPSUM = `
@@ -25,14 +27,14 @@ Repeat until success:
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
 `.repeat(10);
 
-export function PlanScreen({ theme, themeMode }: Props) {
+export function PlanScreen({ theme, themeMode, copy }: Props) {
   const logoSource =
     themeMode === "dark"
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
   return (
-    <SectionScreenShell
+    <SectionLayout
       leftAction={<HeaderTemplateButton theme={theme} onPress={() => undefined} />}
       headerCenter={<HeaderLogo source={logoSource} />}
       rightAction={<HeaderPlusButton theme={theme} onPress={() => undefined} />}
@@ -49,7 +51,7 @@ export function PlanScreen({ theme, themeMode }: Props) {
           },
         ]}
       >
-        План
+        {copy.tabs.plan}
       </Text>
       <Text
         style={[
@@ -62,7 +64,7 @@ export function PlanScreen({ theme, themeMode }: Props) {
       >
         {LOREM_IPSUM}
       </Text>
-    </SectionScreenShell>
+    </SectionLayout>
   );
 }
 

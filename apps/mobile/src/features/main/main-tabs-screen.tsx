@@ -3,16 +3,18 @@ import { Animated, Easing, View, StyleSheet } from "react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { MainTabBar } from "./components/MainTabBar";
-import { type MainTabKey } from "./main.types";
-import { PlanScreen } from "./screens/PlanScreen";
-import { ProfileScreen } from "./screens/ProfileScreen";
-import { ProgressScreen } from "./screens/ProgressScreen";
-import { TodayScreen } from "./screens/TodayScreen";
+import { TabBar } from "./components/tab-bar";
+import { type MainTabKey } from "./main-types";
+import { PlanScreen } from "./screens/plan-screen";
+import { ProfileScreen } from "./screens/profile-screen";
+import { ProgressScreen } from "./screens/progress-screen";
+import { TodayScreen } from "./screens/today-screen";
+import { type MainCopy } from "../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
+  copy: MainCopy;
   userEmail: string;
   onOpenTrefix: () => void;
 };
@@ -20,6 +22,7 @@ type Props = {
 export function MainTabsScreen({
   theme,
   themeMode,
+  copy,
   userEmail,
   onOpenTrefix,
 }: Props) {
@@ -58,20 +61,20 @@ export function MainTabsScreen({
         ]}
       >
         {activeTab === "today" ? (
-          <TodayScreen theme={theme} themeMode={themeMode} />
+          <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
         ) : null}
         {activeTab === "plan" ? (
-          <PlanScreen theme={theme} themeMode={themeMode} />
+          <PlanScreen theme={theme} themeMode={themeMode} copy={copy} />
         ) : null}
         {activeTab === "progress" ? (
-          <ProgressScreen theme={theme} themeMode={themeMode} />
+          <ProgressScreen theme={theme} themeMode={themeMode} copy={copy} />
         ) : null}
         {activeTab === "profile" ? (
-          <ProfileScreen theme={theme} themeMode={themeMode} />
+          <ProfileScreen theme={theme} themeMode={themeMode} copy={copy} />
         ) : null}
       </Animated.View>
 
-      <MainTabBar
+      <TabBar
         theme={theme}
         themeMode={themeMode}
         userEmail={userEmail}

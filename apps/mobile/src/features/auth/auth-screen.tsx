@@ -17,9 +17,9 @@ import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { AuthSocialButtons } from "./components/AuthSocialButtons";
-import { AuthDivider } from "./components/AuthDivider";
-import { AuthEmailField } from "./components/AuthEmailField";
+import { AuthSocialButtons } from "./components/auth-social-buttons";
+import { AuthDivider } from "./components/auth-divider";
+import { AuthEmailField } from "./components/auth-email-field";
 import { type AuthCopy } from "../../locales";
 
 if (

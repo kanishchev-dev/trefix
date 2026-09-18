@@ -5,8 +5,9 @@ import {
   HeaderLogo,
   HeaderMenuButton,
   HeaderOptionsButton,
-} from "../components/Header";
-import { SectionScreenShell } from "../components/SectionScreenShell";
+} from "../components/header";
+import { SectionLayout } from "../components/section-layout";
+import { type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
@@ -21,7 +22,7 @@ export function SectionPlaceholderScreen({ theme, themeMode, title }: Props) {
       : require("../../../../assets/trefix-logo-dark.png");
 
   return (
-    <SectionScreenShell
+    <SectionLayout
       leftAction={<HeaderMenuButton theme={theme} onPress={() => undefined} />}
       headerCenter={<HeaderLogo source={logoSource} />}
       rightAction={<HeaderOptionsButton theme={theme} onPress={() => undefined} />}
@@ -39,7 +40,7 @@ export function SectionPlaceholderScreen({ theme, themeMode, title }: Props) {
       >
         {title}
       </Text>
-    </SectionScreenShell>
+    </SectionLayout>
   );
 }
 

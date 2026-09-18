@@ -28,7 +28,8 @@
   },
   "status": {
     "signedIn": "Signed in",
-    "logout": "Log out"
+    "logout": "Log out",
+    "sessionLabel": "Session"
   },
   "errors": {
     "authFailedTitle": "Sign-in failed",

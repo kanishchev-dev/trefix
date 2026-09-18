@@ -5,12 +5,14 @@ import {
   HeaderLogo,
   HeaderMenuButton,
   HeaderSearchButton,
-} from "../components/Header";
-import { SectionScreenShell } from "../components/SectionScreenShell";
+} from "../components/header";
+import { SectionLayout } from "../components/section-layout";
+import { type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: "light" | "dark";
+  copy: MainCopy;
 };
 
 const LOREM_IPSUM = `
@@ -25,14 +27,14 @@ Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam t
 Cras mollis scelerisque nunc. Donec odeo. Nam te, metus a faucibus pretium, ante nulla egestas erat, vitae sodales ipsum lectus sit amet enim.
 `.repeat(5);
 
-export function TodayScreen({ theme, themeMode }: Props) {
+export function TodayScreen({ theme, themeMode, copy }: Props) {
   const logoSource =
     themeMode === "dark"
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
   return (
-    <SectionScreenShell
+    <SectionLayout
       leftAction={<HeaderMenuButton theme={theme} onPress={() => undefined} />}
       headerCenter={<HeaderLogo source={logoSource} />}
       rightAction={<HeaderSearchButton theme={theme} onPress={() => undefined} />}
@@ -49,7 +51,7 @@ export function TodayScreen({ theme, themeMode }: Props) {
           },
         ]}
       >
-        Сегодня
+        {copy.tabs.today}
       </Text>
       <Text
         style={[
@@ -62,7 +64,7 @@ export function TodayScreen({ theme, themeMode }: Props) {
       >
         {LOREM_IPSUM}
       </Text>
-    </SectionScreenShell>
+    </SectionLayout>
   );
 }
 

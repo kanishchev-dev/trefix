@@ -25,8 +25,8 @@ import {
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 const HEADER_CONTENT_HEIGHT = 56;
-const BACKGROUND_TOP_OFFSET = 0; // Начинаем размытие ровно от границы челки
-const BACKGROUND_TOTAL_HEIGHT = 110; // Оставляем длинный фейд для плавности
+const BACKGROUND_TOP_OFFSET = 0; // Start blur exactly from the notch boundary
+const BACKGROUND_TOTAL_HEIGHT = 110; // Keep long fade for smoothness
 const ACTION_SIZE = 40;
 const ACTION_SLOT_WIDTH = 72;
 
@@ -175,7 +175,7 @@ export function HeaderBackButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Назад"
+      accessibilityLabel="Back"
       icon={<ArrowLeft color={theme.color.foreground} size={20} strokeWidth={2.4} />}
       onPress={onPress}
     />
@@ -191,7 +191,7 @@ export function HeaderMenuButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Меню"
+      accessibilityLabel="Menu"
       icon={<Menu color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -207,7 +207,7 @@ export function HeaderSearchButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Поиск"
+      accessibilityLabel="Search"
       icon={<Search color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -223,7 +223,7 @@ export function HeaderPlusButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Добавить"
+      accessibilityLabel="Add"
       icon={<Plus color={theme.color.foreground} size={20} strokeWidth={2.4} />}
       onPress={onPress}
     />
@@ -239,7 +239,7 @@ export function HeaderOptionsButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Ещё"
+      accessibilityLabel="More"
       icon={<EllipsisVertical color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -255,7 +255,7 @@ export function HeaderFiltersButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Фильтры"
+      accessibilityLabel="Filters"
       icon={<SlidersHorizontal color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -271,7 +271,7 @@ export function HeaderSparklesButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Трефикс"
+      accessibilityLabel="Trefix"
       icon={<Sparkles color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -346,7 +346,7 @@ export function HeaderTemplateButton({
 }) {
   return (
     <HeaderActionButton
-      accessibilityLabel="Действие"
+      accessibilityLabel="Action"
       icon={<LayoutGrid color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />

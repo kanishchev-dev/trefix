@@ -26,10 +26,10 @@ import {
 } from "@workspace/api-client";
 import { getMobileThemeTokens, type ThemeMode } from "@workspace/tokens";
 
-import { AuthScreen } from "./src/features/auth/AuthScreen";
-import { AuthVerificationScreen } from "./src/features/auth/AuthVerificationScreen";
-import { MainTabsScreen } from "./src/features/main/MainTabsScreen";
-import { TrefixScreen } from "./src/features/main/screens/TrefixScreen";
+import { AuthScreen } from "./src/features/auth/auth-screen";
+import { AuthVerificationScreen } from "./src/features/auth/auth-verification-screen";
+import { MainTabsScreen } from "./src/features/main/main-tabs-screen";
+import { TrefixScreen } from "./src/features/main/screens/trefix-screen";
 import {
   requestEmailOtp,
   signInWithAppleNative,
@@ -45,6 +45,7 @@ import {
 } from "./src/lib/google-signin";
 import {
   getAuthCopy,
+  getMainCopy,
   getAppLanguage,
   type AppLanguage,
 } from "./src/locales";
@@ -160,7 +161,8 @@ export default function App() {
   const themeMode: ThemeMode = colorScheme === "dark" ? "dark" : "light";
   const theme = getMobileThemeTokens(themeMode);
   const language: AppLanguage = getAppLanguage();
-  const copy = getAuthCopy(language);
+  const authCopy = getAuthCopy(language);
+  const mainCopy = getMainCopy(language);
   const logoSource =
     themeMode === "dark"
       ? require("./assets/trefix-logo-light.png")
@@ -196,8 +198,8 @@ export default function App() {
       }
 
       Alert.alert(
-        copy.errors.authFailedTitle,
-        error instanceof Error ? error.message : copy.errors.authFailed,
+        authCopy.errors.authFailedTitle,
+        error instanceof Error ? error.message : authCopy.errors.authFailed,
       );
     } finally {
       setIsEmailSubmitting(false);
@@ -217,8 +219,8 @@ export default function App() {
       setSession(tokens);
     } catch (error) {
       Alert.alert(
-        copy.errors.verificationFailedTitle,
-        error instanceof Error ? error.message : copy.errors.verificationFailed,
+        authCopy.errors.verificationFailedTitle,
+        error instanceof Error ? error.message : authCopy.errors.verificationFailed,
       );
       throw error;
     } finally {
@@ -250,8 +252,8 @@ export default function App() {
       setSession(tokens);
     } catch (error) {
       Alert.alert(
-        copy.errors.socialFailedTitle,
-        error instanceof Error ? error.message : copy.errors.socialFailed,
+        authCopy.errors.socialFailedTitle,
+        error instanceof Error ? error.message : authCopy.errors.socialFailed,
       );
     } finally {
       setIsSocialSubmitting(false);
@@ -270,8 +272,8 @@ export default function App() {
       setSession(tokens);
     } catch (error) {
       Alert.alert(
-        copy.errors.socialFailedTitle,
-        error instanceof Error ? error.message : copy.errors.socialFailed,
+        authCopy.errors.socialFailedTitle,
+        error instanceof Error ? error.message : authCopy.errors.socialFailed,
       );
     } finally {
       setIsSocialSubmitting(false);
@@ -295,6 +297,7 @@ export default function App() {
                 <MainTabsScreen
                   theme={theme}
                   themeMode={themeMode}
+                  copy={mainCopy}
                   userEmail={session.user.email}
                   onOpenTrefix={() => {
                     navigation.navigate("trefix");
@@ -313,6 +316,7 @@ export default function App() {
                   }}
                   theme={theme}
                   themeMode={themeMode}
+                  copy={mainCopy}
                 />
               )}
             </MainStack.Screen>
@@ -344,7 +348,7 @@ export default function App() {
               <AuthScreen
                 theme={theme}
                 themeMode={themeMode}
-                copy={copy}
+                copy={authCopy}
                 email={email}
                 isEmailSubmitting={isAuthBusy}
                 isSocialSubmitting={isSocialSubmitting}
@@ -387,7 +391,7 @@ export default function App() {
               challenge ? (
                 <AuthVerificationScreen
                   theme={theme}
-                  copy={copy}
+                  copy={authCopy}
                   email={email}
                   challenge={challenge}
                   isSubmitting={isVerificationSubmitting}

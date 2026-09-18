@@ -1,0 +1,12 @@
+{
+  "tabs": {
+    "today": "Today",
+    "plan": "Plan",
+    "progress": "Progress",
+    "profile": "Profile"
+  },
+  "trefix": {
+    "title": "Trefix",
+    "status": "online"
+  }
+}

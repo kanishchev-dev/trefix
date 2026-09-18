@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { Header } from "./Header";
+import { Header } from "./header";
 
 type Props = {
   theme: ThemeTokens;
@@ -26,7 +26,7 @@ type Props = {
   contentStyle?: StyleProp<ViewStyle>;
 };
 
-export function SectionScreenShell({
+export function SectionLayout({
   theme,
   themeMode,
   headerCenter,

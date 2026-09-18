@@ -88,7 +88,7 @@ export function AuthenticatedScreen({
                 },
               ]}
             >
-              Session
+              {copy.status.sessionLabel}
             </Text>
             <Text
               style={[

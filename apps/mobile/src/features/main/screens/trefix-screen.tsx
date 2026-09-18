@@ -4,23 +4,25 @@ import { type ThemeTokens } from "@workspace/tokens";
 import {
   HeaderBackButton,
   HeaderTitlePill,
-} from "../components/Header";
-import { SectionScreenShell } from "../components/SectionScreenShell";
+} from "../components/header";
+import { SectionLayout } from "../components/section-layout";
+import { type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: "light" | "dark";
+  copy: MainCopy;
   onBack: () => void;
 };
 
-export function TrefixScreen({ theme, themeMode, onBack }: Props) {
+export function TrefixScreen({ theme, themeMode, copy, onBack }: Props) {
   const backgroundCardColor =
     themeMode === "dark" ? "rgba(74, 29, 111, 0.34)" : "rgba(74, 29, 111, 0.22)";
   const accentBackgroundColor =
     themeMode === "dark" ? "rgba(95, 40, 154, 0.42)" : "rgba(95, 40, 154, 0.3)";
 
   return (
-    <SectionScreenShell
+    <SectionLayout
       backgroundContent={
         <View style={styles.backgroundLayer}>
           <View
@@ -44,13 +46,13 @@ export function TrefixScreen({ theme, themeMode, onBack }: Props) {
         </View>
       }
       leftAction={<HeaderBackButton theme={theme} onPress={onBack} />}
-      headerCenter={<HeaderTitlePill theme={theme} title="Трефикс" subtitle="в сети" />}
+      headerCenter={<HeaderTitlePill theme={theme} title={copy.trefix.title} subtitle={copy.trefix.status} />}
       headerContentHeight={72}
       theme={theme}
       themeMode={themeMode}
     >
       {null}
-    </SectionScreenShell>
+    </SectionLayout>
   );
 }
 

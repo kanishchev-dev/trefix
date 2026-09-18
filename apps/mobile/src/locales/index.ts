@@ -2,14 +2,22 @@ import * as Localization from "expo-localization";
 
 import authCopyEn from "./auth/en.json";
 import authCopyRu from "./auth/ru.json";
+import mainCopyEn from "./main/en.json";
+import mainCopyRu from "./main/ru.json";
 
 export type AppLanguage = "en" | "ru";
 
 export type AuthCopy = typeof authCopyEn;
+export type MainCopy = typeof mainCopyEn;
 
-const localeMap: Record<AppLanguage, AuthCopy> = {
+const authLocaleMap: Record<AppLanguage, AuthCopy> = {
   en: authCopyEn,
   ru: authCopyRu,
+};
+
+const mainLocaleMap: Record<AppLanguage, MainCopy> = {
+  en: mainCopyEn,
+  ru: mainCopyRu,
 };
 
 export function getAppLanguage(): AppLanguage {
@@ -19,7 +27,11 @@ export function getAppLanguage(): AppLanguage {
 }
 
 export function getAuthCopy(language: AppLanguage): AuthCopy {
-  return localeMap[language];
+  return authLocaleMap[language];
+}
+
+export function getMainCopy(language: AppLanguage): MainCopy {
+  return mainLocaleMap[language];
 }
 
 export function formatCountdown(secondsRemaining: number): string {

@@ -28,7 +28,8 @@
   },
   "status": {
     "signedIn": "Вы вошли",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "sessionLabel": "Сессия"
   },
   "errors": {
     "authFailedTitle": "Не удалось войти",

@@ -1,4 +1,3 @@
-// MainTabBar.tsx
 import { useCallback, useMemo, useRef, useEffect, type ReactNode } from "react";
 import {
   LayoutChangeEvent,
@@ -27,7 +26,7 @@ import {
 } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
-import { type MainTabKey } from "../main.types";
+import { type MainTabKey } from "../main-types";
 
 type Props = {
   theme: ThemeTokens;
@@ -50,7 +49,7 @@ const SHELL_HEIGHT = 64;
 const INDICATOR_HEIGHT = 46;
 const HORIZONTAL_MARGIN = 16;
 
-export function MainTabBar({
+export function TabBar({
   theme,
   activeTab,
   onChangeTab,
@@ -292,7 +291,7 @@ function TabButton({
   );
 }
 
-/* ---- иконки: Т и Профиль ---- */
+/* ---- Icons: T and Profile ---- */
 
 function TrefixIcon({ theme }: { theme: ThemeTokens }) {
   return (
