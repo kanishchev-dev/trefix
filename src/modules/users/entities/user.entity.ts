@@ -39,6 +39,21 @@ export class User extends Model {
   })
   lastName!: string;
 
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'avatar_url',
+  })
+  avatarUrl!: string | null;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    unique: true,
+    field: 'referral_code',
+  })
+  referralCode!: string | null;
+
   @ApiHideProperty()
   @Column({
     type: DataType.STRING,
@@ -86,6 +101,12 @@ export class User extends Model {
     field: 'password_changed_at',
   })
   passwordChangedAt!: Date | null;
+
+  @Column(DataType.DATE)
+  createdAt!: Date;
+
+  @Column(DataType.DATE)
+  updatedAt!: Date;
 
   @BelongsToMany(() => Permission, () => UserPermission)
   individualPermissions!: Permission[];

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Param, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Param, Patch, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
@@ -25,9 +25,11 @@ import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { SocialExchangeDto } from './dto/social-exchange.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
 import { AuthSocialProvider } from './interfaces/auth-social-provider.interface';
 import { AuthTokenResult } from './interfaces/auth-token-result.interface';
 import { AuthUserContext } from './interfaces/auth-user-context.interface';
+import { User } from '@/modules/users/entities/user.entity';
 
 @ApiTags('Auth')
 @Controller({
@@ -202,6 +204,14 @@ export class AuthController {
     return this.authService.me(user);
   }
 
+  @Patch('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update the current authenticated user' })
+  @ApiResponse({ status: 200, type: AuthUserResponseDto })
+  updateMe(@CurrentUser() user: AuthUserContext, @Body() dto: UpdateUserDto): Promise<AuthUserResponseDto> {
+    return this.authService.updateMe(user, dto);
+  }
+
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
@@ -230,7 +240,7 @@ export class AuthController {
   }
 
   private async toTokensResponse(
-    resultPromise: Promise<{ user: AuthUserContext; tokens: AuthTokenResult }>,
+    resultPromise: Promise<{ user: User; tokens: AuthTokenResult }>,
   ): Promise<AuthTokensResponseDto> {
     const result = await resultPromise;
     return {
@@ -242,7 +252,15 @@ export class AuthController {
       user: {
         id: result.user.id,
         email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        avatarUrl: result.user.avatarUrl ?? undefined,
+        referralCode: result.user.referralCode ?? undefined,
         emailVerified: result.user.emailVerified,
+        createdAt: result.user.createdAt,
+        features: {
+          showReferral: !!result.user.referralCode,
+        },
       },
     };
   }

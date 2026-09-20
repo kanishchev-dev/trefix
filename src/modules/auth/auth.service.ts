@@ -10,6 +10,7 @@ import { MailerService } from '@/modules/mailer/mailer.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
 import { User } from '@/modules/users/entities/user.entity';
 import { UsersService } from '@/modules/users/users.service';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
 
 import {
   AUTH_DEFAULT_DISPLAY_NAME,
@@ -69,7 +70,7 @@ import { AuthTokenService } from './services/auth-token.service';
 import { parseDurationToMilliseconds } from './utils/duration.util';
 
 interface AuthenticatedUserResult {
-  user: AuthUserContext;
+  user: User;
   tokens: AuthTokenResult;
 }
 
@@ -308,7 +309,7 @@ export class AuthService {
     const accessToken = await this.authTokenService.signAccessToken(user.id, session.sessionId);
 
     return {
-      user: this.toAuthUserContext(user, session.sessionId),
+      user,
       tokens: {
         accessToken,
         refreshToken: nextRefreshToken,
@@ -452,6 +453,12 @@ export class AuthService {
     }
   }
 
+  async updateMe(user: AuthUserContext, dto: UpdateUserDto): Promise<AuthUserResponseDto> {
+    const updatedUser = await this.usersService.update(user.id, dto);
+    const permissions = await this.permissionsService.getEffectivePermissions(updatedUser.id);
+    return this.toAuthUserResponse(updatedUser, permissions);
+  }
+
   async buildSocialStartUrl(
     provider: AuthSocialProvider,
     redirectUri: string,
@@ -500,7 +507,7 @@ export class AuthService {
       await this.authRedisService.setSocialResult(
         handoffCode,
         {
-          user: authenticatedResult.user,
+          user: this.toAuthUserContext(authenticatedResult.user, authenticatedResult.tokens.sessionId),
           tokens: authenticatedResult.tokens,
         },
         this.getSocialTtlMilliseconds(),
@@ -521,7 +528,13 @@ export class AuthService {
     }
 
     await this.authRedisService.clearSocialResult(dto.code);
-    return record;
+
+    const user = await this.usersService.findOne(record.user.id);
+
+    return {
+      user,
+      tokens: record.tokens,
+    };
   }
 
   async exchangeNativeAppleCode(dto: AppleNativeExchangeDto): Promise<AuthenticatedUserResult> {
@@ -550,7 +563,7 @@ export class AuthService {
     this.eventEmitter.emit('auth.session.created', new AuthSessionCreatedEvent(user.id, sessionId));
 
     return {
-      user: this.toAuthUserContext(user, sessionId),
+      user,
       tokens: {
         accessToken,
         refreshToken,
@@ -1034,8 +1047,16 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl ?? undefined,
+      referralCode: user.referralCode ?? undefined,
       emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
       permissions,
+      features: {
+        showReferral: !!user.referralCode,
+      },
     };
   }
 

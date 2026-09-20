@@ -9,9 +9,11 @@ import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.ex
 import { SystemEntityDeletionForbiddenException } from '@/common/exceptions/system-entity-deletion-forbidden.exception';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UserCreatedEvent } from './events/user-created.event';
 import { UserDeletedEvent } from './events/user-deleted.event';
+import { UserUpdatedEvent } from './events/user-updated.event';
 
 @Injectable()
 export class UsersService {
@@ -69,6 +71,18 @@ export class UsersService {
 
     // Emit event as per guidelines
     this.eventEmitter.emit('user.created', new UserCreatedEvent(user.id, user.email, user.firstName, user.lastName));
+
+    return user;
+  }
+
+  async update(id: string, dto: UpdateUserDto): Promise<User> {
+    const user = await this.findOne(id);
+    await user.update(dto);
+
+    this.eventEmitter.emit(
+      'user.updated',
+      new UserUpdatedEvent(user.id, user.email, user.firstName, user.lastName, user.avatarUrl),
+    );
 
     return user;
   }
