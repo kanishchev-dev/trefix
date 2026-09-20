@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from "react";
+import { type ReactNode, type RefObject, useState, useEffect } from "react";
 import {
   Image,
   Pressable,
@@ -10,6 +10,7 @@ import {
 import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ArrowLeft,
@@ -27,8 +28,8 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 const HEADER_CONTENT_HEIGHT = 56;
 const BACKGROUND_TOP_OFFSET = 0; // Start blur exactly from the notch boundary
 const BACKGROUND_TOTAL_HEIGHT = 110; // Keep long fade for smoothness
-const ACTION_SIZE = 56;
-const ACTION_SLOT_WIDTH = 132;
+const ACTION_SIZE = 44;
+const ACTION_SLOT_WIDTH = 96;
 
 type HeaderProps = {
   theme: ThemeTokens;
@@ -44,6 +45,7 @@ type HeaderActionButtonProps = {
   accessibilityLabel: string;
   icon: ReactNode;
   themeMode: ThemeMode;
+  theme: ThemeTokens;
   onPress: () => void;
 };
 
@@ -59,21 +61,52 @@ export function HeaderActionButton({
   accessibilityLabel,
   icon,
   themeMode,
+  theme,
   onPress,
 }: HeaderActionButtonProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      hitSlop={8}
+      hitSlop={12}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.actionButton,
-        themeMode === "dark" ? styles.actionButtonDark : styles.actionButtonLight,
+        styles.actionButtonContainer,
         pressed && styles.actionButtonPressed,
       ]}
     >
-      {icon}
+      <View
+        style={[
+          styles.actionButtonGlass,
+          themeMode === "dark" ? styles.actionButtonDark : styles.actionButtonLight,
+          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+        ]}
+      />
+      {isMounted && (
+        <GlassView
+          key={`header-action-${themeMode}`}
+          glassEffectStyle={{ style: "regular", animate: true }}
+          isInteractive
+          colorScheme={themeMode}
+          collapsable={false}
+          tintColor={theme.color.glassTint}
+          style={styles.actionButtonGlass}
+        >
+          {icon}
+        </GlassView>
+      )}
+      {!isMounted && (
+        <View style={[styles.actionButtonGlass, { borderWidth: 0 }]}>
+          {icon}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -85,29 +118,69 @@ export function HeaderTextButton({
   onPress,
   theme,
 }: HeaderTextButtonProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      hitSlop={8}
+      hitSlop={12}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.textButton,
-        themeMode === "dark" ? styles.actionButtonDark : styles.actionButtonLight,
+        styles.textButtonContainer,
         pressed && styles.textButtonPressed,
       ]}
     >
-      <Text
+      <View
         style={[
-          styles.textButtonLabel,
-          {
-            color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.semibold,
-          },
+          styles.textButtonGlass,
+          themeMode === "dark" ? styles.actionButtonDark : styles.actionButtonLight,
+          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
         ]}
-      >
-        {label}
-      </Text>
+      />
+      {isMounted && (
+        <GlassView
+          key={`header-text-${themeMode}`}
+          glassEffectStyle={{ style: "regular", animate: true }}
+          isInteractive
+          colorScheme={themeMode}
+          collapsable={false}
+          tintColor={theme.color.glassTint}
+          style={styles.textButtonGlass}
+        >
+          <Text
+            style={[
+              styles.textButtonLabel,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.semibold,
+              },
+            ]}
+          >
+            {label}
+          </Text>
+        </GlassView>
+      )}
+      {!isMounted && (
+        <View style={[styles.textButtonGlass, { borderWidth: 0 }]}>
+          <Text
+            style={[
+              styles.textButtonLabel,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.semibold,
+              },
+            ]}
+          >
+            {label}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -227,6 +300,7 @@ export function HeaderBackButton({
     <HeaderActionButton
       accessibilityLabel="Back"
       themeMode={themeMode}
+      theme={theme}
       icon={<ArrowLeft color={theme.color.foreground} size={20} strokeWidth={2.4} />}
       onPress={onPress}
     />
@@ -246,6 +320,7 @@ export function HeaderMenuButton({
     <HeaderActionButton
       accessibilityLabel="Menu"
       themeMode={themeMode}
+      theme={theme}
       icon={<Menu color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -265,6 +340,7 @@ export function HeaderSearchButton({
     <HeaderActionButton
       accessibilityLabel="Search"
       themeMode={themeMode}
+      theme={theme}
       icon={<Search color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -284,6 +360,7 @@ export function HeaderPlusButton({
     <HeaderActionButton
       accessibilityLabel="Add"
       themeMode={themeMode}
+      theme={theme}
       icon={<Plus color={theme.color.foreground} size={20} strokeWidth={2.4} />}
       onPress={onPress}
     />
@@ -303,6 +380,7 @@ export function HeaderOptionsButton({
     <HeaderActionButton
       accessibilityLabel="More"
       themeMode={themeMode}
+      theme={theme}
       icon={<EllipsisVertical color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -322,6 +400,7 @@ export function HeaderFiltersButton({
     <HeaderActionButton
       accessibilityLabel="Filters"
       themeMode={themeMode}
+      theme={theme}
       icon={<SlidersHorizontal color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -341,6 +420,7 @@ export function HeaderSparklesButton({
     <HeaderActionButton
       accessibilityLabel="Trefix"
       themeMode={themeMode}
+      theme={theme}
       icon={<Sparkles color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -419,6 +499,7 @@ export function HeaderTemplateButton({
     <HeaderActionButton
       accessibilityLabel="Action"
       themeMode={themeMode}
+      theme={theme}
       icon={<LayoutGrid color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
@@ -458,7 +539,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    paddingHorizontal: 88,
+    paddingHorizontal: 72,
   },
   logo: {
     width: 156,
@@ -488,36 +569,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 18,
   },
-  actionButton: {
+  actionButtonContainer: {
     width: ACTION_SIZE,
     height: ACTION_SIZE,
+  },
+  actionButtonGlass: {
+    width: "100%",
+    height: "100%",
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
   },
   actionButtonDark: {
-    backgroundColor: "rgba(28, 28, 30, 0.88)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderColor: "rgba(255, 255, 255, 0.08)",
   },
   actionButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.86)",
+    backgroundColor: "rgba(255, 255, 255, 0.55)",
     borderColor: "rgba(9, 9, 11, 0.08)",
   },
   actionButtonPressed: {
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 0.94 }],
   },
-  textButton: {
+  textButtonContainer: {
     minHeight: ACTION_SIZE,
-    minWidth: 94,
-    paddingHorizontal: 18,
+  },
+  textButtonGlass: {
+    minHeight: ACTION_SIZE,
+    minWidth: 84,
+    paddingHorizontal: 16,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   textButtonPressed: {
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.96 }],
   },
   textButtonLabel: {
     fontSize: 15,
