@@ -54,7 +54,9 @@ export function AuthEmailField({
       style={[
         styles.root,
         {
-          borderColor: theme.color.glassBorder,
+          borderColor: isFocused
+            ? theme.color.foreground
+            : theme.color.glassBorder,
           backgroundColor: theme.color.glassBackground,
         },
       ]}

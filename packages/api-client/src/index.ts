@@ -7,8 +7,17 @@ export interface ApiClientOptions {
 export const authUserSchema = z.object({
   id: z.string(),
   email: z.string().email(),
+  firstName: z.string().default(""),
+  lastName: z.string().default(""),
+  avatarUrl: z.string().url().optional().nullable(),
+  referralCode: z.string().optional().nullable(),
   emailVerified: z.boolean(),
+  createdAt: z.string().or(z.date()).optional(),
   permissions: z.array(z.string()).optional(),
+  features: z.object({
+    showReferral: z.boolean().default(false),
+    theme: z.string().optional(),
+  }).optional().default({}),
 });
 
 export const authTokensSchema = z.object({
@@ -42,6 +51,12 @@ export const authRequestEmailVerificationSchema = z.object({
 export const authVerifyEmailSchema = z.object({
   email: z.string().email(),
   code: z.string().min(1),
+});
+
+export const updateUserSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  avatarUrl: z.string().url().optional(),
 });
 
 export const mobileAuthEmailRequestSchema = z.object({
@@ -89,6 +104,7 @@ export type AuthRequestEmailVerificationInput = z.infer<
   typeof authRequestEmailVerificationSchema
 >;
 export type AuthVerifyEmailInput = z.infer<typeof authVerifyEmailSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type MobileAuthEmailRequestInput = z.infer<
   typeof mobileAuthEmailRequestSchema
 >;

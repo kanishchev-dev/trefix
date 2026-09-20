@@ -3,13 +3,17 @@ import { Platform } from "react-native";
 
 import {
   authTokensSchema,
+  authUserSchema,
   mobileAuthChallengeSchema,
   mobileAuthEmailRequestSchema,
   mobileAuthEmailVerifySchema,
   appleNativeExchangeSchema,
   googleNativeExchangeSchema,
+  updateUserSchema,
   ApiClientError,
   type AuthTokens,
+  type AuthUser,
+  type UpdateUserInput,
   type MobileAuthChallenge,
   type MobileAuthEmailRequestInput,
   type MobileAuthEmailVerifyInput,
@@ -19,13 +23,15 @@ import {
 } from "@workspace/api-client";
 
 import { getGoogleSigninModule } from "./google-signin";
+import { loadAuthSession } from "./auth-session";
 
 const AUTH_BACKEND_BASE_URL =
   process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
 
 type RequestOptions = {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "DELETE";
   body?: unknown;
+  useAuth?: boolean;
 };
 
 async function request<TResponse>(
@@ -35,15 +41,27 @@ async function request<TResponse>(
   const url = `${AUTH_BACKEND_BASE_URL}${path}`;
   console.log(`[AuthAPI] Fetching: ${options?.method ?? "GET"} ${url}`);
 
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+
+  if (options?.useAuth) {
+    const session = await loadAuthSession();
+    if (session?.accessToken) {
+      headers["Authorization"] = `Bearer ${session.accessToken}`;
+      console.log(`[AuthAPI] Using token: ${session.accessToken.slice(0, 10)}...`);
+    } else {
+      console.warn(`[AuthAPI] No token found for authenticated request: ${path}`);
+    }
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
   try {
     const response = await fetch(url, {
       method: options?.method ?? "GET",
-      headers: {
-        "content-type": "application/json",
-      },
+      headers,
       body: options?.body ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
     });
@@ -178,6 +196,94 @@ export async function signInWithGoogleNative(): Promise<AuthTokens | null> {
       return null;
     }
 
+    throw error;
+  }
+}
+
+export async function getMe(): Promise<AuthUser> {
+  const response = await request<unknown>("/auth/me", {
+    method: "GET",
+    useAuth: true,
+  });
+  return authUserSchema.parse(response);
+}
+
+export async function logout(): Promise<void> {
+  await request<void>("/auth/logout", {
+    method: "POST",
+    useAuth: true,
+  });
+}
+
+export async function updateMe(data: UpdateUserInput): Promise<AuthUser> {
+  const payload = updateUserSchema.parse(data);
+  const response = await request<unknown>("/auth/me", {
+    method: "PATCH",
+    body: payload satisfies UpdateUserInput,
+    useAuth: true,
+  });
+  return authUserSchema.parse(response);
+}
+
+export async function uploadAvatar(uri: string): Promise<string> {
+  const formData = new FormData();
+
+  // Extract filename from URI
+  const filename = uri.split('/').pop() || 'avatar.jpg';
+  const match = /\.(\w+)$/.exec(filename);
+  const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+  // @ts-expect-error: React Native FormData needs object with uri, name, type
+  formData.append('file', {
+    uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+    name: filename,
+    type,
+  });
+  formData.append('scopeType', 'users');
+  formData.append('folder', 'avatars');
+
+  const session = await loadAuthSession();
+  const url = `${AUTH_BACKEND_BASE_URL}/storage/files`;
+
+  console.log(`[AuthAPI] Uploading avatar to: ${url}`);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
+
+    console.log(`[AuthAPI] Upload status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "No body");
+      console.error(`[AuthAPI] Upload failed body: ${errorText}`);
+
+      let errorBody: ApiErrorShape = {};
+      try {
+        errorBody = JSON.parse(errorText);
+      } catch {
+        // Not JSON
+      }
+
+      throw new ApiClientError(
+        errorBody.message || "Avatar upload failed",
+        response.status,
+        errorBody.code,
+        errorBody,
+      );
+    }
+
+    const data = await response.json();
+    console.log(`[AuthAPI] Upload success, file ID: ${data.id}`);
+    // Return the stable URL for the uploaded file
+    return `${AUTH_BACKEND_BASE_URL}/storage/files/${data.id}`;
+  } catch (error) {
+    console.error(`[AuthAPI] Avatar upload exception:`, error);
     throw error;
   }
 }

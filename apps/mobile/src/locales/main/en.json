@@ -29,7 +29,16 @@
       "subscription": "Premium",
       "expires": "Expires Sep 30, 2026",
       "inactive": "No active subscription",
-      "inactiveHint": "Renew to restore premium access"
+      "inactiveHint": "Renew to restore premium access",
+      "changePhoto": "Change Photo",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "save": "Save Changes"
+    },
+    "qr": {
+      "title": "QR Code",
+      "partnerCode": "Partner Code",
+      "close": "Close"
     },
     "referral": {
       "title": "Referral code"

@@ -11,8 +11,10 @@ export async function loadAuthSession(): Promise<AuthTokens | null> {
   }
 
   try {
-    return authTokensSchema.parse(JSON.parse(rawSession));
-  } catch {
+    const session = JSON.parse(rawSession);
+    return authTokensSchema.parse(session);
+  } catch (error) {
+    console.warn("[AuthSession] Failed to parse session, clearing:", error);
     await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
     return null;
   }

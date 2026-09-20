@@ -17,6 +17,8 @@ type Props = {
   copy: MainCopy;
   userEmail: string;
   onOpenTrefix: () => void;
+  onLogout: () => void;
+  onEditProfile: () => void;
 };
 
 export function MainTabsScreen({
@@ -25,6 +27,8 @@ export function MainTabsScreen({
   copy,
   userEmail,
   onOpenTrefix,
+  onLogout,
+  onEditProfile,
 }: Props) {
   const [activeTab, setActiveTab] = useState<MainTabKey>("today");
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -70,7 +74,13 @@ export function MainTabsScreen({
           <ProgressScreen theme={theme} themeMode={themeMode} copy={copy} />
         ) : null}
         {activeTab === "profile" ? (
-          <ProfileScreen theme={theme} themeMode={themeMode} copy={copy} />
+          <ProfileScreen
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            onLogout={onLogout}
+            onEdit={onEditProfile}
+          />
         ) : null}
       </Animated.View>
 

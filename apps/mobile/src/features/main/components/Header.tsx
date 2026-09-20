@@ -18,6 +18,7 @@ import {
   LayoutGrid,
   Menu,
   Plus,
+  QrCode,
   Search,
   Sparkles,
   SlidersHorizontal,
@@ -615,3 +616,46 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
 });
+
+export function HeaderQrButton({
+  theme,
+  themeMode,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="QR Code"
+      themeMode={themeMode}
+      theme={theme}
+      icon={<QrCode color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderTitle({
+  theme,
+  children,
+}: {
+  theme: ThemeTokens;
+  children: string;
+}) {
+  return (
+    <Text
+      numberOfLines={1}
+      style={{
+        color: theme.color.foreground,
+        fontFamily: theme.typography.fontFamily.sans.bold,
+        fontSize: 17,
+        lineHeight: 22,
+        textAlign: "center",
+      }}
+    >
+      {children}
+    </Text>
+  );
+}

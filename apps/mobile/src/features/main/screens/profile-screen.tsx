@@ -1,5 +1,6 @@
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
+  Image,
   Linking,
   Pressable,
   StyleSheet,
@@ -18,18 +19,22 @@ import {
 
 import { type ThemeTokens } from "@workspace/tokens";
 
-import { HeaderLogo, HeaderMenuButton, HeaderTextButton } from "../components/header";
+import { HeaderLogo, HeaderQrButton, HeaderTextButton } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
 import {
   formatProfileJoinedDate,
   getAppLanguage,
   type MainCopy,
 } from "../../../locales";
+import { useProfile } from "../hooks/use-profile";
+import { QrDialog } from "../components/qr-dialog";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: "light" | "dark";
   copy: MainCopy;
+  onLogout: () => void;
+  onEdit: () => void;
 };
 
 type ProfileRowProps = {
@@ -115,23 +120,25 @@ function ProfileRow({
   );
 }
 
-export function ProfileScreen({ theme, themeMode, copy }: Props) {
+export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Props) {
+  const { data: user, isLoading } = useProfile();
+  const [qrVisible, setQrVisible] = useState(false);
   const language = getAppLanguage();
   const logoSource =
     themeMode === "dark"
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
-  const profileJoinedAt = new Date(2026, 8, 1);
+  const profileJoinedAt = user ? new Date(user.createdAt) : new Date();
   const appVersion = appConfig.expo.version ?? "1.0.0";
 
   return (
     <SectionLayout
       leftAction={
-        <HeaderMenuButton
+        <HeaderQrButton
           theme={theme}
           themeMode={themeMode}
-          onPress={() => undefined}
+          onPress={() => setQrVisible(true)}
         />
       }
       headerCenter={<HeaderLogo source={logoSource} />}
@@ -141,7 +148,7 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
           themeMode={themeMode}
           accessibilityLabel={copy.profile.hero.edit}
           label={copy.profile.hero.edit}
-          onPress={() => undefined}
+          onPress={onEdit}
         />
       }
       scrollable
@@ -159,11 +166,18 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
               },
             ]}
           >
-            <UserRound
-              color={theme.color.foreground}
-              size={34}
-              strokeWidth={1.9}
-            />
+            {user?.avatarUrl ? (
+              <Image
+                source={{ uri: user.avatarUrl }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <UserRound
+                color={theme.color.foreground}
+                size={34}
+                strokeWidth={1.9}
+              />
+            )}
           </View>
 
           <Text
@@ -175,7 +189,7 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
               },
             ]}
           >
-            {copy.profile.hero.name}
+            {isLoading ? "..." : `${user?.firstName} ${user?.lastName}`}
           </Text>
 
           <Text
@@ -187,27 +201,38 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
               },
             ]}
           >
-            {formatProfileJoinedDate(profileJoinedAt, language)}
+            {isLoading
+              ? "..."
+              : formatProfileJoinedDate(profileJoinedAt, language)}
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: theme.color.surfaceElevated,
-              borderColor: theme.color.border,
-            },
-          ]}
-        >
-          <ProfileRow
-            theme={theme}
-            title={copy.profile.referral.title}
-            icon={<QrCode color={theme.color.foreground} size={18} strokeWidth={2.1} />}
-            showChevron
-            onPress={() => undefined}
-          />
-        </View>
+        {user?.features?.showReferral ? (
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.color.surfaceElevated,
+                borderColor: theme.color.border,
+              },
+            ]}
+          >
+            <ProfileRow
+              theme={theme}
+              title={copy.profile.referral.title}
+              subtitle={user.referralCode ?? undefined}
+              icon={
+                <QrCode
+                  color={theme.color.foreground}
+                  size={18}
+                  strokeWidth={2.1}
+                />
+              }
+              showChevron
+              onPress={() => undefined}
+            />
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <Text
@@ -318,7 +343,7 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => undefined}
+          onPress={onLogout}
           style={({ pressed }) => [
             styles.logoutButton,
             {
@@ -392,6 +417,15 @@ export function ProfileScreen({ theme, themeMode, copy }: Props) {
           {copy.profile.version} {appVersion}
         </Text>
       </View>
+
+      <QrDialog
+        visible={qrVisible}
+        onClose={() => setQrVisible(false)}
+        referralCode={user?.referralCode ?? "TREFIX"}
+        theme={theme}
+        themeMode={themeMode}
+        copy={copy}
+      />
     </SectionLayout>
   );
 }
@@ -412,6 +446,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
   },
   name: {
     fontSize: 22,

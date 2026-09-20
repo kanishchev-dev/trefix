@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -20,6 +20,12 @@ import {
   Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
 import {
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+  MutationCache,
+} from "@tanstack/react-query";
+import {
   type AuthTokens,
   type MobileAuthChallenge,
   ApiClientError,
@@ -30,13 +36,16 @@ import { AuthScreen } from "./src/features/auth/auth-screen";
 import { AuthVerificationScreen } from "./src/features/auth/auth-verification-screen";
 import { MainTabsScreen } from "./src/features/main/main-tabs-screen";
 import { TrefixScreen } from "./src/features/main/screens/trefix-screen";
+import { ProfileEditScreen } from "./src/features/main/screens/profile-edit-screen";
 import {
+  logout,
   requestEmailOtp,
   signInWithAppleNative,
   signInWithGoogleNative,
   verifyEmailOtp,
 } from "./src/lib/auth-api";
 import {
+  clearAuthSession,
   loadAuthSession,
   saveAuthSession,
 } from "./src/lib/auth-session";
@@ -60,6 +69,7 @@ type AuthStackParamList = {
 type MainStackParamList = {
   main: undefined;
   trefix: undefined;
+  profileEdit: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -70,6 +80,48 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [challenge, setChallenge] = useState<MobileAuthChallenge | null>(null);
   const [session, setSession] = useState<AuthTokens | null>(null);
+
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        queryCache: new QueryCache({
+          onError: (error) => {
+            if (error instanceof ApiClientError && error.status === 401) {
+              console.log("[App] 401 Unauthorized detected, logging out...");
+              void handleLogout();
+            }
+          },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error) => {
+            if (error instanceof ApiClientError && error.status === 401) {
+              console.log("[App] 401 Unauthorized detected in mutation, logging out...");
+              void handleLogout();
+            }
+          },
+        }),
+        defaultOptions: {
+          queries: {
+            retry: false,
+            staleTime: 1000 * 60 * 5, // 5 minutes
+          },
+        },
+      }),
+    [],
+  );
+
+  async function handleLogout(): Promise<void> {
+    try {
+      await logout();
+    } catch (error) {
+      console.warn("Logout request failed:", error);
+    } finally {
+      await clearAuthSession();
+      setSession(null);
+      queryClient.clear();
+    }
+  }
+
   const [isHydratingSession, setIsHydratingSession] = useState(true);
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
   const [isVerificationSubmitting, setIsVerificationSubmitting] =
@@ -282,64 +334,86 @@ export default function App() {
 
   if (session) {
     return (
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <MainStack.Navigator
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <MainStack.Screen
-              name="main"
-              options={{ headerShown: false }}
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <MainStack.Navigator
+              screenOptions={{
+                headerShown: false,
+              }}
             >
-              {({ navigation }) => (
-                <MainTabsScreen
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={mainCopy}
-                  userEmail={session.user.email}
-                  onOpenTrefix={() => {
-                    navigation.navigate("trefix");
-                  }}
-                />
-              )}
-            </MainStack.Screen>
-            <MainStack.Screen
-              name="trefix"
-              options={{ headerShown: false }}
-            >
-              {({ navigation }) => (
-                <TrefixScreen
-                  onBack={() => {
-                    navigation.goBack();
-                  }}
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={mainCopy.trefix}
-                />
-              )}
-            </MainStack.Screen>
-          </MainStack.Navigator>
-          <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
-        </NavigationContainer>
-      </SafeAreaProvider>
+              <MainStack.Screen
+                name="main"
+                options={{ headerShown: false }}
+              >
+                {({ navigation }) => (
+                  <MainTabsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={mainCopy}
+                    userEmail={session.user.email}
+                    onOpenTrefix={() => {
+                      navigation.navigate("trefix");
+                    }}
+                    onLogout={handleLogout}
+                    onEditProfile={() => {
+                      navigation.navigate("profileEdit");
+                    }}
+                  />
+                )}
+              </MainStack.Screen>
+              <MainStack.Screen
+                name="profileEdit"
+                options={{ headerShown: false }}
+              >
+                {({ navigation }) => (
+                  <ProfileEditScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={mainCopy}
+                    onBack={() => {
+                      navigation.goBack();
+                    }}
+                  />
+                )}
+              </MainStack.Screen>
+              <MainStack.Screen
+                name="trefix"
+                options={{ headerShown: false }}
+              >
+                {({ navigation }) => (
+                  <TrefixScreen
+                    onBack={() => {
+                      navigation.goBack();
+                    }}
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={mainCopy.trefix}
+                  />
+                )}
+              </MainStack.Screen>
+            </MainStack.Navigator>
+            <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </QueryClientProvider>
     );
   }
 
   const isAuthBusy = isEmailSubmitting || isSocialSubmitting;
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <AuthStack.Navigator
-          screenOptions={{
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: theme.color.background },
-            headerTitleAlign: "center",
-            headerTintColor: theme.color.foreground,
-          }}
-        >
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <AuthStack.Navigator
+            screenOptions={{
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: theme.color.background },
+              headerTitleAlign: "center",
+              headerTintColor: theme.color.foreground,
+            }}
+          >
           <AuthStack.Screen
             name="email"
             options={{ headerShown: false, headerBackTitle: "" }}
@@ -407,5 +481,6 @@ export default function App() {
       </NavigationContainer>
       <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
     </SafeAreaProvider>
+  </QueryClientProvider>
   );
 }

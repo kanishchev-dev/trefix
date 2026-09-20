@@ -29,7 +29,16 @@
       "subscription": "Premium",
       "expires": "Истекает 30 сентября 2026",
       "inactive": "Подписка не активна",
-      "inactiveHint": "Продлите подписку, чтобы вернуть доступ к Premium"
+      "inactiveHint": "Продлите подписку, чтобы вернуть доступ к Premium",
+      "changePhoto": "Изменить фото",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "save": "Сохранить изменения"
+    },
+    "qr": {
+      "title": "QR-код",
+      "partnerCode": "Код партнёра",
+      "close": "Закрыть"
     },
     "referral": {
       "title": "Реферальный код"
