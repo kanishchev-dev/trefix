@@ -107,7 +107,12 @@ export class AthleteState extends Model {
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    field: 'created_at',
+  })
+  createdAt!: Date;
+
+  @Column({
+    type: DataType.DATE,
     field: 'updated_at',
   })
   updatedAt!: Date;

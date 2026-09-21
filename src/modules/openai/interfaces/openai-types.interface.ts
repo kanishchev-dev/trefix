@@ -7,7 +7,7 @@ export interface OpenAiTextFormatJsonSchema {
 }
 
 export interface OpenAiInputTextContent {
-  type: 'input_text';
+  type: 'input_text' | 'output_text';
   text: string;
 }
 
@@ -25,12 +25,25 @@ export interface OpenAiResponseRequest {
   maxOutputTokens?: number;
   previousResponseId?: string | null;
   metadata?: Record<string, string>;
+  strict?: boolean;
+}
+
+export interface OpenAiResponseOutputContent {
+  type: 'output_text' | 'reasoning' | 'tool_call';
+  text?: string;
+}
+
+export interface OpenAiResponseOutputItem {
+  id: string;
+  type: 'message' | 'reasoning' | 'tool_call';
+  role?: 'assistant';
+  content?: OpenAiResponseOutputContent[];
 }
 
 export interface OpenAiResponseResult {
   id: string;
   status: string;
   output_text?: string;
-  output?: Array<Record<string, unknown>>;
+  output?: OpenAiResponseOutputItem[];
   usage?: Record<string, unknown>;
 }

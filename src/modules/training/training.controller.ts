@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { AdaptPlanDto } from './dto/adapt-plan.dto';
@@ -55,6 +56,17 @@ export class TrainingController {
     return this.trainingService.createAthlete(user.id, dto);
   }
 
+  @Get('athletes/me')
+  @ApiOperation({ summary: 'Get the current user athlete profile' })
+  @ApiOkResponse({
+    description: 'Athlete profile',
+    type: TrainingAthleteResponseDto,
+    schema: { example: TRAINING_ATHLETE_EXAMPLE },
+  })
+  async getMyAthlete(@CurrentUser() user: AuthUserContext): Promise<TrainingAthleteResponseDto> {
+    return this.trainingService.getOrCreateAthlete(user.id);
+  }
+
   @Get('athletes/:id')
   @ApiOperation({ summary: 'Get an athlete profile' })
   @ApiOkResponse({
@@ -62,7 +74,10 @@ export class TrainingController {
     type: TrainingAthleteResponseDto,
     schema: { example: TRAINING_ATHLETE_EXAMPLE },
   })
-  getAthlete(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingAthleteResponseDto> {
+  async getAthlete(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingAthleteResponseDto> {
+    if (id === 'me') {
+      return this.trainingService.getOrCreateAthlete(user.id);
+    }
     return this.trainingService.getAthlete(id, user.id);
   }
 
@@ -73,8 +88,13 @@ export class TrainingController {
     type: TrainingStateResponseDto,
     schema: { example: TRAINING_STATE_EXAMPLE },
   })
-  getAthleteState(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingStateResponseDto> {
-    return this.trainingService.getAthleteState(id, user.id);
+  async getAthleteState(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingStateResponseDto> {
+    let targetId = id;
+    if (id === 'me') {
+      const athlete = await this.trainingService.getOrCreateAthlete(user.id);
+      targetId = athlete.id;
+    }
+    return this.trainingService.getAthleteState(targetId, user.id);
   }
 
   @Post('goals')

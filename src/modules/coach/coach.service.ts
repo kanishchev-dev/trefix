@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
+import { map, Observable, tap } from 'rxjs';
 
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { OpenAiService } from '@/modules/openai/openai.service';
@@ -64,6 +65,182 @@ export class CoachService {
       session: this.toSessionView(session),
       messages: messages.map((message) => this.toMessageView(message)),
     };
+  }
+
+  /** Returns the latest coaching session and its message history. */
+  async getLatestSession(userId: string): Promise<CoachSessionDetailResponseDto> {
+    const session = await this.sessionModel.findOne({
+      where: { userId },
+      order: [['lastMessageAt', 'DESC'], ['createdAt', 'DESC']],
+    });
+
+    if (!session) {
+      throw new EntityNotFoundException('CoachSession', 'latest');
+    }
+
+    return this.getSession(userId, session.id);
+  }
+
+  /** Sends a message to the coach and returns a stream of generated reply fragments. */
+  async streamMessage(
+    userId: string,
+    sessionId: string,
+    dto: SendCoachMessageDto,
+  ): Promise<Observable<{ delta?: string; isDone: boolean }>> {
+    const session = await this.loadSessionOrThrow(userId, sessionId);
+
+    // 1. Record user message
+    await this.messageModel.create({
+      sessionId: session.id,
+      role: 'user',
+      content: dto.message,
+      toolName: null,
+      toolCallId: null,
+      metadata: {},
+    });
+
+    // 2. Generation Phase
+    const context = await this.buildCoachContext(userId, session);
+    const history = await this.getMessages(session.id);
+    let instructions = this.promptBuilder.buildInstructions();
+
+    return new Observable<{ delta?: string; isDone: boolean }>((subscriber) => {
+      let fullReply = '';
+      let toolResults: CoachToolExecutionResult[] = [];
+
+      const runGeneration = async (input: any[], isDraft: boolean) => {
+        let jsonBuffer = '';
+        let lastReplyLength = 0;
+        let foundReply = false;
+
+        return new Promise<void>((resolve, reject) => {
+          this.openAiService
+            .streamResponse({
+              instructions,
+              input,
+              schemaName: isDraft ? 'coach_draft' : 'coach_final',
+              schema: (isDraft ? COACH_DRAFT_SCHEMA : COACH_FINAL_SCHEMA) as Record<string, unknown>,
+              metadata: { module: 'coach', sessionId: session.id },
+            })
+            .subscribe({
+              next: (delta) => {
+                if (delta.type === 'text' && delta.delta) {
+                  jsonBuffer += delta.delta;
+
+                  // Robust extraction of 'reply' field from JSON stream
+                  const replyMatch = jsonBuffer.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)/);
+                  if (replyMatch && replyMatch[1]) {
+                    foundReply = true;
+                    try {
+                      // Attempting to parse the captured fragment as a JS string to unescape correctly
+                      const currentReply = JSON.parse(`"${replyMatch[1]}"`);
+                      const newText = currentReply.slice(lastReplyLength);
+                      if (newText) {
+                        lastReplyLength = currentReply.length;
+                        this.logger.debug(`Coach Stream Delta: [${newText}]`);
+                        subscriber.next({ delta: newText, isDone: false });
+                      }
+                    } catch (e) {
+                      // If JSON.parse fails (e.g. partial escape sequence like \n), try manual cleanup for immediate output
+                      const rawReply = replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                      const newText = rawReply.slice(lastReplyLength);
+                      if (newText && !newText.endsWith('\\')) { // Don't yield if it might be a partial escape
+                        lastReplyLength = rawReply.length;
+                        subscriber.next({ delta: newText, isDone: false });
+                      }
+                    }
+                  }
+                }
+              },
+              error: (err) => reject(err),
+              complete: async () => {
+                try {
+                  const parsed = JSON.parse(jsonBuffer);
+                  if (isDraft) {
+                    const currentDraft = parsed as CoachDraftResponse;
+                    if (currentDraft.stage === 'need_clarification') {
+                      const msg = currentDraft.clarifyingQuestion || currentDraft.reply || '';
+                      const remaining = msg.slice(lastReplyLength);
+                      if (remaining) {
+                        subscriber.next({ delta: remaining, isDone: false });
+                      }
+                      fullReply = msg;
+                      resolve();
+                    } else if (currentDraft.toolRequests && currentDraft.toolRequests.length > 0) {
+                      toolResults = await this.toolRunner.runTools(
+                        userId,
+                        session.athleteId,
+                        currentDraft.toolRequests,
+                      );
+                      const finalInput = this.buildFinalPromptMessages(
+                        context,
+                        history,
+                        dto.message,
+                        currentDraft,
+                        toolResults,
+                      );
+                      await runGeneration(finalInput, false);
+                      resolve();
+                    } else {
+                      fullReply = currentDraft.reply || '';
+                      const remaining = fullReply.slice(lastReplyLength);
+                      if (remaining) {
+                        subscriber.next({ delta: remaining, isDone: false });
+                      }
+                      resolve();
+                    }
+                  } else {
+                    const finalResp = parsed as CoachFinalResponse;
+                    fullReply = finalResp.reply || '';
+                    const remaining = fullReply.slice(lastReplyLength);
+                    if (remaining) {
+                      subscriber.next({ delta: remaining, isDone: false });
+                    }
+                    resolve();
+                  }
+                } catch (e) {
+                  this.logger.error(`Failed to parse OpenAI stream final JSON: ${jsonBuffer.slice(-100)}`, e);
+                  resolve();
+                }
+              },
+            });
+        });
+      };
+
+      const start = async () => {
+        try {
+          const initialInput = this.buildPromptMessages(context, history, dto.message);
+          await runGeneration(initialInput, true);
+
+          // 3. Finalize session & message
+          const assistantMessage = await this.messageModel.create({
+            sessionId: session.id,
+            role: 'assistant',
+            content: fullReply,
+            metadata: { toolResults, isStreamed: true },
+          });
+
+          session.lastMessageAt = new Date();
+          if (!session.title || session.title === COACH_DEFAULT_TITLE) {
+            session.title = this.deriveTitle(dto.message, fullReply);
+          }
+          await session.save();
+
+          this.eventEmitter.emit(
+            'coach.reply.generated',
+            new CoachReplyGeneratedEvent(userId, session.athleteId, session.id, assistantMessage.id),
+          );
+
+          subscriber.next({ isDone: true });
+          subscriber.complete();
+        } catch (error) {
+          this.logger.error('Streaming failed', error);
+          subscriber.error(error);
+        }
+      };
+
+      start();
+    });
   }
 
   /** Sends a message to the coach and returns the generated reply. */
@@ -183,24 +360,38 @@ export class CoachService {
     context: CoachContextInput,
     history: CoachMessage[],
     currentUserMessage: string,
+    toolResults?: CoachToolExecutionResult[],
   ): Array<{
     role: 'system' | 'developer' | 'user' | 'assistant';
-    content: Array<{ type: 'input_text'; text: string }>;
+    content: Array<{ type: 'input_text' | 'output_text'; text: string }>;
   }> {
+    const systemContent = this.promptBuilder.buildContextMessage(context);
+    const toolContent = toolResults?.length
+      ? `\n\nTool Results:\n${JSON.stringify(toolResults, null, 2)}`
+      : '';
+
     const messages: Array<{
       role: 'system' | 'developer' | 'user' | 'assistant';
-      content: Array<{ type: 'input_text'; text: string }>;
+      content: Array<{ type: 'input_text' | 'output_text'; text: string }>;
     }> = [
       {
         role: 'system',
-        content: [{ type: 'input_text', text: this.promptBuilder.buildContextMessage(context) }],
+        content: [{ type: 'input_text', text: systemContent + toolContent }],
       },
     ];
 
-    history.slice(-8).forEach((message) => {
+    history.slice(-12).forEach((message) => {
+      // Skip tool messages in prompt as they are merged into system or developer
+      if (message.role === 'tool') return;
+
       messages.push({
-        role: message.role === 'tool' ? 'developer' : message.role,
-        content: [{ type: 'input_text', text: message.content }],
+        role: message.role as any,
+        content: [
+          {
+            type: message.role === 'assistant' ? 'output_text' : 'input_text',
+            text: message.content,
+          },
+        ],
       });
     });
 
@@ -220,27 +411,10 @@ export class CoachService {
     toolResults: CoachToolExecutionResult[],
   ): Array<{
     role: 'system' | 'developer' | 'user' | 'assistant';
-    content: Array<{ type: 'input_text'; text: string }>;
+    content: Array<{ type: 'input_text' | 'output_text'; text: string }>;
   }> {
-    const messages = this.buildPromptMessages(context, history, currentUserMessage);
-    messages.splice(1, 0, {
-      role: 'developer',
-      content: [
-        {
-          type: 'input_text',
-          text: JSON.stringify(
-            {
-              draft,
-              toolResults,
-            },
-            null,
-            2,
-          ),
-        },
-      ],
-    });
-
-    return messages;
+    // Merge tool results into a more robust context-aware prompt
+    return this.buildPromptMessages(context, history, currentUserMessage, toolResults);
   }
 
   private async getMessages(sessionId: string): Promise<CoachMessage[]> {

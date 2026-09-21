@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Sse, MessageEvent } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { map, Observable } from 'rxjs';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
@@ -34,6 +35,16 @@ export class CoachController {
     return this.coachService.createSession(user.id, dto);
   }
 
+  @Get('sessions/latest')
+  @ApiOperation({ summary: 'Get the latest coaching session' })
+  @ApiOkResponse({
+    description: 'Latest coach session with message history',
+    type: CoachSessionDetailResponseDto,
+  })
+  async getLatestSession(@CurrentUser() user: AuthUserContext): Promise<CoachSessionDetailResponseDto> {
+    return this.coachService.getLatestSession(user.id);
+  }
+
   @Get('sessions/:id')
   @ApiOperation({ summary: 'Get a coaching session' })
   @ApiOkResponse({
@@ -43,6 +54,21 @@ export class CoachController {
   })
   getSession(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<CoachSessionDetailResponseDto> {
     return this.coachService.getSession(user.id, id);
+  }
+
+  @Sse('sessions/:id/stream')
+  @ApiOperation({ summary: 'Stream a message from the coach' })
+  async streamMessage(
+    @CurrentUser() user: AuthUserContext,
+    @Param('id') id: string,
+    @Query('message') message: string,
+  ): Promise<Observable<MessageEvent>> {
+    const stream = await this.coachService.streamMessage(user.id, id, { message });
+    return stream.pipe(
+      map((chunk) => ({
+        data: chunk,
+      })),
+    );
   }
 
   @Post('sessions/:id/messages')

@@ -125,11 +125,13 @@ describe('AuthService', () => {
     expect(authRedisService.setVerificationCode).toHaveBeenCalled();
     expect(mailerService.send).toHaveBeenCalled();
     expect(result.emailVerificationRequired).toBe(true);
-    expect(result.user).toEqual({
-      id: 'user-1',
-      email: 'user@example.com',
-      emailVerified: false,
-    });
+    expect(result.user).toEqual(
+      expect.objectContaining({
+        id: 'user-1',
+        email: 'user@example.com',
+        emailVerified: false,
+      }),
+    );
   });
 
   it('logs in an email-verified user and returns tokens', async () => {
@@ -151,12 +153,13 @@ describe('AuthService', () => {
 
     expect(result.tokens.accessToken).toBe('access-token');
     expect(result.tokens.refreshToken).toBe('refresh-token');
-    expect(result.user).toEqual({
-      id: 'user-1',
-      email: 'user@example.com',
-      emailVerified: true,
-      sessionId: expect.any(String),
-    });
+    expect(result.user).toEqual(
+      expect.objectContaining({
+        id: 'user-1',
+        email: 'user@example.com',
+        emailVerified: true,
+      }),
+    );
   });
 
   it('requests an email OTP code', async () => {

@@ -116,8 +116,16 @@ export class TrainingService {
     return this.getLatestStateSnapshot(athlete.id, true);
   }
 
-  /** Finds an athlete profile by owner user id. */
-  async findAthleteByUserId(userId: string): Promise<AthleteView | null> {
+  /** Finds or creates an athlete profile for the user. */
+  async getOrCreateAthlete(userId: string): Promise<AthleteView> {
+    const athlete = await this.athleteModel.findOne({ where: { userId } });
+    if (athlete) {
+      return this.toAthleteView(athlete);
+    }
+    return this.createAthlete(userId, { experienceLevel: 'intermediate' });
+  }
+
+  /** Finds an athlete profile by owner user id. */  async findAthleteByUserId(userId: string): Promise<AthleteView | null> {
     const athlete = await this.athleteModel.findOne({ where: { userId } });
     return athlete ? this.toAthleteView(athlete) : null;
   }
