@@ -5,6 +5,86 @@
     "progress": "Прогресс",
     "profile": "Профиль"
   },
+  "plan": {
+    "title": "Тренировочный план",
+    "overview": {
+      "weekProgress": "Неделя {{current}} из {{total}}",
+      "daysToRace": "{{days}} дн. до старта",
+      "status": {
+        "notStarted": "Скоро старт",
+        "active": "Активен",
+        "completed": "План завершён"
+      }
+    },
+    "timeline": {
+      "header": "План подготовки",
+      "weekLabel": "НЕДЕЛЯ {{number}}",
+      "currentBadge": "ТЕКУЩАЯ",
+      "completedBadge": "ПРОЙДЕНА",
+      "upcomingBadge": "ПРЕДСТОИТ",
+      "workoutsCount": "{{count}} тренировки",
+      "distanceKm": "{{distance}} км"
+    },
+    "phases": {
+      "BASE": "БАЗА",
+      "BUILD": "РАЗВИТИЕ",
+      "RECOVERY": "ВОССТАНОВЛЕНИЕ",
+      "SPECIFIC": "СПЕЦИАЛЬНАЯ",
+      "PEAK": "ПИК",
+      "TAPER": "ТЕЙПЕР",
+      "RACE": "ЗАБЕГ"
+    },
+    "currentWeekContext": {
+      "sectionTitle": "На этой неделе",
+      "keyFocus": "Главный фокус"
+    },
+    "adaptations": {
+      "sectionTitle": "Последние изменения",
+      "onTrack": "План выполняется по графику",
+      "daysAgo": "{{days}} дн. назад",
+      "hoursAgo": "{{hours}} ч. назад",
+      "justNow": "Только что"
+    },
+    "weekDetails": {
+      "title": "Детали недели {{number}}",
+      "weeklyFocus": "Фокус недели",
+      "trainingIntent": "Цель этапа",
+      "plannedVolume": "Запланированный объём",
+      "workouts": "тренировок",
+      "distance": "км",
+      "keySessions": "Ключевые тренировки",
+      "changesThisWeek": "Изменения на этой неделе",
+      "close": "Закрыть"
+    },
+    "adaptationDetails": {
+      "title": "Детали изменения",
+      "whatChanged": "Что изменилось",
+      "whyItChanged": "Почему изменилось",
+      "affectedWeek": "Затронутая неделя",
+      "whenItHappened": "Когда произошло",
+      "close": "Закрыть"
+    },
+    "emptyState": {
+      "title": "Твой тренировочный путь начинается здесь",
+      "description": "Поставь беговую цель, и Трефикс построит персональный план подготовки.",
+      "createButton": "Создать план"
+    },
+    "notStartedState": {
+      "title": "Ваш план скоро начнётся",
+      "subtitle": "Старт {{date}}",
+      "description": "Готовьтесь к первой неделе. Расписание тренировок откроется автоматически в день старта."
+    },
+    "completedState": {
+      "title": "Цель достигнута!",
+      "description": "Вы успешно прошли все {{total}} недель вашего плана. Отличная работа!",
+      "newGoalButton": "Поставить новую цель"
+    },
+    "errorState": {
+      "title": "Не удалось загрузить план",
+      "description": "Проверьте соединение с сетью и попробуйте снова.",
+      "retryButton": "Попробовать снова"
+    }
+  },
   "trefix": {
     "title": "Трефикс",
     "status": "онлайн",

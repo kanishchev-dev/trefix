@@ -237,6 +237,104 @@ export type TrainingWorkoutAnalysis = z.infer<
   typeof trainingWorkoutAnalysisSchema
 >;
 
+// --- Plan Overview ---
+
+export const planPhaseSchema = z.enum([
+  "BASE",
+  "BUILD",
+  "RECOVERY",
+  "SPECIFIC",
+  "PEAK",
+  "TAPER",
+  "RACE",
+]);
+
+export const planWeekStatusSchema = z.enum([
+  "completed",
+  "current",
+  "upcoming",
+]);
+
+export const planWeekSchema = z.object({
+  id: z.string(),
+  weekNumber: z.number(),
+  phase: planPhaseSchema,
+  title: z.string(),
+  status: planWeekStatusSchema,
+  plannedWorkoutsCount: z.number().optional(),
+  plannedDistance: z.number().optional(),
+  plannedLoad: z.number().optional(),
+  summaryText: z.string().optional(),
+  intent: z.string().optional(),
+  keySessions: z.array(z.string()).optional(),
+});
+
+export const currentWeekContextSchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  focusItems: z.array(z.string()).optional(),
+});
+
+export const planAdaptationTypeSchema = z.enum([
+  "HIGH_FATIGUE",
+  "MISSED_WORKOUT",
+  "POOR_PERFORMANCE",
+  "EXCELLENT_PERFORMANCE",
+  "LOW_RECOVERY",
+  "SCHEDULE_CHANGE",
+  "GOAL_CHANGE",
+]);
+
+export const planAdaptationSchema = z.object({
+  id: z.string(),
+  weekId: z.string().optional(),
+  weekNumber: z.number().optional(),
+  type: planAdaptationTypeSchema,
+  title: z.string(),
+  description: z.string().optional(),
+  createdAt: z.string(),
+});
+
+export const planGoalSchema = z.object({
+  title: z.string().optional(),
+  distance: z.string(),
+  targetTime: z.string().optional(),
+  targetDate: z.string().optional(),
+});
+
+export const planStatusSchema = z.enum([
+  "not_started",
+  "active",
+  "completed",
+]);
+
+export const planOverviewSchema = z.object({
+  plan: z.object({
+    id: z.string(),
+    name: z.string().optional(),
+    goal: planGoalSchema,
+    status: planStatusSchema,
+    currentWeek: z.number(),
+    totalWeeks: z.number(),
+    progress: z.number(),
+    currentPhase: planPhaseSchema,
+    startDate: z.string().optional(),
+  }),
+  weeks: z.array(planWeekSchema),
+  currentWeekContext: currentWeekContextSchema.optional(),
+  adaptations: z.array(planAdaptationSchema),
+});
+
+export type PlanPhase = z.infer<typeof planPhaseSchema>;
+export type PlanWeekStatus = z.infer<typeof planWeekStatusSchema>;
+export type PlanWeek = z.infer<typeof planWeekSchema>;
+export type CurrentWeekContext = z.infer<typeof currentWeekContextSchema>;
+export type PlanAdaptationType = z.infer<typeof planAdaptationTypeSchema>;
+export type PlanAdaptation = z.infer<typeof planAdaptationSchema>;
+export type PlanGoal = z.infer<typeof planGoalSchema>;
+export type PlanStatus = z.infer<typeof planStatusSchema>;
+export type PlanOverview = z.infer<typeof planOverviewSchema>;
+
 // --- Coach ---
 
 export const coachSessionSchema = z.object({

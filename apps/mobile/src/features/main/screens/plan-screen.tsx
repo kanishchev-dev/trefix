@@ -1,5 +1,8 @@
-import { StyleSheet, Text } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+
+import { type PlanAdaptation, type PlanWeek } from "@workspace/api-client";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import {
   HeaderLogo,
@@ -7,86 +10,224 @@ import {
   HeaderTemplateButton,
 } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
+import { CurrentWeekContextCard } from "../../plan/components/current-week-context-card";
+import { PlanAdaptationDetailsSheet } from "../../plan/components/plan-adaptation-details-sheet";
+import { PlanCompletedState } from "../../plan/components/plan-completed-state";
+import { PlanEmptyState } from "../../plan/components/plan-empty-state";
+import { PlanErrorState } from "../../plan/components/plan-error-state";
+import { PlanNotStartedState } from "../../plan/components/plan-not-started-state";
+import { PlanOverviewCard } from "../../plan/components/plan-overview-card";
+import { PlanSkeleton } from "../../plan/components/plan-skeleton";
+import { PlanTimeline } from "../../plan/components/plan-timeline";
+import { PlanWeekDetailsSheet } from "../../plan/components/plan-week-details-sheet";
+import { RecentAdaptationsCard } from "../../plan/components/recent-adaptations-card";
+import {
+  usePlanOverview,
+  type PlanDisplayState,
+} from "../../plan/hooks/use-plan-overview";
 import { type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
-  themeMode: "light" | "dark";
+  themeMode: ThemeMode;
   copy: MainCopy;
 };
 
-const LOREM_IPSUM = `
-PLANNING CONTENT:
-1. Breakfast with Lorem
-2. Meeting with Ipsum
-3. Lunch with Dolor
-4. Coding with Sit Amet
-5. Review with Consectetur
-
-Repeat until success:
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-`.repeat(10);
+const STATE_CYCLE: PlanDisplayState[] = [
+  "active",
+  "not_started",
+  "completed",
+  "empty",
+  "loading",
+  "error",
+];
 
 export function PlanScreen({ theme, themeMode, copy }: Props) {
+  const { displayState, data, switchDisplayState, refresh } =
+    usePlanOverview();
+
+  const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
+  const [selectedAdaptation, setSelectedAdaptation] =
+    useState<PlanAdaptation | null>(null);
+
   const logoSource =
     themeMode === "dark"
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
+  // State switcher for testing all states
+  const handleCycleState = () => {
+    const currentIndex = STATE_CYCLE.indexOf(displayState);
+    const nextIndex = (currentIndex + 1) % STATE_CYCLE.length;
+    switchDisplayState(STATE_CYCLE[nextIndex]);
+  };
+
+  const planCopy = copy.plan;
+
   return (
     <SectionLayout
+      headerCenter={<HeaderLogo source={logoSource} />}
       leftAction={
         <HeaderTemplateButton
+          onPress={handleCycleState}
           theme={theme}
           themeMode={themeMode}
-          onPress={() => undefined}
         />
       }
-      headerCenter={<HeaderLogo source={logoSource} />}
       rightAction={
         <HeaderPlusButton
+          onPress={() => switchDisplayState("active")}
           theme={theme}
           themeMode={themeMode}
-          onPress={() => undefined}
         />
       }
       scrollable
       theme={theme}
       themeMode={themeMode}
     >
-      <Text
-        style={[
-          styles.title,
-          {
-            color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.extrabold,
-          },
-        ]}
-      >
-        {copy.tabs.plan}
-      </Text>
-      <Text
-        style={[
-          styles.text,
-          {
-            color: theme.color.mutedForeground,
-            fontFamily: theme.typography.fontFamily.sans.regular,
-          },
-        ]}
-      >
-        {LOREM_IPSUM}
-      </Text>
+      {/* State Switcher Badge (for testing non-active states) */}
+      {displayState !== "active" ? (
+        <View style={styles.stateBadgeRow}>
+          <View
+            style={[
+              styles.stateBadge,
+              {
+                backgroundColor: theme.color.surfaceElevated,
+                borderColor: theme.color.border,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.stateBadgeText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.semibold,
+                },
+              ]}
+            >
+              State: {displayState}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {/* State Rendering */}
+      {displayState === "loading" ? (
+        <PlanSkeleton theme={theme} themeMode={themeMode} />
+      ) : displayState === "error" ? (
+        <PlanErrorState
+          copy={copy}
+          onRetry={() => switchDisplayState("active")}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ) : displayState === "empty" || !data ? (
+        <PlanEmptyState
+          copy={copy}
+          onCreatePlan={() => switchDisplayState("active")}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ) : displayState === "not_started" ? (
+        <PlanNotStartedState
+          copy={copy}
+          onSelectWeek={setSelectedWeek}
+          overview={data}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ) : displayState === "completed" ? (
+        <PlanCompletedState
+          copy={copy}
+          onNewGoal={() => switchDisplayState("active")}
+          onSelectWeek={setSelectedWeek}
+          overview={data}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ) : (
+        /* Active Plan View */
+        <>
+          {/* Plan Goal Overview */}
+          <PlanOverviewCard
+            copy={copy}
+            overview={data}
+            theme={theme}
+            themeMode={themeMode}
+          />
+
+          {/* Training Plan Timeline */}
+          <PlanTimeline
+            copy={copy}
+            onSelectWeek={setSelectedWeek}
+            theme={theme}
+            themeMode={themeMode}
+            weeks={data.weeks}
+          />
+
+          {/* Current Week Context */}
+          {data.currentWeekContext ? (
+            <CurrentWeekContextCard
+              context={data.currentWeekContext}
+              copy={copy}
+              theme={theme}
+              themeMode={themeMode}
+            />
+          ) : null}
+
+          {/* Recent Adaptations */}
+          <RecentAdaptationsCard
+            adaptations={data.adaptations}
+            copy={copy}
+            onSelectAdaptation={setSelectedAdaptation}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </>
+      )}
+
+      {/* Week Details Sheet */}
+      <PlanWeekDetailsSheet
+        adaptations={data?.adaptations}
+        copy={copy}
+        onClose={() => setSelectedWeek(null)}
+        theme={theme}
+        themeMode={themeMode}
+        visible={selectedWeek !== null}
+        week={selectedWeek}
+      />
+
+      {/* Adaptation Details Sheet */}
+      <PlanAdaptationDetailsSheet
+        adaptation={selectedAdaptation}
+        copy={copy}
+        onClose={() => setSelectedAdaptation(null)}
+        theme={theme}
+        themeMode={themeMode}
+        visible={selectedAdaptation !== null}
+      />
     </SectionLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 36,
-    marginBottom: 24,
+  stateBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginBottom: 12,
   },
-  text: {
-    fontSize: 18,
-    lineHeight: 28,
+  stateBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  stateBadgeText: {
+    fontSize: 11,
+    lineHeight: 15,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
 });

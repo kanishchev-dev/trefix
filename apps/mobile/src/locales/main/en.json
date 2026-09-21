@@ -5,6 +5,86 @@
     "progress": "Progress",
     "profile": "Profile"
   },
+  "plan": {
+    "title": "Training Plan",
+    "overview": {
+      "weekProgress": "Week {{current}} of {{total}}",
+      "daysToRace": "{{days}} days to race",
+      "status": {
+        "notStarted": "Starts soon",
+        "active": "Active",
+        "completed": "Plan completed"
+      }
+    },
+    "timeline": {
+      "header": "Training plan",
+      "weekLabel": "WEEK {{number}}",
+      "currentBadge": "CURRENT",
+      "completedBadge": "COMPLETED",
+      "upcomingBadge": "UPCOMING",
+      "workoutsCount": "{{count}} workouts",
+      "distanceKm": "{{distance}} km"
+    },
+    "phases": {
+      "BASE": "BASE",
+      "BUILD": "BUILD",
+      "RECOVERY": "RECOVERY",
+      "SPECIFIC": "SPECIFIC",
+      "PEAK": "PEAK",
+      "TAPER": "TAPER",
+      "RACE": "RACE"
+    },
+    "currentWeekContext": {
+      "sectionTitle": "This week",
+      "keyFocus": "Key focus"
+    },
+    "adaptations": {
+      "sectionTitle": "Recent adaptations",
+      "onTrack": "Your plan is on track",
+      "daysAgo": "{{days}}d ago",
+      "hoursAgo": "{{hours}}h ago",
+      "justNow": "Just now"
+    },
+    "weekDetails": {
+      "title": "Week {{number}} Details",
+      "weeklyFocus": "Weekly focus",
+      "trainingIntent": "Training intent",
+      "plannedVolume": "Planned volume",
+      "workouts": "workouts",
+      "distance": "km",
+      "keySessions": "Key sessions",
+      "changesThisWeek": "Adaptations for this week",
+      "close": "Close"
+    },
+    "adaptationDetails": {
+      "title": "Adaptation Details",
+      "whatChanged": "What changed",
+      "whyItChanged": "Why it changed",
+      "affectedWeek": "Affected week",
+      "whenItHappened": "When it happened",
+      "close": "Close"
+    },
+    "emptyState": {
+      "title": "Your training plan starts here",
+      "description": "Set a running goal and Trefix will build your training plan around it.",
+      "createButton": "Create a plan"
+    },
+    "notStartedState": {
+      "title": "Your plan starts soon",
+      "subtitle": "Starts {{date}}",
+      "description": "Get ready for Week 1. Your training schedule will unlock automatically on the start date."
+    },
+    "completedState": {
+      "title": "Goal Achieved!",
+      "description": "You completed all {{total}} weeks of your training plan. Great job!",
+      "newGoalButton": "Start a new goal"
+    },
+    "errorState": {
+      "title": "We couldn't load your plan",
+      "description": "Check your connection and try again.",
+      "retryButton": "Try again"
+    }
+  },
   "trefix": {
     "title": "Trefix",
     "status": "online",
