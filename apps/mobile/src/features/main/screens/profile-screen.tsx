@@ -129,7 +129,7 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
-  const profileJoinedAt = user ? new Date(user.createdAt) : new Date();
+  const profileJoinedAt = user?.createdAt ? new Date(user.createdAt) : new Date();
   const appVersion = appConfig.expo.version ?? "1.0.0";
 
   return (

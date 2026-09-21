@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -37,6 +38,8 @@ import {
 } from "../main/components/header";
 import { useTrefixRuntime } from "./use-trefix-runtime";
 import { type MainCopy } from "../../locales";
+import { useAthlete } from "../main/hooks/use-athlete";
+import { getLatestCoachSession } from "../../lib/coach-api";
 
 type Props = {
   theme: ThemeTokens;
@@ -51,12 +54,59 @@ type SelectedAttachment = {
   mimeType: string;
 };
 
+type HistoryData = {
+  sessionId: string | null;
+  messages: any[];
+};
+
 export function TrefixChatScreen({ theme, themeMode, copy, onBack }: Props) {
-  const runtime = useTrefixRuntime();
+  const { data: athlete } = useAthlete();
+  const [history, setHistory] = useState<HistoryData | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const latest = await getLatestCoachSession();
+        if (latest) {
+          const messages = latest.messages
+            .filter((m) => m.role !== "tool")
+            .map((m) => ({
+              id: m.id,
+              role: m.role,
+              content: [{ type: "text", text: m.content }],
+            }));
+          setHistory({ sessionId: latest.session.id, messages });
+        } else {
+          setHistory({ sessionId: null, messages: [] });
+        }
+      } catch (e) {
+        setHistory({ sessionId: null, messages: [] });
+      }
+    }
+    load();
+  }, []);
+
   const logoSource =
     themeMode === "dark"
       ? require("../../../assets/trefix-logo-light.png")
       : require("../../../assets/trefix-logo-dark.png");
+
+  if (!history) {
+    return (
+      <View
+        style={[
+          styles.root,
+          {
+            backgroundColor: theme.color.background,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <ActivityIndicator color={theme.color.primary} size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: theme.color.background }]}>
@@ -73,10 +123,40 @@ export function TrefixChatScreen({ theme, themeMode, copy, onBack }: Props) {
         themeMode={themeMode}
       />
 
-      <AssistantRuntimeProvider runtime={runtime}>
-        <ChatSurface theme={theme} themeMode={themeMode} copy={copy} />
-      </AssistantRuntimeProvider>
+      <TrefixChatContent
+        athleteId={athlete?.id}
+        history={history}
+        theme={theme}
+        themeMode={themeMode}
+        copy={copy}
+      />
     </View>
+  );
+}
+
+function TrefixChatContent({
+  athleteId,
+  history,
+  theme,
+  themeMode,
+  copy,
+}: {
+  athleteId: string | undefined;
+  history: HistoryData;
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  copy: MainCopy["trefix"];
+}) {
+  const runtime = useTrefixRuntime(
+    athleteId,
+    history.sessionId,
+    history.messages,
+  );
+
+  return (
+    <AssistantRuntimeProvider runtime={runtime}>
+      <ChatSurface theme={theme} themeMode={themeMode} copy={copy} />
+    </AssistantRuntimeProvider>
   );
 }
 
@@ -108,9 +188,7 @@ function ChatSurface({
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <TrefixEmptyState theme={theme} copy={copy} />
-          }
+          ListEmptyComponent={<TrefixEmptyState theme={theme} copy={copy} />}
         >
           {({ message }) =>
             message.role === "user" ? (
@@ -511,7 +589,10 @@ function AttachmentPreview({
       ]}
     >
       {kind === "image" ? (
-        <Image source={{ uri: attachment.uri }} style={styles.attachmentImage} />
+        <Image
+          source={{ uri: attachment.uri }}
+          style={styles.attachmentImage}
+        />
       ) : (
         <View
           style={[
