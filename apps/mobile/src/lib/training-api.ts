@@ -1,7 +1,9 @@
 import {
+  planOverviewSchema,
   trainingAthleteSchema,
   trainingPlanSchema,
   trainingStateSchema,
+  type PlanOverview,
   type TrainingAthlete,
   type TrainingPlan,
   type TrainingState,
@@ -52,4 +54,11 @@ export async function getLatestPlan(
     return trainingPlanSchema.parse(response[0]);
   }
   return null;
+}
+
+export async function getPlanOverview(planId = "current"): Promise<PlanOverview> {
+  const response = await request<unknown>(`/plans/${planId}/overview`, {
+    useAuth: true,
+  });
+  return planOverviewSchema.parse(response);
 }

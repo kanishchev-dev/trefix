@@ -33,18 +33,8 @@ type Props = {
   copy: MainCopy;
 };
 
-const STATE_CYCLE: PlanDisplayState[] = [
-  "active",
-  "not_started",
-  "completed",
-  "empty",
-  "loading",
-  "error",
-];
-
 export function PlanScreen({ theme, themeMode, copy }: Props) {
-  const { displayState, data, switchDisplayState, refresh } =
-    usePlanOverview();
+  const { displayState, data, refresh, isRefreshing } = usePlanOverview();
 
   const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
   const [selectedAdaptation, setSelectedAdaptation] =
@@ -55,77 +45,33 @@ export function PlanScreen({ theme, themeMode, copy }: Props) {
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
-  // State switcher for testing all states
-  const handleCycleState = () => {
-    const currentIndex = STATE_CYCLE.indexOf(displayState);
-    const nextIndex = (currentIndex + 1) % STATE_CYCLE.length;
-    switchDisplayState(STATE_CYCLE[nextIndex]);
-  };
-
   const planCopy = copy.plan;
 
   return (
     <SectionLayout
       headerCenter={<HeaderLogo source={logoSource} />}
-      leftAction={
-        <HeaderTemplateButton
-          onPress={handleCycleState}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      }
-      rightAction={
-        <HeaderPlusButton
-          onPress={() => switchDisplayState("active")}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      }
       scrollable
+      refreshing={isRefreshing}
+      onRefresh={refresh}
       theme={theme}
       themeMode={themeMode}
     >
-      {/* State Switcher Badge (for testing non-active states) */}
-      {displayState !== "active" ? (
-        <View style={styles.stateBadgeRow}>
-          <View
-            style={[
-              styles.stateBadge,
-              {
-                backgroundColor: theme.color.surfaceElevated,
-                borderColor: theme.color.border,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.stateBadgeText,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            >
-              State: {displayState}
-            </Text>
-          </View>
-        </View>
-      ) : null}
-
       {/* State Rendering */}
       {displayState === "loading" ? (
         <PlanSkeleton theme={theme} themeMode={themeMode} />
       ) : displayState === "error" ? (
         <PlanErrorState
           copy={copy}
-          onRetry={() => switchDisplayState("active")}
+          onRetry={refresh}
           theme={theme}
           themeMode={themeMode}
         />
       ) : displayState === "empty" || !data ? (
         <PlanEmptyState
           copy={copy}
-          onCreatePlan={() => switchDisplayState("active")}
+          onCreatePlan={() => {
+            /* TODO: Navigate to Goal Creation flow */
+          }}
           theme={theme}
           themeMode={themeMode}
         />

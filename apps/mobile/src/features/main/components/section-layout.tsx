@@ -3,6 +3,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  RefreshControl,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
@@ -22,6 +23,8 @@ type Props = {
   headerContentHeight?: number;
   backgroundContent?: ReactNode;
   scrollable?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   children: ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
 };
@@ -35,6 +38,8 @@ export function SectionLayout({
   headerContentHeight,
   backgroundContent,
   scrollable = false,
+  refreshing,
+  onRefresh,
   children,
   contentStyle,
 }: Props) {
@@ -64,6 +69,17 @@ export function SectionLayout({
             scrollIndicatorInsets={{ top: 0, bottom: insets.bottom + 136 }}
             showsVerticalScrollIndicator={false}
             style={styles.scrollView}
+            refreshControl={
+              onRefresh ? (
+                <RefreshControl
+                  refreshing={refreshing || false}
+                  onRefresh={onRefresh}
+                  tintColor={theme.color.mutedForeground}
+                  colors={[theme.color.primary]}
+                  progressViewOffset={insets.top + 20}
+                />
+              ) : undefined
+            }
           >
             {children}
           </ScrollView>
