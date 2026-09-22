@@ -101,6 +101,102 @@
     ],
     "composerPlaceholder": "Напишите сообщение..."
   },
+  "progress": {
+    "title": "Прогресс",
+    "askTrefix": "Спросить Трефикс",
+    "periods": {
+      "4W": "4Т",
+      "8W": "8Т",
+      "3M": "3М",
+      "6M": "6М",
+      "1Y": "1Г"
+    },
+    "form": {
+      "sectionTitle": "ТЕКУЩАЯ ФОРМА",
+      "strongForm": "ОТЛИЧНАЯ ФОРМА",
+      "buildingForm": "НАБОР ФОРМЫ",
+      "recoveringForm": "ВОССТАНОВЛЕНИЕ",
+      "peakForm": "ПИКОВАЯ ФОРМА",
+      "taperingForm": "ПОДВОДКА",
+      "fitness": "Фитнес",
+      "fatigue": "Усталость",
+      "form": "Форма",
+      "improving": "Растёт",
+      "stable": "Стабильно",
+      "declining": "Снижается",
+      "comparisonText": "+{{change}} за последние 6 недель",
+      "statuses": {
+        "BUILDING": "Набор формы",
+        "MAINTAINING": "Поддержание",
+        "RECOVERING": "Восстановление",
+        "PEAK": "Пик",
+        "TAPERING": "Подводка"
+      }
+    },
+    "goal": {
+      "sectionTitle": "ТВОЯ ЦЕЛЬ",
+      "target": "ЦЕЛЬ",
+      "currentEstimate": "ТЕКУЩИЙ ПРОГНОЗ",
+      "toGo": "ОСТАЛОСЬ",
+      "statuses": {
+        "ON_TRACK": "По графику",
+        "IMPROVING": "Улучшается",
+        "BEHIND": "Отстаёт",
+        "ACHIEVED": "Достигнуто",
+        "NO_LONGER_ACTIVE": "Неактивно"
+      }
+    },
+    "capabilities": {
+      "sectionTitle": "КАЧЕСТВА БЕГУНА",
+      "types": {
+        "ENDURANCE": "Выносливость",
+        "SPEED": "Скорость",
+        "THRESHOLD": "Порог",
+        "RECOVERY": "Восстановление",
+        "CONSISTENCY": "Регулярность"
+      },
+      "relatedFactors": "Ключевые факторы роста",
+      "detailTitle": "Детали качества"
+    },
+    "performance": {
+      "sectionTitle": "ДИНАМИКА РЕЗУЛЬТАТОВ",
+      "metrics": {
+        "distance": "Дистанция",
+        "pace": "Темп",
+        "heartRate": "Пульс",
+        "trainingLoad": "Нагрузка",
+        "elevation": "Набор высоты"
+      },
+      "comparableNote": "Сравнение при сопоставимых условиях"
+    },
+    "milestones": {
+      "sectionTitle": "ДОСТИЖЕНИЯ",
+      "viewAll": "Все",
+      "allTitle": "Все достижения",
+      "detailTitle": "Детали достижения",
+      "achievedDate": "Достигнуто {{date}}",
+      "previousBest": "Предыдущий результат",
+      "improvedBy": "Улучшение на",
+      "context": "Контекст"
+    },
+    "impact": {
+      "sectionTitle": "ВЛИЯНИЕ ТРЕНИРОВОК",
+      "mainContribution": "Наибольший вклад внесли:"
+    },
+    "emptyState": {
+      "title": "Твой прогресс только начинается",
+      "description": "Выполни первые тренировки, и Трефикс начнет формировать твой профиль бегуна."
+    },
+    "insufficientData": {
+      "title": "Недостаточно данных",
+      "description": "Выполни ещё несколько качественных тренировок, чтобы открыть этот показатель."
+    },
+    "errorState": {
+      "title": "Не удалось загрузить прогресс",
+      "description": "Проверьте соединение с сетью и попробуйте снова.",
+      "retry": "Попробовать снова"
+    }
+  },
   "profile": {
     "hero": {
       "name": "Алекс Джонсон",

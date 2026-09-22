@@ -101,6 +101,102 @@
     ],
     "composerPlaceholder": "Write a message..."
   },
+  "progress": {
+    "title": "Progress",
+    "askTrefix": "Ask Trefix",
+    "periods": {
+      "4W": "4W",
+      "8W": "8W",
+      "3M": "3M",
+      "6M": "6M",
+      "1Y": "1Y"
+    },
+    "form": {
+      "sectionTitle": "CURRENT FORM",
+      "strongForm": "STRONG FORM",
+      "buildingForm": "BUILDING FORM",
+      "recoveringForm": "RECOVERING FORM",
+      "peakForm": "PEAK FORM",
+      "taperingForm": "TAPERING FORM",
+      "fitness": "Fitness",
+      "fatigue": "Fatigue",
+      "form": "Form",
+      "improving": "Improving",
+      "stable": "Stable",
+      "declining": "Declining",
+      "comparisonText": "+{{change}} compared with 6 weeks ago",
+      "statuses": {
+        "BUILDING": "Building",
+        "MAINTAINING": "Maintaining",
+        "RECOVERING": "Recovering",
+        "PEAK": "Peak",
+        "TAPERING": "Tapering"
+      }
+    },
+    "goal": {
+      "sectionTitle": "YOUR GOAL",
+      "target": "TARGET",
+      "currentEstimate": "CURRENT ESTIMATE",
+      "toGo": "TO GO",
+      "statuses": {
+        "ON_TRACK": "On track",
+        "IMPROVING": "Improving",
+        "BEHIND": "Behind",
+        "ACHIEVED": "Achieved",
+        "NO_LONGER_ACTIVE": "Inactive"
+      }
+    },
+    "capabilities": {
+      "sectionTitle": "RUNNER CAPABILITIES",
+      "types": {
+        "ENDURANCE": "Endurance",
+        "SPEED": "Speed",
+        "THRESHOLD": "Threshold",
+        "RECOVERY": "Recovery",
+        "CONSISTENCY": "Consistency"
+      },
+      "relatedFactors": "Key contributing factors",
+      "detailTitle": "Capability Details"
+    },
+    "performance": {
+      "sectionTitle": "PERFORMANCE TRENDS",
+      "metrics": {
+        "distance": "Distance",
+        "pace": "Pace",
+        "heartRate": "Heart Rate",
+        "trainingLoad": "Load",
+        "elevation": "Elevation"
+      },
+      "comparableNote": "Compared at similar conditions"
+    },
+    "milestones": {
+      "sectionTitle": "MILESTONES",
+      "viewAll": "View all",
+      "allTitle": "All Milestones",
+      "detailTitle": "Milestone Details",
+      "achievedDate": "Achieved on {{date}}",
+      "previousBest": "Previous best",
+      "improvedBy": "You improved by",
+      "context": "Context"
+    },
+    "impact": {
+      "sectionTitle": "TRAINING IMPACT",
+      "mainContribution": "The biggest contribution came from:"
+    },
+    "emptyState": {
+      "title": "Your progress is just beginning",
+      "description": "Complete a few more runs and Trefix will start building your runner profile."
+    },
+    "insufficientData": {
+      "title": "Not enough data yet",
+      "description": "Complete a few more quality sessions to unlock this trend."
+    },
+    "errorState": {
+      "title": "Couldn't load progress",
+      "description": "Please check your network connection and try again.",
+      "retry": "Try again"
+    }
+  },
   "profile": {
     "hero": {
       "name": "Alex Johnson",

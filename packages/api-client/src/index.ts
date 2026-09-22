@@ -400,6 +400,166 @@ export type CoachSessionDetail = z.infer<typeof coachSessionDetailSchema>;
 export type CreateCoachSessionInput = z.infer<typeof createCoachSessionSchema>;
 export type SendCoachMessageInput = z.infer<typeof sendCoachMessageSchema>;
 
+// --- Progress ---
+
+export const progressPeriodSchema = z.enum(["4W", "8W", "3M", "6M", "1Y"]);
+
+export const progressFormStatusSchema = z.enum([
+  "BUILDING",
+  "MAINTAINING",
+  "RECOVERING",
+  "PEAK",
+  "TAPERING",
+]);
+
+export const progressTrendSchema = z.enum([
+  "IMPROVING",
+  "STABLE",
+  "DECLINING",
+]);
+
+export const progressFormSchema = z.object({
+  fitness: z.number(),
+  fatigue: z.number(),
+  form: z.number(),
+  status: progressFormStatusSchema,
+  trend: progressTrendSchema,
+  change: z.number(),
+  periodComparison: z.string().optional(),
+});
+
+export const progressGoalTypeSchema = z.enum([
+  "RACE_TIME",
+  "DISTANCE",
+  "PACE",
+  "CONSISTENCY",
+  "CUSTOM",
+]);
+
+export const progressGoalStatusSchema = z.enum([
+  "ON_TRACK",
+  "IMPROVING",
+  "BEHIND",
+  "ACHIEVED",
+  "NO_LONGER_ACTIVE",
+]);
+
+export const progressGoalSchema = z.object({
+  type: progressGoalTypeSchema,
+  title: z.string().optional(),
+  distance: z.union([z.string(), z.number()]).optional(),
+  target: z.string(),
+  currentEstimate: z.string(),
+  delta: z.string(),
+  progress: z.number().optional(),
+  status: progressGoalStatusSchema,
+  targetDate: z.string().optional(),
+});
+
+export const progressCapabilityTypeSchema = z.enum([
+  "ENDURANCE",
+  "SPEED",
+  "THRESHOLD",
+  "RECOVERY",
+  "CONSISTENCY",
+]);
+
+export const progressCapabilityTrendSchema = z.enum(["UP", "STABLE", "DOWN"]);
+
+export const progressCapabilitySchema = z.object({
+  type: progressCapabilityTypeSchema,
+  name: z.string().optional(),
+  value: z.number(),
+  change: z.number(),
+  trend: progressCapabilityTrendSchema,
+  period: z.string().optional(),
+  description: z.string().optional(),
+  currentMetric: z.string().optional(),
+  previousMetric: z.string().optional(),
+  trainingFactors: z.array(z.string()).optional(),
+});
+
+export const progressPerformancePointSchema = z.object({
+  date: z.string(),
+  value: z.number(),
+  label: z.string().optional(),
+});
+
+export const progressPerformanceMetricKeySchema = z.enum([
+  "distance",
+  "pace",
+  "heartRate",
+  "trainingLoad",
+  "elevation",
+]);
+
+export const progressPerformanceMetricSchema = z.object({
+  metric: progressPerformanceMetricKeySchema,
+  title: z.string(),
+  currentValue: z.string(),
+  previousValue: z.string().optional(),
+  comparableContext: z.string().optional(),
+  changePercent: z.number().optional(),
+  unit: z.string(),
+  dataPoints: z.array(progressPerformancePointSchema),
+});
+
+export const progressMilestoneSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  value: z.string(),
+  date: z.string(),
+  previousBest: z.string().optional(),
+  change: z.string().optional(),
+  context: z.string().optional(),
+  workoutId: z.string().optional(),
+  category: z.string().optional(),
+});
+
+export const progressTrainingImpactFactorSchema = z.object({
+  name: z.string(),
+  percentage: z.number(),
+  description: z.string().optional(),
+});
+
+export const progressTrainingImpactSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  factors: z.array(progressTrainingImpactFactorSchema),
+});
+
+export const progressSnapshotSchema = z.object({
+  period: z.object({
+    from: z.string(),
+    to: z.string(),
+    periodKey: progressPeriodSchema,
+  }),
+  form: progressFormSchema,
+  goal: progressGoalSchema.nullable().optional(),
+  capabilities: z.array(progressCapabilitySchema),
+  performance: z.array(progressPerformanceMetricSchema),
+  milestones: z.array(progressMilestoneSchema),
+  trainingImpact: progressTrainingImpactSchema.nullable().optional(),
+});
+
+export type ProgressPeriod = z.infer<typeof progressPeriodSchema>;
+export type ProgressFormStatus = z.infer<typeof progressFormStatusSchema>;
+export type ProgressTrend = z.infer<typeof progressTrendSchema>;
+export type ProgressForm = z.infer<typeof progressFormSchema>;
+export type ProgressGoalType = z.infer<typeof progressGoalTypeSchema>;
+export type ProgressGoalStatus = z.infer<typeof progressGoalStatusSchema>;
+export type ProgressGoal = z.infer<typeof progressGoalSchema>;
+export type ProgressCapabilityType = z.infer<typeof progressCapabilityTypeSchema>;
+export type ProgressCapabilityTrend = z.infer<typeof progressCapabilityTrendSchema>;
+export type ProgressCapability = z.infer<typeof progressCapabilitySchema>;
+export type ProgressPerformancePoint = z.infer<typeof progressPerformancePointSchema>;
+export type ProgressPerformanceMetricKey = z.infer<typeof progressPerformanceMetricKeySchema>;
+export type ProgressPerformanceMetric = z.infer<typeof progressPerformanceMetricSchema>;
+export type ProgressMilestone = z.infer<typeof progressMilestoneSchema>;
+export type ProgressTrainingImpactFactor = z.infer<typeof progressTrainingImpactFactorSchema>;
+export type ProgressTrainingImpact = z.infer<typeof progressTrainingImpactSchema>;
+export type ProgressSnapshot = z.infer<typeof progressSnapshotSchema>;
+
 export class ApiClientError extends Error {
   readonly status: number;
   readonly code?: string;

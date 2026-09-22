@@ -71,7 +71,12 @@ export function MainTabsScreen({
           <PlanScreen theme={theme} themeMode={themeMode} copy={copy} />
         ) : null}
         {activeTab === "progress" ? (
-          <ProgressScreen theme={theme} themeMode={themeMode} copy={copy} />
+          <ProgressScreen
+            copy={copy}
+            onOpenTrefix={onOpenTrefix}
+            theme={theme}
+            themeMode={themeMode}
+          />
         ) : null}
         {activeTab === "profile" ? (
           <ProfileScreen
