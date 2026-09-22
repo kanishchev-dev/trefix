@@ -601,8 +601,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   logo: {
-    width: 156,
-    height: 36,
+    width: 168,
+    height: 40,
   },
   titlePill: {
     minHeight: 78,
