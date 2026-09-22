@@ -280,6 +280,8 @@ export function Header({
               borderBottomLeftRadius: theme.radius.xl,
               borderBottomRightRadius: theme.radius.xl,
               overflow: "hidden",
+              left: -StyleSheet.hairlineWidth,
+              right: -StyleSheet.hairlineWidth,
             },
           ]}
         >

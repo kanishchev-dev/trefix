@@ -89,6 +89,7 @@ export function TodayCalendarHeader({
   // --- Advanced Gestures & Animations ---
   const translateX = useSharedValue(0);
   const shutterProgress = useSharedValue(isMonth ? 1 : 0);
+  const gestureAxis = useSharedValue(0); // 0: none, 1: horizontal, 2: vertical
 
   useEffect(() => {
     shutterProgress.value = withSpring(isMonth ? 1 : 0, { damping: 20, stiffness: 100 });
@@ -130,9 +131,23 @@ export function TodayCalendarHeader({
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
       const { translationX, translationY } = event;
-      if (Math.abs(translationX) > Math.abs(translationY)) {
-        translateX.value = translationX;
-      } else {
+
+      // Lock gesture axis on first significant movement
+      if (gestureAxis.value === 0) {
+        if (Math.abs(translationX) > Math.abs(translationY) && Math.abs(translationX) > 10) {
+          gestureAxis.value = 1; // Horizontal Carousel
+        } else if (Math.abs(translationY) > Math.abs(translationX) && Math.abs(translationY) > 10) {
+          gestureAxis.value = 2; // Vertical Shutter
+        }
+      }
+
+      if (gestureAxis.value === 1) {
+        // Only allow horizontal carousel if fully expanded or fully collapsed
+        if (shutterProgress.value === 0 || shutterProgress.value === 1) {
+          translateX.value = translationX;
+        }
+      } else if (gestureAxis.value === 2) {
+        // Shutter logic
         const delta = translationY / (MONTH_CONTENT_HEIGHT - WEEK_CONTENT_HEIGHT);
         const startValue = isMonth ? 1 : 0;
         shutterProgress.value = Math.max(0, Math.min(1, startValue + delta));
@@ -140,8 +155,10 @@ export function TodayCalendarHeader({
     })
     .onEnd((event) => {
       const { translationX, translationY, velocityX, velocityY } = event;
+      const currentAxis = gestureAxis.value;
+      gestureAxis.value = 0; // Reset for next gesture
 
-      if (Math.abs(translationY) > Math.abs(translationX) || shutterProgress.value !== (isMonth ? 1 : 0)) {
+      if (currentAxis === 2 || (currentAxis === 0 && Math.abs(translationY) > 20)) {
         const shouldExpand = shutterProgress.value > 0.5 || velocityY > 500;
         const shouldCollapse = shutterProgress.value <= 0.5 || velocityY < -500;
 
@@ -153,7 +170,7 @@ export function TodayCalendarHeader({
           shutterProgress.value = withSpring(isMonth ? 1 : 0, { damping: 20 });
         }
         translateX.value = withSpring(0);
-      } else {
+      } else if (currentAxis === 1) {
         const snapThreshold = SWIPE_THRESHOLD;
         const fastSwipeThreshold = 500;
         const shouldSwipeNext = translationX < -snapThreshold || velocityX < -fastSwipeThreshold;
@@ -172,6 +189,9 @@ export function TodayCalendarHeader({
         } else {
           translateX.value = withSpring(0, { damping: 20, stiffness: 150 });
         }
+      } else {
+        translateX.value = withSpring(0);
+        shutterProgress.value = withSpring(isMonth ? 1 : 0);
       }
     });
 
