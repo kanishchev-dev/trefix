@@ -86,7 +86,7 @@ export function PlanScreen({ theme, themeMode, copy }: Props) {
       ) : displayState === "completed" ? (
         <PlanCompletedState
           copy={copy}
-          onNewGoal={() => switchDisplayState("active")}
+          onNewGoal={refresh}
           onSelectWeek={setSelectedWeek}
           overview={data}
           theme={theme}
