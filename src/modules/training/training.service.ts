@@ -36,6 +36,12 @@ import {
 } from './interfaces/training-views.interface';
 import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
 import {
+  CurrentWeekContextDto,
+  PlanAdaptationDto,
+  PlanOverviewResponseDto,
+  PlanWeekDto,
+} from './dto/plan-overview-response.dto';
+import {
   ATHLETE_GOAL_STATUSES,
   TRAINING_DEFAULT_AVAILABILITY,
   TRAINING_DEFAULT_DURATION_MINUTES,
@@ -574,6 +580,188 @@ export class TrainingService {
     });
 
     return this.toPlanView(plan, workouts);
+  }
+
+  /** Returns a complete overview of the training plan for the screen. */
+  async getPlanOverview(id: string, actorUserId: string): Promise<PlanOverviewResponseDto> {
+    let plan: TrainingPlan | null = null;
+    if (id === 'current') {
+      // Find the most relevant plan: active, then not_started, then most recent completed
+      plan = await this.planModel.findOne({
+        where: { athleteId: (await this.getOrCreateAthlete(actorUserId)).id, status: 'active' },
+        order: [['createdAt', 'DESC']],
+      });
+
+      if (!plan) {
+        plan = await this.planModel.findOne({
+          where: { athleteId: (await this.getOrCreateAthlete(actorUserId)).id, status: 'draft' },
+          order: [['createdAt', 'DESC']],
+        });
+      }
+
+      if (!plan) {
+        plan = await this.planModel.findOne({
+          where: { athleteId: (await this.getOrCreateAthlete(actorUserId)).id },
+          order: [['createdAt', 'DESC']],
+        });
+      }
+    } else {
+      plan = await this.loadPlanOrThrow(id);
+    }
+
+    if (!plan) {
+      throw new EntityNotFoundException('TrainingPlan', id);
+    }
+
+    const athlete = await this.loadAthleteOrThrow(plan.athleteId);
+    this.ensureAthleteOwnership(athlete, actorUserId);
+
+    // Auto-completion logic
+    const now = new Date();
+    const endDate = new Date(plan.endDate);
+    if (plan.status === 'active' && endDate < now) {
+      plan.status = 'completed';
+      await plan.save();
+    }
+
+    const goal = plan.goalId ? await this.loadGoalOrThrow(plan.goalId) : null;
+    const workouts = await this.workoutModel.findAll({
+      where: { planId: plan.id },
+      order: [
+        ['weekNumber', 'ASC'],
+        ['orderInWeek', 'ASC'],
+      ],
+    });
+
+    const adaptations = await this.adaptationEventModel.findAll({
+      where: { planId: plan.id },
+      order: [['createdAt', 'DESC']],
+      limit: 10,
+    });
+
+    const startDate = new Date(plan.startDate);
+    let currentWeekNumber = 0;
+
+    if (now >= startDate) {
+      const diffTime = now.getTime() - startDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      currentWeekNumber = Math.max(1, Math.min(plan.weeks.length, Math.floor(diffDays / 7) + 1));
+    }
+
+    const weeks: PlanWeekDto[] = plan.weeks.map((week: any) => {
+      const weekNumber = Number(week.weekNumber);
+      const weekWorkouts = workouts.filter((w) => w.weekNumber === weekNumber);
+      const totalDistance = weekWorkouts.reduce((sum, w) => sum + w.distanceKm, 0);
+
+      let status: 'completed' | 'current' | 'upcoming';
+      if (currentWeekNumber === 0) {
+        status = 'upcoming';
+      } else if (weekNumber < currentWeekNumber) {
+        status = 'completed';
+      } else if (weekNumber === currentWeekNumber) {
+        status = 'current';
+      } else {
+        status = 'upcoming';
+      }
+
+      return {
+        id: `week-${plan.id}-${weekNumber}`,
+        weekNumber,
+        phase: (week.phase || 'BASE').toUpperCase(),
+        title: this.getWeekTitle(week.phase, weekNumber),
+        status,
+        plannedWorkoutsCount: weekWorkouts.length,
+        plannedDistance: Math.round(totalDistance),
+        plannedLoad: Math.round(week.weeklyLoadTarget || 0),
+        summaryText: `${weekWorkouts.length} workouts · ${Math.round(totalDistance)} km`,
+        intent: this.getWeekIntent(week.phase, weekNumber),
+        keySessions: weekWorkouts
+          .filter((w) => ['interval', 'threshold', 'tempo', 'long_run'].includes(w.type))
+          .map((w) => `${w.type.charAt(0).toUpperCase() + w.type.slice(1)} ${Math.round(w.distanceKm)}km`),
+      };
+    });
+
+    const currentPhase = weeks.find((w) => w.status === 'current')?.phase || weeks[0]?.phase || 'BASE';
+    const currentWeekContext: CurrentWeekContextDto | undefined =
+      currentWeekNumber > 0 && currentWeekNumber <= weeks.length
+        ? {
+            title: weeks[currentWeekNumber - 1].title,
+            description: weeks[currentWeekNumber - 1].intent,
+            focusItems: weeks[currentWeekNumber - 1].keySessions,
+          }
+        : undefined;
+
+    const planStatusMap: Record<string, 'not_started' | 'active' | 'completed'> = {
+      draft: 'not_started',
+      active: 'active',
+      completed: 'completed',
+      paused: 'active',
+    };
+
+    return {
+      plan: {
+        id: plan.id,
+        name: goal ? `${goal.raceDistance.toUpperCase()} Goal` : 'Training Plan',
+        goal: {
+          title: goal ? `${goal.raceDistance.toUpperCase()} Goal` : undefined,
+          distance: goal?.raceDistance || 'Unknown',
+          targetTime: goal?.targetTimeSeconds
+            ? `${Math.floor(goal.targetTimeSeconds / 3600)}h ${Math.floor((goal.targetTimeSeconds % 3600) / 60)}m`
+            : undefined,
+          targetDate: goal?.targetDate,
+        },
+        status: planStatusMap[plan.status] || 'active',
+        currentWeek: currentWeekNumber,
+        totalWeeks: plan.weeks.length,
+        progress: currentWeekNumber > 0 ? currentWeekNumber / plan.weeks.length : 0,
+        currentPhase,
+        startDate: plan.startDate,
+      },
+      weeks,
+      currentWeekContext,
+      adaptations: adaptations.map((a) => ({
+        id: a.id,
+        weekNumber: workouts.find((w) => w.id === a.workoutId)?.weekNumber,
+        type: a.type,
+        title: this.getAdaptationTitle(a.type),
+        description: a.reason,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  private getWeekTitle(phase: string, weekNumber: number): string {
+    const p = phase.toLowerCase();
+    if (p === 'base') return 'Building consistency';
+    if (p === 'build') return 'Increasing training load';
+    if (p === 'specific') return 'Race-specific work';
+    if (p === 'peak') return 'Peak preparation';
+    if (p === 'taper') return 'Reducing load';
+    if (p === 'race') return 'Race week';
+    if (p === 'recovery') return 'Volume recovery';
+    return `Week ${weekNumber} focus`;
+  }
+
+  private getWeekIntent(phase: string, weekNumber: number): string {
+    const p = phase.toLowerCase();
+    if (p === 'base') return 'Establish steady running routine and comfortable easy effort aerobic base.';
+    if (p === 'build') return 'Build aerobic strength while maintaining recovery between quality sessions.';
+    if (p === 'specific') return 'Develop target race pace efficiency and rhythm.';
+    if (p === 'peak') return 'Execute final key race simulation session before reducing volume.';
+    if (p === 'taper') return 'Shed residual fatigue while preserving neural sharpness.';
+    if (p === 'race') return 'Rest, hydrate, carb load and execute your goal race.';
+    if (p === 'recovery') return 'Allow body to adapt to previous load while maintaining frequency.';
+    return 'Focus on consistent training and proper recovery.';
+  }
+
+  private getAdaptationTitle(type: string): string {
+    if (type === 'ADD_RECOVERY') return 'Recovery added';
+    if (type === 'REDUCE_INTENSITY') return 'Intensity reduced';
+    if (type === 'REDUCE_VOLUME') return 'Volume reduced';
+    if (type === 'MOVE') return 'Workout moved';
+    if (type === 'REPLACE') return 'Workout replaced';
+    if (type === 'REGENERATE_PLAN') return 'Plan adjusted';
+    return 'Plan adaptation';
   }
 
   /** Regenerates the future part of an existing training plan. */

@@ -23,6 +23,7 @@ import {
   TrainingWorkoutCompletionResponseDto,
   TrainingWorkoutResponseDto,
 } from './dto/training-response.dto';
+import { PlanOverviewResponseDto } from './dto/plan-overview-response.dto';
 import {
   TRAINING_ADAPTATION_EXAMPLE,
   TRAINING_ATHLETE_EXAMPLE,
@@ -153,6 +154,16 @@ export class TrainingController {
   })
   getPlan(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingPlanResponseDto> {
     return this.trainingService.getPlan(id, user.id);
+  }
+
+  @Get('plans/:id/overview')
+  @ApiOperation({ summary: 'Get a training plan overview for the mobile UI' })
+  @ApiOkResponse({
+    description: 'Training plan overview',
+    type: PlanOverviewResponseDto,
+  })
+  getPlanOverview(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<PlanOverviewResponseDto> {
+    return this.trainingService.getPlanOverview(id, user.id);
   }
 
   @Post('plans/:id/regenerate')
