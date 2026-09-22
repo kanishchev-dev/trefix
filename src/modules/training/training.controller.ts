@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -11,6 +11,7 @@ import { CompleteWorkoutDto } from './dto/complete-workout.dto';
 import { CreateAthleteDto } from './dto/create-athlete.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
+import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
 import { RegeneratePlanDto } from './dto/regenerate-plan.dto';
 import {
   TrainingAdaptationResponseDto,
@@ -95,6 +96,19 @@ export class TrainingController {
       targetId = athlete.id;
     }
     return this.trainingService.getAthleteState(targetId, user.id);
+  }
+
+  @Get('progress')
+  @ApiOperation({ summary: 'Get progress snapshot for current athlete' })
+  @ApiOkResponse({
+    description: 'Progress snapshot',
+    type: ProgressSnapshotResponseDto,
+  })
+  async getProgress(
+    @CurrentUser() user: AuthUserContext,
+    @Query('period') period?: string,
+  ): Promise<ProgressSnapshotResponseDto> {
+    return this.trainingService.getProgressSnapshot(user.id, period);
   }
 
   @Post('goals')
