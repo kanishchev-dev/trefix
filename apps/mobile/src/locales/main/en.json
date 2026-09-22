@@ -5,6 +5,36 @@
     "progress": "Progress",
     "profile": "Profile"
   },
+  "today": {
+    "title": "Today",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "noEvents": "No planned events",
+    "backToToday": "Today",
+    "eventTypes": {
+      "workout": "Workout",
+      "recovery": "Recovery",
+      "rest": "Rest",
+      "insight": "Insight"
+    },
+    "workout": {
+      "statuses": {
+        "planned": "Planned",
+        "completed": "Completed",
+        "missed": "Missed",
+        "modified": "Modified by Trefix"
+      },
+      "actions": {
+        "start": "Start workout",
+        "view": "View result",
+        "why": "Why?"
+      }
+    },
+    "recovery": {
+      "title": "Recovery",
+      "description": "Your body needs rest"
+    }
+  },
   "plan": {
     "title": "Training Plan",
     "overview": {

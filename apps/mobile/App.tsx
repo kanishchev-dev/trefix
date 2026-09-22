@@ -11,6 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   useFonts,
   Inter_400Regular,
@@ -334,153 +335,157 @@ export default function App() {
 
   if (session) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <MainStack.Navigator
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <MainStack.Screen
-                name="main"
-                options={{ headerShown: false }}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <SafeAreaProvider>
+            <NavigationContainer>
+              <MainStack.Navigator
+                screenOptions={{
+                  headerShown: false,
+                }}
               >
-                {({ navigation }) => (
-                  <MainTabsScreen
-                    theme={theme}
-                    themeMode={themeMode}
-                    copy={mainCopy}
-                    userEmail={session.user.email}
-                    onOpenTrefix={() => {
-                      navigation.navigate("trefix");
-                    }}
-                    onLogout={handleLogout}
-                    onEditProfile={() => {
-                      navigation.navigate("profileEdit");
-                    }}
-                  />
-                )}
-              </MainStack.Screen>
-              <MainStack.Screen
-                name="profileEdit"
-                options={{ headerShown: false }}
-              >
-                {({ navigation }) => (
-                  <ProfileEditScreen
-                    theme={theme}
-                    themeMode={themeMode}
-                    copy={mainCopy}
-                    onBack={() => {
-                      navigation.goBack();
-                    }}
-                  />
-                )}
-              </MainStack.Screen>
-              <MainStack.Screen
-                name="trefix"
-                options={{ headerShown: false }}
-              >
-                {({ navigation }) => (
-                  <TrefixScreen
-                    onBack={() => {
-                      navigation.goBack();
-                    }}
-                    theme={theme}
-                    themeMode={themeMode}
-                    copy={mainCopy.trefix}
-                  />
-                )}
-              </MainStack.Screen>
-            </MainStack.Navigator>
-            <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </QueryClientProvider>
+                <MainStack.Screen
+                  name="main"
+                  options={{ headerShown: false }}
+                >
+                  {({ navigation }) => (
+                    <MainTabsScreen
+                      theme={theme}
+                      themeMode={themeMode}
+                      copy={mainCopy}
+                      userEmail={session.user.email}
+                      onOpenTrefix={() => {
+                        navigation.navigate("trefix");
+                      }}
+                      onLogout={handleLogout}
+                      onEditProfile={() => {
+                        navigation.navigate("profileEdit");
+                      }}
+                    />
+                  )}
+                </MainStack.Screen>
+                <MainStack.Screen
+                  name="profileEdit"
+                  options={{ headerShown: false }}
+                >
+                  {({ navigation }) => (
+                    <ProfileEditScreen
+                      theme={theme}
+                      themeMode={themeMode}
+                      copy={mainCopy}
+                      onBack={() => {
+                        navigation.goBack();
+                      }}
+                    />
+                  )}
+                </MainStack.Screen>
+                <MainStack.Screen
+                  name="trefix"
+                  options={{ headerShown: false }}
+                >
+                  {({ navigation }) => (
+                    <TrefixScreen
+                      onBack={() => {
+                        navigation.goBack();
+                      }}
+                      theme={theme}
+                      themeMode={themeMode}
+                      copy={mainCopy.trefix}
+                    />
+                  )}
+                </MainStack.Screen>
+              </MainStack.Navigator>
+              <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
     );
   }
 
   const isAuthBusy = isEmailSubmitting || isSocialSubmitting;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <AuthStack.Navigator
-            screenOptions={{
-              headerShadowVisible: false,
-              headerStyle: { backgroundColor: theme.color.background },
-              headerTitleAlign: "center",
-              headerTintColor: theme.color.foreground,
-            }}
-          >
-          <AuthStack.Screen
-            name="email"
-            options={{ headerShown: false, headerBackTitle: "" }}
-          >
-            {({ navigation }) => (
-              <AuthScreen
-                theme={theme}
-                themeMode={themeMode}
-                copy={authCopy}
-                email={email}
-                isEmailSubmitting={isAuthBusy}
-                isSocialSubmitting={isSocialSubmitting}
-                isSocialDisabled={isAuthBusy}
-                showGoogleButton={isGoogleAuthAvailable}
-                showAppleButton={isAppleAuthAvailable}
-                onEmailChange={setEmail}
-                onSubmitEmail={(submittedEmail) => {
-                  setEmail(submittedEmail);
-                  void handleEmailSubmit(submittedEmail, () =>
-                    navigation.navigate("verification"),
-                  );
-                }}
-                onGooglePress={() => {
-                  void handleSocialPress();
-                }}
-                onApplePress={() => {
-                  void handleApplePress();
-                }}
-              />
-            )}
-          </AuthStack.Screen>
-          <AuthStack.Screen
-            name="verification"
-            options={{
-              headerTransparent: true,
-              headerBackButtonDisplayMode: "minimal",
-              headerTitle: () => (
-                <Image
-                  source={logoSource}
-                  style={{ width: 160, height: 40 }}
-                  resizeMode="contain"
-                />
-              ),
-              headerTintColor: theme.color.foreground,
-              headerBackTitle: "",
-            }}
-          >
-            {() =>
-              challenge ? (
-                <AuthVerificationScreen
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <AuthStack.Navigator
+              screenOptions={{
+                headerShadowVisible: false,
+                headerStyle: { backgroundColor: theme.color.background },
+                headerTitleAlign: "center",
+                headerTintColor: theme.color.foreground,
+              }}
+            >
+            <AuthStack.Screen
+              name="email"
+              options={{ headerShown: false, headerBackTitle: "" }}
+            >
+              {({ navigation }) => (
+                <AuthScreen
                   theme={theme}
+                  themeMode={themeMode}
                   copy={authCopy}
                   email={email}
-                  challenge={challenge}
-                  isSubmitting={isVerificationSubmitting}
-                  onSubmitCode={(submittedCode) => {
-                    void handleVerificationSubmit(submittedCode);
+                  isEmailSubmitting={isAuthBusy}
+                  isSocialSubmitting={isSocialSubmitting}
+                  isSocialDisabled={isAuthBusy}
+                  showGoogleButton={isGoogleAuthAvailable}
+                  showAppleButton={isAppleAuthAvailable}
+                  onEmailChange={setEmail}
+                  onSubmitEmail={(submittedEmail) => {
+                    setEmail(submittedEmail);
+                    void handleEmailSubmit(submittedEmail, () =>
+                      navigation.navigate("verification"),
+                    );
                   }}
-                  onResendCode={() => handleResendCode()}
+                  onGooglePress={() => {
+                    void handleSocialPress();
+                  }}
+                  onApplePress={() => {
+                    void handleApplePress();
+                  }}
                 />
-              ) : null
-            }
-          </AuthStack.Screen>
-        </AuthStack.Navigator>
-      </NavigationContainer>
-      <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
-    </SafeAreaProvider>
-  </QueryClientProvider>
+              )}
+            </AuthStack.Screen>
+            <AuthStack.Screen
+              name="verification"
+              options={{
+                headerTransparent: true,
+                headerBackButtonDisplayMode: "minimal",
+                headerTitle: () => (
+                  <Image
+                    source={logoSource}
+                    style={{ width: 160, height: 40 }}
+                    resizeMode="contain"
+                  />
+                ),
+                headerTintColor: theme.color.foreground,
+                headerBackTitle: "",
+              }}
+            >
+              {() =>
+                challenge ? (
+                  <AuthVerificationScreen
+                    theme={theme}
+                    copy={authCopy}
+                    email={email}
+                    challenge={challenge}
+                    isSubmitting={isVerificationSubmitting}
+                    onSubmitCode={(submittedCode) => {
+                      void handleVerificationSubmit(submittedCode);
+                    }}
+                    onResendCode={() => handleResendCode()}
+                  />
+                ) : null
+              }
+            </AuthStack.Screen>
+          </AuthStack.Navigator>
+        </NavigationContainer>
+        <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+      </SafeAreaProvider>
+    </QueryClientProvider>
+  </GestureHandlerRootView>
   );
 }

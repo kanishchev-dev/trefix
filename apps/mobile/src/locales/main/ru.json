@@ -5,6 +5,36 @@
     "progress": "Прогресс",
     "profile": "Профиль"
   },
+  "today": {
+    "title": "Сегодня",
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "noEvents": "Нет запланированных событий",
+    "backToToday": "Сегодня",
+    "eventTypes": {
+      "workout": "Тренировка",
+      "recovery": "Восстановление",
+      "rest": "Отдых",
+      "insight": "Инсайт"
+    },
+    "workout": {
+      "statuses": {
+        "planned": "Запланировано",
+        "completed": "Выполнено",
+        "missed": "Пропущено",
+        "modified": "Изменено Трефиксом"
+      },
+      "actions": {
+        "start": "Старт тренировки",
+        "view": "Результат",
+        "why": "Почему?"
+      }
+    },
+    "recovery": {
+      "title": "Восстановление",
+      "description": "Вашему телу нужен отдых"
+    }
+  },
   "plan": {
     "title": "Тренировочный план",
     "overview": {

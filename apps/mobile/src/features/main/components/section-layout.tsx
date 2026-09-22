@@ -21,6 +21,8 @@ type Props = {
   leftAction?: ReactNode;
   rightAction?: ReactNode;
   headerContentHeight?: number;
+  headerVariant?: "default" | "calendar";
+  headerBottomContent?: ReactNode;
   backgroundContent?: ReactNode;
   scrollable?: boolean;
   refreshing?: boolean;
@@ -36,6 +38,8 @@ export function SectionLayout({
   leftAction,
   rightAction,
   headerContentHeight,
+  headerVariant = "default",
+  headerBottomContent,
   backgroundContent,
   scrollable = false,
   refreshing,
@@ -96,6 +100,8 @@ export function SectionLayout({
         rightAction={rightAction}
         theme={theme}
         themeMode={themeMode}
+        variant={headerVariant}
+        bottomContent={headerBottomContent}
       />
     </View>
   );

@@ -40,6 +40,8 @@ type HeaderProps = {
   leftAction?: ReactNode;
   rightAction?: ReactNode;
   contentHeight?: number;
+  variant?: "default" | "calendar";
+  bottomContent?: ReactNode;
 };
 
 type HeaderActionButtonProps = {
@@ -194,8 +196,11 @@ export function Header({
   leftAction,
   rightAction,
   contentHeight = HEADER_CONTENT_HEIGHT,
+  variant = "default",
+  bottomContent,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
+  const isCalendar = variant === "calendar";
 
   return (
     <View
@@ -203,65 +208,106 @@ export function Header({
       style={[
         styles.root,
         {
-          height: insets.top + Math.max(HEADER_CONTENT_HEIGHT, BACKGROUND_TOP_OFFSET + BACKGROUND_TOTAL_HEIGHT),
+          height: isCalendar
+            ? undefined // Let it grow with bottomContent
+            : insets.top + Math.max(HEADER_CONTENT_HEIGHT, BACKGROUND_TOP_OFFSET + BACKGROUND_TOTAL_HEIGHT),
         },
       ]}
     >
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: insets.top + BACKGROUND_TOTAL_HEIGHT,
-        }}
-      >
-        <MaskedView
+      {!isCalendar && (
+        <View
           pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-          maskElement={
-            <LinearGradient
-              colors={[
-                "rgba(0, 0, 0, 1)",
-                "rgba(0, 0, 0, 1)",
-                "rgba(0, 0, 0, 0.9)",
-                "rgba(0, 0, 0, 0.7)",
-                "rgba(0, 0, 0, 0.4)",
-                "rgba(0, 0, 0, 0.15)",
-                "rgba(0, 0, 0, 0.05)",
-                "rgba(0, 0, 0, 0)",
-              ]}
-              locations={[0, 0.6, 0.7, 0.8, 0.88, 0.94, 0.98, 1]}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-          }
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: insets.top + BACKGROUND_TOTAL_HEIGHT,
+          }}
         >
-          <View style={StyleSheet.absoluteFill}>
-            <BlurView
-              blurMethod="dimezisBlurViewSdk31Plus"
-              blurTarget={blurTarget}
-              intensity={25}
-              pointerEvents="none"
-              style={StyleSheet.absoluteFill}
-              tint="regular"
-            />
+          <MaskedView
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+            maskElement={
+              <LinearGradient
+                colors={[
+                  "rgba(0, 0, 0, 1)",
+                  "rgba(0, 0, 0, 1)",
+                  "rgba(0, 0, 0, 0.9)",
+                  "rgba(0, 0, 0, 0.7)",
+                  "rgba(0, 0, 0, 0.4)",
+                  "rgba(0, 0, 0, 0.15)",
+                  "rgba(0, 0, 0, 0.05)",
+                  "rgba(0, 0, 0, 0)",
+                ]}
+                locations={[0, 0.6, 0.7, 0.8, 0.88, 0.94, 0.98, 1]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+            }
+          >
+            <View style={StyleSheet.absoluteFill}>
+              <BlurView
+                blurMethod="dimezisBlurViewSdk31Plus"
+                blurTarget={blurTarget}
+                intensity={25}
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+                tint="regular"
+              />
 
-            <View
-              pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  backgroundColor: theme.color.background,
-                  opacity: themeMode === "dark" ? 0.82 : 0.8,
-                },
-              ]}
-            />
-          </View>
-        </MaskedView>
-      </View>
+              <View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    backgroundColor: theme.color.background,
+                    opacity: themeMode === "dark" ? 0.82 : 0.8,
+                  },
+                ]}
+              />
+            </View>
+          </MaskedView>
+        </View>
+      )}
+
+      {isCalendar && (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              borderBottomLeftRadius: theme.radius.xl,
+              borderBottomRightRadius: theme.radius.xl,
+              overflow: "hidden",
+            },
+          ]}
+        >
+          <BlurView
+            blurMethod="dimezisBlurViewSdk31Plus"
+            blurTarget={blurTarget}
+            intensity={25}
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+            tint="regular"
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: theme.color.background,
+                opacity: themeMode === "dark" ? 0.75 : 0.6,
+                borderBottomLeftRadius: theme.radius.xl,
+                borderBottomRightRadius: theme.radius.xl,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderTopWidth: 0,
+                borderColor: theme.color.border,
+              },
+            ]}
+          />
+        </View>
+      )}
 
       <View
         style={[
@@ -284,6 +330,12 @@ export function Header({
           {rightAction}
         </View>
       </View>
+
+      {isCalendar && bottomContent && (
+        <View style={styles.bottomContent}>
+          {bottomContent}
+        </View>
+      )}
     </View>
   );
 }
@@ -541,6 +593,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flex: 1,
     paddingHorizontal: 72,
+  },
+  bottomContent: {
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   logo: {
     width: 156,
