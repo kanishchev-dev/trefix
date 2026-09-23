@@ -50,6 +50,8 @@ import {
   loadAuthSession,
   saveAuthSession,
 } from "./src/lib/auth-session";
+import { useAuthSessionMonitor } from "./src/lib/use-auth-session-monitor";
+import { RealtimeProvider } from "./src/lib/realtime";
 import {
   getGoogleSigninModule,
 } from "./src/lib/google-signin";
@@ -122,6 +124,15 @@ export default function App() {
       queryClient.clear();
     }
   }
+
+  useAuthSessionMonitor({
+    session,
+    onSessionUpdated: (nextSession) => {
+      console.log("[App] Updating active session with refreshed tokens...");
+      setSession(nextSession);
+    },
+    onLogout: handleLogout,
+  });
 
   const [isHydratingSession, setIsHydratingSession] = useState(true);
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
@@ -337,8 +348,14 @@ export default function App() {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
-          <SafeAreaProvider>
-            <NavigationContainer>
+          <RealtimeProvider
+            accessToken={session.accessToken}
+            onAuthError={() => {
+              void handleLogout();
+            }}
+          >
+            <SafeAreaProvider>
+              <NavigationContainer>
               <MainStack.Navigator
                 screenOptions={{
                   headerShown: false,
@@ -398,8 +415,9 @@ export default function App() {
               <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
             </NavigationContainer>
           </SafeAreaProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
+        </RealtimeProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
     );
   }
 

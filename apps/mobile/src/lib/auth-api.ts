@@ -23,7 +23,7 @@ import {
 } from "@workspace/api-client";
 
 import { getGoogleSigninModule } from "./google-signin";
-import { loadAuthSession } from "./auth-session";
+import { loadAuthSession, saveAuthSession } from "./auth-session";
 import { request } from "./api-client";
 
 const AUTH_BACKEND_BASE_URL =
@@ -135,6 +135,46 @@ export async function signInWithGoogleNative(): Promise<AuthTokens | null> {
 
     throw error;
   }
+}
+
+let activeRefreshPromise: Promise<AuthTokens | null> | null = null;
+
+export async function refreshAuthTokens(
+  existingRefreshToken?: string,
+): Promise<AuthTokens | null> {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
+    try {
+      const session = await loadAuthSession();
+      const tokenToUse = existingRefreshToken || session?.refreshToken;
+      if (!tokenToUse) {
+        console.warn("[AuthAPI] No refresh token available to refresh session");
+        return null;
+      }
+
+      console.log("[AuthAPI] Refreshing auth tokens via POST /auth/refresh...");
+      const response = await request<unknown>("/auth/refresh", {
+        method: "POST",
+        body: { refreshToken: tokenToUse },
+        skipAutoRefresh: true,
+      });
+
+      const newTokens = authTokensSchema.parse(response);
+      await saveAuthSession(newTokens);
+      console.log("[AuthAPI] Auth tokens refreshed successfully!");
+      return newTokens;
+    } catch (error) {
+      console.warn("[AuthAPI] Failed to refresh auth tokens:", error);
+      return null;
+    } finally {
+      activeRefreshPromise = null;
+    }
+  })();
+
+  return activeRefreshPromise;
 }
 
 export async function getMe(): Promise<AuthUser> {

@@ -6,10 +6,11 @@ const BACKEND_BASE_URL =
   process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ||
   "http://127.0.0.1:3000/v1";
 
-type RequestOptions = {
+export type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   useAuth?: boolean;
+  skipAutoRefresh?: boolean;
 };
 
 export async function request<TResponse>(
@@ -50,6 +51,23 @@ export async function request<TResponse>(
       const errorBody = (await response
         .json()
         .catch(() => null)) as ApiErrorShape | null;
+
+      if (
+        response.status === 401 &&
+        options?.useAuth &&
+        !options?.skipAutoRefresh
+      ) {
+        console.log(
+          `[API] 401 Unauthorized for ${path}. Attempting silent token refresh...`,
+        );
+        const { refreshAuthTokens } = await import("./auth-api");
+        const newTokens = await refreshAuthTokens();
+        if (newTokens) {
+          console.log(`[API] Refresh successful. Retrying original request to ${path}`);
+          return request<TResponse>(path, { ...options, skipAutoRefresh: true });
+        }
+      }
+
       throw new ApiClientError(
         errorBody?.message ?? `Request failed with status ${response.status}`,
         response.status,
