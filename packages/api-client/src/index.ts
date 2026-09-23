@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export { z };
+
 export interface ApiClientOptions {
   baseUrl: string;
 }
@@ -236,6 +238,34 @@ export type TrainingPlan = z.infer<typeof trainingPlanSchema>;
 export type TrainingWorkoutAnalysis = z.infer<
   typeof trainingWorkoutAnalysisSchema
 >;
+
+export const createWorkoutSchema = z.object({
+  scheduledAt: z.string(),
+  type: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  durationMinutes: z.number().optional(),
+  distanceKm: z.number().optional(),
+  status: z.enum(["planned", "completed"]).optional(),
+  actualDurationMinutes: z.number().optional(),
+  actualDistanceKm: z.number().optional(),
+  actualAveragePaceSecondsPerKm: z.number().optional(),
+  actualAverageHeartRate: z.number().optional(),
+  rpe: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export const completeWorkoutSchema = z.object({
+  actualDurationMinutes: z.number(),
+  actualDistanceKm: z.number(),
+  actualAveragePaceSecondsPerKm: z.number().optional(),
+  actualAverageHeartRate: z.number().optional(),
+  rpe: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;
+export type CompleteWorkoutInput = z.infer<typeof completeWorkoutSchema>;
 
 // --- Plan Overview ---
 

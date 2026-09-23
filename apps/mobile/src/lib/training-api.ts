@@ -3,10 +3,15 @@ import {
   trainingAthleteSchema,
   trainingPlanSchema,
   trainingStateSchema,
+  trainingWorkoutSchema,
+  z,
+  type CompleteWorkoutInput,
+  type CreateWorkoutInput,
   type PlanOverview,
   type TrainingAthlete,
   type TrainingPlan,
   type TrainingState,
+  type TrainingWorkout,
 } from "@workspace/api-client";
 import { request } from "./api-client";
 
@@ -40,13 +45,6 @@ export async function getAthleteState(
 export async function getLatestPlan(
   athleteId: string,
 ): Promise<TrainingPlan | null> {
-  // This endpoint might not exist directly as described, let's check TrainingController
-  // TrainingController has GET /plans/:id
-  // But we need a way to get the *latest* plan.
-  // TrainingService has getLatestPlanForAthlete.
-  // Let's check if the controller exposes it.
-  // I saw GET /plans/:id in TrainingController but not GET /athletes/:id/plans/latest
-  // Wait, I missed it?
   const response = await request<unknown>(`/plans?athleteId=${athleteId}`, {
     useAuth: true,
   });
@@ -61,4 +59,52 @@ export async function getPlanOverview(planId = "current"): Promise<PlanOverview>
     useAuth: true,
   });
   return planOverviewSchema.parse(response);
+}
+
+export async function getWorkouts(
+  from?: string,
+  to?: string,
+): Promise<TrainingWorkout[]> {
+  const params = new URLSearchParams();
+  if (from) params.append("from", from);
+  if (to) params.append("to", to);
+
+  const queryString = params.toString();
+  const url = queryString ? `/workouts?${queryString}` : "/workouts";
+
+  const response = await request<unknown>(url, {
+    useAuth: true,
+  });
+
+  return z.array(trainingWorkoutSchema).parse(response);
+}
+
+export async function createWorkout(
+  dto: CreateWorkoutInput,
+): Promise<TrainingWorkout> {
+  const response = await request<unknown>("/workouts", {
+    method: "POST",
+    body: JSON.stringify(dto),
+    useAuth: true,
+  });
+
+  return trainingWorkoutSchema.parse(response);
+}
+
+export async function completeWorkout(
+  workoutId: string,
+  dto: CompleteWorkoutInput,
+): Promise<{ workout: TrainingWorkout }> {
+  const response = await request<{ workout: unknown }>(
+    `/workouts/${workoutId}/complete`,
+    {
+      method: "POST",
+      body: JSON.stringify(dto),
+      useAuth: true,
+    },
+  );
+
+  return {
+    workout: trainingWorkoutSchema.parse(response.workout),
+  };
 }

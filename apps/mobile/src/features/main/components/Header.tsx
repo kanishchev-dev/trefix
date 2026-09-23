@@ -14,6 +14,7 @@ import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ArrowLeft,
+  Bell,
   EllipsisVertical,
   LayoutGrid,
   Menu,
@@ -397,6 +398,26 @@ export function HeaderSearchButton({
       themeMode={themeMode}
       theme={theme}
       icon={<Search color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      onPress={onPress}
+    />
+  );
+}
+
+export function HeaderBellButton({
+  theme,
+  themeMode,
+  onPress,
+}: {
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  onPress: () => void;
+}) {
+  return (
+    <HeaderActionButton
+      accessibilityLabel="Events"
+      themeMode={themeMode}
+      theme={theme}
+      icon={<Bell color={theme.color.foreground} size={20} strokeWidth={2.2} />}
       onPress={onPress}
     />
   );

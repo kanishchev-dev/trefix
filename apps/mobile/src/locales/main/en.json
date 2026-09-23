@@ -33,6 +33,44 @@
     "recovery": {
       "title": "Recovery",
       "description": "Your body needs rest"
+    },
+    "addSheet": {
+      "title": "Add Workout",
+      "planTab": "Plan Workout",
+      "logTab": "Log Completed",
+      "dateLabel": "Date (YYYY-MM-DD)",
+      "titleLabel": "Title (optional)",
+      "titlePlaceholder": "e.g. Morning Run",
+      "typeLabel": "WORKOUT TYPE",
+      "planDistance": "Target km",
+      "planDuration": "Target min",
+      "actualDistance": "Distance (km)",
+      "actualDuration": "Time (min)",
+      "heartRate": "Avg Heart Rate (bpm)",
+      "rpe": "Effort RPE (1-10)",
+      "notes": "Notes / Reflection",
+      "notesPlaceholder": "Felt good, legs fresh...",
+      "submitPlan": "Schedule Workout",
+      "submitLog": "Save Result",
+      "invalidDistance": "Please enter a valid distance",
+      "invalidDuration": "Please enter a valid duration"
+    },
+    "detailSheet": {
+      "workoutPlan": "WORKOUT PLAN",
+      "result": "RESULT",
+      "distance": "Distance",
+      "duration": "Duration",
+      "actualDistance": "Actual Distance",
+      "actualDuration": "Actual Time",
+      "avgHeartRate": "Average Heart Rate",
+      "rpeRating": "RPE Rating",
+      "analysisTitle": "Execution Analysis",
+      "loadLabel": "Training Load",
+      "trimp": "TRIMP",
+      "plannedLoad": "planned",
+      "completingHeader": "ENTER ACTUAL METRICS",
+      "completeButton": "Complete Workout",
+      "saveResultButton": "Save Result"
     }
   },
   "plan": {

@@ -33,6 +33,44 @@
     "recovery": {
       "title": "Восстановление",
       "description": "Вашему телу нужен отдых"
+    },
+    "addSheet": {
+      "title": "Добавить тренировку",
+      "planTab": "Запланировать",
+      "logTab": "Внести выполненную",
+      "dateLabel": "Дата (ГГГГ-ММ-ДД)",
+      "titleLabel": "Название (опционально)",
+      "titlePlaceholder": "Например: Утренняя пробежка",
+      "typeLabel": "ТИП ТРЕНИРОВКИ",
+      "planDistance": "План км",
+      "planDuration": "План мин",
+      "actualDistance": "Дистанция (км)",
+      "actualDuration": "Время (мин)",
+      "heartRate": "Ср. пульс (уд/мин)",
+      "rpe": "Усилие RPE (1-10)",
+      "notes": "Заметки / Ощущения",
+      "notesPlaceholder": "Хорошее самочувствие, ноги свежие...",
+      "submitPlan": "Запланировать",
+      "submitLog": "Сохранить результат",
+      "invalidDistance": "Укажите корректную дистанцию",
+      "invalidDuration": "Укажите корректную продолжительность"
+    },
+    "detailSheet": {
+      "workoutPlan": "ПЛАН ТРЕНИРОВКИ",
+      "result": "РЕЗУЛЬТАТ",
+      "distance": "Дистанция",
+      "duration": "Продолжительность",
+      "actualDistance": "Факт дистанция",
+      "actualDuration": "Факт время",
+      "avgHeartRate": "Средний пульс",
+      "rpeRating": "Оценка усилия RPE",
+      "analysisTitle": "Анализ выполнения",
+      "loadLabel": "Нагрузка",
+      "trimp": "TRIMP",
+      "plannedLoad": "план",
+      "completingHeader": "ВВЕДИТЕ ФАКТИЧЕСКИЕ ДАННЫЕ",
+      "completeButton": "Завершить тренировку",
+      "saveResultButton": "Сохранить результат"
     }
   },
   "plan": {

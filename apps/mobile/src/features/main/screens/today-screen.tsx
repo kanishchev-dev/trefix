@@ -1,62 +1,28 @@
 import { useState, useMemo, useCallback, useRef } from "react";
-import { StyleSheet, Text, View, Pressable, Animated } from "react-native";
+import { StyleSheet, Text, View, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Plus } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { type TrainingWorkout } from "@workspace/api-client";
 
 import {
   HeaderLogo,
-  HeaderMenuButton,
-  HeaderSearchButton,
+  HeaderPlusButton,
+  HeaderBellButton,
 } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
 import { type MainCopy, getAppLanguage } from "../../../locales";
 import { TodayCalendarHeader } from "../components/today/today-calendar-header";
 import { TodayTimeline, type TodayTimelineRef } from "../components/today/today-timeline";
-import { type Day, type CalendarMode } from "../today-types";
+import { AddWorkoutSheet } from "../components/today/add-workout-sheet";
+import { WorkoutDetailSheet } from "../components/today/workout-detail-sheet";
+import { useWorkouts } from "../hooks/use-workouts";
+import { type Day, type DayEvent, type CalendarMode } from "../today-types";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-};
-
-const GENERATE_DAYS_COUNT = 60; // 30 past, 30 future
-
-const generateMockData = (count: number): Day[] => {
-  const days: Day[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (let i = -count / 2; i < count / 2; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
-
-    const events = [];
-    // Add workout every 2 days
-    if (i % 2 === 0) {
-      const status = i < 0 ? "completed" : i === 0 ? "planned" : "planned";
-      events.push({
-        id: `workout-${dateStr}`,
-        type: "workout" as const,
-        status: (i === -2 ? "missed" : i === 4 ? "modified" : status) as any,
-        title: i % 4 === 0 ? "Long Run" : "Tempo",
-        duration: "52 min",
-        distance: "8.4 km",
-        description: i === 4 ? "Modified due to high fatigue" : "3 × 8 min at 4:35–4:45 / km",
-      });
-    } else if (i % 5 === 0) {
-      events.push({
-        id: `recovery-${dateStr}`,
-        type: "recovery" as const,
-        status: "planned" as const,
-        title: "Recovery",
-      });
-    }
-
-    days.push({ date: dateStr, events });
-  }
-  return days;
 };
 
 export function TodayScreen({ theme, themeMode, copy }: Props) {
@@ -68,13 +34,63 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const [visibleDate, setVisibleDate] = useState(new Date().toISOString().split("T")[0]);
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("week");
 
-  const days = useMemo(() => generateMockData(GENERATE_DAYS_COUNT), []);
-  const eventDates = useMemo(() => days.filter(d => d.events.length > 0).map(d => d.date), [days]);
+  // Sheet states
+  const [addSheetVisible, setAddSheetVisible] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<TrainingWorkout | null>(null);
+  const [detailSheetVisible, setDetailSheetVisible] = useState(false);
+
+  // Compute 60-day query range around selectedDate
+  const { fromStr, toStr } = useMemo(() => {
+    const from = new Date(selectedDate);
+    from.setDate(from.getDate() - 30);
+    const to = new Date(selectedDate);
+    to.setDate(to.getDate() + 30);
+    return {
+      fromStr: from.toISOString().split("T")[0],
+      toStr: to.toISOString().split("T")[0],
+    };
+  }, [selectedDate]);
+
+  // Fetch real workouts from backend
+  const { data: workoutsData = [] } = useWorkouts(fromStr, toStr);
+
+  // Map backend TrainingWorkout[] to calendar Day[]
+  const { daysMap, workoutById } = useMemo(() => {
+    const map = new Map<string, DayEvent[]>();
+    const byId = new Map<string, TrainingWorkout>();
+
+    for (const workout of workoutsData) {
+      byId.set(workout.id, workout);
+      const dateStr = new Date(workout.scheduledAt).toISOString().split("T")[0];
+
+      const existing = map.get(dateStr) || [];
+      const isRecovery = workout.type === "recovery";
+
+      existing.push({
+        id: workout.id,
+        type: isRecovery ? "recovery" : "workout",
+        status: workout.status as any,
+        title:
+          ((workout.target as any)?.title as string) ||
+          `${workout.type.toUpperCase()} Run`,
+        duration: `${Math.round(workout.durationMinutes)} min`,
+        distance: `${workout.distanceKm} km`,
+        description: ((workout.target as any)?.description as string) || "",
+      });
+
+      map.set(dateStr, existing);
+    }
+
+    return { daysMap: map, workoutById: byId };
+  }, [workoutsData]);
+
+  const eventDates = useMemo(() => Array.from(daysMap.keys()), [daysMap]);
 
   const selectedDay = useMemo(() => {
     const dateStr = selectedDate.toISOString().split("T")[0];
-    return days.find(d => d.date === dateStr) || { date: dateStr, events: [] };
-  }, [selectedDate, days]);
+    const events = daysMap.get(dateStr) || [];
+    return { date: dateStr, events };
+  }, [selectedDate, daysMap]);
 
   const handleSelectDate = useCallback((date: Date) => {
     setSelectedDate(date);
@@ -84,6 +100,17 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const handleBackToToday = () => {
     handleSelectDate(new Date());
   };
+
+  const handleEventPress = useCallback(
+    (event: DayEvent) => {
+      const workout = workoutById.get(event.id);
+      if (workout) {
+        setSelectedWorkout(workout);
+        setDetailSheetVisible(true);
+      }
+    },
+    [workoutById],
+  );
 
   const isShowingToday = useMemo(() => {
     const todayStr = new Date().toISOString().split("T")[0];
@@ -100,15 +127,15 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       theme={theme}
       themeMode={themeMode}
       leftAction={
-        <HeaderMenuButton
+        <HeaderPlusButton
           theme={theme}
           themeMode={themeMode}
-          onPress={() => undefined}
+          onPress={() => setAddSheetVisible(true)}
         />
       }
       headerCenter={<HeaderLogo source={logoSource} />}
       rightAction={
-        <HeaderSearchButton
+        <HeaderBellButton
           theme={theme}
           themeMode={themeMode}
           onPress={() => undefined}
@@ -131,7 +158,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       contentStyle={{
         paddingHorizontal: 0,
         alignItems: "stretch",
-        justifyContent: "flex-start"
+        justifyContent: "flex-start",
       }}
     >
       <View style={styles.timelineContainer}>
@@ -143,10 +170,11 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
           day={selectedDay}
           copy={copy}
           calendarMode={calendarMode}
-          onEventPress={(ev) => console.log("Press", ev.id)}
-          onEventAction={(ev) => console.log("Action", ev.id)}
+          onEventPress={handleEventPress}
+          onEventAction={handleEventPress}
         />
 
+        {/* Back to Today Floating Button */}
         {!isShowingToday && (
           <Pressable
             onPress={handleBackToToday}
@@ -172,7 +200,44 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
             </Text>
           </Pressable>
         )}
+
+        {/* Floating Add Workout FAB */}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setAddSheetVisible(true)}
+          style={({ pressed }) => [
+            styles.fab,
+            {
+              backgroundColor: theme.color.primary,
+              bottom: 24 + insets.bottom,
+              shadowColor: "#000",
+            },
+            pressed && styles.fabPressed,
+          ]}
+        >
+          <Plus color={theme.color.primaryForeground} size={24} />
+        </Pressable>
       </View>
+
+      {/* Add Workout Modal Sheet */}
+      <AddWorkoutSheet
+        copy={copy}
+        defaultDate={selectedDate.toISOString().split("T")[0]}
+        onClose={() => setAddSheetVisible(false)}
+        theme={theme}
+        themeMode={themeMode}
+        visible={addSheetVisible}
+      />
+
+      {/* Workout Details Modal Sheet */}
+      <WorkoutDetailSheet
+        copy={copy}
+        onClose={() => setDetailSheetVisible(false)}
+        theme={theme}
+        themeMode={themeMode}
+        visible={detailSheetVisible}
+        workout={selectedWorkout}
+      />
     </SectionLayout>
   );
 }
@@ -198,5 +263,21 @@ const styles = StyleSheet.create({
   todayButtonText: {
     fontSize: 12,
     letterSpacing: 1,
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  fabPressed: {
+    transform: [{ scale: 0.95 }],
   },
 });
