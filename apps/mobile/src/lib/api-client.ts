@@ -82,7 +82,11 @@ export async function request<TResponse>(
 
     return (await response.json()) as TResponse;
   } catch (error) {
-    console.error(`[API] Request error:`, error);
+    if (error instanceof ApiClientError && error.status < 500) {
+      console.warn(`[API] Request warning (${error.status}): ${error.message}`);
+    } else {
+      console.error(`[API] Request error:`, error);
+    }
     throw error;
   }
 }
