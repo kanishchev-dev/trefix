@@ -12,6 +12,7 @@ import { CompleteWorkoutDto } from './dto/complete-workout.dto';
 import { CreateAthleteDto } from './dto/create-athlete.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
+import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { AdaptationEvent } from './entities/adaptation-event.entity';
 import { Athlete } from './entities/athlete.entity';
 import { AthleteGoal } from './entities/athlete-goal.entity';
@@ -494,6 +495,117 @@ export class TrainingService {
     });
 
     return workouts.map((workout) => this.toWorkoutView(workout));
+  }
+
+  /** Returns workouts for the authenticated athlete within a date range. */
+  async listWorkoutsForDateRange(actorUserId: string, fromStr?: string, toStr?: string): Promise<WorkoutView[]> {
+    const athleteView = await this.getOrCreateAthlete(actorUserId);
+
+    const whereClause: Record<string, unknown> = { athleteId: athleteView.id };
+    if (fromStr || toStr) {
+      const scheduledAtWhere: Record<symbol, Date> = {};
+      if (fromStr) {
+        const fromDate = new Date(fromStr);
+        fromDate.setHours(0, 0, 0, 0);
+        scheduledAtWhere[Op.gte] = fromDate;
+      }
+      if (toStr) {
+        const toDate = new Date(toStr);
+        toDate.setHours(23, 59, 59, 999);
+        scheduledAtWhere[Op.lte] = toDate;
+      }
+      whereClause.scheduledAt = scheduledAtWhere;
+    }
+
+    const workouts = await this.workoutModel.findAll({
+      where: whereClause,
+      order: [
+        ['scheduledAt', 'ASC'],
+        ['createdAt', 'ASC'],
+      ],
+    });
+
+    return workouts.map((workout) => this.toWorkoutView(workout));
+  }
+
+  /** Creates a workout (planned or directly completed) for the authenticated athlete. */
+  async createWorkout(actorUserId: string, dto: CreateWorkoutDto): Promise<WorkoutView> {
+    const athleteView = await this.getOrCreateAthlete(actorUserId);
+    const athlete = await this.loadAthleteOrThrow(athleteView.id);
+
+    const scheduledDate = new Date(dto.scheduledAt);
+    const isCompleted = dto.status === 'completed' || dto.actualDistanceKm !== undefined;
+    const status = isCompleted ? 'completed' : dto.status || 'planned';
+    const workoutType = dto.type || 'easy';
+    const durationMinutes = dto.durationMinutes ?? (dto.actualDurationMinutes || 30);
+    const distanceKm = dto.distanceKm ?? (dto.actualDistanceKm || 5);
+
+    const target = {
+      title: dto.title || `${workoutType.charAt(0).toUpperCase() + workoutType.slice(1)} Run`,
+      description: dto.description || `${distanceKm} km at target pace`,
+    };
+
+    const workout = await this.workoutModel.create({
+      athleteId: athlete.id,
+      goalId: null,
+      planId: null,
+      weekNumber: 1,
+      scheduledAt: scheduledDate,
+      type: workoutType,
+      phase: 'adhoc',
+      status,
+      orderInWeek: 1,
+      durationMinutes,
+      distanceKm,
+      target,
+      steps: [],
+      actual: null,
+      analysis: null,
+      completedAt: isCompleted ? new Date() : null,
+    });
+
+    if (isCompleted) {
+      const actualDurationMinutes = dto.actualDurationMinutes ?? durationMinutes;
+      const actualDistanceKm = dto.actualDistanceKm ?? distanceKm;
+
+      const analysisResult = this.trainingEngine.analyzeWorkout({
+        plannedWorkout: this.toWorkoutView(workout),
+        actualDurationMinutes,
+        actualDistanceKm,
+        actualAveragePaceSecondsPerKm: dto.actualAveragePaceSecondsPerKm,
+        actualAverageHeartRate: dto.actualAverageHeartRate,
+        rpe: dto.rpe,
+      });
+
+      workout.actual = {
+        actualDurationMinutes,
+        actualDistanceKm,
+        actualAveragePaceSecondsPerKm: dto.actualAveragePaceSecondsPerKm ?? null,
+        actualAverageHeartRate: dto.actualAverageHeartRate ?? null,
+        rpe: dto.rpe ?? null,
+        notes: dto.notes ?? null,
+      };
+      workout.analysis = analysisResult.analysis as unknown as Record<string, unknown>;
+      await workout.save();
+
+      const loadRecord = await this.trainingLoadModel.create({
+        athleteId: athlete.id,
+        workoutId: workout.id,
+        occurredAt: workout.completedAt ?? workout.scheduledAt,
+        load: analysisResult.trainingLoad,
+        intensityFactor: analysisResult.intensityFactor,
+        algorithmVersion: TRAINING_LOAD_ALGORITHM_VERSION,
+      });
+
+      await this.recalculateAthleteState(athlete.id);
+
+      this.eventEmitter.emit(
+        'training.workout.completed',
+        new WorkoutCompletedEvent(athlete.id, workout.id, loadRecord.load),
+      );
+    }
+
+    return this.toWorkoutView(workout);
   }
 
   /** Creates a goal linked to the authenticated athlete. */

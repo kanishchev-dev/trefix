@@ -11,6 +11,7 @@ import { CompleteWorkoutDto } from './dto/complete-workout.dto';
 import { CreateAthleteDto } from './dto/create-athlete.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
+import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
 import { RegeneratePlanDto } from './dto/regenerate-plan.dto';
 import {
@@ -179,6 +180,33 @@ export class TrainingController {
     @Body() dto: RegeneratePlanDto,
   ): Promise<TrainingPlanResponseDto> {
     return this.trainingService.regeneratePlan(user.id, id, dto.startDate);
+  }
+
+  @Get('workouts')
+  @ApiOperation({ summary: 'List workouts for a date range' })
+  @ApiOkResponse({
+    description: 'Workouts list',
+    type: [TrainingWorkoutResponseDto],
+  })
+  getWorkouts(
+    @CurrentUser() user: AuthUserContext,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ): Promise<TrainingWorkoutResponseDto[]> {
+    return this.trainingService.listWorkoutsForDateRange(user.id, from, to);
+  }
+
+  @Post('workouts')
+  @ApiOperation({ summary: 'Create or log a workout' })
+  @ApiCreatedResponse({
+    description: 'Workout created',
+    type: TrainingWorkoutResponseDto,
+  })
+  createWorkout(
+    @CurrentUser() user: AuthUserContext,
+    @Body() dto: CreateWorkoutDto,
+  ): Promise<TrainingWorkoutResponseDto> {
+    return this.trainingService.createWorkout(user.id, dto);
   }
 
   @Get('workouts/:id')
