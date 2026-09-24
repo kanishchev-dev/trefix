@@ -20,6 +20,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './modules/auth/config/auth.config';
 import { CoachModule } from './modules/coach/coach.module';
 import { HealthModule } from './modules/health/health.module';
+import integrationsConfig from './modules/integrations/config/integrations.config';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 import mailerConfig from './modules/mailer/config/mailer.config';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
@@ -33,7 +35,7 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, storageConfig, mailerConfig, authConfig],
+      load: [appConfig, databaseConfig, storageConfig, mailerConfig, authConfig, integrationsConfig],
       validationSchema,
     }),
     HealthModule,
@@ -45,6 +47,7 @@ import { UsersModule } from './modules/users/users.module';
     SystemSeedModule,
     RealtimeModule,
     TrainingModule,
+    IntegrationsModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

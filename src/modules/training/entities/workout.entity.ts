@@ -124,4 +124,18 @@ export class Workout extends Model {
     field: 'completed_at',
   })
   completedAt!: Date | null;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'source_provider',
+  })
+  sourceProvider!: string | null;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'source_activity_id',
+  })
+  sourceActivityId!: string | null;
 }

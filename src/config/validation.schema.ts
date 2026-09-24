@@ -54,4 +54,9 @@ export const validationSchema = Joi.object({
   AUTO_SEED_SYSTEM_DATA: Joi.boolean().default(true),
   ADMIN_EMAIL: Joi.string().email().optional(),
   ADMIN_PASSWORD: Joi.string().min(8).optional(),
+  STRAVA_CLIENT_ID: Joi.string().optional().default('12345'),
+  STRAVA_CLIENT_SECRET: Joi.string().optional().default('strava_client_secret_placeholder'),
+  STRAVA_REDIRECT_URI: Joi.string().optional().default('http://localhost:3000/integrations/strava/callback'),
+  STRAVA_WEBHOOK_VERIFY_TOKEN: Joi.string().optional().default('trefix_strava_webhook_secret'),
+  INTEGRATIONS_ENCRYPTION_KEY: Joi.string().optional().default('default_integrations_master_encryption_key_32_chars!'),
 });
