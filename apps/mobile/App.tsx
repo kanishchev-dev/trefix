@@ -33,11 +33,19 @@ import {
 } from "@workspace/api-client";
 import { getMobileThemeTokens, type ThemeMode } from "@workspace/tokens";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { AuthScreen } from "./src/features/auth/auth-screen";
 import { AuthVerificationScreen } from "./src/features/auth/auth-verification-screen";
 import { MainTabsScreen } from "./src/features/main/main-tabs-screen";
 import { TrefixScreen } from "./src/features/main/screens/trefix-screen";
 import { ProfileEditScreen } from "./src/features/main/screens/profile-edit-screen";
+import { NotificationsSettingsScreen } from "./src/features/main/screens/notifications-settings-screen";
+import { LanguageSettingsScreen } from "./src/features/main/screens/language-settings-screen";
+import {
+  ThemeSettingsScreen,
+  type ThemePreference,
+} from "./src/features/main/screens/theme-settings-screen";
 import {
   logout,
   requestEmailOtp,
@@ -73,6 +81,9 @@ type MainStackParamList = {
   main: undefined;
   trefix: undefined;
   profileEdit: undefined;
+  notificationsSettings: undefined;
+  languageSettings: undefined;
+  themeSettings: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -83,6 +94,9 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [challenge, setChallenge] = useState<MobileAuthChallenge | null>(null);
   const [session, setSession] = useState<AuthTokens | null>(null);
+
+  const [userLanguage, setUserLanguage] = useState<AppLanguage | null>(null);
+  const [userTheme, setUserTheme] = useState<ThemePreference>("system");
 
   const queryClient = useMemo(
     () =>
@@ -210,6 +224,38 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const storedLang = await AsyncStorage.getItem("@trefix/language");
+        if (storedLang === "ru" || storedLang === "en") {
+          setUserLanguage(storedLang);
+        }
+        const storedTheme = await AsyncStorage.getItem("@trefix/theme");
+        if (
+          storedTheme === "system" ||
+          storedTheme === "dark" ||
+          storedTheme === "light"
+        ) {
+          setUserTheme(storedTheme as ThemePreference);
+        }
+      } catch (error) {
+        console.warn("Failed to load user preferences:", error);
+      }
+    }
+    void loadPreferences();
+  }, []);
+
+  const handleSelectLanguage = (nextLanguage: AppLanguage) => {
+    setUserLanguage(nextLanguage);
+    void AsyncStorage.setItem("@trefix/language", nextLanguage);
+  };
+
+  const handleSelectTheme = (nextTheme: ThemePreference) => {
+    setUserTheme(nextTheme);
+    void AsyncStorage.setItem("@trefix/theme", nextTheme);
+  };
+
   const isReady = (fontsLoaded || fontError) && !isHydratingSession;
 
   useEffect(() => {
@@ -222,9 +268,14 @@ export default function App() {
     return null;
   }
 
-  const themeMode: ThemeMode = colorScheme === "dark" ? "dark" : "light";
+  const themeMode: ThemeMode =
+    userTheme === "system"
+      ? colorScheme === "dark"
+        ? "dark"
+        : "light"
+      : userTheme;
   const theme = getMobileThemeTokens(themeMode);
-  const language: AppLanguage = getAppLanguage();
+  const language: AppLanguage = userLanguage ?? getAppLanguage();
   const authCopy = getAuthCopy(language);
   const mainCopy = getMainCopy(language);
   const logoSource =
@@ -371,12 +422,23 @@ export default function App() {
                       themeMode={themeMode}
                       copy={mainCopy}
                       userEmail={session.user.email}
+                      userLanguage={language}
+                      userTheme={userTheme}
                       onOpenTrefix={() => {
                         navigation.navigate("trefix");
                       }}
                       onLogout={handleLogout}
                       onEditProfile={() => {
                         navigation.navigate("profileEdit");
+                      }}
+                      onOpenNotifications={() => {
+                        navigation.navigate("notificationsSettings");
+                      }}
+                      onOpenLanguage={() => {
+                        navigation.navigate("languageSettings");
+                      }}
+                      onOpenTheme={() => {
+                        navigation.navigate("themeSettings");
                       }}
                     />
                   )}
@@ -390,6 +452,55 @@ export default function App() {
                       theme={theme}
                       themeMode={themeMode}
                       copy={mainCopy}
+                      onBack={() => {
+                        navigation.goBack();
+                      }}
+                    />
+                  )}
+                </MainStack.Screen>
+                <MainStack.Screen
+                  name="notificationsSettings"
+                  options={{ headerShown: false }}
+                >
+                  {({ navigation }) => (
+                    <NotificationsSettingsScreen
+                      theme={theme}
+                      themeMode={themeMode}
+                      copy={mainCopy}
+                      onBack={() => {
+                        navigation.goBack();
+                      }}
+                    />
+                  )}
+                </MainStack.Screen>
+                <MainStack.Screen
+                  name="languageSettings"
+                  options={{ headerShown: false }}
+                >
+                  {({ navigation }) => (
+                    <LanguageSettingsScreen
+                      theme={theme}
+                      themeMode={themeMode}
+                      copy={mainCopy}
+                      selectedLanguage={language}
+                      onSelectLanguage={handleSelectLanguage}
+                      onBack={() => {
+                        navigation.goBack();
+                      }}
+                    />
+                  )}
+                </MainStack.Screen>
+                <MainStack.Screen
+                  name="themeSettings"
+                  options={{ headerShown: false }}
+                >
+                  {({ navigation }) => (
+                    <ThemeSettingsScreen
+                      theme={theme}
+                      themeMode={themeMode}
+                      copy={mainCopy}
+                      selectedTheme={userTheme}
+                      onSelectTheme={handleSelectTheme}
                       onBack={() => {
                         navigation.goBack();
                       }}

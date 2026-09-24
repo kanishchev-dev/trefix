@@ -290,8 +290,50 @@
     "settings": {
       "title": "Settings",
       "notifications": "Notifications",
+      "notificationsTitle": "Notifications",
+      "notificationsWorkout": "Workout Reminders",
+      "notificationsWorkoutDesc": "Push notifications about upcoming sessions",
+      "notificationsWeekly": "Weekly Digest",
+      "notificationsWeeklyDesc": "Weekly summary of progress and form changes",
+      "notificationsAi": "AI Coach Updates",
+      "notificationsAiDesc": "Insights and adaptations from Trefix",
       "language": "Language",
-      "theme": "Theme"
+      "languageTitle": "App Language",
+      "languages": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "theme": "Theme",
+      "themeTitle": "Theme",
+      "themes": {
+        "system": "System Default",
+        "dark": "Dark",
+        "light": "Light"
+      }
+    },
+    "integrations": {
+      "title": "Integrations",
+      "subtitle": "Connected services",
+      "comingSoon": "Coming soon",
+      "strava": {
+        "title": "Strava",
+        "description": "Automatically import your runs and let Trefix use them to adapt your training.",
+        "disconnectedStatus": "Not connected",
+        "connectedStatus": "Connected",
+        "reauthStatus": "Reconnect required",
+        "errorStatus": "Sync error",
+        "connectBtn": "Connect with Strava",
+        "reconnectBtn": "Reconnect Strava",
+        "syncNow": "Sync now",
+        "disconnect": "Disconnect",
+        "connectedStateTitle": "Strava Connected",
+        "connectionExpiredTitle": "Connection Expired",
+        "reconnectDesc": "Please reconnect your Strava account to continue syncing your activities.",
+        "lastSyncLabel": "Last synced",
+        "activitiesImportedLabel": "Activities imported",
+        "justNow": "Just now",
+        "importingHistory": "Importing your running history..."
+      }
     },
     "legal": {
       "privacy": "Privacy Policy",

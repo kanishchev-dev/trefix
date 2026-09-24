@@ -9,16 +9,24 @@ import { PlanScreen } from "./screens/plan-screen";
 import { ProfileScreen } from "./screens/profile-screen";
 import { ProgressScreen } from "./screens/progress-screen";
 import { TodayScreen } from "./screens/today-screen";
-import { type MainCopy } from "../../locales";
+import { IntegrationsScreen } from "./screens/integrations-screen";
+import { StravaIntegrationScreen } from "./screens/strava-integration-screen";
+import { type AppLanguage, type MainCopy } from "../../locales";
+import { type ThemePreference } from "./screens/theme-settings-screen";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
   userEmail: string;
+  userLanguage: AppLanguage;
+  userTheme: ThemePreference;
   onOpenTrefix: () => void;
   onLogout: () => void;
   onEditProfile: () => void;
+  onOpenNotifications: () => void;
+  onOpenLanguage: () => void;
+  onOpenTheme: () => void;
 };
 
 export function MainTabsScreen({
@@ -26,11 +34,18 @@ export function MainTabsScreen({
   themeMode,
   copy,
   userEmail,
+  userLanguage,
+  userTheme,
   onOpenTrefix,
   onLogout,
   onEditProfile,
+  onOpenNotifications,
+  onOpenLanguage,
+  onOpenTheme,
 }: Props) {
   const [activeTab, setActiveTab] = useState<MainTabKey>("today");
+  const [subScreen, setSubScreen] = useState<"integrations" | "strava-integration" | null>(null);
+
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateAnim = useRef(new Animated.Value(0)).current;
 
@@ -51,7 +66,12 @@ export function MainTabsScreen({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [activeTab, fadeAnim, translateAnim]);
+  }, [activeTab, subScreen, fadeAnim, translateAnim]);
+
+  const handleTabChange = (tab: MainTabKey) => {
+    setSubScreen(null);
+    setActiveTab(tab);
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.color.background }]}>
@@ -64,27 +84,52 @@ export function MainTabsScreen({
           },
         ]}
       >
-        {activeTab === "today" ? (
+        {subScreen === "integrations" ? (
+          <IntegrationsScreen
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            userLanguage={userLanguage}
+            onBack={() => setSubScreen(null)}
+            onOpenStrava={() => setSubScreen("strava-integration")}
+          />
+        ) : subScreen === "strava-integration" ? (
+          <StravaIntegrationScreen
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            userLanguage={userLanguage}
+            onBack={() => setSubScreen("integrations")}
+          />
+        ) : activeTab === "today" ? (
           <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
-        ) : null}
-        {activeTab === "plan" ? (
-          <PlanScreen theme={theme} themeMode={themeMode} copy={copy} />
-        ) : null}
-        {activeTab === "progress" ? (
+        ) : activeTab === "plan" ? (
+          <PlanScreen
+            copy={copy}
+            onOpenTrefix={onOpenTrefix}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        ) : activeTab === "progress" ? (
           <ProgressScreen
             copy={copy}
             onOpenTrefix={onOpenTrefix}
             theme={theme}
             themeMode={themeMode}
           />
-        ) : null}
-        {activeTab === "profile" ? (
+        ) : activeTab === "profile" ? (
           <ProfileScreen
             theme={theme}
             themeMode={themeMode}
             copy={copy}
+            userLanguage={userLanguage}
+            userTheme={userTheme}
             onLogout={onLogout}
             onEdit={onEditProfile}
+            onOpenNotifications={onOpenNotifications}
+            onOpenLanguage={onOpenLanguage}
+            onOpenTheme={onOpenTheme}
+            onOpenIntegrations={() => setSubScreen("integrations")}
           />
         ) : null}
       </Animated.View>
@@ -94,7 +139,7 @@ export function MainTabsScreen({
         themeMode={themeMode}
         userEmail={userEmail}
         activeTab={activeTab}
-        onChangeTab={setActiveTab}
+        onChangeTab={handleTabChange}
         onOpenTrefix={onOpenTrefix}
       />
     </View>

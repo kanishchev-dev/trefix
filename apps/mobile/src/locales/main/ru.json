@@ -290,8 +290,50 @@
     "settings": {
       "title": "Настройки",
       "notifications": "Уведомления",
+      "notificationsTitle": "Уведомления",
+      "notificationsWorkout": "Напоминания о тренировках",
+      "notificationsWorkoutDesc": "Пуш-уведомления о предстоящих занятиях",
+      "notificationsWeekly": "Еженедельный отчёт",
+      "notificationsWeeklyDesc": "Сводка результатов и изменения формы за неделю",
+      "notificationsAi": "Обновления от AI-коуча",
+      "notificationsAiDesc": "Инсайты и рекомендации Трефикса по плану",
       "language": "Язык",
-      "theme": "Тема"
+      "languageTitle": "Язык приложения",
+      "languages": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "theme": "Тема",
+      "themeTitle": "Оформление",
+      "themes": {
+        "system": "Как в системе",
+        "dark": "Тёмная",
+        "light": "Светлая"
+      }
+    },
+    "integrations": {
+      "title": "Интеграции",
+      "subtitle": "Подключённые сервисы",
+      "comingSoon": "Скоро",
+      "strava": {
+        "title": "Strava",
+        "description": "Автоматический импорт пробежек для адаптации вашего тренировочного плана.",
+        "disconnectedStatus": "Не подключено",
+        "connectedStatus": "Подключено",
+        "reauthStatus": "Требуется авторизация",
+        "errorStatus": "Ошибка синхронизации",
+        "connectBtn": "Подключить Strava",
+        "reconnectBtn": "Переподключить Strava",
+        "syncNow": "Синхронизировать сейчас",
+        "disconnect": "Отключить",
+        "connectedStateTitle": "Strava подключена",
+        "connectionExpiredTitle": "Сессия истекла",
+        "reconnectDesc": "Пожалуйста, переподключите ваш аккаунт Strava для продолжения синхронизации.",
+        "lastSyncLabel": "Последняя синхронизация",
+        "activitiesImportedLabel": "Импортировано пробежек",
+        "justNow": "Только что",
+        "importingHistory": "Импорт истории тренировок..."
+      }
     },
     "legal": {
       "privacy": "Политика конфиденциальности",

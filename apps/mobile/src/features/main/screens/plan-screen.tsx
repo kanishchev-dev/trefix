@@ -31,9 +31,10 @@ type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
+  onOpenTrefix?: () => void;
 };
 
-export function PlanScreen({ theme, themeMode, copy }: Props) {
+export function PlanScreen({ theme, themeMode, copy, onOpenTrefix }: Props) {
   const { displayState, data, refresh, isRefreshing } = usePlanOverview();
 
   const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
@@ -70,7 +71,9 @@ export function PlanScreen({ theme, themeMode, copy }: Props) {
         <PlanEmptyState
           copy={copy}
           onCreatePlan={() => {
-            /* TODO: Navigate to Goal Creation flow */
+            if (onOpenTrefix) {
+              onOpenTrefix();
+            }
           }}
           theme={theme}
           themeMode={themeMode}
@@ -86,7 +89,13 @@ export function PlanScreen({ theme, themeMode, copy }: Props) {
       ) : displayState === "completed" ? (
         <PlanCompletedState
           copy={copy}
-          onNewGoal={refresh}
+          onNewGoal={() => {
+            if (onOpenTrefix) {
+              onOpenTrefix();
+            } else {
+              refresh();
+            }
+          }}
           onSelectWeek={setSelectedWeek}
           overview={data}
           theme={theme}

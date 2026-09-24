@@ -590,6 +590,60 @@ export type ProgressTrainingImpactFactor = z.infer<typeof progressTrainingImpact
 export type ProgressTrainingImpact = z.infer<typeof progressTrainingImpactSchema>;
 export type ProgressSnapshot = z.infer<typeof progressSnapshotSchema>;
 
+// --- Integrations ---
+
+export const integrationProviderSchema = z.enum([
+  "strava",
+  "garmin",
+  "apple_health",
+  "health_connect",
+]);
+
+export const integrationStatusSchema = z.enum([
+  "connecting",
+  "connected",
+  "syncing",
+  "error",
+  "reauthorization_required",
+  "disconnected",
+]);
+
+export const integrationItemSchema = z.object({
+  provider: z.string(),
+  status: z.string(),
+  connectedAt: z.string().nullable().optional(),
+  lastSyncedAt: z.string().nullable().optional(),
+  externalUserId: z.string().nullable().optional(),
+  importedActivitiesCount: z.number().optional(),
+});
+
+export const integrationsListSchema = z.object({
+  items: z.array(integrationItemSchema),
+});
+
+export const stravaConnectResponseSchema = z.object({
+  authUrl: z.string(),
+  state: z.string(),
+});
+
+export const integrationSyncStatusSchema = z.object({
+  status: z.string(),
+  processed: z.number(),
+  imported: z.number(),
+  failed: z.number(),
+  startedAt: z.string().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+  estimatedCompletion: z.string().nullable().optional(),
+  error: z.string().nullable().optional(),
+});
+
+export type IntegrationProvider = z.infer<typeof integrationProviderSchema>;
+export type IntegrationStatus = z.infer<typeof integrationStatusSchema>;
+export type IntegrationItem = z.infer<typeof integrationItemSchema>;
+export type IntegrationsList = z.infer<typeof integrationsListSchema>;
+export type StravaConnectResponse = z.infer<typeof stravaConnectResponseSchema>;
+export type IntegrationSyncStatus = z.infer<typeof integrationSyncStatusSchema>;
+
 export class ApiClientError extends Error {
   readonly status: number;
   readonly code?: string;

@@ -14,6 +14,7 @@ import {
   Languages,
   Palette,
   QrCode,
+  Share2,
   UserRound,
 } from "lucide-react-native";
 
@@ -23,7 +24,7 @@ import { HeaderLogo, HeaderQrButton, HeaderTextButton } from "../components/head
 import { SectionLayout } from "../components/section-layout";
 import {
   formatProfileJoinedDate,
-  getAppLanguage,
+  type AppLanguage,
   type MainCopy,
 } from "../../../locales";
 import { useProfile } from "../hooks/use-profile";
@@ -33,8 +34,14 @@ type Props = {
   theme: ThemeTokens;
   themeMode: "light" | "dark";
   copy: MainCopy;
+  userLanguage: AppLanguage;
+  userTheme: "system" | "dark" | "light";
   onLogout: () => void;
   onEdit: () => void;
+  onOpenNotifications: () => void;
+  onOpenLanguage: () => void;
+  onOpenTheme: () => void;
+  onOpenIntegrations?: () => void;
 };
 
 type ProfileRowProps = {
@@ -120,10 +127,21 @@ function ProfileRow({
   );
 }
 
-export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Props) {
+export function ProfileScreen({
+  theme,
+  themeMode,
+  copy,
+  userLanguage,
+  userTheme,
+  onLogout,
+  onEdit,
+  onOpenNotifications,
+  onOpenLanguage,
+  onOpenTheme,
+  onOpenIntegrations,
+}: Props) {
   const { data: user, isLoading } = useProfile();
   const [qrVisible, setQrVisible] = useState(false);
-  const language = getAppLanguage();
   const logoSource =
     themeMode === "dark"
       ? require("../../../../assets/trefix-logo-light.png")
@@ -203,7 +221,7 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
           >
             {isLoading
               ? "..."
-              : formatProfileJoinedDate(profileJoinedAt, language)}
+              : formatProfileJoinedDate(profileJoinedAt, userLanguage)}
           </Text>
         </View>
 
@@ -267,7 +285,7 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
                   strokeWidth={2.1}
                 />
               }
-              onPress={() => undefined}
+              onPress={onOpenNotifications}
             />
             <View
               style={[
@@ -278,6 +296,7 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
             <ProfileRow
               theme={theme}
               title={copy.profile.settings.language}
+              subtitle={copy.profile.settings.languages[userLanguage]}
               compact
               icon={
                 <Languages
@@ -286,7 +305,7 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
                   strokeWidth={2.1}
                 />
               }
-              onPress={() => undefined}
+              onPress={onOpenLanguage}
             />
             <View
               style={[
@@ -297,6 +316,7 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
             <ProfileRow
               theme={theme}
               title={copy.profile.settings.theme}
+              subtitle={copy.profile.settings.themes[userTheme]}
               compact
               icon={
                 <Palette
@@ -305,8 +325,31 @@ export function ProfileScreen({ theme, themeMode, copy, onLogout, onEdit }: Prop
                   strokeWidth={2.1}
                 />
               }
-              onPress={() => undefined}
+              onPress={onOpenTheme}
             />
+            {onOpenIntegrations ? (
+              <>
+                <View
+                  style={[
+                    styles.separator,
+                    { backgroundColor: theme.color.border },
+                  ]}
+                />
+                <ProfileRow
+                  theme={theme}
+                  title={copy.profile.integrations.title}
+                  compact
+                  icon={
+                    <Share2
+                      color={theme.color.foreground}
+                      size={18}
+                      strokeWidth={2.1}
+                    />
+                  }
+                  onPress={onOpenIntegrations}
+                />
+              </>
+            ) : null}
           </View>
         </View>
 
