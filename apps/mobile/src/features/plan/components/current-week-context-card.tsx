@@ -5,6 +5,7 @@ import { type CurrentWeekContext } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   context: CurrentWeekContext;
@@ -22,14 +23,10 @@ export function CurrentWeekContextCard({
   const planCopy = copy.plan;
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surfaceElevated,
-          borderColor: theme.color.border,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={styles.card}
     >
       <View style={styles.headerRow}>
         <View style={styles.titleRow}>
@@ -99,7 +96,7 @@ export function CurrentWeekContextCard({
           ))}
         </View>
       ) : null}
-    </View>
+    </Card>
   );
 }
 

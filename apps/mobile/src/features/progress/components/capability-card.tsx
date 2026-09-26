@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowDownRight, Minus, ChevronRight } from "lucide-react-
 import type { ThemeTokens } from "@workspace/tokens";
 import type { ProgressCapability } from "../types/progress-types";
 import type { MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   capability: ProgressCapability;
@@ -27,63 +28,64 @@ export function CapabilityCard({ capability, onPress, theme, themeMode, copy }: 
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-          opacity: pressed ? 0.85 : 1,
-        },
+        { opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View style={styles.topRow}>
-        <Text
-          style={[
-            styles.nameText,
-            {
-              color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.bold,
-            },
-          ]}
-        >
-          {translatedName.toUpperCase()}
-        </Text>
-        <ChevronRight size={16} color={theme.color.mutedForeground} strokeWidth={2} />
-      </View>
-
-      <View style={styles.bottomRow}>
-        <Text
-          style={[
-            styles.valueText,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {capability.value}
-        </Text>
-
-        <View style={styles.trendWrap}>
-          {isUp ? (
-            <ArrowUpRight size={16} color={theme.color.foreground} strokeWidth={2.5} />
-          ) : isDown ? (
-            <ArrowDownRight size={16} color={theme.color.mutedForeground} strokeWidth={2.5} />
-          ) : (
-            <Minus size={16} color={theme.color.mutedForeground} strokeWidth={2.5} />
-          )}
+      <Card
+        variant="glass"
+        theme={theme}
+        style={styles.card}
+      >
+        <View style={styles.topRow}>
           <Text
             style={[
-              styles.trendText,
+              styles.nameText,
               {
-                color: theme.color.foreground,
+                color: theme.color.mutedForeground,
                 fontFamily: theme.typography.fontFamily.sans.bold,
               },
             ]}
           >
-            {isUp ? `+${capability.change}%` : isDown ? `-${capability.change}%` : "0%"}
+            {translatedName.toUpperCase()}
           </Text>
+          <ChevronRight size={16} color={theme.color.mutedForeground} strokeWidth={2} />
         </View>
-      </View>
+
+        <View style={styles.bottomRow}>
+          <Text
+            style={[
+              styles.valueText,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.extrabold,
+              },
+            ]}
+          >
+            {capability.value}
+          </Text>
+
+          <View style={styles.trendWrap}>
+            {isUp ? (
+              <ArrowUpRight size={16} color={theme.color.foreground} strokeWidth={2.5} />
+            ) : isDown ? (
+              <ArrowDownRight size={16} color={theme.color.mutedForeground} strokeWidth={2.5} />
+            ) : (
+              <Minus size={16} color={theme.color.mutedForeground} strokeWidth={2.5} />
+            )}
+            <Text
+              style={[
+                styles.trendText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.bold,
+                },
+              ]}
+            >
+              {isUp ? `+${capability.change}%` : isDown ? `-${capability.change}%` : "0%"}
+            </Text>
+          </View>
+        </View>
+      </Card>
     </Pressable>
   );
 }

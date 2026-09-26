@@ -9,6 +9,7 @@ import {
   HeaderPlusButton,
   HeaderTemplateButton,
 } from "../components/header";
+import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import { CurrentWeekContextCard } from "../../plan/components/current-week-context-card";
 import { PlanAdaptationDetailsSheet } from "../../plan/components/plan-adaptation-details-sheet";
@@ -46,11 +47,22 @@ export function PlanScreen({ theme, themeMode, copy, onOpenTrefix }: Props) {
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
+  useHeaderOptions(
+    {
+      leftAction: null,
+      centerContent: <HeaderLogo source={logoSource} />,
+      rightAction: null,
+      variant: "default",
+      bottomContent: null,
+    },
+    [logoSource],
+  );
+
   const planCopy = copy.plan;
 
   return (
     <SectionLayout
-      headerCenter={<HeaderLogo source={logoSource} />}
+      hasHeader={false}
       scrollable
       refreshing={isRefreshing}
       onRefresh={refresh}

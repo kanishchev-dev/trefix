@@ -27,6 +27,7 @@ import {
   HeaderPlusButton,
   HeaderTemplateButton,
 } from "../components/header";
+import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import type { ThemeMode, ThemeTokens } from "@workspace/tokens";
 import type { MainCopy } from "../../../locales";
@@ -96,23 +97,32 @@ export function ProgressScreen({
     }
   };
 
-  return (
-    <SectionLayout
-      headerCenter={<HeaderLogo source={logoSource} />}
-      leftAction={
+  useHeaderOptions(
+    {
+      leftAction: (
         <HeaderTemplateButton
           onPress={handleCycleState}
           theme={theme}
           themeMode={themeMode}
         />
-      }
-      rightAction={
+      ),
+      centerContent: <HeaderLogo source={logoSource} />,
+      rightAction: (
         <HeaderPlusButton
           onPress={() => switchDisplayState("active")}
           theme={theme}
           themeMode={themeMode}
         />
-      }
+      ),
+      variant: "default",
+      bottomContent: null,
+    },
+    [theme, themeMode, logoSource],
+  );
+
+  return (
+    <SectionLayout
+      hasHeader={false}
       scrollable
       theme={theme}
       themeMode={themeMode}

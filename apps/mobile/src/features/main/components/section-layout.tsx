@@ -17,7 +17,7 @@ import { Header } from "./header";
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
-  headerCenter: ReactNode;
+  headerCenter?: ReactNode;
   leftAction?: ReactNode;
   rightAction?: ReactNode;
   headerContentHeight?: number;
@@ -29,6 +29,7 @@ type Props = {
   onRefresh?: () => void;
   children: ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
+  hasHeader?: boolean;
 };
 
 export function SectionLayout({
@@ -46,6 +47,7 @@ export function SectionLayout({
   onRefresh,
   children,
   contentStyle,
+  hasHeader = true,
 }: Props) {
   const insets = useSafeAreaInsets();
   const blurTargetRef = useRef<View | null>(null);
@@ -92,17 +94,19 @@ export function SectionLayout({
         )}
       </BlurTargetView>
 
-      <Header
-        leftAction={leftAction}
-        centerContent={headerCenter}
-        blurTarget={blurTargetRef}
-        contentHeight={headerContentHeight}
-        rightAction={rightAction}
-        theme={theme}
-        themeMode={themeMode}
-        variant={headerVariant}
-        bottomContent={headerBottomContent}
-      />
+      {hasHeader ? (
+        <Header
+          leftAction={leftAction}
+          centerContent={headerCenter}
+          blurTarget={blurTargetRef}
+          contentHeight={headerContentHeight}
+          rightAction={rightAction}
+          theme={theme}
+          themeMode={themeMode}
+          variant={headerVariant}
+          bottomContent={headerBottomContent}
+        />
+      ) : null}
     </View>
   );
 }

@@ -5,6 +5,7 @@ import { type PlanAdaptation } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   adaptations: PlanAdaptation[];
@@ -25,7 +26,7 @@ export function RecentAdaptationsCard({
 
   if (adaptations.length === 0) {
     return (
-      <View
+      <Card
         style={[
           styles.card,
           {
@@ -59,7 +60,7 @@ export function RecentAdaptationsCard({
         >
           {planCopy.adaptations.onTrack}
         </Text>
-      </View>
+      </Card>
     );
   }
 

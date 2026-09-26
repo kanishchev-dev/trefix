@@ -70,14 +70,7 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
             { paddingTop: insets.top + listPaddingTop, paddingBottom: insets.bottom + 40 }
         ]}
       >
-        <View style={[styles.dayContainer, { minHeight: minDayHeight }]}>
-            <DayHeader
-                theme={theme}
-                date={formatDateLong(dateObj, language)}
-                isToday={isToday}
-                isTomorrow={isTomorrow}
-                copy={copy}
-            />
+        <View style={[styles.dayContainer, { minHeight: minDayHeight }, day.events.length === 0 && styles.emptyDayContainer]}>
             {day.events.length > 0 ? (
                 day.events.map((event) => {
                 if (event.type === "workout") {
@@ -113,5 +106,9 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     // Height set dynamically
+  },
+  emptyDayContainer: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

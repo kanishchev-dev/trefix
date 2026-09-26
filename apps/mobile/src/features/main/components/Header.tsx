@@ -69,6 +69,7 @@ export function HeaderActionButton({
   onPress,
 }: HeaderActionButtonProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const isDark = themeMode === "dark";
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 100);
@@ -86,28 +87,32 @@ export function HeaderActionButton({
         pressed && styles.actionButtonPressed,
       ]}
     >
-      <View
-        style={[
-          styles.actionButtonGlass,
-          themeMode === "dark" ? styles.actionButtonDark : styles.actionButtonLight,
-          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-        ]}
-      />
-      {isMounted && (
+      {isMounted ? (
         <GlassView
           key={`header-action-${themeMode}`}
-          glassEffectStyle={{ style: "regular", animate: true }}
+          glassEffectStyle="regular"
           isInteractive
-          colorScheme={themeMode}
-          collapsable={false}
           tintColor={theme.color.glassTint}
-          style={styles.actionButtonGlass}
+          style={[
+            styles.actionButtonGlass,
+            {
+              borderColor: theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+            },
+          ]}
         >
           {icon}
         </GlassView>
-      )}
-      {!isMounted && (
-        <View style={[styles.actionButtonGlass, { borderWidth: 0 }]}>
+      ) : (
+        <View
+          style={[
+            styles.actionButtonGlass,
+            {
+              borderColor: theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+            },
+          ]}
+        >
           {icon}
         </View>
       )}
@@ -123,6 +128,7 @@ export function HeaderTextButton({
   theme,
 }: HeaderTextButtonProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const isDark = themeMode === "dark";
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 100);
@@ -140,22 +146,19 @@ export function HeaderTextButton({
         pressed && styles.textButtonPressed,
       ]}
     >
-      <View
-        style={[
-          styles.textButtonGlass,
-          themeMode === "dark" ? styles.actionButtonDark : styles.actionButtonLight,
-          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-        ]}
-      />
-      {isMounted && (
+      {isMounted ? (
         <GlassView
           key={`header-text-${themeMode}`}
-          glassEffectStyle={{ style: "regular", animate: true }}
+          glassEffectStyle="regular"
           isInteractive
-          colorScheme={themeMode}
-          collapsable={false}
           tintColor={theme.color.glassTint}
-          style={styles.textButtonGlass}
+          style={[
+            styles.textButtonGlass,
+            {
+              borderColor: theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+            },
+          ]}
         >
           <Text
             style={[
@@ -169,9 +172,16 @@ export function HeaderTextButton({
             {label}
           </Text>
         </GlassView>
-      )}
-      {!isMounted && (
-        <View style={[styles.textButtonGlass, { borderWidth: 0 }]}>
+      ) : (
+        <View
+          style={[
+            styles.textButtonGlass,
+            {
+              borderColor: theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+            },
+          ]}
+        >
           <Text
             style={[
               styles.textButtonLabel,
@@ -667,7 +677,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.08)",
   },
   actionButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.55)",
+    backgroundColor: "rgba(255, 255, 255, 0.72)",
     borderColor: "rgba(9, 9, 11, 0.08)",
   },
   actionButtonPressed: {

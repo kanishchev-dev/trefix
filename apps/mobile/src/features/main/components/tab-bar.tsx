@@ -195,7 +195,7 @@ export function TabBar({
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 4) }]}
+      style={[styles.outer, { paddingBottom: Math.max(insets.bottom - 18, 4) }]}
     >
       <GlassView
         glassEffectStyle="regular"

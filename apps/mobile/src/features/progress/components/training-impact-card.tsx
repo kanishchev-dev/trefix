@@ -3,6 +3,7 @@ import { Zap } from "lucide-react-native";
 import type { ThemeTokens } from "@workspace/tokens";
 import type { ProgressTrainingImpact } from "../types/progress-types";
 import type { MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   impact: ProgressTrainingImpact;
@@ -19,14 +20,10 @@ export function TrainingImpactCard({ impact, theme, themeMode, copy }: Props) {
   }
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={styles.card}
     >
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
@@ -109,7 +106,7 @@ export function TrainingImpactCard({ impact, theme, themeMode, copy }: Props) {
           </View>
         ))}
       </View>
-    </View>
+    </Card>
   );
 }
 

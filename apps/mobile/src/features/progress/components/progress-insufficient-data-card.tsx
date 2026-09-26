@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { AlertCircle } from "lucide-react-native";
 import type { ThemeTokens } from "@workspace/tokens";
 import type { MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   title?: string;
@@ -21,14 +22,10 @@ export function ProgressInsufficientDataCard({
   const isDark = themeMode === "dark";
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={styles.card}
     >
       <View style={styles.headerRow}>
         <AlertCircle size={16} color={theme.color.mutedForeground} strokeWidth={2} />
@@ -58,7 +55,7 @@ export function ProgressInsufficientDataCard({
           copy.progress?.insufficientData?.description ||
           "Complete a few more quality sessions to unlock this trend."}
       </Text>
-    </View>
+    </Card>
   );
 }
 

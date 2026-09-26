@@ -5,6 +5,7 @@ import { type PlanOverview } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   overview: PlanOverview;
@@ -42,14 +43,10 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy }: Props) {
   const progressPercent = Math.min(100, Math.max(0, Math.round(plan.progress * 100)));
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surfaceElevated,
-          borderColor: theme.color.border,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={styles.card}
     >
       {/* Top Header: Goal Title & Badges */}
       <View style={styles.headerRow}>
@@ -199,7 +196,7 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy }: Props) {
           />
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 

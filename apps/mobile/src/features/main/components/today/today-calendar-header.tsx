@@ -266,30 +266,34 @@ export function TodayCalendarHeader({
       <Pressable
         key={date.toISOString()}
         onPress={() => onSelectDate(date)}
-        style={[
-          styles.dayItem,
-          selected && { backgroundColor: theme.color.primary, borderRadius: 12 },
-        ]}
+        style={styles.dayItem}
       >
-        <Text
+        <View
           style={[
-            styles.dayText,
-            {
-              color: isCurrentMonth ? theme.color.foreground : theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.medium,
-            },
-            selected && { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.bold },
-            todayFlag && !selected && { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.bold },
+            styles.circle,
+            selected && { backgroundColor: theme.color.primary },
           ]}
         >
-          {date.getDate()}
-        </Text>
+          <Text
+            style={[
+              styles.dayText,
+              {
+                color: isCurrentMonth ? theme.color.foreground : theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+              selected && { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.bold },
+              todayFlag && !selected && { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.bold },
+            ]}
+          >
+            {date.getDate()}
+          </Text>
+        </View>
         <View style={styles.markerContainer}>
           {hasEv && (
             <View
               style={[
                 styles.marker,
-                { backgroundColor: selected ? theme.color.primaryForeground : theme.color.primary },
+                { backgroundColor: theme.color.primary },
               ]}
             />
           )}
@@ -436,16 +440,22 @@ const styles = StyleSheet.create({
   },
   dayItem: {
     width: "14.28%",
-    height: 36,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 2,
+    paddingVertical: 2,
+  },
+  circle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   dayText: {
-    fontSize: 16,
+    fontSize: 15,
   },
   markerContainer: {
-    height: 6,
+    height: 8,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 2,

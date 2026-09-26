@@ -4,6 +4,7 @@ import { ChevronRight, RefreshCw } from "lucide-react-native";
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
+import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { useIntegrations } from "../hooks/use-integrations";
@@ -108,20 +109,30 @@ export function IntegrationsScreen({
     return copy.profile.integrations.strava.errorStatus;
   };
 
-  return (
-    <SectionLayout
-      leftAction={
+  useHeaderOptions(
+    {
+      leftAction: (
         <HeaderBackButton
           theme={theme}
           themeMode={themeMode}
           onPress={onBack}
         />
-      }
-      headerCenter={
+      ),
+      centerContent: (
         <HeaderTitle theme={theme}>
           {copy.profile.integrations.title}
         </HeaderTitle>
-      }
+      ),
+      rightAction: null,
+      variant: "default",
+      bottomContent: null,
+    },
+    [theme, themeMode, onBack, copy.profile.integrations.title],
+  );
+
+  return (
+    <SectionLayout
+      hasHeader={false}
       scrollable
       theme={theme}
       themeMode={themeMode}

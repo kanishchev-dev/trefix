@@ -21,6 +21,7 @@ import {
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { HeaderLogo, HeaderQrButton, HeaderTextButton } from "../components/header";
+import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import {
   formatProfileJoinedDate,
@@ -150,17 +151,17 @@ export function ProfileScreen({
   const profileJoinedAt = user?.createdAt ? new Date(user.createdAt) : new Date();
   const appVersion = appConfig.expo.version ?? "1.0.0";
 
-  return (
-    <SectionLayout
-      leftAction={
+  useHeaderOptions(
+    {
+      leftAction: (
         <HeaderQrButton
           theme={theme}
           themeMode={themeMode}
           onPress={() => setQrVisible(true)}
         />
-      }
-      headerCenter={<HeaderLogo source={logoSource} />}
-      rightAction={
+      ),
+      centerContent: <HeaderLogo source={logoSource} />,
+      rightAction: (
         <HeaderTextButton
           theme={theme}
           themeMode={themeMode}
@@ -168,7 +169,16 @@ export function ProfileScreen({
           label={copy.profile.hero.edit}
           onPress={onEdit}
         />
-      }
+      ),
+      variant: "default",
+      bottomContent: null,
+    },
+    [theme, themeMode, logoSource, copy.profile.hero.edit, onEdit],
+  );
+
+  return (
+    <SectionLayout
+      hasHeader={false}
       scrollable
       theme={theme}
       themeMode={themeMode}

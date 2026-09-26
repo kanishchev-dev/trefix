@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react-native";
 import type { ThemeTokens } from "@workspace/tokens";
 import type { ProgressForm } from "../types/progress-types";
 import type { MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   form: ProgressForm;
@@ -34,14 +35,10 @@ export function FormOverviewCard({ form, theme, themeMode, copy }: Props) {
     ) || `+${form.change} compared with 6 weeks ago`;
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={styles.card}
     >
       <Text
         style={[
@@ -213,7 +210,7 @@ export function FormOverviewCard({ form, theme, themeMode, copy }: Props) {
           {comparisonText}
         </Text>
       </View>
-    </View>
+    </Card>
   );
 }
 

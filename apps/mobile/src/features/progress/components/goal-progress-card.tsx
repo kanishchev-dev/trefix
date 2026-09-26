@@ -3,6 +3,7 @@ import { Flag, CheckCircle2 } from "lucide-react-native";
 import type { ThemeTokens } from "@workspace/tokens";
 import type { ProgressGoal } from "../types/progress-types";
 import type { MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   goal: ProgressGoal;
@@ -22,14 +23,10 @@ export function GoalProgressCard({ goal, theme, themeMode, copy }: Props) {
   const progressPercent = Math.min(Math.max(goal.progress ?? 70, 0), 100);
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={styles.card}
     >
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
@@ -183,7 +180,7 @@ export function GoalProgressCard({ goal, theme, themeMode, copy }: Props) {
           ]}
         />
       </View>
-    </View>
+    </Card>
   );
 }
 

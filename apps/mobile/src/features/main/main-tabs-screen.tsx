@@ -3,7 +3,9 @@ import { Animated, Easing, View, StyleSheet } from "react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
+import { Header } from "./components/header";
 import { TabBar } from "./components/tab-bar";
+import { HeaderContext, type HeaderOptions } from "./context/header-context";
 import { type MainTabKey } from "./main-types";
 import { PlanScreen } from "./screens/plan-screen";
 import { ProfileScreen } from "./screens/profile-screen";
@@ -45,6 +47,7 @@ export function MainTabsScreen({
 }: Props) {
   const [activeTab, setActiveTab] = useState<MainTabKey>("today");
   const [subScreen, setSubScreen] = useState<"integrations" | "strava-integration" | null>(null);
+  const [headerOptions, setHeaderOptions] = useState<HeaderOptions>({});
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateAnim = useRef(new Animated.Value(0)).current;
@@ -74,75 +77,87 @@ export function MainTabsScreen({
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: translateAnim }],
-          },
-        ]}
-      >
-        {subScreen === "integrations" ? (
-          <IntegrationsScreen
-            theme={theme}
-            themeMode={themeMode}
-            copy={copy}
-            userLanguage={userLanguage}
-            onBack={() => setSubScreen(null)}
-            onOpenStrava={() => setSubScreen("strava-integration")}
-          />
-        ) : subScreen === "strava-integration" ? (
-          <StravaIntegrationScreen
-            theme={theme}
-            themeMode={themeMode}
-            copy={copy}
-            userLanguage={userLanguage}
-            onBack={() => setSubScreen("integrations")}
-          />
-        ) : activeTab === "today" ? (
-          <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
-        ) : activeTab === "plan" ? (
-          <PlanScreen
-            copy={copy}
-            onOpenTrefix={onOpenTrefix}
-            theme={theme}
-            themeMode={themeMode}
-          />
-        ) : activeTab === "progress" ? (
-          <ProgressScreen
-            copy={copy}
-            onOpenTrefix={onOpenTrefix}
-            theme={theme}
-            themeMode={themeMode}
-          />
-        ) : activeTab === "profile" ? (
-          <ProfileScreen
-            theme={theme}
-            themeMode={themeMode}
-            copy={copy}
-            userLanguage={userLanguage}
-            userTheme={userTheme}
-            onLogout={onLogout}
-            onEdit={onEditProfile}
-            onOpenNotifications={onOpenNotifications}
-            onOpenLanguage={onOpenLanguage}
-            onOpenTheme={onOpenTheme}
-            onOpenIntegrations={() => setSubScreen("integrations")}
-          />
-        ) : null}
-      </Animated.View>
+    <HeaderContext.Provider value={{ options: headerOptions, setOptions: setHeaderOptions }}>
+      <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+        <Header
+          theme={theme}
+          themeMode={themeMode}
+          leftAction={headerOptions.leftAction}
+          centerContent={headerOptions.centerContent}
+          rightAction={headerOptions.rightAction}
+          variant={headerOptions.variant}
+          bottomContent={headerOptions.bottomContent}
+        />
 
-      <TabBar
-        theme={theme}
-        themeMode={themeMode}
-        userEmail={userEmail}
-        activeTab={activeTab}
-        onChangeTab={handleTabChange}
-        onOpenTrefix={onOpenTrefix}
-      />
-    </View>
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: translateAnim }],
+            },
+          ]}
+        >
+          {subScreen === "integrations" ? (
+            <IntegrationsScreen
+              theme={theme}
+              themeMode={themeMode}
+              copy={copy}
+              userLanguage={userLanguage}
+              onBack={() => setSubScreen(null)}
+              onOpenStrava={() => setSubScreen("strava-integration")}
+            />
+          ) : subScreen === "strava-integration" ? (
+            <StravaIntegrationScreen
+              theme={theme}
+              themeMode={themeMode}
+              copy={copy}
+              userLanguage={userLanguage}
+              onBack={() => setSubScreen("integrations")}
+            />
+          ) : activeTab === "today" ? (
+            <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
+          ) : activeTab === "plan" ? (
+            <PlanScreen
+              copy={copy}
+              onOpenTrefix={onOpenTrefix}
+              theme={theme}
+              themeMode={themeMode}
+            />
+          ) : activeTab === "progress" ? (
+            <ProgressScreen
+              copy={copy}
+              onOpenTrefix={onOpenTrefix}
+              theme={theme}
+              themeMode={themeMode}
+            />
+          ) : activeTab === "profile" ? (
+            <ProfileScreen
+              theme={theme}
+              themeMode={themeMode}
+              copy={copy}
+              userLanguage={userLanguage}
+              userTheme={userTheme}
+              onLogout={onLogout}
+              onEdit={onEditProfile}
+              onOpenNotifications={onOpenNotifications}
+              onOpenLanguage={onOpenLanguage}
+              onOpenTheme={onOpenTheme}
+              onOpenIntegrations={() => setSubScreen("integrations")}
+            />
+          ) : null}
+        </Animated.View>
+
+        <TabBar
+          theme={theme}
+          themeMode={themeMode}
+          userEmail={userEmail}
+          activeTab={activeTab}
+          onChangeTab={handleTabChange}
+          onOpenTrefix={onOpenTrefix}
+        />
+      </View>
+    </HeaderContext.Provider>
   );
 }
 

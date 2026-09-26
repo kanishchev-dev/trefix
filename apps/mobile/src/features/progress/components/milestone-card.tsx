@@ -3,6 +3,7 @@ import { Trophy, ChevronRight } from "lucide-react-native";
 import type { ThemeTokens } from "@workspace/tokens";
 import type { ProgressMilestone } from "../types/progress-types";
 import type { MainCopy } from "../../../locales";
+import { Card } from "../../../shared/ui/card";
 
 type Props = {
   milestone: ProgressMilestone;
@@ -18,58 +19,59 @@ export function MilestoneCard({ milestone, onPress, theme, themeMode }: Props) {
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-          opacity: pressed ? 0.85 : 1,
-        },
+        { opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View style={styles.leftCol}>
-        <View style={styles.iconWrap}>
-          <Trophy size={16} color={theme.color.foreground} strokeWidth={2} />
+      <Card
+        variant="glass"
+        theme={theme}
+        style={styles.card}
+      >
+        <View style={styles.leftCol}>
+          <View style={styles.iconWrap}>
+            <Trophy size={16} color={theme.color.foreground} strokeWidth={2} />
+          </View>
+          <View style={styles.textWrap}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.bold,
+                },
+              ]}
+            >
+              {milestone.title}
+            </Text>
+            <Text
+              style={[
+                styles.date,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {milestone.date}
+            </Text>
+          </View>
         </View>
-        <View style={styles.textWrap}>
+
+        <View style={styles.rightCol}>
           <Text
             style={[
-              styles.title,
+              styles.value,
               {
                 color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
+                fontFamily: theme.typography.fontFamily.sans.extrabold,
               },
             ]}
           >
-            {milestone.title}
+            {milestone.value}
           </Text>
-          <Text
-            style={[
-              styles.date,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-            ]}
-          >
-            {milestone.date}
-          </Text>
+          <ChevronRight size={16} color={theme.color.mutedForeground} strokeWidth={2} />
         </View>
-      </View>
-
-      <View style={styles.rightCol}>
-        <Text
-          style={[
-            styles.value,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {milestone.value}
-        </Text>
-        <ChevronRight size={16} color={theme.color.mutedForeground} strokeWidth={2} />
-      </View>
+      </Card>
     </Pressable>
   );
 }

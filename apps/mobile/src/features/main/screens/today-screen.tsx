@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 import { type TrainingWorkout } from "@workspace/api-client";
 
@@ -10,6 +9,7 @@ import {
   HeaderPlusButton,
   HeaderBellButton,
 } from "../components/header";
+import { HeaderContext, useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import { type MainCopy, getAppLanguage } from "../../../locales";
 import { TodayCalendarHeader } from "../components/today/today-calendar-header";
@@ -122,27 +122,25 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       ? require("../../../../assets/trefix-logo-light.png")
       : require("../../../../assets/trefix-logo-dark.png");
 
-  return (
-    <SectionLayout
-      theme={theme}
-      themeMode={themeMode}
-      leftAction={
+  useHeaderOptions(
+    {
+      leftAction: (
         <HeaderPlusButton
           theme={theme}
           themeMode={themeMode}
           onPress={() => setAddSheetVisible(true)}
         />
-      }
-      headerCenter={<HeaderLogo source={logoSource} />}
-      rightAction={
+      ),
+      centerContent: <HeaderLogo source={logoSource} />,
+      rightAction: (
         <HeaderBellButton
           theme={theme}
           themeMode={themeMode}
           onPress={() => undefined}
         />
-      }
-      headerVariant="calendar"
-      headerBottomContent={
+      ),
+      variant: "calendar",
+      bottomContent: (
         <TodayCalendarHeader
           theme={theme}
           themeMode={themeMode}
@@ -153,7 +151,16 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
           setCalendarMode={setCalendarMode}
           eventDates={eventDates}
         />
-      }
+      ),
+    },
+    [theme, themeMode, language, selectedDate, handleSelectDate, calendarMode, setCalendarMode, eventDates, logoSource],
+  );
+
+  return (
+    <SectionLayout
+      hasHeader={false}
+      theme={theme}
+      themeMode={themeMode}
       scrollable={false}
       contentStyle={{
         paddingHorizontal: 0,
@@ -200,23 +207,6 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
             </Text>
           </Pressable>
         )}
-
-        {/* Floating Add Workout FAB */}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => setAddSheetVisible(true)}
-          style={({ pressed }) => [
-            styles.fab,
-            {
-              backgroundColor: theme.color.primary,
-              bottom: 24 + insets.bottom,
-              shadowColor: "#000",
-            },
-            pressed && styles.fabPressed,
-          ]}
-        >
-          <Plus color={theme.color.primaryForeground} size={24} />
-        </Pressable>
       </View>
 
       {/* Add Workout Modal Sheet */}
@@ -263,21 +253,5 @@ const styles = StyleSheet.create({
   todayButtonText: {
     fontSize: 12,
     letterSpacing: 1,
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  fabPressed: {
-    transform: [{ scale: 0.95 }],
   },
 });

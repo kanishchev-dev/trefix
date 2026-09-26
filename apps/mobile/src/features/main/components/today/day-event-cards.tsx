@@ -10,6 +10,7 @@ import {
 } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 import { type DayEvent } from "../../today-types";
+import { Card, CardHeader, CardContent, CardFooter } from "../../../../shared/ui/card";
 
 type CardProps = {
   theme: ThemeTokens;
@@ -21,7 +22,6 @@ type CardProps = {
 };
 
 export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAction, copy }: CardProps) => {
-  const isDark = themeMode === "dark";
   const statusLabels = copy.today.workout.statuses;
   const actionLabels = copy.today.workout.actions;
 
@@ -41,109 +41,103 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
   return (
     <Pressable
       onPress={() => onPress?.(event)}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-        },
-        pressed && styles.cardPressed,
-      ]}
+      style={({ pressed }) => [pressed && styles.cardPressed]}
     >
-      <View style={styles.cardHeader}>
-        <View style={styles.titleContainer}>
-          {renderStatusIcon()}
-          <Text
-            style={[
-              styles.cardTitle,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
-              },
-              event.status === "completed" && { color: theme.color.foreground },
-            ]}
-          >
-            {event.status === "completed" && "✓ "}
-            {event.title}
-          </Text>
-        </View>
-        <ChevronRight size={16} color={theme.color.mutedForeground} />
-      </View>
+      <Card
+        variant="glass"
+        theme={theme}
+        style={styles.card}
+      >
+        <CardHeader style={styles.cardHeader}>
+          <View style={styles.titleContainer}>
+            {renderStatusIcon()}
+            <Text
+              style={[
+                styles.cardTitle,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.bold,
+                },
+                event.status === "completed" && { color: theme.color.foreground },
+              ]}
+            >
+              {event.status === "completed" && "✓ "}
+              {event.title}
+            </Text>
+          </View>
+          <ChevronRight size={16} color={theme.color.mutedForeground} />
+        </CardHeader>
 
-      <View style={styles.cardBody}>
-        {event.status === "modified" && (
-          <Text style={[styles.modifiedLabel, { color: "#A37EFF", fontFamily: theme.typography.fontFamily.sans.medium }]}>
-            {statusLabels.modified}
-          </Text>
-        )}
-
-        {event.status === "missed" && (
-          <Text style={[styles.missedLabel, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
-            {statusLabels.missed}
-          </Text>
-        )}
-
-        <View style={styles.metricsContainer}>
-          {event.distance && (
-            <Text style={[styles.metric, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
-              {event.distance}
+        <CardContent style={styles.cardBody}>
+          {event.status === "modified" && (
+            <Text style={[styles.modifiedLabel, { color: "#A37EFF", fontFamily: theme.typography.fontFamily.sans.medium }]}>
+              {statusLabels.modified}
             </Text>
           )}
-          {event.distance && event.duration && <Text style={{ color: theme.color.mutedForeground }}> · </Text>}
-          {event.duration && (
-            <Text style={[styles.metric, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
-              {event.duration}
+
+          {event.status === "missed" && (
+            <Text style={[styles.missedLabel, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+              {statusLabels.missed}
             </Text>
           )}
-        </View>
 
-        {event.description && (
-          <Text style={[styles.description, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
-            {event.description}
-          </Text>
-        )}
-      </View>
+          <View style={styles.metricsContainer}>
+            {event.distance && (
+              <Text style={[styles.metric, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+                {event.distance}
+              </Text>
+            )}
+            {event.distance && event.duration && <Text style={{ color: theme.color.mutedForeground }}> · </Text>}
+            {event.duration && (
+              <Text style={[styles.metric, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+                {event.duration}
+              </Text>
+            )}
+          </View>
 
-      <View style={styles.cardFooter}>
-        {event.status === "planned" && (
-          <Pressable
-            onPress={() => onAction?.(event)}
-            style={[styles.actionButton, { backgroundColor: theme.color.primary }]}
-          >
-            <Text style={[styles.actionButtonText, { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
-              {actionLabels.start}
+          {event.description && (
+            <Text style={[styles.description, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+              {event.description}
             </Text>
-            <ChevronRight size={14} color={theme.color.primaryForeground} />
-          </Pressable>
-        )}
+          )}
+        </CardContent>
 
-        {event.status === "completed" && (
-          <Text style={[styles.footerText, { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
-            {actionLabels.view} →
-          </Text>
-        )}
+        <CardFooter style={styles.cardFooter}>
+          {event.status === "planned" && (
+            <Pressable
+              onPress={() => onAction?.(event)}
+              style={[styles.actionButton, { backgroundColor: theme.color.primary }]}
+            >
+              <Text style={[styles.actionButtonText, { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+                {actionLabels.start}
+              </Text>
+              <ChevronRight size={14} color={theme.color.primaryForeground} />
+            </Pressable>
+          )}
 
-        {event.status === "modified" && (
-          <Text style={[styles.footerText, { color: "#A37EFF", fontFamily: theme.typography.fontFamily.sans.semibold }]}>
-            {actionLabels.why} →
-          </Text>
-        )}
-      </View>
+          {event.status === "completed" && (
+            <Text style={[styles.footerText, { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+              {actionLabels.view} →
+            </Text>
+          )}
+
+          {event.status === "modified" && (
+            <Text style={[styles.footerText, { color: "#A37EFF", fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+              {actionLabels.why} →
+            </Text>
+          )}
+        </CardFooter>
+      </Card>
     </Pressable>
   );
 });
 
 export const RecoveryCard = React.memo(({ theme, copy }: Omit<CardProps, "themeMode" | "event">) => {
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.color.surface,
-          borderColor: theme.color.border,
-          paddingVertical: 16,
-        },
-      ]}
+    <Card
+      variant="glass"
+      theme={theme}
+      style={[styles.card, { paddingVertical: 16 }]}
     >
       <View style={styles.titleContainer}>
         <Moon size={16} color={theme.color.mutedForeground} />
@@ -171,7 +165,7 @@ export const RecoveryCard = React.memo(({ theme, copy }: Omit<CardProps, "themeM
       >
         {copy.today.recovery.description}
       </Text>
-    </View>
+    </Card>
   );
 });
 
@@ -234,9 +228,6 @@ export const DayHeader = React.memo(({ theme, date, isToday, isTomorrow, copy }:
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 20,
     marginBottom: 12,
     marginHorizontal: 16,
   },
@@ -245,10 +236,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 8,
+    paddingHorizontal: 0,
+    paddingTop: 0,
   },
   titleContainer: {
     flexDirection: "row",
@@ -260,6 +250,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   cardBody: {
+    paddingHorizontal: 0,
     marginBottom: 12,
   },
   modifiedLabel: {
@@ -285,6 +276,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   cardFooter: {
+    paddingHorizontal: 0,
+    paddingBottom: 0,
     flexDirection: "row",
     justifyContent: "flex-start",
   },
@@ -303,12 +296,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   emptyContainer: {
-    paddingVertical: 8,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 24,
   },
   emptyText: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 16,
+    textAlign: "center",
+    opacity: 0.8,
   },
   dayHeader: {
     marginTop: 32,
