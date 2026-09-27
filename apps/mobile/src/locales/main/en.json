@@ -11,6 +11,27 @@
     "tomorrow": "Tomorrow",
     "noEvents": "No planned events",
     "backToToday": "Today",
+    "addSectionTitle": "Add workout",
+    "types": {
+      "easy": "Easy Run",
+      "tempo": "Tempo Run",
+      "interval": "Intervals",
+      "hill": "Hills",
+      "race": "Race"
+    },
+    "goalSheet": {
+      "title": "Choose current goal and widget",
+      "tabs": {
+        "duration": "Time",
+        "distance": "Distance"
+      },
+      "distanceUnit": "km",
+      "durationUnit": "min",
+      "submit": "Add workout",
+      "invalidValue": "Please enter a value greater than 0",
+      "futureDateOnly": "Planned workouts can only be added for future dates.",
+      "errorDefault": "Failed to add workout. Please try again."
+    },
     "eventTypes": {
       "workout": "Workout",
       "recovery": "Recovery",

@@ -16,6 +16,7 @@ import { TodayCalendarHeader } from "../components/today/today-calendar-header";
 import { TodayTimeline, type TodayTimelineRef } from "../components/today/today-timeline";
 import { AddWorkoutSheet } from "../components/today/add-workout-sheet";
 import { WorkoutDetailSheet } from "../components/today/workout-detail-sheet";
+import { WorkoutGoalSheet, type ManualWorkoutType } from "../components/today/workout-goal-sheet";
 import { useWorkouts } from "../hooks/use-workouts";
 import { type Day, type DayEvent, type CalendarMode } from "../today-types";
 
@@ -36,6 +37,8 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
 
   // Sheet states
   const [addSheetVisible, setAddSheetVisible] = useState(false);
+  const [goalSheetVisible, setGoalSheetVisible] = useState(false);
+  const [selectedWorkoutType, setSelectedWorkoutType] = useState<ManualWorkoutType>("easy");
   const [selectedWorkout, setSelectedWorkout] = useState<TrainingWorkout | null>(null);
   const [detailSheetVisible, setDetailSheetVisible] = useState(false);
 
@@ -100,6 +103,11 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const handleBackToToday = () => {
     handleSelectDate(new Date());
   };
+
+  const handleSelectWorkoutType = useCallback((type: ManualWorkoutType) => {
+    setSelectedWorkoutType(type);
+    setGoalSheetVisible(true);
+  }, []);
 
   const handleEventPress = useCallback(
     (event: DayEvent) => {
@@ -179,6 +187,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
           calendarMode={calendarMode}
           onEventPress={handleEventPress}
           onEventAction={handleEventPress}
+          onSelectWorkoutType={handleSelectWorkoutType}
         />
 
         {/* Back to Today Floating Button */}
@@ -217,6 +226,17 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
         theme={theme}
         themeMode={themeMode}
         visible={addSheetVisible}
+      />
+
+      {/* Planned Workout Goal Sheet */}
+      <WorkoutGoalSheet
+        copy={copy}
+        date={selectedDate.toISOString().split("T")[0]}
+        onClose={() => setGoalSheetVisible(false)}
+        theme={theme}
+        themeMode={themeMode}
+        visible={goalSheetVisible}
+        workoutType={selectedWorkoutType}
       />
 
       {/* Workout Details Modal Sheet */}
