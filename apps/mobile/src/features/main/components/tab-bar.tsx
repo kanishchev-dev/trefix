@@ -198,14 +198,15 @@ export function TabBar({
       style={[styles.outer, { paddingBottom: Math.max(insets.bottom - 18, 4) }]}
     >
       <GlassView
+        colorScheme={isDark ? "dark" : "light"}
         glassEffectStyle="regular"
-        tintColor={theme.color.glassTint}
+        tintColor={isDark ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
         isInteractive
         style={[
           styles.shell,
           {
-            borderColor: theme.color.glassBorder,
-            backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+            borderColor: isDark ? "transparent" : theme.color.glassBorder,
+            backgroundColor: isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
           },
         ]}
       >
@@ -223,8 +224,8 @@ export function TabBar({
             style={[
               styles.indicator,
               {
-                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.45)",
-                borderColor: "rgba(255,255,255,0.1)",
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.45)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.1)",
               },
             ]}
           />

@@ -6,14 +6,14 @@ import { type Day, type DayEvent, type CalendarMode } from "../../today-types";
 import { DayHeader, WorkoutCard, RecoveryCard, EmptyDayCard } from "./day-event-cards";
 import { AddWorkoutSection } from "./add-workout-section";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
-import { formatDateLong, type AppLanguage } from "../../../../locales";
+import { formatDateLong, type AppLanguage, type MainCopy } from "../../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   language: AppLanguage;
   day: Day | null;
-  copy: any;
+  copy: MainCopy;
   calendarMode: CalendarMode;
   onEventPress?: (event: DayEvent) => void;
   onEventAction?: (event: DayEvent) => void;

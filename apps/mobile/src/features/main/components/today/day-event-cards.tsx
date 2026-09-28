@@ -46,6 +46,7 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
       <Card
         variant="glass"
         theme={theme}
+        themeMode={themeMode}
         style={styles.card}
       >
         <CardHeader style={styles.cardHeader}>
@@ -132,11 +133,12 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
   );
 });
 
-export const RecoveryCard = React.memo(({ theme, copy }: Omit<CardProps, "themeMode" | "event">) => {
+export const RecoveryCard = React.memo(({ theme, themeMode, copy }: Omit<CardProps, "event">) => {
   return (
     <Card
       variant="glass"
       theme={theme}
+      themeMode={themeMode}
       style={[styles.card, { paddingVertical: 16 }]}
     >
       <View style={styles.titleContainer}>

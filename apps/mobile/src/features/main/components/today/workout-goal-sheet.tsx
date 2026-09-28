@@ -24,6 +24,7 @@ import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { useCreateWorkout } from "../../hooks/use-workouts";
+import { type MainCopy } from "../../../../locales";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -37,7 +38,7 @@ type Props = {
   workoutType: ManualWorkoutType;
   theme: ThemeTokens;
   themeMode: ThemeMode;
-  copy: any;
+  copy: MainCopy;
 };
 
 const DISTANCE_PRESETS = [5, 10, 15];
@@ -165,9 +166,10 @@ export function WorkoutGoalSheet({
       });
 
       handleClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       setErrorMessage(
-        err?.message ||
+        message ||
           goalSheetCopy.errorDefault ||
           "Не удалось добавить тренировку. Попробуйте ещё раз.",
       );

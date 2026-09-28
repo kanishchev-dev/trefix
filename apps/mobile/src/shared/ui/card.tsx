@@ -1,17 +1,19 @@
 import * as React from "react";
 import { StyleSheet, Text, View, type ViewProps, type TextProps } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 
 export type CardProps = ViewProps & {
   theme?: ThemeTokens;
+  themeMode?: ThemeMode;
   size?: "default" | "sm";
   variant?: "default" | "glass";
 };
 
-export function Card({ style, size = "default", variant = "default", theme, children, ...props }: CardProps) {
-  const isDark = theme?.color.background === "#09090b" || theme?.color.surface === "#111111";
-  // Rich dark charcoal / black surface matching the clean design reference screenshot
-  const cardBg = isDark ? "#161618" : (theme?.color.surface || "#ffffff");
+export function Card({ style, size = "default", variant = "default", theme, themeMode, children, ...props }: CardProps) {
+  const isDark = themeMode === "dark" || theme?.color.background === "#09090b" || theme?.color.surface === "#111111";
+
+  // Deep dark charcoal surface matching the clean design
+  const cardBg = isDark ? "#121214" : (theme?.color.surface || "#ffffff");
   const borderColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)";
 
   return (

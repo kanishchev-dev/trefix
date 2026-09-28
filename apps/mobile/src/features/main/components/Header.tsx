@@ -90,14 +90,15 @@ export function HeaderActionButton({
       {isMounted ? (
         <GlassView
           key={`header-action-${themeMode}`}
+          colorScheme={isDark ? "dark" : "light"}
           glassEffectStyle="regular"
           isInteractive
-          tintColor={theme.color.glassTint}
+          tintColor={isDark ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
           style={[
             styles.actionButtonGlass,
             {
-              borderColor: theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+              borderColor: isDark ? "transparent" : theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -108,8 +109,8 @@ export function HeaderActionButton({
           style={[
             styles.actionButtonGlass,
             {
-              borderColor: theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+              borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(0, 0, 0, 0.65)" : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -149,14 +150,15 @@ export function HeaderTextButton({
       {isMounted ? (
         <GlassView
           key={`header-text-${themeMode}`}
+          colorScheme={isDark ? "dark" : "light"}
           glassEffectStyle="regular"
           isInteractive
-          tintColor={theme.color.glassTint}
+          tintColor={isDark ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
           style={[
             styles.textButtonGlass,
             {
-              borderColor: theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+              borderColor: isDark ? "transparent" : theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -177,8 +179,8 @@ export function HeaderTextButton({
           style={[
             styles.textButtonGlass,
             {
-              borderColor: theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)",
+              borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : theme.color.glassBorder,
+              backgroundColor: isDark ? "rgba(0, 0, 0, 0.65)" : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -273,8 +275,8 @@ export function Header({
                 style={[
                   StyleSheet.absoluteFill,
                   {
-                    backgroundColor: theme.color.background,
-                    opacity: themeMode === "dark" ? 0.82 : 0.8,
+                    backgroundColor: themeMode === "dark" ? "rgba(0, 0, 0, 0.85)" : theme.color.background,
+                    opacity: themeMode === "dark" ? 0.9 : 0.8,
                   },
                 ]}
               />
@@ -284,42 +286,28 @@ export function Header({
       )}
 
       {isCalendar && (
-        <View
+        <GlassView
+          colorScheme={themeMode === "dark" ? "dark" : "light"}
+          glassEffectStyle="regular"
+          tintColor={themeMode === "dark" ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
           style={[
             StyleSheet.absoluteFill,
             {
+              top: -Math.max(insets.top, 40),
               borderBottomLeftRadius: theme.radius.xl,
               borderBottomRightRadius: theme.radius.xl,
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
               overflow: "hidden",
               left: -StyleSheet.hairlineWidth,
               right: -StyleSheet.hairlineWidth,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderTopWidth: 0,
+              borderColor: themeMode === "dark" ? "transparent" : theme.color.border,
+              backgroundColor: themeMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
             },
           ]}
-        >
-          <BlurView
-            blurMethod="dimezisBlurViewSdk31Plus"
-            blurTarget={blurTarget}
-            intensity={25}
-            pointerEvents="none"
-            style={StyleSheet.absoluteFill}
-            tint="regular"
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: theme.color.background,
-                opacity: themeMode === "dark" ? 0.75 : 0.6,
-                borderBottomLeftRadius: theme.radius.xl,
-                borderBottomRightRadius: theme.radius.xl,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderTopWidth: 0,
-                borderColor: theme.color.border,
-              },
-            ]}
-          />
-        </View>
+        />
       )}
 
       <View

@@ -3,11 +3,12 @@ import { StyleSheet, Text, View, ScrollView, Pressable } from "react-native";
 import { Activity, Flame, Zap, Mountain, Trophy } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
+import { type MainCopy } from "../../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
-  copy: any;
+  copy: MainCopy;
   onSelectType: (type: ManualWorkoutType) => void;
 };
 
@@ -26,6 +27,7 @@ export const AddWorkoutSection = React.memo(
   ({ theme, themeMode, copy, onSelectType }: Props) => {
     const typesCopy = copy?.today?.types || {};
     const title = copy?.today?.addSectionTitle || "Добавить тренировку";
+    const isDark = themeMode === "dark";
 
     const getDefaultLabel = (key: ManualWorkoutType) => {
       switch (key) {
@@ -74,7 +76,8 @@ export const AddWorkoutSection = React.memo(
                 style={({ pressed }) => [
                   styles.card,
                   {
-                    backgroundColor: theme.color.surfaceElevated,
+                    backgroundColor: isDark ? "#121214" : theme.color.surfaceElevated,
+                    borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
                   },
                   pressed && styles.cardPressed,
                 ]}
@@ -82,7 +85,7 @@ export const AddWorkoutSection = React.memo(
                 <View
                   style={[
                     styles.iconContainer,
-                    { backgroundColor: theme.color.surface },
+                    { backgroundColor: isDark ? "#222226" : theme.color.surface },
                   ]}
                 >
                   <Icon size={20} color={theme.color.primary} />
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 110,
     borderRadius: 20,
-    borderWidth: 0,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
     justifyContent: "space-between",
   },
