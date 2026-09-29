@@ -20,14 +20,15 @@
       "race": "Race"
     },
     "goalSheet": {
-      "title": "Choose current goal and widget",
+      "title": "Specify goal",
       "tabs": {
-        "duration": "Time",
-        "distance": "Distance"
+        "distance": "Distance",
+        "duration": "Time"
       },
       "distanceUnit": "km",
       "durationUnit": "min",
-      "submit": "Add workout",
+      "submit": "Add",
+      "cancel": "Cancel",
       "invalidValue": "Please enter a value greater than 0",
       "futureDateOnly": "Planned workouts can only be added for future dates.",
       "errorDefault": "Failed to add workout. Please try again."
@@ -73,6 +74,7 @@
       "notesPlaceholder": "Felt good, legs fresh...",
       "submitPlan": "Schedule Workout",
       "submitLog": "Save Result",
+      "cancel": "Cancel",
       "invalidDistance": "Please enter a valid distance",
       "invalidDuration": "Please enter a valid duration"
     },

@@ -15,7 +15,7 @@ type Props = {
 export function FormOverviewCard({ form, theme, themeMode, copy }: Props) {
   const isDark = themeMode === "dark";
 
-  // Translate form status (BUILDING -> "Building" / "Набор формы")
+  // Translate form status (BUILDING -> status label from i18n)
   const statusKey = form.status;
   const statusLabel =
     copy.progress?.form?.statuses?.[statusKey] ||

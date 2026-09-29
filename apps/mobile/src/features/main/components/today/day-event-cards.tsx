@@ -11,6 +11,7 @@ import {
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 import { type DayEvent } from "../../today-types";
 import { Card, CardHeader, CardContent, CardFooter } from "../../../../shared/ui/card";
+import { type MainCopy } from "../../../../locales";
 
 type CardProps = {
   theme: ThemeTokens;
@@ -18,7 +19,7 @@ type CardProps = {
   event: DayEvent;
   onPress?: (event: DayEvent) => void;
   onAction?: (event: DayEvent) => void;
-  copy: any;
+  copy: MainCopy;
 };
 
 export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAction, copy }: CardProps) => {
@@ -133,7 +134,7 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
   );
 });
 
-export const RecoveryCard = React.memo(({ theme, themeMode, copy }: Omit<CardProps, "event">) => {
+export const RecoveryCard = React.memo(({ theme, themeMode, copy }: Omit<CardProps, "event"> & { themeMode?: ThemeMode }) => {
   return (
     <Card
       variant="glass"
@@ -194,7 +195,7 @@ export const DayHeader = React.memo(({ theme, date, isToday, isTomorrow, copy }:
   date: string;
   isToday?: boolean;
   isTomorrow?: boolean;
-  copy: any;
+  copy: MainCopy;
 }) => {
   const label = isToday ? copy.today.today : isTomorrow ? copy.today.tomorrow : null;
 

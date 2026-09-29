@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
   Dimensions,
   TextInput,
+  LayoutChangeEvent,
 } from "react-native";
 import { BlurView } from "expo-blur";
-import { X } from "lucide-react-native";
+import { Plus, Minus } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useSharedValue,
@@ -19,6 +20,7 @@ import Animated, {
   withTiming,
   withSpring,
   runOnJS,
+  interpolate,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
@@ -41,8 +43,8 @@ type Props = {
   copy: MainCopy;
 };
 
-const DISTANCE_PRESETS = [5, 10, 15];
-const DURATION_PRESETS = [30, 45, 60];
+const DISTANCE_PRESETS = [3, 5, 8, 10, 12, 15, 21, 42];
+const DURATION_PRESETS = [20, 30, 45, 60, 90, 120];
 
 export function WorkoutGoalSheet({
   visible,
@@ -61,9 +63,35 @@ export function WorkoutGoalSheet({
   const [distanceVal, setDistanceVal] = useState("10");
   const [durationVal, setDurationVal] = useState("45");
   const [errorMessage, setErrorMessage] = useState("");
+  const [tabsWidth, setTabsWidth] = useState(0);
 
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
+  const activeTabX = useSharedValue(0);
+
+  useEffect(() => {
+    activeTabX.value = withSpring(mode === "distance" ? 0 : 1, {
+      damping: 18,
+      stiffness: 120,
+      mass: 1,
+    });
+  }, [mode]);
+
+  const indicatorAnimatedStyle = useAnimatedStyle(() => {
+    const tabWidth = tabsWidth > 0 ? (tabsWidth - 8) / 2 : 140;
+    return {
+      width: tabWidth,
+      transform: [
+        {
+          translateX: interpolate(
+            activeTabX.value,
+            [0, 1],
+            [4, 4 + tabWidth]
+          ),
+        },
+      ],
+    };
+  });
 
   const handleClose = useCallback(() => {
     backdropOpacity.value = withTiming(0, { duration: 200 });
@@ -117,13 +145,13 @@ export function WorkoutGoalSheet({
     transform: [{ translateY: translateY.value }],
   }));
 
-  // Date validation check (must be strictly future date)
-  const isFutureDate = useMemo(() => {
-    if (!date) return false;
+  // Date validation check (today or future date)
+  const isFutureOrToday = useMemo(() => {
+    if (!date) return true;
     const target = new Date(`${date}T00:00:00.000`);
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return target.getTime() > today.getTime();
+    today.setHours(0, 0, 0, 0);
+    return target.getTime() >= today.getTime();
   }, [date]);
 
   const parsedValue = useMemo(() => {
@@ -131,15 +159,39 @@ export function WorkoutGoalSheet({
     return isNaN(val) ? 0 : val;
   }, [mode, distanceVal, durationVal]);
 
-  const isValid = parsedValue > 0 && isFutureDate && !createWorkoutMutation.isPending;
+  const isValid = parsedValue > 0 && isFutureOrToday && !createWorkoutMutation.isPending;
+
+  const handleDecrement = () => {
+    if (mode === "distance") {
+      const current = parseFloat(distanceVal.replace(",", ".")) || 0;
+      const next = Math.max(0.5, current - 1);
+      setDistanceVal(next.toString());
+    } else {
+      const current = parseInt(durationVal, 10) || 0;
+      const next = Math.max(5, current - 5);
+      setDurationVal(next.toString());
+    }
+  };
+
+  const handleIncrement = () => {
+    if (mode === "distance") {
+      const current = parseFloat(distanceVal.replace(",", ".")) || 0;
+      const next = current + 1;
+      setDistanceVal(next.toString());
+    } else {
+      const current = parseInt(durationVal, 10) || 0;
+      const next = current + 5;
+      setDurationVal(next.toString());
+    }
+  };
 
   const handleSubmit = async () => {
     setErrorMessage("");
 
-    if (!isFutureDate) {
+    if (!isFutureOrToday) {
       setErrorMessage(
         goalSheetCopy.futureDateOnly ||
-          "Плановую тренировку можно добавить только на будущую дату.",
+          "Плановую тренировку можно добавить только на сегодняшнюю или будущую дату.",
       );
       return;
     }
@@ -184,25 +236,33 @@ export function WorkoutGoalSheet({
       visible={visible}
     >
       <View style={styles.overlay}>
-        <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+        <Animated.View
+          style={[
+            styles.backdropContainer,
+            {
+              backgroundColor: themeMode === "dark" ? "rgba(0, 0, 0, 0.4)" : "rgba(255, 255, 255, 0.4)",
+            },
+            backdropAnimatedStyle,
+          ]}
+        >
           <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
             <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
           </Pressable>
         </Animated.View>
 
-        <Animated.View style={[styles.container, cardAnimatedStyle]}>
+        <Animated.View style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}>
           <View
             style={[
               styles.card,
               {
-                borderColor: theme.color.border,
-                backgroundColor: theme.color.surfaceElevated,
-                paddingBottom: Math.max(insets.bottom, 24),
+                borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                backgroundColor: themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+                paddingBottom: 20,
               },
             ]}
           >
             <GestureDetector gesture={panGesture}>
-              <View style={styles.topDragArea}>
+              <View style={[styles.topDragArea, styles.paddedContent]}>
                 <View style={styles.handleContainer}>
                   <View
                     style={[styles.handle, { backgroundColor: theme.color.border }]}
@@ -215,84 +275,77 @@ export function WorkoutGoalSheet({
                       styles.title,
                       {
                         color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.extrabold,
+                        fontFamily: theme.typography.fontFamily.sans.semibold,
                       },
                     ]}
                   >
-                    {goalSheetCopy.title || "Выберите текущую цель и виджет"}
+                    {goalSheetCopy.title || "Укажите цель"}
                   </Text>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    hitSlop={12}
-                    onPress={handleClose}
-                    style={styles.closeButton}
-                  >
-                    <X color={theme.color.mutedForeground} size={20} />
-                  </Pressable>
                 </View>
               </View>
             </GestureDetector>
 
-            {/* Mode Tabs */}
-            <View
-              style={[
-                styles.tabsContainer,
-                {
-                  backgroundColor: theme.color.surface,
-                  borderColor: theme.color.border,
-                },
-              ]}
-            >
-              <Pressable
-                onPress={() => setMode("duration")}
+            {/* Mode Tabs with Animated Pill Indicator */}
+            <View style={styles.paddedContent}>
+              <View
+                onLayout={(e: LayoutChangeEvent) => setTabsWidth(e.nativeEvent.layout.width)}
                 style={[
-                  styles.tab,
-                  mode === "duration" && {
-                    backgroundColor: theme.color.primary,
+                  styles.tabsContainer,
+                  {
+                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
                   },
                 ]}
               >
-                <Text
+                <Animated.View
                   style={[
-                    styles.tabText,
+                    styles.activeTabIndicator,
                     {
-                      color:
-                        mode === "duration"
-                          ? theme.color.primaryForeground
-                          : theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.bold,
+                      backgroundColor: theme.color.primary,
                     },
+                    indicatorAnimatedStyle,
                   ]}
-                >
-                  {goalSheetCopy.tabs?.duration || "Время"}
-                </Text>
-              </Pressable>
+                />
 
-              <Pressable
-                onPress={() => setMode("distance")}
-                style={[
-                  styles.tab,
-                  mode === "distance" && {
-                    backgroundColor: theme.color.primary,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    {
-                      color:
-                        mode === "distance"
-                          ? theme.color.primaryForeground
-                          : theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.bold,
-                    },
-                  ]}
+                <Pressable
+                  onPress={() => setMode("distance")}
+                  style={styles.tab}
                 >
-                  {goalSheetCopy.tabs?.distance || "По дистанции"}
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.tabText,
+                      {
+                        color:
+                          mode === "distance"
+                            ? theme.color.primaryForeground
+                            : theme.color.mutedForeground,
+                        fontFamily: theme.typography.fontFamily.sans.bold,
+                      },
+                    ]}
+                  >
+                    {goalSheetCopy.tabs?.distance || "Дистанция"}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setMode("duration")}
+                  style={styles.tab}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      {
+                        color:
+                          mode === "duration"
+                            ? theme.color.primaryForeground
+                            : theme.color.mutedForeground,
+                        fontFamily: theme.typography.fontFamily.sans.bold,
+                      },
+                    ]}
+                  >
+                    {goalSheetCopy.tabs?.duration || "Время"}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
             <ScrollView
@@ -302,125 +355,184 @@ export function WorkoutGoalSheet({
               style={styles.scrollView}
             >
               {errorMessage ? (
-                <View style={styles.errorBanner}>
+                <View style={[styles.errorBanner, styles.paddedContent]}>
                   <Text style={styles.errorText}>{errorMessage}</Text>
                 </View>
               ) : null}
 
-              {/* Display Main Goal Value Input */}
-              <View style={styles.valueDisplayArea}>
+              {/* Display Main Goal Value Input with Stepper Controls */}
+              <View style={[styles.valueDisplayArea, styles.paddedContent]}>
                 <View style={styles.inputRow}>
-                  <TextInput
-                    keyboardType="decimal-pad"
-                    onChangeText={mode === "distance" ? setDistanceVal : setDurationVal}
-                    selectTextOnFocus
-                    style={[
-                      styles.valueInput,
+                  <Pressable
+                    onPress={handleDecrement}
+                    style={({ pressed }) => [
+                      styles.stepperButton,
                       {
-                        color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.extrabold,
+                        backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                        borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
                       },
+                      pressed && styles.buttonPressed,
                     ]}
-                    value={mode === "distance" ? distanceVal : durationVal}
-                  />
+                  >
+                    <Minus size={20} color={theme.color.foreground} />
+                  </Pressable>
+
+                  <View style={styles.numberWrapper}>
+                    <TextInput
+                      editable={false}
+                      style={[
+                        styles.valueInput,
+                        {
+                          color: theme.color.foreground,
+                          fontFamily: theme.typography.fontFamily.sans.medium,
+                        },
+                      ]}
+                      value={mode === "distance" ? distanceVal : durationVal}
+                    />
+                    <Text
+                      style={[
+                        styles.superscriptUnit,
+                        {
+                          color: theme.color.mutedForeground,
+                          fontFamily: theme.typography.fontFamily.sans.semibold,
+                        },
+                      ]}
+                    >
+                      {mode === "distance"
+                        ? goalSheetCopy.distanceUnit || "км"
+                        : goalSheetCopy.durationUnit || "мин"}
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    onPress={handleIncrement}
+                    style={({ pressed }) => [
+                      styles.stepperButton,
+                      {
+                        backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                        borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                      },
+                      pressed && styles.buttonPressed,
+                    ]}
+                  >
+                    <Plus size={20} color={theme.color.foreground} />
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Quick Presets Horizontal Slider (Edge-to-Edge) */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.presetsScrollContent}
+                style={styles.presetsScrollView}
+              >
+                {(mode === "distance" ? DISTANCE_PRESETS : DURATION_PRESETS).map(
+                  (preset) => {
+                    const isSelected =
+                      mode === "distance"
+                        ? parseFloat(distanceVal.replace(",", ".")) === preset
+                        : parseInt(durationVal, 10) === preset;
+
+                    return (
+                      <Pressable
+                        key={preset}
+                        onPress={() => {
+                          if (mode === "distance") {
+                            setDistanceVal(preset.toString());
+                          } else {
+                            setDurationVal(preset.toString());
+                          }
+                        }}
+                        style={[
+                          styles.presetChip,
+                          {
+                            backgroundColor: isSelected
+                              ? theme.color.primary
+                              : themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                            borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.presetChipText,
+                            {
+                              color: isSelected
+                                ? theme.color.primaryForeground
+                                : theme.color.foreground,
+                              fontFamily: isSelected
+                                ? theme.typography.fontFamily.sans.bold
+                                : theme.typography.fontFamily.sans.medium,
+                            },
+                          ]}
+                        >
+                          {preset}{" "}
+                          {mode === "distance"
+                            ? goalSheetCopy.distanceUnit || "км"
+                            : goalSheetCopy.durationUnit || "мин"}
+                        </Text>
+                      </Pressable>
+                    );
+                  },
+                )}
+              </ScrollView>
+            </ScrollView>
+
+            {/* Actions Row */}
+            <View style={[styles.actionsRow, styles.paddedContent]}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleClose}
+                style={({ pressed }) => [
+                  styles.cancelButton,
+                  {
+                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
+                  },
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.cancelLabel,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.semibold,
+                    },
+                  ]}
+                >
+                  {goalSheetCopy.cancel || "Отменить"}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                disabled={!isValid}
+                onPress={handleSubmit}
+                style={({ pressed }) => [
+                  styles.submitButton,
+                  { backgroundColor: theme.color.primary },
+                  !isValid && { opacity: 0.5 },
+                  pressed && isValid && styles.buttonPressed,
+                ]}
+              >
+                {createWorkoutMutation.isPending ? (
+                  <ActivityIndicator color={theme.color.primaryForeground} />
+                ) : (
                   <Text
                     style={[
-                      styles.unitText,
+                      styles.submitLabel,
                       {
-                        color: theme.color.mutedForeground,
+                        color: theme.color.primaryForeground,
                         fontFamily: theme.typography.fontFamily.sans.semibold,
                       },
                     ]}
                   >
-                    {mode === "distance"
-                      ? goalSheetCopy.distanceUnit || "км"
-                      : goalSheetCopy.durationUnit || "мин"}
+                    {goalSheetCopy.submit || "Добавить"}
                   </Text>
-                </View>
-
-                {/* Quick Presets */}
-                <View style={styles.presetsRow}>
-                  {(mode === "distance" ? DISTANCE_PRESETS : DURATION_PRESETS).map(
-                    (preset) => {
-                      const isSelected =
-                        mode === "distance"
-                          ? parseFloat(distanceVal.replace(",", ".")) === preset
-                          : parseInt(durationVal, 10) === preset;
-
-                      return (
-                        <Pressable
-                          key={preset}
-                          onPress={() => {
-                            if (mode === "distance") {
-                              setDistanceVal(preset.toString());
-                            } else {
-                              setDurationVal(preset.toString());
-                            }
-                          }}
-                          style={[
-                            styles.presetChip,
-                            {
-                              backgroundColor: isSelected
-                                ? theme.color.primary
-                                : theme.color.surface,
-                              borderColor: theme.color.border,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.presetChipText,
-                              {
-                                color: isSelected
-                                  ? theme.color.primaryForeground
-                                  : theme.color.foreground,
-                                fontFamily: isSelected
-                                  ? theme.typography.fontFamily.sans.bold
-                                  : theme.typography.fontFamily.sans.medium,
-                              },
-                            ]}
-                          >
-                            {preset}{" "}
-                            {mode === "distance"
-                              ? goalSheetCopy.distanceUnit || "км"
-                              : goalSheetCopy.durationUnit || "мин"}
-                          </Text>
-                        </Pressable>
-                      );
-                    },
-                  )}
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Primary Action Button */}
-            <Pressable
-              accessibilityRole="button"
-              disabled={!isValid}
-              onPress={handleSubmit}
-              style={({ pressed }) => [
-                styles.submitButton,
-                { backgroundColor: theme.color.primary },
-                !isValid && { opacity: 0.5 },
-                pressed && isValid && styles.submitButtonPressed,
-              ]}
-            >
-              {createWorkoutMutation.isPending ? (
-                <ActivityIndicator color={theme.color.primaryForeground} />
-              ) : (
-                <Text
-                  style={[
-                    styles.submitLabel,
-                    {
-                      color: theme.color.primaryForeground,
-                      fontFamily: theme.typography.fontFamily.sans.bold,
-                    },
-                  ]}
-                >
-                  {goalSheetCopy.submit || "Добавить тренировку"}
-                </Text>
-              )}
-            </Pressable>
+                )}
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -435,21 +547,24 @@ const styles = StyleSheet.create({
   },
   backdropContainer: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
   container: {
     width: "100%",
+    paddingHorizontal: 8,
     maxHeight: "85%",
     zIndex: 1,
   },
   card: {
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderRadius: 44,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 24,
-    paddingTop: 12,
+    paddingTop: 16,
+    paddingBottom: 20,
+    paddingHorizontal: 0,
     gap: 16,
-    overflow: "hidden",
+    overflow: "visible",
+  },
+  paddedContent: {
+    paddingHorizontal: 20,
   },
   topDragArea: {
     width: "100%",
@@ -468,32 +583,33 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
   },
   title: {
-    fontSize: 20,
-    lineHeight: 26,
-    flex: 1,
-    marginRight: 12,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: "center",
   },
   tabsContainer: {
     flexDirection: "row",
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 9999,
+    borderWidth: 0,
     padding: 4,
+    position: "relative",
+    overflow: "hidden",
+  },
+  activeTabIndicator: {
+    position: "absolute",
+    top: 4,
+    bottom: 4,
+    borderRadius: 9999,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: "center",
+    zIndex: 1,
   },
   tabText: {
     fontSize: 14,
@@ -505,7 +621,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     gap: 20,
     paddingVertical: 12,
-    alignItems: "center",
   },
   errorBanner: {
     backgroundColor: "rgba(220, 38, 38, 0.2)",
@@ -522,31 +637,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    gap: 16,
+    gap: 12,
+    marginVertical: 12,
+  },
+  numberWrapper: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  superscriptUnit: {
+    position: "absolute",
+    top: -20,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: 10,
+    lineHeight: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   inputRow: {
     flexDirection: "row",
-    alignItems: "baseline",
+    alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 12,
+  },
+  stepperButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
   },
   valueInput: {
-    fontSize: 54,
-    lineHeight: 64,
+    fontSize: 48,
+    lineHeight: 56,
     textAlign: "center",
-    minWidth: 100,
+    minWidth: 90,
   },
   unitText: {
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 24,
   },
-  presetsRow: {
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "center",
+  presetsScrollView: {
+    width: "100%",
+    maxHeight: 50,
+  },
+  presetsScrollContent: {
+    gap: 10,
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
   presetChip: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: StyleSheet.hairlineWidth,
@@ -554,18 +698,34 @@ const styles = StyleSheet.create({
   presetChipText: {
     fontSize: 14,
   },
-  submitButton: {
-    height: 52,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
     marginTop: 8,
   },
-  submitButtonPressed: {
+  cancelButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  submitButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonPressed: {
     transform: [{ scale: 0.985 }],
   },
   submitLabel: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 20,
   },
 });

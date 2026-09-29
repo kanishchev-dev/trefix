@@ -34,6 +34,7 @@ import { type TrainingWorkout } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
 import { useCompleteWorkout } from "../../hooks/use-workouts";
+import { type MainCopy } from "../../../../locales";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -43,7 +44,7 @@ type Props = {
   onClose: () => void;
   theme: ThemeTokens;
   themeMode: ThemeMode;
-  copy: any;
+  copy: MainCopy;
 };
 
 export function WorkoutDetailSheet({
@@ -205,14 +206,14 @@ export function WorkoutDetailSheet({
         </Animated.View>
 
         {/* Card Container */}
-        <Animated.View style={[styles.container, cardAnimatedStyle]}>
+        <Animated.View style={[styles.container, { marginBottom: 16 }, cardAnimatedStyle]}>
           <View
             style={[
               styles.card,
               {
-                borderColor: theme.color.border,
-                backgroundColor: theme.color.surfaceElevated,
-                paddingBottom: Math.max(insets.bottom, 24),
+                borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                backgroundColor: themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+                paddingBottom: Math.max(insets.bottom, 20),
               },
             ]}
           >
@@ -237,7 +238,7 @@ export function WorkoutDetailSheet({
                         styles.title,
                         {
                           color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.extrabold,
+                          fontFamily: theme.typography.fontFamily.sans.semibold,
                         },
                       ]}
                     >
@@ -324,8 +325,8 @@ export function WorkoutDetailSheet({
                     style={[
                       styles.statBox,
                       {
-                        backgroundColor: theme.color.surface,
-                        borderColor: theme.color.border,
+                        backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                        borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
                       },
                     ]}
                   >
@@ -360,8 +361,8 @@ export function WorkoutDetailSheet({
                     style={[
                       styles.statBox,
                       {
-                        backgroundColor: theme.color.surface,
-                        borderColor: theme.color.border,
+                        backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                        borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
                       },
                     ]}
                   >
@@ -646,47 +647,42 @@ export function WorkoutDetailSheet({
               )}
             </ScrollView>
 
-            {/* Action Buttons */}
-            {!isCompleted && !isCompleting && (
+            {/* Actions Row */}
+            <View style={styles.actionsRow}>
               <Pressable
                 accessibilityRole="button"
-                onPress={handleStartCompleting}
+                onPress={handleClose}
                 style={({ pressed }) => [
-                  styles.actionButton,
-                  { backgroundColor: theme.color.primary },
-                  pressed && styles.actionButtonPressed,
+                  styles.cancelButton,
+                  {
+                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
+                  },
+                  pressed && styles.buttonPressed,
                 ]}
               >
                 <Text
                   style={[
-                    styles.actionButtonText,
+                    styles.cancelLabel,
                     {
-                      color: theme.color.primaryForeground,
+                      color: theme.color.foreground,
                       fontFamily: theme.typography.fontFamily.sans.semibold,
                     },
                   ]}
                 >
-                  {locale.completeButton || "Завершить тренировку"}
+                  {copy?.today?.goalSheet?.cancel || "Отменить"}
                 </Text>
-                <ChevronRight color={theme.color.primaryForeground} size={18} />
               </Pressable>
-            )}
 
-            {isCompleting && (
-              <Pressable
-                accessibilityRole="button"
-                disabled={completeWorkoutMutation.isPending}
-                onPress={handleSaveCompletion}
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  { backgroundColor: theme.color.primary },
-                  pressed && styles.actionButtonPressed,
-                  completeWorkoutMutation.isPending && { opacity: 0.7 },
-                ]}
-              >
-                {completeWorkoutMutation.isPending ? (
-                  <ActivityIndicator color={theme.color.primaryForeground} />
-                ) : (
+              {!isCompleted && !isCompleting && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={handleStartCompleting}
+                  style={({ pressed }) => [
+                    styles.actionButton,
+                    { backgroundColor: theme.color.primary },
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
                   <Text
                     style={[
                       styles.actionButtonText,
@@ -696,11 +692,42 @@ export function WorkoutDetailSheet({
                       },
                     ]}
                   >
-                    {locale.saveResultButton || "Сохранить результат"}
+                    {locale.completeButton || "Завершить"}
                   </Text>
-                )}
-              </Pressable>
-            )}
+                  <ChevronRight color={theme.color.primaryForeground} size={18} />
+                </Pressable>
+              )}
+
+              {isCompleting && (
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={completeWorkoutMutation.isPending}
+                  onPress={handleSaveCompletion}
+                  style={({ pressed }) => [
+                    styles.actionButton,
+                    { backgroundColor: theme.color.primary },
+                    pressed && styles.buttonPressed,
+                    completeWorkoutMutation.isPending && { opacity: 0.7 },
+                  ]}
+                >
+                  {completeWorkoutMutation.isPending ? (
+                    <ActivityIndicator color={theme.color.primaryForeground} />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.actionButtonText,
+                        {
+                          color: theme.color.primaryForeground,
+                          fontFamily: theme.typography.fontFamily.sans.semibold,
+                        },
+                      ]}
+                    >
+                      {locale.saveResultButton || "Сохранить"}
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -719,14 +746,14 @@ const styles = StyleSheet.create({
   },
   container: {
     width: "100%",
+    paddingHorizontal: 16,
     maxHeight: "85%",
     zIndex: 1,
   },
   card: {
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderRadius: 38,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 24,
+    padding: 20,
     paddingTop: 12,
     gap: 16,
     overflow: "hidden",
@@ -758,8 +785,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 15,
+    lineHeight: 20,
   },
   closeButton: {
     width: 32,
@@ -865,20 +892,36 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
   },
-  actionButton: {
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+  cancelButton: {
+    flex: 1,
     height: 52,
-    borderRadius: 18,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  actionButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 9999,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    marginTop: 8,
   },
-  actionButtonPressed: {
+  buttonPressed: {
     transform: [{ scale: 0.985 }],
   },
   actionButtonText: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 20,
   },
 });

@@ -24,6 +24,7 @@ import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
 import { useCreateWorkout } from "../../hooks/use-workouts";
+import { type MainCopy } from "../../../../locales";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -33,7 +34,7 @@ type Props = {
   defaultDate?: string; // YYYY-MM-DD
   theme: ThemeTokens;
   themeMode: ThemeMode;
-  copy: any;
+  copy: MainCopy;
 };
 
 const WORKOUT_TYPES = [
@@ -205,14 +206,14 @@ export function AddWorkoutSheet({
         </Animated.View>
 
         {/* Card Container */}
-        <Animated.View style={[styles.container, cardAnimatedStyle]}>
+        <Animated.View style={[styles.container, { marginBottom: 16 }, cardAnimatedStyle]}>
           <View
             style={[
               styles.card,
               {
-                borderColor: theme.color.border,
-                backgroundColor: theme.color.surfaceElevated,
-                paddingBottom: Math.max(insets.bottom, 24),
+                borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                backgroundColor: themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+                paddingBottom: Math.max(insets.bottom, 20),
               },
             ]}
           >
@@ -231,7 +232,7 @@ export function AddWorkoutSheet({
                       styles.title,
                       {
                         color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.extrabold,
+                        fontFamily: theme.typography.fontFamily.sans.semibold,
                       },
                     ]}
                   >
@@ -255,8 +256,8 @@ export function AddWorkoutSheet({
               style={[
                 styles.modeSwitcher,
                 {
-                  backgroundColor: theme.color.surface,
-                  borderColor: theme.color.border,
+                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                  borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
                 },
               ]}
             >
@@ -381,8 +382,8 @@ export function AddWorkoutSheet({
                           {
                             backgroundColor: selected
                               ? theme.color.primary
-                              : theme.color.surface,
-                            borderColor: theme.color.border,
+                              : themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                            borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
                           },
                         ]}
                       >
@@ -494,36 +495,62 @@ export function AddWorkoutSheet({
               )}
             </ScrollView>
 
-            {/* Save Button */}
-            <Pressable
-              accessibilityRole="button"
-              disabled={createWorkoutMutation.isPending}
-              onPress={handleSubmit}
-              style={({ pressed }) => [
-                styles.submitButton,
-                { backgroundColor: theme.color.primary },
-                pressed && styles.submitButtonPressed,
-                createWorkoutMutation.isPending && { opacity: 0.7 },
-              ]}
-            >
-              {createWorkoutMutation.isPending ? (
-                <ActivityIndicator color={theme.color.primaryForeground} />
-              ) : (
+            {/* Actions Row */}
+            <View style={styles.actionsRow}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleClose}
+                style={({ pressed }) => [
+                  styles.cancelButton,
+                  {
+                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
+                  },
+                  pressed && styles.buttonPressed,
+                ]}
+              >
                 <Text
                   style={[
-                    styles.submitLabel,
+                    styles.cancelLabel,
                     {
-                      color: theme.color.primaryForeground,
+                      color: theme.color.foreground,
                       fontFamily: theme.typography.fontFamily.sans.semibold,
                     },
                   ]}
                 >
-                  {mode === "planned"
-                    ? locale.submitPlan || "Запланировать"
-                    : locale.submitLog || "Сохранить результат"}
+                  {locale.cancel || "Отменить"}
                 </Text>
-              )}
-            </Pressable>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                disabled={createWorkoutMutation.isPending}
+                onPress={handleSubmit}
+                style={({ pressed }) => [
+                  styles.submitButton,
+                  { backgroundColor: theme.color.primary },
+                  pressed && styles.buttonPressed,
+                  createWorkoutMutation.isPending && { opacity: 0.7 },
+                ]}
+              >
+                {createWorkoutMutation.isPending ? (
+                  <ActivityIndicator color={theme.color.primaryForeground} />
+                ) : (
+                  <Text
+                    style={[
+                      styles.submitLabel,
+                      {
+                        color: theme.color.primaryForeground,
+                        fontFamily: theme.typography.fontFamily.sans.semibold,
+                      },
+                    ]}
+                  >
+                    {mode === "planned"
+                      ? locale.submitPlan || "Запланировать"
+                      : locale.submitLog || "Сохранить"}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -542,14 +569,14 @@ const styles = StyleSheet.create({
   },
   container: {
     width: "100%",
+    paddingHorizontal: 16,
     maxHeight: "90%",
     zIndex: 1,
   },
   card: {
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderRadius: 38,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 24,
+    padding: 20,
     paddingTop: 12,
     gap: 16,
     overflow: "hidden",
@@ -575,8 +602,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   title: {
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 15,
+    lineHeight: 20,
   },
   closeButton: {
     width: 32,
@@ -587,14 +614,14 @@ const styles = StyleSheet.create({
   },
   modeSwitcher: {
     flexDirection: "row",
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 9999,
+    borderWidth: 0,
     padding: 4,
   },
   modeTab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: "center",
   },
   modeTabText: {
@@ -644,18 +671,34 @@ const styles = StyleSheet.create({
   metricField: {
     flex: 1,
   },
-  submitButton: {
-    height: 52,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
     marginTop: 8,
   },
-  submitButtonPressed: {
+  cancelButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  submitButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonPressed: {
     transform: [{ scale: 0.985 }],
   },
   submitLabel: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 20,
   },
 });

@@ -30,15 +30,16 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
     const { height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    const minDayHeight = useMemo(() => {
-      const headerOffset = 56 + 44 + 24 + 12; // listPaddingTop
-      const tabBarHeight = 64;
-      return windowHeight - insets.top - headerOffset - insets.bottom - tabBarHeight;
-    }, [windowHeight, insets]);
+    const headerOffset = useMemo(() => {
+      const baseHeader = 88; // Header content height
+      const calendarHeight = 88; // Fixed week header height so month calendar sheet overlays content
+      return insets.top + baseHeader + calendarHeight;
+    }, [insets.top]);
 
-    const listPaddingTop = useMemo(() => {
-        return 56 + 44 + 24 + 12;
-    }, []);
+    const minDayHeight = useMemo(() => {
+      const tabBarHeight = 64;
+      return windowHeight - headerOffset - insets.bottom - tabBarHeight;
+    }, [windowHeight, insets.bottom, headerOffset]);
 
     useImperativeHandle(ref, () => ({
       scrollToTop: (animated = true) => {
@@ -68,37 +69,42 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         alwaysBounceVertical={false}
+        style={[styles.scrollView, { paddingTop: headerOffset + 16 }]}
         contentContainerStyle={[
             styles.content,
-            { paddingTop: insets.top + listPaddingTop, paddingBottom: insets.bottom + 40 }
+            { paddingBottom: insets.bottom + 40 }
         ]}
       >
-        <View style={[styles.dayContainer, day.events.length === 0 && { minHeight: minDayHeight }, day.events.length === 0 && styles.emptyDayContainer]}>
-            {day.events.length > 0 ? (
-                day.events.map((event) => {
-                if (event.type === "workout") {
-                    return (
-                    <WorkoutCard
-                        key={event.id}
-                        theme={theme}
-                        themeMode={themeMode}
-                        event={event}
-                        copy={copy}
-                        onPress={onEventPress}
-                        onAction={onEventAction}
-                    />
-                    );
-                }
-                if (event.type === "recovery") {
-                    return <RecoveryCard key={event.id} theme={theme} copy={copy} />;
-                }
-                return null;
-                })
-            ) : isFutureDay && onSelectWorkoutType ? (
-                <View style={[styles.futureEmptyContainer, { minHeight: minDayHeight }]}>
-                  <View style={styles.emptyCardWrapper}>
-                    <EmptyDayCard theme={theme} copy={copy} />
-                  </View>
+        <View style={[styles.dayContainer, { minHeight: minDayHeight }]}>
+            <View style={styles.populatedInner}>
+              <View>
+                {day.events.length > 0 ? (
+                  day.events.map((event) => {
+                    if (event.type === "workout") {
+                        return (
+                        <WorkoutCard
+                            key={event.id}
+                            theme={theme}
+                            themeMode={themeMode}
+                            event={event}
+                            copy={copy}
+                            onPress={onEventPress}
+                            onAction={onEventAction}
+                        />
+                        );
+                    }
+                    if (event.type === "recovery") {
+                        return <RecoveryCard key={event.id} theme={theme} themeMode={themeMode} copy={copy} />;
+                    }
+                    return null;
+                  })
+                ) : (
+                  <EmptyDayCard theme={theme} copy={copy} />
+                )}
+              </View>
+
+              {onSelectWorkoutType && (
+                <View style={styles.additionalAddSection}>
                   <AddWorkoutSection
                     copy={copy}
                     onSelectType={onSelectWorkoutType}
@@ -106,9 +112,8 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
                     themeMode={themeMode}
                   />
                 </View>
-            ) : (
-                <EmptyDayCard theme={theme} copy={copy} />
-            )}
+              )}
+            </View>
         </View>
       </ScrollView>
     );
@@ -116,24 +121,21 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
 );
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 0,
   },
   dayContainer: {
     width: "100%",
   },
-  emptyDayContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  futureEmptyContainer: {
-    width: "100%",
-    justifyContent: "space-between",
-    alignItems: "stretch",
-  },
-  emptyCardWrapper: {
+  populatedInner: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  additionalAddSection: {
+    marginTop: 10,
+    marginBottom: 0,
   },
 });

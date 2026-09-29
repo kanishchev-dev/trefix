@@ -14,6 +14,7 @@ import { SectionLayout } from "../components/section-layout";
 import { type MainCopy, getAppLanguage } from "../../../locales";
 import { TodayCalendarHeader } from "../components/today/today-calendar-header";
 import { TodayTimeline, type TodayTimelineRef } from "../components/today/today-timeline";
+import { AddWorkoutSection } from "../components/today/add-workout-section";
 import { AddWorkoutSheet } from "../components/today/add-workout-sheet";
 import { WorkoutDetailSheet } from "../components/today/workout-detail-sheet";
 import { WorkoutGoalSheet, type ManualWorkoutType } from "../components/today/workout-goal-sheet";

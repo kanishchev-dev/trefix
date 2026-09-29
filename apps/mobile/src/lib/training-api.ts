@@ -84,7 +84,7 @@ export async function createWorkout(
 ): Promise<TrainingWorkout> {
   const response = await request<unknown>("/workouts", {
     method: "POST",
-    body: JSON.stringify(dto),
+    body: dto,
     useAuth: true,
   });
 
@@ -99,7 +99,7 @@ export async function completeWorkout(
     `/workouts/${workoutId}/complete`,
     {
       method: "POST",
-      body: JSON.stringify(dto),
+      body: dto,
       useAuth: true,
     },
   );
