@@ -339,16 +339,7 @@ function AssistantMessage({ theme }: { theme: ThemeTokens }) {
 
   return (
     <MessagePrimitive.Root style={styles.messageRoot}>
-      <View
-        style={[
-          styles.messageRow,
-          styles.assistantRow,
-          {
-            borderColor: theme.color.glassBorder,
-            backgroundColor: theme.color.surfaceElevated,
-          },
-        ]}
-      >
+      <View style={styles.assistantRow}>
         <View style={styles.messageHeader}>
           {isRunning && isLast ? (
             <View
@@ -821,7 +812,8 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   assistantRow: {
-    alignSelf: "flex-start",
+    width: "100%",
+    gap: 8,
   },
   messageHeader: {
     flexDirection: "row",

@@ -122,10 +122,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     lineHeight: 20,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
   sliderContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     gap: 12,
   },
   card: {

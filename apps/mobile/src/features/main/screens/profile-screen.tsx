@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     alignSelf: "stretch",
     width: "100%",
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",

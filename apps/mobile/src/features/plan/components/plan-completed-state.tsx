@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   banner: {
-    padding: 24,
+    padding: 16,
     borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 48,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",

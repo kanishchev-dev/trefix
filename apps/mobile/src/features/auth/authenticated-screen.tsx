@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     gap: 28,
   },
   logo: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     borderRadius: 28,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 24,
+    padding: 16,
     gap: 12,
     overflow: "hidden",
   },

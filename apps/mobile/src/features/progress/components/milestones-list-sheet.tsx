@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerArea: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
   title: {
@@ -153,6 +153,6 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   listContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
 });

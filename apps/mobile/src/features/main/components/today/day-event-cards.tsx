@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingVertical: 16,
   },
   emptyText: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   dayHeader: {
     marginTop: 32,
     marginBottom: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
   dayBadge: {
     fontSize: 12,
