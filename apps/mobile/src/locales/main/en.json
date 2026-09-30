@@ -157,8 +157,107 @@
     },
     "emptyState": {
       "title": "Your training plan starts here",
-      "description": "Set a running goal and Trefix will build your training plan around it.",
-      "createButton": "Create a plan"
+      "description": "Build a plan that fits the way you run.",
+      "createButton": "Create plan"
+    },
+    "creation": {
+      "selector": {
+        "title": "Create your plan",
+        "subtitle": "How would you like to build your training plan?",
+        "aiTitle": "With Trefix AI",
+        "aiDescription": "Get a personalized plan based on your goal and current fitness.",
+        "manualTitle": "Create manually",
+        "manualDescription": "Build your own training schedule and workouts.",
+        "cancel": "Cancel"
+      },
+      "common": {
+        "back": "Back",
+        "close": "Close",
+        "cancel": "Cancel",
+        "continue": "Continue",
+        "buildPlan": "Build plan"
+      },
+      "discard": {
+        "title": "Discard plan?",
+        "message": "Your changes will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "steps": {
+        "goal": {
+          "title": "Your goal",
+          "question": "What are you training for?"
+        },
+        "schedule": {
+          "title": "Your schedule",
+          "question": "When do you want to run?"
+        },
+        "structure": {
+          "title": "Plan structure",
+          "question": "Shape your training week."
+        }
+      },
+      "goalSection": "Goal distance",
+      "targetTimeSection": "Target time",
+      "targetTimePlaceholder": "45:00",
+      "targetDateSection": "Target date",
+      "trainingDaysSection": "Training days",
+      "sessionsPerWeekText": "{{count}} days per week",
+      "longRunSection": "Preferred long run",
+      "durationSection": "Typical workout duration",
+      "weeksLabel": "Training weeks",
+      "weeksSuffix": "weeks",
+      "sessionsLabel": "Sessions per week",
+      "focusSection": "Training focus",
+      "goals": {
+        "halfMarathon": "Half Marathon",
+        "marathon": "Marathon",
+        "justRunning": "Just running"
+      },
+      "focusOptions": {
+        "easy": "Easy running",
+        "long_run": "Long run",
+        "tempo": "Tempo",
+        "interval": "Intervals",
+        "hill": "Hills"
+      },
+      "workoutTypes": {
+        "easy": "Easy",
+        "long_run": "Long run",
+        "tempo": "Tempo",
+        "threshold": "Threshold",
+        "interval": "Intervals",
+        "hill": "Hills",
+        "recovery": "Recovery"
+      },
+      "preview": {
+        "title": "Review plan",
+        "weeksUnit": "weeks",
+        "runsPerWeek": "{{count}} runs/week",
+        "startsOn": "Starts {{date}}",
+        "totalDistance": "{{distance}} km total",
+        "weekSummary": "{{workouts}} workouts · {{distance}} km",
+        "createButton": "Create plan"
+      },
+      "workoutEditor": {
+        "title": "Edit workout",
+        "addButton": "Add workout",
+        "typeLabel": "Workout type",
+        "dayLabel": "Day",
+        "distanceLabel": "Distance",
+        "durationLabel": "Duration",
+        "save": "Save workout",
+        "removeButton": "Remove workout"
+      },
+      "errors": {
+        "invalidTargetTime": "Enter a valid time like 45:00 or 1:45:00",
+        "invalidTargetDate": "Target date must be in the future",
+        "invalidDistance": "Distance must be between 1 and 100 km",
+        "invalidDuration": "Duration must be between 10 and 300 minutes",
+        "generationFailed": "We couldn't build your plan",
+        "creationFailed": "We couldn't create your plan",
+        "tryAgain": "Try again"
+      }
     },
     "notStartedState": {
       "title": "Your plan starts soon",

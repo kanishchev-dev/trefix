@@ -32,10 +32,18 @@ type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
+  /** Opens the manual plan creation flow (native stack screen in App.tsx). */
+  onOpenPlanCreation?: () => void;
+  /** Opens the AI (Trefix) flow. */
   onOpenTrefix?: () => void;
 };
 
-export function PlanScreen({ theme, themeMode, copy, onOpenTrefix }: Props) {
+export function PlanScreen({
+  theme,
+  themeMode,
+  copy,
+  onOpenPlanCreation,
+}: Props) {
   const { displayState, data, refresh, isRefreshing } = usePlanOverview();
 
   const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
@@ -51,14 +59,18 @@ export function PlanScreen({ theme, themeMode, copy, onOpenTrefix }: Props) {
     {
       leftAction: null,
       centerContent: <HeaderLogo source={logoSource} />,
-      rightAction: null,
+      rightAction: (
+        <HeaderPlusButton
+          onPress={() => onOpenPlanCreation?.()}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ),
       variant: "default",
       bottomContent: null,
     },
     [logoSource],
   );
-
-  const planCopy = copy.plan;
 
   return (
     <SectionLayout
@@ -82,11 +94,7 @@ export function PlanScreen({ theme, themeMode, copy, onOpenTrefix }: Props) {
       ) : displayState === "empty" || !data ? (
         <PlanEmptyState
           copy={copy}
-          onCreatePlan={() => {
-            if (onOpenTrefix) {
-              onOpenTrefix();
-            }
-          }}
+          onCreatePlan={() => onOpenPlanCreation?.()}
           theme={theme}
           themeMode={themeMode}
         />
@@ -102,11 +110,7 @@ export function PlanScreen({ theme, themeMode, copy, onOpenTrefix }: Props) {
         <PlanCompletedState
           copy={copy}
           onNewGoal={() => {
-            if (onOpenTrefix) {
-              onOpenTrefix();
-            } else {
-              refresh();
-            }
+            onOpenPlanCreation?.();
           }}
           onSelectWeek={setSelectedWeek}
           overview={data}

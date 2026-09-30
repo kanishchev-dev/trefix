@@ -157,8 +157,107 @@
     },
     "emptyState": {
       "title": "Твой тренировочный путь начинается здесь",
-      "description": "Поставь беговую цель, и Трефикс построит персональный план подготовки.",
+      "description": "План, который подходит именно тебе.",
       "createButton": "Создать план"
+    },
+    "creation": {
+      "selector": {
+        "title": "Создай свой план",
+        "subtitle": "Как хочешь составить тренировочный план?",
+        "aiTitle": "С Трефикс AI",
+        "aiDescription": "Персональный план на основе твоей цели и текущей формы.",
+        "manualTitle": "Создать вручную",
+        "manualDescription": "Сам составь расписание и тренировки.",
+        "cancel": "Отмена"
+      },
+      "common": {
+        "back": "Назад",
+        "close": "Закрыть",
+        "cancel": "Отмена",
+        "continue": "Далее",
+        "buildPlan": "Собрать план"
+      },
+      "discard": {
+        "title": "Отменить план?",
+        "message": "Твои изменения будут потеряны.",
+        "keepEditing": "Продолжить редактирование",
+        "discard": "Отменить"
+      },
+      "steps": {
+        "goal": {
+          "title": "Твоя цель",
+          "question": "К чему ты готовишься?"
+        },
+        "schedule": {
+          "title": "Твоё расписание",
+          "question": "Когда тебе удобно бегать?"
+        },
+        "structure": {
+          "title": "Структура плана",
+          "question": "Определи форму тренировочной недели."
+        }
+      },
+      "goalSection": "Дистанция",
+      "targetTimeSection": "Целевое время",
+      "targetTimePlaceholder": "45:00",
+      "targetDateSection": "Целевая дата",
+      "trainingDaysSection": "Дни тренировок",
+      "sessionsPerWeekText": "{{count}} дней в неделю",
+      "longRunSection": "Любимый день длинной",
+      "durationSection": "Обычная длительность тренировки",
+      "weeksLabel": "Длительность плана",
+      "weeksSuffix": "недель",
+      "sessionsLabel": "Тренировок в неделю",
+      "focusSection": "Фокус тренировок",
+      "goals": {
+        "halfMarathon": "Полумарафон",
+        "marathon": "Марафон",
+        "justRunning": "Просто бегать"
+      },
+      "focusOptions": {
+        "easy": "Лёгкий бег",
+        "long_run": "Длинная",
+        "tempo": "Темповая",
+        "interval": "Интервалы",
+        "hill": "Горки"
+      },
+      "workoutTypes": {
+        "easy": "Лёгкая",
+        "long_run": "Длинная",
+        "tempo": "Темповая",
+        "threshold": "Пороговая",
+        "interval": "Интервалы",
+        "hill": "Горки",
+        "recovery": "Восстановление"
+      },
+      "preview": {
+        "title": "Проверь план",
+        "weeksUnit": "недель",
+        "runsPerWeek": "{{count}} тренировок/нед",
+        "startsOn": "Старт {{date}}",
+        "totalDistance": "всего {{distance}} км",
+        "weekSummary": "{{workouts}} тренировок · {{distance}} км",
+        "createButton": "Создать план"
+      },
+      "workoutEditor": {
+        "title": "Редактировать тренировку",
+        "addButton": "Добавить тренировку",
+        "typeLabel": "Тип тренировки",
+        "dayLabel": "День",
+        "distanceLabel": "Дистанция",
+        "durationLabel": "Длительность",
+        "save": "Сохранить тренировку",
+        "removeButton": "Убрать тренировку"
+      },
+      "errors": {
+        "invalidTargetTime": "Введите время в формате 45:00 или 1:45:00",
+        "invalidTargetDate": "Целевая дата должна быть в будущем",
+        "invalidDistance": "Дистанция должна быть от 1 до 100 км",
+        "invalidDuration": "Длительность должна быть от 10 до 300 минут",
+        "generationFailed": "Не удалось собрать план",
+        "creationFailed": "Не удалось создать план",
+        "tryAgain": "Попробовать снова"
+      }
     },
     "notStartedState": {
       "title": "Ваш план скоро начнётся",

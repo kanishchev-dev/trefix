@@ -15,6 +15,7 @@ import { IntegrationsScreen } from "./screens/integrations-screen";
 import { StravaIntegrationScreen } from "./screens/strava-integration-screen";
 import { type AppLanguage, type MainCopy } from "../../locales";
 import { type ThemePreference } from "./screens/theme-settings-screen";
+import { PlanCreationMethodSheet } from "../plan-creation/components/plan-creation-method-sheet";
 
 type Props = {
   theme: ThemeTokens;
@@ -24,6 +25,7 @@ type Props = {
   userLanguage: AppLanguage;
   userTheme: ThemePreference;
   onOpenTrefix: () => void;
+  onOpenPlanCreation: () => void;
   onLogout: () => void;
   onEditProfile: () => void;
   onOpenNotifications: () => void;
@@ -39,6 +41,7 @@ export function MainTabsScreen({
   userLanguage,
   userTheme,
   onOpenTrefix,
+  onOpenPlanCreation,
   onLogout,
   onEditProfile,
   onOpenNotifications,
@@ -48,6 +51,7 @@ export function MainTabsScreen({
   const [activeTab, setActiveTab] = useState<MainTabKey>("today");
   const [subScreen, setSubScreen] = useState<"integrations" | "strava-integration" | null>(null);
   const [headerOptions, setHeaderOptions] = useState<HeaderOptions>({});
+  const [planCreationSheetVisible, setPlanCreationSheetVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateAnim = useRef(new Animated.Value(0)).current;
@@ -120,6 +124,7 @@ export function MainTabsScreen({
           ) : activeTab === "plan" ? (
             <PlanScreen
               copy={copy}
+              onOpenPlanCreation={() => setPlanCreationSheetVisible(true)}
               onOpenTrefix={onOpenTrefix}
               theme={theme}
               themeMode={themeMode}
@@ -155,6 +160,22 @@ export function MainTabsScreen({
           activeTab={activeTab}
           onChangeTab={handleTabChange}
           onOpenTrefix={onOpenTrefix}
+        />
+
+        <PlanCreationMethodSheet
+          visible={planCreationSheetVisible}
+          onClose={() => setPlanCreationSheetVisible(false)}
+          onOpenTrefix={() => {
+            setPlanCreationSheetVisible(false);
+            onOpenTrefix();
+          }}
+          onCreateManually={() => {
+            setPlanCreationSheetVisible(false);
+            onOpenPlanCreation();
+          }}
+          theme={theme}
+          themeMode={themeMode}
+          copy={copy}
         />
       </View>
     </HeaderContext.Provider>

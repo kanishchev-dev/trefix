@@ -1,4 +1,5 @@
 import {
+  manualPlanPreviewSchema,
   planOverviewSchema,
   trainingAthleteSchema,
   trainingPlanSchema,
@@ -6,8 +7,11 @@ import {
   trainingWorkoutSchema,
   z,
   type CompleteWorkoutInput,
+  type CreateManualPlanInput,
   type CreateWorkoutInput,
+  type ManualPlanPreview,
   type PlanOverview,
+  type PreviewManualPlanInput,
   type TrainingAthlete,
   type TrainingPlan,
   type TrainingState,
@@ -107,4 +111,30 @@ export async function completeWorkout(
   return {
     workout: trainingWorkoutSchema.parse(response.workout),
   };
+}
+
+/** Builds a non-persisted manual plan preview via the Training Engine (PRD section 12). */
+export async function previewManualPlan(
+  dto: PreviewManualPlanInput,
+): Promise<ManualPlanPreview> {
+  const response = await request<unknown>("/plans/manual/preview", {
+    method: "POST",
+    body: dto,
+    useAuth: true,
+  });
+
+  return manualPlanPreviewSchema.parse(response);
+}
+
+/** Creates the final manual training plan (PRD section 16). */
+export async function createManualPlan(
+  dto: CreateManualPlanInput,
+): Promise<TrainingPlan> {
+  const response = await request<unknown>("/plans/manual", {
+    method: "POST",
+    body: dto,
+    useAuth: true,
+  });
+
+  return trainingPlanSchema.parse(response);
 }

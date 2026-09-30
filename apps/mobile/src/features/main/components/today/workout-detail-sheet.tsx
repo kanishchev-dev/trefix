@@ -1,17 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Modal,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  ActivityIndicator,
-  Dimensions,
 } from "react-native";
-import { BlurView } from "expo-blur";
 import {
-  X,
   CheckCircle2,
   Activity,
   Clock,
@@ -20,23 +16,17 @@ import {
   Sparkles,
   ChevronRight,
 } from "lucide-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  runOnJS,
-} from "react-native-reanimated";
-import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
 import { type TrainingWorkout } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
+import {
+  BottomSheet,
+  SheetButton,
+  SheetSectionLabel,
+} from "../../../../shared/ui/bottom-sheet";
 import { useCompleteWorkout } from "../../hooks/use-workouts";
 import { type MainCopy } from "../../../../locales";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Props = {
   workout: TrainingWorkout | null;
@@ -55,7 +45,6 @@ export function WorkoutDetailSheet({
   themeMode,
   copy,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const completeWorkoutMutation = useCompleteWorkout();
   const locale = copy?.today?.detailSheet || {};
   const statuses = copy?.today?.workout?.statuses || {};
@@ -68,66 +57,18 @@ export function WorkoutDetailSheet({
   const [notes, setNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Reanimated values for modal transitions and drag-to-close gesture
-  const translateY = useSharedValue(SCREEN_HEIGHT);
-  const backdropOpacity = useSharedValue(0);
-
-  const handleClose = useCallback(() => {
-    backdropOpacity.value = withTiming(0, { duration: 200 });
-    translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, () => {
-      runOnJS(onClose)();
-    });
-  }, [onClose]);
-
   useEffect(() => {
     if (visible) {
       setIsCompleting(false);
       setErrorMessage("");
-
-      // Ensure starting position offscreen then animate in smoothly
-      translateY.value = SCREEN_HEIGHT;
-      backdropOpacity.value = 0;
-
-      backdropOpacity.value = withTiming(1, { duration: 200 });
-      translateY.value = withSpring(0, {
-        damping: 28,
-        stiffness: 220,
-        mass: 0.8,
-      });
-    } else {
-      translateY.value = SCREEN_HEIGHT;
-      backdropOpacity.value = 0;
     }
   }, [visible]);
 
-  const panGesture = Gesture.Pan()
-    .activeOffsetY([5, 5])
-    .onChange((event) => {
-      if (event.translationY > 0) {
-        translateY.value = event.translationY;
-      }
-    })
-    .onEnd((event) => {
-      if (event.translationY > 100 || event.velocityY > 500) {
-        runOnJS(handleClose)();
-      } else {
-        translateY.value = withSpring(0, {
-          damping: 28,
-          stiffness: 220,
-          mass: 0.8,
-        });
-      }
-    });
-
-  const backdropAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
-
-  const cardAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  if (!workout) return null;
+  if (!workout) {
+    return (
+      <BottomSheet visible={false} onClose={onClose} theme={theme} themeMode={themeMode} />
+    );
+  }
 
   const isCompleted = workout.status === "completed";
   const actualData = (workout.actual as Record<string, unknown>) || {};
@@ -171,7 +112,7 @@ export function WorkoutDetailSheet({
       });
 
       setIsCompleting(false);
-      handleClose();
+      onClose();
     } catch (err: any) {
       setErrorMessage(err?.message || "Не удалось завершить тренировку");
     }
@@ -191,612 +132,448 @@ export function WorkoutDetailSheet({
   };
 
   return (
-    <Modal
-      animationType="none"
-      onRequestClose={handleClose}
-      transparent
+    <BottomSheet
       visible={visible}
-    >
-      <View style={styles.overlay}>
-        {/* Backdrop (Fades in / out independently) */}
-        <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
-            <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
-          </Pressable>
-        </Animated.View>
-
-        {/* Card Container */}
-        <Animated.View style={[styles.container, { marginBottom: 16 }, cardAnimatedStyle]}>
-          <View
+      onClose={onClose}
+      theme={theme}
+      themeMode={themeMode}
+      renderHeader={() => (
+        <View style={styles.titleRow}>
+          {isCompleted ? (
+            <CheckCircle2 color={theme.color.primary} size={22} />
+          ) : (
+            <Activity color={theme.color.primary} size={22} />
+          )}
+          <Text
+            numberOfLines={1}
             style={[
-              styles.card,
+              styles.title,
               {
-                borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-                backgroundColor: themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
-                paddingBottom: Math.max(insets.bottom, 20),
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.semibold,
               },
             ]}
           >
-            {/* Top Drag Area with GestureDetector for Pull-to-close */}
-            <GestureDetector gesture={panGesture}>
-              <View style={styles.topDragArea}>
-                <View style={styles.handleContainer}>
-                  <View
-                    style={[styles.handle, { backgroundColor: theme.color.border }]}
-                  />
-                </View>
+            {((workout.target as any)?.title as string) ||
+              `${workout.type.toUpperCase()} Run`}
+          </Text>
+        </View>
+      )}
+    >
+      {/* Status Badge */}
+      <View style={styles.badgeRow}>
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: isCompleted
+                ? theme.color.primary + "20"
+                : theme.color.surface,
+              borderColor: theme.color.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              {
+                color: isCompleted ? theme.color.primary : theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.bold,
+              },
+            ]}
+          >
+            {getStatusLabel().toUpperCase()}
+          </Text>
+        </View>
+      </View>
 
-                <View style={styles.header}>
-                  <View style={styles.titleRow}>
-                    {isCompleted ? (
-                      <CheckCircle2 color={theme.color.primary} size={22} />
-                    ) : (
-                      <Activity color={theme.color.primary} size={22} />
-                    )}
-                    <Text
-                      style={[
-                        styles.title,
-                        {
-                          color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.semibold,
-                        },
-                      ]}
-                    >
-                      {((workout.target as any)?.title as string) ||
-                        `${workout.type.toUpperCase()} Run`}
-                    </Text>
-                  </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {errorMessage ? (
+          <View
+            style={[styles.errorBanner, { backgroundColor: "rgba(220, 38, 38, 0.2)" }]}
+          >
+            <Text style={[styles.errorText, { color: "#dc2626" }]}>{errorMessage}</Text>
+          </View>
+        ) : null}
 
-                  <Pressable
-                    accessibilityRole="button"
-                    hitSlop={12}
-                    onPress={handleClose}
-                    style={styles.closeButton}
-                  >
-                    <X color={theme.color.mutedForeground} size={20} />
-                  </Pressable>
-                </View>
-              </View>
-            </GestureDetector>
+        {/* Target / Plan Stats */}
+        <View style={styles.section}>
+          <SheetSectionLabel text={locale.workoutPlan || "ПЛАН ТРЕНИРОВКИ"} theme={theme} />
 
-            {/* Status Badge */}
-            <View style={styles.badgeRow}>
-              <View
-                style={[
-                  styles.badge,
-                  {
-                    backgroundColor: isCompleted
-                      ? theme.color.primary + "20"
-                      : theme.color.surface,
-                    borderColor: theme.color.border,
-                  },
-                ]}
-              >
+          <View style={styles.statsGrid}>
+            <View
+              style={[
+                styles.statBox,
+                {
+                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                  borderColor:
+                    themeMode === "dark"
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : theme.color.border,
+                },
+              ]}
+            >
+              <Activity color={theme.color.primary} size={18} />
+              <View>
                 <Text
                   style={[
-                    styles.badgeText,
+                    styles.statValue,
                     {
-                      color: isCompleted
-                        ? theme.color.primary
-                        : theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.bold,
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.extrabold,
                     },
                   ]}
                 >
-                  {getStatusLabel().toUpperCase()}
+                  {workout.distanceKm} км
+                </Text>
+                <Text
+                  style={[
+                    styles.statLabel,
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {locale.distance || "Дистанция"}
                 </Text>
               </View>
             </View>
 
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
+            <View
+              style={[
+                styles.statBox,
+                {
+                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                  borderColor:
+                    themeMode === "dark"
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : theme.color.border,
+                },
+              ]}
             >
-              {errorMessage ? (
-                <View
-                  style={[
-                    styles.errorBanner,
-                    { backgroundColor: "rgba(220, 38, 38, 0.2)" },
-                  ]}
-                >
-                  <Text style={[styles.errorText, { color: "#dc2626" }]}>
-                    {errorMessage}
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Target / Plan Stats */}
-              <View style={styles.section}>
+              <Clock color={theme.color.primary} size={18} />
+              <View>
                 <Text
                   style={[
-                    styles.sectionLabel,
+                    styles.statValue,
                     {
-                      color: theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.bold,
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.extrabold,
                     },
                   ]}
                 >
-                  {locale.workoutPlan || "ПЛАН ТРЕНИРОВКИ"}
+                  {workout.durationMinutes} мин
                 </Text>
+                <Text
+                  style={[
+                    styles.statLabel,
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {locale.duration || "Продолжительность"}
+                </Text>
+              </View>
+            </View>
+          </View>
 
-                <View style={styles.statsGrid}>
-                  <View
-                    style={[
-                      styles.statBox,
-                      {
-                        backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-                        borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-                      },
-                    ]}
-                  >
-                    <Activity color={theme.color.primary} size={18} />
-                    <View>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          {
-                            color: theme.color.foreground,
-                            fontFamily: theme.typography.fontFamily.sans.extrabold,
-                          },
-                        ]}
-                      >
-                        {workout.distanceKm} км
-                      </Text>
-                      <Text
-                        style={[
-                          styles.statLabel,
-                          {
-                            color: theme.color.mutedForeground,
-                            fontFamily: theme.typography.fontFamily.sans.medium,
-                          },
-                        ]}
-                      >
-                        {locale.distance || "Дистанция"}
-                      </Text>
-                    </View>
-                  </View>
+          {((workout.target as any)?.description as string) ? (
+            <Text
+              style={[
+                styles.descriptionText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
+              {((workout.target as any)?.description as string)}
+            </Text>
+          ) : null}
+        </View>
 
-                  <View
-                    style={[
-                      styles.statBox,
-                      {
-                        backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-                        borderColor: themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-                      },
-                    ]}
-                  >
-                    <Clock color={theme.color.primary} size={18} />
-                    <View>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          {
-                            color: theme.color.foreground,
-                            fontFamily: theme.typography.fontFamily.sans.extrabold,
-                          },
-                        ]}
-                      >
-                        {workout.durationMinutes} мин
-                      </Text>
-                      <Text
-                        style={[
-                          styles.statLabel,
-                          {
-                            color: theme.color.mutedForeground,
-                            fontFamily: theme.typography.fontFamily.sans.medium,
-                          },
-                        ]}
-                      >
-                        {locale.duration || "Продолжительность"}
-                      </Text>
-                    </View>
+        {/* Actual Results (if completed) */}
+        {isCompleted && (
+          <View style={styles.section}>
+            <SheetSectionLabel text={locale.result || "РЕЗУЛЬТАТ"} theme={theme} />
+
+            <View style={styles.statsGrid}>
+              {actualData.actualDistanceKm ? (
+                <View
+                  style={[
+                    styles.statBox,
+                    {
+                      backgroundColor: theme.color.surface,
+                      borderColor: theme.color.border,
+                    },
+                  ]}
+                >
+                  <Activity color={theme.color.primary} size={18} />
+                  <View>
+                    <Text
+                      style={[
+                        styles.statValue,
+                        {
+                          color: theme.color.foreground,
+                          fontFamily: theme.typography.fontFamily.sans.extrabold,
+                        },
+                      ]}
+                    >
+                      {String(actualData.actualDistanceKm)} км
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statLabel,
+                        {
+                          color: theme.color.mutedForeground,
+                          fontFamily: theme.typography.fontFamily.sans.medium,
+                        },
+                      ]}
+                    >
+                      {locale.actualDistance || "Факт дистанция"}
+                    </Text>
                   </View>
                 </View>
+              ) : null}
 
-                {((workout.target as any)?.description as string) ? (
+              {actualData.actualDurationMinutes ? (
+                <View
+                  style={[
+                    styles.statBox,
+                    {
+                      backgroundColor: theme.color.surface,
+                      borderColor: theme.color.border,
+                    },
+                  ]}
+                >
+                  <Clock color={theme.color.primary} size={18} />
+                  <View>
+                    <Text
+                      style={[
+                        styles.statValue,
+                        {
+                          color: theme.color.foreground,
+                          fontFamily: theme.typography.fontFamily.sans.extrabold,
+                        },
+                      ]}
+                    >
+                      {String(actualData.actualDurationMinutes)} мин
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statLabel,
+                        {
+                          color: theme.color.mutedForeground,
+                          fontFamily: theme.typography.fontFamily.sans.medium,
+                        },
+                      ]}
+                    >
+                      {locale.actualDuration || "Факт время"}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+            </View>
+
+            {actualData.actualAverageHeartRate ? (
+              <View style={styles.infoRow}>
+                <Heart color={theme.color.mutedForeground} size={16} />
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {locale.avgHeartRate || "Средний пульс"}:{" "}
+                  {String(actualData.actualAverageHeartRate)} уд/мин
+                </Text>
+              </View>
+            ) : null}
+
+            {actualData.rpe ? (
+              <View style={styles.infoRow}>
+                <Award color={theme.color.mutedForeground} size={16} />
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {locale.rpeRating || "Оценка усилия RPE"}: {String(actualData.rpe)} / 10
+                </Text>
+              </View>
+            ) : null}
+
+            {analysisData ? (
+              <View
+                style={[
+                  styles.analysisCard,
+                  {
+                    backgroundColor: theme.color.surface,
+                    borderColor: theme.color.border,
+                  },
+                ]}
+              >
+                <Sparkles color="#A37EFF" size={18} />
+                <View style={{ flex: 1 }}>
                   <Text
                     style={[
-                      styles.descriptionText,
+                      styles.analysisTitle,
+                      {
+                        color: theme.color.foreground,
+                        fontFamily: theme.typography.fontFamily.sans.bold,
+                      },
+                    ]}
+                  >
+                    {locale.analysisTitle || "Анализ выполнения"}:{" "}
+                    {Math.round(analysisData.completion * 100)}%
+                  </Text>
+                  <Text
+                    style={[
+                      styles.analysisBody,
                       {
                         color: theme.color.mutedForeground,
                         fontFamily: theme.typography.fontFamily.sans.regular,
                       },
                     ]}
                   >
-                    {((workout.target as any)?.description as string)}
+                    {locale.loadLabel || "Нагрузка"}: {Math.round(analysisData.load)} TRIMP (
+                    {locale.plannedLoad || "план"}: {Math.round(analysisData.expectedLoad)})
                   </Text>
-                ) : null}
+                </View>
               </View>
-
-              {/* Actual Results (if completed) */}
-              {isCompleted && (
-                <View style={styles.section}>
-                  <Text
-                    style={[
-                      styles.sectionLabel,
-                      {
-                        color: theme.color.mutedForeground,
-                        fontFamily: theme.typography.fontFamily.sans.bold,
-                      },
-                    ]}
-                  >
-                    {locale.result || "РЕЗУЛЬТАТ"}
-                  </Text>
-
-                  <View style={styles.statsGrid}>
-                    {actualData.actualDistanceKm ? (
-                      <View
-                        style={[
-                          styles.statBox,
-                          {
-                            backgroundColor: theme.color.surface,
-                            borderColor: theme.color.border,
-                          },
-                        ]}
-                      >
-                        <Activity color={theme.color.primary} size={18} />
-                        <View>
-                          <Text
-                            style={[
-                              styles.statValue,
-                              {
-                                color: theme.color.foreground,
-                                fontFamily: theme.typography.fontFamily.sans.extrabold,
-                              },
-                            ]}
-                          >
-                            {String(actualData.actualDistanceKm)} км
-                          </Text>
-                          <Text
-                            style={[
-                              styles.statLabel,
-                              {
-                                color: theme.color.mutedForeground,
-                                fontFamily: theme.typography.fontFamily.sans.medium,
-                              },
-                            ]}
-                          >
-                            {locale.actualDistance || "Факт дистанция"}
-                          </Text>
-                        </View>
-                      </View>
-                    ) : null}
-
-                    {actualData.actualDurationMinutes ? (
-                      <View
-                        style={[
-                          styles.statBox,
-                          {
-                            backgroundColor: theme.color.surface,
-                            borderColor: theme.color.border,
-                          },
-                        ]}
-                      >
-                        <Clock color={theme.color.primary} size={18} />
-                        <View>
-                          <Text
-                            style={[
-                              styles.statValue,
-                              {
-                                color: theme.color.foreground,
-                                fontFamily: theme.typography.fontFamily.sans.extrabold,
-                              },
-                            ]}
-                          >
-                            {String(actualData.actualDurationMinutes)} мин
-                          </Text>
-                          <Text
-                            style={[
-                              styles.statLabel,
-                              {
-                                color: theme.color.mutedForeground,
-                                fontFamily: theme.typography.fontFamily.sans.medium,
-                              },
-                            ]}
-                          >
-                            {locale.actualDuration || "Факт время"}
-                          </Text>
-                        </View>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  {actualData.actualAverageHeartRate ? (
-                    <View style={styles.infoRow}>
-                      <Heart color={theme.color.mutedForeground} size={16} />
-                      <Text
-                        style={[
-                          styles.infoText,
-                          {
-                            color: theme.color.foreground,
-                            fontFamily: theme.typography.fontFamily.sans.medium,
-                          },
-                        ]}
-                      >
-                        {locale.avgHeartRate || "Средний пульс"}: {String(actualData.actualAverageHeartRate)} уд/мин
-                      </Text>
-                    </View>
-                  ) : null}
-
-                  {actualData.rpe ? (
-                    <View style={styles.infoRow}>
-                      <Award color={theme.color.mutedForeground} size={16} />
-                      <Text
-                        style={[
-                          styles.infoText,
-                          {
-                            color: theme.color.foreground,
-                            fontFamily: theme.typography.fontFamily.sans.medium,
-                          },
-                        ]}
-                      >
-                        {locale.rpeRating || "Оценка усилия RPE"}: {String(actualData.rpe)} / 10
-                      </Text>
-                    </View>
-                  ) : null}
-
-                  {analysisData ? (
-                    <View
-                      style={[
-                        styles.analysisCard,
-                        {
-                          backgroundColor: theme.color.surface,
-                          borderColor: theme.color.border,
-                        },
-                      ]}
-                    >
-                      <Sparkles color="#A37EFF" size={18} />
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={[
-                            styles.analysisTitle,
-                            {
-                              color: theme.color.foreground,
-                              fontFamily: theme.typography.fontFamily.sans.bold,
-                            },
-                          ]}
-                        >
-                          {locale.analysisTitle || "Анализ выполнения"}: {Math.round(analysisData.completion * 100)}%
-                        </Text>
-                        <Text
-                          style={[
-                            styles.analysisBody,
-                            {
-                              color: theme.color.mutedForeground,
-                              fontFamily: theme.typography.fontFamily.sans.regular,
-                            },
-                          ]}
-                        >
-                          {locale.loadLabel || "Нагрузка"}: {Math.round(analysisData.load)} TRIMP ({locale.plannedLoad || "план"}: {Math.round(analysisData.expectedLoad)})
-                        </Text>
-                      </View>
-                    </View>
-                  ) : null}
-                </View>
-              )}
-
-              {/* Completion Form (if completing now) */}
-              {isCompleting && (
-                <View style={styles.completingForm}>
-                  <Text
-                    style={[
-                      styles.sectionLabel,
-                      {
-                        color: theme.color.primary,
-                        fontFamily: theme.typography.fontFamily.sans.bold,
-                      },
-                    ]}
-                  >
-                    {locale.completingHeader || "ВВЕДИТЕ ФАКТИЧЕСКИЕ ДАННЫЕ"}
-                  </Text>
-
-                  <View style={styles.metricsRow}>
-                    <View style={{ flex: 1 }}>
-                      <GlassInput
-                        keyboardType="numeric"
-                        label="Дистанция (км)"
-                        onChangeText={setActualDistanceKm}
-                        theme={theme}
-                        value={actualDistanceKm}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <GlassInput
-                        keyboardType="numeric"
-                        label="Время (мин)"
-                        onChangeText={setActualDurationMinutes}
-                        theme={theme}
-                        value={actualDurationMinutes}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.metricsRow}>
-                    <View style={{ flex: 1 }}>
-                      <GlassInput
-                        keyboardType="numeric"
-                        label="Пульс (опционально)"
-                        onChangeText={setHeartRate}
-                        placeholder="145"
-                        theme={theme}
-                        value={heartRate}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <GlassInput
-                        keyboardType="numeric"
-                        label="RPE 1-10"
-                        onChangeText={setRpe}
-                        placeholder="6"
-                        theme={theme}
-                        value={rpe}
-                      />
-                    </View>
-                  </View>
-
-                  <GlassInput
-                    label="Заметки"
-                    multiline
-                    onChangeText={setNotes}
-                    placeholder="Как прошла тренировка?"
-                    theme={theme}
-                    value={notes}
-                  />
-                </View>
-              )}
-            </ScrollView>
-
-            {/* Actions Row */}
-            <View style={styles.actionsRow}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={handleClose}
-                style={({ pressed }) => [
-                  styles.cancelButton,
-                  {
-                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
-                  },
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.cancelLabel,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  {copy?.today?.goalSheet?.cancel || "Отменить"}
-                </Text>
-              </Pressable>
-
-              {!isCompleted && !isCompleting && (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={handleStartCompleting}
-                  style={({ pressed }) => [
-                    styles.actionButton,
-                    { backgroundColor: theme.color.primary },
-                    pressed && styles.buttonPressed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.actionButtonText,
-                      {
-                        color: theme.color.primaryForeground,
-                        fontFamily: theme.typography.fontFamily.sans.semibold,
-                      },
-                    ]}
-                  >
-                    {locale.completeButton || "Завершить"}
-                  </Text>
-                  <ChevronRight color={theme.color.primaryForeground} size={18} />
-                </Pressable>
-              )}
-
-              {isCompleting && (
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={completeWorkoutMutation.isPending}
-                  onPress={handleSaveCompletion}
-                  style={({ pressed }) => [
-                    styles.actionButton,
-                    { backgroundColor: theme.color.primary },
-                    pressed && styles.buttonPressed,
-                    completeWorkoutMutation.isPending && { opacity: 0.7 },
-                  ]}
-                >
-                  {completeWorkoutMutation.isPending ? (
-                    <ActivityIndicator color={theme.color.primaryForeground} />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.actionButtonText,
-                        {
-                          color: theme.color.primaryForeground,
-                          fontFamily: theme.typography.fontFamily.sans.semibold,
-                        },
-                      ]}
-                    >
-                      {locale.saveResultButton || "Сохранить"}
-                    </Text>
-                  )}
-                </Pressable>
-              )}
-            </View>
+            ) : null}
           </View>
-        </Animated.View>
+        )}
+
+        {/* Completion Form (if completing now) */}
+        {isCompleting && (
+          <View style={styles.completingForm}>
+            <SheetSectionLabel
+              text={locale.completingHeader || "ВВЕДИТЕ ФАКТИЧЕСКИЕ ДАННЫЕ"}
+              theme={theme}
+            />
+
+            <View style={styles.metricsRow}>
+              <View style={{ flex: 1 }}>
+                <GlassInput
+                  keyboardType="numeric"
+                  label="Дистанция (км)"
+                  onChangeText={setActualDistanceKm}
+                  theme={theme}
+                  value={actualDistanceKm}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <GlassInput
+                  keyboardType="numeric"
+                  label="Время (мин)"
+                  onChangeText={setActualDurationMinutes}
+                  theme={theme}
+                  value={actualDurationMinutes}
+                />
+              </View>
+            </View>
+
+            <View style={styles.metricsRow}>
+              <View style={{ flex: 1 }}>
+                <GlassInput
+                  keyboardType="numeric"
+                  label="Пульс (опционально)"
+                  onChangeText={setHeartRate}
+                  placeholder="145"
+                  theme={theme}
+                  value={heartRate}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <GlassInput
+                  keyboardType="numeric"
+                  label="RPE 1-10"
+                  onChangeText={setRpe}
+                  placeholder="6"
+                  theme={theme}
+                  value={rpe}
+                />
+              </View>
+            </View>
+
+            <GlassInput
+              label="Заметки"
+              multiline
+              onChangeText={setNotes}
+              placeholder="Как прошла тренировка?"
+              theme={theme}
+              value={notes}
+            />
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Actions Row */}
+      <View style={styles.actionsRow}>
+        <SheetButton
+          label={copy?.today?.goalSheet?.cancel || "Отменить"}
+          onPress={onClose}
+          variant="secondary"
+          theme={theme}
+          themeMode={themeMode}
+        />
+
+        {!isCompleted && !isCompleting && (
+          <SheetButton
+            label={locale.completeButton || "Завершить"}
+            onPress={handleStartCompleting}
+            theme={theme}
+            themeMode={themeMode}
+            trailing={
+              <ChevronRight color={theme.color.primaryForeground} size={18} />
+            }
+          />
+        )}
+
+        {isCompleting && (
+          <SheetButton
+            label={locale.saveResultButton || "Сохранить"}
+            onPress={handleSaveCompletion}
+            pending={completeWorkoutMutation.isPending}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        )}
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  backdropContainer: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  container: {
-    width: "100%",
-    paddingHorizontal: 16,
-    maxHeight: "85%",
-    zIndex: 1,
-  },
-  card: {
-    borderRadius: 38,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 20,
-    paddingTop: 12,
-    gap: 16,
-    overflow: "hidden",
-    maxHeight: "100%",
-  },
-  topDragArea: {
-    width: "100%",
-    gap: 8,
-  },
-  handleContainer: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  handle: {
-    width: 36,
-    height: 5,
-    borderRadius: 2.5,
-    opacity: 0.5,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 10,
-    flex: 1,
   },
   title: {
     fontSize: 15,
     lineHeight: 20,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    flexShrink: 1,
   },
   badgeRow: {
     flexDirection: "row",
+    marginTop: -8,
   },
   badge: {
     paddingHorizontal: 10,
@@ -825,11 +602,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 8,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    letterSpacing: 0.8,
   },
   statsGrid: {
     flexDirection: "row",
@@ -896,32 +668,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
-  },
-  cancelButton: {
-    flex: 1,
-    height: 52,
-    borderRadius: 9999,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelLabel: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  actionButton: {
-    flex: 1,
-    height: 52,
-    borderRadius: 9999,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  buttonPressed: {
-    transform: [{ scale: 0.985 }],
-  },
-  actionButtonText: {
-    fontSize: 15,
-    lineHeight: 20,
   },
 });

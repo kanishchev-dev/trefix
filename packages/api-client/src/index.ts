@@ -267,6 +267,104 @@ export const completeWorkoutSchema = z.object({
 export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;
 export type CompleteWorkoutInput = z.infer<typeof completeWorkoutSchema>;
 
+// --- Manual Plan Creation ---
+
+export const manualPlanGoalSchema = z.object({
+  raceDistance: z.enum(["5k", "10k", "half_marathon", "marathon", "just_running"]),
+  targetTimeSeconds: z.number().int().positive().optional(),
+  targetDate: z.string().optional(),
+});
+
+export const manualPlanScheduleSchema = z.object({
+  trainingDays: z.array(z.number().int().min(0).max(6)).min(1),
+  preferredLongRunDay: z.number().int().min(0).max(6).optional(),
+  workoutDurationMinutes: z.number().int().positive().optional(),
+});
+
+export const manualPlanStructureSchema = z.object({
+  totalWeeks: z.number().int().min(1).max(52),
+  sessionsPerWeek: z.number().int().min(1).max(7),
+  focus: z.array(z.string()).optional(),
+});
+
+export const manualPlanPreviewWorkoutSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  phase: z.string(),
+  weekNumber: z.number(),
+  dayOfWeek: z.number(),
+  scheduledAt: z.string(),
+  orderInWeek: z.number(),
+  durationMinutes: z.number(),
+  distanceKm: z.number(),
+  target: z.record(z.string(), z.unknown()),
+  steps: z.array(z.record(z.string(), z.unknown())),
+});
+
+export const manualPlanPreviewWeekSchema = z.object({
+  weekNumber: z.number(),
+  phase: z.string(),
+  title: z.string(),
+  plannedWorkoutsCount: z.number(),
+  plannedDistance: z.number(),
+  plannedLoad: z.number(),
+  workouts: z.array(manualPlanPreviewWorkoutSchema),
+});
+
+export const manualPlanPreviewSchema = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+  totalWeeks: z.number(),
+  trainingFrequency: z.number(),
+  weeklyTargetKm: z.number(),
+  weeks: z.array(manualPlanPreviewWeekSchema),
+});
+
+export const manualPlanWorkoutOverrideSchema = z.object({
+  id: z.string(),
+  type: z.string().optional(),
+  dayOfWeek: z.number().int().min(0).max(6).optional(),
+  distanceKm: z.number().positive().optional(),
+  durationMinutes: z.number().int().positive().optional(),
+});
+
+export const manualPlanNewWorkoutSchema = z.object({
+  type: z.string(),
+  dayOfWeek: z.number().int().min(0).max(6),
+  distanceKm: z.number().positive().optional(),
+  durationMinutes: z.number().int().positive().optional(),
+});
+
+export const manualPlanWeekOverridesSchema = z.object({
+  weekNumber: z.number().int().min(1),
+  workoutOverrides: z.array(manualPlanWorkoutOverrideSchema),
+  removedWorkoutIds: z.array(z.string()),
+  newWorkouts: z.array(manualPlanNewWorkoutSchema),
+});
+
+export const previewManualPlanSchema = z.object({
+  goal: manualPlanGoalSchema,
+  schedule: manualPlanScheduleSchema,
+  structure: manualPlanStructureSchema,
+});
+
+export const createManualPlanSchema = previewManualPlanSchema.extend({
+  startDate: z.string().optional(),
+  weekOverrides: z.array(manualPlanWeekOverridesSchema).optional(),
+});
+
+export type ManualPlanGoalInput = z.infer<typeof manualPlanGoalSchema>;
+export type ManualPlanScheduleInput = z.infer<typeof manualPlanScheduleSchema>;
+export type ManualPlanStructureInput = z.infer<typeof manualPlanStructureSchema>;
+export type ManualPlanPreviewWorkout = z.infer<typeof manualPlanPreviewWorkoutSchema>;
+export type ManualPlanPreviewWeek = z.infer<typeof manualPlanPreviewWeekSchema>;
+export type ManualPlanPreview = z.infer<typeof manualPlanPreviewSchema>;
+export type ManualPlanWorkoutOverride = z.infer<typeof manualPlanWorkoutOverrideSchema>;
+export type ManualPlanNewWorkout = z.infer<typeof manualPlanNewWorkoutSchema>;
+export type ManualPlanWeekOverrides = z.infer<typeof manualPlanWeekOverridesSchema>;
+export type PreviewManualPlanInput = z.infer<typeof previewManualPlanSchema>;
+export type CreateManualPlanInput = z.infer<typeof createManualPlanSchema>;
+
 // --- Plan Overview ---
 
 export const planPhaseSchema = z.enum([
