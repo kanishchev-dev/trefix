@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 
+import { DomainException } from '@/common/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 
@@ -21,6 +22,7 @@ import { TrainingLoad } from './entities/training-load.entity';
 import { TrainingPlan } from './entities/training-plan.entity';
 import { Workout } from './entities/workout.entity';
 import { AthleteCreatedEvent } from './events/athlete-created.event';
+import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
 import { PlanAdaptedEvent } from './events/plan-adapted.event';
 import { PlanGeneratedEvent } from './events/plan-generated.event';
@@ -35,6 +37,8 @@ import {
   WorkoutAnalysisView,
   WorkoutView,
 } from './interfaces/training-views.interface';
+import { CreateManualPlanDto, ManualPlanWeekOverrideDto, PreviewManualPlanDto } from './dto/create-manual-plan.dto';
+import { ManualPlanPreviewResponseDto, ManualPlanPreviewWeekDto, ManualPlanPreviewWorkoutDto } from './dto/manual-plan-preview-response.dto';
 import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
 import {
   CurrentWeekContextDto,
@@ -49,8 +53,15 @@ import {
   TRAINING_DEFAULT_FREQUENCY,
   TRAINING_DEFAULT_WEEKLY_MILEAGE_KM,
   TRAINING_LOAD_ALGORITHM_VERSION,
+  TRAINING_WEEKDAY_ORDER,
 } from './training.constants';
 import { TrainingEngine, TrainingStateComputation } from './training.engine';
+import {
+  deriveLegacyRaceFields,
+  mapLegacyRaceGoal,
+  validateGoalPayload,
+  type GoalPayloadShape,
+} from './goal-taxonomy';
 
 interface WorkoutCompletionResult {
   workout: WorkoutView;
@@ -163,37 +174,11 @@ export class TrainingService {
       periodComparison: 'compared with 6 weeks ago',
     };
 
-    // 2. Goal Progress
+    // 2. Goal Progress — representation depends on the goal type
+    // (PRD section 21: no race distance/time may be assumed for every goal).
     let goalProgress = null;
     if (goal) {
-      const raceDistanceKm = Number(goal.raceDistance) || 10;
-      const targetSeconds = goal.targetTimeSeconds || 2700; // 45 mins default
-      const estimatedSeconds = state.thresholdPaceSecondsPerKm
-        ? Math.round(state.thresholdPaceSecondsPerKm * raceDistanceKm)
-        : targetSeconds + 138; // 2:18 slower default
-
-      const deltaSeconds = estimatedSeconds - targetSeconds;
-      const formatTime = (secs: number) => {
-        const mins = Math.floor(secs / 60);
-        const s = Math.abs(secs % 60);
-        return `${mins}:${String(s).padStart(2, '0')}`;
-      };
-
-      const deltaText = deltaSeconds <= 0 ? 'Goal reached' : `${formatTime(deltaSeconds)}`;
-      const goalStatus: 'ON_TRACK' | 'IMPROVING' | 'BEHIND' | 'ACHIEVED' | 'NO_LONGER_ACTIVE' =
-        estimatedSeconds <= targetSeconds ? 'ACHIEVED' : 'ON_TRACK';
-
-      goalProgress = {
-        type: 'RACE_TIME' as const,
-        title: `${raceDistanceKm}K Race Goal`,
-        distance: `${raceDistanceKm}k`,
-        target: formatTime(targetSeconds),
-        currentEstimate: formatTime(estimatedSeconds),
-        delta: deltaText,
-        progress: Math.min(Math.round(((targetSeconds / estimatedSeconds) || 0.7) * 100), 100),
-        status: goalStatus,
-        targetDate: goal.targetDate,
-      };
+      goalProgress = this.buildGoalProgress(goal, state);
     }
 
     // 3. Runner Capabilities
@@ -536,6 +521,18 @@ export class TrainingService {
     const scheduledDate = new Date(dto.scheduledAt);
     const isCompleted = dto.status === 'completed' || dto.actualDistanceKm !== undefined;
     const status = isCompleted ? 'completed' : dto.status || 'planned';
+
+    if (status === 'planned') {
+      const now = new Date();
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      if (scheduledDate <= todayEnd) {
+        throw new DomainException(
+          'INVALID_DATE',
+          'Плановую тренировку можно добавить только на будущую дату.',
+        );
+      }
+    }
+
     const workoutType = dto.type || 'easy';
     const durationMinutes = dto.durationMinutes ?? (dto.actualDurationMinutes || 30);
     const distanceKm = dto.distanceKm ?? (dto.actualDistanceKm || 5);
@@ -543,6 +540,7 @@ export class TrainingService {
     const target = {
       title: dto.title || `${workoutType.charAt(0).toUpperCase() + workoutType.slice(1)} Run`,
       description: dto.description || `${distanceKm} km at target pace`,
+      source: dto.source || 'manual',
     };
 
     const workout = await this.workoutModel.create({
@@ -562,6 +560,7 @@ export class TrainingService {
       actual: null,
       analysis: null,
       completedAt: isCompleted ? new Date() : null,
+      sourceProvider: dto.source || 'manual',
     });
 
     if (isCompleted) {
@@ -608,17 +607,40 @@ export class TrainingService {
     return this.toWorkoutView(workout);
   }
 
-  /** Creates a goal linked to the authenticated athlete. */
+  /**
+   * Creates a goal linked to the authenticated athlete from the universal
+   * polymorphic payload (PRD sections 9, 19). Validation is schema-aware and
+   * authoritative (PRD section 14).
+   */
   async createGoal(actorUserId: string, dto: CreateGoalDto & { athleteId: string }): Promise<GoalView> {
     const athlete = await this.loadAthleteOrThrow(dto.athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
 
+    const payload = dto.goal;
+    this.ensureGoalPayloadValid({
+      type: payload.type,
+      current: payload.current,
+      target: payload.target,
+      description: payload.description,
+    });
+    const legacyFields = deriveLegacyRaceFields({
+      type: payload.type,
+      current: payload.current,
+      target: payload.target,
+    });
+
     const goal = await this.goalModel.create({
       athleteId: athlete.id,
-      raceDistance: dto.raceDistance,
-      targetTimeSeconds: dto.targetTimeSeconds ?? null,
-      targetDate: dto.targetDate,
-      priority: dto.priority ?? 5,
+      type: payload.type,
+      payload: {
+        current: payload.current,
+        target: payload.target ?? {},
+        description: payload.description,
+      },
+      raceDistance: legacyFields.raceDistance,
+      targetTimeSeconds: legacyFields.targetTimeSeconds,
+      targetDate: payload.targetDate ?? null,
+      priority: payload.priority ?? 5,
       status: ATHLETE_GOAL_STATUSES[0],
       notes: dto.notes ?? null,
     });
@@ -674,6 +696,476 @@ export class TrainingService {
 
     this.eventEmitter.emit('training.plan.generated', new PlanGeneratedEvent(athlete.id, plan.id));
     return this.toPlanView(plan, workouts);
+  }
+
+  /** Builds a non-persisted manual plan preview from the user configuration. */
+  async previewManualPlan(actorUserId: string, dto: PreviewManualPlanDto): Promise<ManualPlanPreviewResponseDto> {
+    const athlete = await this.loadAthleteOrThrow((await this.getOrCreateAthlete(actorUserId)).id);
+    this.ensureAthleteOwnership(athlete, actorUserId);
+
+    this.ensureManualScheduleConsistency(dto);
+
+    const goal = this.buildManualGoalView(athlete.id, dto);
+    const athleteView = this.applyManualScheduleToAthlete(athlete, dto);
+    const state = await this.getLatestStateSnapshot(athlete.id, true);
+
+    const generatedPlan = this.trainingEngine.generatePlan(
+      athleteView,
+      goal,
+      this.toStateComputation(state),
+      dto.startDate ? new Date(dto.startDate) : new Date(),
+      {
+        totalWeeks: dto.structure.totalWeeks,
+        preferredLongRunDay: dto.schedule.preferredLongRunDay,
+        focus: dto.structure.focus,
+      },
+    );
+
+    return this.toManualPreview(generatedPlan);
+  }
+
+  /** Creates a persisted training plan from the manual configuration and optional workout overrides. */
+  async createManualPlan(actorUserId: string, dto: CreateManualPlanDto): Promise<TrainingPlanView> {
+    const athlete = await this.loadAthleteOrThrow((await this.getOrCreateAthlete(actorUserId)).id);
+    this.ensureAthleteOwnership(athlete, actorUserId);
+
+    // Authoritative validation: the client must send a configuration the engine accepts.
+    await this.previewManualPlan(actorUserId, dto);
+
+    const goalPayload = this.normalizeManualGoalPayload(dto.goal);
+    this.ensureGoalPayloadValid(goalPayload);
+    const legacyFields = deriveLegacyRaceFields(goalPayload);
+
+    const goalEntity = await this.goalModel.create({
+      athleteId: athlete.id,
+      type: goalPayload.type,
+      payload: {
+        current: goalPayload.current,
+        target: goalPayload.target ?? {},
+        description: goalPayload.description,
+      },
+      raceDistance: legacyFields.raceDistance,
+      targetTimeSeconds: legacyFields.targetTimeSeconds,
+      targetDate: dto.goal.targetDate ?? null,
+      priority: 5,
+      status: ATHLETE_GOAL_STATUSES[0],
+      notes: 'Created via manual plan flow',
+    });
+    this.eventEmitter.emit('training.goal.created', new GoalCreatedEvent(athlete.id, goalEntity.id));
+
+    const athleteView = this.applyManualScheduleToAthlete(athlete, dto);
+    const state = await this.getLatestStateSnapshot(athlete.id, true);
+    const goalView = this.toGoalView(goalEntity);
+
+    const generatedPlan = this.trainingEngine.generatePlan(
+      athleteView,
+      goalView,
+      this.toStateComputation(state),
+      dto.startDate ? new Date(dto.startDate) : new Date(),
+      {
+        totalWeeks: dto.structure.totalWeeks,
+        preferredLongRunDay: dto.schedule.preferredLongRunDay,
+        focus: dto.structure.focus,
+      },
+    );
+
+    const plan = await this.planModel.create({
+      athleteId: athlete.id,
+      goalId: goalEntity.id,
+      startDate: generatedPlan.startDate,
+      endDate: generatedPlan.endDate,
+      trainingFrequency: generatedPlan.trainingFrequency,
+      weeklyTargetKm: generatedPlan.weeklyTargetKm,
+      status: 'active',
+      creationSource: 'manual',
+      algorithmVersion: TRAINING_LOAD_ALGORITHM_VERSION,
+      weeks: generatedPlan.weeks,
+    });
+
+    const workouts = await this.persistGeneratedWorkouts(plan, athlete, goalEntity, generatedPlan.workouts);
+    const validatedWorkouts = await this.applyManualWorkoutOverrides(
+      plan,
+      athlete,
+      goalEntity,
+      generatedPlan.startDate,
+      dto.weekOverrides ?? [],
+      workouts,
+    );
+    await this.updatePlanWeeksWithWorkoutIds(plan, generatedPlan.weeks, validatedWorkouts);
+
+    // Persist the user-schedule preferences so future regenerations respect them.
+    athlete.availableTrainingDays = this.normalizeDays(
+      dto.schedule.trainingDays.map((dayIndex) => TRAINING_WEEKDAY_ORDER[dayIndex]).filter(Boolean),
+    );
+    if (dto.schedule.workoutDurationMinutes) {
+      athlete.preferredWorkoutDurationMinutes = dto.schedule.workoutDurationMinutes;
+    }
+    athlete.sessionsPerWeek = dto.structure.sessionsPerWeek;
+    await athlete.save();
+    this.eventEmitter.emit('training.athlete.updated', new AthleteUpdatedEvent(athlete.id, actorUserId));
+
+    this.eventEmitter.emit(
+      'training.plan.generated',
+      new PlanGeneratedEvent(athlete.id, plan.id, 'manual'),
+    );
+    return this.toPlanView(plan, validatedWorkouts);
+  }
+
+  /** Applies validated client-side workout overrides to freshly generated planned workouts. */
+  /**
+   * Guards the PRD section 11 rule: sessions per week must stay consistent with
+   * the selected training days. Both preview and create go through this check.
+   */
+  private ensureManualScheduleConsistency(dto: PreviewManualPlanDto): void {
+    if (dto.structure.sessionsPerWeek > dto.schedule.trainingDays.length) {
+      throw new DomainException(
+        'MANUAL_PLAN_CONFIG_INVALID',
+        `sessionsPerWeek (${dto.structure.sessionsPerWeek}) cannot exceed the number of training days (${dto.schedule.trainingDays.length})`,
+        400,
+      );
+    }
+  }
+
+  /**
+   * Applies validated client-side changes (edit / remove / add) to freshly
+   * generated planned workouts. Every change passes Training Engine validation
+   * before persistence (PRD sections 14-16).
+   */
+  private async applyManualWorkoutOverrides(
+    plan: TrainingPlan,
+    athlete: Athlete,
+    goal: AthleteGoal,
+    planStartDate: string,
+    weekOverrides: ManualPlanWeekOverrideDto[],
+    workouts: Workout[],
+  ): Promise<Workout[]> {
+    if (weekOverrides.length === 0) {
+      return workouts;
+    }
+
+    const result = [...workouts];
+    const athleteView = this.toAthleteView(athlete);
+    const goalView = this.toGoalView(goal);
+    const state = this.toStateComputation(await this.getLatestStateSnapshot(athlete.id, true));
+
+    for (const weekOverride of weekOverrides) {
+      let maxOrderInWeek = result
+        .filter((workout) => workout.weekNumber === weekOverride.weekNumber)
+        .reduce((max, workout) => Math.max(max, workout.orderInWeek), 0);
+
+      // --- Removals (PRD section 15: remove workout) ---
+      for (const removedId of weekOverride.removedWorkoutIds ?? []) {
+        const [weekRaw, orderRaw] = removedId.split('-');
+        const removedWeekNumber = Number(weekRaw);
+        const removedOrder = Number(orderRaw);
+        const target = result.find(
+          (workout) =>
+            workout.weekNumber === removedWeekNumber &&
+            workout.orderInWeek === removedOrder &&
+            workout.planId === plan.id,
+        );
+        if (!target) {
+          throw new DomainException(
+            'MANUAL_PLAN_WORKOUT_NOT_FOUND',
+            `Workout ${removedId} not found in the generated plan`,
+            400,
+          );
+        }
+        await target.destroy();
+        const targetIndex = result.indexOf(target);
+        if (targetIndex >= 0) {
+          result.splice(targetIndex, 1);
+        }
+      }
+
+      // --- Edits (PRD section 14: user change → engine validation) ---
+      const workoutByKey = new Map<string, Workout>();
+      for (const workout of result) {
+        workoutByKey.set(`${workout.weekNumber}-${workout.orderInWeek}`, workout);
+      }
+
+      for (const override of weekOverride.workoutOverrides ?? []) {
+        const target = workoutByKey.get(override.id);
+        if (!target) {
+          throw new DomainException(
+            'MANUAL_PLAN_WORKOUT_NOT_FOUND',
+            `Workout ${override.id} not found in the generated plan`,
+            400,
+          );
+        }
+
+        // Merge override over the existing workout, then validate the combined result.
+        const mergedType = override.type ?? target.type;
+        const mergedDistanceKm = override.distanceKm ?? Number(target.distanceKm);
+        const mergedDurationMinutes = override.durationMinutes ?? target.durationMinutes;
+        const validation = this.trainingEngine.validateWorkoutOverride({
+          type: mergedType,
+          dayOfWeek: override.dayOfWeek,
+          distanceKm: mergedDistanceKm,
+          durationMinutes: mergedDurationMinutes,
+        });
+        if (!validation.valid) {
+          throw new DomainException('MANUAL_PLAN_WORKOUT_INVALID', validation.reason, 400);
+        }
+
+        const typeChanged = override.type !== undefined && override.type !== target.type;
+        if (override.type) {
+          target.type = override.type as Workout['type'];
+        }
+        if (override.dayOfWeek !== undefined) {
+          target.scheduledAt = this.trainingEngine.resolveWeekdayDate(
+            new Date(planStartDate),
+            target.weekNumber,
+            override.dayOfWeek,
+          );
+        }
+
+        // A changed type or metrics rebuild target/steps from the engine blueprint
+        // so intensity zones stay consistent with the new workout shape.
+        if (typeChanged || override.distanceKm !== undefined || override.durationMinutes !== undefined) {
+          const planWeek = this.toPlanWeeks(plan.weeks).find((week) => week.weekNumber === target.weekNumber);
+          const weekLoadTarget = planWeek?.weeklyLoadTarget ?? Math.round(plan.weeklyTargetKm);
+          const rebuilt = this.trainingEngine.createWorkoutBlueprint({
+            athlete: athleteView,
+            goal: goalView,
+            state,
+            phase: target.phase,
+            weekNumber: target.weekNumber,
+            workoutType: target.type,
+            scheduledAt: target.scheduledAt,
+            orderInWeek: target.orderInWeek,
+            weekLoadTarget,
+          });
+          target.durationMinutes = override.durationMinutes ?? rebuilt.durationMinutes;
+          target.distanceKm = override.distanceKm ?? rebuilt.distanceKm;
+          target.target = rebuilt.target;
+          target.steps = rebuilt.steps;
+        }
+        await target.save();
+      }
+
+      // --- Additions (PRD section 15: add workout) ---
+      for (const newWorkout of weekOverride.newWorkouts ?? []) {
+        // Validate only the fields the client actually provided: distance is
+        // optional for additions (e.g. a recovery jog), so it must not be
+        // coerced to 0 and fail the engine distance rule.
+        const validation = this.trainingEngine.validateWorkoutOverride({
+          type: newWorkout.type,
+          dayOfWeek: newWorkout.dayOfWeek,
+          ...(newWorkout.distanceKm !== undefined ? { distanceKm: newWorkout.distanceKm } : {}),
+          durationMinutes: newWorkout.durationMinutes,
+        });
+        if (!validation.valid) {
+          throw new DomainException('MANUAL_PLAN_WORKOUT_INVALID', validation.reason, 400);
+        }
+
+        const scheduledAt = this.trainingEngine.resolveWeekdayDate(
+          new Date(planStartDate),
+          weekOverride.weekNumber,
+          newWorkout.dayOfWeek,
+        );
+        const nextOrder = maxOrderInWeek + 1;
+        maxOrderInWeek += 1;
+
+        const planWeek = this.toPlanWeeks(plan.weeks).find((week) => week.weekNumber === weekOverride.weekNumber);
+        const weekLoadTarget = planWeek?.weeklyLoadTarget ?? Math.round(plan.weeklyTargetKm);
+        const blueprint = this.trainingEngine.createWorkoutBlueprint({
+          athlete: athleteView,
+          goal: goalView,
+          state,
+          phase: (planWeek?.phase as string) ?? 'base',
+          weekNumber: weekOverride.weekNumber,
+          workoutType: newWorkout.type as Workout['type'],
+          scheduledAt,
+          orderInWeek: nextOrder,
+          weekLoadTarget,
+        });
+
+        const created = await this.workoutModel.create({
+          athleteId: athlete.id,
+          goalId: goal.id,
+          planId: plan.id,
+          weekNumber: weekOverride.weekNumber,
+          scheduledAt,
+          type: newWorkout.type as Workout['type'],
+          phase: blueprint.phase,
+          status: 'planned',
+          orderInWeek: nextOrder,
+          durationMinutes: newWorkout.durationMinutes,
+          distanceKm: newWorkout.distanceKm ?? blueprint.distanceKm,
+          target: blueprint.target,
+          steps: blueprint.steps,
+          actual: null,
+          analysis: null,
+          completedAt: null,
+        });
+        result.push(created);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Normalises a manual plan goal DTO into the universal payload shape.
+   * Legacy flat race fields (raceDistance / targetTimeSeconds) are mapped onto
+   * the universal model; universal fields win when both are provided.
+   */
+  private normalizeManualGoalPayload(dtoGoal: PreviewManualPlanDto['goal']): GoalPayloadShape & {
+    targetDate?: string;
+  } {
+    const hasUniversalType = Boolean(dtoGoal.type);
+    if (hasUniversalType) {
+      return {
+        type: dtoGoal.type!,
+        current: dtoGoal.current ?? undefined,
+        target: dtoGoal.target ?? undefined,
+        description: dtoGoal.description ?? undefined,
+        targetDate: dtoGoal.targetDate,
+      };
+    }
+
+    // Legacy flat race payload (PRD section 26 backward compatibility).
+    const legacy = mapLegacyRaceGoal(
+      dtoGoal.raceDistance ?? 'just_running',
+      dtoGoal.targetTimeSeconds ?? null,
+    );
+    return {
+      type: legacy.type,
+      target: legacy.target,
+      targetDate: dtoGoal.targetDate,
+    };
+  }
+
+  /** Validates the universal goal payload authoritatively (PRD section 14). */
+  private ensureGoalPayloadValid(goal: GoalPayloadShape): void {
+    const result = validateGoalPayload(goal);
+    if (result.valid) {
+      return;
+    }
+
+    throw new DomainException(
+      `GOAL_${result.code}`,
+      `Goal configuration invalid: ${result.code}${result.field ? ` (${result.field})` : ''}`,
+      400,
+    );
+  }
+
+  /** Builds an in-memory goal view for preview without persisting anything. */
+  private buildManualGoalView(athleteId: string, dto: PreviewManualPlanDto): GoalView {
+    const payload = this.normalizeManualGoalPayload(dto.goal);
+    this.ensureGoalPayloadValid(payload);
+
+    const legacyFields = deriveLegacyRaceFields(payload);
+
+    return {
+      id: 'preview-goal',
+      athleteId,
+      type: payload.type,
+      payload: {
+        current: payload.current ?? undefined,
+        target: payload.target ?? {},
+        description: payload.description ?? undefined,
+      },
+      raceDistance: legacyFields.raceDistance,
+      targetTimeSeconds: legacyFields.targetTimeSeconds,
+      targetDate: dto.goal.targetDate ?? this.addDaysToIsoDate(new Date(), 84),
+      priority: 5,
+      status: ATHLETE_GOAL_STATUSES[0],
+      notes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  /** Derives the athlete view used by the engine from the user's manual schedule. */
+  private applyManualScheduleToAthlete(athlete: Athlete, dto: PreviewManualPlanDto): AthleteView {
+    const trainingDays = dto.schedule.trainingDays.length > 0
+      ? dto.schedule.trainingDays
+          .map((dayIndex) => TRAINING_WEEKDAY_ORDER[dayIndex])
+          .filter((day): day is (typeof TRAINING_WEEKDAY_ORDER)[number] => Boolean(day))
+      : [...TRAINING_DEFAULT_AVAILABILITY];
+
+    return {
+      ...this.toAthleteView(athlete),
+      sessionsPerWeek: dto.structure.sessionsPerWeek,
+      availableTrainingDays: trainingDays,
+      preferredWorkoutDurationMinutes: dto.schedule.workoutDurationMinutes ?? athlete.preferredWorkoutDurationMinutes,
+    }; 
+  }
+
+  /** Maps an engine build result into the preview DTO. */
+  private toManualPreview(generatedPlan: {
+    startDate: string;
+    endDate: string;
+    trainingFrequency: number;
+    weeklyTargetKm: number;
+    weeks: Array<Record<string, unknown>>;
+    workouts: Array<{
+      type: Workout['type'];
+      phase: string;
+      weekNumber: number;
+      scheduledAt: Date;
+      orderInWeek: number;
+      durationMinutes: number;
+      distanceKm: number;
+      target: Record<string, unknown>;
+      steps: Array<Record<string, unknown>>;
+    }>;
+  }): ManualPlanPreviewResponseDto {
+    const weeks: ManualPlanPreviewWeekDto[] = generatedPlan.weeks.map((week) => {
+      const weekNumber = Number(week.weekNumber);
+      const phase = String(week.phase || 'base');
+      const weekWorkouts = generatedPlan.workouts.filter((workout) => workout.weekNumber === weekNumber);
+
+      const workoutDtos: ManualPlanPreviewWorkoutDto[] = weekWorkouts.map((workout) => ({
+        id: `${workout.weekNumber}-${workout.orderInWeek}`,
+        type: workout.type,
+        phase: workout.phase,
+        weekNumber: workout.weekNumber,
+        dayOfWeek: this.resolveDayOfWeekIndex(workout.scheduledAt),
+        scheduledAt: this.toIsoDate(workout.scheduledAt),
+        orderInWeek: workout.orderInWeek,
+        durationMinutes: workout.durationMinutes,
+        distanceKm: workout.distanceKm,
+        target: workout.target,
+        steps: workout.steps,
+      }));
+
+      return {
+        weekNumber,
+        phase: phase.toUpperCase(),
+        title: this.getWeekTitle(phase, weekNumber),
+        plannedWorkoutsCount: weekWorkouts.length,
+        plannedDistance: Math.round(weekWorkouts.reduce((sum, workout) => sum + workout.distanceKm, 0)),
+        plannedLoad: Math.round(Number(week.weeklyLoadTarget || 0)),
+        workouts: workoutDtos,
+      };
+    });
+
+    return {
+      startDate: generatedPlan.startDate,
+      endDate: generatedPlan.endDate,
+      totalWeeks: generatedPlan.weeks.length,
+      trainingFrequency: generatedPlan.trainingFrequency,
+      weeklyTargetKm: generatedPlan.weeklyTargetKm,
+      weeks,
+    };
+  }
+
+  private resolveDayOfWeekIndex(date: Date): number {
+    // Convert JS Sunday-first getDay() into the Monday-first index used by the app.
+    return (date.getUTCDay() + 6) % 7;
+  }
+
+  private toIsoDate(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
+
+  private addDaysToIsoDate(date: Date, days: number): string {
+    const result = new Date(date);
+    result.setUTCDate(result.getUTCDate() + days);
+    return result.toISOString().slice(0, 10);
   }
 
   /** Returns a training plan with its scheduled workouts. */
@@ -810,17 +1302,21 @@ export class TrainingService {
       paused: 'active',
     };
 
+    // Universal goals must not assume race distance/time (PRD section 23):
+    // the summary derives from the goal type, custom goals keep user text.
+    const goalTitle = goal ? this.resolveGoalSummaryTitle(goal) : undefined;
+
     return {
       plan: {
         id: plan.id,
-        name: goal ? `${goal.raceDistance.toUpperCase()} Goal` : 'Training Plan',
+        name: goalTitle ?? 'Training Plan',
         goal: {
-          title: goal ? `${goal.raceDistance.toUpperCase()} Goal` : undefined,
+          title: goalTitle,
           distance: goal?.raceDistance || 'Unknown',
           targetTime: goal?.targetTimeSeconds
             ? `${Math.floor(goal.targetTimeSeconds / 3600)}h ${Math.floor((goal.targetTimeSeconds % 3600) / 60)}m`
             : undefined,
-          targetDate: goal?.targetDate,
+          targetDate: goal?.targetDate ?? undefined,
         },
         status: planStatusMap[plan.status] || 'active',
         currentWeek: currentWeekNumber,
@@ -840,6 +1336,166 @@ export class TrainingService {
         createdAt: a.createdAt.toISOString(),
       })),
     };
+  }
+
+  /**
+   * Builds the type-aware goal progress for the Progress snapshot.
+   * Types without a reliable numeric target produce no invented percentages
+   * (PRD section 21).
+   */
+  private buildGoalProgress(
+    goal: GoalView | AthleteGoal,
+    state: AthleteStateView,
+  ): ProgressSnapshotResponseDto['goal'] {
+    const formatTime = (secs: number) => {
+      const mins = Math.floor(secs / 60);
+      const s = Math.abs(secs % 60);
+      return `${mins}:${String(s).padStart(2, '0')}`;
+    };
+
+    const target = goal.payload?.target ?? {};
+    const current = goal.payload?.current ?? {};
+    const statusOf = (ratio: number): 'ON_TRACK' | 'IMPROVING' | 'BEHIND' | 'ACHIEVED' | 'NO_LONGER_ACTIVE' =>
+      ratio >= 1 ? 'ACHIEVED' : ratio >= 0.6 ? 'ON_TRACK' : 'BEHIND';
+
+    // Race-family goals: target finish time over a distance.
+    const distanceMeters = typeof target.distanceMeters === 'number' ? target.distanceMeters : null;
+    const finishTimeSec = typeof target.finishTimeSec === 'number' ? target.finishTimeSec : null;
+    if (distanceMeters && finishTimeSec) {
+      const raceDistanceKm = distanceMeters / 1000;
+      const targetSeconds = finishTimeSec;
+      const estimatedSeconds = state.thresholdPaceSecondsPerKm
+        ? Math.round(state.thresholdPaceSecondsPerKm * raceDistanceKm)
+        : targetSeconds + 138;
+
+      const deltaSeconds = estimatedSeconds - targetSeconds;
+      const deltaText = deltaSeconds <= 0 ? 'Goal reached' : formatTime(deltaSeconds);
+
+      return {
+        type: 'RACE_TIME' as const,
+        title: `${Math.round(raceDistanceKm)}K Race Goal`,
+        distance: `${Math.round(raceDistanceKm)}k`,
+        target: formatTime(targetSeconds),
+        currentEstimate: formatTime(estimatedSeconds),
+        delta: deltaText,
+        progress: Math.min(Math.round((targetSeconds / estimatedSeconds) * 100), 100),
+        status: estimatedSeconds <= targetSeconds ? 'ACHIEVED' : 'ON_TRACK',
+        targetDate: goal.targetDate,
+      };
+    }
+
+    // Distance-only goals (prepare a race / run a new distance).
+    if (distanceMeters) {
+      const targetKm = Math.round(distanceMeters / 100) / 10;
+      return {
+        type: 'DISTANCE' as const,
+        title: `${targetKm} km Goal`,
+        distance: `${targetKm}k`,
+        target: `${targetKm} km`,
+        currentEstimate: '—',
+        delta: 'In progress',
+        status: 'ON_TRACK' as const,
+        targetDate: goal.targetDate,
+      };
+    }
+
+    // Consistency: runs per week.
+    const runsPerWeek = typeof target.runsPerWeek === 'number' ? target.runsPerWeek : null;
+    if (runsPerWeek) {
+      const currentRuns = typeof current.runsPerWeek === 'number' ? current.runsPerWeek : null;
+      return {
+        type: 'CONSISTENCY' as const,
+        title: `${runsPerWeek} runs/week`,
+        target: `${runsPerWeek} runs/week`,
+        currentEstimate: currentRuns ? `${currentRuns} runs/week` : '—',
+        delta: currentRuns && currentRuns >= runsPerWeek ? 'Goal reached' : 'In progress',
+        progress: currentRuns ? Math.min(Math.round((currentRuns / runsPerWeek) * 100), 100) : undefined,
+        status: currentRuns && currentRuns >= runsPerWeek ? 'ACHIEVED' : 'ON_TRACK',
+        targetDate: goal.targetDate,
+      };
+    }
+
+    // Pace goals.
+    const paceTarget = typeof target.paceSecondsPerKm === 'number' ? target.paceSecondsPerKm : null;
+    if (paceTarget) {
+      const paceCurrent =
+        typeof current.paceSecondsPerKm === 'number'
+          ? current.paceSecondsPerKm
+          : state.thresholdPaceSecondsPerKm;
+      const reached = paceCurrent !== null && paceCurrent !== undefined && paceCurrent <= paceTarget;
+      return {
+        type: 'PACE' as const,
+        title: `Target pace ${formatTime(paceTarget)} /km`,
+        target: `${formatTime(paceTarget)} /km`,
+        currentEstimate: paceCurrent ? `${formatTime(paceCurrent)} /km` : '—',
+        delta: reached ? 'Goal reached' : 'In progress',
+        status: reached ? 'ACHIEVED' : 'ON_TRACK',
+        targetDate: goal.targetDate,
+      };
+    }
+
+    // Custom goal: no numeric progress unless the backend derives one.
+    if (goal.type === 'custom') {
+      return {
+        type: 'CUSTOM' as const,
+        title: goal.payload?.description ?? 'Custom goal',
+        target: '—',
+        currentEstimate: '—',
+        delta: 'In progress',
+        status: 'ON_TRACK' as const,
+        targetDate: goal.targetDate,
+      };
+    }
+
+    // Remaining intent-only goals keep a non-numeric representation.
+    return {
+      type: 'CUSTOM' as const,
+      title: goal.type
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' '),
+      target: '—',
+      currentEstimate: '—',
+      delta: 'In progress',
+      status: 'ON_TRACK' as const,
+      targetDate: goal.targetDate,
+    };
+  }
+
+  /** Human-readable goal summary used by the plan overview (PRD section 23). */
+  private resolveGoalSummaryTitle(goal: GoalView | AthleteGoal): string {
+    if (goal.type === 'custom' && goal.payload?.description) {
+      return goal.payload.description;
+    }
+
+    const target = goal.payload?.target ?? {};
+    const formatTime = (secs: number) => {
+      const mins = Math.floor(secs / 60);
+      const s = Math.abs(Math.round(secs % 60));
+      return `${mins}:${String(s).padStart(2, '0')}`;
+    };
+
+    const distanceMeters = typeof target.distanceMeters === 'number' ? target.distanceMeters : null;
+    const finishTimeSec = typeof target.finishTimeSec === 'number' ? target.finishTimeSec : null;
+    if (distanceMeters) {
+      const distanceKm = Math.round(distanceMeters / 100) / 10;
+      return finishTimeSec ? `${distanceKm} km · ${formatTime(finishTimeSec)}` : `${distanceKm} km goal`;
+    }
+
+    const runsPerWeek = typeof target.runsPerWeek === 'number' ? target.runsPerWeek : null;
+    if (runsPerWeek) {
+      return `${runsPerWeek} runs/week`;
+    }
+
+    const weightKg = typeof target.weightKg === 'number' ? target.weightKg : null;
+    if (weightKg) {
+      return `${weightKg} kg goal`;
+    }
+
+    return goal.type
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
   }
 
   private getWeekTitle(phase: string, weekNumber: number): string {
@@ -1418,9 +2074,11 @@ export class TrainingService {
     return {
       id: goal.id,
       athleteId: goal.athleteId,
+      type: goal.type ?? 'prepare_for_race',
+      payload: goal.payload ?? null,
       raceDistance: goal.raceDistance,
       targetTimeSeconds: goal.targetTimeSeconds,
-      targetDate: goal.targetDate,
+      targetDate: goal.targetDate ?? '',
       priority: goal.priority,
       status: goal.status,
       notes: goal.notes,

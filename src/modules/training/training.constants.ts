@@ -5,9 +5,18 @@ export const TRAINING_STATE_SOURCE = 'deterministic_v1';
 
 export const ATHLETE_EXPERIENCE_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
 export const ATHLETE_SEX_VALUES = ['female', 'male', 'other', 'prefer_not_to_say'] as const;
-export const ATHLETE_GOAL_DISTANCES = ['5k', '10k', 'half_marathon', 'marathon'] as const;
+export const ATHLETE_GOAL_DISTANCES = ['5k', '10k', 'half_marathon', 'marathon', 'just_running'] as const;
 export const ATHLETE_GOAL_STATUSES = ['active', 'completed', 'paused'] as const;
 export const TRAINING_PLAN_STATUSES = ['draft', 'active', 'completed', 'paused'] as const;
+export const PLAN_CREATION_SOURCES = ['ai', 'manual'] as const;
+export const PLAN_CREATION_SOURCE_DEFAULT = 'ai' as const;
+
+export const MANUAL_PLAN_MIN_WEEKS = 4;
+export const MANUAL_PLAN_MAX_WEEKS = 16;
+export const MANUAL_PLAN_MIN_DURATION_MINUTES = 10;
+export const MANUAL_PLAN_MAX_DURATION_MINUTES = 300;
+export const MANUAL_PLAN_MAX_DISTANCE_KM = 100;
+export const MANUAL_PLAN_FOCUS_TYPES = ['easy', 'long_run', 'tempo', 'interval', 'hill'] as const;
 export const WORKOUT_STATUSES = ['planned', 'completed', 'skipped', 'cancelled'] as const;
 export const WORKOUT_TYPES = [
   'recovery',
@@ -90,6 +99,8 @@ export type AthleteSexValue = (typeof ATHLETE_SEX_VALUES)[number];
 export type AthleteGoalDistance = (typeof ATHLETE_GOAL_DISTANCES)[number];
 export type AthleteGoalStatus = (typeof ATHLETE_GOAL_STATUSES)[number];
 export type TrainingPlanStatus = (typeof TRAINING_PLAN_STATUSES)[number];
+export type PlanCreationSource = (typeof PLAN_CREATION_SOURCES)[number];
+export type ManualPlanFocusType = (typeof MANUAL_PLAN_FOCUS_TYPES)[number];
 export type WorkoutStatus = (typeof WORKOUT_STATUSES)[number];
 export type WorkoutType = (typeof WORKOUT_TYPES)[number];
 export type TrainingPhase = (typeof TRAINING_PHASES)[number];

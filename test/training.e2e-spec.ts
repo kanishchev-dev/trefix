@@ -489,10 +489,13 @@ describe('Training loop (e2e)', () => {
 
     const goal = await trainingService.createGoal('user-1', {
       athleteId: athlete.id,
-      raceDistance: '10k',
-      targetTimeSeconds: 2700,
-      targetDate: '2026-11-01',
-      priority: 5,
+      goal: {
+        type: 'improve_race_result',
+        current: { finishTimeSec: 2910 },
+        target: { distanceMeters: 10_000, finishTimeSec: 2700 },
+        targetDate: '2026-11-01',
+        priority: 5,
+      },
       notes: 'Sub-45 target',
     });
 

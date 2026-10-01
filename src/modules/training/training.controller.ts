@@ -10,6 +10,7 @@ import { AnalyzeWorkoutDto } from './dto/analyze-workout.dto';
 import { CompleteWorkoutDto } from './dto/complete-workout.dto';
 import { CreateAthleteDto } from './dto/create-athlete.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
+import { CreateManualPlanDto, PreviewManualPlanDto } from './dto/create-manual-plan.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
@@ -24,6 +25,7 @@ import {
   TrainingWorkoutCompletionResponseDto,
   TrainingWorkoutResponseDto,
 } from './dto/training-response.dto';
+import { ManualPlanPreviewResponseDto } from './dto/manual-plan-preview-response.dto';
 import { PlanOverviewResponseDto } from './dto/plan-overview-response.dto';
 import {
   TRAINING_ADAPTATION_EXAMPLE,
@@ -114,7 +116,7 @@ export class TrainingController {
   }
 
   @Post('goals')
-  @ApiOperation({ summary: 'Create a running goal' })
+  @ApiOperation({ summary: 'Create a universal training goal (polymorphic by goal.type)' })
   @ApiCreatedResponse({
     description: 'Goal created',
     type: TrainingGoalResponseDto,
@@ -133,6 +135,32 @@ export class TrainingController {
   })
   getGoal(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingGoalResponseDto> {
     return this.trainingService.getGoal(id, user.id);
+  }
+
+  @Post('plans/manual/preview')
+  @ApiOperation({ summary: 'Preview a manually configured training plan (not persisted)' })
+  @ApiOkResponse({
+    description: 'Manual plan preview structure',
+    type: ManualPlanPreviewResponseDto,
+  })
+  previewManualPlan(
+    @CurrentUser() user: AuthUserContext,
+    @Body() dto: PreviewManualPlanDto,
+  ): Promise<ManualPlanPreviewResponseDto> {
+    return this.trainingService.previewManualPlan(user.id, dto);
+  }
+
+  @Post('plans/manual')
+  @ApiOperation({ summary: 'Create a training plan from a manual configuration' })
+  @ApiCreatedResponse({
+    description: 'Training plan created from the manual configuration',
+    type: TrainingPlanResponseDto,
+  })
+  createManualPlan(
+    @CurrentUser() user: AuthUserContext,
+    @Body() dto: CreateManualPlanDto,
+  ): Promise<TrainingPlanResponseDto> {
+    return this.trainingService.createManualPlan(user.id, dto);
   }
 
   @Post('plans')

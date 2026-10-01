@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
 
 import { AthleteCreatedEvent } from './events/athlete-created.event';
+import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
 import { PlanAdaptedEvent } from './events/plan-adapted.event';
 import { PlanGeneratedEvent } from './events/plan-generated.event';
@@ -20,6 +21,12 @@ export class TrainingListener {
   handleAthleteCreated(event: AthleteCreatedEvent): void {
     this.logger.log(`training.athlete.created for athlete ${event.athleteId}`);
     this.realtimeService.emitToRoom('training', 'training.athlete.created', event);
+  }
+
+  @OnEvent('training.athlete.updated')
+  handleAthleteUpdated(event: AthleteUpdatedEvent): void {
+    this.logger.log(`training.athlete.updated for athlete ${event.athleteId}`);
+    this.realtimeService.emitToRoom('training', 'training.athlete.updated', event);
   }
 
   @OnEvent('training.goal.created')

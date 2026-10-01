@@ -25,6 +25,10 @@ describe('TrainingEngine', () => {
   const goal: GoalView = {
     id: 'goal-1',
     athleteId: athlete.id,
+    type: 'improve_race_result',
+    payload: {
+      target: { distanceMeters: 10_000, finishTimeSec: 2700 },
+    },
     raceDistance: '10k',
     targetTimeSeconds: 2700,
     targetDate: '2026-11-01',
@@ -97,6 +101,77 @@ describe('TrainingEngine', () => {
     expect(result.analysis.completion).toBeLessThan(1);
     expect(result.analysis.load).toBeGreaterThan(0);
     expect(result.analysis.fatigueImpact).toBe('moderate');
+  });
+
+  it('honors manual options: week count, preferred long run day and focus', () => {
+    const manualGoal: GoalView = { ...goal, targetDate: '2026-11-01' };
+    const plan = engine.generatePlan(athlete, manualGoal, state, new Date('2026-09-15T00:00:00.000Z'), {
+      totalWeeks: 8,
+      preferredLongRunDay: 6,
+      focus: ['tempo', 'long_run'],
+    });
+
+    expect(plan.weeks.length).toBe(8);
+    // Long run must land on the preferred weekday (Saturday, index 6).
+    const longRuns = plan.workouts.filter((workout) => workout.type === 'long_run');
+    expect(longRuns.length).toBeGreaterThan(0);
+    for (const longRun of longRuns) {
+      expect((longRun.scheduledAt.getUTCDay() + 6) % 7).toBe(6);
+    }
+  });
+
+  it('steers workout emphasis from the goal type when no explicit focus is set', () => {
+    const enduranceGoal: GoalView = {
+      ...goal,
+      type: 'build_endurance',
+      payload: { target: { continuousDistanceKm: 20 } },
+      targetTimeSeconds: null,
+      raceDistance: 'just_running',
+    };
+    const plan = engine.generatePlan(athlete, enduranceGoal, state, new Date('2026-09-15T00:00:00.000Z'), {
+      totalWeeks: 8,
+    });
+
+    // Endurance goals emphasize long runs beyond the positional default.
+    expect(plan.workouts.filter((workout) => workout.type === 'long_run').length).toBeGreaterThan(0);
+
+    const consistencyGoal: GoalView = {
+      ...goal,
+      type: 'build_consistency',
+      payload: { target: { runsPerWeek: 4 } },
+    };
+    const consistencyPlan = engine.generatePlan(athlete, consistencyGoal, state, new Date('2026-09-15T00:00:00.000Z'), {
+      totalWeeks: 8,
+    });
+    expect(consistencyPlan.workouts.length).toBeGreaterThan(0);
+  });
+
+  it('derives threshold pace from the universal goal payload', () => {
+    // 10K in 2700s = 270 s/km target pace from the payload alone.
+    const payloadOnlyGoal: GoalView = {
+      ...goal,
+      type: 'improve_race_result',
+      payload: { target: { distanceMeters: 10_000, finishTimeSec: 2700 } },
+      targetTimeSeconds: null,
+    };
+    const nextState = engine.calculateTrainingState(athlete, [], payloadOnlyGoal);
+    expect(nextState.thresholdPaceSecondsPerKm).toBe(270);
+  });
+
+  it('validates workout overrides for the manual editor', () => {
+    expect(engine.validateWorkoutOverride({ type: 'tempo', distanceKm: 7 })).toEqual({
+      valid: true,
+      value: { type: 'tempo', distanceKm: 7 },
+    });
+    expect(engine.validateWorkoutOverride({ type: 'plyometrics', distanceKm: 5 }).valid).toBe(false);
+    expect(engine.validateWorkoutOverride({ type: 'easy', dayOfWeek: 9 }).valid).toBe(false);
+    expect(engine.validateWorkoutOverride({ type: 'easy', distanceKm: 500 }).valid).toBe(false);
+    expect(engine.validateWorkoutOverride({ type: 'easy', distanceKm: 0 }).valid).toBe(false);
+    expect(engine.validateWorkoutOverride({ type: 'easy', durationMinutes: 5 }).valid).toBe(false);
+    // Overrides carry only changed fields: a day-only change is valid because the
+    // service merges it with the existing workout before validating.
+    expect(engine.validateWorkoutOverride({ type: 'easy', dayOfWeek: 2 }).valid).toBe(true);
+    expect(engine.validateWorkoutOverride({ type: 'easy' }).valid).toBe(true);
   });
 
   it('adapts a plan after poor performance', () => {

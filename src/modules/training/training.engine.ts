@@ -1,6 +1,12 @@
 import { AthleteView, GoalView, WorkoutAnalysisView, WorkoutView } from './interfaces/training-views.interface';
 import {
   ATHLETE_GOAL_DISTANCES,
+  MANUAL_PLAN_FOCUS_TYPES,
+  MANUAL_PLAN_MAX_DISTANCE_KM,
+  MANUAL_PLAN_MAX_DURATION_MINUTES,
+  MANUAL_PLAN_MAX_WEEKS,
+  MANUAL_PLAN_MIN_DURATION_MINUTES,
+  MANUAL_PLAN_MIN_WEEKS,
   TRAINING_DEFAULT_DURATION_MINUTES,
   TRAINING_DEFAULT_FREQUENCY,
   TRAINING_DEFAULT_TARGET_CONFIDENCE,
@@ -39,6 +45,15 @@ export interface WorkoutBuildResult {
   steps: Array<Record<string, unknown>>;
 }
 
+export interface ManualPlanOptions {
+  /** Desired number of training weeks chosen by the user. */
+  totalWeeks?: number;
+  /** Preferred weekday index (0 = Monday) for the long run. */
+  preferredLongRunDay?: number;
+  /** Workout types the user wants to see in the plan. */
+  focus?: string[];
+}
+
 export interface PlanBuildResult {
   startDate: string;
   endDate: string;
@@ -72,6 +87,64 @@ export interface AdaptationResult {
 }
 
 export class TrainingEngine {
+  /**
+   * Maps a goal type onto its default workout emphasis (PRD section 17).
+   * Explicit user focus always wins; this only steers plans when the user
+   * did not pick a manual focus.
+   */
+  private resolveGoalFocusTypes(goal: GoalView): Array<WorkoutView['type']> | null {
+    switch (goal.type) {
+      case 'improve_speed':
+        return ['interval', 'tempo'];
+      case 'improve_pace':
+        return ['tempo', 'threshold'];
+      case 'build_endurance':
+      case 'run_continuously':
+      case 'ultra_preparation':
+      case 'trail_preparation':
+      case 'backyard_preparation':
+      case 'increase_running_volume':
+        return ['long_run', 'easy'];
+      case 'improve_hills':
+        return ['hill', 'long_run'];
+      case 'improve_aerobic_fitness':
+        return ['tempo', 'easy'];
+      case 'start_running':
+      case 'return_to_running':
+      case 'build_consistency':
+      case 'lose_weight':
+      case 'maintain_fitness':
+      case 'general_health':
+        return ['easy', 'recovery'];
+      default:
+        // Race preparation, challenges and custom goals keep the phase defaults.
+        return null;
+    }
+  }
+
+  /**
+   * Derives the threshold pace directly from the universal goal payload
+   * (target finish time over a distance, or an explicit target pace).
+   */
+  private resolveUniversalGoalPace(goal: GoalView | null): number | null {
+    const target = goal?.payload?.target;
+    if (!target) {
+      return null;
+    }
+
+    const finishTimeSec = typeof target.finishTimeSec === 'number' ? target.finishTimeSec : 0;
+    const distanceMeters = typeof target.distanceMeters === 'number' ? target.distanceMeters : 0;
+    if (finishTimeSec > 0 && distanceMeters > 0) {
+      return Math.round(finishTimeSec / (distanceMeters / 1000));
+    }
+
+    const paceSecondsPerKm = target.paceSecondsPerKm;
+    if (typeof paceSecondsPerKm === 'number' && paceSecondsPerKm > 0) {
+      return paceSecondsPerKm;
+    }
+
+    return null;
+  }
   createWorkoutBlueprint(input: {
     athlete: AthleteView;
     goal: GoalView;
@@ -248,10 +321,15 @@ export class TrainingEngine {
     goal: GoalView,
     state: TrainingStateComputation,
     startDate: Date,
+    options: ManualPlanOptions = {},
   ): PlanBuildResult {
-    const weeks = this.resolvePlanWeeks(goal, startDate);
+    const weeks = options.totalWeeks
+      ? Math.max(MANUAL_PLAN_MIN_WEEKS, Math.min(MANUAL_PLAN_MAX_WEEKS, options.totalWeeks))
+      : this.resolvePlanWeeks(goal, startDate);
     const trainingFrequency = Math.max(3, Math.min(7, athlete.sessionsPerWeek || TRAINING_DEFAULT_FREQUENCY));
     const weeklyTargetKm = this.resolveWeeklyTargetKm(athlete, state);
+    // Explicit user focus wins; otherwise the goal type steers the emphasis.
+    const focusTypes = this.resolveFocusTypes(options.focus) ?? this.resolveGoalFocusTypes(goal);
     const workouts: WorkoutBuildResult[] = [];
     const planWeeks: Array<Record<string, unknown>> = [];
 
@@ -261,10 +339,16 @@ export class TrainingEngine {
       const weeklyMultiplier =
         TRAINING_PHASE_WEEKLY_LOAD_MULTIPLIERS[phase as keyof typeof TRAINING_PHASE_WEEKLY_LOAD_MULTIPLIERS];
       const weekLoadTarget = Math.round(weeklyTargetKm * weeklyMultiplier);
-      const workoutTypes = this.resolveWorkoutTypesForPhase(phase);
+      const workoutTypes = this.resolveWorkoutTypesForPhase(phase, focusTypes);
       const availableDays =
         athlete.availableTrainingDays.length > 0 ? athlete.availableTrainingDays : [...TRAINING_WEEKDAY_ORDER];
-      const dates = this.resolveWorkoutDates(startDate, weekNumber, availableDays, trainingFrequency);
+      const dates = this.resolveWorkoutDates(
+        startDate,
+        weekNumber,
+        availableDays,
+        trainingFrequency,
+        options.preferredLongRunDay,
+      );
       const weekWorkouts: string[] = [];
 
       dates.forEach((scheduledAt, index) => {
@@ -441,6 +525,7 @@ export class TrainingEngine {
     weekNumber: number,
     availableDays: string[],
     trainingFrequency: number,
+    preferredLongRunDay?: number,
   ): Date[] {
     const weekStart = this.addDays(startDate, (weekNumber - 1) * 7);
     const available = availableDays.length > 0 ? availableDays : [...TRAINING_WEEKDAY_ORDER];
@@ -453,7 +538,25 @@ export class TrainingEngine {
       return Array.from({ length: trainingFrequency }, (_, index) => this.addDays(weekStart, index * 2));
     }
 
-    return dayIndexes.map((dayIndex) => this.addDays(weekStart, dayIndex));
+    // Map weekday indexes onto the rolling 7-day week window so each selected
+    // weekday lands on its real calendar day regardless of the start weekday.
+    const startWeekday = this.resolveWeekdayIndex(startDate);
+    const dates = dayIndexes.map((dayIndex) => {
+      const offset = (dayIndex - startWeekday + 7) % 7;
+      return this.addDays(weekStart, offset);
+    });
+    dates.sort((left, right) => left.getTime() - right.getTime());
+
+    // The long run is assigned to the chronologically last session, so move the
+    // preferred long run day's date to the end while keeping the rest in order.
+    if (preferredLongRunDay !== undefined && dayIndexes.includes(preferredLongRunDay)) {
+      const preferredOffset = (preferredLongRunDay - startWeekday + 7) % 7;
+      const preferredDate = this.addDays(weekStart, preferredOffset);
+      const withoutPreferred = dates.filter((date) => date.getTime() !== preferredDate.getTime());
+      return [...withoutPreferred, preferredDate];
+    }
+
+    return dates;
   }
 
   private resolveWorkoutType(
@@ -481,12 +584,47 @@ export class TrainingEngine {
     return workoutTypes[Math.min(index, workoutTypes.length - 1)] || 'easy';
   }
 
-  private resolveWorkoutTypesForPhase(phase: string): Array<WorkoutView['type']> {
-    return (TRAINING_PHASE_WORKOUT_TYPES[phase as keyof typeof TRAINING_PHASE_WORKOUT_TYPES] ||
+  private resolveWorkoutTypesForPhase(
+    phase: string,
+    focusTypes: Array<WorkoutView['type']> | null = null,
+  ): Array<WorkoutView['type']> {
+    const phaseTypes = (TRAINING_PHASE_WORKOUT_TYPES[phase as keyof typeof TRAINING_PHASE_WORKOUT_TYPES] ||
       TRAINING_PHASE_WORKOUT_TYPES.base) as Array<WorkoutView['type']>;
+
+    if (!focusTypes || focusTypes.length === 0) {
+      return phaseTypes;
+    }
+
+    // Focus acts as a preference filter. The long run is assigned positionally
+    // (last session of the week), so it must stay out of the index-based list.
+    const filtered = phaseTypes.filter((type) => focusTypes.includes(type) && type !== 'long_run');
+    if (filtered.length === 0) {
+      return phaseTypes;
+    }
+
+    const supplements = focusTypes.filter((type) => !filtered.includes(type) && type !== 'long_run');
+    return [...filtered, ...supplements];
+  }
+
+  /** Maps user-selected focus labels to workout types, dropping unsupported values. */
+  private resolveFocusTypes(focus?: string[]): Array<WorkoutView['type']> | null {
+    if (!focus || focus.length === 0) {
+      return null;
+    }
+
+    const mapped = focus
+      .map((label) => label as WorkoutView['type'])
+      .filter((type) => (MANUAL_PLAN_FOCUS_TYPES as readonly string[]).includes(type));
+
+    return mapped.length > 0 ? mapped : null;
   }
 
   private resolvePlanWeeks(goal: GoalView, startDate: Date): number {
+    // Goal target date is optional ("Just running"); fall back to a 12-week default duration.
+    if (!goal.targetDate) {
+      return 12;
+    }
+
     const targetDate = new Date(goal.targetDate);
     const diffDays = Math.max(1, Math.ceil((targetDate.getTime() - startDate.getTime()) / 86_400_000));
     return Math.max(6, Math.min(16, Math.ceil(diffDays / 7)));
@@ -644,6 +782,15 @@ export class TrainingEngine {
   }
 
   private resolveThresholdPace(athlete: AthleteView, goal: GoalView | null): number | null {
+    // Universal payload takes priority (PRD section 17: engine distinguishes
+    // goal types instead of treating every goal as a generic race target).
+    const universalPace = this.resolveUniversalGoalPace(goal);
+    if (universalPace) {
+      return universalPace;
+    }
+
+    // Legacy race columns stay supported for goals created before the
+    // universal model (PRD section 26).
     if (
       goal?.targetTimeSeconds &&
       ATHLETE_GOAL_DISTANCES.includes(goal.raceDistance as (typeof ATHLETE_GOAL_DISTANCES)[number])
@@ -695,6 +842,7 @@ export class TrainingEngine {
       '10k': 10,
       half_marathon: 21.097,
       marathon: 42.195,
+      just_running: 0,
     };
 
     return map[distance as keyof typeof map] || 0;
@@ -786,6 +934,61 @@ export class TrainingEngine {
     }
 
     return this.formatDate(this.addDays(scheduledAt, 1));
+  }
+
+  /**
+   * Validates a user-provided workout override against the engine constraints.
+   * The override carries only changed fields; the caller must merge it with the
+   * existing workout before calling (PRD section 14: validated user change).
+   */
+  validateWorkoutOverride(input: {
+    type: string;
+    dayOfWeek?: number;
+    distanceKm?: number;
+    durationMinutes?: number;
+  }): { valid: true; value: { type: WorkoutView['type']; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number } } | { valid: false; reason: string } {
+    if (!(WORKOUT_TYPE_INTENSITY_FACTORS as Record<string, number>)[input.type]) {
+      return { valid: false, reason: 'unsupported_workout_type' };
+    }
+
+    if (input.dayOfWeek !== undefined && (input.dayOfWeek < 0 || input.dayOfWeek > 6)) {
+      return { valid: false, reason: 'invalid_day_of_week' };
+    }
+
+    if (
+      input.distanceKm !== undefined &&
+      (input.distanceKm <= 0 || input.distanceKm > MANUAL_PLAN_MAX_DISTANCE_KM)
+    ) {
+      return { valid: false, reason: 'invalid_distance' };
+    }
+
+    if (
+      input.durationMinutes !== undefined &&
+      (input.durationMinutes < MANUAL_PLAN_MIN_DURATION_MINUTES ||
+        input.durationMinutes > MANUAL_PLAN_MAX_DURATION_MINUTES)
+    ) {
+      return { valid: false, reason: 'invalid_duration' };
+    }
+
+    return { valid: true, value: input as { type: WorkoutView['type']; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number } };
+  }
+
+  /** Resolves the concrete date of a weekday index within a plan week. */
+  resolveWeekdayDate(startDate: Date, weekNumber: number, dayOfWeek: number): Date {
+    const weekStart = this.addDays(startDate, (weekNumber - 1) * 7);
+    const startWeekday = this.resolveWeekdayIndex(startDate);
+    const offset = (dayOfWeek - startWeekday + 7) % 7;
+    return this.addDays(weekStart, offset);
+  }
+
+  /** Clamps a user-selected number of weeks into the supported range. */
+  clampManualWeeks(totalWeeks: number): number {
+    return Math.max(MANUAL_PLAN_MIN_WEEKS, Math.min(MANUAL_PLAN_MAX_WEEKS, totalWeeks));
+  }
+
+  /** Monday-first weekday index (0 = Monday ... 6 = Sunday). */
+  private resolveWeekdayIndex(date: Date): number {
+    return (date.getUTCDay() + 6) % 7;
   }
 
   private addDays(date: Date, days: number): Date {

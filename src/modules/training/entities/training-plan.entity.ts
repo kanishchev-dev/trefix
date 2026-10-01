@@ -1,7 +1,7 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
-import { TRAINING_LOAD_ALGORITHM_VERSION, TRAINING_PLAN_STATUSES } from '../training.constants';
+import { PLAN_CREATION_SOURCES, PLAN_CREATION_SOURCE_DEFAULT, TRAINING_LOAD_ALGORITHM_VERSION, TRAINING_PLAN_STATUSES } from '../training.constants';
 
 @Table({
   tableName: 'training_plans',
@@ -64,6 +64,13 @@ export class TrainingPlan extends Model {
     defaultValue: TRAINING_PLAN_STATUSES[0],
   })
   status!: (typeof TRAINING_PLAN_STATUSES)[number];
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    defaultValue: PLAN_CREATION_SOURCE_DEFAULT,
+  })
+  creationSource!: (typeof PLAN_CREATION_SOURCES)[number];
 
   @Column({
     type: DataType.STRING,

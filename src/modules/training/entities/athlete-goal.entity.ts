@@ -1,8 +1,16 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
-import { ATHLETE_GOAL_DISTANCES, ATHLETE_GOAL_STATUSES } from '../training.constants';
+import { ATHLETE_GOAL_STATUSES, AthleteGoalStatus } from '../training.constants';
 
+/**
+ * Canonical athlete goal (PRD section 9).
+ *
+ * The row is polymorphic: `type` discriminates the payload stored in the
+ * `payload` JSONB column ({ current?, target?, description? }). Legacy
+ * race-oriented columns (race_distance / target_time_seconds / target_date)
+ * are kept in sync for existing consumers; new goal types derive them.
+ */
 @Table({
   tableName: 'athlete_goals',
   underscored: true,
@@ -26,9 +34,26 @@ export class AthleteGoal extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    defaultValue: 'prepare_for_race',
+  })
+  type!: string;
+
+  @Column({
+    type: DataType.JSONB,
+    allowNull: true,
+  })
+  payload!: {
+    current?: Record<string, unknown>;
+    target?: Record<string, unknown>;
+    description?: string;
+  } | null;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
     field: 'race_distance',
   })
-  raceDistance!: (typeof ATHLETE_GOAL_DISTANCES)[number];
+  raceDistance!: string;
 
   @Column({
     type: DataType.INTEGER,
@@ -39,10 +64,10 @@ export class AthleteGoal extends Model {
 
   @Column({
     type: DataType.DATEONLY,
-    allowNull: false,
+    allowNull: true,
     field: 'target_date',
   })
-  targetDate!: string;
+  targetDate!: string | null;
 
   @Column({
     type: DataType.INTEGER,
@@ -56,7 +81,7 @@ export class AthleteGoal extends Model {
     allowNull: false,
     defaultValue: ATHLETE_GOAL_STATUSES[0],
   })
-  status!: (typeof ATHLETE_GOAL_STATUSES)[number];
+  status!: AthleteGoalStatus;
 
   @Column({
     type: DataType.STRING,

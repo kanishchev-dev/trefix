@@ -3,6 +3,10 @@
   "ERRORS": {
     "INTERNAL": "Internal server error",
     "NOT_FOUND": "Resource not found",
-    "SYSTEM_ENTITY_DELETION_FORBIDDEN": "System entity cannot be deleted"
+    "SYSTEM_ENTITY_DELETION_FORBIDDEN": "System entity cannot be deleted",
+    "INVALID_DATE": "Invalid date",
+    "MANUAL_PLAN_WORKOUT_NOT_FOUND": "This workout can't be added to the plan",
+    "MANUAL_PLAN_WORKOUT_INVALID": "This workout can't be added to the plan. Choose different workout settings.",
+    "MANUAL_PLAN_CONFIG_INVALID": "This plan configuration isn't available. Try changing the number of training days or the plan duration."
   }
 }

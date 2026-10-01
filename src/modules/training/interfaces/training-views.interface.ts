@@ -46,12 +46,24 @@ export interface AthleteStateView {
   updatedAt: Date;
 }
 
+/** Type-specific metric payload of the universal goal model (PRD section 9). */
+export interface GoalMetricsPayload {
+  current?: Record<string, unknown>;
+  target?: Record<string, unknown>;
+  description?: string;
+}
+
 export interface GoalView {
   id: string;
   athleteId: string;
-  raceDistance: AthleteGoalDistance;
+  /** Universal goal discriminator (PRD sections 6, 9). */
+  type: string;
+  /** Type-specific metrics; separate from current state, may be absent. */
+  payload: GoalMetricsPayload | null;
+  /** Derived legacy race fields kept in sync for existing consumers. */
+  raceDistance: AthleteGoalDistance | string;
   targetTimeSeconds: number | null;
-  targetDate: string;
+  targetDate: string | null;
   priority: number;
   status: AthleteGoalStatus;
   notes: string | null;

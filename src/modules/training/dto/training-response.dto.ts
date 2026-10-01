@@ -137,14 +137,20 @@ export class TrainingGoalResponseDto implements GoalView {
   @ApiProperty()
   athleteId!: string;
 
+  @ApiProperty({ description: 'Universal goal type discriminator' })
+  type!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: Object, description: 'Type-specific metric payload { current?, target?, description? }' })
+  payload!: GoalView['payload'];
+
   @ApiProperty()
   raceDistance!: GoalView['raceDistance'];
 
   @ApiPropertyOptional({ nullable: true })
   targetTimeSeconds!: number | null;
 
-  @ApiProperty()
-  targetDate!: string;
+  @ApiPropertyOptional({ nullable: true })
+  targetDate!: string | null;
 
   @ApiProperty()
   priority!: number;

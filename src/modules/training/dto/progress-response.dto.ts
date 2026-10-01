@@ -60,7 +60,7 @@ export class ProgressGoalDto {
   status!: 'ON_TRACK' | 'IMPROVING' | 'BEHIND' | 'ACHIEVED' | 'NO_LONGER_ACTIVE';
 
   @ApiPropertyOptional()
-  targetDate?: string;
+  targetDate?: string | null;
 }
 
 export class ProgressCapabilityDto {

@@ -82,4 +82,9 @@ export class CreateWorkoutDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiProperty({ required: false, example: 'manual' })
+  @IsString()
+  @IsOptional()
+  source?: string;
 }
