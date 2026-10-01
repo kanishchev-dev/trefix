@@ -871,7 +871,14 @@ function WorkoutEditForm({
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    // Full-screen page mounted as a flex sibling of the tab content in
+    // MainTabsScreen; it must overlay the whole screen instead of sharing
+    // the remaining space with it.
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   header: {
     flexDirection: "row",

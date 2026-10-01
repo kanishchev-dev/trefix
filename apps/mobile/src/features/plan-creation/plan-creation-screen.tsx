@@ -271,7 +271,7 @@ export function PlanCreationScreen({
   const visibleLayers = STEPS.slice(0, stepIndex + 1);
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} pointerEvents="none">
       <BottomSheet
         mode="stack"
         visible={sheetVisible}
@@ -662,8 +662,17 @@ function PlanCreationStepLayer({
 }
 
 const styles = StyleSheet.create({
+  // The screen only hosts the native Modal, so it must not take part in the
+  // host layout: as a flex sibling it would squeeze the tab content and
+  // expose the app background at the bottom half of the screen between the
+  // method sheet closing and the stack opening.
+  // (StyleSheet.absoluteFillObject is absent from this RN version's types.)
   root: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   stepLayerRoot: {
     flex: 1,

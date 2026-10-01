@@ -47,6 +47,7 @@ export function PlanCreationMethodSheet({
     <BottomSheet
       title={locale.title}
       visible={visible}
+      animatedHide
       onClose={onClose}
       theme={theme}
       themeMode={themeMode}

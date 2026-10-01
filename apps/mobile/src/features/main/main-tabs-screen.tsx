@@ -54,6 +54,10 @@ export function MainTabsScreen({
   const [headerOptions, setHeaderOptions] = useState<HeaderOptions>({});
   const [planCreationSheetVisible, setPlanCreationSheetVisible] = useState(false);
   const [manualCreationVisible, setManualCreationVisible] = useState(false);
+  // What the user picked in the method sheet; consumed when its close
+  // animation finishes, so the creation screen opens only after the method
+  // sheet has fully slid away.
+  const [pendingCreation, setPendingCreation] = useState<"manual" | "trefix" | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateAnim = useRef(new Animated.Value(0)).current;
@@ -166,14 +170,22 @@ export function MainTabsScreen({
 
         <PlanCreationMethodSheet
           visible={planCreationSheetVisible}
-          onClose={() => setPlanCreationSheetVisible(false)}
-          onOpenTrefix={() => {
+          onClose={() => {
             setPlanCreationSheetVisible(false);
-            onOpenTrefix();
+            if (pendingCreation === "manual") {
+              setManualCreationVisible(true);
+            } else if (pendingCreation === "trefix") {
+              onOpenTrefix();
+            }
+            setPendingCreation(null);
+          }}
+          onOpenTrefix={() => {
+            setPendingCreation("trefix");
+            setPlanCreationSheetVisible(false);
           }}
           onCreateManually={() => {
+            setPendingCreation("manual");
             setPlanCreationSheetVisible(false);
-            setManualCreationVisible(true);
           }}
           theme={theme}
           themeMode={themeMode}

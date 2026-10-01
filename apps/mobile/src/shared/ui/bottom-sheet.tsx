@@ -51,7 +51,9 @@ const STACK_SPRING_CONFIG = {
   stiffness: 380,
   mass: 0.9,
 };
-const STACK_EXIT_TIMING = { duration: 200 };
+// Close timing matches the single-sheet close exactly (translateY 220ms +
+// 200ms backdrop fade), so the plan-creation stack feels identical.
+const STACK_EXIT_TIMING = { duration: 220 };
 const STACK_FADE_IN = { duration: 160 };
 const STACK_FADE_OUT = { duration: 140 };
 
@@ -202,7 +204,13 @@ export function BottomSheet({
       const opacity = layerOpacities[index];
 
       if (shouldShow && opacity.value < 1) {
-        opacity.value = withTiming(1, STACK_FADE_IN);
+        if (index === logicalLayerCount - 1) {
+          // The entering top layer slides in like a single sheet — no fade,
+          // otherwise the open animation would differ from the reference.
+          opacity.value = 1;
+        } else {
+          opacity.value = withTiming(1, STACK_FADE_IN);
+        }
       } else if (!shouldShow && opacity.value > 0) {
         opacity.value = withTiming(0, STACK_FADE_OUT);
       }
@@ -592,16 +600,25 @@ function StackLayer({
 }) {
   const isTopLayer = role === "top";
 
+  // A layer's first animation is its entrance (sheet opening or a new step
+  // pushed in) — it must match the single-sheet open animation exactly.
+  // Later role changes are internal stack navigation and stay snappy.
+  const hasEnteredRef = useRef(false);
+
   // Every role change retargets the layer: the active card always settles at
   // the exact same position, the previous one right above it, older ones park
   // off-screen.
   useEffect(() => {
     if (!sheetVisible) {
+      hasEnteredRef.current = false;
       return;
     }
 
-    layerY.value = withSpring(getStackLayerTargetY(role), STACK_SPRING_CONFIG);
-    layerScale.value = withSpring(role === "top" ? 1 : STACK_BG_SCALE, STACK_SPRING_CONFIG);
+    const spring = hasEnteredRef.current ? STACK_SPRING_CONFIG : SHEET_SPRING_CONFIG;
+    hasEnteredRef.current = true;
+
+    layerY.value = withSpring(getStackLayerTargetY(role), spring);
+    layerScale.value = withSpring(role === "top" ? 1 : STACK_BG_SCALE, spring);
   }, [layerScale, layerY, role, sheetVisible]);
 
   const panGesture = Gesture.Pan()
