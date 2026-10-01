@@ -16,6 +16,7 @@ import { StravaIntegrationScreen } from "./screens/strava-integration-screen";
 import { type AppLanguage, type MainCopy } from "../../locales";
 import { type ThemePreference } from "./screens/theme-settings-screen";
 import { PlanCreationMethodSheet } from "../plan-creation/components/plan-creation-method-sheet";
+import { PlanCreationScreen } from "../plan-creation/plan-creation-screen";
 
 type Props = {
   theme: ThemeTokens;
@@ -52,6 +53,7 @@ export function MainTabsScreen({
   const [subScreen, setSubScreen] = useState<"integrations" | "strava-integration" | null>(null);
   const [headerOptions, setHeaderOptions] = useState<HeaderOptions>({});
   const [planCreationSheetVisible, setPlanCreationSheetVisible] = useState(false);
+  const [manualCreationVisible, setManualCreationVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateAnim = useRef(new Animated.Value(0)).current;
@@ -171,12 +173,26 @@ export function MainTabsScreen({
           }}
           onCreateManually={() => {
             setPlanCreationSheetVisible(false);
-            onOpenPlanCreation();
+            setManualCreationVisible(true);
           }}
           theme={theme}
           themeMode={themeMode}
           copy={copy}
         />
+
+        {manualCreationVisible && (
+          <PlanCreationScreen
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            language={userLanguage}
+            onClose={() => setManualCreationVisible(false)}
+            onOpenTrefix={() => {
+              setManualCreationVisible(false);
+              onOpenTrefix();
+            }}
+          />
+        )}
       </View>
     </HeaderContext.Provider>
   );

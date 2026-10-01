@@ -2,6 +2,8 @@ import React, {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -14,29 +16,60 @@ import {
   View,
 } from "react-native";
 import { BlurView } from "expo-blur";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
+  interpolate,
   runOnJS,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
   withSpring,
-  interpolate,
+  withTiming,
 } from "react-native-reanimated";
-import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-/**
- * App-wide canonical bottom sheet shell.
- *
- * This is extracted 1:1 from the reference sheet — the workout goal sheet
- * on the Today screen (opened from the "add workout" type buttons):
- * floating rounded card, blur backdrop, spring slide-up, drag-to-close.
- * Every sheet in the app must render inside this shell.
- */
+const SHEET_SPRING_CONFIG = {
+  damping: 28,
+  stiffness: 220,
+  mass: 0.8,
+};
+
+const STACK_BG_SCALE = 0.92;
+const STACK_BG_OFFSET = -24;
+const MAX_STACK_LAYERS = 8;
+const MAX_VISIBLE_STACK_LAYERS = 2;
+
+type SheetStackApi = {
+  pop: () => void;
+};
+
+const SheetStackContext = React.createContext<SheetStackApi | null>(null);
+
+export function useSheetStack(): SheetStackApi {
+  const api = React.useContext(SheetStackContext);
+  if (!api) {
+    throw new Error("useSheetStack must be used within a stack-mode BottomSheet");
+  }
+  return api;
+}
+
+type BottomSheetProps = {
+  visible: boolean;
+  onClose: () => void;
+  title?: string;
+  renderHeader?: () => ReactNode;
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  children?: ReactNode;
+  mode?: "single" | "stack";
+  animatedHide?: boolean;
+  onStackPop?: () => void;
+  onDismissRequest?: () => void;
+};
+
 export function BottomSheet({
   visible,
   onClose,
@@ -45,46 +78,53 @@ export function BottomSheet({
   theme,
   themeMode,
   children,
-}: {
-  visible: boolean;
-  /** Called after the close animation finishes (backdrop tap, drag, dismiss). */
-  onClose: () => void;
-  /** Centered title under the handle; renderHeader takes precedence when provided. */
-  title?: string;
-  /** Replaces the title row entirely (keeps the handle). */
-  renderHeader?: () => ReactNode;
-  theme: ThemeTokens;
-  themeMode: ThemeMode;
-  children?: ReactNode;
-}) {
+  mode = "single",
+  animatedHide = false,
+  onStackPop,
+  onDismissRequest,
+}: BottomSheetProps) {
+  const isStack = mode === "stack";
+
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
 
-  const handleClose = useCallback(() => {
+  const stackLayerOffsets = [
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+    useSharedValue(SCREEN_HEIGHT),
+  ];
+  const stackLayerOffsetsRef = useRef(stackLayerOffsets);
+  stackLayerOffsetsRef.current = stackLayerOffsets;
+
+  const [hideMounted, setHideMounted] = useState(visible);
+  const [stackMounted, setStackMounted] = useState(visible);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const layerCountRef = useRef(1);
+  const exitRemaining = useSharedValue(0);
+
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  const finishSingleClose = useCallback(() => {
+    if (animatedHide) {
+      setHideMounted(false);
+    }
+    onCloseRef.current();
+  }, [animatedHide]);
+
+  const handleSingleClose = useCallback(() => {
     backdropOpacity.value = withTiming(0, { duration: 200 });
     translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, () => {
-      runOnJS(onClose)();
+      runOnJS(finishSingleClose)();
     });
-  }, [onClose]);
+  }, [backdropOpacity, finishSingleClose, translateY]);
 
-  useEffect(() => {
-    if (visible) {
-      translateY.value = SCREEN_HEIGHT;
-      backdropOpacity.value = 0;
-
-      backdropOpacity.value = withTiming(1, { duration: 200 });
-      translateY.value = withSpring(0, {
-        damping: 28,
-        stiffness: 220,
-        mass: 0.8,
-      });
-    } else {
-      translateY.value = SCREEN_HEIGHT;
-      backdropOpacity.value = 0;
-    }
-  }, [visible]);
-
-  const panGesture = Gesture.Pan()
+  const handleSingleGesture = Gesture.Pan()
     .activeOffsetY([5, 5])
     .onChange((event) => {
       if (event.translationY > 0) {
@@ -93,15 +133,132 @@ export function BottomSheet({
     })
     .onEnd((event) => {
       if (event.translationY > 100 || event.velocityY > 500) {
-        runOnJS(handleClose)();
+        runOnJS(handleSingleClose)();
       } else {
-        translateY.value = withSpring(0, {
-          damping: 28,
-          stiffness: 220,
-          mass: 0.8,
-        });
+        translateY.value = withSpring(0, SHEET_SPRING_CONFIG);
       }
     });
+
+  useEffect(() => {
+    if (isStack) {
+      return;
+    }
+
+    if (visible) {
+      if (animatedHide) {
+        setHideMounted(true);
+      }
+      translateY.value = SCREEN_HEIGHT;
+      backdropOpacity.value = 0;
+      backdropOpacity.value = withTiming(1, { duration: 200 });
+      translateY.value = withSpring(0, SHEET_SPRING_CONFIG);
+      return;
+    }
+
+    if (!animatedHide) {
+      translateY.value = SCREEN_HEIGHT;
+      backdropOpacity.value = 0;
+    }
+  }, [animatedHide, backdropOpacity, isStack, translateY, visible]);
+
+  useEffect(() => {
+    if (isStack || !animatedHide) {
+      return;
+    }
+
+    if (!visible && hideMounted) {
+      backdropOpacity.value = withTiming(0, { duration: 200 });
+      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, () => {
+        runOnJS(finishSingleClose)();
+      });
+    }
+  }, [animatedHide, backdropOpacity, finishSingleClose, hideMounted, isStack, translateY, visible]);
+
+  const finishStackExit = useCallback(() => {
+    setStackMounted(false);
+    onCloseRef.current();
+  }, []);
+
+  const exitStackAnimated = useCallback(() => {
+    backdropOpacity.value = withTiming(0, { duration: 200 });
+
+    const count = Math.min(layerCountRef.current, MAX_STACK_LAYERS);
+    if (count === 0) {
+      finishStackExit();
+      return;
+    }
+
+    exitRemaining.value = count;
+    for (let index = 0; index < count; index += 1) {
+      stackLayerOffsetsRef.current[index].value = withTiming(
+        SCREEN_HEIGHT,
+        { duration: 240 },
+        () => {
+          exitRemaining.value -= 1;
+          if (exitRemaining.value === 0) {
+            runOnJS(finishStackExit)();
+          }
+        },
+      );
+    }
+  }, [backdropOpacity, exitRemaining, finishStackExit]);
+
+  useEffect(() => {
+    if (!isStack) {
+      return;
+    }
+
+    if (visible) {
+      setStackMounted(true);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
+      return;
+    }
+
+    if (stackMounted) {
+      exitStackAnimated();
+    }
+  }, [backdropOpacity, exitStackAnimated, isStack, stackMounted, visible]);
+
+  const finishPop = useCallback(() => {
+    setIsTransitioning(false);
+    onStackPop?.();
+  }, [onStackPop]);
+
+  const popTopLayer = useCallback(() => {
+    if (isTransitioning) {
+      return;
+    }
+
+    const topIndex = Math.min(layerCountRef.current - 1, MAX_STACK_LAYERS - 1);
+    if (topIndex < 0) {
+      return;
+    }
+
+    const topOffset = stackLayerOffsetsRef.current[topIndex];
+    if (!topOffset) {
+      return;
+    }
+
+    setIsTransitioning(true);
+    topOffset.value = withSpring(SCREEN_HEIGHT, SHEET_SPRING_CONFIG, () => {
+      runOnJS(finishPop)();
+    });
+  }, [finishPop, isTransitioning]);
+
+  const requestStackDismiss = useCallback(() => {
+    const topIndex = Math.min(layerCountRef.current - 1, MAX_STACK_LAYERS - 1);
+    const topOffset = stackLayerOffsetsRef.current[topIndex];
+
+    if (onDismissRequest) {
+      if (topOffset) {
+        topOffset.value = withSpring(0, SHEET_SPRING_CONFIG);
+      }
+      onDismissRequest();
+      return;
+    }
+
+    exitStackAnimated();
+  }, [exitStackAnimated, onDismissRequest]);
 
   const backdropAnimatedStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
@@ -111,12 +268,109 @@ export function BottomSheet({
     transform: [{ translateY: translateY.value }],
   }));
 
+  const stackApi = useMemo<SheetStackApi>(
+    () => ({ pop: popTopLayer }),
+    [popTopLayer],
+  );
+
+  if (!isStack) {
+    return (
+      <Modal animationType="none" onRequestClose={handleSingleClose} transparent visible={animatedHide ? hideMounted : visible}>
+        <View style={styles.overlay}>
+          <Animated.View
+            style={[
+              styles.backdropContainer,
+              {
+                backgroundColor:
+                  themeMode === "dark"
+                    ? "rgba(0, 0, 0, 0.4)"
+                    : "rgba(255, 255, 255, 0.4)",
+              },
+              backdropAnimatedStyle,
+            ]}
+          >
+            <Pressable style={StyleSheet.absoluteFill} onPress={handleSingleClose}>
+              <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
+            </Pressable>
+          </Animated.View>
+
+          <Animated.View style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}>
+            <View
+              style={[
+                styles.card,
+                {
+                  borderColor:
+                    themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                  backgroundColor:
+                    themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+                },
+              ]}
+            >
+              <GestureDetector gesture={handleSingleGesture}>
+                <View style={[styles.topDragArea, styles.paddedContent]}>
+                  <View style={styles.handleContainer}>
+                    <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+                  </View>
+
+                  {renderHeader ? (
+                    renderHeader()
+                  ) : title !== undefined ? (
+                    <View style={styles.header}>
+                      <Text
+                        style={[
+                          styles.title,
+                          {
+                            color: theme.color.foreground,
+                            fontFamily: theme.typography.fontFamily.sans.semibold,
+                          },
+                        ]}
+                      >
+                        {title}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </GestureDetector>
+
+              {children}
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+    );
+  }
+
+  const layers = React.Children.toArray(children);
+  const logicalLayerCount = Math.max(layers.length, 1);
+  layerCountRef.current = logicalLayerCount;
+
+  const visibleStartIndex = Math.max(logicalLayerCount - MAX_VISIBLE_STACK_LAYERS, 0);
+  const visibleLayers = layers.slice(visibleStartIndex);
+  const activeLocalIndex = visibleLayers.length - 1;
+  const canPop = logicalLayerCount > 1;
+
+  const handleBackdropTap = () => {
+    if (canPop) {
+      popTopLayer();
+      return;
+    }
+    requestStackDismiss();
+  };
+
+  const activeOriginalIndex = Math.min(visibleStartIndex + activeLocalIndex, MAX_STACK_LAYERS - 1);
+
   return (
     <Modal
       animationType="none"
-      onRequestClose={handleClose}
+      onRequestClose={() => {
+        if (canPop) {
+          popTopLayer();
+          return;
+        }
+        requestStackDismiss();
+      }}
       transparent
-      visible={visible}
+      visible={stackMounted}
     >
       <View style={styles.overlay}>
         <Animated.View
@@ -131,60 +385,159 @@ export function BottomSheet({
             backdropAnimatedStyle,
           ]}
         >
-          <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropTap}>
             <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
           </Pressable>
         </Animated.View>
 
-        <Animated.View style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}>
-          <View
-            style={[
-              styles.card,
-              {
-                borderColor:
-                  themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-                backgroundColor:
-                  themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
-              },
-            ]}
-          >
-            <GestureDetector gesture={panGesture}>
-              <View style={[styles.topDragArea, styles.paddedContent]}>
-                <View style={styles.handleContainer}>
-                  <View
-                    style={[styles.handle, { backgroundColor: theme.color.border }]}
-                  />
-                </View>
+        <SheetStackContext.Provider value={stackApi}>
+          {visibleLayers.map((layer, localIndex) => {
+            const originalIndex = visibleStartIndex + localIndex;
+            const isTopLayer = localIndex === activeLocalIndex;
+            const layerIndex = Math.min(originalIndex, MAX_STACK_LAYERS - 1);
+            const activeLayerOffset = isTopLayer
+              ? null
+              : stackLayerOffsets[Math.min(activeOriginalIndex, MAX_STACK_LAYERS - 1)];
 
-                {renderHeader ? (
-                  renderHeader()
-                ) : title !== undefined ? (
-                  <View style={styles.header}>
-                    <Text
-                      style={[
-                        styles.title,
-                        {
-                          color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.semibold,
-                        },
-                      ]}
-                    >
-                      {title}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </GestureDetector>
-
-            {children}
-          </View>
-        </Animated.View>
+            return (
+              <StackLayer
+                key={originalIndex}
+                layerIndex={localIndex}
+                activeIndex={activeLocalIndex}
+                layerY={stackLayerOffsets[layerIndex]}
+                sheetVisible={stackMounted}
+                isTransitioning={isTransitioning}
+                activeLayerOffset={activeLayerOffset}
+                theme={theme}
+                themeMode={themeMode}
+                onDragEnd={(shouldClose) => {
+                  if (!shouldClose) {
+                    return;
+                  }
+                  if (originalIndex === 0) {
+                    requestStackDismiss();
+                  } else {
+                    popTopLayer();
+                  }
+                }}
+              >
+                {layer}
+              </StackLayer>
+            );
+          })}
+        </SheetStackContext.Provider>
       </View>
     </Modal>
   );
 }
 
-/** Standard action pill button used inside sheets (cancel/submit rows). */
+function StackLayer({
+  layerIndex,
+  activeIndex,
+  layerY,
+  sheetVisible,
+  isTransitioning,
+  activeLayerOffset,
+  theme,
+  themeMode,
+  onDragEnd,
+  children,
+}: {
+  layerIndex: number;
+  activeIndex: number;
+  layerY: SharedValue<number>;
+  sheetVisible: boolean;
+  isTransitioning: boolean;
+  activeLayerOffset: SharedValue<number> | null;
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  onDragEnd: (shouldClose: boolean) => void;
+  children: ReactNode;
+}) {
+  const isTopLayer = layerIndex === activeIndex;
+
+  useEffect(() => {
+    if (sheetVisible) {
+      layerY.value = withSpring(0, SHEET_SPRING_CONFIG);
+    }
+  }, [layerY, sheetVisible]);
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetY([5, 5])
+    .enabled(isTopLayer && !isTransitioning)
+    .onChange((event) => {
+      if (event.translationY > 0) {
+        layerY.value = event.translationY;
+      }
+    })
+    .onEnd((event) => {
+      const shouldClose = event.translationY > 100 || event.velocityY > 500;
+      if (!shouldClose) {
+        layerY.value = withSpring(0, SHEET_SPRING_CONFIG);
+        return;
+      }
+      runOnJS(onDragEnd)(true);
+    });
+
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: layerY.value }],
+  }));
+
+  const backgroundAnimatedStyle = useAnimatedStyle(() => {
+    if (isTopLayer || !activeLayerOffset) {
+      return {};
+    }
+
+    const progress = 1 - activeLayerOffset.value / SCREEN_HEIGHT;
+    return {
+      transform: [
+        {
+          translateY: interpolate(progress, [0, 1], [0, STACK_BG_OFFSET], "clamp"),
+        },
+        {
+          scale: interpolate(progress, [0, 1], [1, STACK_BG_SCALE], "clamp"),
+        },
+      ],
+    };
+  });
+
+  const cardStyle =
+    isTopLayer || activeLayerOffset === null
+      ? [styles.stackLayerCardWrapper]
+      : [styles.stackLayerCardWrapper, backgroundAnimatedStyle];
+
+  return (
+    <Animated.View
+      pointerEvents={isTopLayer ? "auto" : "none"}
+      style={[styles.stackLayerContainer, containerAnimatedStyle]}
+    >
+      <Animated.View style={cardStyle}>
+        <View
+          style={[
+            styles.card,
+            {
+              borderColor:
+                themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+              backgroundColor:
+                themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+            },
+          ]}
+        >
+          <GestureDetector gesture={panGesture}>
+            <View style={[styles.topDragArea, styles.paddedContent]}>
+              <View style={styles.handleContainer}>
+                <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+              </View>
+            </View>
+          </GestureDetector>
+
+          {children}
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 export function SheetButton({
   label,
   onPress,
@@ -254,7 +607,6 @@ export function SheetButton({
   );
 }
 
-/** Small uppercase section label used inside sheets. */
 export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeTokens }) {
   return (
     <Text
@@ -271,10 +623,6 @@ export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeT
   );
 }
 
-/**
- * Animated pill tab switcher (Дистанция / Время in the reference sheet).
- * Two tabs with a spring-animated active indicator.
- */
 export function SheetTabs<T extends string>({
   tabs,
   value,
@@ -287,10 +635,7 @@ export function SheetTabs<T extends string>({
   theme: ThemeTokens;
 }) {
   const [tabsWidth, setTabsWidth] = useState(0);
-  const activeIndex = Math.max(
-    0,
-    tabs.findIndex((t) => t.key === value),
-  );
+  const activeIndex = Math.max(0, tabs.findIndex((t) => t.key === value));
   const activeTabX = useSharedValue(activeIndex);
 
   useEffect(() => {
@@ -299,7 +644,7 @@ export function SheetTabs<T extends string>({
       stiffness: 120,
       mass: 1,
     });
-  }, [activeIndex]);
+  }, [activeIndex, activeTabX]);
 
   const indicatorAnimatedStyle = useAnimatedStyle(() => {
     const tabWidth = tabsWidth > 0 ? (tabsWidth - 8) / tabs.length : 140;
@@ -307,11 +652,7 @@ export function SheetTabs<T extends string>({
       width: tabWidth,
       transform: [
         {
-          translateX: interpolate(
-            activeTabX.value,
-            [0, tabs.length - 1],
-            [4, 4 + tabWidth],
-          ),
+          translateX: interpolate(activeTabX.value, [0, tabs.length - 1], [4, 4 + tabWidth]),
         },
       ],
     };
@@ -338,9 +679,7 @@ export function SheetTabs<T extends string>({
               style={[
                 styles.tabText,
                 {
-                  color: isActive
-                    ? theme.color.primaryForeground
-                    : theme.color.mutedForeground,
+                  color: isActive ? theme.color.primaryForeground : theme.color.mutedForeground,
                   fontFamily: theme.typography.fontFamily.sans.bold,
                 },
               ]}
@@ -367,6 +706,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     maxHeight: "85%",
     zIndex: 1,
+  },
+  stackLayerContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 8,
+    maxHeight: "85%",
+    zIndex: 1,
+  },
+  stackLayerCardWrapper: {
+    marginBottom: 8,
   },
   card: {
     borderRadius: 44,

@@ -12,9 +12,11 @@ import {
 } from "react-native";
 import { AlertCircle, X } from "lucide-react-native";
 
+import { type ManualPlanPreview } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
+import { BottomSheet, useSheetStack } from "../../shared/ui/bottom-sheet";
 import {
   MANUAL_PLAN_MAX_SESSIONS,
   MANUAL_PLAN_MAX_WEEKS,
@@ -37,7 +39,6 @@ import {
   SectionBlock,
 } from "./components/plan-creation-ui";
 import { PlanPreviewScreen } from "./plan-preview-screen";
-import type { ManualPlanPreview } from "@workspace/api-client";
 
 type Props = {
   theme: ThemeTokens;
@@ -52,74 +53,52 @@ type StepKey = "goal" | "schedule" | "structure";
 
 const STEPS: StepKey[] = ["goal", "schedule", "structure"];
 
+const INITIAL_DRAFT: PlanCreationDraft = {
+  goal: {
+    raceDistance: "10k",
+    targetTimeText: "",
+    targetTimeSeconds: undefined,
+    targetDate: undefined,
+  },
+  schedule: {
+    trainingDays: [0, 2, 5],
+    preferredLongRunDay: undefined,
+    workoutDurationMinutes: 45,
+  },
+  structure: {
+    totalWeeks: 8,
+    sessionsPerWeek: 3,
+    focus: ["easy", "long_run", "tempo"],
+  },
+};
+
+type StepOption = {
+  value: PlanCreationDraft["goal"]["raceDistance"];
+  label: string;
+};
+
+type StepMutationState = {
+  isPending: boolean;
+  isError: boolean;
+};
+
 export function PlanCreationScreen({
   theme,
   themeMode,
   copy,
   language,
   onClose,
-  onOpenTrefix,
 }: Props) {
   const creationCopy = copy.plan.creation;
 
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [sheetVisible, setSheetVisible] = useState(true);
   const [stepIndex, setStepIndex] = useState(0);
+  const [draft, setDraft] = useState<PlanCreationDraft>(INITIAL_DRAFT);
   const [preview, setPreview] = useState<ManualPlanPreview | null>(null);
-  const [draft, setDraft] = useState<PlanCreationDraft>({
-    goal: {
-      raceDistance: "10k",
-      targetTimeText: "",
-      targetTimeSeconds: undefined,
-      targetDate: undefined,
-    },
-    schedule: {
-      trainingDays: [0, 2, 5],
-      preferredLongRunDay: undefined,
-      workoutDurationMinutes: 45,
-    },
-    structure: {
-      totalWeeks: 8,
-      sessionsPerWeek: 3,
-      focus: ["easy", "long_run", "tempo"],
-    },
-  });
+  const [pendingPreview, setPendingPreview] = useState<ManualPlanPreview | null>(null);
 
   const previewMutation = useManualPlanPreview();
-
-  const requestClose = useCallback(() => {
-    // User is mid-flow — ask before discarding (PRD §21).
-    setShowDiscardConfirm(true);
-  }, []);
-
-  // Android hardware back mirrors the on-screen close action at each stage.
-  useEffect(() => {
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        if (showDiscardConfirm) {
-          setShowDiscardConfirm(false);
-          return true;
-        }
-        if (preview) {
-          setPreview(null);
-          setStepIndex(0);
-          return true;
-        }
-        if (stepIndex > 0) {
-          setStepIndex(stepIndex - 1);
-          return true;
-        }
-        requestClose();
-        return true;
-      },
-    );
-    return () => subscription.remove();
-  }, [
-    showDiscardConfirm,
-    preview,
-    stepIndex,
-    requestClose,
-  ]);
 
   const step = STEPS[stepIndex];
 
@@ -131,7 +110,7 @@ export function PlanCreationScreen({
     [language],
   );
 
-  const goalOptions = useMemo(
+  const goalOptions = useMemo<StepOption[]>(
     () =>
       PLAN_GOAL_OPTIONS.map((option) => ({
         value: option.value,
@@ -167,77 +146,119 @@ export function PlanCreationScreen({
       draft.structure.totalWeeks >= MANUAL_PLAN_MIN_WEEKS &&
       draft.structure.totalWeeks <= MANUAL_PLAN_MAX_WEEKS
     );
-  }, [step, targetTimeError, draft]);
+  }, [draft, step, targetTimeError]);
 
-  const requestPreview = async () => {
+  const requestClose = useCallback(() => {
+    setShowDiscardConfirm(true);
+  }, []);
+
+  const handleDiscard = useCallback(() => {
+    setShowDiscardConfirm(false);
+    setPendingPreview(null);
+    setSheetVisible(false);
+  }, []);
+
+  const handleFlowClosed = useCallback(() => {
+    if (pendingPreview) {
+      setPreview(pendingPreview);
+      setPendingPreview(null);
+      return;
+    }
+    onClose();
+  }, [onClose, pendingPreview]);
+
+  const requestPreview = useCallback(async () => {
     const targetTimeSeconds = parsedTargetTime ?? undefined;
-    setDraft((current) => ({
-      ...current,
-      goal: { ...current.goal, targetTimeSeconds },
-    }));
+    const nextDraft: PlanCreationDraft = {
+      ...draft,
+      goal: {
+        ...draft.goal,
+        targetTimeSeconds,
+      },
+    };
+
+    setDraft(nextDraft);
 
     try {
       const result = await previewMutation.mutateAsync({
         goal: {
-          raceDistance: draft.goal.raceDistance,
+          raceDistance: nextDraft.goal.raceDistance,
           targetTimeSeconds,
-          targetDate: draft.goal.targetDate,
+          targetDate: nextDraft.goal.targetDate,
         },
-        schedule: draft.schedule,
-        structure: draft.structure,
+        schedule: nextDraft.schedule,
+        structure: nextDraft.structure,
       });
-      setPreview(result);
-    } catch {
-      // Inline error is rendered below via previewMutation.isError.
-    }
-  };
 
-  const handleContinue = () => {
+      setPendingPreview(result);
+      setSheetVisible(false);
+    } catch {
+      // The sheet stays open and the inline error state will surface.
+    }
+  }, [draft, parsedTargetTime, previewMutation]);
+
+  const handleContinue = useCallback(() => {
     if (!isStepValid) {
       return;
     }
+
     if (stepIndex < STEPS.length - 1) {
-      setStepIndex(stepIndex + 1);
+      setStepIndex((current) => current + 1);
       return;
     }
+
     void requestPreview();
-  };
+  }, [isStepValid, requestPreview, stepIndex]);
 
-  const handleDiscard = () => {
-    setShowDiscardConfirm(false);
-    onClose();
-  };
+  const toggleDay = useCallback(
+    (dayIndex: number) => {
+      setDraft((current) => {
+        const selected = current.schedule.trainingDays.includes(dayIndex);
+        const trainingDays = selected
+          ? current.schedule.trainingDays.filter((day) => day !== dayIndex)
+          : [...current.schedule.trainingDays, dayIndex].sort((a, b) => a - b);
 
-  const toggleDay = (dayIndex: number) => {
-    setDraft((current) => {
-      const selected = current.schedule.trainingDays.includes(dayIndex);
-      const trainingDays = selected
-        ? current.schedule.trainingDays.filter((day) => day !== dayIndex)
-        : [...current.schedule.trainingDays, dayIndex].sort((a, b) => a - b);
+        const preferredLongRunDay =
+          current.schedule.preferredLongRunDay !== undefined &&
+          trainingDays.includes(current.schedule.preferredLongRunDay)
+            ? current.schedule.preferredLongRunDay
+            : undefined;
 
-      // Keep the preferred long run day consistent with selected days.
-      const preferredLongRunDay =
-        current.schedule.preferredLongRunDay !== undefined &&
-        trainingDays.includes(current.schedule.preferredLongRunDay)
-          ? current.schedule.preferredLongRunDay
-          : undefined;
+        return {
+          ...current,
+          schedule: { ...current.schedule, trainingDays, preferredLongRunDay },
+          structure: {
+            ...current.structure,
+            sessionsPerWeek: Math.min(
+              current.structure.sessionsPerWeek,
+              Math.max(trainingDays.length, 1),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
 
-      return {
-        ...current,
-        schedule: { ...current.schedule, trainingDays, preferredLongRunDay },
-        structure: {
-          ...current.structure,
-          // Sessions per week stays consistent with the selected days (PRD section 11).
-          sessionsPerWeek: Math.min(
-            current.structure.sessionsPerWeek,
-            Math.max(trainingDays.length, 1),
-          ),
-        },
-      };
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (showDiscardConfirm) {
+        setShowDiscardConfirm(false);
+        return true;
+      }
+
+      if (preview) {
+        setPreview(null);
+        setStepIndex(0);
+        return true;
+      }
+
+      return false;
     });
-  };
 
-  // --- Preview step ---
+    return () => subscription.remove();
+  }, [preview, showDiscardConfirm]);
+
   if (preview) {
     return (
       <PlanPreviewScreen
@@ -249,19 +270,54 @@ export function PlanCreationScreen({
         draft={draft}
         onEditSettings={() => {
           setPreview(null);
+          setSheetVisible(true);
           setStepIndex(0);
         }}
-        onDiscard={requestClose}
+        onDiscard={onClose}
         onCreated={onClose}
       />
     );
   }
 
-  const creationStepCopy = creationCopy.steps[step];
+  const visibleLayers = STEPS.slice(0, stepIndex + 1);
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
-      {/* Discard confirmation modal */}
+    <View style={styles.root}>
+      <BottomSheet
+        mode="stack"
+        visible={sheetVisible}
+        onClose={handleFlowClosed}
+        onStackPop={() => setStepIndex((current) => Math.max(current - 1, 0))}
+        onDismissRequest={requestClose}
+        theme={theme}
+        themeMode={themeMode}
+      >
+        {visibleLayers.map((stepKey) => (
+          <PlanCreationStepLayer
+            key={stepKey}
+            stepKey={stepKey}
+            isActive={stepKey === step}
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            language={language}
+            draft={draft}
+            onDraftChange={setDraft}
+            onToggleDay={toggleDay}
+            goalOptions={goalOptions}
+            shortDayNames={shortDayNames}
+            targetTimeError={targetTimeError}
+            isStepValid={isStepValid}
+            previewMutation={{
+              isPending: previewMutation.isPending,
+              isError: previewMutation.isError,
+            }}
+            onContinue={handleContinue}
+            onCloseRequest={requestClose}
+          />
+        ))}
+      </BottomSheet>
+
       <Modal
         visible={showDiscardConfirm}
         transparent
@@ -350,75 +406,82 @@ export function PlanCreationScreen({
           </View>
         </View>
       </Modal>
+    </View>
+  );
+}
 
-      {/* Step content */}
-      <View style={styles.header}>
-        {stepIndex > 0 ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={creationCopy.common.back}
-            hitSlop={8}
-            onPress={() => setStepIndex(stepIndex - 1)}
-            style={styles.backButton}
-          >
-            <Text
-              style={[
-                styles.backButtonText,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            >
-              ‹
-            </Text>
-          </Pressable>
-        ) : (
-          <View style={styles.backButton} />
-        )}
+function PlanCreationStepLayer({
+  stepKey,
+  isActive,
+  theme,
+  themeMode,
+  copy,
+  language,
+  draft,
+  onDraftChange,
+  onToggleDay,
+  goalOptions,
+  shortDayNames,
+  targetTimeError,
+  isStepValid,
+  previewMutation,
+  onContinue,
+  onCloseRequest,
+}: {
+  stepKey: StepKey;
+  isActive: boolean;
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+  copy: MainCopy;
+  language: AppLanguage;
+  draft: PlanCreationDraft;
+  onDraftChange: React.Dispatch<React.SetStateAction<PlanCreationDraft>>;
+  onToggleDay: (dayIndex: number) => void;
+  goalOptions: StepOption[];
+  shortDayNames: readonly string[];
+  targetTimeError: string | null;
+  isStepValid: boolean;
+  previewMutation: StepMutationState;
+  onContinue: () => void;
+  onCloseRequest: () => void;
+}) {
+  const { pop } = useSheetStack();
+  const creationCopy = copy.plan.creation;
+  const stepCopy = creationCopy.steps[stepKey];
+  const stepIndex = STEPS.indexOf(stepKey);
+  const isLastStep = stepKey === "structure";
 
-        <Text
-          style={[
-            styles.stepTitle,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {creationStepCopy.title}
-        </Text>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={creationCopy.common.close}
-          hitSlop={8}
-          onPress={requestClose}
-          style={styles.closeButton}
-        >
-          <X color={theme.color.mutedForeground} size={20} />
-        </Pressable>
-      </View>
+  return (
+    <View>
+      <StepHeader
+        title={stepCopy.title}
+        showBack={stepIndex > 0}
+        backLabel={creationCopy.common.back}
+        closeLabel={creationCopy.common.close}
+        theme={theme}
+        onBack={stepIndex > 0 ? pop : undefined}
+        onClose={onCloseRequest}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {step === "goal" ? (
-          <>
-            <Text
-              style={[
-                styles.stepQuestion,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            >
-              {creationStepCopy.question}
-            </Text>
+        <Text
+          style={[
+            styles.stepQuestion,
+            {
+              color: theme.color.mutedForeground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
+          ]}
+        >
+          {stepCopy.question}
+        </Text>
 
+        {stepKey === "goal" ? (
+          <>
             <SectionBlock title={creationCopy.goalSection} theme={theme}>
               <View style={styles.chipWrap}>
                 {goalOptions.map((option) => (
@@ -428,7 +491,7 @@ export function PlanCreationScreen({
                     selected={draft.goal.raceDistance === option.value}
                     theme={theme}
                     onPress={() =>
-                      setDraft((current) => ({
+                      onDraftChange((current) => ({
                         ...current,
                         goal: { ...current.goal, raceDistance: option.value },
                       }))
@@ -446,13 +509,13 @@ export function PlanCreationScreen({
                     label={preset}
                     selected={
                       draft.goal.targetTimeText === preset ||
-                      (parsedTargetTime !== null &&
-                        formatTargetTime(parsedTargetTime) === preset &&
+                      (parseTargetTime(draft.goal.targetTimeText) !== null &&
+                        formatTargetTime(parseTargetTime(draft.goal.targetTimeText) ?? 0) === preset &&
                         draft.goal.targetTimeText === preset)
                     }
                     theme={theme}
                     onPress={() =>
-                      setDraft((current) => ({
+                      onDraftChange((current) => ({
                         ...current,
                         goal: { ...current.goal, targetTimeText: preset },
                       }))
@@ -467,7 +530,7 @@ export function PlanCreationScreen({
                 placeholderTextColor={theme.color.mutedForeground}
                 value={draft.goal.targetTimeText}
                 onChangeText={(text: string) =>
-                  setDraft((current) => ({
+                  onDraftChange((current) => ({
                     ...current,
                     goal: { ...current.goal, targetTimeText: text },
                   }))
@@ -476,9 +539,7 @@ export function PlanCreationScreen({
                   styles.timeInput,
                   {
                     backgroundColor: theme.color.surfaceElevated,
-                    borderColor: targetTimeError
-                      ? "#dc2626"
-                      : theme.color.border,
+                    borderColor: targetTimeError ? "#dc2626" : theme.color.border,
                     color: theme.color.foreground,
                     fontFamily: theme.typography.fontFamily.sans.semibold,
                   },
@@ -502,6 +563,7 @@ export function PlanCreationScreen({
                     day: "numeric",
                     month: "short",
                   });
+
                   return (
                     <OptionChip
                       key={daysAhead}
@@ -509,7 +571,7 @@ export function PlanCreationScreen({
                       selected={draft.goal.targetDate === iso}
                       theme={theme}
                       onPress={() =>
-                        setDraft((current) => ({
+                        onDraftChange((current) => ({
                           ...current,
                           goal: {
                             ...current.goal,
@@ -525,26 +587,14 @@ export function PlanCreationScreen({
           </>
         ) : null}
 
-        {step === "schedule" ? (
+        {stepKey === "schedule" ? (
           <>
-            <Text
-              style={[
-                styles.stepQuestion,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            >
-              {creationStepCopy.question}
-            </Text>
-
             <SectionBlock title={creationCopy.trainingDaysSection} theme={theme}>
               <DayPicker
                 selectedDays={draft.schedule.trainingDays}
                 theme={theme}
                 shortDayNames={shortDayNames}
-                onToggleDay={toggleDay}
+                onToggleDay={onToggleDay}
               />
               <Text
                 style={[
@@ -571,7 +621,7 @@ export function PlanCreationScreen({
                     selected={draft.schedule.preferredLongRunDay === dayIndex}
                     theme={theme}
                     onPress={() =>
-                      setDraft((current) => ({
+                      onDraftChange((current) => ({
                         ...current,
                         schedule: {
                           ...current.schedule,
@@ -594,7 +644,7 @@ export function PlanCreationScreen({
                     selected={draft.schedule.workoutDurationMinutes === minutes}
                     theme={theme}
                     onPress={() =>
-                      setDraft((current) => ({
+                      onDraftChange((current) => ({
                         ...current,
                         schedule: { ...current.schedule, workoutDurationMinutes: minutes },
                       }))
@@ -606,20 +656,8 @@ export function PlanCreationScreen({
           </>
         ) : null}
 
-        {step === "structure" ? (
+        {stepKey === "structure" ? (
           <>
-            <Text
-              style={[
-                styles.stepQuestion,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            >
-              {creationStepCopy.question}
-            </Text>
-
             <View style={styles.counterGroup}>
               <CounterRow
                 label={creationCopy.weeksLabel}
@@ -629,7 +667,7 @@ export function PlanCreationScreen({
                 max={MANUAL_PLAN_MAX_WEEKS}
                 theme={theme}
                 onChange={(value) =>
-                  setDraft((current) => ({
+                  onDraftChange((current) => ({
                     ...current,
                     structure: { ...current.structure, totalWeeks: value },
                   }))
@@ -642,7 +680,7 @@ export function PlanCreationScreen({
                 max={Math.max(draft.schedule.trainingDays.length, 1)}
                 theme={theme}
                 onChange={(value) =>
-                  setDraft((current) => ({
+                  onDraftChange((current) => ({
                     ...current,
                     structure: { ...current.structure, sessionsPerWeek: value },
                   }))
@@ -655,17 +693,16 @@ export function PlanCreationScreen({
                 {PLAN_FOCUS_OPTIONS.map((focusKey) => (
                   <OptionChip
                     key={focusKey}
-                    label={
-                      creationCopy.focusOptions[focusKey as keyof typeof creationCopy.focusOptions]
-                    }
+                    label={creationCopy.focusOptions[focusKey as keyof typeof creationCopy.focusOptions]}
                     selected={(draft.structure.focus ?? []).includes(focusKey)}
                     theme={theme}
                     onPress={() =>
-                      setDraft((current) => {
+                      onDraftChange((current) => {
                         const focus = current.structure.focus ?? [];
                         const nextFocus = focus.includes(focusKey)
                           ? focus.filter((item) => item !== focusKey)
                           : [...focus, focusKey];
+
                         return {
                           ...current,
                           structure: { ...current.structure, focus: nextFocus },
@@ -680,70 +717,172 @@ export function PlanCreationScreen({
         ) : null}
       </ScrollView>
 
-      {/* Footer */}
-      <View
+      <StepFooter
+        label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
+        disabled={!isStepValid || (previewMutation.isPending && isActive)}
+        pending={previewMutation.isPending && isActive}
+        theme={theme}
+        onPress={onContinue}
+        errorRow={
+          previewMutation.isError && isActive
+            ? {
+                message: creationCopy.errors.generationFailed,
+                onRetry: onContinue,
+                onRetryLabel: creationCopy.errors.tryAgain,
+              }
+            : null
+        }
+      />
+    </View>
+  );
+}
+
+function StepHeader({
+  title,
+  showBack,
+  backLabel,
+  closeLabel,
+  theme,
+  onBack,
+  onClose,
+}: {
+  title: string;
+  showBack: boolean;
+  backLabel: string;
+  closeLabel: string;
+  theme: ThemeTokens;
+  onBack?: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <View style={styles.header}>
+      {showBack && onBack ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={backLabel}
+          hitSlop={8}
+          onPress={onBack}
+          style={styles.headerSideSlot}
+        >
+          <Text
+            style={[
+              styles.backButtonText,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.semibold,
+              },
+            ]}
+          >
+            ‹
+          </Text>
+        </Pressable>
+      ) : (
+        <View style={styles.headerSideSlot} />
+      )}
+
+      <Text
         style={[
-          styles.footer,
+          styles.stepTitle,
           {
-            borderTopColor: theme.color.border,
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.extrabold,
           },
         ]}
       >
-        {previewMutation.isError ? (
-          <View style={styles.inlineErrorRow}>
-            <AlertCircle color="#dc2626" size={14} />
-            <Text
-              style={[
-                styles.inlineErrorText,
-                { fontFamily: theme.typography.fontFamily.sans.regular },
-              ]}
-            >
-              {creationCopy.errors.generationFailed}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => void requestPreview()}
-              hitSlop={8}
-            >
-              <Text
-                style={[
-                  styles.inlineErrorRetry,
-                  { fontFamily: theme.typography.fontFamily.sans.bold },
-                ]}
-              >
-                {creationCopy.errors.tryAgain}
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
+        {title}
+      </Text>
 
-        <Pressable
-          accessibilityRole="button"
-          disabled={!isStepValid || previewMutation.isPending}
-          onPress={handleContinue}
-          style={({ pressed }) => [
-            styles.continueButton,
-            { backgroundColor: theme.color.primary, opacity: isStepValid ? 1 : 0.45 },
-            pressed && styles.pressed,
-          ]}
-        >
-          {previewMutation.isPending ? (
-            <ActivityIndicator color={theme.color.primaryForeground} />
-          ) : (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={closeLabel}
+        hitSlop={8}
+        onPress={onClose}
+        style={styles.headerSideSlot}
+      >
+        <X color={theme.color.mutedForeground} size={20} />
+      </Pressable>
+    </View>
+  );
+}
+
+function StepFooter({
+  label,
+  disabled,
+  pending,
+  theme,
+  onPress,
+  errorRow,
+}: {
+  label: string;
+  disabled: boolean;
+  pending: boolean;
+  theme: ThemeTokens;
+  onPress: () => void;
+  errorRow?: {
+    message: string;
+    onRetry: () => void;
+    onRetryLabel: string;
+  } | null;
+}) {
+  return (
+    <View
+      style={[
+        styles.footer,
+        {
+          borderTopColor: theme.color.border,
+        },
+      ]}
+    >
+      {errorRow ? (
+        <View style={styles.inlineErrorRow}>
+          <AlertCircle color="#dc2626" size={14} />
+          <Text
+            style={[
+              styles.inlineErrorText,
+              { fontFamily: theme.typography.fontFamily.sans.regular },
+            ]}
+          >
+            {errorRow.message}
+          </Text>
+          <Pressable accessibilityRole="button" onPress={errorRow.onRetry} hitSlop={8}>
             <Text
               style={[
-                styles.continueButtonText,
-                {
-                  color: theme.color.primaryForeground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
+                styles.inlineErrorRetry,
+                { fontFamily: theme.typography.fontFamily.sans.bold },
               ]}
             >
-              {stepIndex < STEPS.length - 1 ? creationCopy.common.continue : creationCopy.common.buildPlan}
+              {errorRow.onRetryLabel}
             </Text>
-          )}
-        </Pressable>
-      </View>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <Pressable
+        accessibilityRole="button"
+        disabled={disabled}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.continueButton,
+          { backgroundColor: theme.color.primary, opacity: disabled ? 0.45 : 1 },
+          pressed && styles.pressed,
+        ]}
+      >
+        {pending ? (
+          <ActivityIndicator color={theme.color.primaryForeground} />
+        ) : (
+          <Text
+            style={[
+              styles.continueButtonText,
+              {
+                color: theme.color.primaryForeground,
+                fontFamily: theme.typography.fontFamily.sans.semibold,
+              },
+            ]}
+          >
+            {label}
+          </Text>
+        )}
+      </Pressable>
     </View>
   );
 }
@@ -795,14 +934,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 60,
     paddingBottom: 8,
   },
-  backButton: {
+  headerSideSlot: {
     width: 36,
     height: 36,
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "center",
   },
   backButtonText: {
@@ -815,20 +952,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
   },
-  closeButton: {
-    width: 36,
-    height: 36,
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
     gap: 20,
+    paddingBottom: 4,
   },
   stepQuestion: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
+    marginTop: -6,
   },
   chipWrap: {
     flexDirection: "row",
@@ -838,14 +969,15 @@ const styles = StyleSheet.create({
   targetTimeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 8,
   },
   timeInput: {
-    height: 52,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
-    fontSize: 16,
+    paddingVertical: 12,
+    fontSize: 15,
+    lineHeight: 20,
   },
   dayCountText: {
     fontSize: 13,
@@ -855,37 +987,34 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   footer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: 10,
+    paddingTop: 16,
+    gap: 12,
   },
   inlineErrorRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   inlineErrorText: {
-    flex: 1,
-    color: "#dc2626",
     fontSize: 12,
     lineHeight: 16,
+    flex: 1,
   },
   inlineErrorRetry: {
-    color: "#dc2626",
     fontSize: 12,
     lineHeight: 16,
+    color: "#dc2626",
   },
   continueButton: {
-    height: 54,
     borderRadius: 18,
+    minHeight: 52,
     alignItems: "center",
     justifyContent: "center",
   },
   continueButtonText: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 20,
   },
   pressed: {
     transform: [{ scale: 0.98 }],
