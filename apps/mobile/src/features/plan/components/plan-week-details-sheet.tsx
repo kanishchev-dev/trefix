@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     height: 52,
-    borderRadius: 18,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,

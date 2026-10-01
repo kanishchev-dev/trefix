@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
   removeButton: {
     width: 34,
     height: 34,
-    borderRadius: 999,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 42,
     height: 42,
-    borderRadius: 999,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
@@ -927,7 +927,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 42,
     height: 42,
-    borderRadius: 999,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 1,

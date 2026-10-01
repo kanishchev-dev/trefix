@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   BackHandler,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,13 +8,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { AlertCircle, X } from "lucide-react-native";
+import { AlertCircle, ChevronLeft } from "lucide-react-native";
 
 import { type ManualPlanPreview } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
-import { BottomSheet, useSheetStack } from "../../shared/ui/bottom-sheet";
+import { BottomSheet, SheetButton, useSheetStack } from "../../shared/ui/bottom-sheet";
 import {
   MANUAL_PLAN_MAX_SESSIONS,
   MANUAL_PLAN_MAX_WEEKS,
@@ -91,7 +89,6 @@ export function PlanCreationScreen({
 }: Props) {
   const creationCopy = copy.plan.creation;
 
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(true);
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState<PlanCreationDraft>(INITIAL_DRAFT);
@@ -148,12 +145,9 @@ export function PlanCreationScreen({
     );
   }, [draft, step, targetTimeError]);
 
+  // Cancel closes the whole flow immediately (same as the workout sheets);
+  // the animated exit happens inside the stack sheet.
   const requestClose = useCallback(() => {
-    setShowDiscardConfirm(true);
-  }, []);
-
-  const handleDiscard = useCallback(() => {
-    setShowDiscardConfirm(false);
     setPendingPreview(null);
     setSheetVisible(false);
   }, []);
@@ -242,11 +236,6 @@ export function PlanCreationScreen({
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (showDiscardConfirm) {
-        setShowDiscardConfirm(false);
-        return true;
-      }
-
       if (preview) {
         setPreview(null);
         setStepIndex(0);
@@ -257,7 +246,7 @@ export function PlanCreationScreen({
     });
 
     return () => subscription.remove();
-  }, [preview, showDiscardConfirm]);
+  }, [preview]);
 
   if (preview) {
     return (
@@ -289,6 +278,7 @@ export function PlanCreationScreen({
         onClose={handleFlowClosed}
         onStackPop={() => setStepIndex((current) => Math.max(current - 1, 0))}
         onDismissRequest={requestClose}
+        layerTitles={visibleLayers.map((stepKey) => copy.plan.creation.steps[stepKey].title)}
         theme={theme}
         themeMode={themeMode}
       >
@@ -313,99 +303,10 @@ export function PlanCreationScreen({
               isError: previewMutation.isError,
             }}
             onContinue={handleContinue}
-            onCloseRequest={requestClose}
+            onCancelRequest={requestClose}
           />
         ))}
       </BottomSheet>
-
-      <Modal
-        visible={showDiscardConfirm}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDiscardConfirm(false)}
-      >
-        <View style={styles.selectorOverlay}>
-          <View
-            style={[
-              styles.selectorCard,
-              {
-                backgroundColor: theme.color.surfaceElevated,
-                borderColor: theme.color.border,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.selectorTitle,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.extrabold,
-                },
-              ]}
-            >
-              {creationCopy.discard.title}
-            </Text>
-            <Text
-              style={[
-                styles.selectorSubtitle,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            >
-              {creationCopy.discard.message}
-            </Text>
-            <View style={styles.discardButtons}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowDiscardConfirm(false)}
-                style={({ pressed }) => [
-                  styles.discardButton,
-                  {
-                    backgroundColor: theme.color.surface,
-                    borderColor: theme.color.border,
-                  },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.discardButtonText,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  {creationCopy.discard.keepEditing}
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={handleDiscard}
-                style={({ pressed }) => [
-                  styles.discardButton,
-                  { backgroundColor: "#dc2626", borderColor: "#dc2626" },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.discardButtonText,
-                    {
-                      color: "#ffffff",
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  {creationCopy.discard.discard}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -426,7 +327,7 @@ function PlanCreationStepLayer({
   isStepValid,
   previewMutation,
   onContinue,
-  onCloseRequest,
+  onCancelRequest,
 }: {
   stepKey: StepKey;
   isActive: boolean;
@@ -443,27 +344,16 @@ function PlanCreationStepLayer({
   isStepValid: boolean;
   previewMutation: StepMutationState;
   onContinue: () => void;
-  onCloseRequest: () => void;
+  onCancelRequest: () => void;
 }) {
   const { pop } = useSheetStack();
   const creationCopy = copy.plan.creation;
   const stepCopy = creationCopy.steps[stepKey];
   const stepIndex = STEPS.indexOf(stepKey);
-  const isLastStep = stepKey === "structure";
-
-  return (
-    <View>
-      <StepHeader
-        title={stepCopy.title}
-        showBack={stepIndex > 0}
-        backLabel={creationCopy.common.back}
-        closeLabel={creationCopy.common.close}
-        theme={theme}
-        onBack={stepIndex > 0 ? pop : undefined}
-        onClose={onCloseRequest}
-      />
-
+  const isLastStep = stepKey === "structure";  return (
+    <View style={styles.stepLayerRoot}>
       <ScrollView
+        style={styles.stepScroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -717,123 +607,7 @@ function PlanCreationStepLayer({
         ) : null}
       </ScrollView>
 
-      <StepFooter
-        label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
-        disabled={!isStepValid || (previewMutation.isPending && isActive)}
-        pending={previewMutation.isPending && isActive}
-        theme={theme}
-        onPress={onContinue}
-        errorRow={
-          previewMutation.isError && isActive
-            ? {
-                message: creationCopy.errors.generationFailed,
-                onRetry: onContinue,
-                onRetryLabel: creationCopy.errors.tryAgain,
-              }
-            : null
-        }
-      />
-    </View>
-  );
-}
-
-function StepHeader({
-  title,
-  showBack,
-  backLabel,
-  closeLabel,
-  theme,
-  onBack,
-  onClose,
-}: {
-  title: string;
-  showBack: boolean;
-  backLabel: string;
-  closeLabel: string;
-  theme: ThemeTokens;
-  onBack?: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <View style={styles.header}>
-      {showBack && onBack ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={backLabel}
-          hitSlop={8}
-          onPress={onBack}
-          style={styles.headerSideSlot}
-        >
-          <Text
-            style={[
-              styles.backButtonText,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.semibold,
-              },
-            ]}
-          >
-            ‹
-          </Text>
-        </Pressable>
-      ) : (
-        <View style={styles.headerSideSlot} />
-      )}
-
-      <Text
-        style={[
-          styles.stepTitle,
-          {
-            color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.extrabold,
-          },
-        ]}
-      >
-        {title}
-      </Text>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={closeLabel}
-        hitSlop={8}
-        onPress={onClose}
-        style={styles.headerSideSlot}
-      >
-        <X color={theme.color.mutedForeground} size={20} />
-      </Pressable>
-    </View>
-  );
-}
-
-function StepFooter({
-  label,
-  disabled,
-  pending,
-  theme,
-  onPress,
-  errorRow,
-}: {
-  label: string;
-  disabled: boolean;
-  pending: boolean;
-  theme: ThemeTokens;
-  onPress: () => void;
-  errorRow?: {
-    message: string;
-    onRetry: () => void;
-    onRetryLabel: string;
-  } | null;
-}) {
-  return (
-    <View
-      style={[
-        styles.footer,
-        {
-          borderTopColor: theme.color.border,
-        },
-      ]}
-    >
-      {errorRow ? (
+      {previewMutation.isError && isActive ? (
         <View style={styles.inlineErrorRow}>
           <AlertCircle color="#dc2626" size={14} />
           <Text
@@ -842,47 +616,47 @@ function StepFooter({
               { fontFamily: theme.typography.fontFamily.sans.regular },
             ]}
           >
-            {errorRow.message}
+            {creationCopy.errors.generationFailed}
           </Text>
-          <Pressable accessibilityRole="button" onPress={errorRow.onRetry} hitSlop={8}>
-            <Text
-              style={[
-                styles.inlineErrorRetry,
-                { fontFamily: theme.typography.fontFamily.sans.bold },
-              ]}
-            >
-              {errorRow.onRetryLabel}
-            </Text>
-          </Pressable>
         </View>
       ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.continueButton,
-          { backgroundColor: theme.color.primary, opacity: disabled ? 0.45 : 1 },
-          pressed && styles.pressed,
-        ]}
-      >
-        {pending ? (
-          <ActivityIndicator color={theme.color.primaryForeground} />
-        ) : (
-          <Text
-            style={[
-              styles.continueButtonText,
+      <View style={styles.actionsRow}>
+        {stepIndex > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={creationCopy.common.back}
+            onPress={pop}
+            style={({ pressed }) => [
+              styles.iconButton,
               {
-                color: theme.color.primaryForeground,
-                fontFamily: theme.typography.fontFamily.sans.semibold,
+                backgroundColor:
+                  themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
               },
+              pressed && styles.pressed,
             ]}
           >
-            {label}
-          </Text>
-        )}
-      </Pressable>
+            <ChevronLeft color={theme.color.foreground} size={22} />
+          </Pressable>
+        ) : null}
+
+        <SheetButton
+          label={creationCopy.common.cancel}
+          onPress={onCancelRequest}
+          variant="secondary"
+          theme={theme}
+          themeMode={themeMode}
+        />
+
+        <SheetButton
+          label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
+          onPress={onContinue}
+          disabled={!isStepValid}
+          pending={previewMutation.isPending && isActive}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      </View>
     </View>
   );
 }
@@ -891,65 +665,10 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  selectorOverlay: {
+  stepLayerRoot: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  selectorCard: {
-    width: "100%",
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 20,
-    gap: 16,
-  },
-  selectorTitle: {
-    fontSize: 22,
-    lineHeight: 28,
-  },
-  selectorSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: -8,
-  },
-  discardButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  discardButton: {
-    flex: 1,
-    height: 48,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  discardButtonText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingBottom: 8,
-  },
-  headerSideSlot: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backButtonText: {
-    fontSize: 28,
-    lineHeight: 34,
-  },
-  stepTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-    textAlign: "center",
+  stepScroll: {
     flex: 1,
   },
   scrollContent: {
@@ -986,10 +705,16 @@ const styles = StyleSheet.create({
   counterGroup: {
     gap: 12,
   },
-  footer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 16,
+  actionsRow: {
+    flexDirection: "row",
     gap: 12,
+  },
+  iconButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
   },
   inlineErrorRow: {
     flexDirection: "row",
@@ -1000,21 +725,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     flex: 1,
-  },
-  inlineErrorRetry: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#dc2626",
-  },
-  continueButton: {
-    borderRadius: 18,
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  continueButtonText: {
-    fontSize: 15,
-    lineHeight: 20,
   },
   pressed: {
     transform: [{ scale: 0.98 }],

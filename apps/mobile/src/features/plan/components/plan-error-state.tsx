@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   button: {
     height: 48,
     paddingHorizontal: 22,
-    borderRadius: 14,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     alignItems: "center",

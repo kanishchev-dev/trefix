@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   typeChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
   },
   typeChipText: {

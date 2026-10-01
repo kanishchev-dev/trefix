@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   stepperButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   presetChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
   },
   presetChipText: {

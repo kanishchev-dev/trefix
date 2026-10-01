@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   resendButton: {
     width: "100%",
     height: 56,
-    borderRadius: 24,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",

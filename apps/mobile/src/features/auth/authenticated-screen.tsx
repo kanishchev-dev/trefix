@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     minHeight: 52,
-    borderRadius: 18,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#f97316",

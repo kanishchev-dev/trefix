@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 18,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
   },
   chipLabel: {
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   dayCell: {
     flex: 1,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   counterButton: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },

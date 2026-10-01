@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: 9999,
     gap: 8,
   },
   retryText: {

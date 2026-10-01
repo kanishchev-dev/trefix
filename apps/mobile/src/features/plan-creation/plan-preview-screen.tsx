@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
   },
   createButton: {
     height: 54,
-    borderRadius: 18,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1056,7 +1056,7 @@ const styles = StyleSheet.create({
   },
   sheetSaveButton: {
     height: 52,
-    borderRadius: 18,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 12,
@@ -1067,7 +1067,7 @@ const styles = StyleSheet.create({
   },
   sheetRemoveButton: {
     height: 48,
-    borderRadius: 18,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
   },
   addWorkoutButton: {
     minHeight: 44,
-    borderRadius: 14,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
     borderStyle: "dashed",
     alignItems: "center",

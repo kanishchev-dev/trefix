@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
-    borderRadius: 18,
+    borderRadius: 9999,
     gap: 8,
   },
   askButtonText: {

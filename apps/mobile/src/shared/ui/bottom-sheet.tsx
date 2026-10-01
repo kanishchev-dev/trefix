@@ -37,10 +37,48 @@ const SHEET_SPRING_CONFIG = {
   mass: 0.8,
 };
 
+// Stack look: every card has the same fixed height, so the active sheet always
+// sits at exactly the same position while the previous one peeks out above it.
+// Layers older than the previous one are parked fully off-screen (only two
+// windows are ever visible at once), fading in/out when they enter/leave.
 const STACK_BG_SCALE = 0.92;
-const STACK_BG_OFFSET = -24;
+const STACK_BG_OFFSET = -48;
 const MAX_STACK_LAYERS = 8;
-const MAX_VISIBLE_STACK_LAYERS = 3;
+const STACK_CARD_HEIGHT = Math.round(SCREEN_HEIGHT * 0.78);
+const STACK_PARKED_OFFSET = 140;
+const STACK_SPRING_CONFIG = {
+  damping: 30,
+  stiffness: 380,
+  mass: 0.9,
+};
+const STACK_EXIT_TIMING = { duration: 200 };
+const STACK_FADE_IN = { duration: 160 };
+const STACK_FADE_OUT = { duration: 140 };
+
+type StackLayerRole = "top" | "behind" | "parked";
+
+function getStackLayerRole(layerIndex: number, layerCount: number): StackLayerRole {
+  if (layerIndex >= layerCount) {
+    return "parked";
+  }
+  if (layerIndex === layerCount - 1) {
+    return "top";
+  }
+  if (layerIndex === layerCount - 2) {
+    return "behind";
+  }
+  return "parked";
+}
+
+function getStackLayerTargetY(role: StackLayerRole): number {
+  if (role === "top") {
+    return 0;
+  }
+  if (role === "behind") {
+    return STACK_BG_OFFSET;
+  }
+  return SCREEN_HEIGHT + STACK_PARKED_OFFSET;
+}
 
 type SheetStackApi = {
   pop: () => void;
@@ -60,6 +98,8 @@ type BottomSheetProps = {
   visible: boolean;
   onClose: () => void;
   title?: string;
+  /** Stack mode: standard header title per layer, aligned with children order. */
+  layerTitles?: string[];
   renderHeader?: () => ReactNode;
   theme: ThemeTokens;
   themeMode: ThemeMode;
@@ -74,6 +114,7 @@ export function BottomSheet({
   visible,
   onClose,
   title,
+  layerTitles,
   renderHeader,
   theme,
   themeMode,
@@ -101,14 +142,72 @@ export function BottomSheet({
   const stackLayerOffsetsRef = useRef(stackLayerOffsets);
   stackLayerOffsetsRef.current = stackLayerOffsets;
 
+  const stackLayerScales = [
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+  ];
+  const stackLayerScalesRef = useRef(stackLayerScales);
+  stackLayerScalesRef.current = stackLayerScales;
+
+  const layerOpacities = [
+    useSharedValue(0),
+    useSharedValue(0),
+    useSharedValue(0),
+    useSharedValue(0),
+    useSharedValue(0),
+    useSharedValue(0),
+    useSharedValue(0),
+    useSharedValue(0),
+  ];
+
   const [hideMounted, setHideMounted] = useState(visible);
   const [stackMounted, setStackMounted] = useState(visible);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const layerCountRef = useRef(1);
-  const exitRemaining = useSharedValue(0);
+  // The guard lives in a ref: state closures can go stale, and a lost
+  // Reanimated completion callback would block every future pop forever.
+  const isTransitioningRef = useRef(false);
+  const popTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevLayerCountRef = useRef<number | null>(null);
+
+  const layers = React.Children.toArray(children);
+  const logicalLayerCount = Math.max(layers.length, 1);
+  layerCountRef.current = Math.min(logicalLayerCount, MAX_STACK_LAYERS);
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  // Keep layer opacities in sync with the stack: visible windows are opaque,
+  // parked ones are fully transparent (animated, so the third window fades
+  // in/out instead of popping).
+  useEffect(() => {
+    if (!isStack) {
+      return;
+    }
+
+    if (prevLayerCountRef.current === logicalLayerCount) {
+      return;
+    }
+    prevLayerCountRef.current = logicalLayerCount;
+
+    for (let index = 0; index < MAX_STACK_LAYERS; index += 1) {
+      const shouldShow = index < logicalLayerCount;
+      const opacity = layerOpacities[index];
+
+      if (shouldShow && opacity.value < 1) {
+        opacity.value = withTiming(1, STACK_FADE_IN);
+      } else if (!shouldShow && opacity.value > 0) {
+        opacity.value = withTiming(0, STACK_FADE_OUT);
+      }
+    }
+  }, [isStack, layerOpacities, logicalLayerCount]);
 
   const finishSingleClose = useCallback(() => {
     if (animatedHide) {
@@ -175,6 +274,12 @@ export function BottomSheet({
   }, [animatedHide, backdropOpacity, finishSingleClose, hideMounted, isStack, translateY, visible]);
 
   const finishStackExit = useCallback(() => {
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+    isTransitioningRef.current = false;
+    setIsTransitioning(false);
     setStackMounted(false);
     onCloseRef.current();
   }, []);
@@ -183,25 +288,21 @@ export function BottomSheet({
     backdropOpacity.value = withTiming(0, { duration: 200 });
 
     const count = Math.min(layerCountRef.current, MAX_STACK_LAYERS);
-    if (count === 0) {
-      finishStackExit();
-      return;
+    for (let index = 0; index < count; index += 1) {
+      const offset = stackLayerOffsetsRef.current[index];
+      if (offset) {
+        offset.value = withTiming(SCREEN_HEIGHT, STACK_EXIT_TIMING);
+      }
     }
 
-    exitRemaining.value = count;
-    for (let index = 0; index < count; index += 1) {
-      stackLayerOffsetsRef.current[index].value = withTiming(
-        SCREEN_HEIGHT,
-        { duration: 240 },
-        () => {
-          exitRemaining.value -= 1;
-          if (exitRemaining.value === 0) {
-            runOnJS(finishStackExit)();
-          }
-        },
-      );
+    // Completion is driven by a plain timer: animation callbacks can be
+    // dropped when an animation gets interrupted, which used to leave the
+    // stack stuck in a "transitioning" state with dead pop gestures.
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
     }
-  }, [backdropOpacity, exitRemaining, finishStackExit]);
+    exitTimerRef.current = setTimeout(finishStackExit, STACK_EXIT_TIMING.duration + 60);
+  }, [backdropOpacity, finishStackExit]);
 
   useEffect(() => {
     if (!isStack) {
@@ -210,6 +311,8 @@ export function BottomSheet({
 
     if (visible) {
       setStackMounted(true);
+      setIsTransitioning(false);
+      isTransitioningRef.current = false;
       backdropOpacity.value = withTiming(1, { duration: 200 });
       return;
     }
@@ -220,12 +323,17 @@ export function BottomSheet({
   }, [backdropOpacity, exitStackAnimated, isStack, stackMounted, visible]);
 
   const finishPop = useCallback(() => {
+    if (popTimerRef.current) {
+      clearTimeout(popTimerRef.current);
+      popTimerRef.current = null;
+    }
+    isTransitioningRef.current = false;
     setIsTransitioning(false);
     onStackPop?.();
   }, [onStackPop]);
 
   const popTopLayer = useCallback(() => {
-    if (isTransitioning) {
+    if (isTransitioningRef.current) {
       return;
     }
 
@@ -239,11 +347,48 @@ export function BottomSheet({
       return;
     }
 
+    isTransitioningRef.current = true;
     setIsTransitioning(true);
-    topOffset.value = withSpring(SCREEN_HEIGHT, SHEET_SPRING_CONFIG, () => {
-      runOnJS(finishPop)();
-    });
-  }, [finishPop, isTransitioning]);
+    topOffset.value = withTiming(SCREEN_HEIGHT, STACK_EXIT_TIMING);
+
+    // The window underneath starts returning immediately: both animations run
+    // in parallel, so the pop feels like one synchronized move.
+    const behindIndex = topIndex - 1;
+    if (behindIndex >= 0) {
+      const behindOffset = stackLayerOffsetsRef.current[behindIndex];
+      const behindScale = stackLayerScalesRef.current[behindIndex];
+      if (behindOffset) {
+        behindOffset.value = withSpring(0, STACK_SPRING_CONFIG);
+      }
+      if (behindScale) {
+        behindScale.value = withSpring(1, STACK_SPRING_CONFIG);
+      }
+    }
+
+    popTimerRef.current = setTimeout(finishPop, STACK_EXIT_TIMING.duration + 40);
+  }, [finishPop]);
+
+  // Swipe-down on the first (single) layer closes the whole stack with the
+  // same animated exit, bypassing onDismissRequest.
+  const dismissStackBySwipe = useCallback(() => {
+    if (isTransitioningRef.current) {
+      return;
+    }
+    isTransitioningRef.current = true;
+    setIsTransitioning(true);
+    exitStackAnimated();
+  }, [exitStackAnimated]);
+
+  useEffect(() => {
+    return () => {
+      if (popTimerRef.current) {
+        clearTimeout(popTimerRef.current);
+      }
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+      }
+    };
+  }, []);
 
   const requestStackDismiss = useCallback(() => {
     const topIndex = Math.min(layerCountRef.current - 1, MAX_STACK_LAYERS - 1);
@@ -340,13 +485,6 @@ export function BottomSheet({
     );
   }
 
-  const layers = React.Children.toArray(children);
-  const logicalLayerCount = Math.max(layers.length, 1);
-  layerCountRef.current = logicalLayerCount;
-
-  const visibleStartIndex = Math.max(logicalLayerCount - MAX_VISIBLE_STACK_LAYERS, 0);
-  const visibleLayers = layers.slice(visibleStartIndex);
-  const activeLocalIndex = visibleLayers.length - 1;
   const canPop = logicalLayerCount > 1;
 
   const handleBackdropTap = () => {
@@ -356,8 +494,6 @@ export function BottomSheet({
     }
     requestStackDismiss();
   };
-
-  const activeOriginalIndex = Math.min(visibleStartIndex + activeLocalIndex, MAX_STACK_LAYERS - 1);
 
   return (
     <Modal
@@ -391,31 +527,29 @@ export function BottomSheet({
         </Animated.View>
 
         <SheetStackContext.Provider value={stackApi}>
-          {visibleLayers.map((layer, localIndex) => {
-            const originalIndex = visibleStartIndex + localIndex;
-            const isTopLayer = localIndex === activeLocalIndex;
-            const layerIndex = Math.min(originalIndex, MAX_STACK_LAYERS - 1);
-            const activeLayerOffset = isTopLayer
-              ? null
-              : stackLayerOffsets[Math.min(activeOriginalIndex, MAX_STACK_LAYERS - 1)];
+          {layers.map((layer, index) => {
+            if (index >= MAX_STACK_LAYERS) {
+              return null;
+            }
 
             return (
               <StackLayer
-                key={originalIndex}
-                layerIndex={localIndex}
-                activeIndex={activeLocalIndex}
-                layerY={stackLayerOffsets[layerIndex]}
+                key={index}
+                role={getStackLayerRole(index, logicalLayerCount)}
+                title={layerTitles?.[index]}
+                layerY={stackLayerOffsets[index]}
+                layerScale={stackLayerScales[index]}
+                layerOpacity={layerOpacities[index]}
                 sheetVisible={stackMounted}
                 isTransitioning={isTransitioning}
-                activeLayerOffset={activeLayerOffset}
                 theme={theme}
                 themeMode={themeMode}
                 onDragEnd={(shouldClose) => {
                   if (!shouldClose) {
                     return;
                   }
-                  if (originalIndex === 0) {
-                    requestStackDismiss();
+                  if (logicalLayerCount <= 1) {
+                    dismissStackBySwipe();
                   } else {
                     popTopLayer();
                   }
@@ -432,35 +566,43 @@ export function BottomSheet({
 }
 
 function StackLayer({
-  layerIndex,
-  activeIndex,
+  role,
+  title,
   layerY,
+  layerScale,
+  layerOpacity,
   sheetVisible,
   isTransitioning,
-  activeLayerOffset,
   theme,
   themeMode,
   onDragEnd,
   children,
 }: {
-  layerIndex: number;
-  activeIndex: number;
+  role: StackLayerRole;
+  title?: string;
   layerY: SharedValue<number>;
+  layerScale: SharedValue<number>;
+  layerOpacity: SharedValue<number>;
   sheetVisible: boolean;
   isTransitioning: boolean;
-  activeLayerOffset: SharedValue<number> | null;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   onDragEnd: (shouldClose: boolean) => void;
   children: ReactNode;
 }) {
-  const isTopLayer = layerIndex === activeIndex;
+  const isTopLayer = role === "top";
 
+  // Every role change retargets the layer: the active card always settles at
+  // the exact same position, the previous one right above it, older ones park
+  // off-screen.
   useEffect(() => {
-    if (sheetVisible) {
-      layerY.value = withSpring(0, SHEET_SPRING_CONFIG);
+    if (!sheetVisible) {
+      return;
     }
-  }, [layerY, sheetVisible]);
+
+    layerY.value = withSpring(getStackLayerTargetY(role), STACK_SPRING_CONFIG);
+    layerScale.value = withSpring(role === "top" ? 1 : STACK_BG_SCALE, STACK_SPRING_CONFIG);
+  }, [layerScale, layerY, role, sheetVisible]);
 
   const panGesture = Gesture.Pan()
     .activeOffsetY([5, 5])
@@ -473,48 +615,31 @@ function StackLayer({
     .onEnd((event) => {
       const shouldClose = event.translationY > 100 || event.velocityY > 500;
       if (!shouldClose) {
-        layerY.value = withSpring(0, SHEET_SPRING_CONFIG);
+        layerY.value = withSpring(getStackLayerTargetY(role), STACK_SPRING_CONFIG);
         return;
       }
       runOnJS(onDragEnd)(true);
     });
 
   const containerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: layerY.value }],
+    transform: [{ translateY: layerY.value }, { scale: layerScale.value }],
+    opacity: layerOpacity.value,
   }));
-
-  const backgroundAnimatedStyle = useAnimatedStyle(() => {
-    if (isTopLayer || !activeLayerOffset) {
-      return {};
-    }
-
-    const progress = 1 - activeLayerOffset.value / SCREEN_HEIGHT;
-    return {
-      transform: [
-        {
-          translateY: interpolate(progress, [0, 1], [0, STACK_BG_OFFSET], "clamp"),
-        },
-        {
-          scale: interpolate(progress, [0, 1], [1, STACK_BG_SCALE], "clamp"),
-        },
-      ],
-    };
-  });
-
-  const cardStyle =
-    isTopLayer || activeLayerOffset === null
-      ? [styles.stackLayerCardWrapper]
-      : [styles.stackLayerCardWrapper, backgroundAnimatedStyle];
 
   return (
     <Animated.View
       pointerEvents={isTopLayer ? "auto" : "none"}
-      style={[styles.stackLayerContainer, containerAnimatedStyle]}
+      style={[
+        styles.stackLayerContainer,
+        containerAnimatedStyle,
+        { zIndex: isTopLayer ? 3 : 2 },
+      ]}
     >
-      <Animated.View style={cardStyle}>
+      <View style={styles.stackLayerCardWrapper}>
         <View
           style={[
             styles.card,
+            styles.stackCard,
             {
               borderColor:
                 themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
@@ -528,12 +653,28 @@ function StackLayer({
               <View style={styles.handleContainer}>
                 <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
               </View>
+
+              {title !== undefined ? (
+                <View style={styles.header}>
+                  <Text
+                    style={[
+                      styles.title,
+                      {
+                        color: theme.color.foreground,
+                        fontFamily: theme.typography.fontFamily.sans.semibold,
+                      },
+                    ]}
+                  >
+                    {title}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </GestureDetector>
 
           {children}
         </View>
-      </Animated.View>
+      </View>
     </Animated.View>
   );
 }
@@ -713,7 +854,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: 8,
-    maxHeight: "85%",
     zIndex: 1,
   },
   stackLayerCardWrapper: {
@@ -727,6 +867,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     gap: 16,
     overflow: "visible",
+  },
+  stackCard: {
+    height: STACK_CARD_HEIGHT,
+    overflow: "hidden",
   },
   paddedContent: {
     paddingHorizontal: 20,

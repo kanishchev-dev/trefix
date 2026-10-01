@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: 9999,
   },
   selectedButton: {
     borderWidth: StyleSheet.hairlineWidth,
