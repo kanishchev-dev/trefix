@@ -6,6 +6,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
 import {
   BottomSheet,
+  SheetBlock,
   SheetButton,
   SheetSectionLabel,
   SheetTabs,
@@ -178,12 +179,13 @@ export function AddWorkoutSheet({
         <View style={styles.section}>
           <SheetSectionLabel text={locale.typeLabel || "ТИП ТРЕНИРОВКИ"} theme={theme} />
 
-          <ScrollView
-            horizontal
-            nestedScrollEnabled
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.typesRow}
-          >
+          <SheetBlock theme={theme} edgeToEdge>
+            <ScrollView
+              horizontal
+              nestedScrollEnabled
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.typesRow}
+            >
             {WORKOUT_TYPES.map((t) => {
               const selected = type === t.key;
               return (
@@ -223,7 +225,8 @@ export function AddWorkoutSheet({
                 </Pressable>
               );
             })}
-          </ScrollView>
+            </ScrollView>
+          </SheetBlock>
         </View>
 
         {/* Metrics */}

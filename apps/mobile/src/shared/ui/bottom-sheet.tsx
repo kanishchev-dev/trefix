@@ -477,7 +477,7 @@ export function BottomSheet({
                 </View>
               </GestureDetector>
 
-              {children}
+              <View style={[styles.sheetContent, styles.sheetContentPadding]}>{children}</View>
             </View>
           </Animated.View>
         </View>
@@ -654,6 +654,7 @@ function StackLayer({
                 <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
               </View>
 
+
               {title !== undefined ? (
                 <View style={styles.header}>
                   <Text
@@ -672,7 +673,7 @@ function StackLayer({
             </View>
           </GestureDetector>
 
-          {children}
+          <View style={[styles.sheetContent, styles.sheetContentPadding]}>{children}</View>
         </View>
       </View>
     </Animated.View>
@@ -761,6 +762,38 @@ export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeT
     >
       {text}
     </Text>
+  );
+}
+
+/**
+ * Content wrapper for sheet bodies.
+ *
+ * Sheets give their content a default horizontal padding (see
+ * styles.sheetContentPadding). Blocks that must run edge-to-edge (sliders,
+ * full-bleed media, etc.) set `edgeToEdge` and the wrapper compensates with
+ * negative margins, so only the wrapper needs to know about padding.
+ */
+export function SheetBlock({
+  theme,
+  edgeToEdge = false,
+  children,
+  style,
+}: {
+  theme: ThemeTokens;
+  edgeToEdge?: boolean;
+  children: ReactNode;
+  style?: object;
+}) {
+  return (
+    <View
+      style={[
+        styles.sheetContentPadding,
+        edgeToEdge ? styles.sheetContentBleed : null,
+        style,
+      ]}
+    >
+      {children}
+    </View>
   );
 }
 
@@ -942,5 +975,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     letterSpacing: 0.8,
+  },
+  sheetContent: {
+    flexGrow: 1,
+    flexShrink: 1,
+    gap: 16,
+  },
+  sheetContentPadding: {
+    paddingHorizontal: 20,
+  },
+  sheetContentBleed: {
+    marginHorizontal: -20,
   },
 });

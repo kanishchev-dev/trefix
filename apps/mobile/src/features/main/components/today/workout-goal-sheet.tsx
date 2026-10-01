@@ -12,6 +12,7 @@ import { Plus, Minus } from "lucide-react-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import {
   BottomSheet,
+  SheetBlock,
   SheetButton,
   SheetTabs,
 } from "../../../../shared/ui/bottom-sheet";
@@ -246,12 +247,13 @@ export function WorkoutGoalSheet({
         </View>
 
         {/* Quick Presets Horizontal Slider (Edge-to-Edge) */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.presetsScrollContent}
-          style={styles.presetsScrollView}
-        >
+        <SheetBlock theme={theme} edgeToEdge>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.presetsScrollContent}
+            style={styles.presetsScrollView}
+          >
           {(mode === "distance" ? DISTANCE_PRESETS : DURATION_PRESETS).map((preset) => {
             const isSelected =
               mode === "distance"
@@ -304,7 +306,8 @@ export function WorkoutGoalSheet({
               </Pressable>
             );
           })}
-        </ScrollView>
+          </ScrollView>
+        </SheetBlock>
       </ScrollView>
 
       {/* Actions Row */}
