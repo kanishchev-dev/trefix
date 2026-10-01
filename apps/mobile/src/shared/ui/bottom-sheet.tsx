@@ -40,7 +40,7 @@ const SHEET_SPRING_CONFIG = {
 const STACK_BG_SCALE = 0.92;
 const STACK_BG_OFFSET = -24;
 const MAX_STACK_LAYERS = 8;
-const MAX_VISIBLE_STACK_LAYERS = 2;
+const MAX_VISIBLE_STACK_LAYERS = 3;
 
 type SheetStackApi = {
   pop: () => void;
