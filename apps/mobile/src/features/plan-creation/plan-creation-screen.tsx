@@ -5,12 +5,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { AlertCircle, ChevronLeft } from "lucide-react-native";
 
-import { type ManualPlanPreview } from "@workspace/api-client";
+import {
+  validateGoalPayload,
+  type AthleteGoalType,
+  type ManualPlanPreview,
+} from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
@@ -21,10 +24,10 @@ import {
   MANUAL_PLAN_MIN_SESSIONS,
   MANUAL_PLAN_MIN_WEEKS,
   PLAN_FOCUS_OPTIONS,
-  PLAN_GOAL_OPTIONS,
   PLAN_WORKOUT_DURATION_OPTIONS,
   formatTargetTime,
   parseTargetTime,
+  pruneStaleGoalFields,
   validateTargetTime,
   type PlanCreationDraft,
 } from "./plan-creation-types";
@@ -32,10 +35,11 @@ import { useManualPlanPreview } from "./hooks/use-manual-plan";
 import {
   CounterRow,
   DayPicker,
-  FieldError,
   OptionChip,
   SectionBlock,
 } from "./components/plan-creation-ui";
+import { GoalTypeStep } from "./components/goal-type-step";
+import { GoalSetupStep } from "./components/goal-setup-step";
 import { PlanPreviewScreen } from "./plan-preview-screen";
 
 type Props = {
@@ -47,12 +51,16 @@ type Props = {
   onOpenTrefix: () => void;
 };
 
-type StepKey = "goal" | "schedule" | "structure";
+type StepKey = "goalType" | "goalSetup" | "schedule" | "structure";
 
-const STEPS: StepKey[] = ["goal", "schedule", "structure"];
+const STEPS: StepKey[] = ["goalType", "goalSetup", "schedule", "structure"];
 
 const INITIAL_DRAFT: PlanCreationDraft = {
   goal: {
+    type: "prepare_for_race",
+    target: {
+      distanceMeters: 10000,
+    },
     raceDistance: "10k",
     targetTimeText: "",
     targetTimeSeconds: undefined,
@@ -68,11 +76,6 @@ const INITIAL_DRAFT: PlanCreationDraft = {
     sessionsPerWeek: 3,
     focus: ["easy", "long_run", "tempo"],
   },
-};
-
-type StepOption = {
-  value: PlanCreationDraft["goal"]["raceDistance"];
-  label: string;
 };
 
 type StepMutationState = {
@@ -107,32 +110,42 @@ export function PlanCreationScreen({
     [language],
   );
 
-  const goalOptions = useMemo<StepOption[]>(
-    () =>
-      PLAN_GOAL_OPTIONS.map((option) => ({
-        value: option.value,
-        label:
-          option.labelKey === "5K" || option.labelKey === "10K"
-            ? option.labelKey
-            : creationCopy.goals[option.labelKey as keyof typeof creationCopy.goals],
-      })),
-    [creationCopy.goals],
-  );
+  const targetTimeText =
+    (draft.goal.target?.finishTimeText as string) ||
+    draft.goal.targetTimeText ||
+    "";
 
-  const parsedTargetTime = draft.goal.targetTimeText.trim()
-    ? parseTargetTime(draft.goal.targetTimeText)
+  const parsedTargetTime = targetTimeText.trim()
+    ? parseTargetTime(targetTimeText)
     : null;
 
   const targetTimeError = useMemo(() => {
-    if (draft.goal.targetTimeText.trim() && parsedTargetTime === null) {
+    if (targetTimeText.trim() && parsedTargetTime === null) {
       return "invalidTargetTime";
     }
-    return validateTargetTime(draft.goal.raceDistance, parsedTargetTime);
-  }, [draft.goal.targetTimeText, draft.goal.raceDistance, parsedTargetTime]);
+    const distPreset = draft.goal.raceDistance || "10k";
+    return validateTargetTime(distPreset, parsedTargetTime);
+  }, [targetTimeText, parsedTargetTime, draft.goal.raceDistance]);
 
   const isStepValid = useMemo(() => {
-    if (step === "goal") {
-      return targetTimeError === null;
+    if (step === "goalType") {
+      return Boolean(draft.goal.type);
+    }
+    if (step === "goalSetup") {
+      if (targetTimeError !== null) return false;
+      if (draft.goal.type === "custom") {
+        return Boolean(draft.goal.description?.trim());
+      }
+      const valResult = validateGoalPayload({
+        type: draft.goal.type,
+        target: {
+          ...draft.goal.target,
+          ...(parsedTargetTime ? { finishTimeSec: parsedTargetTime } : {}),
+        },
+        current: draft.goal.current,
+        description: draft.goal.description,
+      });
+      return valResult.valid;
     }
     if (step === "schedule") {
       return draft.schedule.trainingDays.length > 0;
@@ -143,10 +156,8 @@ export function PlanCreationScreen({
       draft.structure.totalWeeks >= MANUAL_PLAN_MIN_WEEKS &&
       draft.structure.totalWeeks <= MANUAL_PLAN_MAX_WEEKS
     );
-  }, [draft, step, targetTimeError]);
+  }, [step, draft, targetTimeError, parsedTargetTime]);
 
-  // Cancel closes the whole flow immediately (same as the workout sheets);
-  // the animated exit happens inside the stack sheet.
   const requestClose = useCallback(() => {
     setPendingPreview(null);
     setSheetVisible(false);
@@ -161,33 +172,41 @@ export function PlanCreationScreen({
     onClose();
   }, [onClose, pendingPreview]);
 
-  const requestPreview = useCallback(async () => {
-    const targetTimeSeconds = parsedTargetTime ?? undefined;
-    const nextDraft: PlanCreationDraft = {
-      ...draft,
-      goal: {
-        ...draft.goal,
-        targetTimeSeconds,
-      },
-    };
+  const handleGoalTypeSelect = useCallback((newType: AthleteGoalType) => {
+    setDraft((current) => ({
+      ...current,
+      goal: pruneStaleGoalFields(current.goal, newType),
+    }));
+  }, []);
 
-    setDraft(nextDraft);
+  const requestPreview = useCallback(async () => {
+    const finishTimeSec = parsedTargetTime ?? undefined;
+
+    const goalPayload = {
+      type: draft.goal.type,
+      target: {
+        ...draft.goal.target,
+        ...(finishTimeSec ? { finishTimeSec } : {}),
+      },
+      current: draft.goal.current,
+      description: draft.goal.description,
+      targetDate: draft.goal.targetDate,
+      priority: draft.goal.priority,
+      raceDistance: draft.goal.raceDistance,
+      targetTimeSeconds: finishTimeSec,
+    };
 
     try {
       const result = await previewMutation.mutateAsync({
-        goal: {
-          raceDistance: nextDraft.goal.raceDistance,
-          targetTimeSeconds,
-          targetDate: nextDraft.goal.targetDate,
-        },
-        schedule: nextDraft.schedule,
-        structure: nextDraft.structure,
+        goal: goalPayload,
+        schedule: draft.schedule,
+        structure: draft.structure,
       });
 
       setPendingPreview(result);
       setSheetVisible(false);
     } catch {
-      // The sheet stays open and the inline error state will surface.
+      // Inline error will surface
     }
   }, [draft, parsedTargetTime, previewMutation]);
 
@@ -278,7 +297,9 @@ export function PlanCreationScreen({
         onClose={handleFlowClosed}
         onStackPop={() => setStepIndex((current) => Math.max(current - 1, 0))}
         onDismissRequest={requestClose}
-        layerTitles={visibleLayers.map((stepKey) => copy.plan.creation.steps[stepKey].title)}
+        layerTitles={visibleLayers.map(
+          (stepKey) => creationCopy.steps[stepKey]?.title ?? stepKey,
+        )}
         theme={theme}
         themeMode={themeMode}
       >
@@ -293,8 +314,8 @@ export function PlanCreationScreen({
             language={language}
             draft={draft}
             onDraftChange={setDraft}
+            onSelectGoalType={handleGoalTypeSelect}
             onToggleDay={toggleDay}
-            goalOptions={goalOptions}
             shortDayNames={shortDayNames}
             targetTimeError={targetTimeError}
             isStepValid={isStepValid}
@@ -320,8 +341,8 @@ function PlanCreationStepLayer({
   language,
   draft,
   onDraftChange,
+  onSelectGoalType,
   onToggleDay,
-  goalOptions,
   shortDayNames,
   targetTimeError,
   isStepValid,
@@ -337,8 +358,8 @@ function PlanCreationStepLayer({
   language: AppLanguage;
   draft: PlanCreationDraft;
   onDraftChange: React.Dispatch<React.SetStateAction<PlanCreationDraft>>;
+  onSelectGoalType: (goalType: AthleteGoalType) => void;
   onToggleDay: (dayIndex: number) => void;
-  goalOptions: StepOption[];
   shortDayNames: readonly string[];
   targetTimeError: string | null;
   isStepValid: boolean;
@@ -350,7 +371,9 @@ function PlanCreationStepLayer({
   const creationCopy = copy.plan.creation;
   const stepCopy = creationCopy.steps[stepKey];
   const stepIndex = STEPS.indexOf(stepKey);
-  const isLastStep = stepKey === "structure";  return (
+  const isLastStep = stepKey === "structure";
+
+  return (
     <View style={styles.stepLayerRoot}>
       <ScrollView
         style={styles.stepScroll}
@@ -367,114 +390,33 @@ function PlanCreationStepLayer({
             },
           ]}
         >
-          {stepCopy.question}
+          {stepCopy?.question}
         </Text>
 
-        {stepKey === "goal" ? (
-          <>
-            <SectionBlock title={creationCopy.goalSection} theme={theme}>
-              <View style={styles.chipWrap}>
-                {goalOptions.map((option) => (
-                  <OptionChip
-                    key={option.value}
-                    label={option.label}
-                    selected={draft.goal.raceDistance === option.value}
-                    theme={theme}
-                    onPress={() =>
-                      onDraftChange((current) => ({
-                        ...current,
-                        goal: { ...current.goal, raceDistance: option.value },
-                      }))
-                    }
-                  />
-                ))}
-              </View>
-            </SectionBlock>
+        {stepKey === "goalType" ? (
+          <GoalTypeStep
+            selectedType={draft.goal.type}
+            theme={theme}
+            copy={copy}
+            onSelectType={onSelectGoalType}
+          />
+        ) : null}
 
-            <SectionBlock title={creationCopy.targetTimeSection} theme={theme}>
-              <View style={styles.targetTimeRow}>
-                {["45:00", "1:45:00", "4:00:00"].map((preset) => (
-                  <OptionChip
-                    key={preset}
-                    label={preset}
-                    selected={
-                      draft.goal.targetTimeText === preset ||
-                      (parseTargetTime(draft.goal.targetTimeText) !== null &&
-                        formatTargetTime(parseTargetTime(draft.goal.targetTimeText) ?? 0) === preset &&
-                        draft.goal.targetTimeText === preset)
-                    }
-                    theme={theme}
-                    onPress={() =>
-                      onDraftChange((current) => ({
-                        ...current,
-                        goal: { ...current.goal, targetTimeText: preset },
-                      }))
-                    }
-                  />
-                ))}
-              </View>
-              <TextInput
-                accessibilityLabel={creationCopy.targetTimeSection}
-                keyboardType="numbers-and-punctuation"
-                placeholder={creationCopy.targetTimePlaceholder}
-                placeholderTextColor={theme.color.mutedForeground}
-                value={draft.goal.targetTimeText}
-                onChangeText={(text: string) =>
-                  onDraftChange((current) => ({
-                    ...current,
-                    goal: { ...current.goal, targetTimeText: text },
-                  }))
-                }
-                style={[
-                  styles.timeInput,
-                  {
-                    backgroundColor: theme.color.surfaceElevated,
-                    borderColor: targetTimeError ? "#dc2626" : theme.color.border,
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.semibold,
-                  },
-                ]}
-              />
-              {targetTimeError ? (
-                <FieldError
-                  message={creationCopy.errors[targetTimeError as keyof typeof creationCopy.errors]}
-                  theme={theme}
-                />
-              ) : null}
-            </SectionBlock>
-
-            <SectionBlock title={creationCopy.targetDateSection} theme={theme}>
-              <View style={styles.targetTimeRow}>
-                {[7, 14, 21].map((daysAhead) => {
-                  const date = new Date();
-                  date.setDate(date.getDate() + daysAhead);
-                  const iso = date.toISOString().slice(0, 10);
-                  const label = date.toLocaleDateString(language === "ru" ? "ru-RU" : "en-US", {
-                    day: "numeric",
-                    month: "short",
-                  });
-
-                  return (
-                    <OptionChip
-                      key={daysAhead}
-                      label={label}
-                      selected={draft.goal.targetDate === iso}
-                      theme={theme}
-                      onPress={() =>
-                        onDraftChange((current) => ({
-                          ...current,
-                          goal: {
-                            ...current.goal,
-                            targetDate: current.goal.targetDate === iso ? undefined : iso,
-                          },
-                        }))
-                      }
-                    />
-                  );
-                })}
-              </View>
-            </SectionBlock>
-          </>
+        {stepKey === "goalSetup" ? (
+          <GoalSetupStep
+            goalType={draft.goal.type}
+            draft={draft.goal}
+            theme={theme}
+            copy={copy}
+            language={language}
+            targetTimeError={targetTimeError}
+            onChangeDraft={(updater) =>
+              onDraftChange((current) => ({
+                ...current,
+                goal: updater(current.goal),
+              }))
+            }
+          />
         ) : null}
 
         {stepKey === "schedule" ? (
@@ -662,11 +604,6 @@ function PlanCreationStepLayer({
 }
 
 const styles = StyleSheet.create({
-  // The screen only hosts the native Modal, so it must not take part in the
-  // host layout: as a flex sibling it would squeeze the tab content and
-  // expose the app background at the bottom half of the screen between the
-  // method sheet closing and the stack opening.
-  // (StyleSheet.absoluteFillObject is absent from this RN version's types.)
   root: {
     position: "absolute",
     top: 0,
@@ -693,19 +630,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-  },
-  targetTimeRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  timeInput: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    lineHeight: 20,
   },
   dayCountText: {
     fontSize: 13,

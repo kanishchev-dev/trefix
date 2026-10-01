@@ -1,10 +1,35 @@
-import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Animated,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type FlatListProps,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 
-import { PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
+import { getGoalDistanceKm, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
+
+// FlatList needs this wrapper to support native onScroll events with
+// useNativeDriver (plain FlatList throws an invariant in dev).
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+// createAnimatedComponent loses the FlatList generic (item becomes unknown);
+// this stable module-level alias restores it without recreating the component
+// identity on every render (which would remount the list).
+const CarouselList = AnimatedFlatList as unknown as <ItemT>(
+  props: FlatListProps<ItemT> & {
+    ref?: React.Ref<FlatList<ItemT>>;
+  },
+) => React.ReactElement | null;
 
 type OptionChipProps = {
   label: string;
@@ -215,7 +240,437 @@ export function FieldError({ message, theme }: { message: string; theme: ThemeTo
   );
 }
 
+type DistanceGoalOption<T extends string> = {
+  value: T;
+  label: string;
+};
+
+type DistanceGoalWidgetProps<T extends string> = {
+  options: DistanceGoalOption<T>[];
+  value: T;
+  unit?: string;
+  theme: ThemeTokens;
+  onChange: (value: T) => void;
+};
+
+/**
+ * Race-distance picker: a swipeable carousel where the neighbouring values
+ * peek from the sides and scale/fade away from the centre, with a quick
+ * preset chip slider underneath (same pattern as the workout goal sheet).
+ */
+export function DistanceGoalWidget<T extends string>({
+  options,
+  value,
+  unit = "км",
+  theme,
+  onChange,
+}: DistanceGoalWidgetProps<T>) {
+  const [containerWidth, setContainerWidth] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const listRef = useRef<FlatList<DistanceGoalOption<T>> | null>(null);
+  const lastIndexRef = useRef(
+    Math.max(
+      options.findIndex((option) => option.value === value),
+      0,
+    ),
+  );
+
+  const itemWidth = containerWidth / 3;
+
+  const formatDistance = (km: number) => (Number.isInteger(km) ? String(km) : km.toFixed(1));
+
+  // Follow external value changes (e.g. preset chip taps).
+  useEffect(() => {
+    const index = options.findIndex((option) => option.value === value);
+    if (index >= 0 && index !== lastIndexRef.current && itemWidth > 0) {
+      lastIndexRef.current = index;
+      listRef.current?.scrollToOffset({ offset: index * itemWidth, animated: true });
+    }
+  }, [value, options, itemWidth]);
+
+  const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (itemWidth <= 0) {
+      return;
+    }
+    const rawIndex = Math.round(event.nativeEvent.contentOffset.x / itemWidth);
+    const index = Math.min(Math.max(rawIndex, 0), options.length - 1);
+    lastIndexRef.current = index;
+    const selected = options[index];
+    if (selected && selected.value !== value) {
+      onChange(selected.value);
+    }
+  };
+
+  return (
+    <View onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}>
+      {itemWidth > 0 ? (
+        <CarouselList
+          ref={listRef}
+          data={options}
+          keyExtractor={(item) => item.value}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={itemWidth}
+          decelerationRate="fast"
+          getItemLayout={(_, index) => ({
+            length: itemWidth,
+            offset: itemWidth * index,
+            index,
+          })}
+          initialScrollIndex={lastIndexRef.current}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: true },
+          )}
+          onMomentumScrollEnd={handleMomentumEnd}
+          scrollEventThrottle={16}
+          style={styles.distanceCarousel}
+          renderItem={({ item, index }) => {
+            const km = getGoalDistanceKm(item.value);
+            const inputRange = [
+              (index - 1) * itemWidth,
+              index * itemWidth,
+              (index + 1) * itemWidth,
+            ];
+            const scale = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.72, 1, 0.72],
+              extrapolate: "clamp",
+            });
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.3, 1, 0.3],
+              extrapolate: "clamp",
+            });
+
+            return (
+              <Animated.View
+                style={[
+                  styles.distanceCell,
+                  { width: itemWidth, opacity, transform: [{ scale }] },
+                ]}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: item.value === value }}
+                  onPress={() =>
+                    listRef.current?.scrollToOffset({
+                      offset: index * itemWidth,
+                      animated: true,
+                    })
+                  }
+                  style={styles.distanceCellPress}
+                >
+                  {km !== null ? (
+                    <>
+                      <Text
+                        style={[
+                          styles.distanceValue,
+                          {
+                            color: theme.color.foreground,
+                            fontFamily: theme.typography.fontFamily.sans.extrabold,
+                          },
+                        ]}
+                      >
+                        {formatDistance(km)}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.distanceUnit,
+                          {
+                            color: theme.color.mutedForeground,
+                            fontFamily: theme.typography.fontFamily.sans.semibold,
+                          },
+                        ]}
+                      >
+                        {unit}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text
+                      numberOfLines={2}
+                      style={[
+                        styles.distanceValueText,
+                        {
+                          color: theme.color.foreground,
+                          fontFamily: theme.typography.fontFamily.sans.extrabold,
+                        },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  )}
+                </Pressable>
+              </Animated.View>
+            );
+          }}
+        />
+      ) : null}
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.distancePresetsScroll}
+        contentContainerStyle={styles.distancePresetsContent}
+      >
+        {options.map((option) => {
+          const selected = option.value === value;
+          const km = getGoalDistanceKm(option.value);
+          const label = km !== null ? `${formatDistance(km)} ${unit}` : option.label;
+
+          return (
+            <Pressable
+              key={option.value}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => onChange(option.value)}
+              style={({ pressed }) => [
+                styles.distancePresetChip,
+                {
+                  backgroundColor: selected ? theme.color.primary : theme.color.surfaceElevated,
+                  borderColor: selected ? theme.color.primary : theme.color.border,
+                },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.distancePresetText,
+                  {
+                    color: selected ? theme.color.primaryForeground : theme.color.foreground,
+                    fontFamily: selected
+                      ? theme.typography.fontFamily.sans.bold
+                      : theme.typography.fontFamily.sans.medium,
+                  },
+                ]}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+type FormInputRowProps = {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  unit?: string;
+  keyboardType?: 'default' | 'numeric' | 'decimal-pad' | 'number-pad' | 'numbers-and-punctuation';
+  error?: string | null;
+  badge?: string;
+  theme: ThemeTokens;
+};
+
+export function FormInputRow({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  unit,
+  keyboardType = 'numeric',
+  error,
+  badge,
+  theme,
+}: FormInputRowProps) {
+  return (
+    <View style={styles.inputRowBlock}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        >
+          {label}
+        </Text>
+
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+            <Text
+              style={[
+                styles.badgePillText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          accessibilityLabel={label}
+          keyboardType={keyboardType}
+          placeholder={placeholder}
+          placeholderTextColor={theme.color.mutedForeground}
+          value={value}
+          onChangeText={onChangeText}
+          style={[
+            styles.textInput,
+            {
+              backgroundColor: theme.color.surfaceElevated,
+              borderColor: error ? '#dc2626' : theme.color.border,
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        />
+        {unit ? (
+          <Text
+            style={[
+              styles.unitSuffix,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {unit}
+          </Text>
+        ) : null}
+      </View>
+
+      {error ? <FieldError message={error} theme={theme} /> : null}
+    </View>
+  );
+}
+
+type MultilineInputRowProps = {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  error?: string | null;
+  badge?: string;
+  theme: ThemeTokens;
+};
+
+export function MultilineInputRow({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  error,
+  badge,
+  theme,
+}: MultilineInputRowProps) {
+  return (
+    <View style={styles.inputRowBlock}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        >
+          {label}
+        </Text>
+
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+            <Text
+              style={[
+                styles.badgePillText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <TextInput
+        accessibilityLabel={label}
+        multiline
+        numberOfLines={4}
+        placeholder={placeholder}
+        placeholderTextColor={theme.color.mutedForeground}
+        textAlignVertical="top"
+        value={value}
+        onChangeText={onChangeText}
+        style={[
+          styles.multilineInput,
+          {
+            backgroundColor: theme.color.surfaceElevated,
+            borderColor: error ? '#dc2626' : theme.color.border,
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.regular,
+          },
+        ]}
+      />
+
+      {error ? <FieldError message={error} theme={theme} /> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  inputRowBlock: {
+    gap: 6,
+  },
+  inputRowHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  inputRowLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  badgePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgePillText: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  inputContainer: {
+    position: "relative",
+    justifyContent: "center",
+  },
+  textInput: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  unitSuffix: {
+    position: "absolute",
+    right: 16,
+    fontSize: 13,
+  },
+  multilineInput: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    lineHeight: 20,
+    minHeight: 96,
+  },
   chip: {
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -286,6 +741,56 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     marginLeft: 4,
+  },
+  distanceCarousel: {
+    height: 148,
+    width: "100%",
+  },
+  distanceCell: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  distanceCellPress: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  distanceValue: {
+    fontSize: 44,
+    lineHeight: 52,
+  },
+  distanceValueText: {
+    fontSize: 20,
+    lineHeight: 26,
+    textAlign: "center",
+    paddingHorizontal: 12,
+  },
+  distanceUnit: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  distancePresetsScroll: {
+    width: "100%",
+    marginTop: 4,
+    maxHeight: 46,
+  },
+  distancePresetsContent: {
+    gap: 8,
+    alignItems: "center",
+  },
+  distancePresetChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 9999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  distancePresetText: {
+    fontSize: 14,
+    lineHeight: 18,
   },
   pressed: {
     transform: [{ scale: 0.97 }],

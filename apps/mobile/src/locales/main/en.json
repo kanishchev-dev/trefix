@@ -175,7 +175,8 @@
         "close": "Close",
         "cancel": "Cancel",
         "continue": "Continue",
-        "buildPlan": "Build plan"
+        "buildPlan": "Build plan",
+        "distanceUnit": "km"
       },
       "discard": {
         "title": "Discard plan?",
@@ -185,8 +186,16 @@
       },
       "steps": {
         "goal": {
-          "title": "Your goal",
-          "question": "What are you training for?"
+          "title": "Goal Type",
+          "question": "What do you want to achieve?"
+        },
+        "goalType": {
+          "title": "Goal Type",
+          "question": "What do you want to achieve?"
+        },
+        "goalSetup": {
+          "title": "Goal Setup",
+          "question": "Configure your training target"
         },
         "schedule": {
           "title": "Your schedule",
@@ -196,6 +205,103 @@
           "title": "Plan structure",
           "question": "Shape your training week."
         }
+      },
+      "categories": {
+        "race_event": "Race & Events",
+        "performance": "Performance",
+        "training_habit": "Training Habit",
+        "fitness_lifestyle": "Fitness & Health",
+        "challenge": "Challenges",
+        "flexible": "Custom Goal"
+      },
+      "goalTypes": {
+        "prepare_for_race": "Prepare for a race",
+        "improve_race_result": "Improve a race result",
+        "run_new_distance": "Run a new distance",
+        "trail_preparation": "Trail preparation",
+        "ultra_preparation": "Ultra preparation",
+        "backyard_preparation": "Backyard preparation",
+        "improve_speed": "Improve speed",
+        "improve_pace": "Improve pace",
+        "build_endurance": "Build endurance",
+        "improve_aerobic_fitness": "Improve aerobic fitness",
+        "improve_hills": "Improve hills",
+        "start_running": "Start running",
+        "return_to_running": "Return to running",
+        "build_consistency": "Build consistency",
+        "increase_running_volume": "Increase weekly volume",
+        "run_continuously": "Run continuously",
+        "lose_weight": "Lose weight",
+        "maintain_fitness": "Maintain fitness",
+        "general_health": "General health & stay active",
+        "complete_challenge": "Complete a challenge",
+        "custom": "Custom goal"
+      },
+      "goalDescriptions": {
+        "prepare_for_race": "Train for a specific event distance with or without target finish time",
+        "improve_race_result": "Target a specific finish time for a race distance",
+        "run_new_distance": "Step up to a longer distance you haven't run before",
+        "trail_preparation": "Prepare for off-road trail running with elevation gain",
+        "ultra_preparation": "Prepare for distances beyond marathon",
+        "backyard_preparation": "Train for last-one-standing backyard loop challenges",
+        "improve_speed": "Focus on short-distance speed and interval capability",
+        "improve_pace": "Sustain a faster average pace over your target distance",
+        "build_endurance": "Increase continuous duration and long run capability",
+        "improve_aerobic_fitness": "Build base aerobic capacity and heart-rate efficiency",
+        "improve_hills": "Strengthen climbing power and hill endurance",
+        "start_running": "Begin running safely with walk/run intervals and habit building",
+        "return_to_running": "Smoothly rebuild fitness after a break",
+        "build_consistency": "Run regularly a target number of days every week",
+        "increase_running_volume": "Safely build higher weekly mileage or time",
+        "run_continuously": "Run without stopping for a target time or distance",
+        "lose_weight": "Sustainable running plan aligned with weight-loss goals",
+        "maintain_fitness": "Keep current fitness level with comfortable frequency",
+        "general_health": "Run for overall health, energy, and well-being",
+        "complete_challenge": "Achieve a monthly or custom running challenge",
+        "custom": "Describe your goal in your own words"
+      },
+      "fields": {
+        "currentSection": "Current Metrics (Optional)",
+        "targetSection": "Target Metrics",
+        "optionalLabel": "Optional",
+        "requiredLabel": "Required",
+        "distance": "Distance (km)",
+        "targetTime": "Target Time (hh:mm:ss)",
+        "currentResult": "Current Result (hh:mm:ss)",
+        "currentPace": "Current Pace (min/km)",
+        "targetPace": "Target Pace (min/km)",
+        "targetWeight": "Target Weight (kg)",
+        "currentWeight": "Current Weight (kg)",
+        "targetRunsPerWeek": "Target Runs / Week",
+        "currentRunsPerWeek": "Current Runs / Week",
+        "weeklyVolumeDistance": "Weekly Volume (km)",
+        "weeklyVolumeDuration": "Weekly Volume (min)",
+        "continuousDuration": "Continuous Time (min)",
+        "continuousDistance": "Continuous Distance (km)",
+        "elevationGain": "Elevation Gain (m)",
+        "timeOnFeet": "Time on Feet (min)",
+        "loopsCount": "Number of Loops",
+        "shortDistanceResult": "Short Distance Result (sec)",
+        "benchmarkValue": "Benchmark Value",
+        "challengeMetric": "Challenge Metric",
+        "challengeTarget": "Challenge Target",
+        "challengePeriod": "Challenge Period",
+        "challengeProgress": "Current Progress",
+        "customDescriptionLabel": "Describe what you want to achieve",
+        "customDescriptionPlaceholder": "e.g., I want to comfortably run with my local running club twice a week for an hour.",
+        "targetDate": "Target Date"
+      },
+      "challengeMetrics": {
+        "total_distance": "Total distance (km)",
+        "total_duration": "Total duration (hours)",
+        "runs_count": "Number of runs",
+        "active_days": "Active days"
+      },
+      "challengePeriods": {
+        "this_week": "This week",
+        "this_month": "This month",
+        "this_year": "This year",
+        "custom": "Custom deadline"
       },
       "goalSection": "Goal distance",
       "targetTimeSection": "Target time",

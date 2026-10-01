@@ -175,7 +175,8 @@
         "close": "Закрыть",
         "cancel": "Отмена",
         "continue": "Далее",
-        "buildPlan": "Собрать план"
+        "buildPlan": "Собрать план",
+        "distanceUnit": "км"
       },
       "discard": {
         "title": "Отменить план?",
@@ -185,8 +186,16 @@
       },
       "steps": {
         "goal": {
-          "title": "Твоя цель",
-          "question": "К чему ты готовишься?"
+          "title": "Тип цели",
+          "question": "Чего ты хочешь достичь?"
+        },
+        "goalType": {
+          "title": "Тип цели",
+          "question": "Чего ты хочешь достичь?"
+        },
+        "goalSetup": {
+          "title": "Настройка цели",
+          "question": "Укажи целевые показатели"
         },
         "schedule": {
           "title": "Твоё расписание",
@@ -196,6 +205,103 @@
           "title": "Структура плана",
           "question": "Определи форму тренировочной недели."
         }
+      },
+      "categories": {
+        "race_event": "Забеги и соревнования",
+        "performance": "Результативность и скорость",
+        "training_habit": "Привычки и регулярность",
+        "fitness_lifestyle": "Фитнес и здоровье",
+        "challenge": "Челленджи",
+        "flexible": "Своя цель"
+      },
+      "goalTypes": {
+        "prepare_for_race": "Подготовка к забегу",
+        "improve_race_result": "Улучшить результат в забеге",
+        "run_new_distance": "Пробежать новую дистанцию",
+        "trail_preparation": "Подготовка к трейлу",
+        "ultra_preparation": "Подготовка к ультрамарафону",
+        "backyard_preparation": "Подготовка к Backyard Ultra",
+        "improve_speed": "Развитие скорости",
+        "improve_pace": "Улучшение темпа",
+        "build_endurance": "Развитие выносливости",
+        "improve_aerobic_fitness": "Развитие аэробной формы",
+        "improve_hills": "Бег по холмам и горкам",
+        "start_running": "Начать бегать",
+        "return_to_running": "Возвращение к бегу",
+        "build_consistency": "Регулярность тренировок",
+        "increase_running_volume": "Увеличение недельного объёма",
+        "run_continuously": "Непрерывный бег",
+        "lose_weight": "Снижение веса",
+        "maintain_fitness": "Поддержание формы",
+        "general_health": "Общее здоровье и активность",
+        "complete_challenge": "Выполнить челлендж",
+        "custom": "Своя цель"
+      },
+      "goalDescriptions": {
+        "prepare_for_race": "Подготовка к финишу на целевой дистанции с временем или без",
+        "improve_race_result": "Целевое время на выбранной дистанции забега",
+        "run_new_distance": "Подготовка к новой, ранее не преодолевавшейся дистанции",
+        "trail_preparation": "Подготовка к бегу по пересечённой местности с набором высоты",
+        "ultra_preparation": "Подготовка к дистанциям длиннее марафона",
+        "backyard_preparation": "Подготовка к многочасовому круговому формату Backyard",
+        "improve_speed": "Фокус на интервалах и коротких быстрых отрезках",
+        "improve_pace": "Способность удерживать более высокий средний темп",
+        "build_endurance": "Увеличение длительности бега и объёма длинных тренировок",
+        "improve_aerobic_fitness": "Развитие базы, аэробного порога и эффективного пульса",
+        "improve_hills": "Укрепление силы и выносливости при беге в подъёмы",
+        "start_running": "Безопасный старт с чередованием бега и шага",
+        "return_to_running": "Плавный возврат к пробежкам после перерыва",
+        "build_consistency": "Закрепление привычки бегать фиксированное число дней в неделю",
+        "increase_running_volume": "Безопасное увеличение недельного километража или времени",
+        "run_continuously": "Бег без остановок и перехода на шаг на время или дистанцию",
+        "lose_weight": "Беговая программа, согласованная с целью снижения веса",
+        "maintain_fitness": "Сохранение текущего уровня формы в комфортном ритме",
+        "general_health": "Пробежки для тонуса, хорошего самочувствия и энергии",
+        "complete_challenge": "Достижение месячной или индивидуальной беговой цели",
+        "custom": "Свободное описание вашей цели своими словами"
+      },
+      "fields": {
+        "currentSection": "Текущие показатели (необязательно)",
+        "targetSection": "Целевой показатель",
+        "optionalLabel": "Необязательно",
+        "requiredLabel": "Обязательно",
+        "distance": "Дистанция (км)",
+        "targetTime": "Целевое время (чч:мм:сс)",
+        "currentResult": "Текущий результат (чч:мм:сс)",
+        "currentPace": "Текущий темп (мин/км)",
+        "targetPace": "Целевой темп (мин/км)",
+        "targetWeight": "Целевой вес (кг)",
+        "currentWeight": "Текущий вес (кг)",
+        "targetRunsPerWeek": "Цель пробежек в неделю",
+        "currentRunsPerWeek": "Текущее кол-во пробежек в неделю",
+        "weeklyVolumeDistance": "Недельный объём (км)",
+        "weeklyVolumeDuration": "Недельная длительность (мин)",
+        "continuousDuration": "Время непрерывного бега (мин)",
+        "continuousDistance": "Дистанция непрерывного бега (км)",
+        "elevationGain": "Набор высоты (м)",
+        "timeOnFeet": "Время на ногах (мин)",
+        "loopsCount": "Количество кругов",
+        "shortDistanceResult": "Результат на короткой дистанции (сек)",
+        "benchmarkValue": "Тестовый показатель",
+        "challengeMetric": "Показатель челленджа",
+        "challengeTarget": "Цель челленджа",
+        "challengePeriod": "Период",
+        "challengeProgress": "Текущий прогресс",
+        "customDescriptionLabel": "Опишите, чего вы хотите достичь",
+        "customDescriptionPlaceholder": "Например: хочу комфортно бегать с местным беговым клубом дважды в неделю по часу.",
+        "targetDate": "Целевая дата"
+      },
+      "challengeMetrics": {
+        "total_distance": "Общая дистанция (км)",
+        "total_duration": "Общая длительность (часы)",
+        "runs_count": "Количество пробежек",
+        "active_days": "Активные дни"
+      },
+      "challengePeriods": {
+        "this_week": "На этой неделе",
+        "this_month": "В этом месяце",
+        "this_year": "В этом году",
+        "custom": "К определенной дате"
       },
       "goalSection": "Дистанция",
       "targetTimeSection": "Целевое время",

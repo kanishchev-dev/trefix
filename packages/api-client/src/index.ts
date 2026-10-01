@@ -267,12 +267,373 @@ export const completeWorkoutSchema = z.object({
 export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;
 export type CompleteWorkoutInput = z.infer<typeof completeWorkoutSchema>;
 
+// --- Training Goals Taxonomy & Universal Goal Model ---
+
+export const ATHLETE_GOAL_TYPES = [
+  // Race & Event
+  'prepare_for_race',
+  'improve_race_result',
+  'run_new_distance',
+  'trail_preparation',
+  'ultra_preparation',
+  'backyard_preparation',
+  // Performance
+  'improve_speed',
+  'improve_pace',
+  'build_endurance',
+  'improve_aerobic_fitness',
+  'improve_hills',
+  // Training habit
+  'start_running',
+  'return_to_running',
+  'build_consistency',
+  'increase_running_volume',
+  'run_continuously',
+  // Fitness & Lifestyle
+  'lose_weight',
+  'maintain_fitness',
+  'general_health',
+  // Challenge
+  'complete_challenge',
+  // Flexible
+  'custom',
+] as const;
+
+export type AthleteGoalType = (typeof ATHLETE_GOAL_TYPES)[number];
+
+export const ATHLETE_GOAL_CATEGORIES = [
+  'race_event',
+  'performance',
+  'training_habit',
+  'fitness_lifestyle',
+  'challenge',
+  'flexible',
+] as const;
+
+export type AthleteGoalCategory = (typeof ATHLETE_GOAL_CATEGORIES)[number];
+
+export const GOAL_TYPE_CATEGORY: Record<AthleteGoalType, AthleteGoalCategory> = {
+  prepare_for_race: 'race_event',
+  improve_race_result: 'race_event',
+  run_new_distance: 'race_event',
+  trail_preparation: 'race_event',
+  ultra_preparation: 'race_event',
+  backyard_preparation: 'race_event',
+  improve_speed: 'performance',
+  improve_pace: 'performance',
+  build_endurance: 'performance',
+  improve_aerobic_fitness: 'performance',
+  improve_hills: 'performance',
+  start_running: 'training_habit',
+  return_to_running: 'training_habit',
+  build_consistency: 'training_habit',
+  increase_running_volume: 'training_habit',
+  run_continuously: 'training_habit',
+  lose_weight: 'fitness_lifestyle',
+  maintain_fitness: 'fitness_lifestyle',
+  general_health: 'fitness_lifestyle',
+  complete_challenge: 'challenge',
+  custom: 'flexible',
+};
+
+export const GOAL_METRIC_KEYS = [
+  'distanceMeters',
+  'finishTimeSec',
+  'paceSecondsPerKm',
+  'weightKg',
+  'runsPerWeek',
+  'weeklyDistanceKm',
+  'weeklyDurationMinutes',
+  'continuousDurationMinutes',
+  'continuousDistanceKm',
+  'elevationGainMeters',
+  'shortDistanceResultSec',
+  'benchmarkValue',
+  'timeOnFeetMinutes',
+  'loopsCount',
+  'challengeMetric',
+  'challengeTargetValue',
+  'challengePeriod',
+  'challengeProgressValue',
+] as const;
+
+export type GoalMetricKey = (typeof GOAL_METRIC_KEYS)[number];
+
+export type GoalChallengeMetric = 'total_distance' | 'total_duration' | 'runs_count' | 'active_days';
+export type GoalChallengePeriod = 'this_week' | 'this_month' | 'this_year' | 'custom';
+
+export const GOAL_CHALLENGE_METRICS: readonly GoalChallengeMetric[] = [
+  'total_distance',
+  'total_duration',
+  'runs_count',
+  'active_days',
+];
+
+export const GOAL_CHALLENGE_PERIODS: readonly GoalChallengePeriod[] = [
+  'this_week',
+  'this_month',
+  'this_year',
+  'custom',
+];
+
+export const GOAL_METRIC_BOUNDS: Record<GoalMetricKey, { min: number; max: number; integer?: boolean }> = {
+  distanceMeters: { min: 500, max: 300_000, integer: true },
+  finishTimeSec: { min: 60, max: 260_000, integer: true },
+  paceSecondsPerKm: { min: 120, max: 1_200, integer: true },
+  weightKg: { min: 25, max: 350 },
+  runsPerWeek: { min: 1, max: 14, integer: true },
+  weeklyDistanceKm: { min: 1, max: 400 },
+  weeklyDurationMinutes: { min: 20, max: 6_000, integer: true },
+  continuousDurationMinutes: { min: 3, max: 1_440, integer: true },
+  continuousDistanceKm: { min: 0.5, max: 300 },
+  elevationGainMeters: { min: 0, max: 10_000, integer: true },
+  shortDistanceResultSec: { min: 5, max: 3_600, integer: true },
+  benchmarkValue: { min: 0, max: 10_000 },
+  timeOnFeetMinutes: { min: 30, max: 4_320, integer: true },
+  loopsCount: { min: 1, max: 100, integer: true },
+  challengeMetric: { min: 0, max: 0 },
+  challengeTargetValue: { min: 1, max: 100_000 },
+  challengePeriod: { min: 0, max: 0 },
+  challengeProgressValue: { min: 0, max: 100_000 },
+};
+
+export interface GoalTypeConfig {
+  targetFields: readonly GoalMetricKey[];
+  currentFields: readonly GoalMetricKey[];
+  requiredTargetGroups: readonly (readonly GoalMetricKey[])[];
+  requiresDescription?: boolean;
+}
+
+const T: Record<string, readonly GoalMetricKey[]> = {
+  distance: ['distanceMeters'],
+  finishTime: ['finishTimeSec'],
+  pace: ['paceSecondsPerKm'],
+  weight: ['weightKg'],
+  runsPerWeek: ['runsPerWeek'],
+  weeklyVolume: ['weeklyDistanceKm', 'weeklyDurationMinutes'],
+  continuous: ['continuousDurationMinutes', 'continuousDistanceKm'],
+};
+
+const RACE_CURRENT: readonly GoalMetricKey[] = ['distanceMeters', 'finishTimeSec', 'paceSecondsPerKm'];
+
+export const GOAL_TYPE_CONFIG: Record<AthleteGoalType, GoalTypeConfig> = {
+  prepare_for_race: {
+    targetFields: [...T.distance, ...T.finishTime],
+    currentFields: [...RACE_CURRENT],
+    requiredTargetGroups: [T.distance],
+  },
+  improve_race_result: {
+    targetFields: [...T.distance, ...T.finishTime],
+    currentFields: [...RACE_CURRENT],
+    requiredTargetGroups: [T.distance, T.finishTime],
+  },
+  run_new_distance: {
+    targetFields: [...T.distance],
+    currentFields: [...RACE_CURRENT],
+    requiredTargetGroups: [T.distance],
+  },
+  trail_preparation: {
+    targetFields: ['distanceMeters', 'elevationGainMeters'],
+    currentFields: ['distanceMeters', 'elevationGainMeters', 'weeklyDistanceKm'],
+    requiredTargetGroups: [T.distance],
+  },
+  ultra_preparation: {
+    targetFields: ['distanceMeters', 'elevationGainMeters'],
+    currentFields: ['distanceMeters', 'weeklyDistanceKm'],
+    requiredTargetGroups: [T.distance],
+  },
+  backyard_preparation: {
+    targetFields: ['loopsCount', 'timeOnFeetMinutes', 'distanceMeters'],
+    currentFields: ['timeOnFeetMinutes', 'distanceMeters'],
+    requiredTargetGroups: [],
+  },
+  improve_speed: {
+    targetFields: ['shortDistanceResultSec', 'paceSecondsPerKm', 'benchmarkValue'],
+    currentFields: ['shortDistanceResultSec', 'paceSecondsPerKm', 'benchmarkValue'],
+    requiredTargetGroups: [],
+  },
+  improve_pace: {
+    targetFields: [...T.pace, 'distanceMeters'],
+    currentFields: [...T.pace, ...T.distance],
+    requiredTargetGroups: [T.pace],
+  },
+  build_endurance: {
+    targetFields: [...T.continuous],
+    currentFields: ['continuousDurationMinutes', 'continuousDistanceKm', 'distanceMeters'],
+    requiredTargetGroups: [T.continuous],
+  },
+  improve_aerobic_fitness: {
+    targetFields: ['benchmarkValue'],
+    currentFields: ['benchmarkValue'],
+    requiredTargetGroups: [],
+  },
+  improve_hills: {
+    targetFields: ['elevationGainMeters', 'continuousDurationMinutes'],
+    currentFields: ['elevationGainMeters', 'benchmarkValue'],
+    requiredTargetGroups: [],
+  },
+  start_running: {
+    targetFields: ['continuousDurationMinutes', 'continuousDistanceKm'],
+    currentFields: ['continuousDurationMinutes', 'continuousDistanceKm'],
+    requiredTargetGroups: [],
+  },
+  return_to_running: {
+    targetFields: ['weeklyDistanceKm', 'continuousDurationMinutes'],
+    currentFields: ['weeklyDistanceKm', 'continuousDurationMinutes', 'continuousDistanceKm'],
+    requiredTargetGroups: [],
+  },
+  build_consistency: {
+    targetFields: [...T.runsPerWeek],
+    currentFields: [...T.runsPerWeek],
+    requiredTargetGroups: [T.runsPerWeek],
+  },
+  increase_running_volume: {
+    targetFields: [...T.weeklyVolume],
+    currentFields: [...T.weeklyVolume],
+    requiredTargetGroups: [T.weeklyVolume],
+  },
+  run_continuously: {
+    targetFields: [...T.continuous],
+    currentFields: [...T.continuous],
+    requiredTargetGroups: [T.continuous],
+  },
+  lose_weight: {
+    targetFields: [...T.weight],
+    currentFields: [...T.weight],
+    requiredTargetGroups: [T.weight],
+  },
+  maintain_fitness: {
+    targetFields: ['runsPerWeek', 'weeklyDistanceKm'],
+    currentFields: ['runsPerWeek', 'weeklyDistanceKm'],
+    requiredTargetGroups: [],
+  },
+  general_health: {
+    targetFields: ['runsPerWeek', 'weeklyDurationMinutes'],
+    currentFields: ['runsPerWeek'],
+    requiredTargetGroups: [],
+  },
+  complete_challenge: {
+    targetFields: ['challengeMetric', 'challengeTargetValue', 'challengePeriod'],
+    currentFields: ['challengeProgressValue'],
+    requiredTargetGroups: [['challengeMetric', 'challengeTargetValue'] as readonly GoalMetricKey[]],
+  },
+  custom: {
+    targetFields: [],
+    currentFields: [],
+    requiredTargetGroups: [],
+    requiresDescription: true,
+  },
+};
+
+export interface GoalValidationResult {
+  valid: boolean;
+  code?: string;
+  field?: string;
+}
+
+export function validateGoalPayload(goal: {
+  type: AthleteGoalType;
+  current?: Record<string, unknown> | null;
+  target?: Record<string, unknown> | null;
+  description?: string | null;
+}): GoalValidationResult {
+  const config = GOAL_TYPE_CONFIG[goal.type];
+  if (!config) {
+    return { valid: false, code: 'GOAL_TYPE_UNKNOWN' };
+  }
+
+  if (config.requiresDescription && !(typeof goal.description === 'string' && goal.description.trim().length > 0)) {
+    return { valid: false, code: 'GOAL_DESCRIPTION_REQUIRED' };
+  }
+
+  const target = goal.target ?? {};
+
+  for (const group of config.requiredTargetGroups) {
+    const satisfied = group.some((field) => {
+      const value = target[field];
+      return value !== undefined && value !== null && value !== '';
+    });
+    if (!satisfied) {
+      return { valid: false, code: 'GOAL_TARGET_REQUIRED', field: group[0] };
+    }
+  }
+
+  return { valid: true };
+}
+
+export const athleteGoalTypeSchema = z.enum(ATHLETE_GOAL_TYPES);
+export const athleteGoalCategorySchema = z.enum(ATHLETE_GOAL_CATEGORIES);
+
+export const athleteGoalPayloadSchema = z.object({
+  type: athleteGoalTypeSchema,
+  current: z.record(z.string(), z.unknown()).nullable().optional(),
+  target: z.record(z.string(), z.unknown()).nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  targetDate: z.string().optional(),
+  priority: z.number().int().min(1).max(10).optional(),
+});
+
+export type AthleteGoalPayloadInput = z.infer<typeof athleteGoalPayloadSchema>;
+
+export const LEGACY_RACE_DISTANCE_METERS: Record<string, number> = {
+  '5k': 5_000,
+  '10k': 10_000,
+  half_marathon: 21_097,
+  marathon: 42_195,
+};
+
+export const LEGACY_RACE_DISTANCE_VALUES = ['5k', '10k', 'half_marathon', 'marathon', 'just_running'] as const;
+
+export function mapLegacyRaceGoal(
+  raceDistance: string,
+  targetTimeSeconds?: number | null,
+): { type: AthleteGoalType; target: Record<string, unknown> } {
+  const distanceMeters = LEGACY_RACE_DISTANCE_METERS[raceDistance];
+  const target: Record<string, unknown> = {};
+  if (distanceMeters) {
+    target.distanceMeters = distanceMeters;
+  }
+  if (targetTimeSeconds && distanceMeters) {
+    return { type: 'improve_race_result', target: { ...target, finishTimeSec: targetTimeSeconds } };
+  }
+  return { type: 'prepare_for_race', target };
+}
+
+export function deriveLegacyRaceFields(goal: {
+  type?: AthleteGoalType;
+  target?: Record<string, unknown> | null;
+}): {
+  raceDistance: (typeof LEGACY_RACE_DISTANCE_VALUES)[number];
+  targetTimeSeconds: number | null;
+} {
+  const distanceMeters = goal.target?.distanceMeters;
+  const finishTimeSec = goal.target?.finishTimeSec;
+  const targetTimeSeconds = typeof finishTimeSec === 'number' && Number.isFinite(finishTimeSec) ? finishTimeSec : null;
+
+  if (typeof distanceMeters === 'number') {
+    const matched = Object.entries(LEGACY_RACE_DISTANCE_METERS).find(
+      ([, meters]) => Math.abs(meters - distanceMeters) < 1,
+    );
+    if (matched) {
+      return { raceDistance: matched[0] as (typeof LEGACY_RACE_DISTANCE_VALUES)[number], targetTimeSeconds };
+    }
+  }
+
+  return { raceDistance: 'just_running', targetTimeSeconds };
+}
+
 // --- Manual Plan Creation ---
 
 export const manualPlanGoalSchema = z.object({
-  raceDistance: z.enum(["5k", "10k", "half_marathon", "marathon", "just_running"]),
-  targetTimeSeconds: z.number().int().positive().optional(),
+  type: athleteGoalTypeSchema.optional(),
+  current: z.record(z.string(), z.unknown()).nullable().optional(),
+  target: z.record(z.string(), z.unknown()).nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
   targetDate: z.string().optional(),
+  priority: z.number().int().min(1).max(10).optional(),
+  // Legacy fields kept for backward compatibility
+  raceDistance: z.enum(['5k', '10k', 'half_marathon', 'marathon', 'just_running']).optional(),
+  targetTimeSeconds: z.number().int().nonnegative().optional(),
 });
 
 export const manualPlanScheduleSchema = z.object({

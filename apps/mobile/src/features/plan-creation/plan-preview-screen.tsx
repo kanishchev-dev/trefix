@@ -20,7 +20,11 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
 import { BottomSheet } from "../../shared/ui/bottom-sheet";
-import { PLAN_WORKOUT_TYPE_KEYS, type PlanCreationDraft } from "./plan-creation-types";
+import {
+  PLAN_WORKOUT_TYPE_KEYS,
+  formatGoalSummary,
+  type PlanCreationDraft,
+} from "./plan-creation-types";
 import { useCreateManualPlan } from "./hooks/use-manual-plan";
 import { FieldError, OptionChip } from "./components/plan-creation-ui";
 
@@ -77,15 +81,8 @@ export function PlanPreviewScreen({
   }, [preview.startDate, language]);
 
   const goalSummary = useMemo(() => {
-    const goalCopy = creationCopy.goals;
-    const label =
-      draft.goal.raceDistance === "5k" || draft.goal.raceDistance === "10k"
-        ? draft.goal.raceDistance.toUpperCase()
-        : goalCopy[
-            draft.goal.raceDistance as keyof typeof goalCopy
-          ] ?? draft.goal.raceDistance;
-    return [label, draft.goal.targetDate].filter(Boolean).join(" · ");
-  }, [draft.goal.raceDistance, draft.goal.targetDate, creationCopy.goals]);
+    return formatGoalSummary(draft.goal, copy);
+  }, [draft.goal, copy]);
 
   const totalDistance = useMemo(
     () => preview.weeks.reduce((sum, week) => sum + week.plannedDistance, 0),
@@ -128,9 +125,14 @@ export function PlanPreviewScreen({
 
     return {
       goal: {
+        type: draft.goal.type,
+        target: draft.goal.target,
+        current: draft.goal.current,
+        description: draft.goal.description,
+        targetDate: draft.goal.targetDate,
+        priority: draft.goal.priority,
         raceDistance: draft.goal.raceDistance,
         targetTimeSeconds: draft.goal.targetTimeSeconds,
-        targetDate: draft.goal.targetDate,
       },
       schedule: draft.schedule,
       structure: {
