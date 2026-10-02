@@ -485,7 +485,7 @@ export function BottomSheet({
                 </View>
               </GestureDetector>
 
-              <View style={[styles.sheetContent, styles.sheetContentPadding]}>{children}</View>
+              <View style={styles.sheetContent}>{children}</View>
             </View>
           </Animated.View>
         </View>
@@ -690,7 +690,7 @@ function StackLayer({
             </View>
           </GestureDetector>
 
-          <View style={[styles.sheetContent, styles.sheetContentPadding]}>{children}</View>
+          <View style={styles.sheetContent}>{children}</View>
         </View>
       </View>
     </Animated.View>
@@ -793,19 +793,30 @@ export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeT
 export function SheetBlock({
   theme,
   edgeToEdge = false,
+  disableLeftPadding = false,
+  disableRightPadding = false,
+  noPadding = false,
   children,
   style,
 }: {
   theme: ThemeTokens;
   edgeToEdge?: boolean;
+  disableLeftPadding?: boolean;
+  disableRightPadding?: boolean;
+  noPadding?: boolean;
   children: ReactNode;
   style?: object;
 }) {
+  const noLeft = edgeToEdge || noPadding || disableLeftPadding;
+  const noRight = edgeToEdge || noPadding || disableRightPadding;
+
   return (
     <View
       style={[
-        styles.sheetContentPadding,
-        edgeToEdge ? styles.sheetContentBleed : null,
+        {
+          paddingLeft: noLeft ? 0 : 20,
+          paddingRight: noRight ? 0 : 20,
+        },
         style,
       ]}
     >
@@ -916,7 +927,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 0,
     gap: 16,
-    overflow: "visible",
+    overflow: "hidden",
   },
   stackCard: {
     height: STACK_CARD_HEIGHT,

@@ -158,15 +158,17 @@ export function WorkoutGoalSheet({
       themeMode={themeMode}
     >
       {/* Mode Tabs with Animated Pill Indicator */}
-      <SheetTabs
-        value={mode}
-        onChange={setMode}
-        theme={theme}
-        tabs={[
-          { key: "distance" as WorkoutGoalMode, label: goalSheetCopy.tabs?.distance || "Дистанция" },
-          { key: "duration" as WorkoutGoalMode, label: goalSheetCopy.tabs?.duration || "Время" },
-        ]}
-      />
+      <SheetBlock theme={theme}>
+        <SheetTabs
+          value={mode}
+          onChange={setMode}
+          theme={theme}
+          tabs={[
+            { key: "distance" as WorkoutGoalMode, label: goalSheetCopy.tabs?.distance || "Дистанция" },
+            { key: "duration" as WorkoutGoalMode, label: goalSheetCopy.tabs?.duration || "Время" },
+          ]}
+        />
+      </SheetBlock>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -175,76 +177,80 @@ export function WorkoutGoalSheet({
         style={styles.scrollView}
       >
         {errorMessage ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
+          <SheetBlock theme={theme}>
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          </SheetBlock>
         ) : null}
 
         {/* Display Main Goal Value Input with Stepper Controls */}
-        <View style={styles.valueDisplayArea}>
-          <View style={styles.inputRow}>
-            <Pressable
-              onPress={handleDecrement}
-              style={({ pressed }) => [
-                styles.stepperButton,
-                {
-                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-                  borderColor:
-                    themeMode === "dark"
-                      ? "rgba(255, 255, 255, 0.08)"
-                      : theme.color.border,
-                },
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Minus size={20} color={theme.color.foreground} />
-            </Pressable>
-
-            <View style={styles.numberWrapper}>
-              <TextInput
-                editable={false}
-                style={[
-                  styles.valueInput,
+        <SheetBlock theme={theme}>
+          <View style={styles.valueDisplayArea}>
+            <View style={styles.inputRow}>
+              <Pressable
+                onPress={handleDecrement}
+                style={({ pressed }) => [
+                  styles.stepperButton,
                   {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
+                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                    borderColor:
+                      themeMode === "dark"
+                        ? "rgba(255, 255, 255, 0.08)"
+                        : theme.color.border,
                   },
-                ]}
-                value={mode === "distance" ? distanceVal : durationVal}
-              />
-              <Text
-                style={[
-                  styles.superscriptUnit,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.semibold,
-                  },
+                  pressed && styles.buttonPressed,
                 ]}
               >
-                {mode === "distance"
-                  ? goalSheetCopy.distanceUnit || "км"
-                  : goalSheetCopy.durationUnit || "мин"}
-              </Text>
-            </View>
+                <Minus size={20} color={theme.color.foreground} />
+              </Pressable>
 
-            <Pressable
-              onPress={handleIncrement}
-              style={({ pressed }) => [
-                styles.stepperButton,
-                {
-                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-                  borderColor:
-                    themeMode === "dark"
-                      ? "rgba(255, 255, 255, 0.08)"
-                      : theme.color.border,
-                },
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Plus size={20} color={theme.color.foreground} />
-            </Pressable>
+              <View style={styles.numberWrapper}>
+                <TextInput
+                  editable={false}
+                  style={[
+                    styles.valueInput,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                  value={mode === "distance" ? distanceVal : durationVal}
+                />
+                <Text
+                  style={[
+                    styles.superscriptUnit,
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.semibold,
+                    },
+                  ]}
+                >
+                  {mode === "distance"
+                    ? goalSheetCopy.distanceUnit || "км"
+                    : goalSheetCopy.durationUnit || "мин"}
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={handleIncrement}
+                style={({ pressed }) => [
+                  styles.stepperButton,
+                  {
+                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                    borderColor:
+                      themeMode === "dark"
+                        ? "rgba(255, 255, 255, 0.08)"
+                        : theme.color.border,
+                  },
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Plus size={20} color={theme.color.foreground} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </SheetBlock>
 
         {/* Quick Presets Horizontal Slider (Edge-to-Edge) */}
         <SheetBlock theme={theme} edgeToEdge>
@@ -311,24 +317,26 @@ export function WorkoutGoalSheet({
       </ScrollView>
 
       {/* Actions Row */}
-      <View style={styles.actionsRow}>
-        <SheetButton
-          label={goalSheetCopy.cancel || "Отменить"}
-          onPress={onClose}
-          variant="secondary"
-          theme={theme}
-          themeMode={themeMode}
-        />
+      <SheetBlock theme={theme}>
+        <View style={styles.actionsRow}>
+          <SheetButton
+            label={goalSheetCopy.cancel || "Отменить"}
+            onPress={onClose}
+            variant="secondary"
+            theme={theme}
+            themeMode={themeMode}
+          />
 
-        <SheetButton
-          label={goalSheetCopy.submit || "Добавить"}
-          onPress={handleSubmit}
-          disabled={!isValid}
-          pending={createWorkoutMutation.isPending}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      </View>
+          <SheetButton
+            label={goalSheetCopy.submit || "Добавить"}
+            onPress={handleSubmit}
+            disabled={!isValid}
+            pending={createWorkoutMutation.isPending}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </View>
+      </SheetBlock>
     </BottomSheet>
   );
 }

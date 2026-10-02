@@ -16,6 +16,7 @@ import { Minus, Plus } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 
+import { SheetBlock } from "../../../shared/ui/bottom-sheet";
 import { getGoalDistanceKm, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
 
 // FlatList needs this wrapper to support native onScroll events with
@@ -209,20 +210,22 @@ type SectionBlockProps = {
 
 export function SectionBlock({ title, theme, children }: SectionBlockProps) {
   return (
-    <View style={styles.sectionBlock}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: theme.color.mutedForeground,
-            fontFamily: theme.typography.fontFamily.sans.bold,
-          },
-        ]}
-      >
-        {title.toUpperCase()}
-      </Text>
-      {children}
-    </View>
+    <SheetBlock theme={theme}>
+      <View style={styles.sectionBlock}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            {
+              color: theme.color.mutedForeground,
+              fontFamily: theme.typography.fontFamily.sans.bold,
+            },
+          ]}
+        >
+          {title.toUpperCase()}
+        </Text>
+        {children}
+      </View>
+    </SheetBlock>
   );
 }
 
@@ -407,49 +410,51 @@ export function DistanceGoalWidget<T extends string>({
         />
       ) : null}
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.distancePresetsScroll}
-        contentContainerStyle={styles.distancePresetsContent}
-      >
-        {options.map((option) => {
-          const selected = option.value === value;
-          const km = getGoalDistanceKm(option.value);
-          const label = km !== null ? `${formatDistance(km)} ${unit}` : option.label;
+      <SheetBlock theme={theme} edgeToEdge>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.distancePresetsScroll}
+          contentContainerStyle={styles.distancePresetsContent}
+        >
+          {options.map((option) => {
+            const selected = option.value === value;
+            const km = getGoalDistanceKm(option.value);
+            const label = km !== null ? `${formatDistance(km)} ${unit}` : option.label;
 
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => onChange(option.value)}
-              style={({ pressed }) => [
-                styles.distancePresetChip,
-                {
-                  backgroundColor: selected ? theme.color.primary : theme.color.surfaceElevated,
-                  borderColor: selected ? theme.color.primary : theme.color.border,
-                },
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.distancePresetText,
+            return (
+              <Pressable
+                key={option.value}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onChange(option.value)}
+                style={({ pressed }) => [
+                  styles.distancePresetChip,
                   {
-                    color: selected ? theme.color.primaryForeground : theme.color.foreground,
-                    fontFamily: selected
-                      ? theme.typography.fontFamily.sans.bold
-                      : theme.typography.fontFamily.sans.medium,
+                    backgroundColor: selected ? theme.color.primary : theme.color.surfaceElevated,
+                    borderColor: selected ? theme.color.primary : theme.color.border,
                   },
+                  pressed && styles.pressed,
                 ]}
               >
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={[
+                    styles.distancePresetText,
+                    {
+                      color: selected ? theme.color.primaryForeground : theme.color.foreground,
+                      fontFamily: selected
+                        ? theme.typography.fontFamily.sans.bold
+                        : theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </SheetBlock>
     </View>
   );
 }
@@ -781,6 +786,7 @@ const styles = StyleSheet.create({
   distancePresetsContent: {
     gap: 8,
     alignItems: "center",
+    paddingHorizontal: 20,
   },
   distancePresetChip: {
     paddingHorizontal: 16,

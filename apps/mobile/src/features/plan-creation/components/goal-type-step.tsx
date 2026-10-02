@@ -34,6 +34,7 @@ import {
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { SheetBlock } from "../../../shared/ui/bottom-sheet";
 import { OptionChip } from "./plan-creation-ui";
 
 type Props = {
@@ -112,46 +113,49 @@ export function GoalTypeStep({
   return (
     <View style={styles.container}>
       {/* Category filter tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesScroll}
-        contentContainerStyle={styles.categoriesContent}
-      >
-        <OptionChip
-          label={copy.progress.milestones.viewAll}
-          selected={activeCategory === "all"}
-          theme={theme}
-          onPress={() => setActiveCategory("all")}
-        />
-        {ATHLETE_GOAL_CATEGORIES.map((cat) => (
+      <SheetBlock theme={theme} edgeToEdge>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesScroll}
+          contentContainerStyle={styles.categoriesContent}
+        >
           <OptionChip
-            key={cat}
-            label={categoriesCopy[cat as keyof typeof categoriesCopy] ?? cat}
-            selected={activeCategory === cat}
+            label={copy.progress.milestones.viewAll}
+            selected={activeCategory === "all"}
             theme={theme}
-            onPress={() => setActiveCategory(cat)}
+            onPress={() => setActiveCategory("all")}
           />
-        ))}
-      </ScrollView>
+          {ATHLETE_GOAL_CATEGORIES.map((cat) => (
+            <OptionChip
+              key={cat}
+              label={categoriesCopy[cat as keyof typeof categoriesCopy] ?? cat}
+              selected={activeCategory === cat}
+              theme={theme}
+              onPress={() => setActiveCategory(cat)}
+            />
+          ))}
+        </ScrollView>
+      </SheetBlock>
 
       {/* Goal types list */}
-      <View style={styles.typesList}>
-        {filteredTypes.map((goalType) => {
-          const selected = selectedType === goalType;
-          const title =
-            goalTypesCopy[goalType as keyof typeof goalTypesCopy] ?? goalType;
-          const description =
-            descriptionsCopy[goalType as keyof typeof descriptionsCopy] ?? "";
+      <SheetBlock theme={theme}>
+        <View style={styles.typesList}>
+          {filteredTypes.map((goalType) => {
+            const selected = selectedType === goalType;
+            const title =
+              goalTypesCopy[goalType as keyof typeof goalTypesCopy] ?? goalType;
+            const description =
+              descriptionsCopy[goalType as keyof typeof descriptionsCopy] ?? "";
 
-          return (
-            <Pressable
-              key={goalType}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => onSelectType(goalType)}
-              style={({ pressed }) => [
-                styles.typeCard,
+            return (
+              <Pressable
+                key={goalType}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onSelectType(goalType)}
+                style={({ pressed }) => [
+                  styles.typeCard,
                 {
                   backgroundColor: selected
                     ? theme.color.surfaceElevated
@@ -222,8 +226,9 @@ export function GoalTypeStep({
           );
         })}
       </View>
-    </View>
-  );
+    </SheetBlock>
+  </View>
+);
 }
 
 const styles = StyleSheet.create({
@@ -235,7 +240,7 @@ const styles = StyleSheet.create({
   },
   categoriesContent: {
     gap: 8,
-    paddingRight: 8,
+    paddingHorizontal: 20,
   },
   typesList: {
     gap: 10,

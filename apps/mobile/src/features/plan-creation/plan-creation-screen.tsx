@@ -17,7 +17,7 @@ import {
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
-import { BottomSheet, SheetButton, useSheetStack } from "../../shared/ui/bottom-sheet";
+import { BottomSheet, SheetBlock, SheetButton, useSheetStack } from "../../shared/ui/bottom-sheet";
 import {
   MANUAL_PLAN_MAX_SESSIONS,
   MANUAL_PLAN_MAX_WEEKS,
@@ -381,17 +381,19 @@ function PlanCreationStepLayer({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text
-          style={[
-            styles.stepQuestion,
-            {
-              color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.regular,
-            },
-          ]}
-        >
-          {stepCopy?.question}
-        </Text>
+        <SheetBlock theme={theme}>
+          <Text
+            style={[
+              styles.stepQuestion,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
+          >
+            {stepCopy?.question}
+          </Text>
+        </SheetBlock>
 
         {stepKey === "goalType" ? (
           <GoalTypeStep
@@ -490,35 +492,37 @@ function PlanCreationStepLayer({
 
         {stepKey === "structure" ? (
           <>
-            <View style={styles.counterGroup}>
-              <CounterRow
-                label={creationCopy.weeksLabel}
-                value={draft.structure.totalWeeks}
-                suffix={creationCopy.weeksSuffix}
-                min={MANUAL_PLAN_MIN_WEEKS}
-                max={MANUAL_PLAN_MAX_WEEKS}
-                theme={theme}
-                onChange={(value) =>
-                  onDraftChange((current) => ({
-                    ...current,
-                    structure: { ...current.structure, totalWeeks: value },
-                  }))
-                }
-              />
-              <CounterRow
-                label={creationCopy.sessionsLabel}
-                value={draft.structure.sessionsPerWeek}
-                min={MANUAL_PLAN_MIN_SESSIONS}
-                max={Math.max(draft.schedule.trainingDays.length, 1)}
-                theme={theme}
-                onChange={(value) =>
-                  onDraftChange((current) => ({
-                    ...current,
-                    structure: { ...current.structure, sessionsPerWeek: value },
-                  }))
-                }
-              />
-            </View>
+            <SheetBlock theme={theme}>
+              <View style={styles.counterGroup}>
+                <CounterRow
+                  label={creationCopy.weeksLabel}
+                  value={draft.structure.totalWeeks}
+                  suffix={creationCopy.weeksSuffix}
+                  min={MANUAL_PLAN_MIN_WEEKS}
+                  max={MANUAL_PLAN_MAX_WEEKS}
+                  theme={theme}
+                  onChange={(value) =>
+                    onDraftChange((current) => ({
+                      ...current,
+                      structure: { ...current.structure, totalWeeks: value },
+                    }))
+                  }
+                />
+                <CounterRow
+                  label={creationCopy.sessionsLabel}
+                  value={draft.structure.sessionsPerWeek}
+                  min={MANUAL_PLAN_MIN_SESSIONS}
+                  max={Math.max(draft.schedule.trainingDays.length, 1)}
+                  theme={theme}
+                  onChange={(value) =>
+                    onDraftChange((current) => ({
+                      ...current,
+                      structure: { ...current.structure, sessionsPerWeek: value },
+                    }))
+                  }
+                />
+              </View>
+            </SheetBlock>
 
             <SectionBlock title={creationCopy.focusSection} theme={theme}>
               <View style={styles.chipWrap}>
@@ -550,55 +554,59 @@ function PlanCreationStepLayer({
       </ScrollView>
 
       {previewMutation.isError && isActive ? (
-        <View style={styles.inlineErrorRow}>
-          <AlertCircle color="#dc2626" size={14} />
-          <Text
-            style={[
-              styles.inlineErrorText,
-              { fontFamily: theme.typography.fontFamily.sans.regular },
-            ]}
-          >
-            {creationCopy.errors.generationFailed}
-          </Text>
-        </View>
+        <SheetBlock theme={theme}>
+          <View style={styles.inlineErrorRow}>
+            <AlertCircle color="#dc2626" size={14} />
+            <Text
+              style={[
+                styles.inlineErrorText,
+                { fontFamily: theme.typography.fontFamily.sans.regular },
+              ]}
+            >
+              {creationCopy.errors.generationFailed}
+            </Text>
+          </View>
+        </SheetBlock>
       ) : null}
 
-      <View style={styles.actionsRow}>
-        {stepIndex > 0 ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={creationCopy.common.back}
-            onPress={pop}
-            style={({ pressed }) => [
-              styles.iconButton,
-              {
-                backgroundColor:
-                  themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
-              },
-              pressed && styles.pressed,
-            ]}
-          >
-            <ChevronLeft color={theme.color.foreground} size={22} />
-          </Pressable>
-        ) : null}
+      <SheetBlock theme={theme}>
+        <View style={styles.actionsRow}>
+          {stepIndex > 0 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={creationCopy.common.back}
+              onPress={pop}
+              style={({ pressed }) => [
+                styles.iconButton,
+                {
+                  backgroundColor:
+                    themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
+                },
+                pressed && styles.pressed,
+              ]}
+            >
+              <ChevronLeft color={theme.color.foreground} size={22} />
+            </Pressable>
+          ) : null}
 
-        <SheetButton
-          label={creationCopy.common.cancel}
-          onPress={onCancelRequest}
-          variant="secondary"
-          theme={theme}
-          themeMode={themeMode}
-        />
+          <SheetButton
+            label={creationCopy.common.cancel}
+            onPress={onCancelRequest}
+            variant="secondary"
+            theme={theme}
+            themeMode={themeMode}
+          />
 
-        <SheetButton
-          label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
-          onPress={onContinue}
-          disabled={!isStepValid}
-          pending={previewMutation.isPending && isActive}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      </View>
+          <SheetButton
+            label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
+            onPress={onContinue}
+            disabled={!isStepValid}
+            pending={previewMutation.isPending && isActive}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </View>
+      </SheetBlock>
     </View>
   );
 }

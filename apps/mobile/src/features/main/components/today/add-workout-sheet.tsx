@@ -178,56 +178,56 @@ export function AddWorkoutSheet({
         {/* Workout Type Selector */}
         <View style={styles.section}>
           <SheetSectionLabel text={locale.typeLabel || "ТИП ТРЕНИРОВКИ"} theme={theme} />
+        </View>
 
-          <SheetBlock theme={theme} edgeToEdge>
-            <ScrollView
-              horizontal
-              nestedScrollEnabled
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.typesRow}
-            >
-            {WORKOUT_TYPES.map((t) => {
-              const selected = type === t.key;
-              return (
-                <Pressable
-                  key={t.key}
-                  onPress={() => setType(t.key)}
+        <SheetBlock theme={theme} edgeToEdge>
+          <ScrollView
+            horizontal
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.typesRow}
+          >
+          {WORKOUT_TYPES.map((t) => {
+            const selected = type === t.key;
+            return (
+              <Pressable
+                key={t.key}
+                onPress={() => setType(t.key)}
+                style={[
+                  styles.typeChip,
+                  {
+                    backgroundColor: selected
+                      ? theme.color.primary
+                      : themeMode === "dark"
+                        ? "#1a1a1e"
+                        : theme.color.surface,
+                    borderColor:
+                      themeMode === "dark"
+                        ? "rgba(255, 255, 255, 0.08)"
+                        : theme.color.border,
+                  },
+                ]}
+              >
+                <Text
                   style={[
-                    styles.typeChip,
+                    styles.typeChipText,
                     {
-                      backgroundColor: selected
-                        ? theme.color.primary
-                        : themeMode === "dark"
-                          ? "#1a1a1e"
-                          : theme.color.surface,
-                      borderColor:
-                        themeMode === "dark"
-                          ? "rgba(255, 255, 255, 0.08)"
-                          : theme.color.border,
+                      color: selected
+                        ? theme.color.primaryForeground
+                        : theme.color.foreground,
+                      fontFamily: selected
+                        ? theme.typography.fontFamily.sans.bold
+                        : theme.typography.fontFamily.sans.medium,
                     },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.typeChipText,
-                      {
-                        color: selected
-                          ? theme.color.primaryForeground
-                          : theme.color.foreground,
-                        fontFamily: selected
-                          ? theme.typography.fontFamily.sans.bold
-                          : theme.typography.fontFamily.sans.medium,
-                      },
-                    ]}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-            </ScrollView>
-          </SheetBlock>
-        </View>
+                  {t.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+          </ScrollView>
+        </SheetBlock>
 
         {/* Metrics */}
         <View style={styles.metricsRow}>
@@ -307,27 +307,29 @@ export function AddWorkoutSheet({
       </ScrollView>
 
       {/* Actions Row */}
-      <View style={styles.actionsRow}>
-        <SheetButton
-          label={locale.cancel || "Отменить"}
-          onPress={onClose}
-          variant="secondary"
-          theme={theme}
-          themeMode={themeMode}
-        />
+      <SheetBlock theme={theme}>
+        <View style={styles.actionsRow}>
+          <SheetButton
+            label={locale.cancel || "Отменить"}
+            onPress={onClose}
+            variant="secondary"
+            theme={theme}
+            themeMode={themeMode}
+          />
 
-        <SheetButton
-          label={
-            mode === "planned"
-              ? locale.submitPlan || "Запланировать"
-              : locale.submitLog || "Сохранить"
-          }
-          onPress={handleSubmit}
-          pending={createWorkoutMutation.isPending}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      </View>
+          <SheetButton
+            label={
+              mode === "planned"
+                ? locale.submitPlan || "Запланировать"
+                : locale.submitLog || "Сохранить"
+            }
+            onPress={handleSubmit}
+            pending={createWorkoutMutation.isPending}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </View>
+      </SheetBlock>
     </BottomSheet>
   );
 }
@@ -353,7 +355,7 @@ const styles = StyleSheet.create({
   },
   typesRow: {
     gap: 8,
-    paddingRight: 16,
+    paddingHorizontal: 20,
   },
   typeChip: {
     paddingHorizontal: 14,
