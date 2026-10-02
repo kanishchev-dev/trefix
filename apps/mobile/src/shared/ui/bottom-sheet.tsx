@@ -939,6 +939,12 @@ const styles = StyleSheet.create({
   topDragArea: {
     width: "100%",
     gap: 8,
+    backgroundColor: "transparent",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
   handleContainer: {
     alignItems: "center",

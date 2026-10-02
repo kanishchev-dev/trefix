@@ -627,7 +627,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 20,
-    paddingBottom: 4,
+    paddingTop: 56,
+    paddingBottom: 84,
   },
   stepQuestion: {
     fontSize: 14,
@@ -649,6 +650,14 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
     gap: 12,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: "transparent",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   iconButton: {
     width: 52,

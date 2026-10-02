@@ -341,7 +341,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 16,
-    paddingVertical: 4,
+    paddingTop: 56,
+    paddingBottom: 84,
   },
   errorBanner: {
     padding: 12,
@@ -376,6 +377,13 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 8,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: "transparent",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
 });

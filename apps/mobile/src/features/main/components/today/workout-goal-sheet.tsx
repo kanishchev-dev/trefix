@@ -347,7 +347,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 20,
-    paddingVertical: 12,
+    paddingTop: 56,
+    paddingBottom: 84,
   },
   errorBanner: {
     backgroundColor: "rgba(220, 38, 38, 0.2)",
@@ -424,7 +425,14 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 8,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: "transparent",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   buttonPressed: {
     transform: [{ scale: 0.985 }],
