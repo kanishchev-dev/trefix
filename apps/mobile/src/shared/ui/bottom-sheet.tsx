@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { BlurView } from "expo-blur";
+
 import Animated, {
   interpolate,
   runOnJS,
@@ -430,24 +431,11 @@ export function BottomSheet({
     return (
       <Modal animationType="none" onRequestClose={handleSingleClose} transparent visible={animatedHide ? hideMounted : visible}>
         <View style={styles.overlay}>
-          <Animated.View
-            style={[
-              styles.backdropContainer,
-              {
-                backgroundColor:
-                  themeMode === "dark"
-                    ? "rgba(0, 0, 0, 0.4)"
-                    : "rgba(255, 255, 255, 0.4)",
-              },
-              backdropAnimatedStyle,
-            ]}
-          >
-            <Pressable style={StyleSheet.absoluteFill} onPress={handleSingleClose}>
-              <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
-            </Pressable>
+          <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={handleSingleClose} />
           </Animated.View>
 
-          <Animated.View style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}>
+          <Animated.View style={[styles.container, { marginBottom: 0 }, cardAnimatedStyle]}>
             <View
               style={[
                 styles.card,
@@ -517,21 +505,8 @@ export function BottomSheet({
       visible={stackMounted}
     >
       <View style={styles.overlay}>
-        <Animated.View
-          style={[
-            styles.backdropContainer,
-            {
-              backgroundColor:
-                themeMode === "dark"
-                  ? "rgba(0, 0, 0, 0.4)"
-                  : "rgba(255, 255, 255, 0.4)",
-            },
-            backdropAnimatedStyle,
-          ]}
-        >
-          <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropTap}>
-            <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
-          </Pressable>
+        <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropTap} />
         </Animated.View>
 
         <SheetStackContext.Provider value={stackApi}>
@@ -918,15 +893,15 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   stackLayerCardWrapper: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
   card: {
     borderRadius: 44,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingTop: 0,
+    paddingBottom: 0,
     paddingHorizontal: 0,
-    gap: 16,
+    gap: 0,
     overflow: "hidden",
   },
   stackCard: {
@@ -948,7 +923,7 @@ const styles = StyleSheet.create({
   },
   handleContainer: {
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   handle: {
     width: 36,
