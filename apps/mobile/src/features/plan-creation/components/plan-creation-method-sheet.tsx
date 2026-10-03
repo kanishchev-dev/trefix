@@ -1,9 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Sparkles } from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { BottomSheet } from "../../../shared/ui/bottom-sheet";
+import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
 import { type MainCopy } from "../../../locales";
 
 type Props = {
@@ -37,8 +37,7 @@ export function PlanCreationMethodSheet({
     {
       backgroundColor:
         themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-      borderColor:
-        themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+      borderWidth: 0,
     },
     pressed && styles.pressed,
   ];
@@ -52,129 +51,143 @@ export function PlanCreationMethodSheet({
       theme={theme}
       themeMode={themeMode}
     >
-      <Text
-        style={[
-          styles.subtitle,
-          {
-            color: theme.color.mutedForeground,
-            fontFamily: theme.typography.fontFamily.sans.regular,
-          },
-        ]}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
       >
-        {locale.subtitle}
-      </Text>
+        <SheetBlock theme={theme}>
+          <View style={styles.cardsGroup}>
+            {/* AI option */}
+            <Pressable
+              accessibilityRole="button"
+              onPress={onOpenTrefix}
+              style={methodCardStyle}
+            >
+              <View
+                style={[
+                  styles.methodIcon,
+                  {
+                    backgroundColor:
+                      themeMode === "dark" ? "rgba(255, 255, 255, 0.06)" : theme.color.surfaceElevated,
+                  },
+                ]}
+              >
+                <Sparkles color={theme.color.accent} size={20} />
+              </View>
+              <View style={styles.methodTextGroup}>
+                <Text
+                  style={[
+                    styles.methodTitle,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {locale.aiTitle}
+                </Text>
+                <Text
+                  style={[
+                    styles.methodDescription,
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.regular,
+                    },
+                  ]}
+                >
+                  {locale.aiDescription}
+                </Text>
+              </View>
+            </Pressable>
 
-      {/* AI option */}
-      <Pressable
-        accessibilityRole="button"
-        onPress={onOpenTrefix}
-        style={methodCardStyle}
-      >
-        <View style={styles.methodIcon}>
-          <Sparkles color={theme.color.accent} size={18} />
-        </View>
-        <View style={styles.methodTextGroup}>
-          <Text
-            style={[
-              styles.methodTitle,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
-              },
-            ]}
-          >
-            {locale.aiTitle}
-          </Text>
-          <Text
-            style={[
-              styles.methodDescription,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {locale.aiDescription}
-          </Text>
-        </View>
-      </Pressable>
+            {/* Manual option */}
+            <Pressable
+              accessibilityRole="button"
+              onPress={onCreateManually}
+              style={methodCardStyle}
+            >
+              <View
+                style={[
+                  styles.methodIcon,
+                  {
+                    backgroundColor:
+                      themeMode === "dark" ? "rgba(255, 255, 255, 0.06)" : theme.color.surfaceElevated,
+                  },
+                ]}
+              >
+                <Text style={[styles.methodPlusIcon, { color: theme.color.accent }]}>
+                  +
+                </Text>
+              </View>
+              <View style={styles.methodTextGroup}>
+                <Text
+                  style={[
+                    styles.methodTitle,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {locale.manualTitle}
+                </Text>
+                <Text
+                  style={[
+                    styles.methodDescription,
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.regular,
+                    },
+                  ]}
+                >
+                  {locale.manualDescription}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+        </SheetBlock>
 
-      {/* Manual option */}
-      <Pressable
-        accessibilityRole="button"
-        onPress={onCreateManually}
-        style={methodCardStyle}
-      >
-        <View style={styles.methodIcon}>
-          <Text style={[styles.methodPlusIcon, { color: theme.color.accent }]}>
-            +
-          </Text>
-        </View>
-        <View style={styles.methodTextGroup}>
-          <Text
-            style={[
-              styles.methodTitle,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
-              },
-            ]}
-          >
-            {locale.manualTitle}
-          </Text>
-          <Text
-            style={[
-              styles.methodDescription,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {locale.manualDescription}
-          </Text>
-        </View>
-      </Pressable>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={onClose}
-        style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
-      >
-        <Text
-          style={[
-            styles.cancelText,
-            {
-              color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {common.cancel}
-        </Text>
-      </Pressable>
+        {/* Cancel button */}
+        <SheetBlock theme={theme}>
+          <SheetButton
+            label={common.cancel}
+            onPress={onClose}
+            variant="secondary"
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </SheetBlock>
+      </ScrollView>
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: -8,
+  scrollView: {
+    width: "100%",
+  },
+  scrollContent: {
+    gap: 16,
+    paddingTop: 72,
+    paddingBottom: 32,
+  },
+  cardsGroup: {
+    gap: 8,
   },
   methodCard: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 14,
     padding: 16,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 0,
   },
   methodIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: "rgba(127,127,127,0.12)",
+    width: 44,
+    height: 44,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -193,14 +206,6 @@ const styles = StyleSheet.create({
   methodDescription: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  cancelButton: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  cancelText: {
-    fontSize: 15,
-    lineHeight: 20,
   },
   pressed: {
     transform: [{ scale: 0.985 }],

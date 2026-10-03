@@ -186,12 +186,12 @@
       },
       "steps": {
         "goal": {
-          "title": "Тип цели",
-          "question": "Чего ты хочешь достичь?"
+          "title": "Выбор цели тренировок",
+          "question": ""
         },
         "goalType": {
-          "title": "Тип цели",
-          "question": "Чего ты хочешь достичь?"
+          "title": "Выбор цели тренировок",
+          "question": ""
         },
         "goalSetup": {
           "title": "Настройка цели",
@@ -216,25 +216,25 @@
       },
       "goalTypes": {
         "prepare_for_race": "Подготовка к забегу",
-        "improve_race_result": "Улучшить результат в забеге",
-        "run_new_distance": "Пробежать новую дистанцию",
-        "trail_preparation": "Подготовка к трейлу",
-        "ultra_preparation": "Подготовка к ультрамарафону",
-        "backyard_preparation": "Подготовка к Backyard Ultra",
+        "improve_race_result": "Улучшить результат",
+        "run_new_distance": "Новая дистанция",
+        "trail_preparation": "Трейловый бег",
+        "ultra_preparation": "Ультрамарафон",
+        "backyard_preparation": "Backyard Ultra",
         "improve_speed": "Развитие скорости",
         "improve_pace": "Улучшение темпа",
         "build_endurance": "Развитие выносливости",
-        "improve_aerobic_fitness": "Развитие аэробной формы",
-        "improve_hills": "Бег по холмам и горкам",
+        "improve_aerobic_fitness": "Аэробная база",
+        "improve_hills": "Холмы и горки",
         "start_running": "Начать бегать",
-        "return_to_running": "Возвращение к бегу",
-        "build_consistency": "Регулярность тренировок",
-        "increase_running_volume": "Увеличение недельного объёма",
+        "return_to_running": "Возврат к бегу",
+        "build_consistency": "Регулярность бега",
+        "increase_running_volume": "Рост объёма",
         "run_continuously": "Непрерывный бег",
         "lose_weight": "Снижение веса",
         "maintain_fitness": "Поддержание формы",
-        "general_health": "Общее здоровье и активность",
-        "complete_challenge": "Выполнить челлендж",
+        "general_health": "Здоровье и тонус",
+        "complete_challenge": "Челлендж",
         "custom": "Своя цель"
       },
       "goalDescriptions": {

@@ -177,6 +177,7 @@ export function PlanCreationScreen({
       ...current,
       goal: pruneStaleGoalFields(current.goal, newType),
     }));
+    setStepIndex(1);
   }, []);
 
   const requestPreview = useCallback(async () => {
@@ -381,26 +382,30 @@ function PlanCreationStepLayer({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <SheetBlock theme={theme}>
-          <Text
-            style={[
-              styles.stepQuestion,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {stepCopy?.question}
-          </Text>
-        </SheetBlock>
+        {stepKey !== "goalType" && stepCopy?.question ? (
+          <SheetBlock theme={theme}>
+            <Text
+              style={[
+                styles.stepQuestion,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
+              {stepCopy.question}
+            </Text>
+          </SheetBlock>
+        ) : null}
 
         {stepKey === "goalType" ? (
           <GoalTypeStep
             selectedType={draft.goal.type}
             theme={theme}
+            themeMode={themeMode}
             copy={copy}
             onSelectType={onSelectGoalType}
+            onCancel={onCancelRequest}
           />
         ) : null}
 
@@ -569,44 +574,46 @@ function PlanCreationStepLayer({
         </SheetBlock>
       ) : null}
 
-      <SheetBlock theme={theme}>
-        <View style={styles.actionsRow}>
-          {stepIndex > 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={creationCopy.common.back}
-              onPress={pop}
-              style={({ pressed }) => [
-                styles.iconButton,
-                {
-                  backgroundColor:
-                    themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
-                },
-                pressed && styles.pressed,
-              ]}
-            >
-              <ChevronLeft color={theme.color.foreground} size={22} />
-            </Pressable>
-          ) : null}
+      {stepKey !== "goalType" ? (
+        <SheetBlock theme={theme}>
+          <View style={styles.actionsRow}>
+            {stepIndex > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={creationCopy.common.back}
+                onPress={pop}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  {
+                    backgroundColor:
+                      themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
+                  },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <ChevronLeft color={theme.color.foreground} size={22} />
+              </Pressable>
+            ) : null}
 
-          <SheetButton
-            label={creationCopy.common.cancel}
-            onPress={onCancelRequest}
-            variant="secondary"
-            theme={theme}
-            themeMode={themeMode}
-          />
+            <SheetButton
+              label={creationCopy.common.cancel}
+              onPress={onCancelRequest}
+              variant="secondary"
+              theme={theme}
+              themeMode={themeMode}
+            />
 
-          <SheetButton
-            label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
-            onPress={onContinue}
-            disabled={!isStepValid}
-            pending={previewMutation.isPending && isActive}
-            theme={theme}
-            themeMode={themeMode}
-          />
-        </View>
-      </SheetBlock>
+            <SheetButton
+              label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
+              onPress={onContinue}
+              disabled={!isStepValid}
+              pending={previewMutation.isPending && isActive}
+              theme={theme}
+              themeMode={themeMode}
+            />
+          </View>
+        </SheetBlock>
+      ) : null}
     </View>
   );
 }
@@ -627,7 +634,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 20,
-    paddingTop: 56,
+    paddingTop: 72,
     paddingBottom: 84,
   },
   stepQuestion: {

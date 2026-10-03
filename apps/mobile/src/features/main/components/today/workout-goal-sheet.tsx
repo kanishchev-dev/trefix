@@ -157,25 +157,24 @@ export function WorkoutGoalSheet({
       theme={theme}
       themeMode={themeMode}
     >
-      {/* Mode Tabs with Animated Pill Indicator */}
-      <SheetBlock theme={theme}>
-        <SheetTabs
-          value={mode}
-          onChange={setMode}
-          theme={theme}
-          tabs={[
-            { key: "distance" as WorkoutGoalMode, label: goalSheetCopy.tabs?.distance || "Дистанция" },
-            { key: "duration" as WorkoutGoalMode, label: goalSheetCopy.tabs?.duration || "Время" },
-          ]}
-        />
-      </SheetBlock>
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
       >
+        {/* Mode Tabs with Animated Pill Indicator */}
+        <SheetBlock theme={theme}>
+          <SheetTabs
+            value={mode}
+            onChange={setMode}
+            theme={theme}
+            tabs={[
+              { key: "distance" as WorkoutGoalMode, label: goalSheetCopy.tabs?.distance || "Дистанция" },
+              { key: "duration" as WorkoutGoalMode, label: goalSheetCopy.tabs?.duration || "Время" },
+            ]}
+          />
+        </SheetBlock>
         {errorMessage ? (
           <SheetBlock theme={theme}>
             <View style={styles.errorBanner}>
@@ -347,7 +346,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 20,
-    paddingTop: 56,
+    paddingTop: 72,
     paddingBottom: 84,
   },
   errorBanner: {

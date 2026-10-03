@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 
 import Animated, {
   interpolate,
@@ -432,6 +433,11 @@ export function BottomSheet({
       <Modal animationType="none" onRequestClose={handleSingleClose} transparent visible={animatedHide ? hideMounted : visible}>
         <View style={styles.overlay}>
           <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+            <BlurView
+              intensity={25}
+              tint={themeMode === "dark" ? "dark" : "light"}
+              style={StyleSheet.absoluteFill}
+            />
             <Pressable style={StyleSheet.absoluteFill} onPress={handleSingleClose} />
           </Animated.View>
 
@@ -473,7 +479,25 @@ export function BottomSheet({
                 </View>
               </GestureDetector>
 
-              <View style={styles.sheetContent}>{children}</View>
+              <View style={styles.sheetContent}>
+                {children}
+                <LinearGradient
+                  colors={[
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
+                  ]}
+                  style={styles.topFade}
+                  pointerEvents="none"
+                />
+                <LinearGradient
+                  colors={[
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                  ]}
+                  style={styles.bottomFade}
+                  pointerEvents="none"
+                />
+              </View>
             </View>
           </Animated.View>
         </View>
@@ -506,6 +530,11 @@ export function BottomSheet({
     >
       <View style={styles.overlay}>
         <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+          <BlurView
+            intensity={25}
+            tint={themeMode === "dark" ? "dark" : "light"}
+            style={StyleSheet.absoluteFill}
+          />
           <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropTap} />
         </Animated.View>
 
@@ -665,7 +694,25 @@ function StackLayer({
             </View>
           </GestureDetector>
 
-          <View style={styles.sheetContent}>{children}</View>
+              <View style={styles.sheetContent}>
+                {children}
+                <LinearGradient
+                  colors={[
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
+                  ]}
+                  style={styles.topFade}
+                  pointerEvents="none"
+                />
+                <LinearGradient
+                  colors={[
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
+                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                  ]}
+                  style={styles.bottomFade}
+                  pointerEvents="none"
+                />
+              </View>
         </View>
       </View>
     </Animated.View>
@@ -989,11 +1036,28 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     gap: 16,
+    position: "relative",
   },
   sheetContentPadding: {
     paddingHorizontal: 20,
   },
   sheetContentBleed: {
     marginHorizontal: -20,
+  },
+  topFade: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 52,
+    zIndex: 5,
+  },
+  bottomFade: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 52,
+    zIndex: 5,
   },
 });

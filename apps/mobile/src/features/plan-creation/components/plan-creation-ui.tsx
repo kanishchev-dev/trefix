@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 
 import { SheetBlock } from "../../../shared/ui/bottom-sheet";
 import { getGoalDistanceKm, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
@@ -36,10 +36,13 @@ type OptionChipProps = {
   label: string;
   selected: boolean;
   theme: ThemeTokens;
+  themeMode?: ThemeMode;
   onPress: () => void;
 };
 
-export function OptionChip({ label, selected, theme, onPress }: OptionChipProps) {
+export function OptionChip({ label, selected, theme, themeMode, onPress }: OptionChipProps) {
+  const isDark = themeMode === "dark";
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -48,8 +51,15 @@ export function OptionChip({ label, selected, theme, onPress }: OptionChipProps)
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected ? theme.color.primary : theme.color.surfaceElevated,
-          borderColor: selected ? theme.color.primary : theme.color.border,
+          backgroundColor: selected
+            ? theme.color.primary
+            : isDark
+              ? "#1a1a1e"
+              : theme.color.surface,
+          borderColor: isDark
+            ? "rgba(255, 255, 255, 0.08)"
+            : theme.color.border,
+          borderWidth: StyleSheet.hairlineWidth,
         },
         pressed && styles.pressed,
       ]}
@@ -58,8 +68,12 @@ export function OptionChip({ label, selected, theme, onPress }: OptionChipProps)
         style={[
           styles.chipLabel,
           {
-            color: selected ? theme.color.primaryForeground : theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.semibold,
+            color: selected
+              ? theme.color.primaryForeground
+              : theme.color.foreground,
+            fontFamily: selected
+              ? theme.typography.fontFamily.sans.bold
+              : theme.typography.fontFamily.sans.medium,
           },
         ]}
       >
@@ -677,8 +691,8 @@ const styles = StyleSheet.create({
     minHeight: 96,
   },
   chip: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
   },

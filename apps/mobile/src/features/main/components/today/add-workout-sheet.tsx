@@ -130,23 +130,24 @@ export function AddWorkoutSheet({
       theme={theme}
       themeMode={themeMode}
     >
-      {/* Mode Switcher */}
-      <SheetTabs
-        value={mode}
-        onChange={setMode}
-        theme={theme}
-        tabs={[
-          { key: "planned" as const, label: locale.planTab || "Запланировать" },
-          { key: "completed" as const, label: locale.logTab || "Внести выполненную" },
-        ]}
-      />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Mode Switcher */}
+        <SheetBlock theme={theme}>
+          <SheetTabs
+            value={mode}
+            onChange={setMode}
+            theme={theme}
+            tabs={[
+              { key: "planned" as const, label: locale.planTab || "Запланировать" },
+              { key: "completed" as const, label: locale.logTab || "Внести выполненную" },
+            ]}
+          />
+        </SheetBlock>
         {errorMessage ? (
           <View
             style={[styles.errorBanner, { backgroundColor: "rgba(220, 38, 38, 0.2)" }]}
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 16,
-    paddingTop: 56,
+    paddingTop: 72,
     paddingBottom: 84,
   },
   errorBanner: {

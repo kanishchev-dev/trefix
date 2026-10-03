@@ -186,12 +186,12 @@
       },
       "steps": {
         "goal": {
-          "title": "Goal Type",
-          "question": "What do you want to achieve?"
+          "title": "Choose your training goal",
+          "question": ""
         },
         "goalType": {
-          "title": "Goal Type",
-          "question": "What do you want to achieve?"
+          "title": "Choose your training goal",
+          "question": ""
         },
         "goalSetup": {
           "title": "Goal Setup",
@@ -215,26 +215,26 @@
         "flexible": "Custom Goal"
       },
       "goalTypes": {
-        "prepare_for_race": "Prepare for a race",
-        "improve_race_result": "Improve a race result",
-        "run_new_distance": "Run a new distance",
-        "trail_preparation": "Trail preparation",
-        "ultra_preparation": "Ultra preparation",
-        "backyard_preparation": "Backyard preparation",
+        "prepare_for_race": "Race preparation",
+        "improve_race_result": "Improve race time",
+        "run_new_distance": "New distance",
+        "trail_preparation": "Trail running",
+        "ultra_preparation": "Ultra marathon",
+        "backyard_preparation": "Backyard Ultra",
         "improve_speed": "Improve speed",
         "improve_pace": "Improve pace",
         "build_endurance": "Build endurance",
-        "improve_aerobic_fitness": "Improve aerobic fitness",
-        "improve_hills": "Improve hills",
+        "improve_aerobic_fitness": "Aerobic fitness",
+        "improve_hills": "Hill running",
         "start_running": "Start running",
         "return_to_running": "Return to running",
         "build_consistency": "Build consistency",
-        "increase_running_volume": "Increase weekly volume",
+        "increase_running_volume": "Increase volume",
         "run_continuously": "Run continuously",
         "lose_weight": "Lose weight",
         "maintain_fitness": "Maintain fitness",
-        "general_health": "General health & stay active",
-        "complete_challenge": "Complete a challenge",
+        "general_health": "General health",
+        "complete_challenge": "Challenge",
         "custom": "Custom goal"
       },
       "goalDescriptions": {
