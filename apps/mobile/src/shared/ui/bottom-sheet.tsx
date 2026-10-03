@@ -441,7 +441,7 @@ export function BottomSheet({
             <Pressable style={StyleSheet.absoluteFill} onPress={handleSingleClose} />
           </Animated.View>
 
-          <Animated.View style={[styles.container, { marginBottom: 0 }, cardAnimatedStyle]}>
+          <Animated.View style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}>
             <View
               style={[
                 styles.card,
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   stackLayerCardWrapper: {
-    marginBottom: 0,
+    marginBottom: 8,
   },
   card: {
     borderRadius: 44,
