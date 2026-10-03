@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import {
+  payloadToFetchInit,
+  prepareProxyBody,
+  type ProxyPayload,
+} from "@/lib/server/proxy-payload";
+
 export const runtime = "nodejs";
 
 const BACKEND_BASE_URL =
@@ -28,33 +34,27 @@ function buildBackendPath(segments: string[] | undefined): string {
   return `/auth/${(segments ?? []).join("/")}`;
 }
 
-async function readJsonBody(request: NextRequest): Promise<unknown> {
-  const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    return undefined;
-  }
-
-  return request.json().catch(() => undefined);
-}
-
 async function forwardToBackend(
   request: NextRequest,
   segments: string[] | undefined,
   method: "GET" | "POST",
-  body?: unknown,
+  payload: ProxyPayload,
   accessToken?: string | null,
 ) {
+  const { body, headers, duplex } = payloadToFetchInit(payload);
+
   return fetch(`${BACKEND_BASE_URL}${buildBackendPath(segments)}`, {
     method,
     headers: {
-      "content-type": "application/json",
+      ...headers,
       ...(request.headers.get("accept-language")
         ? { "accept-language": request.headers.get("accept-language") ?? "en" }
         : {}),
       ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+    body,
+    ...(duplex ? { duplex } : {}),
+  } as RequestInit);
 }
 
 function isProduction() {
@@ -123,7 +123,8 @@ async function refreshIfNeeded(
   }
 
   const response = await forwardToBackend(request, ["refresh"], "POST", {
-    refreshToken,
+    kind: "json",
+    body: JSON.stringify({ refreshToken }),
   });
   if (!response.ok) {
     return null;
@@ -150,7 +151,7 @@ async function handleMe(request: NextRequest): Promise<NextResponse> {
     request,
     ["me"],
     "GET",
-    undefined,
+    { kind: "empty" },
     accessToken,
   );
 
@@ -172,7 +173,7 @@ async function handleMe(request: NextRequest): Promise<NextResponse> {
       request,
       ["me"],
       "GET",
-      undefined,
+      { kind: "empty" },
       refreshedTokens.accessToken,
     );
     const nextResponse = await responseFromBackend(response);
@@ -201,8 +202,12 @@ async function handleRefresh(request: NextRequest): Promise<NextResponse> {
 }
 
 async function handleLogin(request: NextRequest): Promise<NextResponse> {
-  const body = await readJsonBody(request);
-  const response = await forwardToBackend(request, ["login"], "POST", body);
+  const response = await forwardToBackend(
+    request,
+    ["login"],
+    "POST",
+    await prepareProxyBody(request, "POST"),
+  );
   if (!response.ok) {
     return responseFromBackend(response);
   }
@@ -220,7 +225,7 @@ async function handleLogout(
     request,
     segments,
     "POST",
-    undefined,
+    { kind: "empty" },
     accessToken,
   );
   const nextResponse = await responseFromBackend(response);
@@ -231,8 +236,12 @@ async function handleGenericPost(
   request: NextRequest,
   segments: string[],
 ): Promise<NextResponse> {
-  const body = await readJsonBody(request);
-  const response = await forwardToBackend(request, segments, "POST", body);
+  const response = await forwardToBackend(
+    request,
+    segments,
+    "POST",
+    await prepareProxyBody(request, "POST"),
+  );
   return responseFromBackend(response);
 }
 

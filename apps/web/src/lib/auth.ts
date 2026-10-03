@@ -6,6 +6,8 @@ import {
   authTokensSchema,
   authUserSchema,
   authVerifyEmailSchema,
+  changePasswordSchema,
+  updateUserSchema,
   type AuthForgotPasswordInput,
   type AuthLoginInput,
   type AuthResetPasswordInput,
@@ -13,6 +15,8 @@ import {
   type AuthTokens,
   type AuthUser,
   type AuthVerifyEmailInput,
+  type ChangePasswordInput,
+  type UpdateUserInput,
 } from "@workspace/api-client";
 
 export {
@@ -23,6 +27,8 @@ export {
   authTokensSchema,
   authUserSchema,
   authVerifyEmailSchema,
+  changePasswordSchema,
+  updateUserSchema,
 };
 
 export type {
@@ -33,6 +39,8 @@ export type {
   AuthTokens,
   AuthUser,
   AuthVerifyEmailInput,
+  ChangePasswordInput,
+  UpdateUserInput,
 };
 
 export const authPaths = {
@@ -41,6 +49,7 @@ export const authPaths = {
   refresh: "/api/auth/refresh",
   logout: "/api/auth/logout",
   logoutAll: "/api/auth/logout-all",
+  passwordChange: "/api/auth/password/change",
   passwordResetRequest: "/api/auth/password/reset/request",
   passwordResetConfirm: "/api/auth/password/reset/confirm",
   inviteActivate: "/api/auth/invite/activate",

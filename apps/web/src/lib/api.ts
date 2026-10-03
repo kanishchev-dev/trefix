@@ -7,6 +7,8 @@ import {
   authTokensSchema,
   authUserSchema,
   authVerifyEmailSchema,
+  changePasswordSchema,
+  updateUserSchema,
   type AuthActivateInviteInput,
   type AuthForgotPasswordInput,
   type AuthLoginInput,
@@ -15,6 +17,8 @@ import {
   type AuthTokens,
   type AuthUser,
   type AuthVerifyEmailInput,
+  type ChangePasswordInput,
+  type UpdateUserInput,
 } from "@workspace/api-client";
 
 import { authPaths } from "@/lib/auth";
@@ -149,6 +153,38 @@ export async function resendVerification(
 ): Promise<void> {
   const payload = authRequestEmailVerificationSchema.parse(input);
   await request<void>(authPaths.emailResend, { method: "POST", body: payload });
+}
+
+/**
+ * Updates the own profile. The backend answers with the fresh user, so the
+ * caller can replace its cached copy without a second round trip.
+ */
+export async function updateProfile(
+  input: UpdateUserInput,
+): Promise<AuthUser> {
+  const payload = updateUserSchema.parse(input);
+  const response = await request<unknown>(authPaths.me, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  return authUserSchema.parse(response);
+}
+
+/**
+ * Changes the own password. The backend rotates the session and returns fresh
+ * tokens, which the caller keeps in its auth store.
+ */
+export async function changePassword(
+  input: ChangePasswordInput,
+): Promise<AuthTokens> {
+  const payload = changePasswordSchema.parse(input);
+  const response = await request<unknown>(authPaths.passwordChange, {
+    method: "POST",
+    body: payload,
+  });
+
+  return authTokensSchema.parse(response);
 }
 
 export { request as apiRequest };

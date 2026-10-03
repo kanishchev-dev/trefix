@@ -18,6 +18,7 @@ import { SidebarTrigger } from "@workspace/ui/components/sidebar";
 import { useI18n } from "@/shared/i18n";
 
 const BREADCRUMB_KEYS: Array<{ prefix: string; key: string }> = [
+  { prefix: "/profile", key: "breadcrumbs.profile" },
   { prefix: "/users/list", key: "breadcrumbs.list" },
   { prefix: "/users/create", key: "breadcrumbs.create" },
   { prefix: "/users/groups", key: "breadcrumbs.groups" },

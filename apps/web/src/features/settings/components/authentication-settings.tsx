@@ -190,7 +190,9 @@ function EditorFields({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">{t("permissions.empty")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("permissions.sectionEmpty")}
+            </p>
           )}
         </CardContent>
       </Card>

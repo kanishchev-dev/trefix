@@ -63,7 +63,8 @@
     "languageRussian": "Русский",
     "languageEnglish": "Английский",
     "signOut": "Выйти",
-    "accessDenied": "Раздел недоступен"
+    "accessDenied": "Раздел недоступен",
+    "profile": "Профиль"
   },
   "dashboard": {
     "title": "Дашборд",
@@ -81,7 +82,8 @@
     "edit": "Редактирование",
     "groups": "Группы",
     "settings": "Настройки",
-    "authentication": "Аутентификация"
+    "authentication": "Аутентификация",
+    "profile": "Профиль"
   },
   "users": {
     "title": "Пользователи",
@@ -432,5 +434,46 @@
     "recoveryEmailFailedTitle": "Не удалось отправить письмо",
     "rememberedPassword": "Вспомнили пароль?",
     "returnToLogin": "Вернуться ко входу"
+  },
+  "profile": {
+    "verified": "Почта подтверждена",
+    "notVerified": "Почта не подтверждена",
+    "details": {
+      "title": "Профиль",
+      "description": "Имя и аватар показываются в сайдбаре и во всех разделах админки."
+    },
+    "fields": {
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "email": "Почта",
+      "memberSince": "В системе с"
+    },
+    "password": {
+      "title": "Пароль",
+      "description": "При смене пароля все остальные сессии будут завершены.",
+      "current": "Текущий пароль",
+      "new": "Новый пароль",
+      "confirm": "Повторите новый пароль",
+      "hint": "Минимум 8 символов.",
+      "submit": "Сменить пароль"
+    },
+    "toasts": {
+      "updated": "Профиль обновлён",
+      "passwordChanged": "Пароль изменён",
+      "avatarUpdated": "Аватар обновлён"
+    },
+    "validation": {
+      "passwordsMismatch": "Пароли не совпадают"
+    },
+    "avatar": {
+      "change": "Изменить фото",
+      "hint": "JPG, PNG или WebP. Обрежется и сожмётся перед загрузкой.",
+      "dialogTitle": "Обрезка фото",
+      "dialogDescription": "Перетащите изображение и отрегулируйте масштаб ползунком. Фото обрежется и сожмётся прямо в браузере.",
+      "zoom": "Масштаб",
+      "save": "Сохранить фото",
+      "invalidType": "Выберите изображение JPG, PNG или WebP",
+      "readFailed": "Не удалось прочитать выбранный файл как изображение"
+    }
   }
 }

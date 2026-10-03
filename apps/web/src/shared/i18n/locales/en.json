@@ -63,7 +63,8 @@
     "languageRussian": "Russian",
     "languageEnglish": "English",
     "signOut": "Sign out",
-    "accessDenied": "Section unavailable"
+    "accessDenied": "Section unavailable",
+    "profile": "Profile"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -81,7 +82,8 @@
     "edit": "Edit",
     "groups": "User groups",
     "settings": "Settings",
-    "authentication": "Authentication"
+    "authentication": "Authentication",
+    "profile": "Profile"
   },
   "users": {
     "title": "Users",
@@ -432,5 +434,46 @@
     "recoveryEmailFailedTitle": "Could not send the email",
     "rememberedPassword": "Remembered your password?",
     "returnToLogin": "Return to login"
+  },
+  "profile": {
+    "verified": "Email verified",
+    "notVerified": "Email not verified",
+    "details": {
+      "title": "Profile",
+      "description": "Your name and avatar are shown in the sidebar and across the admin panel."
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "memberSince": "Member since"
+    },
+    "password": {
+      "title": "Password",
+      "description": "Changing the password signs out all other sessions.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Repeat the new password",
+      "hint": "At least 8 characters.",
+      "submit": "Change password"
+    },
+    "toasts": {
+      "updated": "Profile updated",
+      "passwordChanged": "Password changed",
+      "avatarUpdated": "Avatar updated"
+    },
+    "validation": {
+      "passwordsMismatch": "The passwords do not match"
+    },
+    "avatar": {
+      "change": "Change photo",
+      "hint": "JPG, PNG or WebP. Cropped and compressed before upload.",
+      "dialogTitle": "Crop the photo",
+      "dialogDescription": "Drag to reposition and use the slider to zoom. The image is squared and compressed in the browser.",
+      "zoom": "Zoom",
+      "save": "Save photo",
+      "invalidType": "Choose a JPG, PNG or WebP image",
+      "readFailed": "The selected file could not be read as an image"
+    }
   }
 }

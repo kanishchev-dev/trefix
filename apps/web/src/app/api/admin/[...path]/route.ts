@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import {
+  payloadToFetchInit,
+  prepareProxyBody,
+  type ProxyPayload,
+} from "@/lib/server/proxy-payload";
+
 export const runtime = "nodejs";
 
 const BACKEND_BASE_URL =
@@ -65,36 +71,30 @@ function buildQueryString(request: NextRequest): string {
   return search.length > 0 ? search : "";
 }
 
-async function readJsonBody(request: NextRequest): Promise<unknown> {
-  const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    return undefined;
-  }
-
-  return request.json().catch(() => undefined);
-}
-
 async function forwardToBackend(
   request: NextRequest,
   segments: string[] | undefined,
   method: HttpMethod,
-  body: unknown,
+  payload: ProxyPayload,
   accessToken?: string | null,
 ) {
+  const { body, headers, duplex } = payloadToFetchInit(payload);
+
   return fetch(
     `${BACKEND_BASE_URL}${buildBackendPath(segments)}${buildQueryString(request)}`,
     {
       method,
       headers: {
-        "content-type": "application/json",
+        ...headers,
         ...(request.headers.get("accept-language")
           ? { "accept-language": request.headers.get("accept-language") ?? "en" }
           : {}),
         ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body,
+      ...(duplex ? { duplex } : {}),
       cache: "no-store",
-    },
+    } as RequestInit,
   );
 }
 
@@ -141,14 +141,14 @@ async function handleRequest(
   method: HttpMethod,
 ): Promise<NextResponse> {
   const { path } = await context.params;
-  const body = method === "GET" ? undefined : await readJsonBody(request);
+  const payload = await prepareProxyBody(request, method);
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value ?? null;
 
   let response = await forwardToBackend(
     request,
     path,
     method,
-    body,
+    payload,
     accessToken,
   );
 
@@ -171,7 +171,7 @@ async function handleRequest(
       request,
       path,
       method,
-      body,
+      payload,
       refreshedTokens.accessToken,
     );
     const nextResponse = await responseFromBackend(response);

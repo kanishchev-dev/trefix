@@ -67,6 +67,24 @@ export const updateUserSchema = z.object({
   avatarUrl: z.string().url().optional(),
 });
 
+/**
+ * Self-service password change. The 8 character minimum mirrors the backend
+ * `ChangePasswordDto`, so an obviously too short password is rejected before
+ * the request instead of after it.
+ */
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
+/**
+ * Answer of the avatar upload endpoint. The URL is absolute and carries the
+ * file id as a version parameter, so it changes on every replacement.
+ */
+export const avatarUploadSchema = z.object({
+  avatarUrl: z.string().url(),
+});
+
 export const mobileAuthEmailRequestSchema = z.object({
   email: z.string().email(),
 });
@@ -114,6 +132,7 @@ export type AuthRequestEmailVerificationInput = z.infer<
 >;
 export type AuthVerifyEmailInput = z.infer<typeof authVerifyEmailSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type MobileAuthEmailRequestInput = z.infer<
   typeof mobileAuthEmailRequestSchema
 >;

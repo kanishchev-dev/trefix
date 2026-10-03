@@ -31,6 +31,7 @@ import {
   MonitorIcon,
   MoonIcon,
   SunIcon,
+  UserRoundIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
@@ -45,7 +46,7 @@ const THEME_OPTIONS: { value: ThemeMode; icon: ReactElement }[] = [
 
 export function NavUser(): ReactElement {
   const { isMobile } = useSidebar();
-  const { user, signOut } = useAuth();
+  const { user, signOut, hasPermission } = useAuth();
   const { theme, setTheme } = useAppSettings();
   const { locale, setLocale, t } = useI18n();
   const router = useRouter();
@@ -159,6 +160,12 @@ export function NavUser(): ReactElement {
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            {hasPermission("account.update") ? (
+              <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <UserRoundIcon />
+                {t("sidebar.profile")}
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem
               onClick={() => signOutMutation.mutate()}
               disabled={signOutMutation.isPending}

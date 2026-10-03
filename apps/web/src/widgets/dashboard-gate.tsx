@@ -15,6 +15,9 @@ const SECTION_PERMISSIONS: Array<{ prefix: string; permission: string }> = [
   { prefix: "/users/create", permission: "users.create" },
   { prefix: "/users", permission: "users.read" },
   { prefix: "/settings/authentication", permission: "permissions.read" },
+  // Editing your own profile is what `account.update` stands for, so the page
+  // follows the same rule as the menu entry that links to it.
+  { prefix: "/profile", permission: "account.update" },
 ];
 
 function requiredPermission(pathname: string): string | null {

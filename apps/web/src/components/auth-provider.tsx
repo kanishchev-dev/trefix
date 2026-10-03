@@ -20,10 +20,13 @@ import type {
   AuthResetPasswordInput,
   AuthVerifyEmailInput,
   AuthRequestEmailVerificationInput,
+  ChangePasswordInput,
+  UpdateUserInput,
 } from "@workspace/api-client";
 
 import {
   activateInvite,
+  changePassword as changePasswordRequest,
   confirmPasswordReset,
   getCurrentUser,
   login,
@@ -32,6 +35,7 @@ import {
   refreshSession,
   requestPasswordReset,
   resendVerification,
+  updateProfile as updateProfileRequest,
   verifyEmail,
 } from "@/lib/api";
 import {
@@ -54,6 +58,9 @@ type AuthContextValue = {
   activateInvite: (input: AuthActivateInviteInput) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   signOutAll: () => Promise<void>;
+  updateProfile: (input: UpdateUserInput) => Promise<AuthUser>;
+  changePassword: (input: ChangePasswordInput) => Promise<void>;
+  setAvatarUrl: (avatarUrl: string) => void;
   refreshAuth: () => Promise<AuthUser | null>;
   requestPasswordRecovery: (input: AuthForgotPasswordInput) => Promise<void>;
   confirmPasswordRecovery: (input: AuthResetPasswordInput) => Promise<void>;
@@ -191,8 +198,29 @@ export function AuthProvider({
           router.refresh();
         }
       },
-      async refreshAuth() {
-        try {
+      /**
+       * Saves the own profile and swaps the cached user for the fresh one the
+       * backend returns, so the sidebar name updates without a reload.
+       */
+      async updateProfile(input) {
+        const updatedUser = await updateProfileRequest(input);
+        setUser(updatedUser);
+        return updatedUser;
+      },
+      async changePassword(input) {
+        const tokens = await changePasswordRequest(input);
+        setUser(tokens.user);
+      },
+      /**
+       * Applies an avatar URL the backend just handed out. The upload endpoint
+       * already persisted it, so only the cached user has to be updated.
+       */
+      setAvatarUrl(avatarUrl) {
+        setUser((current) =>
+          current ? { ...current, avatarUrl } : current,
+        );
+      },
+      async refreshAuth() {        try {
           await refreshSession();
           const currentUser = await getCurrentUser();
           setUser(currentUser);
