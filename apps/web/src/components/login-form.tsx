@@ -21,6 +21,7 @@ import { useAuth } from "@/components/auth-provider";
 import { authLoginSchema } from "@/lib/auth";
 import { notifyError } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/shared/i18n";
 
 type FormState = {
   email: string;
@@ -31,6 +32,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">): ReactElement {
+  const { t } = useI18n();
   const { signIn } = useAuth();
   const [values, setValues] = useState<FormState>({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,10 +44,10 @@ export function LoginForm({
     if (!parsed.success) {
       const flattened = parsed.error.flatten().fieldErrors;
       notifyError(
-        "Не удалось войти",
+        t("auth.signInFailed"),
         flattened.email?.[0] ??
           flattened.password?.[0] ??
-          "Проверьте введённые данные",
+          t("auth.invalidForm"),
       );
       return;
     }
@@ -65,20 +67,19 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
+          <CardTitle>{t("auth.signInTitle")}</CardTitle>
+          <CardDescription>{t("auth.signInDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t("auth.emailLabel")}</FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="john.dow@mail.com"
+                  autoComplete="email"
+                  placeholder={t("auth.emailPlaceholder")}
                   value={values.email}
                   onChange={(event) =>
                     setValues((current) => ({
@@ -90,18 +91,21 @@ export function LoginForm({
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password">
+                    {t("auth.passwordLabel")}
+                  </FieldLabel>
                   <Link
                     href="/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    {t("auth.forgotPasswordLink")}
                   </Link>
                 </div>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••••"
+                  autoComplete="current-password"
+                  placeholder={t("auth.passwordPlaceholder")}
                   value={values.password}
                   onChange={(event) =>
                     setValues((current) => ({
@@ -113,7 +117,7 @@ export function LoginForm({
               </Field>
               <Field>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Signing in..." : "Login"}
+                  {isSubmitting ? t("auth.signingIn") : t("auth.signInAction")}
                   {!isSubmitting ? <ArrowRightIcon className="size-4" /> : null}
                 </Button>
               </Field>

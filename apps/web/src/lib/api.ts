@@ -7,6 +7,7 @@ import {
   authTokensSchema,
   authUserSchema,
   authVerifyEmailSchema,
+  type AuthActivateInviteInput,
   type AuthForgotPasswordInput,
   type AuthLoginInput,
   type AuthResetPasswordInput,
@@ -18,16 +19,27 @@ import {
 
 import { authPaths } from "@/lib/auth";
 
-type ApiMethod = "GET" | "POST";
+type ApiMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 async function request<TResponse>(
   path: string,
   options?: {
     method?: ApiMethod;
     body?: unknown;
+    searchParams?: Record<string, string | number | undefined>;
   },
 ): Promise<TResponse> {
-  const response = await fetch(path, {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(options?.searchParams ?? {})) {
+    if (value !== undefined) {
+      search.set(key, String(value));
+    }
+  }
+
+  const queryString = search.toString();
+  const url = queryString.length > 0 ? `${path}?${queryString}` : path;
+
+  const response = await fetch(url, {
     method: options?.method ?? "GET",
     credentials: "include",
     headers: {
@@ -54,7 +66,16 @@ async function request<TResponse>(
     return undefined as TResponse;
   }
 
-  return (await response.json()) as TResponse;
+  /**
+   * Endpoints that only mutate state answer with an empty body, and some of
+   * them use 200/201 rather than 204. Calling `response.json()` on those throws
+   * "Unexpected end of JSON input", which surfaced as a crash right after a
+   * successful request. Reading the text first keeps the void responses safe
+   * regardless of the status the endpoint chose.
+   */
+  const body = await response.text();
+
+  return (body ? JSON.parse(body) : undefined) as TResponse;
 }
 
 export async function login(input: AuthLoginInput): Promise<AuthTokens> {
@@ -106,6 +127,18 @@ export async function confirmPasswordReset(
   });
 }
 
+/**
+ * Completes the admin invite flow: the invited user sets their own password
+ * and is signed in immediately on success.
+ */
+export async function activateInvite(input: AuthActivateInviteInput): Promise<AuthTokens> {
+  const response = await request<unknown>(authPaths.inviteActivate, {
+    method: "POST",
+    body: input,
+  });
+  return authTokensSchema.parse(response);
+}
+
 export async function verifyEmail(input: AuthVerifyEmailInput): Promise<void> {
   const payload = authVerifyEmailSchema.parse(input);
   await request<void>(authPaths.emailVerify, { method: "POST", body: payload });
@@ -117,3 +150,5 @@ export async function resendVerification(
   const payload = authRequestEmailVerificationSchema.parse(input);
   await request<void>(authPaths.emailResend, { method: "POST", body: payload });
 }
+
+export { request as apiRequest };

@@ -26,6 +26,7 @@ import { Input } from "@workspace/ui/components/input";
 import { useAuth } from "@/components/auth-provider";
 import { authResetPasswordSchema } from "@/lib/auth";
 import { notifyError } from "@/lib/notifications";
+import { useI18n } from "@/shared/i18n";
 
 type Values = {
   email: string;
@@ -35,6 +36,7 @@ type Values = {
 };
 
 export function ResetPasswordForm(): ReactElement {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { confirmPasswordRecovery } = useAuth();
@@ -56,7 +58,7 @@ export function ResetPasswordForm(): ReactElement {
     event.preventDefault();
 
     if (values.newPassword !== values.confirmPassword) {
-      notifyError("Не удалось изменить пароль", "Пароли не совпадают");
+      notifyError(t("auth.passwordResetFailed"), t("auth.passwordMismatch"));
       return;
     }
 
@@ -69,11 +71,11 @@ export function ResetPasswordForm(): ReactElement {
     if (!parsed.success) {
       const flattened = parsed.error.flatten().fieldErrors;
       notifyError(
-        "Не удалось изменить пароль",
+        t("auth.passwordResetFailed"),
         flattened.email?.[0] ??
           flattened.code?.[0] ??
           flattened.newPassword?.[0] ??
-          "Проверьте введённые данные",
+          t("auth.invalidForm"),
       );
       return;
     }
@@ -91,16 +93,18 @@ export function ResetPasswordForm(): ReactElement {
   }
 
   return (
-    <Card className="w-full border-white/70 bg-white/90 shadow-[0_25px_80px_rgba(15,23,42,0.16)] backdrop-blur">
+    <Card className="w-full">
       <CardHeader className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <ShieldCheckIcon className="size-4" />
-          Password reset
+          {t("auth.passwordRecoveryTitle")}
         </div>
         <div>
-          <CardTitle className="text-2xl">Create a new password</CardTitle>
+          <CardTitle className="text-2xl">
+            {t("auth.newPasswordLabel")}
+          </CardTitle>
           <CardDescription>
-            Enter the recovery code from email and choose a new password.
+            {t("auth.passwordRecoveryDescription")}
           </CardDescription>
         </div>
       </CardHeader>
@@ -108,12 +112,12 @@ export function ResetPasswordForm(): ReactElement {
         <form className="space-y-6" onSubmit={onSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email">{t("auth.emailLabel")}</FieldLabel>
               <Input
                 id="email"
                 autoComplete="email"
                 inputMode="email"
-                placeholder="admin@example.com"
+                placeholder={t("auth.emailPlaceholder")}
                 value={values.email}
                 onChange={(event) =>
                   setValues((current) => ({
@@ -125,11 +129,11 @@ export function ResetPasswordForm(): ReactElement {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="code">Recovery code</FieldLabel>
+              <FieldLabel htmlFor="code">{t("auth.codeLabel")}</FieldLabel>
               <Input
                 id="code"
                 inputMode="numeric"
-                placeholder="123456"
+                placeholder={t("auth.codePlaceholder")}
                 value={values.code}
                 onChange={(event) =>
                   setValues((current) => ({
@@ -141,12 +145,14 @@ export function ResetPasswordForm(): ReactElement {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="newPassword">New password</FieldLabel>
+              <FieldLabel htmlFor="newPassword">
+                {t("auth.newPasswordLabel")}
+              </FieldLabel>
               <Input
                 id="newPassword"
                 type="password"
                 autoComplete="new-password"
-                placeholder="At least 8 characters"
+                placeholder={t("auth.newPasswordPlaceholder")}
                 value={values.newPassword}
                 onChange={(event) =>
                   setValues((current) => ({
@@ -159,13 +165,13 @@ export function ResetPasswordForm(): ReactElement {
 
             <Field>
               <FieldLabel htmlFor="confirmPassword">
-                Confirm password
+                {t("auth.confirmPasswordLabel")}
               </FieldLabel>
               <Input
                 id="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Repeat the new password"
+                placeholder={t("auth.confirmPasswordPlaceholder")}
                 value={values.confirmPassword}
                 onChange={(event) =>
                   setValues((current) => ({
@@ -177,15 +183,15 @@ export function ResetPasswordForm(): ReactElement {
             </Field>
             <Field>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Updating..." : "Reset password"}
+                {isSubmitting ? t("common.actions.loading") : t("auth.passwordRecoveryTitle")}
               </Button>
-              <FieldDescription className="text-center text-slate-500">
-                Back to{" "}
+              <FieldDescription className="text-center text-muted-foreground">
+                {t("auth.backToLogin")}{" "}
                 <Link
                   href="/login"
-                  className="font-medium text-slate-950 underline-offset-4 hover:underline"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
                 >
-                  login
+                  {t("auth.loginLink")}
                 </Link>
               </FieldDescription>
             </Field>

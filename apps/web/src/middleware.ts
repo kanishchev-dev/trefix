@@ -5,7 +5,12 @@ const BACKEND_BASE_URL =
 const ACCESS_COOKIE = "trefix_access_token";
 const REFRESH_COOKIE = "trefix_refresh_token";
 const SESSION_COOKIE = "trefix_session_id";
-const PUBLIC_ROUTES = ["/login", "/forgot-password", "/reset-password"];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/activate",
+];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(

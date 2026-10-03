@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import type {
   AuthUser,
   ApiClientError,
+  AuthActivateInviteInput,
   AuthLoginInput,
   AuthForgotPasswordInput,
   AuthResetPasswordInput,
@@ -22,6 +23,7 @@ import type {
 } from "@workspace/api-client";
 
 import {
+  activateInvite,
   confirmPasswordReset,
   getCurrentUser,
   login,
@@ -32,8 +34,11 @@ import {
   resendVerification,
   verifyEmail,
 } from "@/lib/api";
-import { getFriendlyAuthMessage } from "@/lib/errors";
+import {
+  getFriendlyAuthMessage,
+} from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
+import { useI18n } from "@/shared/i18n";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 
@@ -44,7 +49,9 @@ type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   permissions: string[];
+  hasPermission: (permission: string) => boolean;
   signIn: (input: AuthLoginInput) => Promise<AuthUser>;
+  activateInvite: (input: AuthActivateInviteInput) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   signOutAll: () => Promise<void>;
   refreshAuth: () => Promise<AuthUser | null>;
@@ -66,6 +73,7 @@ export function AuthProvider({
   children,
 }: Readonly<{ children: ReactNode }>): ReactElement {
   const router = useRouter();
+  const { t } = useI18n();
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,8 +100,8 @@ export function AuthProvider({
         setStatus("unauthenticated");
         setError(
           isApiClientError(bootstrapError)
-            ? getFriendlyAuthMessage(bootstrapError)
-            : "Не удалось проверить авторизацию",
+            ? getFriendlyAuthMessage(bootstrapError, t)
+            : t("errors.default"),
         );
       }
     }
@@ -103,7 +111,7 @@ export function AuthProvider({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -113,6 +121,8 @@ export function AuthProvider({
       isLoading: status === "loading",
       isAuthenticated: status === "authenticated" && Boolean(user),
       permissions: user?.permissions ?? [],
+      hasPermission: (permission: string) =>
+        (user?.permissions ?? []).includes(permission),
       async signIn(input) {
         setStatus("loading");
 
@@ -122,19 +132,39 @@ export function AuthProvider({
           setStatus("authenticated");
           setError(null);
           notifySuccess(
-            "Вход выполнен",
-            `Добро пожаловать, ${tokens.user.email}`,
+            t("auth.signInSuccess"),
+            tokens.user.email,
           );
-          router.replace("/");
+          router.replace("/dashboard");
           router.refresh();
           return tokens.user;
         } catch (signInError) {
           setUser(null);
           setStatus("unauthenticated");
-          const message = getFriendlyAuthMessage(signInError);
+          const message = getFriendlyAuthMessage(signInError, t);
           setError(message);
           notifyError(message);
           throw signInError;
+        }
+      },
+      async activateInvite(input) {
+        setStatus("loading");
+
+        try {
+          const tokens = await activateInvite(input);
+          setUser(tokens.user);
+          setStatus("authenticated");
+          setError(null);
+          notifySuccess(t("auth.activationSuccess"));
+          router.replace("/dashboard");
+          router.refresh();
+          return tokens.user;
+        } catch (activateError) {
+          setStatus("unauthenticated");
+          const message = getFriendlyAuthMessage(activateError, t);
+          setError(message);
+          notifyError(t("auth.activationFailed"), message);
+          throw activateError;
         }
       },
       async signOut() {
@@ -144,7 +174,7 @@ export function AuthProvider({
           setUser(null);
           setStatus("unauthenticated");
           setError(null);
-          notifySuccess("Выход выполнен");
+          notifySuccess(t("auth.signOutSuccess"));
           router.replace("/login");
           router.refresh();
         }
@@ -156,7 +186,7 @@ export function AuthProvider({
           setUser(null);
           setStatus("unauthenticated");
           setError(null);
-          notifySuccess("Все сессии завершены");
+          notifySuccess(t("auth.signOutAllSuccess"));
           router.replace("/login");
           router.refresh();
         }
@@ -172,7 +202,7 @@ export function AuthProvider({
         } catch (refreshError) {
           setUser(null);
           setStatus("unauthenticated");
-          const message = getFriendlyAuthMessage(refreshError);
+          const message = getFriendlyAuthMessage(refreshError, t);
           setError(message);
           notifyError(message);
           router.replace("/login");
@@ -184,51 +214,51 @@ export function AuthProvider({
         try {
           await requestPasswordReset(input);
           notifySuccess(
-            "Письмо отправлено",
-            "Если адрес найден, инструкции уже отправлены на почту",
+            t("auth.recoveryEmailSent"),
+            t("auth.recoveryEmailSentDescription"),
           );
         } catch (requestError) {
-          const message = getFriendlyAuthMessage(requestError);
+          const message = getFriendlyAuthMessage(requestError, t);
           setError(message);
-          notifyError("Не удалось отправить письмо", message);
+          notifyError(t("auth.recoveryEmailFailed"), message);
           throw requestError;
         }
       },
       async confirmPasswordRecovery(input) {
         try {
           await confirmPasswordReset(input);
-          notifySuccess("Пароль успешно изменён");
+          notifySuccess(t("auth.passwordChanged"));
         } catch (resetError) {
-          const message = getFriendlyAuthMessage(resetError);
+          const message = getFriendlyAuthMessage(resetError, t);
           setError(message);
-          notifyError("Не удалось изменить пароль", message);
+          notifyError(t("auth.passwordChangeFailed"), message);
           throw resetError;
         }
       },
       async verifyEmailAddress(input) {
         try {
           await verifyEmail(input);
-          notifySuccess("Email подтверждён");
+          notifySuccess(t("auth.emailVerified"));
         } catch (verifyError) {
-          const message = getFriendlyAuthMessage(verifyError);
+          const message = getFriendlyAuthMessage(verifyError, t);
           setError(message);
-          notifyError("Не удалось подтвердить email", message);
+          notifyError(t("auth.emailVerifyFailed"), message);
           throw verifyError;
         }
       },
       async resendVerificationEmail(input) {
         try {
           await resendVerification(input);
-          notifySuccess("Письмо для подтверждения отправлено повторно");
+          notifySuccess(t("auth.verificationResent"));
         } catch (resendError) {
-          const message = getFriendlyAuthMessage(resendError);
+          const message = getFriendlyAuthMessage(resendError, t);
           setError(message);
-          notifyError("Не удалось отправить письмо", message);
+          notifyError(t("auth.verificationResendFailed"), message);
           throw resendError;
         }
       },
     }),
-    [error, router, status, user],
+    [error, router, status, t, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

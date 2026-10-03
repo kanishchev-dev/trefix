@@ -1,0 +1,436 @@
+{
+  "common": {
+    "appName": "Trefix Admin",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "search": "Search",
+      "retry": "Retry",
+      "back": "Back",
+      "refresh": "Refresh",
+      "close": "Close",
+      "confirm": "Confirm",
+      "continue": "Continue",
+      "loading": "Loading",
+      "viewDetails": "View details"
+    },
+    "states": {
+      "empty": "Nothing here yet",
+      "emptyDescription": "Data will appear here after creation",
+      "noSearchResults": "No results found",
+      "noSearchResultsDescription": "Try changing your search query",
+      "error": "Something went wrong",
+      "errorDescription": "The request failed. Try again",
+      "loading": "Loading data"
+    },
+    "table": {
+      "page": "Page",
+      "of": "of",
+      "previous": "Previous",
+      "next": "Next",
+      "rowsTotal": "{total} total",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "page": "Page {page} of {totalPages}"
+    },
+    "confirm": {
+      "title": "Are you sure?",
+      "description": "This action cannot be undone.",
+      "yes": "Yes, proceed",
+      "no": "Cancel"
+    },
+    "system": "System",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "userList": "User list",
+    "userGroups": "User groups",
+    "settings": "Settings",
+    "authentication": "Authentication",
+    "navigation": "Navigation",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "languageRussian": "Russian",
+    "languageEnglish": "English",
+    "signOut": "Sign out",
+    "accessDenied": "Section unavailable"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "System overview",
+    "users": "Users",
+    "groups": "Groups",
+    "permissions": "Permissions",
+    "goToUsers": "Open user list"
+  },
+  "breadcrumbs": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "list": "List",
+    "create": "New user",
+    "edit": "Edit",
+    "groups": "User groups",
+    "settings": "Settings",
+    "authentication": "Authentication"
+  },
+  "users": {
+    "title": "Users",
+    "listTitle": "User list",
+    "createTitle": "New user",
+    "editTitle": "Edit user",
+    "detailTitle": "User profile",
+    "searchPlaceholder": "Search by name or email",
+    "createButton": "New user",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "emailVerified": "Email verified",
+      "groups": "Groups",
+      "createdAt": "Created"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "avatarUrl": "Avatar URL",
+      "referralCode": "Referral code",
+      "emailVerified": "Email verified",
+      "password": "Password",
+      "passwordHint": "Minimum 8 characters. Leave empty to send an invite instead",
+      "systemKey": "System key",
+      "createdAt": "Created at",
+      "updatedAt": "Updated at",
+      "passwordChangedAt": "Password changed at",
+      "avatar": "Avatar"
+    },
+    "tabs": {
+      "profile": "Profile",
+      "groups": "Groups",
+      "permissions": "Permissions",
+      "effective": "Effective permissions"
+    },
+    "groups": {
+      "assigned": "Assigned groups",
+      "assign": "Assign group",
+      "assignPlaceholder": "Select a group",
+      "assignAction": "Assign",
+      "revokeAction": "Revoke",
+      "empty": "No groups assigned"
+    },
+    "permissions": {
+      "individual": "Individual permissions",
+      "add": "Add permission",
+      "addPlaceholder": "Select a permission",
+      "addAction": "Add",
+      "revokeAction": "Revoke",
+      "empty": "No individual permissions",
+      "effective": "Effective permissions",
+      "effectiveEmpty": "No effective permissions",
+      "effectiveDescription": "Effective permissions combine group rights and individual grants"
+    },
+    "actions": {
+      "invite": "Send invite",
+      "inviteSent": "Invite sent",
+      "delete": "Delete user",
+      "openDetail": "Open"
+    },
+    "system": "This is a system user. Some fields are read-only",
+    "create": {
+      "passwordMode": "Set password now",
+      "inviteMode": "Send invite",
+      "modeLabel": "Access method",
+      "submitPassword": "Create user",
+      "submitInvite": "Create and invite"
+    },
+    "confirmDelete": {
+      "title": "Delete user",
+      "description": "User {name} will be deactivated. This action cannot be undone."
+    },
+    "empty": "No users yet",
+    "toasts": {
+      "created": "User created",
+      "updated": "User updated",
+      "deleted": "User deleted",
+      "invited": "Invite sent",
+      "groupAssigned": "Group assigned",
+      "groupRevoked": "Group revoked",
+      "permissionAssigned": "Permission granted",
+      "permissionRevoked": "Permission revoked"
+    },
+    "confirmRevokeGroup": {
+      "title": "Revoke group",
+      "description": "Group {name} will be removed from this user. Effective permissions will change immediately."
+    },
+    "confirmRevokePermission": {
+      "title": "Revoke permission",
+      "description": "Permission {name} will be removed from this user. Effective permissions will change immediately."
+    }
+  },
+  "groups": {
+    "title": "User groups",
+    "listTitle": "User groups",
+    "createTitle": "New group",
+    "editTitle": "Edit group",
+    "detailTitle": "Group",
+    "searchPlaceholder": "Search groups",
+    "createButton": "New group",
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "permissions": "Permissions",
+      "users": "Users"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "systemKey": "System key",
+      "createdAt": "Created at",
+      "updatedAt": "Updated at"
+    },
+    "tabs": {
+      "info": "Overview",
+      "permissions": "Permissions",
+      "members": "Members"
+    },
+    "permissions": {
+      "hint": "Permissions are defined by the platform and can only be enabled or disabled here"
+    },
+    "members": {
+      "empty": "No users in this group"
+    },
+    "system": "System groups cannot be renamed or deleted because they are managed by the platform bootstrap",
+    "confirmDelete": {
+      "title": "Delete group",
+      "description": "Group {name} will be deleted. This action cannot be undone."
+    },
+    "empty": "No groups yet",
+    "toasts": {
+      "created": "Group created",
+      "updated": "Group updated",
+      "deleted": "Group deleted",
+      "permissionAdded": "Permission added to group",
+      "permissionRemoved": "Permission removed from group"
+    }
+  },
+  "permissions": {
+    "title": "Permissions",
+    "manageHint": "Manage rights",
+    "domains": {
+      "permissions": "Access control",
+      "users": "Users",
+      "settings": "Settings",
+      "storage": "Files",
+      "integrations": "Integrations",
+      "coach": "AI coach",
+      "training": "Training",
+      "other": "Other",
+      "account": "Account"
+    },
+    "actions": {
+      "read": "Read",
+      "create": "Create",
+      "update": "Edit",
+      "delete": "Delete",
+      "manage": "Manage",
+      "sync": "Sync",
+      "message": "Send messages",
+      "analyze": "Analyze",
+      "adapt": "Adapt"
+    },
+    "sectionEmpty": "No permissions in the catalog",
+    "resources": {
+      "coach": {
+        "sessions": "Sessions"
+      },
+      "training": {
+        "athletes": "Athlete",
+        "progress": "Progress",
+        "goals": "Goals",
+        "plans": "Plans",
+        "workouts": "Workouts"
+      }
+    },
+    "descriptions": {
+      "permissions": {
+        "read": "View the permission catalog, permission groups and effective user permissions",
+        "manage": "Create, edit and delete permissions and groups, and assign them to users and new accounts"
+      },
+      "users": {
+        "read": "View the user list and individual user profiles",
+        "create": "Create user accounts from the admin panel",
+        "update": "Edit user profiles, status and own profile settings",
+        "delete": "Delete user accounts permanently",
+        "manage": "Manage user access: send activation invites, assign groups and individual rights"
+      },
+      "settings": {
+        "read": "View global settings: theme, locale and defaults for new accounts",
+        "update": "Change global settings and defaults for new accounts"
+      },
+      "storage": {
+        "read": "Download uploaded files such as avatars and attachments",
+        "create": "Upload files to storage",
+        "delete": "Delete files from storage"
+      },
+      "integrations": {
+        "read": "View connected integrations, their status and the connection link",
+        "sync": "Trigger a manual data sync with an external service such as Strava",
+        "delete": "Disconnect an integration and revoke its access to user data"
+      },
+      "coach": {
+        "sessions": {
+          "read": "View coaching sessions, their messages and the streaming answer",
+          "create": "Start a new coaching session with the AI coach",
+          "message": "Send messages to the AI coach and receive answers"
+        }
+      },
+      "training": {
+        "athletes": {
+          "read": "View the athlete profile and the latest calculated athlete state",
+          "create": "Create an athlete profile and fill in the training input data"
+        },
+        "progress": {
+          "read": "View the progress snapshot: load, form and recovery trends"
+        },
+        "goals": {
+          "read": "View training goals",
+          "create": "Create and adjust training goals"
+        },
+        "plans": {
+          "read": "View training plans, the mobile overview and manual plan previews",
+          "create": "Build a training plan manually or generate one automatically",
+          "update": "Regenerate a training plan and change its weeks and volume"
+        },
+        "workouts": {
+          "read": "View the workout list for a period and individual workouts",
+          "create": "Create or log a workout manually",
+          "update": "Complete a workout and record its actual result"
+        },
+        "analyze": "Run a detailed AI analysis of a completed workout",
+        "adapt": "Adapt the current training plan to the athlete state and recovery"
+      },
+      "account": {
+        "update": "Edit the own profile: first name, last name and locale"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "authentication": {
+      "title": "Authentication",
+      "description": "Defaults applied to newly created users",
+      "defaultGroups": "Default groups",
+      "defaultGroupsHint": "Groups assigned automatically to every new user",
+      "defaultPermissions": "Default individual permissions",
+      "defaultPermissionsHint": "Individual permissions granted to every new user",
+      "inviteFlow": "Invite flow",
+      "inviteFlowHint": "New users receive an email invite and set a password on first sign-in"
+    },
+    "toasts": {
+      "saved": "Settings saved"
+    },
+    "groupsCount": "{count} permissions",
+    "usersCount": "{count} users"
+  },
+  "errors": {
+    "USER_NOT_FOUND": "User not found",
+    "USER_EMAIL_ALREADY_EXISTS": "A user with this email already exists",
+    "PERMISSION_NOT_FOUND": "Permission not found",
+    "PERMISSION_GROUP_NOT_FOUND": "Group not found",
+    "SYSTEM_ENTITY_DELETION_FORBIDDEN": "System entities cannot be deleted",
+    "VALIDATION_ERROR": "Check the entered data",
+    "default": "Operation failed. Try again",
+    "apiCodes": {
+      "AUTH_INVALID_CREDENTIALS": "Invalid email or password",
+      "AUTH_EMAIL_ALREADY_EXISTS": "A user with this email already exists",
+      "AUTH_EMAIL_NOT_VERIFIED": "Email is not verified. Check your inbox or request a new code",
+      "AUTH_VERIFICATION_CODE_INVALID": "Invalid verification code",
+      "AUTH_VERIFICATION_CODE_RATE_LIMIT": "Too many requests. Try again later",
+      "AUTH_PASSWORD_RESET_CODE_INVALID": "Invalid password reset code",
+      "AUTH_PASSWORD_RESET_TOKEN_EXPIRED": "Password reset code has expired",
+      "AUTH_INVITE_CODE_INVALID": "Invalid or expired invite code",
+      "AUTH_INVITE_ALREADY_ACTIVATED": "This account has already been activated",
+      "AUTH_TOKEN_INVALID": "Session expired. Please sign in again",
+      "AUTH_SESSION_NOT_FOUND": "Session not found. Please sign in again",
+      "AUTH_REFRESH_TOKEN_REUSE": "Session was revoked. Please sign in again"
+    },
+    "byStatus": {
+      "400": "Please check the entered data",
+      "401": "Sign-in required",
+      "403": "Insufficient permissions",
+      "404": "Requested resource not found",
+      "409": "Data conflict",
+      "500": "Operation failed. Please try later"
+    },
+    "fallback": "Something went wrong"
+  },
+  "accessDenied": {
+    "title": "Access denied",
+    "description": "You do not have permission to view this section",
+    "backToDashboard": "Back to dashboard"
+  },
+  "auth": {
+    "signInSuccess": "Signed in",
+    "signOutSuccess": "Signed out",
+    "signOutAllSuccess": "All sessions revoked",
+    "recoveryEmailSent": "Email sent",
+    "recoveryEmailSentDescription": "If the address is known, instructions are on the way",
+    "recoveryEmailFailed": "Failed to send email",
+    "passwordChanged": "Password updated",
+    "passwordChangeFailed": "Failed to update password",
+    "emailVerified": "Email verified",
+    "emailVerifyFailed": "Failed to verify email",
+    "verificationResent": "Verification email sent again",
+    "verificationResendFailed": "Failed to send email",
+    "passwordRecoveryTitle": "Password reset",
+    "passwordRecoveryDescription": "Enter the recovery code from the email and choose a new password.",
+    "passwordResetSuccess": "Password updated",
+    "passwordResetFailed": "Could not update the password",
+    "passwordMismatch": "Passwords do not match",
+    "activationTitle": "Account activation",
+    "activationDescription": "Enter the invite code from the email and choose a password to activate your account.",
+    "activationSuccess": "Account activated. Welcome!",
+    "activationFailed": "Could not activate the account",
+    "codeLabel": "Invite code",
+    "codePlaceholder": "12345678",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Repeat the new password",
+    "activating": "Activating...",
+    "activateAction": "Activate account",
+    "backToLogin": "Back to",
+    "loginLink": "login",
+    "forgotPasswordTitle": "Password recovery",
+    "forgotPasswordDescription": "Enter your email and we will send a recovery code.",
+    "forgotPasswordEmailLabel": "Email",
+    "forgotPasswordEmailPlaceholder": "admin@example.com",
+    "forgotPasswordSubmit": "Send recovery code",
+    "sending": "Sending...",
+    "signInTitle": "Sign in",
+    "signInDescription": "Enter your email and password to access the admin panel.",
+    "signInAction": "Sign in",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Invalid email or password",
+    "invalidForm": "Please check the entered data",
+    "invalidEmail": "Please check the email",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "emailPlaceholder": "john.dow@mail.com",
+    "passwordPlaceholder": "••••••••••",
+    "forgotPasswordLink": "Forgot your password?",
+    "signInFailed": "Could not sign in",
+    "recoveryEmailFailedTitle": "Could not send the email",
+    "rememberedPassword": "Remembered your password?",
+    "returnToLogin": "Return to login"
+  }
+}

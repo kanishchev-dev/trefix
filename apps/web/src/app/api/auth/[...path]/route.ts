@@ -160,7 +160,7 @@ async function handleMe(request: NextRequest): Promise<NextResponse> {
       const unauthorized = NextResponse.json(
         {
           statusCode: 401,
-          message: "Требуется повторный вход",
+          message: "Session expired",
           code: "AUTH_TOKEN_INVALID",
         } satisfies BackendErrorBody,
         { status: 401 },
@@ -189,7 +189,7 @@ async function handleRefresh(request: NextRequest): Promise<NextResponse> {
       NextResponse.json(
         {
           statusCode: 401,
-          message: "Требуется повторный вход",
+          message: "Session expired",
           code: "AUTH_TOKEN_INVALID",
         } satisfies BackendErrorBody,
         { status: 401 },

@@ -46,6 +46,12 @@ export const authResetPasswordSchema = z.object({
   newPassword: z.string().min(8),
 });
 
+export const authActivateInviteSchema = z.object({
+  email: z.string().email(),
+  code: z.string().regex(/^\d+$/, "Invite code must contain digits only"),
+  newPassword: z.string().min(8),
+});
+
 export const authRequestEmailVerificationSchema = z.object({
   email: z.string().email(),
 });
@@ -102,6 +108,7 @@ export type AuthTokens = z.infer<typeof authTokensSchema>;
 export type AuthLoginInput = z.infer<typeof authLoginSchema>;
 export type AuthForgotPasswordInput = z.infer<typeof authForgotPasswordSchema>;
 export type AuthResetPasswordInput = z.infer<typeof authResetPasswordSchema>;
+export type AuthActivateInviteInput = z.infer<typeof authActivateInviteSchema>;
 export type AuthRequestEmailVerificationInput = z.infer<
   typeof authRequestEmailVerificationSchema
 >;
@@ -1103,6 +1110,149 @@ export type IntegrationsList = z.infer<typeof integrationsListSchema>;
 export type StravaConnectResponse = z.infer<typeof stravaConnectResponseSchema>;
 export type IntegrationSyncStatus = z.infer<typeof integrationSyncStatusSchema>;
 
+// --- Admin: shared ---
+
+export const paginationMetaSchema = z.object({
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+  hasNextPage: z.boolean(),
+  hasPreviousPage: z.boolean(),
+});
+
+export const adminUserSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  avatarUrl: z.string().nullable().optional(),
+  referralCode: z.string().nullable().optional(),
+  emailVerified: z.boolean(),
+  emailVerifiedAt: z.string().or(z.date()).nullable().optional(),
+  isSystem: z.boolean(),
+  systemKey: z.string().nullable().optional(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+  passwordChangedAt: z.string().or(z.date()).nullable().optional(),
+});
+
+export const adminUserGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  systemKey: z.string().nullable().optional(),
+  isSystem: z.boolean(),
+});
+
+export const adminUserPermissionSchema = z.object({
+  name: z.string(),
+  description: z.string().nullable().optional(),
+});
+
+export const adminUserDetailSchema = adminUserSchema.extend({
+  groups: z.array(adminUserGroupSchema).default([]),
+  individualPermissions: z.array(adminUserPermissionSchema).default([]),
+  effectivePermissions: z.array(z.string()).default([]),
+});
+
+export const permissionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  createdAt: z.string().or(z.date()).optional(),
+  updatedAt: z.string().or(z.date()).optional(),
+});
+
+/** The complete, unpaginated permission catalog. */
+export const permissionCatalogSchema = z.array(permissionSchema);
+
+/**
+ * Member projection returned by the group detail endpoint. The backend loads
+ * group members with a restricted attribute set (`id`, `firstName`,
+ * `lastName`, `email`, `isSystem`), so this intentionally does not reuse
+ * `adminUserSchema`, which models the full admin user resource.
+ */
+export const permissionGroupMemberSchema = z.object({
+  id: z.string(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  email: z.string(),
+  isSystem: z.boolean().optional(),
+});
+
+export const permissionGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  systemKey: z.string().nullable().optional(),
+  isSystem: z.boolean().default(false),
+  permissions: z.array(permissionSchema).optional(),
+  users: z.array(permissionGroupMemberSchema).optional(),
+  createdAt: z.string().or(z.date()).optional(),
+  updatedAt: z.string().or(z.date()).optional(),
+});
+
+export const appSettingsSchema = z.object({
+  defaultGroups: z.array(z.string()).default([]),
+  defaultPermissions: z.array(z.string()).default([]),
+  theme: z.enum(["light", "dark", "system"]).default("system"),
+  locale: z.enum(["ru", "en"]).default("en"),
+});
+
+export const adminCreateUserSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  password: z.string().min(8).optional(),
+  emailVerified: z.boolean().optional(),
+  avatarUrl: z.string().url().optional(),
+  referralCode: z.string().optional(),
+});
+
+export const adminUpdateUserSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  avatarUrl: z.string().url().optional(),
+  referralCode: z.string().optional(),
+  emailVerified: z.boolean().optional(),
+});
+
+export const updateSettingsSchema = z.object({
+  defaultGroups: z.array(z.string().uuid()).optional(),
+  defaultPermissions: z.array(z.string().uuid()).optional(),
+  theme: z.enum(["light", "dark", "system"]).optional(),
+  locale: z.enum(["ru", "en"]).optional(),
+});
+
+export const userListQuerySchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(10),
+  search: z.string().optional(),
+  sortBy: z.enum(["createdAt", "email", "firstName", "lastName"]).default("createdAt"),
+  sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
+});
+
+export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
+export type AdminUser = z.infer<typeof adminUserSchema>;
+export type AdminUserGroup = z.infer<typeof adminUserGroupSchema>;
+export type AdminUserPermission = z.infer<typeof adminUserPermissionSchema>;
+export type AdminUserDetail = z.infer<typeof adminUserDetailSchema>;
+export type Permission = z.infer<typeof permissionSchema>;
+export type PermissionGroup = z.infer<typeof permissionGroupSchema>;
+export type PermissionGroupMember = z.infer<typeof permissionGroupMemberSchema>;
+export type AppSettings = z.infer<typeof appSettingsSchema>;
+export type AdminCreateUserInput = z.infer<typeof adminCreateUserSchema>;
+export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserSchema>;
+export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
+export type UserListQuery = z.infer<typeof userListQuerySchema>;
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 export class ApiClientError extends Error {
   readonly status: number;
   readonly code?: string;
@@ -1151,6 +1301,13 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       return undefined as TResponse;
     }
 
-    return (await response.json()) as TResponse;
+    /**
+     * Mutating endpoints answer with an empty body, and not all of them use
+     * 204. Reading the text first keeps those responses from throwing
+     * "Unexpected end of JSON input" after a request that actually succeeded.
+     */
+    const body = await response.text();
+
+    return (body ? JSON.parse(body) : undefined) as TResponse;
   };
 }

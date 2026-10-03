@@ -43,6 +43,7 @@ export const authPaths = {
   logoutAll: "/api/auth/logout-all",
   passwordResetRequest: "/api/auth/password/reset/request",
   passwordResetConfirm: "/api/auth/password/reset/confirm",
+  inviteActivate: "/api/auth/invite/activate",
   emailVerify: "/api/auth/email/verify",
   emailResend: "/api/auth/email/resend",
 } as const;

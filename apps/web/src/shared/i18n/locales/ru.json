@@ -1,0 +1,436 @@
+{
+  "common": {
+    "appName": "Trefix Admin",
+    "actions": {
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "delete": "Удалить",
+      "edit": "Редактировать",
+      "create": "Создать",
+      "search": "Поиск",
+      "retry": "Повторить",
+      "back": "Назад",
+      "refresh": "Обновить",
+      "close": "Закрыть",
+      "confirm": "Подтвердить",
+      "continue": "Продолжить",
+      "loading": "Загрузка",
+      "viewDetails": "Подробнее"
+    },
+    "states": {
+      "empty": "Пока ничего нет",
+      "emptyDescription": "Данные появятся здесь после создания",
+      "noSearchResults": "Ничего не найдено",
+      "noSearchResultsDescription": "Попробуйте изменить условия поиска",
+      "error": "Что-то пошло не так",
+      "errorDescription": "Не удалось выполнить запрос. Попробуйте снова",
+      "loading": "Загружаем данные"
+    },
+    "table": {
+      "page": "Страница",
+      "of": "из",
+      "previous": "Назад",
+      "next": "Вперёд",
+      "rowsTotal": "Всего: {total}",
+      "actions": "Действия"
+    },
+    "pagination": {
+      "page": "Страница {page} из {totalPages}"
+    },
+    "confirm": {
+      "title": "Вы уверены?",
+      "description": "Это действие нельзя отменить.",
+      "yes": "Да, продолжить",
+      "no": "Отмена"
+    },
+    "system": "Системный",
+    "yes": "Да",
+    "no": "Нет"
+  },
+  "sidebar": {
+    "dashboard": "Дашборд",
+    "users": "Пользователи",
+    "userList": "Список пользователей",
+    "userGroups": "Группы пользователей",
+    "settings": "Настройки",
+    "authentication": "Аутентификация",
+    "navigation": "Навигация",
+    "theme": "Тема",
+    "themeSystem": "Системная",
+    "themeLight": "Светлая",
+    "themeDark": "Тёмная",
+    "language": "Язык",
+    "languageRussian": "Русский",
+    "languageEnglish": "Английский",
+    "signOut": "Выйти",
+    "accessDenied": "Раздел недоступен"
+  },
+  "dashboard": {
+    "title": "Дашборд",
+    "subtitle": "Обзор системы",
+    "users": "Пользователи",
+    "groups": "Группы",
+    "permissions": "Права",
+    "goToUsers": "Открыть список пользователей"
+  },
+  "breadcrumbs": {
+    "dashboard": "Дашборд",
+    "users": "Пользователи",
+    "list": "Список",
+    "create": "Новый пользователь",
+    "edit": "Редактирование",
+    "groups": "Группы",
+    "settings": "Настройки",
+    "authentication": "Аутентификация"
+  },
+  "users": {
+    "title": "Пользователи",
+    "listTitle": "Список пользователей",
+    "createTitle": "Новый пользователь",
+    "editTitle": "Редактирование пользователя",
+    "detailTitle": "Профиль пользователя",
+    "searchPlaceholder": "Поиск по имени или email",
+    "createButton": "Новый пользователь",
+    "columns": {
+      "name": "Имя",
+      "email": "Email",
+      "emailVerified": "Email подтверждён",
+      "groups": "Группы",
+      "createdAt": "Создан"
+    },
+    "fields": {
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "email": "Email",
+      "avatarUrl": "URL аватара",
+      "referralCode": "Реферальный код",
+      "emailVerified": "Email подтверждён",
+      "password": "Пароль",
+      "passwordHint": "Минимум 8 символов. Оставьте пустым, чтобы отправить приглашение",
+      "systemKey": "Системный ключ",
+      "createdAt": "Создан",
+      "updatedAt": "Обновлён",
+      "passwordChangedAt": "Пароль изменён",
+      "avatar": "Аватар"
+    },
+    "tabs": {
+      "profile": "Профиль",
+      "groups": "Группы",
+      "permissions": "Права",
+      "effective": "Эффективные права"
+    },
+    "groups": {
+      "assigned": "Назначенные группы",
+      "assign": "Назначить группу",
+      "assignPlaceholder": "Выберите группу",
+      "assignAction": "Назначить",
+      "revokeAction": "Снять",
+      "empty": "Группы не назначены"
+    },
+    "permissions": {
+      "individual": "Индивидуальные права",
+      "add": "Добавить право",
+      "addPlaceholder": "Выберите право",
+      "addAction": "Добавить",
+      "revokeAction": "Снять",
+      "empty": "Нет индивидуальных прав",
+      "effective": "Эффективные права",
+      "effectiveEmpty": "Нет эффективных прав",
+      "effectiveDescription": "Эффективные права объединяют права групп и индивидуальные выдачи"
+    },
+    "actions": {
+      "invite": "Отправить приглашение",
+      "inviteSent": "Приглашение отправлено",
+      "delete": "Удалить пользователя",
+      "openDetail": "Открыть"
+    },
+    "system": "Это системный пользователь. Некоторые поля доступны только для чтения",
+    "create": {
+      "passwordMode": "Задать пароль сразу",
+      "inviteMode": "Отправить приглашение",
+      "modeLabel": "Способ доступа",
+      "submitPassword": "Создать пользователя",
+      "submitInvite": "Создать и пригласить"
+    },
+    "confirmDelete": {
+      "title": "Удалить пользователя",
+      "description": "Пользователь {name} будет деактивирован. Это действие нельзя отменить."
+    },
+    "empty": "Пользователей пока нет",
+    "toasts": {
+      "created": "Пользователь создан",
+      "updated": "Пользователь обновлён",
+      "deleted": "Пользователь удалён",
+      "invited": "Приглашение отправлено",
+      "groupAssigned": "Группа назначена",
+      "groupRevoked": "Группа снята",
+      "permissionAssigned": "Право выдано",
+      "permissionRevoked": "Право снято"
+    },
+    "confirmRevokeGroup": {
+      "title": "Снять группу",
+      "description": "Группа {name} будет снята с пользователя. Эффективные права изменятся сразу."
+    },
+    "confirmRevokePermission": {
+      "title": "Снять право",
+      "description": "Право {name} будет снято с пользователя. Эффективные права изменятся сразу."
+    }
+  },
+  "groups": {
+    "title": "Группы пользователей",
+    "listTitle": "Группы пользователей",
+    "createTitle": "Новая группа",
+    "editTitle": "Редактирование группы",
+    "detailTitle": "Группа",
+    "searchPlaceholder": "Поиск групп",
+    "createButton": "Новая группа",
+    "columns": {
+      "name": "Название",
+      "description": "Описание",
+      "permissions": "Права",
+      "users": "Пользователи"
+    },
+    "fields": {
+      "name": "Название",
+      "description": "Описание",
+      "systemKey": "Системный ключ",
+      "createdAt": "Создана",
+      "updatedAt": "Обновлена"
+    },
+    "tabs": {
+      "info": "Обзор",
+      "permissions": "Права",
+      "members": "Участники"
+    },
+    "permissions": {
+      "hint": "Права определяются платформой, здесь их можно только включать и выключать"
+    },
+    "members": {
+      "empty": "В группе нет пользователей"
+    },
+    "system": "Системные группы нельзя переименовать или удалить: ими управляет инициализация платформы",
+    "confirmDelete": {
+      "title": "Удалить группу",
+      "description": "Группа {name} будет удалена. Это действие нельзя отменить."
+    },
+    "empty": "Групп пока нет",
+    "toasts": {
+      "created": "Группа создана",
+      "updated": "Группа обновлена",
+      "deleted": "Группа удалена",
+      "permissionAdded": "Право добавлено в группу",
+      "permissionRemoved": "Право убрано из группы"
+    }
+  },
+  "permissions": {
+    "title": "Права",
+    "manageHint": "Настроить права",
+    "domains": {
+      "permissions": "Управление доступом",
+      "users": "Пользователи",
+      "settings": "Настройки",
+      "storage": "Файлы",
+      "integrations": "Интеграции",
+      "coach": "ИИ-тренер",
+      "training": "Тренировки",
+      "other": "Прочее",
+      "account": "Аккаунт"
+    },
+    "actions": {
+      "read": "Просмотр",
+      "create": "Создание",
+      "update": "Изменение",
+      "delete": "Удаление",
+      "manage": "Управление",
+      "sync": "Синхронизация",
+      "message": "Отправка сообщений",
+      "analyze": "Анализ",
+      "adapt": "Адаптация"
+    },
+    "sectionEmpty": "Каталог прав пуст",
+    "resources": {
+      "coach": {
+        "sessions": "Консультации"
+      },
+      "training": {
+        "athletes": "Спортсмен",
+        "progress": "Прогресс",
+        "goals": "Цели",
+        "plans": "Планы",
+        "workouts": "Тренировки"
+      }
+    },
+    "descriptions": {
+      "permissions": {
+        "read": "Просмотр каталога прав, групп прав и итоговых прав пользователей",
+        "manage": "Создание, изменение и удаление прав и групп, выдача их пользователям и новым учётным записям"
+      },
+      "users": {
+        "read": "Просмотр списка пользователей и профилей",
+        "create": "Создание пользователей из админки",
+        "update": "Изменение профилей, статуса и собственных настроек профиля",
+        "delete": "Безвозвратное удаление пользователей",
+        "manage": "Управление доступом: приглашения, группы и индивидуальные права"
+      },
+      "settings": {
+        "read": "Просмотр общих настроек: тема, язык и значения по умолчанию для новых учётных записей",
+        "update": "Изменение общих настроек и значений по умолчанию для новых учётных записей"
+      },
+      "storage": {
+        "read": "Скачивание загруженных файлов: аватары, вложения",
+        "create": "Загрузка файлов в хранилище",
+        "delete": "Удаление файлов из хранилища"
+      },
+      "integrations": {
+        "read": "Просмотр подключённых интеграций, их статуса и ссылки подключения",
+        "sync": "Запуск синхронизации с внешним сервисом, например со Strava",
+        "delete": "Отключение интеграции и отзыв доступа к данным пользователя"
+      },
+      "coach": {
+        "sessions": {
+          "read": "Просмотр консультаций, переписки и потокового ответа тренера",
+          "create": "Начало новой консультации с ИИ-тренером",
+          "message": "Отправка сообщений ИИ-тренеру и получение ответов"
+        }
+      },
+      "training": {
+        "athletes": {
+          "read": "Просмотр профиля спортсмена и последнего расчётного состояния",
+          "create": "Создание профиля спортсмена и заполнение входных данных для расчётов"
+        },
+        "progress": {
+          "read": "Просмотр среза прогресса: нагрузка, форма, восстановление"
+        },
+        "goals": {
+          "read": "Просмотр тренировочных целей",
+          "create": "Создание и корректировка тренировочных целей"
+        },
+        "plans": {
+          "read": "Просмотр тренировочных планов, мобильной сводки и предпросмотра ручного плана",
+          "create": "Ручная сборка плана или его автоматическая генерация",
+          "update": "Перегенерация плана, изменение недель и объёма"
+        },
+        "workouts": {
+          "read": "Просмотр списка тренировок за период и отдельных тренировок",
+          "create": "Создание или ручная запись тренировки",
+          "update": "Завершение тренировки и запись фактического результата"
+        },
+        "analyze": "Подробный ИИ-анализ завершённой тренировки",
+        "adapt": "Адаптация текущего плана под состояние спортсмена и восстановление"
+      },
+      "account": {
+        "update": "Изменение собственного профиля: имя, фамилия и язык интерфейса"
+      }
+    }
+  },
+  "settings": {
+    "title": "Настройки",
+    "authentication": {
+      "title": "Аутентификация",
+      "description": "Значения по умолчанию для новых пользователей",
+      "defaultGroups": "Группы по умолчанию",
+      "defaultGroupsHint": "Группы, назначаемые каждому новому пользователю",
+      "defaultPermissions": "Права по умолчанию",
+      "defaultPermissionsHint": "Индивидуальные права, выдаваемые каждому новому пользователю",
+      "inviteFlow": "Приглашения",
+      "inviteFlowHint": "Новые пользователи получают письмо-приглашение и задают пароль при первом входе"
+    },
+    "toasts": {
+      "saved": "Настройки сохранены"
+    },
+    "groupsCount": "{count} прав",
+    "usersCount": "{count} пользователей"
+  },
+  "errors": {
+    "USER_NOT_FOUND": "Пользователь не найден",
+    "USER_EMAIL_ALREADY_EXISTS": "Пользователь с таким email уже существует",
+    "PERMISSION_NOT_FOUND": "Право не найдено",
+    "PERMISSION_GROUP_NOT_FOUND": "Группа не найдена",
+    "SYSTEM_ENTITY_DELETION_FORBIDDEN": "Системные сущности нельзя удалять",
+    "VALIDATION_ERROR": "Проверьте введённые данные",
+    "default": "Не удалось выполнить операцию. Попробуйте снова",
+    "apiCodes": {
+      "AUTH_INVALID_CREDENTIALS": "Неверный email или пароль",
+      "AUTH_EMAIL_ALREADY_EXISTS": "Пользователь с таким email уже существует",
+      "AUTH_EMAIL_NOT_VERIFIED": "Email не подтверждён. Проверьте письмо или запросите повторную отправку кода",
+      "AUTH_VERIFICATION_CODE_INVALID": "Неверный код подтверждения",
+      "AUTH_VERIFICATION_CODE_RATE_LIMIT": "Слишком много запросов. Попробуйте позже",
+      "AUTH_PASSWORD_RESET_CODE_INVALID": "Неверный код восстановления пароля",
+      "AUTH_PASSWORD_RESET_TOKEN_EXPIRED": "Срок действия кода восстановления истёк",
+      "AUTH_INVITE_CODE_INVALID": "Неверный или истёкший код приглашения",
+      "AUTH_INVITE_ALREADY_ACTIVATED": "Аккаунт уже активирован",
+      "AUTH_TOKEN_INVALID": "Сессия истекла. Войдите снова",
+      "AUTH_SESSION_NOT_FOUND": "Сессия не найдена. Войдите снова",
+      "AUTH_REFRESH_TOKEN_REUSE": "Сессия была отозвана. Войдите снова"
+    },
+    "byStatus": {
+      "400": "Проверьте введённые данные",
+      "401": "Требуется повторный вход",
+      "403": "Недостаточно прав",
+      "404": "Запрошенный ресурс не найден",
+      "409": "Возник конфликт данных",
+      "500": "Не удалось выполнить операцию. Попробуйте позже"
+    },
+    "fallback": "Something went wrong"
+  },
+  "accessDenied": {
+    "title": "Доступ запрещён",
+    "description": "У вас нет прав для просмотра этого раздела",
+    "backToDashboard": "Вернуться на дашборд"
+  },
+  "auth": {
+    "signInSuccess": "Вход выполнен",
+    "signOutSuccess": "Выход выполнен",
+    "signOutAllSuccess": "Все сессии завершены",
+    "recoveryEmailSent": "Письмо отправлено",
+    "recoveryEmailSentDescription": "Если адрес найден, инструкции уже отправлены на почту",
+    "recoveryEmailFailed": "Не удалось отправить письмо",
+    "passwordChanged": "Пароль успешно изменён",
+    "passwordChangeFailed": "Не удалось изменить пароль",
+    "emailVerified": "Email подтверждён",
+    "emailVerifyFailed": "Не удалось подтвердить email",
+    "verificationResent": "Письмо для подтверждения отправлено повторно",
+    "verificationResendFailed": "Не удалось отправить письмо",
+    "passwordRecoveryTitle": "Восстановление пароля",
+    "passwordRecoveryDescription": "Введите код из письма и задайте новый пароль.",
+    "passwordResetSuccess": "Пароль обновлён",
+    "passwordResetFailed": "Не удалось изменить пароль",
+    "passwordMismatch": "Пароли не совпадают",
+    "activationTitle": "Активация аккаунта",
+    "activationDescription": "Введите код приглашения из письма и задайте пароль, чтобы активировать аккаунт.",
+    "activationSuccess": "Аккаунт активирован. Добро пожаловать!",
+    "activationFailed": "Не удалось активировать аккаунт",
+    "codeLabel": "Код приглашения",
+    "codePlaceholder": "12345678",
+    "newPasswordLabel": "Новый пароль",
+    "newPasswordPlaceholder": "Минимум 8 символов",
+    "confirmPasswordLabel": "Подтвердите пароль",
+    "confirmPasswordPlaceholder": "Повторите новый пароль",
+    "activating": "Активация...",
+    "activateAction": "Активировать аккаунт",
+    "backToLogin": "Вернуться к",
+    "loginLink": "входу",
+    "forgotPasswordTitle": "Восстановление пароля",
+    "forgotPasswordDescription": "Укажите email, и мы отправим код для восстановления.",
+    "forgotPasswordEmailLabel": "Email",
+    "forgotPasswordEmailPlaceholder": "admin@example.com",
+    "forgotPasswordSubmit": "Отправить код",
+    "sending": "Отправка...",
+    "signInTitle": "Вход",
+    "signInDescription": "Введите email и пароль для доступа в админку.",
+    "signInAction": "Войти",
+    "signingIn": "Вход...",
+    "invalidCredentials": "Неверный email или пароль",
+    "invalidForm": "Проверьте введённые данные",
+    "invalidEmail": "Проверьте email",
+    "emailLabel": "Email",
+    "passwordLabel": "Пароль",
+    "emailPlaceholder": "ivan.petrov@mail.com",
+    "passwordPlaceholder": "••••••••••",
+    "forgotPasswordLink": "Забыли пароль?",
+    "signInFailed": "Не удалось войти",
+    "recoveryEmailFailedTitle": "Не удалось отправить письмо",
+    "rememberedPassword": "Вспомнили пароль?",
+    "returnToLogin": "Вернуться ко входу"
+  }
+}

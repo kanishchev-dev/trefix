@@ -1,60 +1,55 @@
 import type { ApiClientError } from "@workspace/api-client";
 
-const FRIENDLY_MESSAGES: Record<string, string> = {
-  AUTH_INVALID_CREDENTIALS: "Неверный email или пароль",
-  AUTH_EMAIL_ALREADY_EXISTS: "Пользователь с таким email уже существует",
-  AUTH_EMAIL_NOT_VERIFIED:
-    "Email не подтверждён. Проверьте письмо или запросите повторную отправку кода",
-  AUTH_VERIFICATION_CODE_INVALID: "Неверный код подтверждения",
-  AUTH_VERIFICATION_CODE_RATE_LIMIT: "Слишком много запросов. Попробуйте позже",
-  AUTH_PASSWORD_RESET_CODE_INVALID: "Неверный код восстановления пароля",
-  AUTH_PASSWORD_RESET_TOKEN_EXPIRED: "Срок действия кода восстановления истёк",
-  AUTH_TOKEN_INVALID: "Сессия истекла. Войдите снова",
-  AUTH_SESSION_NOT_FOUND: "Сессия не найдена. Войдите снова",
-  AUTH_REFRESH_TOKEN_REUSE: "Сессия была отозвана. Войдите снова",
-};
+export type TranslateFn = (
+  key: string,
+  params?: Record<string, string | number>,
+) => string;
 
-const STATUS_MESSAGES: Record<number, string> = {
-  400: "Проверьте введённые данные",
-  401: "Требуется повторный вход",
-  403: "Недостаточно прав",
-  404: "Запрошенный ресурс не найден",
-  409: "Возник конфликт данных",
-  500: "Не удалось выполнить операцию. Попробуйте позже",
-};
-
-export function getFriendlyAuthMessage(error: unknown): string {
+/**
+ * Resolves a human readable message for an API error.
+ *
+ * Backend error codes and HTTP statuses are mapped to translation keys so the
+ * message follows the active locale instead of being hardcoded. Resolution
+ * order: error code -> HTTP status -> backend message -> fallback, always
+ * falling back to the English dictionary when a key is missing.
+ */
+export function getFriendlyApiMessage(
+  error: unknown,
+  t: TranslateFn,
+): string {
   if (isApiClientError(error)) {
-    return (
-      FRIENDLY_MESSAGES[error.code ?? ""] ||
-      STATUS_MESSAGES[error.status] ||
-      error.message ||
-      "Произошла ошибка"
-    );
+    if (error.code) {
+      const codeKey = `errors.apiCodes.${error.code}`;
+      const byCode = t(codeKey);
+      if (byCode !== codeKey) {
+        return byCode;
+      }
+    }
+
+    const statusKey = `errors.byStatus.${error.status}`;
+    const byStatus = t(statusKey);
+    if (byStatus !== statusKey) {
+      return byStatus;
+    }
+
+    return error.message || t("errors.fallback");
   }
 
   if (error instanceof Error) {
     return error.message;
   }
 
-  return "Произошла ошибка";
+  return t("errors.fallback");
 }
 
-export function getFriendlyApiMessage(error: unknown): string {
-  if (isApiClientError(error)) {
-    return (
-      FRIENDLY_MESSAGES[error.code ?? ""] ||
-      STATUS_MESSAGES[error.status] ||
-      error.message ||
-      "Произошла ошибка"
-    );
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Произошла ошибка";
+/**
+ * Auth flows share the same error surface as the rest of the API.
+ */
+export function getFriendlyAuthMessage(
+  error: unknown,
+  t: TranslateFn,
+): string {
+  return getFriendlyApiMessage(error, t);
 }
 
 function isApiClientError(error: unknown): error is ApiClientError {

@@ -20,8 +20,10 @@ import { Input } from "@workspace/ui/components/input";
 import { useAuth } from "@/components/auth-provider";
 import { authForgotPasswordSchema } from "@/lib/auth";
 import { notifyError } from "@/lib/notifications";
+import { useI18n } from "@/shared/i18n";
 
 export function ForgotPasswordForm(): ReactElement {
+  const { t } = useI18n();
   const router = useRouter();
   const { requestPasswordRecovery } = useAuth();
   const [email, setEmail] = useState("");
@@ -33,8 +35,8 @@ export function ForgotPasswordForm(): ReactElement {
     const parsed = authForgotPasswordSchema.safeParse({ email });
     if (!parsed.success) {
       notifyError(
-        "Не удалось отправить письмо",
-        parsed.error.flatten().fieldErrors.email?.[0] ?? "Проверьте email",
+        t("auth.recoveryEmailFailedTitle"),
+        parsed.error.flatten().fieldErrors.email?.[0] ?? t("auth.invalidEmail"),
       );
       return;
     }
@@ -55,37 +57,38 @@ export function ForgotPasswordForm(): ReactElement {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recover your account</CardTitle>
-        <CardDescription>
-          Enter your email below and we will send recovery instructions to your
-          inbox.
-        </CardDescription>
+        <CardTitle>{t("auth.forgotPasswordTitle")}</CardTitle>
+        <CardDescription>{t("auth.forgotPasswordDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-6" onSubmit={onSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email">
+                {t("auth.forgotPasswordEmailLabel")}
+              </FieldLabel>
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
-                placeholder="john.dow@mail.com"
+                placeholder={t("auth.forgotPasswordEmailPlaceholder")}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
             </Field>
             <Field>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Sending..." : "Send recovery email"}
+                {isSubmitting
+                  ? t("auth.sending")
+                  : t("auth.forgotPasswordSubmit")}
               </Button>
               <div className="text-center text-sm text-muted-foreground">
-                Remembered your password?{" "}
+                {t("auth.rememberedPassword")}{" "}
                 <Link
                   href="/login"
                   className="font-medium text-foreground underline-offset-4 hover:underline"
                 >
-                  Return to login
+                  {t("auth.returnToLogin")}
                 </Link>
               </div>
             </Field>
