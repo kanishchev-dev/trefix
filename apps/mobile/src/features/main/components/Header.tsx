@@ -98,7 +98,7 @@ export function HeaderActionButton({
             styles.actionButtonGlass,
             {
               borderColor: isDark ? "transparent" : theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
+              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -110,7 +110,7 @@ export function HeaderActionButton({
             styles.actionButtonGlass,
             {
               borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(0, 0, 0, 0.65)" : "rgba(255, 255, 255, 0.72)",
+              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -158,7 +158,7 @@ export function HeaderTextButton({
             styles.textButtonGlass,
             {
               borderColor: isDark ? "transparent" : theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
+              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -180,7 +180,7 @@ export function HeaderTextButton({
             styles.textButtonGlass,
             {
               borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : theme.color.glassBorder,
-              backgroundColor: isDark ? "rgba(0, 0, 0, 0.65)" : "rgba(255, 255, 255, 0.72)",
+              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         >
@@ -275,7 +275,7 @@ export function Header({
                 style={[
                   StyleSheet.absoluteFill,
                   {
-                    backgroundColor: themeMode === "dark" ? "rgba(0, 0, 0, 0.85)" : theme.color.background,
+                    backgroundColor: theme.color.background,
                     opacity: themeMode === "dark" ? 0.9 : 0.8,
                   },
                 ]}
@@ -304,7 +304,7 @@ export function Header({
               borderWidth: StyleSheet.hairlineWidth,
               borderTopWidth: 0,
               borderColor: themeMode === "dark" ? "transparent" : theme.color.border,
-              backgroundColor: themeMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.72)",
+              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
             },
           ]}
         />
