@@ -214,6 +214,7 @@ export function Header({
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const isCalendar = variant === "calendar";
+  const isDark = themeMode === "dark";
 
   return (
     <View
