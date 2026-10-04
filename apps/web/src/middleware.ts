@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
+
+// Node.js runtime so this module shares its single-flight map with the route
+// handlers below. On the edge runtime each request would get its own isolate
+// with its own map, and the guard would protect nothing.
+export const runtime = "nodejs";
+
 const BACKEND_BASE_URL =
   process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
 const ACCESS_COOKIE = "trefix_access_token";
@@ -65,24 +72,35 @@ async function refreshSession(request: NextRequest): Promise<{
     return { ok: false };
   }
 
-  const response = await fetch(`${BACKEND_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
+  // Single-flight for the same reason as the API proxies. This is the third
+  // place that spends the refresh token, and the one most likely to collide
+  // with them: the middleware refreshes while the page it is guarding fires its
+  // first authenticated requests, and both present the same token. The backend
+  // rotates it on every use and deletes the session on the second presentation.
+  const tokens = await runSingleFlightRefresh(refreshToken, async () => {
+    const response = await fetch(`${BACKEND_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as {
+      accessToken: string;
+      refreshToken: string;
+      sessionId: string;
+      accessTokenExpiresIn: number;
+    };
   });
 
-  if (!response.ok) {
+  if (!tokens) {
     return { ok: false };
   }
-
-  const tokens = (await response.json()) as {
-    accessToken: string;
-    refreshToken: string;
-    sessionId: string;
-    accessTokenExpiresIn: number;
-  };
 
   return { ok: true, tokens };
 }

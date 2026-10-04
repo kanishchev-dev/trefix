@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState, type ReactElement } from "react";
+import { useCallback, useMemo, useState, type ReactElement } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
@@ -42,12 +42,14 @@ import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { toInitials } from "@/entities/avatar/lib/initials";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
+import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import {
   EmptyState,
   ErrorState,
   TableSkeleton,
 } from "@/widgets/data-state";
 import { useDeleteUser, useUsers } from "@/features/users/hooks/use-users";
+import { useUserPresence } from "@/features/users/hooks/use-user-presence";
 import { formatDate, useI18n } from "@/shared/i18n";
 import { useAuth } from "@/components/auth-provider";
 
@@ -111,6 +113,15 @@ export function UsersTable(): ReactElement {
 
   const meta = usersQuery.data?.meta;
   const canDelete = hasPermission("users.delete");
+
+  // One request for the whole visible page: asking per row would multiply the
+  // number of round trips by the page size for the same answer.
+  const { isOnline } = useUserPresence(
+    useMemo(
+      () => usersQuery.data?.data.map((user) => user.id) ?? [],
+      [usersQuery.data?.data],
+    ),
+  );
 
   function renderSortIcon(field: SortField) {
     if (sortBy !== field) {
@@ -206,15 +217,21 @@ export function UsersTable(): ReactElement {
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="size-8 shrink-0">
-                          <AvatarImage
-                            src={user.avatarUrl ?? undefined}
-                            alt={displayName}
+                        <span className="relative shrink-0">
+                          <Avatar className="size-8">
+                            <AvatarImage
+                              src={user.avatarUrl ?? undefined}
+                              alt={displayName}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {toInitials(displayName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <AvatarPresenceDot
+                            online={isOnline(user.id)}
+                            label={t("presence.online")}
                           />
-                          <AvatarFallback className="text-xs">
-                            {toInitials(displayName)}
-                          </AvatarFallback>
-                        </Avatar>
+                        </span>
                         <Link
                           href={`/users/${user.id}`}
                           className="truncate font-medium hover:underline"

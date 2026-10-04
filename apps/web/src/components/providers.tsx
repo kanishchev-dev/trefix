@@ -24,7 +24,11 @@ export function Providers({
           queries: {
             staleTime: 15_000,
             retry: 1,
-            refetchOnWindowFocus: false,
+            // Left at its default (true) on purpose. Realtime marks a cache
+            // stale the moment a change arrives, but a background tab has its
+            // requests deprioritised by the browser, so the refetch may not have
+            // happened yet. Refetching on focus is what turns that stale mark
+            // into fresh data instead of leaving the tab behind until a reload.
           },
         },
       }),

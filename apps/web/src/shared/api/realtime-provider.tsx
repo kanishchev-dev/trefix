@@ -13,6 +13,7 @@ import {
 
 import { useAuth } from "@/components/auth-provider";
 import { RealtimeClient } from "@/shared/api/realtime-client";
+import { applyRealtimeEventToCache } from "@/shared/api/realtime-sync";
 import {
   REALTIME_EVENT_CACHE_KEYS,
   REALTIME_SELF_EVENTS,
@@ -56,7 +57,12 @@ export function RealtimeProvider({
   useEffect(() => {
     const unsubscribers = Object.entries(REALTIME_EVENT_CACHE_KEYS).map(
       ([event, keys]) =>
-        client.on(event, () => {
+        client.on(event, (payload) => {
+          // Merge first so the change is on screen immediately, then refetch in
+          // the background: the event carries only the fields it changed, so the
+          // request stays the source of truth for everything else.
+          applyRealtimeEventToCache(queryClient, event, payload);
+
           keys.forEach((key) => {
             void queryClient.invalidateQueries({ queryKey: key });
           });
@@ -72,6 +78,34 @@ export function RealtimeProvider({
       client.disconnect();
     };
   }, [client, queryClient, isAuthenticated, rooms]);
+
+  // A background tab keeps its socket, but the browser may have suspended the
+  // traffic long enough for events to be missed. Reconnecting on the way back is
+  // cheap and makes the connection self-healing instead of one-shot.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const roomList = rooms.length > 0 ? rooms.split(",") : [];
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      void client.connect(roomList);
+      // Whatever realtime marked stale while the tab was hidden is still stale:
+      // the browser may never have run those refetches.
+      void queryClient.invalidateQueries();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [client, isAuthenticated, queryClient, rooms]);
 
   // The signed-in user lives in the auth context rather than in react-query, so
   // a cache invalidation cannot reach the sidebar name, the avatar or the

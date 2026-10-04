@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { type ValueControlProps } from "./value-control-types";
-import { Plus, Minus } from "lucide-react-native";
+import { Minus, Plus } from "lucide-react-native";
 
 export type StepperProps = ValueControlProps<number> & {
   unit?: string;
+  themeMode?: ThemeMode;
 };
 
 export function Stepper({
@@ -19,8 +20,14 @@ export function Stepper({
   formatValue,
   accessibilityLabel,
   theme,
+  themeMode,
   unit,
 }: StepperProps) {
+  const isDark =
+    themeMode === "dark" ||
+    theme?.color.background === "#09090b" ||
+    theme?.color.surface === "#111111";
+
   const triggerHaptic = useCallback(() => {
     try {
       Haptics.selectionAsync();
@@ -50,11 +57,22 @@ export function Stepper({
   const canDecrement = value > min && !disabled;
   const canIncrement = value < max && !disabled;
 
+  const btnBg = isDark ? "#27272a" : theme?.color.secondary || "#f4f4f5";
+  const btnBorder = isDark ? "rgba(255, 255, 255, 0.12)" : theme?.color.border || "#e4e4e7";
+  const iconColor = theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b");
+
   return (
     <View
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="adjustable"
-      style={[styles.container, disabled && { opacity: 0.5 }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? "rgba(255, 255, 255, 0.04)" : theme?.color.surface || "#ffffff",
+          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "#e4e4e7",
+        },
+        disabled && { opacity: 0.5 },
+      ]}
     >
       <Pressable
         accessibilityRole="button"
@@ -64,14 +82,14 @@ export function Stepper({
         style={({ pressed }: { pressed: boolean }) => [
           styles.button,
           {
-            backgroundColor: theme?.color.secondary || "#e4e4e7",
-            borderColor: theme?.color.border || "#d4d4d8",
+            backgroundColor: btnBg,
+            borderColor: btnBorder,
           },
-          !canDecrement && { opacity: 0.4 },
-          pressed && canDecrement && { opacity: 0.7 },
+          !canDecrement && styles.buttonDisabled,
+          pressed && canDecrement && styles.buttonPressed,
         ]}
       >
-        <Minus size={20} color={theme?.color.foreground || "#09090b"} />
+        <Minus size={18} color={canDecrement ? iconColor : (isDark ? "#52525b" : "#a1a1aa")} />
       </Pressable>
 
       <View style={styles.valueContainer}>
@@ -79,13 +97,23 @@ export function Stepper({
           style={[
             styles.valueText,
             {
-              color: theme?.color.foreground || "#09090b",
-              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+              color: theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b"),
+              fontFamily: theme?.typography.fontFamily.sans.bold || "System",
             },
           ]}
         >
           {displayString}
-          {unit ? <Text style={styles.unitText}> {unit}</Text> : null}
+          {unit ? (
+            <Text
+              style={[
+                styles.unitText,
+                { color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a") },
+              ]}
+            >
+              {" "}
+              {unit}
+            </Text>
+          ) : null}
         </Text>
       </View>
 
@@ -97,14 +125,14 @@ export function Stepper({
         style={({ pressed }: { pressed: boolean }) => [
           styles.button,
           {
-            backgroundColor: theme?.color.secondary || "#e4e4e7",
-            borderColor: theme?.color.border || "#d4d4d8",
+            backgroundColor: btnBg,
+            borderColor: btnBorder,
           },
-          !canIncrement && { opacity: 0.4 },
-          pressed && canIncrement && { opacity: 0.7 },
+          !canIncrement && styles.buttonDisabled,
+          pressed && canIncrement && styles.buttonPressed,
         ]}
       >
-        <Plus size={20} color={theme?.color.foreground || "#09090b"} />
+        <Plus size={18} color={canIncrement ? iconColor : (isDark ? "#52525b" : "#a1a1aa")} />
       </Pressable>
     </View>
   );
@@ -117,14 +145,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 9999,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   button: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.35,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.92 }],
+    opacity: 0.8,
   },
   valueContainer: {
     flex: 1,
@@ -132,11 +170,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   valueText: {
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 24,
   },
   unitText: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

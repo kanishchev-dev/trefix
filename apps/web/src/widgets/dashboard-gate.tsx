@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactElement, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, type ReactElement, type ReactNode } from "react";
 
 import { Button } from "@workspace/ui/components/button";
 import { ShieldXIcon } from "lucide-react";
@@ -33,8 +33,28 @@ export function DashboardGate({
   const { status, isAuthenticated, hasPermission } = useAuth();
   const { t } = useI18n();
   const pathname = usePathname();
+  const router = useRouter();
 
-  if (status === "loading" || !isAuthenticated) {
+  /**
+   * A session that dies while the app is open (revoked elsewhere, token
+   * rejected) leaves the gate with nothing to render.
+   *
+   * Treating that the same as "still resolving" — an empty span — produced a
+   * blank page that only a manual reload could clear, because the server
+   * middleware never runs on a client-side transition. The middleware already
+   * sends an unauthenticated visitor to /login; this makes the client agree.
+   */
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [router, status]);
+
+  if (status === "loading") {
+    return <span aria-hidden="true" />;
+  }
+
+  if (!isAuthenticated) {
     return <span aria-hidden="true" />;
   }
 

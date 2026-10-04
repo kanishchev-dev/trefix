@@ -43,6 +43,8 @@ import {
   usePermissionCatalog,
 } from "@/features/permissions/hooks/use-permissions";
 import { usePermissionLabels } from "@/features/permissions/hooks/use-permission-labels";
+import { useUserPresence } from "@/features/users/hooks/use-user-presence";
+import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 
 function DetailRow({
@@ -86,6 +88,9 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
   const fallbackInitials = toInitials(displayName);
 
+  const { isOnline } = useUserPresence([user.id]);
+  const online = isOnline(user.id);
+
   const assignedGroupIds = new Set(user.groups.map((group) => group.id));
   const availableGroups =
     groupsQuery.data?.data.filter((group) => !assignedGroupIds.has(group.id)) ?? [];
@@ -106,12 +111,29 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Avatar className="size-14">
-            <AvatarImage src={user.avatarUrl ?? undefined} alt={displayName} />
-            <AvatarFallback>{fallbackInitials}</AvatarFallback>
-          </Avatar>
+          <span className="relative shrink-0">
+            <Avatar className="size-14">
+              <AvatarImage src={user.avatarUrl ?? undefined} alt={displayName} />
+              <AvatarFallback>{fallbackInitials}</AvatarFallback>
+            </Avatar>
+            <AvatarPresenceDot
+              online={online}
+              className="size-3"
+              label={t("presence.online")}
+            />
+          </span>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{displayName}</h1>
+            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+              {displayName}
+              {/* Only ever a positive signal: labelling someone "offline"
+                  permanently is noise, and it would contradict the dot,
+                  which deliberately disappears. */}
+              {online ? (
+                <span className="text-sm font-normal text-muted-foreground">
+                  {t("presence.online")}
+                </span>
+              ) : null}
+            </h1>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>

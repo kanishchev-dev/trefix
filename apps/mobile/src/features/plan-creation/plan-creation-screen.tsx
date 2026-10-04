@@ -37,6 +37,7 @@ import {
   DayPicker,
   OptionChip,
   SectionBlock,
+  SegmentedRow,
 } from "./components/plan-creation-ui";
 import { GoalTypeStep } from "./components/goal-type-step";
 import { GoalSetupStep } from "./components/goal-setup-step";
@@ -432,6 +433,7 @@ function PlanCreationStepLayer({
               <DayPicker
                 selectedDays={draft.schedule.trainingDays}
                 theme={theme}
+                themeMode={themeMode}
                 shortDayNames={shortDayNames}
                 onToggleDay={onToggleDay}
               />
@@ -459,6 +461,7 @@ function PlanCreationStepLayer({
                     label={shortDayNames[dayIndex]}
                     selected={draft.schedule.preferredLongRunDay === dayIndex}
                     theme={theme}
+                    themeMode={themeMode}
                     onPress={() =>
                       onDraftChange((current) => ({
                         ...current,
@@ -482,6 +485,7 @@ function PlanCreationStepLayer({
                     label={`${minutes} min`}
                     selected={draft.schedule.workoutDurationMinutes === minutes}
                     theme={theme}
+                    themeMode={themeMode}
                     onPress={() =>
                       onDraftChange((current) => ({
                         ...current,
@@ -506,6 +510,7 @@ function PlanCreationStepLayer({
                   min={MANUAL_PLAN_MIN_WEEKS}
                   max={MANUAL_PLAN_MAX_WEEKS}
                   theme={theme}
+                  themeMode={themeMode}
                   onChange={(value) =>
                     onDraftChange((current) => ({
                       ...current,
@@ -513,12 +518,15 @@ function PlanCreationStepLayer({
                     }))
                   }
                 />
-                <CounterRow
+                <SegmentedRow
                   label={creationCopy.sessionsLabel}
+                  segments={Array.from(
+                    { length: Math.max(draft.schedule.trainingDays.length, 1) },
+                    (_, i) => ({ label: String(i + 1), value: i + 1 }),
+                  )}
                   value={draft.structure.sessionsPerWeek}
-                  min={MANUAL_PLAN_MIN_SESSIONS}
-                  max={Math.max(draft.schedule.trainingDays.length, 1)}
                   theme={theme}
+                  themeMode={themeMode}
                   onChange={(value) =>
                     onDraftChange((current) => ({
                       ...current,

@@ -453,6 +453,9 @@
       "disconnected": "Disconnected"
     }
   },
+  "presence": {
+    "online": "Online"
+  },
   "profile": {
     "verified": "Email verified",
     "notVerified": "Email not verified",

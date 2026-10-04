@@ -25,19 +25,33 @@ import { authPaths } from "@/lib/auth";
 
 type ApiMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
+/** Query string values; arrays become repeated parameters rather than a joined blob. */
+type SearchParamValue = string | number | readonly string[] | undefined;
+
 async function request<TResponse>(
   path: string,
   options?: {
     method?: ApiMethod;
     body?: unknown;
-    searchParams?: Record<string, string | number | undefined>;
+    searchParams?: Record<string, SearchParamValue>;
   },
 ): Promise<TResponse> {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(options?.searchParams ?? {})) {
-    if (value !== undefined) {
-      search.set(key, String(value));
+    if (value === undefined) {
+      continue;
     }
+
+    if (Array.isArray(value)) {
+      // `?ids=a&ids=b`, the form Nest's array validation reads back cleanly.
+      // String-joining would instead produce one parameter holding "a,b".
+      for (const entry of value) {
+        search.append(key, entry);
+      }
+      continue;
+    }
+
+    search.set(key, String(value));
   }
 
   const queryString = search.toString();

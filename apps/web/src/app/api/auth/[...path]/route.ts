@@ -5,6 +5,7 @@ import {
   prepareProxyBody,
   type ProxyPayload,
 } from "@/lib/server/proxy-payload";
+import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
 
 export const runtime = "nodejs";
 
@@ -122,15 +123,20 @@ async function refreshIfNeeded(
     return null;
   }
 
-  const response = await forwardToBackend(request, ["refresh"], "POST", {
-    kind: "json",
-    body: JSON.stringify({ refreshToken }),
-  });
-  if (!response.ok) {
-    return null;
-  }
+  // Single-flight for the same reason as the admin proxy: this proxy refreshes
+  // too (to forward an authenticated request, and to serve /auth/refresh
+  // itself), and spending the rotated token twice deletes the session.
+  return runSingleFlightRefresh(refreshToken, async () => {
+    const response = await forwardToBackend(request, ["refresh"], "POST", {
+      kind: "json",
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!response.ok) {
+      return null;
+    }
 
-  return (await response.json()) as AuthTokens;
+    return (await response.json()) as AuthTokens;
+  });
 }
 
 async function resolveAccessToken(

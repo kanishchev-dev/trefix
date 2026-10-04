@@ -135,6 +135,7 @@ describe("REALTIME_EVENT_CACHE_KEYS", () => {
       "permissions",
       "permission-groups",
       "settings",
+      "user-presence",
     ]);
 
     for (const keys of Object.values(REALTIME_EVENT_CACHE_KEYS)) {

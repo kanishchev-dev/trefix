@@ -1,12 +1,16 @@
 import { io, type Socket } from "socket.io-client";
 
-import {
-  REALTIME_INBOUND,
-  type RealtimeConnectionStatus,
-} from "./realtime-events";
+import { REALTIME_INBOUND, type RealtimeConnectionStatus } from "./realtime-events";
 
 const DEFAULT_BACKEND_PORT = "3000";
 const REALTIME_NAMESPACE = "/realtime";
+
+/** How often the client proves the socket is still usable. */
+export const REALTIME_HEARTBEAT_INTERVAL_MS = 25_000;
+/** A ping that is not answered within this window means the socket is dead. */
+export const REALTIME_PING_TIMEOUT_MS = 8_000;
+/** A room subscription that is not acknowledged within this window is retried. */
+export const REALTIME_SUBSCRIBE_TIMEOUT_MS = 5_000;
 
 /**
  * Backend origin as the *browser* has to reach it.
@@ -54,6 +58,8 @@ export class RealtimeClient {
   private eventHandlers = new Map<string, Set<RealtimeEventHandler>>();
   private statusListeners = new Set<(status: RealtimeConnectionStatus) => void>();
   private status: RealtimeConnectionStatus = "disconnected";
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  private lastSeenAt = 0;
 
   getStatus(): RealtimeConnectionStatus {
     return this.status;
@@ -120,7 +126,12 @@ export class RealtimeClient {
 
     const origin = resolveSocketOrigin();
     this.socket = io(`${origin}${REALTIME_NAMESPACE}`, {
-      auth: { token },
+      // Rooms travel with the handshake on purpose. Subscribing as a separate
+      // frame right after `connect` races the server: the backend authenticates
+      // asynchronously while connecting, so the subscription can be rejected for
+      // arriving "too early" — leaving a permanently connected socket that is in
+      // no room and receives nothing. Doing it here removes the race entirely.
+      auth: { token, rooms: nextRooms },
       transports: ["websocket"],
       autoConnect: true,
       // Keep trying: the backend is restarted during development, and giving up
@@ -134,12 +145,15 @@ export class RealtimeClient {
     // Re-subscribed on every (re)connection: rooms live on the socket, so a
     // reconnect starts out in none of them.
     this.socket.on("connect", () => {
+      this.markAlive();
       this.setStatus("connected");
       this.subscribedRooms = [];
       this.subscribe(this.rooms);
+      this.startHeartbeat();
     });
 
     this.socket.on("disconnect", () => {
+      this.stopHeartbeat();
       this.subscribedRooms = [];
       this.setStatus("disconnected");
     });
@@ -150,14 +164,91 @@ export class RealtimeClient {
     });
 
     this.socket.onAny((event: string, payload: unknown) => {
+      this.markAlive();
       this.dispatch(event, payload);
     });
+  }
+
+  /**
+   * Asks the backend whether the socket still works.
+   *
+   * Without this the client trusts a TCP connection it cannot see the far end
+   * of. A laptop that sleeps, a switched network or a silently dropped route
+   * leaves the tab "connected" while no event will ever arrive again — the UI
+   * just stops updating until somebody reloads. An unanswered ping is the only
+   * evidence that distinguishes that from a healthy idle connection.
+   */
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.lastSeenAt = Date.now();
+
+    this.heartbeatTimer = setInterval(() => {
+      void this.ping();
+    }, REALTIME_HEARTBEAT_INTERVAL_MS);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer !== null) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
+  private async ping(): Promise<void> {
+    const socket = this.socket;
+
+    if (!socket) {
+      return;
+    }
+
+    socket.timeout(REALTIME_PING_TIMEOUT_MS).emit(
+      REALTIME_INBOUND.ping,
+      (error: Error | null) => {
+        if (error) {
+          this.recover();
+          return;
+        }
+
+        this.markAlive();
+      },
+    );
+  }
+
+  /**
+   * Rebuilds a socket that stopped answering.
+   *
+   * The session is kept, so the existing token is reused instead of fetching a
+   * new one; only the transport is thrown away.
+   */
+  private recover(): void {
+    const socket = this.socket;
+
+    if (!socket) {
+      return;
+    }
+
+    this.setStatus("connecting");
+
+    if (socket.connected) {
+      socket.disconnect();
+    }
+
+    socket.connect();
+  }
+
+  private markAlive(): void {
+    this.lastSeenAt = Date.now();
+
+    if (this.status !== "connected" && this.socket?.connected) {
+      this.setStatus("connected");
+    }
   }
 
   private subscribe(rooms: readonly string[]): void {
     this.rooms = [...rooms];
 
-    if (!this.socket || this.rooms.length === 0) {
+    const socket = this.socket;
+    if (!socket || this.rooms.length === 0) {
       return;
     }
 
@@ -165,16 +256,41 @@ export class RealtimeClient {
       return;
     }
 
+    // Optimistic, and reverted if the server disagrees: rooms may only be
+    // claimed once the backend acknowledges them, so a rejected or unanswered
+    // subscription is retried on the next connect instead of being assumed.
     this.subscribedRooms = [...this.rooms];
-    this.socket.emit(REALTIME_INBOUND.subscribe, { rooms: this.rooms });
+
+    socket.timeout(REALTIME_SUBSCRIBE_TIMEOUT_MS).emit(
+      REALTIME_INBOUND.subscribe,
+      { rooms: this.rooms },
+      (error: Error | null, ack?: { rooms?: string[] }) => {
+        if (error) {
+          console.warn("Realtime: room subscription was not acknowledged.", error.message);
+          this.subscribedRooms = [];
+          return;
+        }
+
+        const granted = ack?.rooms ?? [];
+        const missing = this.rooms.filter((room) => !granted.includes(room));
+
+        if (missing.length > 0) {
+          console.warn(`Realtime: rooms not granted: ${missing.join(", ")}`);
+          this.subscribedRooms = [];
+        }
+      },
+    );
   }
 
   disconnect(): void {
+    this.stopHeartbeat();
+
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
     }
+
     this.token = null;
     this.rooms = [];
     this.subscribedRooms = [];

@@ -10,6 +10,7 @@
 /** Inbound event names, mirroring `backend/src/modules/realtime/constants`. */
 export const REALTIME_INBOUND = {
   subscribe: "realtime.subscribe",
+  ping: "realtime.ping",
 } as const;
 
 /**
@@ -91,6 +92,9 @@ export const REALTIME_EVENT_CACHE_KEYS: Readonly<
   "user.invited": [["users"]],
   "user.updated": [["users"]],
   "user.deleted": [["users"]],
+  // Presence is not user data, so it invalidates only the online-id set; a
+  // refetch of the whole list here would be wasted work on every join/leave.
+  "user.presence.updated": [["user-presence"]],
   "user-permissions.updated": [["users"], ["permissions"], ["permission-groups"]],
   "permission.created": [["permissions"], ["permission-groups"]],
   "permission.updated": [["permissions"], ["permission-groups"]],
@@ -136,6 +140,38 @@ export function realtimeEventUserId(payload: unknown): string | null {
     const userId = (candidate as { userId?: unknown }).userId;
     if (typeof userId === "string" && userId.length > 0) {
       return userId;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Presence change carried by `user.presence.updated`.
+ *
+ * Returned as null unless both the id and the flag are actually present: a
+ * half-parsed event must not be read as "the user went offline", which would
+ * silently blank out a correct indicator.
+ */
+export function realtimeEventPresence(payload: unknown): {
+  userId: string;
+  online: boolean;
+} | null {
+  if (typeof payload !== "object" || payload === null) {
+    return null;
+  }
+
+  const envelope = payload as { data?: unknown; userId?: unknown; online?: unknown };
+
+  for (const candidate of [envelope.data, envelope]) {
+    if (typeof candidate !== "object" || candidate === null) {
+      continue;
+    }
+
+    const { userId, online } = candidate as { userId?: unknown; online?: unknown };
+
+    if (typeof userId === "string" && userId.length > 0 && typeof online === "boolean") {
+      return { userId, online };
     }
   }
 

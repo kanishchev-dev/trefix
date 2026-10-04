@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
@@ -43,6 +44,7 @@ import {
 } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useI18n } from "@/shared/i18n";
+import { useAppSettings } from "@/shared/state/app-settings-provider";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 
@@ -76,40 +78,92 @@ function isApiClientError(error: unknown): error is ApiClientError {
   return Boolean(error && typeof error === "object" && "status" in error);
 }
 
+/**
+ * Whether a failed session lookup is worth retrying.
+ *
+ * A rate limit or a backend hiccup is not a statement about the session: giving
+ * up on the first such response used to leave the app without a user, which in
+ * turn means no realtime connection at all and no hint why. A genuine 401 is an
+ * answer and is not retried.
+ */
+function isTransientAuthError(error: unknown): boolean {
+  if (!isApiClientError(error)) {
+    // No status at all: a network or fetch failure, worth one more try.
+    return true;
+  }
+
+  return error.status === 429 || error.status >= 500;
+}
+
 export function AuthProvider({
   children,
 }: Readonly<{ children: ReactNode }>): ReactElement {
   const router = useRouter();
   const { t } = useI18n();
+  // The settings provider wraps this one, so it mounts first and fetches
+  // settings while there is still no session — a request that can only be
+  // answered with 401. Each place below that establishes a session asks again,
+  // which is the earliest moment the fetch can actually succeed.
+  const { syncFromBackend } = useAppSettings();
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * The translator changes identity whenever the locale settles, and that
+   * happens right after the first load: settings bootstrap overwrites the
+   * default locale with the one the backend reports.
+   *
+   * Reading it straight inside the bootstrap effect made the session lookup
+   * depend on it, so the lookup ran a second time — two `/auth/me` requests
+   * racing each other, and a first-load UI whose state depended on which
+   * answer landed last. The ref keeps the current translator without making it
+   * a trigger for the session lookup.
+   */
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   useEffect(() => {
     let isMounted = true;
 
     async function bootstrap() {
-      try {
-        const currentUser = await getCurrentUser();
-        if (!isMounted) {
-          return;
-        }
+      const attempts = 3;
 
-        setUser(currentUser);
-        setStatus("authenticated");
-        setError(null);
-      } catch (bootstrapError) {
-        if (!isMounted) {
-          return;
-        }
+      for (let attempt = 1; attempt <= attempts; attempt += 1) {
+        try {
+          const currentUser = await getCurrentUser();
+          if (!isMounted) {
+            return;
+          }
 
-        setUser(null);
-        setStatus("unauthenticated");
-        setError(
-          isApiClientError(bootstrapError)
-            ? getFriendlyAuthMessage(bootstrapError, t)
-            : t("errors.default"),
-        );
+          setUser(currentUser);
+          setStatus("authenticated");
+          setError(null);
+          syncFromBackend();
+          return;
+        } catch (bootstrapError) {
+          const transient =
+            attempt < attempts && isTransientAuthError(bootstrapError);
+
+          if (!transient) {
+            if (!isMounted) {
+              return;
+            }
+
+            setUser(null);
+            setStatus("unauthenticated");
+            setError(
+              isApiClientError(bootstrapError)
+                ? getFriendlyAuthMessage(bootstrapError, tRef.current)
+                : tRef.current("errors.default"),
+            );
+            return;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+        }
       }
     }
 
@@ -118,7 +172,7 @@ export function AuthProvider({
     return () => {
       isMounted = false;
     };
-  }, [t]);
+  }, [syncFromBackend]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -138,6 +192,7 @@ export function AuthProvider({
           setUser(tokens.user);
           setStatus("authenticated");
           setError(null);
+          syncFromBackend();
           notifySuccess(
             t("auth.signInSuccess"),
             tokens.user.email,
@@ -162,6 +217,7 @@ export function AuthProvider({
           setUser(tokens.user);
           setStatus("authenticated");
           setError(null);
+          syncFromBackend();
           notifySuccess(t("auth.activationSuccess"));
           router.replace("/dashboard");
           router.refresh();
@@ -286,7 +342,7 @@ export function AuthProvider({
         }
       },
     }),
-    [error, router, status, t, user],
+    [error, router, status, syncFromBackend, t, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

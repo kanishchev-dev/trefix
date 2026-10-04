@@ -5,6 +5,7 @@ import {
   prepareProxyBody,
   type ProxyPayload,
 } from "@/lib/server/proxy-payload";
+import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
 
 export const runtime = "nodejs";
 
@@ -122,17 +123,22 @@ async function refreshIfNeeded(request: NextRequest): Promise<AuthTokens | null>
     return null;
   }
 
-  const response = await fetch(`${BACKEND_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
+  // Single-flight: a burst of parallel 401s must not spend the refresh token
+  // more than once, or the backend reads the extra exchanges as a replayed
+  // token and deletes the session outright.
+  return runSingleFlightRefresh(refreshToken, async () => {
+    const response = await fetch(`${BACKEND_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as AuthTokens;
   });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return (await response.json()) as AuthTokens;
 }
 
 async function handleRequest(

@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Wheel } from "./wheel";
 
 export type CompoundPart = {
@@ -18,6 +18,7 @@ export type CompoundProps = {
   separator?: string;
   unit?: string;
   theme?: ThemeTokens;
+  themeMode?: ThemeMode;
   accessibilityLabel?: string;
 };
 
@@ -27,12 +28,27 @@ export function Compound({
   separator = ":",
   unit,
   theme,
+  themeMode,
   accessibilityLabel,
 }: CompoundProps) {
+  const isDark =
+    themeMode === "dark" ||
+    theme?.color.background === "#09090b" ||
+    theme?.color.surface === "#111111";
+
+  const cardBg = isDark ? "#121214" : theme?.color.surface || "#ffffff";
+  const borderCol = isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "rgba(0, 0, 0, 0.08)";
+
   return (
     <View
       accessibilityLabel={accessibilityLabel}
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor: cardBg,
+          borderColor: borderCol,
+        },
+      ]}
     >
       <View style={styles.partsRow}>
         {parts.map((part, index) => (
@@ -41,7 +57,7 @@ export function Compound({
               <Text
                 style={[
                   styles.separator,
-                  { color: theme?.color.foreground || "#09090b" },
+                  { color: theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b") },
                 ]}
               >
                 {separator}
@@ -51,10 +67,13 @@ export function Compound({
               <Text
                 style={[
                   styles.partLabel,
-                  { color: theme?.color.mutedForeground || "#71717a" },
+                  {
+                    color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+                    fontFamily: theme?.typography.fontFamily.sans.bold || "System",
+                  },
                 ]}
               >
-                {part.label}
+                {part.label.toUpperCase()}
               </Text>
               <Wheel
                 value={part.value}
@@ -64,6 +83,7 @@ export function Compound({
                 step={part.step ?? 1}
                 formatValue={part.formatValue}
                 theme={theme}
+                themeMode={themeMode}
                 visibleItems={3}
                 itemHeight={40}
               />
@@ -75,7 +95,10 @@ export function Compound({
         <Text
           style={[
             styles.unitText,
-            { color: theme?.color.mutedForeground || "#71717a" },
+            {
+              color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+            },
           ]}
         >
           {unit}
@@ -89,7 +112,11 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     alignItems: "center",
-    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: 8,
   },
   partsRow: {
     flexDirection: "row",
@@ -100,22 +127,21 @@ const styles = StyleSheet.create({
   wheelColumn: {
     flex: 1,
     alignItems: "center",
-    maxWidth: 100,
+    maxWidth: 90,
   },
   partLabel: {
-    fontSize: 12,
-    marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    marginBottom: 4,
   },
   separator: {
-    fontSize: 24,
-    fontWeight: "600",
-    paddingHorizontal: 8,
-    paddingTop: 16,
+    fontSize: 22,
+    fontWeight: "700",
+    paddingHorizontal: 4,
+    paddingTop: 18,
   },
   unitText: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
 });

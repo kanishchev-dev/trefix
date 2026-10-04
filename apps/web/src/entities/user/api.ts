@@ -11,6 +11,7 @@ import {
   type AuthUser,
   type PaginatedResponse,
   type UserListQuery,
+  userPresenceSchema,
 } from "@workspace/api-client";
 
 import { apiRequest } from "@/lib/api";
@@ -19,6 +20,7 @@ export const userPaths = {
   list: "/api/admin/users",
   detail: (id: string) => `/api/admin/users/${id}`,
   invitation: (id: string) => `/api/admin/users/${id}/invitations`,
+  presence: "/api/admin/users/presence",
 } as const;
 
 export async function fetchUsers(
@@ -46,6 +48,25 @@ export async function fetchUsers(
 export async function fetchUser(id: string): Promise<AdminUserDetail> {
   const response = await apiRequest<unknown>(userPaths.detail(id));
   return adminUserDetailSchema.parse(response);
+}
+
+/**
+ * Asks which of `userIds` currently hold a realtime connection.
+ *
+ * Resolves to an empty set rather than throwing when the backend has no
+ * presence store: an indicator that silently shows everyone offline is better
+ * than a page that fails to render over a decoration.
+ */
+export async function fetchUserPresence(userIds: readonly string[]): Promise<Set<string>> {
+  if (userIds.length === 0) {
+    return new Set();
+  }
+
+  const response = await apiRequest<unknown>(userPaths.presence, {
+    searchParams: { ids: [...userIds] },
+  });
+
+  return new Set(userPresenceSchema.parse(response).onlineUserIds);
 }
 
 export async function createUser(input: AdminCreateUserInput): Promise<AdminUserDetail> {

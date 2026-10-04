@@ -453,6 +453,9 @@
       "disconnected": "Нет соединения"
     }
   },
+  "presence": {
+    "online": "В сети"
+  },
   "profile": {
     "verified": "Почта подтверждена",
     "notVerified": "Почта не подтверждена",

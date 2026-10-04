@@ -1,4 +1,4 @@
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 export type ValueControlProps<T> = {
   value: T;
@@ -11,4 +11,5 @@ export type ValueControlProps<T> = {
   formatLabel?: (value: T) => string;
   accessibilityLabel?: string;
   theme?: ThemeTokens;
+  themeMode?: ThemeMode;
 };

@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Stepper } from "./stepper";
 
 export type RangeValue = {
@@ -17,6 +17,7 @@ export type RangeProps = {
   unit?: string;
   formatValue?: (v: number) => string;
   theme?: ThemeTokens;
+  themeMode?: ThemeMode;
   accessibilityLabel?: string;
   minLabel?: string;
   maxLabel?: string;
@@ -31,10 +32,16 @@ export function Range({
   unit,
   formatValue,
   theme,
+  themeMode,
   accessibilityLabel,
   minLabel = "Minimum",
   maxLabel = "Maximum",
 }: RangeProps) {
+  const isDark =
+    themeMode === "dark" ||
+    theme?.color.background === "#09090b" ||
+    theme?.color.surface === "#111111";
+
   const handleMinChange = (newMin: number) => {
     const clampedMin = Math.max(absoluteMin, Math.min(newMin, value.max));
     onChange({ min: clampedMin, max: value.max });
@@ -45,16 +52,28 @@ export function Range({
     onChange({ min: value.min, max: clampedMax });
   };
 
+  const cardBg = isDark ? "#121214" : theme?.color.surface || "#ffffff";
+  const borderCol = isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "rgba(0, 0, 0, 0.08)";
+
   return (
     <View
       accessibilityLabel={accessibilityLabel}
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor: cardBg,
+          borderColor: borderCol,
+        },
+      ]}
     >
       <View style={styles.controlRow}>
         <Text
           style={[
             styles.label,
-            { color: theme?.color.mutedForeground || "#71717a" },
+            {
+              color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+            },
           ]}
         >
           {minLabel}
@@ -68,6 +87,7 @@ export function Range({
           formatValue={formatValue}
           unit={unit}
           theme={theme}
+          themeMode={themeMode}
         />
       </View>
 
@@ -75,7 +95,10 @@ export function Range({
         <Text
           style={[
             styles.label,
-            { color: theme?.color.mutedForeground || "#71717a" },
+            {
+              color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+            },
           ]}
         >
           {maxLabel}
@@ -89,6 +112,7 @@ export function Range({
           formatValue={formatValue}
           unit={unit}
           theme={theme}
+          themeMode={themeMode}
         />
       </View>
     </View>
@@ -98,15 +122,17 @@ export function Range({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
     gap: 16,
   },
   controlRow: {
     width: "100%",
-    gap: 8,
+    gap: 6,
   },
   label: {
     fontSize: 13,
-    fontWeight: "500",
     marginLeft: 4,
   },
 });

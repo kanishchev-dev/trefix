@@ -53,6 +53,34 @@ function isItemActive(pathname: string, url: string): boolean {
 }
 
 /**
+ * Whether a section should open itself on this render.
+ *
+ * Extracted as a pure function so the rule is testable without mounting the
+ * sidebar, which is where the regression it guards against lived: it is a
+ * render-time decision, so a mistake in it silently produces a menu that never
+ * completes.
+ */
+export function shouldAutoOpenSection({
+  hasChildren,
+  justGainedChildren,
+  isActive,
+  open,
+  userToggled,
+}: {
+  hasChildren: boolean;
+  justGainedChildren: boolean;
+  isActive: boolean;
+  open: boolean;
+  userToggled: boolean;
+}): boolean {
+  if (userToggled || !hasChildren || open) {
+    return false;
+  }
+
+  return isActive || justGainedChildren;
+}
+
+/**
  * One sidebar row, with its collapsible section.
  *
  * The section is controlled rather than initialized with `defaultOpen`. Route
@@ -63,21 +91,47 @@ function isItemActive(pathname: string, url: string): boolean {
  * Entering a section opens it, and the user stays free to collapse it again:
  * the state is adjusted during render (React's recommended alternative to an
  * effect) and never forced back open while the route stays the same.
+ *
+ * A section that only *gains* children once the session is resolved also opens
+ * itself. Its initial `open` was computed from a permission list that was still
+ * empty, so it stayed collapsed and its submenu never appeared — the menu looked
+ * permanently incomplete until a reload, by which point the permissions were
+ * there on the very first render. Once the user touches it themselves, their
+ * choice wins.
  */
 function NavMainItemRow({ item }: { item: NavMainItem }): ReactElement {
   const pathname = usePathname();
   const isActive = isItemActive(pathname, item.url);
   const hasChildren = Boolean(item.items?.length);
   const [open, setOpen] = useState(hasChildren && isActive);
+  const [userToggled, setUserToggled] = useState(false);
+  const [hadChildren, setHadChildren] = useState(hasChildren);
 
-  if (isActive && !open && hasChildren) {
+  const justGainedChildren = hasChildren && !hadChildren;
+
+  if (hadChildren !== hasChildren) {
+    setHadChildren(hasChildren);
+  }
+
+  if (
+    shouldAutoOpenSection({
+      hasChildren,
+      justGainedChildren,
+      isActive,
+      open,
+      userToggled,
+    })
+  ) {
     setOpen(true);
   }
 
   return (
     <Collapsible
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(next: boolean) => {
+        setUserToggled(true);
+        setOpen(next);
+      }}
       render={<SidebarMenuItem />}
     >
       <SidebarMenuButton

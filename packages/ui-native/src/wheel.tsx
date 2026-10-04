@@ -1,20 +1,93 @@
-import React, { useRef, useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  interpolate,
   runOnJS,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { type ValueControlProps } from "./value-control-types";
 
 export type WheelProps = ValueControlProps<number> & {
   itemHeight?: number;
   visibleItems?: number;
+  themeMode?: ThemeMode;
 };
+
+function WheelItem({
+  item,
+  index,
+  translateY,
+  itemHeight,
+  formatValue,
+  theme,
+  isDark,
+}: {
+  item: number;
+  index: number;
+  translateY: SharedValue<number>;
+  itemHeight: number;
+  formatValue?: (v: number) => string;
+  theme?: ThemeTokens;
+  isDark: boolean;
+}) {
+  const itemOffset = index * itemHeight;
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const currentCenter = -translateY.value;
+    const distance = Math.abs(currentCenter - itemOffset);
+    const maxDistance = itemHeight * 2;
+
+    const opacity = interpolate(
+      distance,
+      [0, itemHeight, maxDistance],
+      [1, 0.45, 0.2],
+      "clamp"
+    );
+
+    const scale = interpolate(
+      distance,
+      [0, itemHeight, maxDistance],
+      [1, 0.9, 0.82],
+      "clamp"
+    );
+
+    return {
+      opacity,
+      transform: [{ scale }],
+    };
+  });
+
+  const displayString = formatValue ? formatValue(item) : String(item);
+
+  return (
+    <Animated.View
+      style={[
+        styles.itemContainer,
+        { height: itemHeight },
+        animatedStyle,
+      ]}
+    >
+      <Text
+        style={[
+          styles.itemText,
+          {
+            color: theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b"),
+            fontFamily: theme?.typography.fontFamily.sans.bold || "System",
+            fontSize: 18,
+          },
+        ]}
+      >
+        {displayString}
+      </Text>
+    </Animated.View>
+  );
+}
 
 export function Wheel({
   value,
@@ -26,14 +99,19 @@ export function Wheel({
   formatValue,
   accessibilityLabel,
   theme,
-  itemHeight = 44,
-  visibleItems = 5,
+  themeMode,
+  itemHeight = 40,
+  visibleItems = 3,
 }: WheelProps) {
+  const isDark =
+    themeMode === "dark" ||
+    theme?.color.background === "#09090b" ||
+    theme?.color.surface === "#111111";
+
   const effectiveMin = min ?? 0;
   const effectiveMax = max ?? 100;
   const effectiveStep = step ?? 1;
 
-  // Generate valid steps
   const items = useMemo(() => {
     const list: number[] = [];
     for (let v = effectiveMin; v <= effectiveMax; v = Number((v + effectiveStep).toFixed(4))) {
@@ -57,7 +135,6 @@ export function Wheel({
   }, [items, value]);
 
   const translateY = useSharedValue(-currentIndex * itemHeight);
-  const lastIndexRef = useRef(currentIndex);
 
   const triggerHaptic = useCallback(() => {
     try {
@@ -67,28 +144,28 @@ export function Wheel({
 
   useEffect(() => {
     const targetY = -currentIndex * itemHeight;
-    translateY.value = withSpring(targetY, { damping: 20, stiffness: 200 });
-    lastIndexRef.current = currentIndex;
+    translateY.value = withSpring(targetY, { damping: 22, stiffness: 220 });
   }, [currentIndex, itemHeight, translateY]);
 
-  const updateValueFromOffset = useCallback(
-    (offsetY: number) => {
-      const rawIndex = Math.round(-offsetY / itemHeight);
-      const clampedIndex = Math.max(0, Math.min(items.length - 1, rawIndex));
-      if (clampedIndex !== lastIndexRef.current) {
-        lastIndexRef.current = clampedIndex;
-        runOnJS(triggerHaptic)();
-        runOnJS(onChange)(items[clampedIndex]);
+  const commitIndex = useCallback(
+    (index: number) => {
+      const val = items[index];
+      if (val !== undefined) {
+        triggerHaptic();
+        onChange(val);
       }
     },
-    [itemHeight, items, onChange, triggerHaptic]
+    [items, onChange, triggerHaptic]
   );
+
+  const itemsLength = items.length;
 
   const panGesture = Gesture.Pan()
     .enabled(!disabled)
-    .onChange((event: any) => {
+    .onChange((event) => {
+      "worklet";
       const currentTranslate = translateY.value + event.changeY;
-      const minY = -(items.length - 1) * itemHeight;
+      const minY = -(itemsLength - 1) * itemHeight;
       const maxY = 0;
       if (currentTranslate > maxY + itemHeight * 0.5) {
         translateY.value = maxY + itemHeight * 0.5 * 0.3;
@@ -97,16 +174,15 @@ export function Wheel({
       } else {
         translateY.value = currentTranslate;
       }
-      updateValueFromOffset(translateY.value);
     })
-    .onEnd((event: any) => {
-      const projected = translateY.value + event.velocityY * 0.1;
+    .onEnd((event) => {
+      "worklet";
+      const projected = translateY.value + event.velocityY * 0.08;
       const rawIndex = Math.round(-projected / itemHeight);
-      const clampedIndex = Math.max(0, Math.min(items.length - 1, rawIndex));
+      const clampedIndex = Math.max(0, Math.min(itemsLength - 1, rawIndex));
       const targetY = -clampedIndex * itemHeight;
-      translateY.value = withSpring(targetY, { damping: 22, stiffness: 220 });
-      lastIndexRef.current = clampedIndex;
-      runOnJS(onChange)(items[clampedIndex]);
+      translateY.value = withSpring(targetY, { damping: 24, stiffness: 240 });
+      runOnJS(commitIndex)(clampedIndex);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -114,6 +190,7 @@ export function Wheel({
   }));
 
   const containerHeight = itemHeight * visibleItems;
+  const topOffset = (containerHeight - itemHeight) / 2;
 
   return (
     <View
@@ -130,42 +207,29 @@ export function Wheel({
           styles.selectionIndicator,
           {
             height: itemHeight,
-            top: (containerHeight - itemHeight) / 2,
-            backgroundColor: theme?.color.overlay || "rgba(0,0,0,0.05)",
-            borderColor: theme?.color.border || "#e4e4e7",
+            top: topOffset,
+            backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
+            borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
           },
         ]}
         pointerEvents="none"
       />
 
       <GestureDetector gesture={panGesture}>
-        <View style={styles.gestureArea}>
-          <Animated.View style={[styles.wheelList, animatedStyle]}>
-            {items.map((item: number, index: number) => {
-              const displayString = formatValue ? formatValue(item) : String(item);
-              const isSelected = index === currentIndex;
-              return (
-                <View
-                  key={index}
-                  style={[styles.itemContainer, { height: itemHeight }]}
-                >
-                  <Text
-                    style={[
-                      styles.itemText,
-                      {
-                        color: isSelected
-                          ? theme?.color.foreground || "#09090b"
-                          : theme?.color.mutedForeground || "#71717a",
-                        fontWeight: isSelected ? "600" : "400",
-                        fontSize: isSelected ? 18 : 16,
-                      },
-                    ]}
-                  >
-                    {displayString}
-                  </Text>
-                </View>
-              );
-            })}
+        <View style={[styles.gestureArea, { height: containerHeight }]}>
+          <Animated.View style={[styles.wheelList, { top: topOffset }, animatedStyle]}>
+            {items.map((item: number, index: number) => (
+              <WheelItem
+                key={index}
+                item={item}
+                index={index}
+                translateY={translateY}
+                itemHeight={itemHeight}
+                formatValue={formatValue}
+                theme={theme}
+                isDark={isDark}
+              />
+            ))}
           </Animated.View>
         </View>
       </GestureDetector>
@@ -182,20 +246,23 @@ const styles = StyleSheet.create({
   },
   selectionIndicator: {
     position: "absolute",
-    left: 12,
-    right: 12,
+    left: 4,
+    right: 4,
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
+    zIndex: 0,
   },
   gestureArea: {
-    flex: 1,
     width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    position: "relative",
+    overflow: "hidden",
   },
   wheelList: {
-    width: "100%",
+    position: "absolute",
+    left: 0,
+    right: 0,
     alignItems: "center",
+    zIndex: 1,
   },
   itemContainer: {
     justifyContent: "center",

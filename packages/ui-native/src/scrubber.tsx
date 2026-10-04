@@ -1,5 +1,5 @@
-import React, { useCallback, useRef } from "react";
-import { StyleSheet, Text, View, LayoutChangeEvent } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -8,12 +8,13 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { type ValueControlProps } from "./value-control-types";
 
 export type ScrubberProps = ValueControlProps<number> & {
   unit?: string;
   sensitivity?: number;
+  themeMode?: ThemeMode;
 };
 
 export function Scrubber({
@@ -26,11 +27,21 @@ export function Scrubber({
   formatValue,
   accessibilityLabel,
   theme,
+  themeMode,
   unit,
   sensitivity = 1,
 }: ScrubberProps) {
-  const containerWidthRef = useRef(300);
-  const lastEmittedValueRef = useRef(value);
+  const isDark =
+    themeMode === "dark" ||
+    theme?.color.background === "#09090b" ||
+    theme?.color.surface === "#111111";
+
+  const containerWidth = useSharedValue(280);
+  const [displayVal, setDisplayVal] = useState(value);
+
+  useEffect(() => {
+    setDisplayVal(value);
+  }, [value]);
 
   const triggerHaptic = useCallback(() => {
     try {
@@ -39,51 +50,72 @@ export function Scrubber({
   }, []);
 
   const range = max - min;
-  const progress = range === 0 ? 0 : Math.max(0, Math.min(1, (value - min) / range));
-  const indicatorX = useSharedValue(progress * 280);
+  const initialRatio = range === 0 ? 0 : Math.max(0, Math.min(1, (value - min) / range));
+  const indicatorX = useSharedValue(initialRatio * 280);
 
   const handleLayout = (e: LayoutChangeEvent) => {
-    containerWidthRef.current = e.nativeEvent.layout.width - 32;
+    const width = Math.max(1, e.nativeEvent.layout.width - 40);
+    containerWidth.value = width;
+    const currentRatio = range === 0 ? 0 : Math.max(0, Math.min(1, (value - min) / range));
+    indicatorX.value = currentRatio * width;
   };
 
-  const updateValueFromX = useCallback(
-    (x: number) => {
-      const width = Math.max(1, containerWidthRef.current);
-      const clampedX = Math.max(0, Math.min(width, x));
-      const ratio = clampedX / width;
-      const rawVal = min + ratio * range;
-      const steppedVal = Math.round((rawVal - min) / step) * step + min;
-      const clampedVal = Math.max(min, Math.min(max, Number(steppedVal.toFixed(4))));
+  const updateDisplayValue = useCallback((val: number) => {
+    setDisplayVal(val);
+  }, []);
 
-      if (clampedVal !== lastEmittedValueRef.current) {
-        lastEmittedValueRef.current = clampedVal;
-        runOnJS(triggerHaptic)();
-        runOnJS(onChange)(clampedVal);
-      }
+  const commitValue = useCallback(
+    (val: number) => {
+      triggerHaptic();
+      onChange(val);
     },
-    [max, min, range, step, triggerHaptic, onChange]
+    [onChange, triggerHaptic]
   );
 
   const panGesture = Gesture.Pan()
     .enabled(!disabled)
-    .onChange((event: any) => {
-      const width = containerWidthRef.current;
+    .onChange((event) => {
+      "worklet";
+      const width = containerWidth.value;
       const currentX = indicatorX.value + event.changeX * sensitivity;
       const clampedX = Math.max(0, Math.min(width, currentX));
       indicatorX.value = clampedX;
-      updateValueFromX(clampedX);
+
+      const ratio = width > 0 ? clampedX / width : 0;
+      const rawVal = min + ratio * (max - min);
+      const steppedVal = Math.round((rawVal - min) / step) * step + min;
+      const clampedVal = Math.max(min, Math.min(max, steppedVal));
+
+      runOnJS(updateDisplayValue)(clampedVal);
     })
     .onEnd(() => {
-      const width = containerWidthRef.current;
-      const currentRatio = range === 0 ? 0 : (lastEmittedValueRef.current - min) / range;
-      indicatorX.value = withSpring(currentRatio * width, { damping: 20, stiffness: 200 });
+      "worklet";
+      const width = containerWidth.value;
+      const ratio = width > 0 ? indicatorX.value / width : 0;
+      const rawVal = min + ratio * (max - min);
+      const steppedVal = Math.round((rawVal - min) / step) * step + min;
+      const finalVal = Math.max(min, Math.min(max, steppedVal));
+
+      const finalRatio = max - min === 0 ? 0 : (finalVal - min) / (max - min);
+      indicatorX.value = withSpring(finalRatio * width, { damping: 22, stiffness: 220 });
+      runOnJS(commitValue)(finalVal);
     });
 
-  const displayString = formatValue ? formatValue(value) : String(value);
+  const displayString = formatValue ? formatValue(displayVal) : String(displayVal);
 
   const thumbAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: indicatorX.value }],
   }));
+
+  const activeTrackAnimatedStyle = useAnimatedStyle(() => ({
+    width: indicatorX.value,
+  }));
+
+  const cardBg = isDark ? "#121214" : theme?.color.surface || "#ffffff";
+  const borderCol = isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "rgba(0, 0, 0, 0.08)";
+  const trackBg = isDark ? "rgba(255, 255, 255, 0.12)" : theme?.color.secondary || "#e4e4e7";
+  const activeTrackBg = theme?.color.primary || (isDark ? "#f8fafc" : "#09090b");
+  const thumbBg = isDark ? "#ffffff" : theme?.color.primary || "#09090b";
 
   return (
     <View
@@ -93,8 +125,8 @@ export function Scrubber({
       style={[
         styles.container,
         {
-          backgroundColor: theme?.color.surfaceElevated || "#ffffff",
-          borderColor: theme?.color.border || "#e4e4e7",
+          backgroundColor: cardBg,
+          borderColor: borderCol,
         },
         disabled && { opacity: 0.5 },
       ]}
@@ -104,36 +136,40 @@ export function Scrubber({
           style={[
             styles.valueText,
             {
-              color: theme?.color.foreground || "#09090b",
-              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+              color: theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b"),
+              fontFamily: theme?.typography.fontFamily.sans.extrabold || "System",
             },
           ]}
         >
           {displayString}
-          {unit ? <Text style={styles.unitText}> {unit}</Text> : null}
-        </Text>
-        <Text
-          style={[
-            styles.hintText,
-            { color: theme?.color.mutedForeground || "#71717a" },
-          ]}
-        >
-          ← Drag to adjust →
+          {unit ? (
+            <Text
+              style={[
+                styles.unitText,
+                { color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a") },
+              ]}
+            >
+              {" "}
+              {unit}
+            </Text>
+          ) : null}
         </Text>
       </View>
 
       <GestureDetector gesture={panGesture}>
         <View style={styles.trackContainer}>
-          <View
-            style={[
-              styles.trackBar,
-              { backgroundColor: theme?.color.secondary || "#e4e4e7" },
-            ]}
-          >
+          <View style={[styles.trackBar, { backgroundColor: trackBg }]}>
+            <Animated.View
+              style={[
+                styles.activeTrack,
+                { backgroundColor: activeTrackBg },
+                activeTrackAnimatedStyle,
+              ]}
+            />
             <Animated.View
               style={[
                 styles.thumb,
-                { backgroundColor: theme?.color.foreground || "#09090b" },
+                { backgroundColor: thumbBg },
                 thumbAnimatedStyle,
               ]}
             />
@@ -149,37 +185,41 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 20,
-    gap: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
     alignItems: "center",
   },
   valueDisplayContainer: {
     alignItems: "center",
-    gap: 4,
+    gap: 2,
   },
   valueText: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 32,
   },
   unitText: {
-    fontSize: 16,
-    opacity: 0.7,
-  },
-  hintText: {
-    fontSize: 12,
+    fontSize: 15,
+    lineHeight: 20,
   },
   trackContainer: {
     width: "100%",
-    height: 40,
+    height: 36,
     justifyContent: "center",
-    paddingHorizontal: 16,
   },
   trackBar: {
     width: "100%",
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
     position: "relative",
     justifyContent: "center",
+    overflow: "visible",
+  },
+  activeTrack: {
+    height: "100%",
+    borderRadius: 4,
+    position: "absolute",
+    left: 0,
   },
   thumb: {
     width: 24,
@@ -189,8 +229,8 @@ const styles = StyleSheet.create({
     left: -12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
   },
 });

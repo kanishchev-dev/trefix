@@ -59,6 +59,9 @@ importers:
       '@workspace/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
+      '@workspace/ui-native':
+        specifier: workspace:*
+        version: link:../../packages/ui-native
       expo:
         specifier: 57.0.23
         version: 57.0.23(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(react-dom@19.3.0(react@19.2.3))(react-native-worklets@0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
@@ -280,7 +283,36 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/ui-native: {}
+  packages/ui-native:
+    dependencies:
+      '@workspace/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      expo-haptics:
+        specifier: ^57.0.3
+        version: 57.0.3(expo@57.0.23)
+      lucide-react-native:
+        specifier: ^1.47.0
+        version: 1.47.0(react-native-svg@15.15.5(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: 19.2.3
+        version: 19.2.3
+      react-native:
+        specifier: 0.86.3
+        version: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
+      react-native-gesture-handler:
+        specifier: 2.32.0
+        version: 2.32.0(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      react-native-reanimated:
+        specifier: ^4.5.1
+        version: 4.5.1(react-native-worklets@0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+    devDependencies:
+      '@types/react':
+        specifier: 19.2.18
+        version: 19.2.18
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
 
   packages/utils: {}
 

@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
-import { RealtimeStatusIndicator } from "@/shared/api/realtime-status";
+import { RealtimeAvatarIndicator } from "@/shared/api/realtime-status";
 import { useI18n, type Locale } from "@/shared/i18n";
 import { useAppSettings, type ThemeMode } from "@/shared/state/app-settings-provider";
 
@@ -77,13 +77,16 @@ export function NavUser(): ReactElement {
               />
             }
           >
-            <Avatar>
-              <AvatarImage
-                src={user?.avatarUrl ?? undefined}
-                alt={displayName}
-              />
-              <AvatarFallback>{fallbackInitials || "U"}</AvatarFallback>
-            </Avatar>
+            <span className="relative shrink-0">
+              <Avatar>
+                <AvatarImage
+                  src={user?.avatarUrl ?? undefined}
+                  alt={displayName}
+                />
+                <AvatarFallback>{fallbackInitials || "U"}</AvatarFallback>
+              </Avatar>
+              <RealtimeAvatarIndicator />
+            </span>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{displayName}</span>
               <span className="truncate text-xs">{user?.email}</span>
@@ -160,8 +163,6 @@ export function NavUser(): ReactElement {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <RealtimeStatusIndicator />
             <DropdownMenuSeparator />
             {hasPermission("account.update") ? (
               <DropdownMenuItem onClick={() => router.push("/profile")}>

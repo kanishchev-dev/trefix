@@ -1254,6 +1254,18 @@ export const userListQuerySchema = z.object({
 });
 
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
+
+/**
+ * Presence answer: which of the requested users hold a live connection.
+ *
+ * A subset of what was asked for, never a full list of everybody online — the
+ * caller only ever asks about rows it is already allowed to see.
+ */
+export const userPresenceSchema = z.object({
+  onlineUserIds: z.array(z.string()),
+});
+export type UserPresence = z.infer<typeof userPresenceSchema>;
+
 export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminUserGroup = z.infer<typeof adminUserGroupSchema>;
 export type AdminUserPermission = z.infer<typeof adminUserPermissionSchema>;

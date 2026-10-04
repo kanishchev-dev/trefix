@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactElement,
@@ -38,6 +39,16 @@ type AppSettingsContextValue = {
   resolvedTheme: ResolvedTheme;
   setTheme: (theme: ThemeMode) => void;
   isSyncing: boolean;
+  /**
+   * Pulls theme and locale from the backend.
+   *
+   * Exposed because this provider mounts *before* the auth one: its own
+   * bootstrap runs while there is no session yet and is answered with 401. A
+   * bootstrap that ran only on mount therefore never ran again for the rest of
+   * the page's life, and the theme and locale stayed whatever localStorage
+   * happened to hold until a reload. Auth calls this once a session exists.
+   */
+  syncFromBackend: () => void;
 };
 
 const AppSettingsContext = createContext<AppSettingsContextValue | null>(null);
@@ -185,6 +196,31 @@ export type AppSettingsProviderProps = {
 };
 
 /**
+ * Whether reaching this auth state should (re)pull settings from the backend.
+ *
+ * The settings provider mounts before the auth one, so its own bootstrap runs
+ * while there is still no session and is answered with 401. Something has to
+ * ask again once a session exists, and the only moment that is true is the
+ * transition into an authenticated state — on first load, on sign-in and after
+ * an invite activation alike.
+ *
+ * Staying put does not re-ask: the values are already in localStorage by then,
+ * and a realtime `settings.updated` covers later changes.
+ *
+ * Exported for testing.
+ */
+export function shouldSyncSettingsForAuthStatus(
+  previous: string | null,
+  next: string,
+): boolean {
+  if (next !== "authenticated") {
+    return false;
+  }
+
+  return previous !== "authenticated";
+}
+
+/**
  * Global system UI state: theme and locale.
  * The backend settings storage is the source of truth; localStorage provides
  * an instant first paint, and realtime events keep every session in sync.
@@ -266,13 +302,20 @@ export function AppSettingsProvider({
   }, [realtimeClient]);
 
   // Backend is the source of truth; local values cover the first paint only.
+  const isMountedRef = useRef(true);
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
 
-    async function bootstrap() {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const syncFromBackend = useCallback(() => {
+    void (async () => {
       try {
         const settings = await fetchSettings();
-        if (!isMounted) {
+        if (!isMountedRef.current) {
           return;
         }
 
@@ -280,21 +323,19 @@ export function AppSettingsProvider({
         persistLocale(settings.locale);
         publishStoredSettings();
       } catch {
-        // Backend defaults are unavailable (e.g. no settings permission);
-        // keep the locally persisted values.
+        // Backend defaults are unavailable (e.g. no settings permission, or no
+        // session yet); keep the locally persisted values.
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setIsSyncing(false);
         }
       }
-    }
-
-    bootstrap();
-
-    return () => {
-      isMounted = false;
-    };
+    })();
   }, []);
+
+  useEffect(() => {
+    syncFromBackend();
+  }, [syncFromBackend]);
 
   const setTheme = useCallback(
     (next: ThemeMode) => {
@@ -321,8 +362,8 @@ export function AppSettingsProvider({
   );
 
   const settingsValue = useMemo<AppSettingsContextValue>(
-    () => ({ theme, resolvedTheme, setTheme, isSyncing }),
-    [theme, resolvedTheme, setTheme, isSyncing],
+    () => ({ theme, resolvedTheme, setTheme, isSyncing, syncFromBackend }),
+    [theme, resolvedTheme, setTheme, isSyncing, syncFromBackend],
   );
 
   return (

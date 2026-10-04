@@ -1,36 +1,17 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
-  Animated,
-  FlatList,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  type FlatListProps,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
 } from "react-native";
-import { Minus, Plus } from "lucide-react-native";
 
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 
 import { SheetBlock } from "../../../shared/ui/bottom-sheet";
-import { getGoalDistanceKm, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
-
-// FlatList needs this wrapper to support native onScroll events with
-// useNativeDriver (plain FlatList throws an invariant in dev).
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
-// createAnimatedComponent loses the FlatList generic (item becomes unknown);
-// this stable module-level alias restores it without recreating the component
-// identity on every render (which would remount the list).
-const CarouselList = AnimatedFlatList as unknown as <ItemT>(
-  props: FlatListProps<ItemT> & {
-    ref?: React.Ref<FlatList<ItemT>>;
-  },
-) => React.ReactElement | null;
+import { parseTargetTime, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
+import { Compound, Segmented, type SegmentItem, Stepper, Wheel } from "@workspace/ui-native";
 
 type OptionChipProps = {
   label: string;
@@ -41,7 +22,7 @@ type OptionChipProps = {
 };
 
 export function OptionChip({ label, selected, theme, themeMode, onPress }: OptionChipProps) {
-  const isDark = themeMode === "dark";
+  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
 
   return (
     <Pressable
@@ -86,6 +67,7 @@ export function OptionChip({ label, selected, theme, themeMode, onPress }: Optio
 type DayPickerProps = {
   selectedDays: number[];
   theme: ThemeTokens;
+  themeMode?: ThemeMode;
   shortDayNames: readonly string[];
   onToggleDay: (dayIndex: number) => void;
 };
@@ -93,9 +75,12 @@ type DayPickerProps = {
 export function DayPicker({
   selectedDays,
   theme,
+  themeMode,
   shortDayNames,
   onToggleDay,
 }: DayPickerProps) {
+  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
+
   return (
     <View style={styles.dayRow}>
       {PLAN_WEEKDAY_ORDER.map((dayIndex) => {
@@ -110,8 +95,16 @@ export function DayPicker({
             style={({ pressed }) => [
               styles.dayCell,
               {
-                backgroundColor: selected ? theme.color.primary : theme.color.surfaceElevated,
-                borderColor: selected ? theme.color.primary : theme.color.border,
+                backgroundColor: selected
+                  ? theme.color.primary
+                  : isDark
+                    ? "#121214"
+                    : theme.color.surfaceElevated,
+                borderColor: selected
+                  ? theme.color.primary
+                  : isDark
+                    ? "rgba(255, 255, 255, 0.08)"
+                    : theme.color.border,
               },
               pressed && styles.pressed,
             ]}
@@ -141,20 +134,30 @@ type CounterRowProps = {
   min: number;
   max: number;
   theme: ThemeTokens;
+  themeMode?: ThemeMode;
   onChange: (value: number) => void;
 };
 
-export function CounterRow({ label, value, suffix, min, max, theme, onChange }: CounterRowProps) {
-  const canDecrement = value > min;
-  const canIncrement = value < max;
+export function CounterRow({
+  label,
+  value,
+  suffix,
+  min,
+  max,
+  theme,
+  themeMode,
+  onChange,
+}: CounterRowProps) {
+  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
 
   return (
     <View
       style={[
         styles.counterRow,
         {
-          backgroundColor: theme.color.surfaceElevated,
-          borderColor: theme.color.border,
+          backgroundColor: isDark ? "#121214" : theme.color.surfaceElevated,
+          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+          gap: 12,
         },
       ]}
     >
@@ -164,53 +167,24 @@ export function CounterRow({ label, value, suffix, min, max, theme, onChange }: 
           {
             color: theme.color.foreground,
             fontFamily: theme.typography.fontFamily.sans.semibold,
+            flex: 1,
           },
         ]}
       >
         {label}
       </Text>
 
-      <View style={styles.counterControls}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${label} minus`}
-          disabled={!canDecrement}
-          onPress={() => onChange(value - 1)}
-          style={({ pressed }) => [
-            styles.counterButton,
-            { backgroundColor: theme.color.surface, opacity: canDecrement ? 1 : 0.35 },
-            pressed && canDecrement && styles.pressed,
-          ]}
-        >
-          <Minus color={theme.color.foreground} size={18} />
-        </Pressable>
-
-        <Text
-          style={[
-            styles.counterValue,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {value}
-          {suffix ? ` ${suffix}` : ""}
-        </Text>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${label} plus`}
-          disabled={!canIncrement}
-          onPress={() => onChange(value + 1)}
-          style={({ pressed }) => [
-            styles.counterButton,
-            { backgroundColor: theme.color.surface, opacity: canIncrement ? 1 : 0.35 },
-            pressed && canIncrement && styles.pressed,
-          ]}
-        >
-          <Plus color={theme.color.foreground} size={18} />
-        </Pressable>
+      <View style={{ width: 150 }}>
+        <Stepper
+          value={value}
+          onChange={onChange}
+          min={min}
+          max={max}
+          step={1}
+          unit={suffix}
+          theme={theme}
+          themeMode={themeMode}
+        />
       </View>
     </View>
   );
@@ -257,218 +231,424 @@ export function FieldError({ message, theme }: { message: string; theme: ThemeTo
   );
 }
 
-type DistanceGoalOption<T extends string> = {
-  value: T;
-  label: string;
-};
+export { CalendarDatePicker } from "./calendar-date-picker";
 
-type DistanceGoalWidgetProps<T extends string> = {
-  options: DistanceGoalOption<T>[];
+/**
+ * Universal Race Distance Selector using Segmented
+ */
+type RaceDistanceSelectorProps<T extends string> = {
+  options: { value: T; label: string }[];
   value: T;
-  unit?: string;
   theme: ThemeTokens;
+  themeMode?: ThemeMode;
   onChange: (value: T) => void;
 };
 
-/**
- * Race-distance picker: a swipeable carousel where the neighbouring values
- * peek from the sides and scale/fade away from the centre, with a quick
- * preset chip slider underneath (same pattern as the workout goal sheet).
- */
-export function DistanceGoalWidget<T extends string>({
+export function RaceDistanceSelector<T extends string>({
   options,
   value,
-  unit = "км",
   theme,
+  themeMode,
   onChange,
-}: DistanceGoalWidgetProps<T>) {
-  const [containerWidth, setContainerWidth] = useState(0);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const listRef = useRef<FlatList<DistanceGoalOption<T>> | null>(null);
-  const lastIndexRef = useRef(
-    Math.max(
-      options.findIndex((option) => option.value === value),
-      0,
-    ),
+}: RaceDistanceSelectorProps<T>) {
+  const segments = options.map((opt) => ({
+    label: opt.label,
+    value: opt.value,
+  }));
+
+  return (
+    <Segmented
+      segments={segments}
+      value={value}
+      onChange={onChange}
+      theme={theme}
+      themeMode={themeMode}
+    />
   );
+}
 
-  const itemWidth = containerWidth / 3;
+/**
+ * Universal Wheel Input Row for numeric metrics (distance, volume, weight, elevation, etc.)
+ */
+type WheelInputRowProps = {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+  formatValue?: (v: number) => string;
+  badge?: string;
+  theme: ThemeTokens;
+  themeMode?: ThemeMode;
+};
 
-  const formatDistance = (km: number) => (Number.isInteger(km) ? String(km) : km.toFixed(1));
+export function WheelInputRow({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  unit,
+  formatValue,
+  badge,
+  theme,
+  themeMode,
+}: WheelInputRowProps) {
+  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
+  const displayVal = formatValue
+    ? formatValue(value)
+    : unit
+      ? `${value} ${unit}`
+      : String(value);
 
-  // Follow external value changes (e.g. preset chip taps).
-  useEffect(() => {
-    const index = options.findIndex((option) => option.value === value);
-    if (index >= 0 && index !== lastIndexRef.current && itemWidth > 0) {
-      lastIndexRef.current = index;
-      listRef.current?.scrollToOffset({ offset: index * itemWidth, animated: true });
-    }
-  }, [value, options, itemWidth]);
+  return (
+    <View style={styles.inputRowBlock}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        >
+          {label}
+        </Text>
 
-  const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (itemWidth <= 0) {
-      return;
-    }
-    const rawIndex = Math.round(event.nativeEvent.contentOffset.x / itemWidth);
-    const index = Math.min(Math.max(rawIndex, 0), options.length - 1);
-    lastIndexRef.current = index;
-    const selected = options[index];
-    if (selected && selected.value !== value) {
-      onChange(selected.value);
-    }
+        <View style={styles.badgeGroup}>
+          <View
+            style={[
+              styles.valueBadgePill,
+              { backgroundColor: isDark ? "#27272a" : theme.color.secondary },
+            ]}
+          >
+            <Text
+              style={[
+                styles.valueBadgeText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.bold,
+                },
+              ]}
+            >
+              {displayVal}
+            </Text>
+          </View>
+
+          {badge ? (
+            <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+              <Text
+                style={[
+                  styles.badgePillText,
+                  {
+                    color: theme.color.mutedForeground,
+                    fontFamily: theme.typography.fontFamily.sans.medium,
+                  },
+                ]}
+              >
+                {badge}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.wheelCardWrapper,
+          {
+            backgroundColor: isDark ? "#121214" : theme.color.surfaceElevated,
+            borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+          },
+        ]}
+      >
+        <Wheel
+          value={value}
+          onChange={onChange}
+          min={min}
+          max={max}
+          step={step}
+          formatValue={formatValue}
+          theme={theme}
+          themeMode={themeMode}
+          visibleItems={3}
+          itemHeight={40}
+        />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Universal Segmented Row for Direct Selection (e.g. 1-7 options)
+ */
+export function SegmentedRow<T>({
+  label,
+  segments,
+  value,
+  onChange,
+  badge,
+  theme,
+  themeMode,
+}: {
+  label: string;
+  segments: SegmentItem<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  badge?: string;
+  theme: ThemeTokens;
+  themeMode?: ThemeMode;
+}) {
+  return (
+    <View style={styles.inputRowBlock}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        >
+          {label}
+        </Text>
+
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+            <Text
+              style={[
+                styles.badgePillText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <Segmented
+        segments={segments}
+        value={value}
+        onChange={onChange}
+        theme={theme}
+        themeMode={themeMode}
+      />
+    </View>
+  );
+}
+
+/**
+ * Universal Compound Time Input Row for Finish Times (e.g. 00:45:00 or 45:00)
+ */
+export function CompoundTimerInputRow({
+  label,
+  value,
+  onChangeText,
+  badge,
+  error,
+  theme,
+  themeMode,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  badge?: string;
+  error?: string | null;
+  theme: ThemeTokens;
+  themeMode?: ThemeMode;
+}) {
+  const seconds = parseTargetTime(value) ?? 2700; // default 45 min
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const parts = [
+    {
+      label: "часы",
+      value: hours,
+      min: 0,
+      max: 12,
+      formatValue: (v: number) => String(v).padStart(2, "0"),
+    },
+    {
+      label: "мин",
+      value: minutes,
+      min: 0,
+      max: 59,
+      formatValue: (v: number) => String(v).padStart(2, "0"),
+    },
+    {
+      label: "сек",
+      value: secs,
+      min: 0,
+      max: 59,
+      step: 5,
+      formatValue: (v: number) => String(v).padStart(2, "0"),
+    },
+  ];
+
+  const handlePartChange = (partIndex: number, newVal: number) => {
+    let newH = hours;
+    let newM = minutes;
+    let newS = secs;
+
+    if (partIndex === 0) newH = newVal;
+    if (partIndex === 1) newM = newVal;
+    if (partIndex === 2) newS = newVal;
+
+    const p = (v: number) => String(v).padStart(2, "0");
+    const formatted = newH > 0 ? `${newH}:${p(newM)}:${p(newS)}` : `${newM}:${p(newS)}`;
+    onChangeText(formatted);
   };
 
   return (
-    <View onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}>
-      {itemWidth > 0 ? (
-        <CarouselList
-          ref={listRef}
-          data={options}
-          keyExtractor={(item) => item.value}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={itemWidth}
-          decelerationRate="fast"
-          getItemLayout={(_, index) => ({
-            length: itemWidth,
-            offset: itemWidth * index,
-            index,
-          })}
-          initialScrollIndex={lastIndexRef.current}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true },
-          )}
-          onMomentumScrollEnd={handleMomentumEnd}
-          scrollEventThrottle={16}
-          style={styles.distanceCarousel}
-          renderItem={({ item, index }) => {
-            const km = getGoalDistanceKm(item.value);
-            const inputRange = [
-              (index - 1) * itemWidth,
-              index * itemWidth,
-              (index + 1) * itemWidth,
-            ];
-            const scale = scrollX.interpolate({
-              inputRange,
-              outputRange: [0.72, 1, 0.72],
-              extrapolate: "clamp",
-            });
-            const opacity = scrollX.interpolate({
-              inputRange,
-              outputRange: [0.3, 1, 0.3],
-              extrapolate: "clamp",
-            });
-
-            return (
-              <Animated.View
-                style={[
-                  styles.distanceCell,
-                  { width: itemWidth, opacity, transform: [{ scale }] },
-                ]}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: item.value === value }}
-                  onPress={() =>
-                    listRef.current?.scrollToOffset({
-                      offset: index * itemWidth,
-                      animated: true,
-                    })
-                  }
-                  style={styles.distanceCellPress}
-                >
-                  {km !== null ? (
-                    <>
-                      <Text
-                        style={[
-                          styles.distanceValue,
-                          {
-                            color: theme.color.foreground,
-                            fontFamily: theme.typography.fontFamily.sans.extrabold,
-                          },
-                        ]}
-                      >
-                        {formatDistance(km)}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.distanceUnit,
-                          {
-                            color: theme.color.mutedForeground,
-                            fontFamily: theme.typography.fontFamily.sans.semibold,
-                          },
-                        ]}
-                      >
-                        {unit}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text
-                      numberOfLines={2}
-                      style={[
-                        styles.distanceValueText,
-                        {
-                          color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.extrabold,
-                        },
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                  )}
-                </Pressable>
-              </Animated.View>
-            );
-          }}
-        />
-      ) : null}
-
-      <SheetBlock theme={theme} edgeToEdge>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.distancePresetsScroll}
-          contentContainerStyle={styles.distancePresetsContent}
+    <View style={styles.inputRowBlock}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
         >
-          {options.map((option) => {
-            const selected = option.value === value;
-            const km = getGoalDistanceKm(option.value);
-            const label = km !== null ? `${formatDistance(km)} ${unit}` : option.label;
+          {label}
+        </Text>
 
-            return (
-              <Pressable
-                key={option.value}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => onChange(option.value)}
-                style={({ pressed }) => [
-                  styles.distancePresetChip,
-                  {
-                    backgroundColor: selected ? theme.color.primary : theme.color.surfaceElevated,
-                    borderColor: selected ? theme.color.primary : theme.color.border,
-                  },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.distancePresetText,
-                    {
-                      color: selected ? theme.color.primaryForeground : theme.color.foreground,
-                      fontFamily: selected
-                        ? theme.typography.fontFamily.sans.bold
-                        : theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </SheetBlock>
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+            <Text
+              style={[
+                styles.badgePillText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <Compound
+        parts={parts}
+        onChangePart={handlePartChange}
+        theme={theme}
+        themeMode={themeMode}
+      />
+
+      {error ? <FieldError message={error} theme={theme} /> : null}
+    </View>
+  );
+}
+
+/**
+ * Universal Compound Pace Input Row (e.g. 05:30 /km)
+ */
+export function CompoundPaceInputRow({
+  label,
+  value,
+  onChangeText,
+  badge,
+  error,
+  theme,
+  themeMode,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  badge?: string;
+  error?: string | null;
+  theme: ThemeTokens;
+  themeMode?: ThemeMode;
+}) {
+  const parsed = parseTargetTime(value) ?? 330; // default 5:30
+  const minutes = Math.floor(parsed / 60);
+  const secs = parsed % 60;
+
+  const parts = [
+    {
+      label: "мин",
+      value: minutes,
+      min: 2,
+      max: 15,
+      formatValue: (v: number) => String(v).padStart(2, "0"),
+    },
+    {
+      label: "сек",
+      value: secs,
+      min: 0,
+      max: 59,
+      step: 5,
+      formatValue: (v: number) => String(v).padStart(2, "0"),
+    },
+  ];
+
+  const handlePartChange = (partIndex: number, newVal: number) => {
+    let newM = minutes;
+    let newS = secs;
+
+    if (partIndex === 0) newM = newVal;
+    if (partIndex === 1) newS = newVal;
+
+    const p = (v: number) => String(v).padStart(2, "0");
+    const formatted = `${newM}:${p(newS)}`;
+    onChangeText(formatted);
+  };
+
+  return (
+    <View style={styles.inputRowBlock}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        >
+          {label}
+        </Text>
+
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+            <Text
+              style={[
+                styles.badgePillText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <Compound
+        parts={parts}
+        onChangePart={handlePartChange}
+        unit="/км"
+        theme={theme}
+        themeMode={themeMode}
+      />
+
+      {error ? <FieldError message={error} theme={theme} /> : null}
     </View>
   );
 }
@@ -644,7 +824,7 @@ export function MultilineInputRow({
 
 const styles = StyleSheet.create({
   inputRowBlock: {
-    gap: 6,
+    gap: 8,
   },
   inputRowHeader: {
     flexDirection: "row",
@@ -654,6 +834,20 @@ const styles = StyleSheet.create({
   inputRowLabel: {
     fontSize: 14,
     lineHeight: 18,
+  },
+  badgeGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  valueBadgePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  valueBadgeText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   badgePill: {
     paddingHorizontal: 8,
@@ -690,6 +884,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     minHeight: 96,
   },
+  wheelCardWrapper: {
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -722,30 +922,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
   },
   counterLabel: {
     fontSize: 15,
     lineHeight: 20,
-  },
-  counterControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  counterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 9999,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  counterValue: {
-    minWidth: 56,
-    textAlign: "center",
-    fontSize: 16,
-    lineHeight: 22,
   },
   sectionBlock: {
     gap: 10,
@@ -760,57 +942,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     marginLeft: 4,
-  },
-  distanceCarousel: {
-    height: 148,
-    width: "100%",
-  },
-  distanceCell: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  distanceCellPress: {
-    flex: 1,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-  },
-  distanceValue: {
-    fontSize: 44,
-    lineHeight: 52,
-  },
-  distanceValueText: {
-    fontSize: 20,
-    lineHeight: 26,
-    textAlign: "center",
-    paddingHorizontal: 12,
-  },
-  distanceUnit: {
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  distancePresetsScroll: {
-    width: "100%",
-    marginTop: 4,
-    maxHeight: 46,
-  },
-  distancePresetsContent: {
-    gap: 8,
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  distancePresetChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 9999,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  distancePresetText: {
-    fontSize: 14,
-    lineHeight: 18,
   },
   pressed: {
     transform: [{ scale: 0.97 }],

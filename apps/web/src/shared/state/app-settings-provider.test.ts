@@ -1,6 +1,31 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { parseRealtimeSettings, resolveTheme } from "./app-settings-provider";
+import {
+  parseRealtimeSettings,
+  resolveTheme,
+  shouldSyncSettingsForAuthStatus,
+} from "./app-settings-provider";
+
+describe("shouldSyncSettingsForAuthStatus", () => {
+  // Regression: the settings provider mounts above the auth one, so its
+  // bootstrap 401s on the login page and used to be the only attempt. Theme
+  // and locale then stayed at whatever localStorage held until a reload.
+  it("asks the backend once a session appears", () => {
+    expect(shouldSyncSettingsForAuthStatus("unauthenticated", "authenticated")).toBe(true);
+    expect(shouldSyncSettingsForAuthStatus("loading", "authenticated")).toBe(true);
+    expect(shouldSyncSettingsForAuthStatus(null, "authenticated")).toBe(true);
+  });
+
+  it("does not ask again while the session stays", () => {
+    expect(shouldSyncSettingsForAuthStatus("authenticated", "authenticated")).toBe(false);
+  });
+
+  it("does not ask without a session", () => {
+    expect(shouldSyncSettingsForAuthStatus("loading", "unauthenticated")).toBe(false);
+    expect(shouldSyncSettingsForAuthStatus("authenticated", "unauthenticated")).toBe(false);
+    expect(shouldSyncSettingsForAuthStatus("unauthenticated", "error")).toBe(false);
+  });
+});
 
 describe("parseRealtimeSettings", () => {
   it("reads the settings snapshot from the realtime envelope", () => {

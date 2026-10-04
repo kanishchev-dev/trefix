@@ -4,7 +4,6 @@ import { StyleSheet, View } from "react-native";
 import {
   GOAL_CHALLENGE_METRICS,
   GOAL_CHALLENGE_PERIODS,
-  GOAL_TYPE_CONFIG,
   LEGACY_RACE_DISTANCE_METERS,
   type AthleteGoalPayloadInput,
   type AthleteGoalType,
@@ -14,13 +13,17 @@ import {
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
+import { CalendarDatePicker } from "./calendar-date-picker";
 import {
+  CompoundPaceInputRow,
+  CompoundTimerInputRow,
   CounterRow,
-  DistanceGoalWidget,
-  FormInputRow,
   MultilineInputRow,
   OptionChip,
+  RaceDistanceSelector,
   SectionBlock,
+  SegmentedRow,
+  WheelInputRow,
 } from "./plan-creation-ui";
 
 type Props = {
@@ -41,6 +44,27 @@ const RACE_OPTIONS = [
   { value: "half_marathon", label: "21.1 km" },
   { value: "marathon", label: "42.2 km" },
 ] as const;
+
+const RUNS_PER_WEEK_SEGMENTS = [1, 2, 3, 4, 5, 6, 7].map((num) => ({
+  label: String(num),
+  value: num,
+}));
+
+function formatTimeOnFeet(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0 && mins > 0) return `${hours} ч ${mins} мин`;
+  if (hours > 0) return `${hours} ч`;
+  return `${mins} мин`;
+}
+
+function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0 && mins > 0) return `${hours} ч ${mins} мин`;
+  if (hours > 0) return `${hours} ч`;
+  return `${mins} мин`;
+}
 
 export function GoalSetupStep({
   goalType,
@@ -114,30 +138,15 @@ export function GoalSetupStep({
     return "10k";
   }, [target.distanceMeters]);
 
-  // Target Date Preset Selector
+  // Target Date Calendar Selector
   const renderTargetDateSection = () => (
     <SectionBlock title={fieldsCopy.targetDate} theme={theme}>
-      <View style={styles.chipRow}>
-        {[7, 14, 30, 60, 90].map((daysAhead) => {
-          const date = new Date();
-          date.setDate(date.getDate() + daysAhead);
-          const iso = date.toISOString().slice(0, 10);
-          const label = date.toLocaleDateString(
-            language === "ru" ? "ru-RU" : "en-US",
-            { day: "numeric", month: "short" },
-          );
-
-          return (
-            <OptionChip
-              key={daysAhead}
-              label={label}
-              selected={draft.targetDate === iso}
-              theme={theme}
-              onPress={() => setTargetDate(draft.targetDate === iso ? undefined : iso)}
-            />
-          );
-        })}
-      </View>
+      <CalendarDatePicker
+        value={draft.targetDate}
+        onChange={setTargetDate}
+        theme={theme}
+        language={language}
+      />
     </SectionBlock>
   );
 
@@ -148,27 +157,26 @@ export function GoalSetupStep({
     case "run_new_distance": {
       return (
         <View style={styles.formContainer}>
-          <DistanceGoalWidget
-            options={RACE_OPTIONS.map((opt) => ({
-              value: opt.value,
-              label: opt.label,
-            }))}
-            value={activeRaceDistancePreset}
-            unit={creationCopy.common.distanceUnit}
-            theme={theme}
-            onChange={(preset) => {
-              const meters = LEGACY_RACE_DISTANCE_METERS[preset] ?? 10000;
-              setTargetValue("distanceMeters", meters);
-            }}
-          />
+          <SectionBlock title={fieldsCopy.distance} theme={theme}>
+            <RaceDistanceSelector
+              options={RACE_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
+              value={activeRaceDistancePreset}
+              theme={theme}
+              onChange={(preset) => {
+                const meters = LEGACY_RACE_DISTANCE_METERS[preset] ?? 10000;
+                setTargetValue("distanceMeters", meters);
+              }}
+            />
+          </SectionBlock>
 
           {goalType !== "run_new_distance" ? (
             <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-              <FormInputRow
+              <CompoundTimerInputRow
                 label={fieldsCopy.targetTime}
-                value={(target.finishTimeText as string) ?? ""}
-                placeholder="45:00"
-                keyboardType="numbers-and-punctuation"
+                value={(target.finishTimeText as string) ?? "45:00"}
                 error={targetTimeError}
                 badge={
                   goalType === "improve_race_result"
@@ -182,11 +190,9 @@ export function GoalSetupStep({
           ) : null}
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <FormInputRow
+            <CompoundTimerInputRow
               label={fieldsCopy.currentResult}
-              value={(current.finishTimeText as string) ?? ""}
-              placeholder="48:30"
-              keyboardType="numbers-and-punctuation"
+              value={(current.finishTimeText as string) ?? "48:30"}
               badge={fieldsCopy.optionalLabel}
               theme={theme}
               onChangeText={(text) => setCurrentValue("finishTimeText", text)}
@@ -203,42 +209,40 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.distance}
-              value={target.distanceKm ? String(target.distanceKm) : ""}
-              placeholder="30"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.requiredLabel}
+              value={(target.distanceKm as number) ?? 30}
+              onChange={(val) => setTargetValue("distanceKm", val)}
+              min={5}
+              max={100}
+              step={1}
+              unit="км"
               theme={theme}
-              onChangeText={(text) => setTargetValue("distanceKm", text ? Number(text) : undefined)}
             />
-            <FormInputRow
-              label={fieldsCopy.elevationGain}
-              value={target.elevationGainMeters ? String(target.elevationGainMeters) : ""}
-              placeholder="1500"
-              unit="m"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("elevationGainMeters", text ? Number(text) : undefined)
-              }
-            />
+            <View style={{ marginTop: 12 }}>
+              <WheelInputRow
+                label={fieldsCopy.elevationGain}
+                value={(target.elevationGainMeters as number) ?? 1500}
+                onChange={(val) => setTargetValue("elevationGainMeters", val)}
+                min={0}
+                max={5000}
+                step={100}
+                unit="м"
+                theme={theme}
+              />
+            </View>
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.continuousDistance}
-              value={current.continuousDistanceKm ? String(current.continuousDistanceKm) : ""}
-              placeholder="15"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
+              value={(current.continuousDistanceKm as number) ?? 15}
+              onChange={(val) => setCurrentValue("continuousDistanceKm", val)}
+              min={1}
+              max={50}
+              step={1}
+              unit="км"
               theme={theme}
-              onChangeText={(text) =>
-                setCurrentValue("continuousDistanceKm", text ? Number(text) : undefined)
-              }
             />
           </SectionBlock>
 
@@ -259,18 +263,18 @@ export function GoalSetupStep({
               theme={theme}
               onChange={(value) => setTargetValue("loopsCount", value)}
             />
-            <FormInputRow
-              label={fieldsCopy.timeOnFeet}
-              value={target.timeOnFeetMinutes ? String(target.timeOnFeetMinutes) : ""}
-              placeholder="720"
-              unit="min"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("timeOnFeetMinutes", text ? Number(text) : undefined)
-              }
-            />
+            <View style={{ marginTop: 12 }}>
+              <WheelInputRow
+                label={fieldsCopy.timeOnFeet}
+                value={(target.timeOnFeetMinutes as number) ?? 720}
+                onChange={(val) => setTargetValue("timeOnFeetMinutes", val)}
+                min={60}
+                max={2880}
+                step={30}
+                formatValue={formatTimeOnFeet}
+                theme={theme}
+              />
+            </View>
           </SectionBlock>
 
           {renderTargetDateSection()}
@@ -283,11 +287,9 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <FormInputRow
+            <CompoundPaceInputRow
               label={fieldsCopy.targetPace}
-              value={(target.paceText as string) ?? ""}
-              placeholder="5:30"
-              keyboardType="numbers-and-punctuation"
+              value={(target.paceText as string) ?? "5:30"}
               badge={
                 goalType === "improve_pace"
                   ? fieldsCopy.requiredLabel
@@ -296,24 +298,24 @@ export function GoalSetupStep({
               theme={theme}
               onChangeText={(text) => setTargetValue("paceText", text)}
             />
-            <FormInputRow
-              label={fieldsCopy.distance}
-              value={target.distanceKm ? String(target.distanceKm) : ""}
-              placeholder="10"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) => setTargetValue("distanceKm", text ? Number(text) : undefined)}
-            />
+            <View style={{ marginTop: 12 }}>
+              <WheelInputRow
+                label={fieldsCopy.distance}
+                value={(target.distanceKm as number) ?? 10}
+                onChange={(val) => setTargetValue("distanceKm", val)}
+                min={1}
+                max={50}
+                step={1}
+                unit="км"
+                theme={theme}
+              />
+            </View>
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <FormInputRow
+            <CompoundPaceInputRow
               label={fieldsCopy.currentPace}
-              value={(current.paceText as string) ?? ""}
-              placeholder="6:00"
-              keyboardType="numbers-and-punctuation"
+              value={(current.paceText as string) ?? "6:00"}
               badge={fieldsCopy.optionalLabel}
               theme={theme}
               onChangeText={(text) => setCurrentValue("paceText", text)}
@@ -330,44 +332,42 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.continuousDuration}
-              value={target.continuousDurationMinutes ? String(target.continuousDurationMinutes) : ""}
-              placeholder="30"
-              unit="min"
-              keyboardType="numeric"
+              value={(target.continuousDurationMinutes as number) ?? 30}
+              onChange={(val) => setTargetValue("continuousDurationMinutes", val)}
+              min={5}
+              max={180}
+              step={5}
+              formatValue={formatDuration}
               badge={fieldsCopy.requiredLabel}
               theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("continuousDurationMinutes", text ? Number(text) : undefined)
-              }
             />
-            <FormInputRow
-              label={fieldsCopy.continuousDistance}
-              value={target.continuousDistanceKm ? String(target.continuousDistanceKm) : ""}
-              placeholder="5"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("continuousDistanceKm", text ? Number(text) : undefined)
-              }
-            />
+            <View style={{ marginTop: 12 }}>
+              <WheelInputRow
+                label={fieldsCopy.continuousDistance}
+                value={(target.continuousDistanceKm as number) ?? 5}
+                onChange={(val) => setTargetValue("continuousDistanceKm", val)}
+                min={1}
+                max={50}
+                step={1}
+                unit="км"
+                theme={theme}
+              />
+            </View>
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.continuousDuration}
-              value={current.continuousDurationMinutes ? String(current.continuousDurationMinutes) : ""}
-              placeholder="15"
-              unit="min"
-              keyboardType="numeric"
+              value={(current.continuousDurationMinutes as number) ?? 15}
+              onChange={(val) => setCurrentValue("continuousDurationMinutes", val)}
+              min={5}
+              max={180}
+              step={5}
+              formatValue={formatDuration}
               badge={fieldsCopy.optionalLabel}
               theme={theme}
-              onChangeText={(text) =>
-                setCurrentValue("continuousDurationMinutes", text ? Number(text) : undefined)
-              }
             />
           </SectionBlock>
 
@@ -380,22 +380,20 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <CounterRow
+            <SegmentedRow
               label={fieldsCopy.targetRunsPerWeek}
+              segments={RUNS_PER_WEEK_SEGMENTS}
               value={(target.runsPerWeek as number) ?? 3}
-              min={1}
-              max={7}
               theme={theme}
               onChange={(value) => setTargetValue("runsPerWeek", value)}
             />
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <CounterRow
+            <SegmentedRow
               label={fieldsCopy.currentRunsPerWeek}
+              segments={RUNS_PER_WEEK_SEGMENTS}
               value={(current.runsPerWeek as number) ?? 2}
-              min={1}
-              max={7}
               theme={theme}
               onChange={(value) => setCurrentValue("runsPerWeek", value)}
             />
@@ -410,32 +408,28 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.weeklyVolumeDistance}
-              value={target.weeklyDistanceKm ? String(target.weeklyDistanceKm) : ""}
-              placeholder="40"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.requiredLabel}
+              value={(target.weeklyDistanceKm as number) ?? 40}
+              onChange={(val) => setTargetValue("weeklyDistanceKm", val)}
+              min={5}
+              max={150}
+              step={1}
+              unit="км"
               theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("weeklyDistanceKm", text ? Number(text) : undefined)
-              }
             />
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.weeklyVolumeDistance}
-              value={current.weeklyDistanceKm ? String(current.weeklyDistanceKm) : ""}
-              placeholder="25"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
+              value={(current.weeklyDistanceKm as number) ?? 25}
+              onChange={(val) => setCurrentValue("weeklyDistanceKm", val)}
+              min={5}
+              max={150}
+              step={1}
+              unit="км"
               theme={theme}
-              onChangeText={(text) =>
-                setCurrentValue("weeklyDistanceKm", text ? Number(text) : undefined)
-              }
             />
           </SectionBlock>
 
@@ -448,28 +442,28 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.targetWeight}
-              value={target.weightKg ? String(target.weightKg) : ""}
-              placeholder="75"
-              unit="kg"
-              keyboardType="decimal-pad"
-              badge={fieldsCopy.requiredLabel}
+              value={(target.weightKg as number) ?? 75}
+              onChange={(val) => setTargetValue("weightKg", val)}
+              min={40}
+              max={180}
+              step={0.5}
+              unit="кг"
               theme={theme}
-              onChangeText={(text) => setTargetValue("weightKg", text ? Number(text) : undefined)}
             />
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.currentWeight}
-              value={current.weightKg ? String(current.weightKg) : ""}
-              placeholder="82"
-              unit="kg"
-              keyboardType="decimal-pad"
-              badge={fieldsCopy.optionalLabel}
+              value={(current.weightKg as number) ?? 82}
+              onChange={(val) => setCurrentValue("weightKg", val)}
+              min={40}
+              max={180}
+              step={0.5}
+              unit="кг"
               theme={theme}
-              onChangeText={(text) => setCurrentValue("weightKg", text ? Number(text) : undefined)}
             />
           </SectionBlock>
 
@@ -487,26 +481,25 @@ export function GoalSetupStep({
       return (
         <View style={styles.formContainer}>
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <CounterRow
+            <SegmentedRow
               label={fieldsCopy.targetRunsPerWeek}
+              segments={RUNS_PER_WEEK_SEGMENTS}
               value={(target.runsPerWeek as number) ?? 3}
-              min={1}
-              max={7}
               theme={theme}
               onChange={(value) => setTargetValue("runsPerWeek", value)}
             />
-            <FormInputRow
-              label={fieldsCopy.weeklyVolumeDistance}
-              value={target.weeklyDistanceKm ? String(target.weeklyDistanceKm) : ""}
-              placeholder="20"
-              unit="km"
-              keyboardType="numeric"
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("weeklyDistanceKm", text ? Number(text) : undefined)
-              }
-            />
+            <View style={{ marginTop: 12 }}>
+              <WheelInputRow
+                label={fieldsCopy.weeklyVolumeDistance}
+                value={(target.weeklyDistanceKm as number) ?? 20}
+                onChange={(val) => setTargetValue("weeklyDistanceKm", val)}
+                min={5}
+                max={150}
+                step={1}
+                unit="км"
+                theme={theme}
+              />
+            </View>
           </SectionBlock>
 
           {renderTargetDateSection()}
@@ -541,16 +534,14 @@ export function GoalSetupStep({
           </SectionBlock>
 
           <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <FormInputRow
+            <WheelInputRow
               label={fieldsCopy.challengeTarget}
-              value={target.challengeTargetValue ? String(target.challengeTargetValue) : ""}
-              placeholder="100"
-              keyboardType="numeric"
-              badge={fieldsCopy.requiredLabel}
+              value={(target.challengeTargetValue as number) ?? 100}
+              onChange={(val) => setTargetValue("challengeTargetValue", val)}
+              min={10}
+              max={1000}
+              step={10}
               theme={theme}
-              onChangeText={(text) =>
-                setTargetValue("challengeTargetValue", text ? Number(text) : undefined)
-              }
             />
           </SectionBlock>
 
@@ -602,11 +593,6 @@ export function GoalSetupStep({
 const styles = StyleSheet.create({
   formContainer: {
     gap: 20,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
   },
   chipWrap: {
     flexDirection: "row",
