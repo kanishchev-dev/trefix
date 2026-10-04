@@ -26,6 +26,7 @@ import type {
 } from "@workspace/api-client";
 
 import { useAuth } from "@/components/auth-provider";
+import { toInitials } from "@/entities/avatar/lib/initials";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { formatDate, useI18n } from "@/shared/i18n";
@@ -83,7 +84,7 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
 
   const displayName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
-  const fallbackInitials = displayName.slice(0, 2).toUpperCase();
+  const fallbackInitials = toInitials(displayName);
 
   const assignedGroupIds = new Set(user.groups.map((group) => group.id));
   const availableGroups =

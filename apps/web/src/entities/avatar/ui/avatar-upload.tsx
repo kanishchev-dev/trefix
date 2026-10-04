@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
@@ -25,19 +31,32 @@ import {
 import { UploadIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
-import { uploadAvatar } from "@/entities/avatar/api";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useI18n } from "@/shared/i18n";
 
+import { uploadOwnAvatar, uploadUserAvatar } from "../api";
 import {
   AVATAR_ACCEPTED_INPUT_TYPES,
   loadImageFromFile,
   renderCroppedAvatar,
 } from "../lib/avatar-image";
+import { toInitials } from "../lib/initials";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
+
+type AvatarCropperProps = {
+  /** Avatar shown until a new one is uploaded. */
+  avatarUrl?: string | null;
+  /** Label behind the placeholder initials and the image alt text. */
+  name: string;
+  /** Performs the upload; differs per caller because of the permissions each route requires. */
+  upload: (file: Blob) => Promise<{ avatarUrl: string }>;
+  /** Called after the backend has stored a new image. */
+  onUploaded?: (avatarUrl: string) => void;
+  disabled?: boolean;
+};
 
 /**
  * Avatar upload with an inline cropper.
@@ -47,9 +66,14 @@ const MAX_ZOOM = 3;
  * receives a 512px WebP of a few dozen kilobytes and only validates the type
  * and the size.
  */
-export function AvatarUpload(): ReactElement {
+function AvatarCropper({
+  avatarUrl: avatarUrlProp,
+  name,
+  upload,
+  onUploaded,
+  disabled,
+}: AvatarCropperProps): ReactElement {
   const { t } = useI18n();
-  const { user, setAvatarUrl } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // The cropper renders from an object URL, which has to be revoked explicitly.
   // It lives in a ref as well because a state updater would not run during the
@@ -63,6 +87,22 @@ export function AvatarUpload(): ReactElement {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [zoom, setZoom] = useState(MIN_ZOOM);
+  // The preview updates on its own right after an upload, so the new avatar is
+  // visible even when the caller keeps the record elsewhere and refetches it
+  // later. The incoming prop is tracked next to it: navigating from one user to
+  // another reuses this component, and a stale preview would show the previous
+  // person's photo. Deriving it during render keeps the state in step without
+  // an effect that would cascade a second render pass.
+  const [preview, setPreview] = useState<{
+    url: string | null;
+    source: string | null | undefined;
+  }>({ url: avatarUrlProp ?? null, source: avatarUrlProp });
+
+  if (preview.source !== avatarUrlProp) {
+    setPreview({ url: avatarUrlProp ?? null, source: avatarUrlProp });
+  }
+
+  const avatarUrl = preview.url;
 
   const releaseImageUrl = useCallback(() => {
     if (imageUrlRef.current) {
@@ -74,15 +114,6 @@ export function AvatarUpload(): ReactElement {
   // Leaving the page is not the only way the object URL has to go: the dialog
   // closing releases it too, through `closeDialog`.
   useEffect(() => releaseImageUrl, [releaseImageUrl]);
-
-  if (!user) {
-    return <span aria-hidden="true" />;
-  }
-
-  const displayName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
-  const initials =
-    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() || "U";
 
   const closeDialog = () => {
     setIsOpen(false);
@@ -100,7 +131,7 @@ export function AvatarUpload(): ReactElement {
     }
 
     if (!(AVATAR_ACCEPTED_INPUT_TYPES as readonly string[]).includes(file.type)) {
-      notifyError(t("profile.avatar.invalidType"));
+      notifyError(t("avatar.invalidType"));
       return;
     }
 
@@ -115,7 +146,7 @@ export function AvatarUpload(): ReactElement {
       setZoom(MIN_ZOOM);
       setIsOpen(true);
     } catch {
-      notifyError(t("profile.avatar.readFailed"));
+      notifyError(t("avatar.readFailed"));
     }
   };
 
@@ -130,10 +161,11 @@ export function AvatarUpload(): ReactElement {
       // `croppedArea` is already in the natural pixel coordinates of the image:
       // react-easy-crop scales it internally when it reports the pixels.
       const blob = await renderCroppedAvatar(imageElement, croppedArea);
-      const { avatarUrl } = await uploadAvatar(blob);
+      const { avatarUrl: uploadedUrl } = await upload(blob);
 
-      setAvatarUrl(avatarUrl);
-      notifySuccess(t("profile.toasts.avatarUpdated"));
+      setPreview({ url: uploadedUrl, source: avatarUrlProp });
+      onUploaded?.(uploadedUrl);
+      notifySuccess(t("avatar.updated"));
       closeDialog();
     } catch (error) {
       notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
@@ -145,8 +177,8 @@ export function AvatarUpload(): ReactElement {
   return (
     <div className="flex items-center gap-4">
       <Avatar className="size-14">
-        <AvatarImage src={user.avatarUrl ?? undefined} alt={displayName} />
-        <AvatarFallback>{initials}</AvatarFallback>
+        <AvatarImage src={avatarUrl ?? undefined} alt={name} />
+        <AvatarFallback>{toInitials(name)}</AvatarFallback>
       </Avatar>
 
       <div className="flex flex-col items-start gap-2">
@@ -154,12 +186,13 @@ export function AvatarUpload(): ReactElement {
           type="button"
           variant="outline"
           size="sm"
+          disabled={disabled}
           onClick={() => fileInputRef.current?.click()}
         >
           <UploadIcon />
-          {t("profile.avatar.change")}
+          {t("avatar.change")}
         </Button>
-        <p className="text-xs text-muted-foreground">{t("profile.avatar.hint")}</p>
+        <p className="text-xs text-muted-foreground">{t("avatar.hint")}</p>
       </div>
 
       <input
@@ -180,8 +213,8 @@ export function AvatarUpload(): ReactElement {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("profile.avatar.dialogTitle")}</DialogTitle>
-            <DialogDescription>{t("profile.avatar.dialogDescription")}</DialogDescription>
+            <DialogTitle>{t("avatar.dialogTitle")}</DialogTitle>
+            <DialogDescription>{t("avatar.dialogDescription")}</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
@@ -205,7 +238,7 @@ export function AvatarUpload(): ReactElement {
 
             <div className="flex items-center gap-3">
               <Label className="shrink-0 text-xs text-muted-foreground">
-                {t("profile.avatar.zoom")}
+                {t("avatar.zoom")}
               </Label>
               <Slider
                 value={[zoom]}
@@ -231,11 +264,64 @@ export function AvatarUpload(): ReactElement {
               {t("common.actions.cancel")}
             </DialogClose>
             <Button type="button" onClick={onSave} disabled={isUploading}>
-              {t("profile.avatar.save")}
+              {t("avatar.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/**
+ * Self-service variant for the profile page.
+ *
+ * Goes to `POST /avatars/me`, which needs `account.update` — an administrator
+ * without `users.update` would be rejected by the admin route for their own
+ * avatar.
+ */
+export function AvatarUpload(): ReactElement {
+  const { user, setAvatarUrl } = useAuth();
+
+  if (!user) {
+    return <span aria-hidden="true" />;
+  }
+
+  const displayName =
+    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+
+  return (
+    <AvatarCropper
+      avatarUrl={user.avatarUrl}
+      name={displayName}
+      upload={uploadOwnAvatar}
+      onUploaded={setAvatarUrl}
+    />
+  );
+}
+
+/**
+ * Admin variant used on the user edit form.
+ *
+ * Goes to `POST /avatars/:userId`, which needs `users.update`.
+ */
+export function UserAvatarUpload({
+  userId,
+  avatarUrl,
+  name,
+  disabled,
+}: {
+  userId: string;
+  avatarUrl?: string | null;
+  name: string;
+  disabled?: boolean;
+}): ReactElement {
+  return (
+    <AvatarCropper
+      avatarUrl={avatarUrl}
+      name={name}
+      disabled={disabled}
+      upload={(file) => uploadUserAvatar(userId, file)}
+    />
   );
 }

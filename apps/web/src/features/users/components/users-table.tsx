@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, type ReactElement } from "react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -39,6 +40,7 @@ import type { AdminUser } from "@workspace/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
+import { toInitials } from "@/entities/avatar/lib/initials";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 import {
   EmptyState,
@@ -195,76 +197,93 @@ export function UsersTable(): ReactElement {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {usersQuery.data?.data.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <Link
-                      href={`/users/${user.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {[user.firstName, user.lastName].filter(Boolean).join(" ") || "—"}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {user.email}
-                  </TableCell>
-                  <TableCell>
-                    {user.emailVerified ? (
-                      <Badge variant="outline">
-                        <CheckCircle2Icon className="size-3" />
-                        {t("common.yes")}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
-                        <XCircleIcon className="size-3" />
-                        {t("common.no")}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(user.createdAt, locale)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <Button variant="ghost" size="icon-sm" />
-                        }
-                      >
-                        <MoreHorizontalIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/users/${user.id}`)}
+              {usersQuery.data?.data.map((user) => {
+                const displayName =
+                  [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+                  user.email;
+
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="size-8 shrink-0">
+                          <AvatarImage
+                            src={user.avatarUrl ?? undefined}
+                            alt={displayName}
+                          />
+                          <AvatarFallback className="text-xs">
+                            {toInitials(displayName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Link
+                          href={`/users/${user.id}`}
+                          className="truncate font-medium hover:underline"
                         >
-                          <EyeIcon />
-                          {t("common.actions.viewDetails")}
-                        </DropdownMenuItem>
-                        {hasPermission("users.update") ? (
+                          {displayName}
+                        </Link>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {user.email}
+                    </TableCell>
+                    <TableCell>
+                      {user.emailVerified ? (
+                        <Badge variant="outline">
+                          <CheckCircle2Icon className="size-3" />
+                          {t("common.yes")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          <XCircleIcon className="size-3" />
+                          {t("common.no")}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(user.createdAt, locale)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button variant="ghost" size="icon-sm" />
+                          }
+                        >
+                          <MoreHorizontalIcon />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => router.push(`/users/${user.id}/edit`)}
+                            onClick={() => router.push(`/users/${user.id}`)}
                           >
-                            <PencilIcon />
-                            {t("common.actions.edit")}
+                            <EyeIcon />
+                            {t("common.actions.viewDetails")}
                           </DropdownMenuItem>
-                        ) : null}
-                        {canDelete && !user.isSystem ? (
-                          <>
-                            <DropdownMenuSeparator />
+                          {hasPermission("users.update") ? (
                             <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => setUserToDelete(user)}
+                              onClick={() => router.push(`/users/${user.id}/edit`)}
                             >
-                              <Trash2Icon />
-                              {t("common.actions.delete")}
+                              <PencilIcon />
+                              {t("common.actions.edit")}
                             </DropdownMenuItem>
-                          </>
-                        ) : null}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                          ) : null}
+                          {canDelete && !user.isSystem ? (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setUserToDelete(user)}
+                              >
+                                <Trash2Icon />
+                                {t("common.actions.delete")}
+                              </DropdownMenuItem>
+                            </>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

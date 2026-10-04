@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
+import { RealtimeStatusIndicator } from "@/shared/api/realtime-status";
 import { useI18n, type Locale } from "@/shared/i18n";
 import { useAppSettings, type ThemeMode } from "@/shared/state/app-settings-provider";
 
@@ -159,6 +160,8 @@ export function NavUser(): ReactElement {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <RealtimeStatusIndicator />
             <DropdownMenuSeparator />
             {hasPermission("account.update") ? (
               <DropdownMenuItem onClick={() => router.push("/profile")}>

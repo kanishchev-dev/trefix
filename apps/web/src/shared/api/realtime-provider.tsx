@@ -6,30 +6,19 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   type ReactElement,
   type ReactNode,
 } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { RealtimeClient } from "@/shared/api/realtime-client";
-
-/**
- * Backend event -> React Query cache keys that must be refreshed.
- * Keeps the admin UI in sync with changes made by other sessions
- * (or by the backend control plane) without a manual page reload.
- */
-const CACHE_INVALIDATION_MAP: Record<string, string[][]> = {
-  "user.created": [["users"]],
-  "user.updated": [["users"]],
-  "user.deleted": [["users"]],
-  "user-permissions.updated": [["users"], ["permissions"], ["permission-groups"]],
-  "permission.created": [["permissions"], ["permission-groups"]],
-  "permission.updated": [["permissions"], ["permission-groups"]],
-  "permission.deleted": [["permissions"], ["permission-groups"]],
-  "permission-group.created": [["permissions"], ["permission-groups"], ["settings"]],
-  "permission-group.updated": [["permissions"], ["permission-groups"], ["settings"]],
-  "permission-group.deleted": [["permissions"], ["permission-groups"], ["settings"]],
-};
+import {
+  REALTIME_EVENT_CACHE_KEYS,
+  REALTIME_SELF_EVENTS,
+  realtimeEventUserId,
+  realtimeRoomsForPermissions,
+} from "@/shared/api/realtime-events";
 
 type RealtimeContextValue = {
   client: RealtimeClient | null;
@@ -43,15 +32,29 @@ export function RealtimeProvider({
   children: ReactNode;
 }): ReactElement {
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, hasPermission, user, refreshAuth } = useAuth();
 
   const client = useMemo(() => new RealtimeClient(), []);
+  const currentUserId = user?.id;
+
+  // `refreshAuth` is a fresh closure on every render; the ref lets the listener
+  // below stay subscribed to the client instead of tearing itself down and
+  // rebuilding on each one.
+  const refreshAuthRef = useRef(refreshAuth);
+  useEffect(() => {
+    refreshAuthRef.current = refreshAuth;
+  }, [refreshAuth]);
+
+  // `hasPermission` is a fresh closure on every render, so the rooms are
+  // reduced to a string key: that keeps the effect below from re-subscribing on
+  // every single render while still reacting to a real permission change.
+  const rooms = realtimeRoomsForPermissions(hasPermission).join(",");
 
   // Subscriptions are registered once; the connection itself is (re)opened
   // whenever the session becomes available, because the socket token is
   // fetched from the httpOnly session cookie.
   useEffect(() => {
-    const unsubscribers = Object.entries(CACHE_INVALIDATION_MAP).map(
+    const unsubscribers = Object.entries(REALTIME_EVENT_CACHE_KEYS).map(
       ([event, keys]) =>
         client.on(event, () => {
           keys.forEach((key) => {
@@ -61,14 +64,35 @@ export function RealtimeProvider({
     );
 
     if (isAuthenticated) {
-      void client.connect();
+      void client.connect(rooms.length > 0 ? rooms.split(",") : []);
     }
 
     return () => {
       unsubscribers.forEach((unsubscribe) => unsubscribe());
       client.disconnect();
     };
-  }, [client, queryClient, isAuthenticated]);
+  }, [client, queryClient, isAuthenticated, rooms]);
+
+  // The signed-in user lives in the auth context rather than in react-query, so
+  // a cache invalidation cannot reach the sidebar name, the avatar or the
+  // permission gates. Events about the viewer refresh the session instead.
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const unsubscribers = REALTIME_SELF_EVENTS.map((event) =>
+      client.on(event, (payload) => {
+        if (realtimeEventUserId(payload) === currentUserId) {
+          void refreshAuthRef.current();
+        }
+      }),
+    );
+
+    return () => {
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
+    };
+  }, [client, currentUserId]);
 
   const value = useMemo<RealtimeContextValue>(() => ({ client }), [client]);
 

@@ -18,10 +18,9 @@ import { Label } from "@workspace/ui/components/label";
 import { formatDate, useI18n } from "@/shared/i18n";
 
 import { useAuth } from "@/components/auth-provider";
+import { AvatarUpload } from "@/entities/avatar/ui/avatar-upload";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
-
-import { AvatarUpload } from "./avatar-upload";
 
 const profileFormSchema = z.object({
   firstName: z.string().trim().min(1),

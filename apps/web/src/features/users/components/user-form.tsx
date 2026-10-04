@@ -18,6 +18,7 @@ import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useI18n } from "@/shared/i18n";
 import { useAuth } from "@/components/auth-provider";
+import { UserAvatarUpload } from "@/entities/avatar/ui/avatar-upload";
 import { useCreateUser, useUpdateUser } from "@/features/users/hooks/use-users";
 
 const userFormSchema = z
@@ -25,11 +26,6 @@ const userFormSchema = z
     firstName: z.string().min(1),
     lastName: z.string().min(1),
     email: z.string().email(),
-    avatarUrl: z
-      .string()
-      .url()
-      .optional()
-      .or(z.literal("")),
     referralCode: z.string().optional(),
     emailVerified: z.boolean(),
     password: z.string().min(8).optional().or(z.literal("")),
@@ -57,7 +53,6 @@ export function UserForm({
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       email: user?.email ?? "",
-      avatarUrl: user?.avatarUrl ?? "",
       referralCode: user?.referralCode ?? "",
       emailVerified: user?.emailVerified ?? false,
       password: "",
@@ -74,6 +69,10 @@ export function UserForm({
   const canSubmit = !isEdit || hasPermission("users.update");
   const isPending = createUser.isPending || updateUser.isPending;
   const isSystem = user?.isSystem ?? false;
+  const displayName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.email ||
+    "";
 
   const onSubmit = form.handleSubmit((values) => {
     if (isEdit) {
@@ -83,7 +82,6 @@ export function UserForm({
           lastName: values.lastName,
           email: values.email,
           emailVerified: values.emailVerified,
-          avatarUrl: values.avatarUrl ? values.avatarUrl : undefined,
           referralCode: values.referralCode,
         },
         {
@@ -106,7 +104,6 @@ export function UserForm({
         firstName: values.firstName,
         lastName: values.lastName,
         emailVerified: values.emailVerified,
-        avatarUrl: values.avatarUrl ? values.avatarUrl : undefined,
         referralCode: values.referralCode,
         password: password && password.length > 0 ? password : undefined,
       },
@@ -140,6 +137,15 @@ export function UserForm({
         </p>
       ) : null}
 
+      {isEdit && user ? (
+        <UserAvatarUpload
+          userId={user.id}
+          avatarUrl={user.avatarUrl}
+          name={displayName}
+          disabled={!canSubmit}
+        />
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label htmlFor="firstName">{t("users.fields.firstName")}</Label>
@@ -162,10 +168,6 @@ export function UserForm({
               {t("errors.VALIDATION_ERROR")}
             </p>
           ) : null}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="avatarUrl">{t("users.fields.avatarUrl")}</Label>
-          <Input id="avatarUrl" {...form.register("avatarUrl")} />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="referralCode">{t("users.fields.referralCode")}</Label>
