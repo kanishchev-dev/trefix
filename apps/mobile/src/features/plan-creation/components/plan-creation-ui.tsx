@@ -10,8 +10,9 @@ import {
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 
 import { SheetBlock } from "../../../shared/ui/bottom-sheet";
-import { parseTargetTime, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
-import { Compound, Segmented, type SegmentItem, Stepper, Wheel } from "@workspace/ui-native";
+import { formatTargetTime, parseTargetTime, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
+import { Ruler } from "@workspace/ui-native";
+import { Plus } from "lucide-react-native";
 
 type OptionChipProps = {
   label: string;
@@ -34,9 +35,7 @@ export function OptionChip({ label, selected, theme, themeMode, onPress }: Optio
         {
           backgroundColor: selected
             ? theme.color.primary
-            : isDark
-              ? "#1a1a1e"
-              : theme.color.surface,
+            : theme.color.control,
           borderColor: isDark
             ? "rgba(255, 255, 255, 0.08)"
             : theme.color.border,
@@ -64,61 +63,56 @@ export function OptionChip({ label, selected, theme, themeMode, onPress }: Optio
   );
 }
 
-type DayPickerProps = {
-  selectedDays: number[];
-  theme: ThemeTokens;
-  themeMode?: ThemeMode;
-  shortDayNames: readonly string[];
-  onToggleDay: (dayIndex: number) => void;
-};
-
-export function DayPicker({
-  selectedDays,
+/**
+ * Row of equal round buttons — the one picker look used for weekdays and
+ * small counts: outlined when free, filled when selected, faded when unavailable.
+ */
+export function CirclePicker<T extends string | number>({
+  options,
+  selected,
+  onPress,
   theme,
-  themeMode,
-  shortDayNames,
-  onToggleDay,
-}: DayPickerProps) {
-  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
-
+}: {
+  options: { value: T; label: string; disabled?: boolean }[];
+  selected: T[];
+  onPress: (value: T) => void;
+  theme: ThemeTokens;
+}) {
   return (
     <View style={styles.dayRow}>
-      {PLAN_WEEKDAY_ORDER.map((dayIndex) => {
-        const selected = selectedDays.includes(dayIndex);
+      {options.map(({ value, label, disabled = false }) => {
+        const isSelected = selected.includes(value);
         return (
           <Pressable
-            key={dayIndex}
+            key={String(value)}
             accessibilityRole="button"
-            accessibilityState={{ selected }}
-            accessibilityLabel={shortDayNames[dayIndex]}
-            onPress={() => onToggleDay(dayIndex)}
+            accessibilityState={{ selected: isSelected, disabled }}
+            accessibilityLabel={label}
+            disabled={disabled}
+            hitSlop={4}
+            onPress={() => onPress(value)}
             style={({ pressed }) => [
               styles.dayCell,
               {
-                backgroundColor: selected
-                  ? theme.color.primary
-                  : isDark
-                    ? "#121214"
-                    : theme.color.surfaceElevated,
-                borderColor: selected
-                  ? theme.color.primary
-                  : isDark
-                    ? "rgba(255, 255, 255, 0.08)"
-                    : theme.color.border,
+                backgroundColor: isSelected ? theme.color.primary : "transparent",
+                borderColor: isSelected ? theme.color.primary : theme.color.border,
+                opacity: disabled ? 0.3 : 1,
               },
-              pressed && styles.pressed,
+              pressed && !disabled && styles.pressed,
             ]}
           >
             <Text
               style={[
                 styles.dayLabel,
                 {
-                  color: selected ? theme.color.primaryForeground : theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
+                  color: isSelected ? theme.color.primaryForeground : theme.color.foreground,
+                  fontFamily: isSelected
+                    ? theme.typography.fontFamily.sans.semibold
+                    : theme.typography.fontFamily.sans.medium,
                 },
               ]}
             >
-              {shortDayNames[dayIndex]}
+              {label}
             </Text>
           </Pressable>
         );
@@ -127,90 +121,100 @@ export function DayPicker({
   );
 }
 
-type CounterRowProps = {
-  label: string;
-  value: number;
-  suffix?: string;
-  min: number;
-  max: number;
+type DayPickerProps = {
+  selectedDays: number[];
   theme: ThemeTokens;
   themeMode?: ThemeMode;
-  onChange: (value: number) => void;
+  shortDayNames: readonly string[];
+  onToggleDay: (dayIndex: number) => void;
+  /** Days that cannot be picked (shown faded), e.g. rest days for the long run. */
+  disabledDays?: number[];
 };
 
-export function CounterRow({
-  label,
-  value,
-  suffix,
-  min,
-  max,
+/** Week row (Mon–Sun) built on CirclePicker. */
+export function DayPicker({
+  selectedDays,
   theme,
-  themeMode,
-  onChange,
-}: CounterRowProps) {
-  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
-
+  shortDayNames,
+  onToggleDay,
+  disabledDays = [],
+}: DayPickerProps) {
   return (
-    <View
-      style={[
-        styles.counterRow,
-        {
-          backgroundColor: isDark ? "#121214" : theme.color.surfaceElevated,
-          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-          gap: 12,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.counterLabel,
-          {
-            color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.semibold,
-            flex: 1,
-          },
-        ]}
-      >
-        {label}
-      </Text>
-
-      <View style={{ width: 150 }}>
-        <Stepper
-          value={value}
-          onChange={onChange}
-          min={min}
-          max={max}
-          step={1}
-          unit={suffix}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      </View>
-    </View>
+    <CirclePicker
+      options={PLAN_WEEKDAY_ORDER.map((dayIndex) => ({
+        value: dayIndex as number,
+        label: shortDayNames[dayIndex],
+        disabled: disabledDays.includes(dayIndex),
+      }))}
+      selected={selectedDays}
+      onPress={onToggleDay}
+      theme={theme}
+    />
   );
 }
 
 type SectionBlockProps = {
   title: string;
+  /** Optional explanation under the title: why the block exists / what happens if skipped. */
+  description?: string;
   theme: ThemeTokens;
+  /**
+   * "title" — centred heading for a standalone block.
+   * "divider" — quieter heading between hairlines, for grouping
+   * (goal vs. current state) without competing with field labels.
+   */
+  variant?: "title" | "divider";
   children: ReactNode;
 };
 
-export function SectionBlock({ title, theme, children }: SectionBlockProps) {
+export function SectionBlock({
+  title,
+  description,
+  theme,
+  variant = "title",
+  children,
+}: SectionBlockProps) {
+  const isDivider = variant === "divider";
+  const titleText = (
+    <Text
+      style={[
+        isDivider ? styles.dividerTitle : styles.sectionTitle,
+        {
+          color: isDivider ? theme.color.mutedForeground : theme.color.foreground,
+          fontFamily: isDivider
+            ? theme.typography.fontFamily.sans.medium
+            : theme.typography.fontFamily.sans.semibold,
+        },
+      ]}
+    >
+      {title}
+    </Text>
+  );
+
   return (
     <SheetBlock theme={theme}>
       <View style={styles.sectionBlock}>
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.bold,
-            },
-          ]}
-        >
-          {title.toUpperCase()}
-        </Text>
+        <View style={styles.sectionHeader}>
+          {isDivider ? (
+            <View style={styles.dividerRow}>
+              <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
+              {titleText}
+              <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
+            </View>
+          ) : (
+            titleText
+          )}
+          {description ? (
+            <Text
+              style={[
+                styles.sectionDescription,
+                { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+              ]}
+            >
+              {description}
+            </Text>
+          ) : null}
+        </View>
         {children}
       </View>
     </SheetBlock>
@@ -231,425 +235,267 @@ export function FieldError({ message, theme }: { message: string; theme: ThemeTo
   );
 }
 
-export { CalendarDatePicker } from "./calendar-date-picker";
+
+/** Centred field label with an optional short description in small muted text under it. */
+function InputRowHeader({
+  label,
+  info,
+  badge,
+  theme,
+}: {
+  label: string;
+  info?: string;
+  badge?: string;
+  theme: ThemeTokens;
+}) {
+  return (
+    <View style={styles.fieldHeader}>
+      <View style={styles.inputRowHeader}>
+        <Text
+          style={[
+            styles.inputRowLabel,
+            { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+          ]}
+        >
+          {label}
+        </Text>
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+            <Text
+              style={[
+                styles.badgePillText,
+                { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+              ]}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      {info ? (
+        <Text
+          style={[
+            styles.fieldInfo,
+            { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+          ]}
+        >
+          {info}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** A field that is always part of the goal: label (+ info tooltip) and its control. */
+export function FieldBlock({
+  label,
+  info,
+  theme,
+  children,
+}: {
+  label: string;
+  info?: string;
+  theme: ThemeTokens;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.inputRowBlock}>
+      <InputRowHeader label={label} info={info} theme={theme} />
+      {children}
+    </View>
+  );
+}
+
+/** Centred "+ Add …" text link used to reveal optional fields and sections. */
+export function AddLink({
+  label,
+  onPress,
+  theme,
+}: {
+  label: string;
+  onPress: () => void;
+  theme: ThemeTokens;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      hitSlop={8}
+      onPress={onPress}
+      style={({ pressed }) => [styles.addLink, pressed && styles.pressed]}
+    >
+      <Plus size={16} color={theme.color.foreground} />
+      <Text
+        style={[
+          styles.addLinkText,
+          { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function RemoveLink({
+  label,
+  onPress,
+  theme,
+}: {
+  label: string;
+  onPress: () => void;
+  theme: ThemeTokens;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      hitSlop={8}
+      onPress={onPress}
+      style={({ pressed }) => [styles.optionalRemove, pressed && styles.pressed]}
+    >
+      <Text
+        style={[
+          styles.optionalRemoveText,
+          { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 
 /**
- * Universal Race Distance Selector using Segmented
+ * Optional field inside a section. Hidden behind "+ Add …"; once added the
+ * value is stored and the control shows with a "Remove" link. Nothing that
+ * is not visible is ever sent.
  */
-type RaceDistanceSelectorProps<T extends string> = {
-  options: { value: T; label: string }[];
-  value: T;
-  theme: ThemeTokens;
-  themeMode?: ThemeMode;
-  onChange: (value: T) => void;
-};
-
-export function RaceDistanceSelector<T extends string>({
-  options,
-  value,
+export function OptionalField({
+  label,
+  info,
+  addLabel,
+  removeLabel,
+  isSet,
+  onSet,
+  onRemove,
   theme,
-  themeMode,
-  onChange,
-}: RaceDistanceSelectorProps<T>) {
-  const segments = options.map((opt) => ({
-    label: opt.label,
-    value: opt.value,
-  }));
+  children,
+}: {
+  label: string;
+  info?: string;
+  addLabel: string;
+  removeLabel: string;
+  isSet: boolean;
+  onSet: () => void;
+  onRemove: () => void;
+  theme: ThemeTokens;
+  children: ReactNode;
+}) {
+  if (!isSet) {
+    return <AddLink label={addLabel} onPress={onSet} theme={theme} />;
+  }
 
   return (
-    <Segmented
-      segments={segments}
-      value={value}
+    <View style={styles.inputRowBlock}>
+      <InputRowHeader label={label} info={info} theme={theme} />
+      {children}
+      <RemoveLink label={removeLabel} onPress={onRemove} theme={theme} />
+    </View>
+  );
+}
+
+/**
+ * Optional section (e.g. current metrics, target date). Collapsed it is a
+ * single "+ Add …" link; opened it becomes a regular divider section with
+ * a "Remove …" link that clears everything it stored.
+ */
+export function OptionalSection({
+  title,
+  description,
+  addLabel,
+  removeLabel,
+  isOpen,
+  onOpen,
+  onRemove,
+  theme,
+  children,
+}: {
+  title: string;
+  description?: string;
+  addLabel: string;
+  removeLabel: string;
+  isOpen: boolean;
+  onOpen: () => void;
+  onRemove: () => void;
+  theme: ThemeTokens;
+  children: ReactNode;
+}) {
+  if (!isOpen) {
+    return (
+      <SheetBlock theme={theme}>
+        <AddLink label={addLabel} onPress={onOpen} theme={theme} />
+      </SheetBlock>
+    );
+  }
+
+  return (
+    <SectionBlock title={title} description={description} theme={theme} variant="divider">
+      {children}
+      <RemoveLink label={removeLabel} onPress={onRemove} theme={theme} />
+    </SectionBlock>
+  );
+}
+
+/** Ruler scale for a time value in seconds. */
+export type TimeRulerRange = {
+  min: number;
+  max: number;
+  step: number;
+  majorEvery: number;
+  labelEvery: number;
+};
+
+export const PACE_RANGE: TimeRulerRange = {
+  min: 2 * 60 + 30,
+  max: 15 * 60,
+  step: 5,
+  majorEvery: 60,
+  labelEvery: 60,
+};
+
+/** Ruler over seconds, displayed as m:ss / h:mm:ss (finish time, pace). */
+export function TimeRuler({
+  seconds,
+  onChange,
+  range,
+  unit,
+  accessibilityLabel,
+  theme,
+  themeMode,
+}: {
+  seconds: number;
+  onChange: (seconds: number) => void;
+  range: TimeRulerRange;
+  unit?: string;
+  accessibilityLabel?: string;
+  theme: ThemeTokens;
+  themeMode?: ThemeMode;
+}) {
+  return (
+    <Ruler
+      value={Math.max(range.min, Math.min(range.max, seconds))}
       onChange={onChange}
+      min={range.min}
+      max={range.max}
+      step={range.step}
+      majorEvery={range.majorEvery}
+      labelEvery={range.labelEvery}
+      formatValue={formatTargetTime}
+      formatLabel={formatTargetTime}
+      unit={unit}
+      accessibilityLabel={accessibilityLabel}
       theme={theme}
       themeMode={themeMode}
     />
-  );
-}
-
-/**
- * Universal Wheel Input Row for numeric metrics (distance, volume, weight, elevation, etc.)
- */
-type WheelInputRowProps = {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  min: number;
-  max: number;
-  step?: number;
-  unit?: string;
-  formatValue?: (v: number) => string;
-  badge?: string;
-  theme: ThemeTokens;
-  themeMode?: ThemeMode;
-};
-
-export function WheelInputRow({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-  step = 1,
-  unit,
-  formatValue,
-  badge,
-  theme,
-  themeMode,
-}: WheelInputRowProps) {
-  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
-  const displayVal = formatValue
-    ? formatValue(value)
-    : unit
-      ? `${value} ${unit}`
-      : String(value);
-
-  return (
-    <View style={styles.inputRowBlock}>
-      <View style={styles.inputRowHeader}>
-        <Text
-          style={[
-            styles.inputRowLabel,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {label}
-        </Text>
-
-        <View style={styles.badgeGroup}>
-          <View
-            style={[
-              styles.valueBadgePill,
-              { backgroundColor: isDark ? "#27272a" : theme.color.secondary },
-            ]}
-          >
-            <Text
-              style={[
-                styles.valueBadgeText,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
-                },
-              ]}
-            >
-              {displayVal}
-            </Text>
-          </View>
-
-          {badge ? (
-            <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
-              <Text
-                style={[
-                  styles.badgePillText,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {badge}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      </View>
-
-      <View
-        style={[
-          styles.wheelCardWrapper,
-          {
-            backgroundColor: isDark ? "#121214" : theme.color.surfaceElevated,
-            borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-          },
-        ]}
-      >
-        <Wheel
-          value={value}
-          onChange={onChange}
-          min={min}
-          max={max}
-          step={step}
-          formatValue={formatValue}
-          theme={theme}
-          themeMode={themeMode}
-          visibleItems={3}
-          itemHeight={40}
-        />
-      </View>
-    </View>
-  );
-}
-
-/**
- * Universal Segmented Row for Direct Selection (e.g. 1-7 options)
- */
-export function SegmentedRow<T>({
-  label,
-  segments,
-  value,
-  onChange,
-  badge,
-  theme,
-  themeMode,
-}: {
-  label: string;
-  segments: SegmentItem<T>[];
-  value: T;
-  onChange: (value: T) => void;
-  badge?: string;
-  theme: ThemeTokens;
-  themeMode?: ThemeMode;
-}) {
-  return (
-    <View style={styles.inputRowBlock}>
-      <View style={styles.inputRowHeader}>
-        <Text
-          style={[
-            styles.inputRowLabel,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {label}
-        </Text>
-
-        {badge ? (
-          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
-            <Text
-              style={[
-                styles.badgePillText,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.medium,
-                },
-              ]}
-            >
-              {badge}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      <Segmented
-        segments={segments}
-        value={value}
-        onChange={onChange}
-        theme={theme}
-        themeMode={themeMode}
-      />
-    </View>
-  );
-}
-
-/**
- * Universal Compound Time Input Row for Finish Times (e.g. 00:45:00 or 45:00)
- */
-export function CompoundTimerInputRow({
-  label,
-  value,
-  onChangeText,
-  badge,
-  error,
-  theme,
-  themeMode,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  badge?: string;
-  error?: string | null;
-  theme: ThemeTokens;
-  themeMode?: ThemeMode;
-}) {
-  const seconds = parseTargetTime(value) ?? 2700; // default 45 min
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  const parts = [
-    {
-      label: "часы",
-      value: hours,
-      min: 0,
-      max: 12,
-      formatValue: (v: number) => String(v).padStart(2, "0"),
-    },
-    {
-      label: "мин",
-      value: minutes,
-      min: 0,
-      max: 59,
-      formatValue: (v: number) => String(v).padStart(2, "0"),
-    },
-    {
-      label: "сек",
-      value: secs,
-      min: 0,
-      max: 59,
-      step: 5,
-      formatValue: (v: number) => String(v).padStart(2, "0"),
-    },
-  ];
-
-  const handlePartChange = (partIndex: number, newVal: number) => {
-    let newH = hours;
-    let newM = minutes;
-    let newS = secs;
-
-    if (partIndex === 0) newH = newVal;
-    if (partIndex === 1) newM = newVal;
-    if (partIndex === 2) newS = newVal;
-
-    const p = (v: number) => String(v).padStart(2, "0");
-    const formatted = newH > 0 ? `${newH}:${p(newM)}:${p(newS)}` : `${newM}:${p(newS)}`;
-    onChangeText(formatted);
-  };
-
-  return (
-    <View style={styles.inputRowBlock}>
-      <View style={styles.inputRowHeader}>
-        <Text
-          style={[
-            styles.inputRowLabel,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {label}
-        </Text>
-
-        {badge ? (
-          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
-            <Text
-              style={[
-                styles.badgePillText,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.medium,
-                },
-              ]}
-            >
-              {badge}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      <Compound
-        parts={parts}
-        onChangePart={handlePartChange}
-        theme={theme}
-        themeMode={themeMode}
-      />
-
-      {error ? <FieldError message={error} theme={theme} /> : null}
-    </View>
-  );
-}
-
-/**
- * Universal Compound Pace Input Row (e.g. 05:30 /km)
- */
-export function CompoundPaceInputRow({
-  label,
-  value,
-  onChangeText,
-  badge,
-  error,
-  theme,
-  themeMode,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  badge?: string;
-  error?: string | null;
-  theme: ThemeTokens;
-  themeMode?: ThemeMode;
-}) {
-  const parsed = parseTargetTime(value) ?? 330; // default 5:30
-  const minutes = Math.floor(parsed / 60);
-  const secs = parsed % 60;
-
-  const parts = [
-    {
-      label: "мин",
-      value: minutes,
-      min: 2,
-      max: 15,
-      formatValue: (v: number) => String(v).padStart(2, "0"),
-    },
-    {
-      label: "сек",
-      value: secs,
-      min: 0,
-      max: 59,
-      step: 5,
-      formatValue: (v: number) => String(v).padStart(2, "0"),
-    },
-  ];
-
-  const handlePartChange = (partIndex: number, newVal: number) => {
-    let newM = minutes;
-    let newS = secs;
-
-    if (partIndex === 0) newM = newVal;
-    if (partIndex === 1) newS = newVal;
-
-    const p = (v: number) => String(v).padStart(2, "0");
-    const formatted = `${newM}:${p(newS)}`;
-    onChangeText(formatted);
-  };
-
-  return (
-    <View style={styles.inputRowBlock}>
-      <View style={styles.inputRowHeader}>
-        <Text
-          style={[
-            styles.inputRowLabel,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {label}
-        </Text>
-
-        {badge ? (
-          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
-            <Text
-              style={[
-                styles.badgePillText,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.medium,
-                },
-              ]}
-            >
-              {badge}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      <Compound
-        parts={parts}
-        onChangePart={handlePartChange}
-        unit="/км"
-        theme={theme}
-        themeMode={themeMode}
-      />
-
-      {error ? <FieldError message={error} theme={theme} /> : null}
-    </View>
   );
 }
 
@@ -678,35 +524,7 @@ export function FormInputRow({
 }: FormInputRowProps) {
   return (
     <View style={styles.inputRowBlock}>
-      <View style={styles.inputRowHeader}>
-        <Text
-          style={[
-            styles.inputRowLabel,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {label}
-        </Text>
-
-        {badge ? (
-          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
-            <Text
-              style={[
-                styles.badgePillText,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.medium,
-                },
-              ]}
-            >
-              {badge}
-            </Text>
-          </View>
-        ) : null}
-      </View>
+      <InputRowHeader label={label} badge={badge} theme={theme} />
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -767,35 +585,7 @@ export function MultilineInputRow({
 }: MultilineInputRowProps) {
   return (
     <View style={styles.inputRowBlock}>
-      <View style={styles.inputRowHeader}>
-        <Text
-          style={[
-            styles.inputRowLabel,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {label}
-        </Text>
-
-        {badge ? (
-          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
-            <Text
-              style={[
-                styles.badgePillText,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.medium,
-                },
-              ]}
-            >
-              {badge}
-            </Text>
-          </View>
-        ) : null}
-      </View>
+      <InputRowHeader label={label} badge={badge} theme={theme} />
 
       <TextInput
         accessibilityLabel={label}
@@ -824,30 +614,19 @@ export function MultilineInputRow({
 
 const styles = StyleSheet.create({
   inputRowBlock: {
-    gap: 8,
+    gap: 16,
   },
   inputRowHeader: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 8,
   },
   inputRowLabel: {
     fontSize: 14,
     lineHeight: 18,
-  },
-  badgeGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  valueBadgePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  valueBadgeText: {
-    fontSize: 12,
-    lineHeight: 16,
+    textAlign: "center",
   },
   badgePill: {
     paddingHorizontal: 8,
@@ -884,12 +663,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     minHeight: 96,
   },
-  wheelCardWrapper: {
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -902,12 +675,12 @@ const styles = StyleSheet.create({
   },
   dayRow: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "space-between",
   },
   dayCell: {
-    flex: 1,
-    height: 44,
-    borderRadius: 9999,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
@@ -916,26 +689,80 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
   },
-  counterRow: {
+  sectionBlock: {
+    gap: 28,
+  },
+  sectionHeader: {
+    gap: 4,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  sectionDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  // Separator in the spirit of shadcn Marker (separator variant):
+  // quiet centred label between hairlines; spacing does the grouping.
+  dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    gap: 10,
   },
-  counterLabel: {
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  dividerTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  fieldHeader: {
+    gap: 2,
+  },
+  fieldInfo: {
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center",
+    paddingHorizontal: 16,
+  },
+  addLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    gap: 6,
+    paddingVertical: 8,
+  },
+  addLinkText: {
     fontSize: 15,
     lineHeight: 20,
   },
-  sectionBlock: {
-    gap: 10,
+  optionalEmptyRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 4,
   },
-  sectionTitle: {
-    fontSize: 11,
-    lineHeight: 15,
-    letterSpacing: 0.8,
+  optionalEmptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  optionalActionText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  optionalRemove: {
+    alignSelf: "center",
+    paddingVertical: 2,
+  },
+  optionalRemoveText: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   fieldError: {
     color: "#dc2626",

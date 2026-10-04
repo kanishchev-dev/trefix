@@ -76,8 +76,8 @@ export const AddWorkoutSection = React.memo(
                 style={({ pressed }) => [
                   styles.card,
                   {
-                    backgroundColor: isDark ? "#121214" : theme.color.surfaceElevated,
-                    borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
+                    backgroundColor: theme.color.card,
+                    borderColor: theme.color.cardBorder,
                   },
                   pressed && styles.cardPressed,
                 ]}

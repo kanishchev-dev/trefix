@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { AlertCircle, Pencil, X } from "lucide-react-native";
+import { AlertCircle, ChevronLeft, ChevronRight, X } from "lucide-react-native";
 
 import {
   type ManualPlanNewWorkout,
@@ -19,14 +19,24 @@ import {
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
-import { BottomSheet } from "../../shared/ui/bottom-sheet";
+import { BottomSheet, SheetBlock, SheetButton } from "../../shared/ui/bottom-sheet";
+import { Card } from "../../shared/ui/card";
+import { Ruler } from "@workspace/ui-native";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import {
   PLAN_WORKOUT_TYPE_KEYS,
   formatGoalSummary,
   type PlanCreationDraft,
 } from "./plan-creation-types";
 import { useCreateManualPlan } from "./hooks/use-manual-plan";
-import { FieldError, OptionChip } from "./components/plan-creation-ui";
+import { DayPicker, FieldError, OptionChip, SectionBlock } from "./components/plan-creation-ui";
 
 type Props = {
   theme: ThemeTokens;
@@ -41,9 +51,54 @@ type Props = {
 };
 
 type EditingTarget = {
-  weekNumber: number; 
+  weekNumber: number;
   workout: ManualPlanPreviewWorkout | null;
+  /** Suggested weekday for a new workout: first free training day of the week. */
+  defaultDayOfWeek?: number;
 };
+
+type WorkoutChanges = {
+  type?: string;
+  dayOfWeek?: number;
+  distanceKm?: number;
+  durationMinutes?: number;
+};
+
+/** Client-side addition. `localId` keeps it addressable for edit/remove before creation. */
+type PlanAddition = ManualPlanNewWorkout & { weekNumber: number; localId: string };
+
+const NEW_WORKOUT_ID_PREFIX = "new:";
+
+const isAdditionId = (id: string) => id.startsWith(NEW_WORKOUT_ID_PREFIX);
+
+/** Distance is shown and compared with 0.1 km precision. */
+const roundKm = (value: number) => Math.round(value * 10) / 10;
+
+/** Parses user input like "7.5" / "7,5"; empty → null, garbage → NaN. */
+function parseDecimalInput(text: string): number | null {
+  const normalized = text.trim().replace(",", ".");
+  if (!normalized) return null;
+  return /^\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : Number.NaN;
+}
+
+/** Mirrors backend engine rules; returns an errors-copy key or null. */
+function validateWorkoutChanges(changes: WorkoutChanges): string | null {
+  if (
+    changes.distanceKm !== undefined &&
+    (!Number.isFinite(changes.distanceKm) || changes.distanceKm <= 0 || changes.distanceKm > 100)
+  ) {
+    return "invalidDistance";
+  }
+  if (
+    changes.durationMinutes !== undefined &&
+    (!Number.isFinite(changes.durationMinutes) ||
+      changes.durationMinutes < 10 ||
+      changes.durationMinutes > 300)
+  ) {
+    return "invalidDuration";
+  }
+  return null;
+}
 
 const SHORT_DAY_NAMES_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 const SHORT_DAY_NAMES_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] as const;
@@ -60,12 +115,27 @@ export function PlanPreviewScreen({
   onDiscard,
 }: Props) {
   const creationCopy = copy.plan.creation;
-  const planCopy = copy.plan;
+  const previewCopy = creationCopy.preview;
+  const regular = theme.typography.fontFamily.sans.regular;
+  const medium = theme.typography.fontFamily.sans.medium;
+  const semibold = theme.typography.fontFamily.sans.semibold;
 
   const [overrides, setOverrides] = useState<Record<string, ManualPlanWorkoutOverride>>({});
   const [removals, setRemovals] = useState<Array<{ weekNumber: number; orderInWeek: number }>>([]);
-  const [additions, setAdditions] = useState<Array<ManualPlanNewWorkout & { weekNumber: number }>>([]);
+  const [additions, setAdditions] = useState<PlanAddition[]>([]);
+  const additionSeq = useRef(0);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
+  /**
+   * Sheet visibility is separate from `editing`: closing first slides the sheet
+   * down (animatedHide) with its content still rendered; `editing` is cleared
+   * only once the animation has finished (BottomSheet onClose).
+   */
+  const [editorOpen, setEditorOpen] = useState(false);
+  const closeEditor = () => setEditorOpen(false);
+  const openEditor = (target: EditingTarget) => {
+    setEditing(target);
+    setEditorOpen(true);
+  };
   const [editError, setEditError] = useState<string | null>(null);
   const [showCreatedError, setShowCreatedError] = useState(false);
 
@@ -81,13 +151,8 @@ export function PlanPreviewScreen({
   }, [preview.startDate, language]);
 
   const goalSummary = useMemo(() => {
-    return formatGoalSummary(draft.goal, copy);
+    return formatGoalSummary(draft.goal, copy, language === "ru" ? "ru-RU" : "en-US");
   }, [draft.goal, copy]);
-
-  const totalDistance = useMemo(
-    () => preview.weeks.reduce((sum, week) => sum + week.plannedDistance, 0),
-    [preview.weeks],
-  );
 
   const buildCreatePayload = () => {
     const weekOverrideMap = new Map<
@@ -115,6 +180,7 @@ export function PlanPreviewScreen({
       weekFor(removal.weekNumber).removedWorkoutIds.push(`${removal.weekNumber}-${removal.orderInWeek}`);
     }
     for (const addition of additions) {
+      // Additions are sent as newWorkouts only; their local ids never reach the backend.
       weekFor(addition.weekNumber).newWorkouts.push({
         type: addition.type,
         dayOfWeek: addition.dayOfWeek,
@@ -156,72 +222,81 @@ export function PlanPreviewScreen({
 
   const applyEdit = (
     target: EditingTarget & { workout: ManualPlanPreviewWorkout },
-    changes: {
-      type?: string;
-      dayOfWeek?: number;
-      distanceKm?: number;
-      durationMinutes?: number;
-    },
+    changes: WorkoutChanges,
   ) => {
     // Client-side mirror of the backend engine rules. The server re-validates
     // everything on creation, so a stale edit cannot produce an invalid plan.
-    if (
-      (changes.distanceKm !== undefined && changes.distanceKm <= 0) ||
-      (changes.distanceKm !== undefined && changes.distanceKm > 100)
-    ) {
-      setEditError("invalidDistance");
-      return;
-    }
-    if (
-      (changes.durationMinutes !== undefined && changes.durationMinutes < 10) ||
-      (changes.durationMinutes !== undefined && changes.durationMinutes > 300)
-    ) {
-      setEditError("invalidDuration");
+    const error = validateWorkoutChanges(changes);
+    if (error) {
+      setEditError(error);
       return;
     }
     setEditError(null);
+
+    const workoutId = target.workout.id;
+    if (isAdditionId(workoutId)) {
+      const localId = workoutId.slice(NEW_WORKOUT_ID_PREFIX.length);
+      setAdditions((current) =>
+        current.map((addition) =>
+          addition.localId === localId
+            ? {
+                ...addition,
+                type: changes.type ?? addition.type,
+                dayOfWeek: changes.dayOfWeek ?? addition.dayOfWeek,
+                distanceKm: changes.distanceKm ?? addition.distanceKm,
+                durationMinutes: changes.durationMinutes ?? addition.durationMinutes,
+              }
+            : addition,
+        ),
+      );
+      closeEditor();
+      return;
+    }
+
     setOverrides((current) => ({
       ...current,
-      [target.workout.id]: {
-        ...current[target.workout.id],
-        id: target.workout.id,
+      [workoutId]: {
+        ...current[workoutId],
+        id: workoutId,
         ...changes,
       },
     }));
-    setEditing(null);
+    closeEditor();
   };
 
   const removeWorkout = (workout: ManualPlanPreviewWorkout) => {
-    setRemovals((current) => {
-      const key = `${workout.weekNumber}-${workout.orderInWeek}`;
-      return current.some((item) => item.weekNumber === workout.weekNumber && item.orderInWeek === workout.orderInWeek)
+    if (isAdditionId(workout.id)) {
+      const localId = workout.id.slice(NEW_WORKOUT_ID_PREFIX.length);
+      setAdditions((current) => current.filter((addition) => addition.localId !== localId));
+      closeEditor();
+      return;
+    }
+
+    setRemovals((current) =>
+      current.some(
+        (item) => item.weekNumber === workout.weekNumber && item.orderInWeek === workout.orderInWeek,
+      )
         ? current
-        : [...current, { weekNumber: workout.weekNumber, orderInWeek: workout.orderInWeek }];
-    });
+        : [...current, { weekNumber: workout.weekNumber, orderInWeek: workout.orderInWeek }],
+    );
     setOverrides((current) => {
       const next = { ...current };
       delete next[workout.id];
       return next;
     });
-    setEditing(null);
+    closeEditor();
   };
 
-  const addWorkout = (
-    input: { type: string; dayOfWeek: number; distanceKm?: number; durationMinutes: number; weekNumber: number },
-  ): boolean => {
-    if (
-      input.distanceKm !== undefined &&
-      (input.distanceKm <= 0 || input.distanceKm > 100)
-    ) {
-      setEditError("invalidDistance");
-      return false;
-    }
-    if (input.durationMinutes < 10 || input.durationMinutes > 300) {
-      setEditError("invalidDuration");
+  const addWorkout = (input: Omit<PlanAddition, "localId">): boolean => {
+    const error = validateWorkoutChanges(input);
+    if (error) {
+      setEditError(error);
       return false;
     }
     setEditError(null);
-    setAdditions((current) => [...current, input]);
+    additionSeq.current += 1;
+    const localId = String(additionSeq.current);
+    setAdditions((current) => [...current, { ...input, localId }]);
     return true;
   };
 
@@ -243,7 +318,7 @@ export function PlanPreviewScreen({
   additions.forEach((addition, index) => {
     const list = additionsByWeek.get(addition.weekNumber) ?? [];
     list.push({
-      id: `new-${addition.weekNumber}-${index}`,
+      id: `${NEW_WORKOUT_ID_PREFIX}${addition.localId}`,
       type: addition.type,
       phase: "",
       weekNumber: addition.weekNumber,
@@ -258,343 +333,212 @@ export function PlanPreviewScreen({
     additionsByWeek.set(addition.weekNumber, list);
   });
 
-  const editingWorkout = editing?.workout
-    ? resolvedWorkouts.get(editing.workout.id) ?? editing.workout
-    : null;
+  // Reflects the user's edits, removals and additions, not the raw preview.
+  const totalDistance =
+    Array.from(resolvedWorkouts.values()).reduce((sum, workout) => sum + workout.distanceKm, 0) +
+    Array.from(additionsByWeek.values())
+      .flat()
+      .reduce((sum, workout) => sum + workout.distanceKm, 0);
 
-  const renderWorkout = (workout: ManualPlanPreviewWorkout) => {
+  const renderWorkout = (workout: ManualPlanPreviewWorkout, index: number) => {
     const typeLabel =
       creationCopy.workoutTypes[workout.type as keyof typeof creationCopy.workoutTypes] ??
       workout.type;
-    const isEdited = overrides[workout.id] !== undefined;
+    const isEdited = overrides[workout.id] !== undefined || isAdditionId(workout.id);
+    const distanceLabel = `${roundKm(workout.distanceKm)} ${creationCopy.units.km}`;
+    const meta = [distanceLabel, `${workout.durationMinutes} ${creationCopy.units.min}`];
+    if (isEdited) meta.push(previewCopy.edited);
 
     return (
       <Pressable
         key={workout.id}
         accessibilityRole="button"
-        accessibilityLabel={`${typeLabel} ${Math.round(workout.distanceKm)} km`}
+        accessibilityLabel={`${shortDayNames[workout.dayOfWeek]}, ${typeLabel}, ${meta.join(", ")}`}
         onPress={() => {
           setEditError(null);
-          setEditing({
+          openEditor({
             weekNumber: workout.weekNumber,
-            workout: resolvedWorkouts.get(workout.id) ?? workout,
+            workout: isAdditionId(workout.id) ? workout : resolvedWorkouts.get(workout.id) ?? workout,
           });
         }}
         style={({ pressed }) => [
           styles.workoutRow,
-          {
-            backgroundColor: theme.color.surface,
-            borderColor: theme.color.border,
-          },
-          pressed && styles.pressed,
+          index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.color.border },
+          pressed && styles.rowPressed,
         ]}
       >
-        <View style={[styles.workoutDot, { backgroundColor: theme.color.primary }]} />
+        <Text style={[styles.workoutDay, { color: theme.color.mutedForeground, fontFamily: medium }]}>
+          {shortDayNames[workout.dayOfWeek]}
+        </Text>
         <View style={styles.workoutTextGroup}>
-          <Text
-            style={[
-              styles.workoutType,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.semibold,
-              },
-            ]}
-          >
+          <Text style={[styles.workoutType, { color: theme.color.foreground, fontFamily: medium }]}>
             {typeLabel}
-            {isEdited ? " ✎" : ""}
           </Text>
-          <Text
-            style={[
-              styles.workoutMeta,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {shortDayNames[workout.dayOfWeek]} · {Math.round(workout.distanceKm)} km ·{" "}
-            {workout.durationMinutes} min
+          <Text style={[styles.workoutMeta, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+            {meta.join(" · ")}
           </Text>
         </View>
-        <Pencil color={theme.color.mutedForeground} size={16} />
+        <ChevronRight color={theme.color.mutedForeground} size={18} />
       </Pressable>
     );
   };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.color.background }]}>
-      {/* Header */}
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={planCopy.creation.common.back}
+          accessibilityLabel={creationCopy.common.back}
           hitSlop={8}
           onPress={onEditSettings}
-          style={styles.backButton}
+          style={({ pressed }) => [styles.headerButton, pressed && styles.rowPressed]}
         >
-          <Text
-            style={[
-              styles.backButtonText,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.semibold,
-              },
-            ]}
-          >
-            ‹
-          </Text>
+          <ChevronLeft color={theme.color.foreground} size={24} />
         </Pressable>
-
-        <Text
-          style={[
-            styles.stepTitle,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {creationCopy.preview.title}
+        <Text style={[styles.headerTitle, { color: theme.color.foreground, fontFamily: semibold }]}>
+          {previewCopy.title}
         </Text>
-
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={creationCopy.common.close}
           hitSlop={8}
           onPress={onDiscard}
-          style={styles.closeButton}
+          style={({ pressed }) => [styles.headerButton, pressed && styles.rowPressed]}
         >
           <X color={theme.color.mutedForeground} size={20} />
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Goal summary */}
-        <View
-          style={[
-            styles.goalCard,
-            {
-              backgroundColor: theme.color.surfaceElevated,
-              borderColor: theme.color.border,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.goalTitle,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.extrabold,
-              },
-            ]}
-          >
+        <Text style={[styles.pageHint, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+          {previewCopy.hint}
+        </Text>
+
+        {/* Plan summary */}
+        <Card size="sm" theme={theme} themeMode={themeMode} style={styles.summaryCard}>
+          <Text style={[styles.summaryTitle, { color: theme.color.foreground, fontFamily: semibold }]}>
             {goalSummary}
           </Text>
-          <Text
-            style={[
-              styles.goalMeta,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-            ]}
-          >
-            {preview.totalWeeks} {creationCopy.preview.weeksUnit} ·{" "}
-            {creationCopy.preview.runsPerWeek.replace("{{count}}", String(preview.trainingFrequency))}{" "}
-            · {creationCopy.preview.startsOn.replace("{{date}}", formattedStartDate)}
+          <View style={styles.summaryStats}>
+            {[
+              { value: String(preview.totalWeeks), label: previewCopy.statWeeks },
+              { value: String(preview.trainingFrequency), label: previewCopy.statRuns },
+              { value: `${Math.round(totalDistance)}`, label: previewCopy.statDistance },
+            ].map((stat) => (
+              <View key={stat.label} style={styles.stat}>
+                <Text style={[styles.statValue, { color: theme.color.foreground, fontFamily: semibold }]}>
+                  {stat.value}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+                  {stat.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <Text style={[styles.summaryMeta, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+            {previewCopy.startsOn.replace("{{date}}", formattedStartDate)}
           </Text>
-          <Text
-            style={[
-              styles.goalMeta,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-            ]}
-          >
-            {creationCopy.preview.totalDistance.replace(
-              "{{distance}}",
-              String(Math.round(totalDistance)),
-            )}
-          </Text>
-        </View>
+        </Card>
 
         {/* Weeks */}
         {preview.weeks.map((week) => {
-          const phaseLabel = planCopy.phases[week.phase as keyof typeof planCopy.phases] ?? week.phase;
+          const phaseKey = String(week.phase).toUpperCase() as keyof typeof previewCopy.phases;
+          const phaseLabel = previewCopy.phases[phaseKey] ?? week.phase;
+          // Backend titles are English placeholders; the title is derived from the phase here.
+          const weekTitle = previewCopy.phaseTitles[phaseKey] ?? week.title;
           const baseWeekWorkouts = week.workouts
             .map((workout) => resolvedWorkouts.get(workout.id))
-            .filter((workout): workout is ManualPlanPreviewWorkout => workout !== undefined)
+            .filter((workout): workout is ManualPlanPreviewWorkout => workout !== undefined);
           const weekWorkouts = [...baseWeekWorkouts, ...(additionsByWeek.get(week.weekNumber) ?? [])].sort(
             (left, right) => left.dayOfWeek - right.dayOfWeek,
           );
           const weekDistance = weekWorkouts.reduce((sum, workout) => sum + workout.distanceKm, 0);
+          const occupiedDays = new Set(weekWorkouts.map((workout) => workout.dayOfWeek));
+          const freeDay =
+            draft.schedule.trainingDays.find((day) => !occupiedDays.has(day)) ??
+            [0, 1, 2, 3, 4, 5, 6].find((day) => !occupiedDays.has(day)) ??
+            draft.schedule.trainingDays[0] ??
+            0;
 
           return (
-            <View
-              key={week.weekNumber}
-              style={[
-                styles.weekCard,
-                {
-                  backgroundColor: theme.color.surfaceElevated,
-                  borderColor: theme.color.border,
-                },
-              ]}
-            >
+            <Card key={week.weekNumber} size="sm" theme={theme} themeMode={themeMode} style={styles.weekCard}>
               <View style={styles.weekHeader}>
-                <View style={styles.weekTitleGroup}>
-                  <Text
-                    style={[
-                      styles.weekLabel,
-                      {
-                        color: theme.color.mutedForeground,
-                        fontFamily: theme.typography.fontFamily.sans.bold,
-                      },
-                    ]}
-                  >
-                    {planCopy.timeline.weekLabel.replace("{{number}}", String(week.weekNumber))}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.weekTitle,
-                      {
-                        color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.extrabold,
-                      },
-                    ]}
-                  >
-                    {week.title}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.phaseBadge,
-                    {
-                      backgroundColor: theme.color.surface,
-                      borderColor: theme.color.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.phaseBadgeText,
-                      {
-                        color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.bold,
-                      },
-                    ]}
-                  >
-                    {phaseLabel}
-                  </Text>
-                </View>
+                <Text style={[styles.weekLabel, { color: theme.color.mutedForeground, fontFamily: medium }]}>
+                  {previewCopy.weekLabel.replace("{{number}}", String(week.weekNumber))} · {phaseLabel}
+                </Text>
+                <Text style={[styles.weekTitle, { color: theme.color.foreground, fontFamily: semibold }]}>
+                  {weekTitle}
+                </Text>
+                <Text style={[styles.weekMeta, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+                  {previewCopy.weekSummary
+                    .replace("{{workouts}}", String(weekWorkouts.length))
+                    .replace("{{distance}}", String(Math.round(weekDistance)))}
+                </Text>
               </View>
 
-              <Text
-                style={[
-                  styles.weekMeta,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {creationCopy.preview.weekSummary
-                  .replace("{{workouts}}", String(weekWorkouts.length))
-                  .replace("{{distance}}", String(Math.round(weekDistance)))}
-              </Text>
+              <View style={[styles.workoutList, { borderTopColor: theme.color.border }]}>
+                {weekWorkouts.map(renderWorkout)}
+              </View>
 
-              <View style={styles.workoutList}>{weekWorkouts.map(renderWorkout)}</View>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={creationCopy.workoutEditor.addButton}
+              <SheetButton
+                label={creationCopy.workoutEditor.addButton}
+                variant="secondary"
                 onPress={() => {
                   setEditError(null);
-                  setEditing({ weekNumber: week.weekNumber, workout: null });
+                  openEditor({ weekNumber: week.weekNumber, workout: null, defaultDayOfWeek: freeDay });
                 }}
-                style={({ pressed }) => [
-                  styles.addWorkoutButton,
-                  {
-                    borderColor: theme.color.border,
-                  },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.addWorkoutText,
-                    {
-                      color: theme.color.primary,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  + {creationCopy.workoutEditor.addButton}
-                  </Text>
-              </Pressable>
-            </View>
+                theme={theme}
+                themeMode={themeMode}
+                style={styles.addButton}
+              />
+            </Card>
           );
         })}
       </ScrollView>
 
-      {/* Footer */}
-      <View style={[styles.footer, { borderTopColor: theme.color.border }]}>
+      {/* Footer: floating button pair without a bar, like the dialog actions */}
+      <View style={styles.footer} pointerEvents="box-none">
         {showCreatedError ? (
           <View style={styles.inlineErrorRow}>
             <AlertCircle color="#dc2626" size={14} />
-            <Text
-              style={[
-                styles.inlineErrorText,
-                { fontFamily: theme.typography.fontFamily.sans.regular },
-              ]}
-            >
+            <Text style={[styles.inlineErrorText, { fontFamily: regular }]}>
               {creationCopy.errors.creationFailed}
             </Text>
             <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void handleCreate()}>
-              <Text
-                style={[
-                  styles.inlineErrorRetry,
-                  { fontFamily: theme.typography.fontFamily.sans.bold },
-                ]}
-              >
+              <Text style={[styles.inlineErrorRetry, { fontFamily: semibold }]}>
                 {creationCopy.errors.tryAgain}
               </Text>
             </Pressable>
           </View>
         ) : null}
-
-        <Pressable
-          accessibilityRole="button"
-          disabled={createMutation.isPending}
-          onPress={() => void handleCreate()}
-          style={({ pressed }) => [
-            styles.createButton,
-            { backgroundColor: theme.color.primary },
-            pressed && styles.pressed,
-          ]}
-        >
-          {createMutation.isPending ? (
-            <ActivityIndicator color={theme.color.primaryForeground} />
-          ) : (
-            <Text
-              style={[
-                styles.createButtonText,
-                {
-                  color: theme.color.primaryForeground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            >
-              {creationCopy.preview.createButton}
-            </Text>
-          )}
-        </Pressable>
+        <View style={styles.footerButtons}>
+          <SheetButton
+            label={creationCopy.common.cancel}
+            onPress={onDiscard}
+            variant="secondary"
+            disabled={createMutation.isPending}
+            theme={theme}
+            themeMode={themeMode}
+          />
+          <SheetButton
+            label={previewCopy.createButton}
+            onPress={() => void handleCreate()}
+            pending={createMutation.isPending}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </View>
       </View>
 
       {/* Workout edit sheet */}
       <BottomSheet
-        visible={editing !== null}
-        onClose={() => setEditing(null)}
+        visible={editorOpen}
+        animatedHide
+        onClose={() => {
+          // Called after the slide-down finished (or after a drag/backdrop close).
+          setEditorOpen(false);
+          setEditing(null);
+        }}
         theme={theme}
         themeMode={themeMode}
         title={creationCopy.workoutEditor.title}
@@ -607,6 +551,7 @@ export function PlanPreviewScreen({
             theme={theme}
             copy={copy}
             language={language}
+            themeMode={themeMode}
             error={editError}
             onSave={(changes) => {
               const current = editing;
@@ -617,30 +562,32 @@ export function PlanPreviewScreen({
               const current = editing;
               if (current?.workout) removeWorkout(current.workout);
             }}
-            onClose={() => setEditing(null)}
+            onClose={closeEditor}
           />
         ) : null}
 
         {editing && !editing.workout ? (
           <WorkoutEditForm
             workout={null}
-            defaultWeekNumber={editing.weekNumber}
+            defaultDayOfWeek={editing.defaultDayOfWeek}
             theme={theme}
             copy={copy}
             language={language}
+            themeMode={themeMode}
             error={editError}
             onSave={(changes) => {
               if (!editing) return;
-              addWorkout({
+              const added = addWorkout({
                 type: changes.type ?? "easy",
-                dayOfWeek: changes.dayOfWeek ?? 0,
+                dayOfWeek: changes.dayOfWeek ?? editing.defaultDayOfWeek ?? 0,
                 distanceKm: changes.distanceKm,
                 durationMinutes: changes.durationMinutes ?? 30,
                 weekNumber: editing.weekNumber,
               });
-              setEditing(null);
+              // Keep the sheet open on validation errors so the inline error is visible.
+              if (added) closeEditor();
             }}
-            onClose={() => setEditing(null)}
+            onClose={closeEditor}
           />
         ) : null}
       </BottomSheet>
@@ -650,24 +597,28 @@ export function PlanPreviewScreen({
 
 type WorkoutEditFormProps = {
   workout: ManualPlanPreviewWorkout | null;
-  defaultWeekNumber?: number;
+  defaultDayOfWeek?: number;
   theme: ThemeTokens;
+  themeMode: ThemeMode;
   copy: MainCopy;
   language: AppLanguage;
   error: string | null;
-  onSave: (changes: {
-    type?: string;
-    dayOfWeek?: number;
-    distanceKm?: number;
-    durationMinutes?: number;
-  }) => void;
+  onSave: (changes: WorkoutChanges) => void;
   onRemove?: () => void;
   onClose: () => void;
 };
 
+/**
+ * Workout editor in the creation-flow style: type slider, weekday row and
+ * rulers for distance and duration. Actions mirror the creation steps:
+ * back icon (closes) | Delete | Save (only once something changed).
+ * Only changed fields are sent as overrides; a new workout sends everything.
+ */
 function WorkoutEditForm({
   workout,
+  defaultDayOfWeek,
   theme,
+  themeMode,
   copy,
   language,
   error,
@@ -676,198 +627,237 @@ function WorkoutEditForm({
   onClose,
 }: WorkoutEditFormProps) {
   const creationCopy = copy.plan.creation;
+  const editorCopy = creationCopy.workoutEditor;
   const shortDayNames = language === "ru" ? SHORT_DAY_NAMES_RU : SHORT_DAY_NAMES_EN;
 
-  const [type, setType] = useState(workout?.type ?? "easy");
-  const [dayOfWeek, setDayOfWeek] = useState(workout?.dayOfWeek ?? 0);
-  const [distanceText, setDistanceText] = useState(
-    workout ? String(Math.round(workout.distanceKm)) : "5",
-  );
-  const [durationText, setDurationText] = useState(workout ? String(workout.durationMinutes) : "30");
+  const initial = {
+    type: workout?.type ?? "easy",
+    dayOfWeek: workout?.dayOfWeek ?? defaultDayOfWeek ?? 0,
+    distanceKm: workout ? roundKm(workout.distanceKm) : 5,
+    durationMinutes: workout?.durationMinutes ?? 30,
+  };
+  const [type, setType] = useState(initial.type);
+  const [dayOfWeek, setDayOfWeek] = useState(initial.dayOfWeek);
+  const [distanceKm, setDistanceKm] = useState(initial.distanceKm);
+  const [durationMinutes, setDurationMinutes] = useState(initial.durationMinutes);
 
-  const distance = Number(distanceText);
-  const duration = Number(durationText);
+  const changes: WorkoutChanges = workout
+    ? {
+        type: type !== initial.type ? type : undefined,
+        dayOfWeek: dayOfWeek !== initial.dayOfWeek ? dayOfWeek : undefined,
+        distanceKm: Math.abs(distanceKm - initial.distanceKm) > 1e-6 ? distanceKm : undefined,
+        durationMinutes: durationMinutes !== initial.durationMinutes ? durationMinutes : undefined,
+      }
+    : { type, dayOfWeek, distanceKm, durationMinutes };
+  const hasChanges = !workout || Object.values(changes).some((value) => value !== undefined);
 
   return (
     <>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.editGroup}>
-          <Text
-            style={[
-              styles.editLabel,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
-              },
-            ]}
+      {/* Same structure as WorkoutGoalSheet: plain ScrollView sized by content
+          (the sheet caps it at 85%), actions pinned to the sheet bottom. */}
+      <ScrollView
+        style={styles.editScroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.editContent}
+      >
+        {/* Title only: the slider below runs edge to edge, outside the padded block. */}
+        <SectionBlock title={editorCopy.typeLabel} theme={theme}>
+          {null}
+        </SectionBlock>
+        {/* Type slider: one horizontal row edge to edge, like the presets in the workout sheet. */}
+        <SheetBlock theme={theme} edgeToEdge>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.typeSlider}
+            style={styles.typeSliderView}
           >
-            {creationCopy.workoutEditor.typeLabel.toUpperCase()}
-          </Text>
-          <View style={styles.chipWrap}>
             {PLAN_WORKOUT_TYPE_KEYS.map((typeKey) => (
               <OptionChip
                 key={typeKey}
-                label={
-                  creationCopy.workoutTypes[typeKey as keyof typeof creationCopy.workoutTypes] ??
-                  typeKey
-                }
+                label={creationCopy.workoutTypes[typeKey as keyof typeof creationCopy.workoutTypes] ?? typeKey}
                 selected={type === typeKey}
                 theme={theme}
+                themeMode={themeMode}
                 onPress={() => setType(typeKey)}
               />
             ))}
-          </View>
-        </View>
+          </ScrollView>
+        </SheetBlock>
 
-        <View style={styles.editGroup}>
-          <Text
-            style={[
-              styles.editLabel,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
-              },
-            ]}
-          >
-            {creationCopy.workoutEditor.dayLabel.toUpperCase()}
-          </Text>
-          <View style={styles.chipWrap}>
-            {shortDayNames.map((dayName, dayIndex) => (
-              <OptionChip
-                key={dayIndex}
-                label={dayName}
-                selected={dayOfWeek === dayIndex}
-                theme={theme}
-                onPress={() => setDayOfWeek(dayIndex)}
-              />
-            ))}
-          </View>
-        </View>
+        <SectionBlock title={editorCopy.dayLabel} theme={theme}>
+          <DayPicker
+            selectedDays={[dayOfWeek]}
+            shortDayNames={shortDayNames}
+            onToggleDay={setDayOfWeek}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </SectionBlock>
 
-        <View style={styles.editRow}>
-          <View style={styles.editField}>
-            <Text
-              style={[
-                styles.editLabel,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
-                },
-              ]}
-            >
-              {creationCopy.workoutEditor.distanceLabel.toUpperCase()}
-            </Text>
-            <TextInput
-              accessibilityLabel={creationCopy.workoutEditor.distanceLabel}
-              keyboardType="decimal-pad"
-              value={distanceText}
-              onChangeText={setDistanceText}
-              style={[
-                styles.editInput,
-                {
-                  backgroundColor: theme.color.surface,
-                  borderColor: theme.color.border,
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            />
-          </View>
-          <View style={styles.editField}>
-            <Text
-              style={[
-                styles.editLabel,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
-                },
-              ]}
-            >
-              {creationCopy.workoutEditor.durationLabel.toUpperCase()}
-            </Text>
-            <TextInput
-              accessibilityLabel={creationCopy.workoutEditor.durationLabel}
-              keyboardType="number-pad"
-              value={durationText}
-              onChangeText={setDurationText}
-              style={[
-                styles.editInput,
-                {
-                  backgroundColor: theme.color.surface,
-                  borderColor: theme.color.border,
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <SectionBlock title={editorCopy.distanceLabel} theme={theme}>
+          <Ruler
+            value={distanceKm}
+            onChange={setDistanceKm}
+            min={0.5}
+            max={100}
+            step={0.1}
+            majorEvery={1}
+            labelEvery={1}
+            tickSpacing={10}
+            unit={creationCopy.units.km}
+            accessibilityLabel={editorCopy.distanceLabel}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </SectionBlock>
+
+        <SectionBlock title={editorCopy.durationLabel} theme={theme}>
+          <Ruler
+            value={durationMinutes}
+            onChange={setDurationMinutes}
+            min={10}
+            max={300}
+            step={5}
+            majorEvery={15}
+            labelEvery={30}
+            unit={creationCopy.units.min}
+            accessibilityLabel={editorCopy.durationLabel}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </SectionBlock>
 
         {error ? (
-          <FieldError message={creationCopy.errors[error as keyof typeof creationCopy.errors] ?? error} theme={theme} />
+          <SheetBlock theme={theme}>
+            <FieldError
+              message={creationCopy.errors[error as keyof typeof creationCopy.errors] ?? error}
+              theme={theme}
+            />
+          </SheetBlock>
         ) : null}
       </ScrollView>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() =>
-          onSave({
-            type: !workout || type !== workout.type ? type : undefined,
-            dayOfWeek: !workout || dayOfWeek !== workout.dayOfWeek ? dayOfWeek : undefined,
-            distanceKm:
-              !workout || (!Number.isNaN(distance) && distance !== Math.round(workout.distanceKm))
-                ? distance
-                : undefined,
-            durationMinutes:
-              !workout || (!Number.isNaN(duration) && duration !== workout.durationMinutes)
-                ? duration
-                : undefined,
-          })
-        }
-        style={({ pressed }) => [
-          styles.sheetSaveButton,
-          { backgroundColor: theme.color.primary },
-          pressed && styles.pressed,
-        ]}
-      >
-        <Text
-          style={[
-            styles.sheetSaveButtonText,
-            {
-              color: theme.color.primaryForeground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
-            },
-          ]}
-        >
-          {workout ? creationCopy.workoutEditor.save : creationCopy.workoutEditor.addButton}
-        </Text>
-      </Pressable>
-
-      {workout && onRemove ? (
+      {/* Actions: same layout and offsets as the creation-step sheets. */}
+      <SheetBlock theme={theme}>
+        <View style={styles.editActions}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={creationCopy.workoutEditor.removeButton}
-          onPress={onRemove}
+          accessibilityLabel={creationCopy.common.back}
+          onPress={onClose}
           style={({ pressed }) => [
-            styles.sheetRemoveButton,
-            { borderColor: "#dc2626" },
-            pressed && styles.pressed,
+            styles.editIconButton,
+            { backgroundColor: theme.color.controlSecondary },
+            pressed && styles.rowPressed,
           ]}
         >
-          <Text
+          <ChevronLeft color={theme.color.foreground} size={22} />
+        </Pressable>
+        {workout && onRemove ? (
+          <SplitActions
+            showSecond={hasChanges}
+            first={{ label: editorCopy.removeButton, onPress: onRemove }}
+            second={{ label: editorCopy.save, onPress: () => onSave(changes) }}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        ) : (
+          <SheetButton
+            label={editorCopy.addShort}
+            onPress={() => onSave(changes)}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        )}
+        </View>
+      </SheetBlock>
+    </>
+  );
+}
+
+const SPLIT_GAP = 12;
+/** Slightly under-damped so the new button "pours out" with a small overshoot. */
+const SPLIT_SPRING = { damping: 14, stiffness: 170, mass: 0.9 } as const;
+
+/**
+ * Two actions that grow out of one: the destructive button first fills the
+ * row; when `showSecond` turns on, a drop of the same colour buds off its
+ * right edge, swells to half the row while changing to the primary colour,
+ * and its label fades in. Turning it off pours it back.
+ */
+function SplitActions({
+  showSecond,
+  first,
+  second,
+  theme,
+  themeMode,
+}: {
+  showSecond: boolean;
+  first: { label: string; onPress: () => void };
+  second: { label: string; onPress: () => void };
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+}) {
+  const progress = useSharedValue(showSecond ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withSpring(showSecond ? 1 : 0, SPLIT_SPRING);
+  }, [progress, showSecond]);
+
+  const secondSlotStyle = useAnimatedStyle(() => {
+    const p = Math.max(0, progress.value);
+    return {
+      flexGrow: p,
+      marginLeft: Math.min(1, p) * SPLIT_GAP,
+      // a round droplet first, then a pill
+      transform: [{ scaleY: interpolate(p, [0, 0.25, 1], [0.55, 0.9, 1], Extrapolation.CLAMP) }],
+      backgroundColor: interpolateColor(
+        Math.min(1, p),
+        [0, 0.55, 1],
+        [theme.color.dangerSurface, theme.color.dangerSurface, theme.color.primary],
+      ),
+    };
+  });
+
+  const secondLabelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0.55, 1], [0, 1], Extrapolation.CLAMP),
+    transform: [{ scale: interpolate(progress.value, [0.55, 1], [0.9, 1], Extrapolation.CLAMP) }],
+  }));
+
+  return (
+    <View style={styles.splitRow}>
+      <SheetButton
+        label={first.label}
+        onPress={first.onPress}
+        variant="destructive"
+        theme={theme}
+        themeMode={themeMode}
+        style={styles.splitFirst}
+      />
+      <Animated.View
+        style={[styles.splitSecond, secondSlotStyle]}
+        pointerEvents={showSecond ? "auto" : "none"}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityElementsHidden={!showSecond}
+          importantForAccessibility={showSecond ? "auto" : "no-hide-descendants"}
+          onPress={second.onPress}
+          style={({ pressed }) => [styles.splitPressable, pressed && styles.rowPressed]}
+        >
+          <Animated.Text
+            numberOfLines={1}
             style={[
-              styles.sheetRemoveButtonText,
-              {
-                color: "#dc2626",
-                fontFamily: theme.typography.fontFamily.sans.semibold,
-              },
+              styles.splitLabel,
+              { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.semibold },
+              secondLabelStyle,
             ]}
           >
-            {creationCopy.workoutEditor.removeButton}
-          </Text>
+            {second.label}
+          </Animated.Text>
         </Pressable>
-      ) : null}
-    </>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -890,122 +880,122 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 8,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: "flex-start",
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
     justifyContent: "center",
   },
-  backButtonText: {
-    fontSize: 28,
-    lineHeight: 34,
-  },
-  stepTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-    textAlign: "center",
+  headerTitle: {
     flex: 1,
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    alignItems: "flex-end",
-    justifyContent: "center",
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: "center",
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 32,
-    gap: 14,
+    paddingTop: 8,
+    // room for the floating footer buttons
+    paddingBottom: 120,
+    gap: 16,
   },
-  goalCard: {
-    padding: 18,
-    borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 6,
+  pageHint: {
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: "center",
+    paddingHorizontal: 8,
+    marginBottom: 8,
   },
-  goalTitle: {
-    fontSize: 20,
-    lineHeight: 26,
-    textTransform: "capitalize",
+  summaryCard: {
+    alignItems: "center",
+    borderRadius: 32,
+    padding: 20,
   },
-  goalMeta: {
-    fontSize: 13,
-    lineHeight: 18,
+  summaryTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  summaryStats: {
+    flexDirection: "row",
+    alignSelf: "stretch",
+    justifyContent: "space-around",
+  },
+  stat: {
+    alignItems: "center",
+    gap: 2,
+  },
+  statValue: {
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  statLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  summaryMeta: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   weekCard: {
-    padding: 16,
-    borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 10,
+    gap: 8,
+    borderRadius: 32,
+    padding: 20,
   },
   weekHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  weekTitleGroup: {
-    flex: 1,
     gap: 2,
   },
   weekLabel: {
-    fontSize: 10,
-    lineHeight: 14,
-    letterSpacing: 1,
+    fontSize: 12,
+    lineHeight: 16,
   },
   weekTitle: {
-    fontSize: 16,
-    lineHeight: 21,
-  },
-  phaseBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  phaseBadgeText: {
-    fontSize: 10,
-    lineHeight: 14,
-    letterSpacing: 0.6,
+    fontSize: 15,
+    lineHeight: 20,
   },
   weekMeta: {
     fontSize: 12,
     lineHeight: 16,
   },
   workoutList: {
-    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   workoutRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 12,
   },
-  workoutDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  workoutDay: {
+    width: 28,
+    fontSize: 13,
+    lineHeight: 18,
   },
   workoutTextGroup: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   workoutType: {
     fontSize: 14,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   workoutMeta: {
     fontSize: 12,
     lineHeight: 16,
   },
   footer: {
-    paddingHorizontal: 16,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingBottom: 28,
     gap: 10,
+  },
+  footerButtons: {
+    flexDirection: "row",
+    gap: 12,
   },
   inlineErrorRow: {
     flexDirection: "row",
@@ -1023,84 +1013,82 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
-  createButton: {
-    height: 54,
-    borderRadius: 9999,
+  editScroll: {
+    width: "100%",
+  },
+  // Same offsets as the creation-step sheets (header overlay on top, actions at the bottom).
+  editContent: {
+    gap: 28,
+    paddingTop: 72,
+    // room for the pinned action row (same as WorkoutGoalSheet)
+    paddingBottom: 84,
+  },
+  typeSliderView: {
+    width: "100%",
+    maxHeight: 50,
+    marginTop: -16,
+  },
+  typeSlider: {
+    gap: 8,
     alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 20,
   },
-  createButtonText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  editGroup: {
-    gap: 10,
-    marginTop: 8,
-  },
-  editLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    letterSpacing: 0.8,
-  },
-  editRow: {
+  editActions: {
+    // Pinned to the sheet bottom like WorkoutGoalSheet's action row.
     flexDirection: "row",
     gap: 12,
-    marginTop: 8,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
-  editField: {
+  splitRow: {
     flex: 1,
-    gap: 8,
-  },
-  editInput: {
-    height: 48,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 14,
-    fontSize: 15,
-  },
-  chipWrap: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
   },
-  sheetSaveButton: {
+  splitFirst: {
+    flex: 1,
+  },
+  splitSecond: {
+    flexBasis: 0,
+    minWidth: 0,
+    height: 52,
+    borderRadius: 9999,
+    overflow: "hidden",
+  },
+  splitPressable: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  splitLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  editIconButton: {
+    width: 52,
     height: 52,
     borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 12,
   },
-  sheetSaveButtonText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  sheetRemoveButton: {
-    height: 48,
-    borderRadius: 9999,
-    alignItems: "center",
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-    marginTop: 10,
+    gap: 8,
   },
-  sheetRemoveButtonText: {
-    fontSize: 15,
-    lineHeight: 20,
+  addButton: {
+    flex: 0,
+    alignSelf: "stretch",
+    marginTop: 4,
   },
-  addWorkoutButton: {
-    minHeight: 44,
-    borderRadius: 9999,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderStyle: "dashed",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
+  rowPressed: {
+    opacity: 0.6,
   },
-  addWorkoutText: {
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
-  },
+
 });

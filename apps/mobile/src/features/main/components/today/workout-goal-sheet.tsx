@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Stepper, Scrubber } from "@workspace/ui-native";
+import { Ruler } from "@workspace/ui-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import {
@@ -158,29 +158,9 @@ export function WorkoutGoalSheet({
           </SheetBlock>
         ) : null}
 
-        {/* Display Main Goal Value Input with Universal Metric Controls */}
+        {/* Goal value: − value + with draggable ruler */}
         <SheetBlock theme={theme}>
-          <View style={styles.valueDisplayArea}>
-            <Stepper
-              value={mode === "distance" ? parseFloat(distanceVal) || 1 : parseInt(durationVal, 10) || 10}
-              onChange={(val) => {
-                if (mode === "distance") {
-                  setDistanceVal(val.toString());
-                } else {
-                  setDurationVal(val.toString());
-                }
-              }}
-              min={mode === "distance" ? 0.5 : 5}
-              max={mode === "distance" ? 100 : 300}
-              step={mode === "distance" ? 0.5 : 5}
-              unit={mode === "distance" ? goalSheetCopy.distanceUnit || "км" : goalSheetCopy.durationUnit || "мин"}
-              theme={theme}
-            />
-          </View>
-        </SheetBlock>
-
-        <SheetBlock theme={theme}>
-          <Scrubber
+          <Ruler
             value={mode === "distance" ? parseFloat(distanceVal) || 1 : parseInt(durationVal, 10) || 10}
             onChange={(val) => {
               if (mode === "distance") {
@@ -190,10 +170,14 @@ export function WorkoutGoalSheet({
               }
             }}
             min={mode === "distance" ? 0.5 : 5}
-            max={mode === "distance" ? 50 : 180}
-            step={mode === "distance" ? 1 : 5}
+            max={mode === "distance" ? 1000 : 1440}
+            step={mode === "distance" ? 0.5 : 1}
+            majorEvery={mode === "distance" ? 1 : 5}
+            labelEvery={mode === "distance" ? 1 : 10}
             unit={mode === "distance" ? goalSheetCopy.distanceUnit || "км" : goalSheetCopy.durationUnit || "мин"}
+            accessibilityLabel={mode === "distance" ? goalSheetCopy.tabs?.distance : goalSheetCopy.tabs?.duration}
             theme={theme}
+            themeMode={themeMode}
           />
         </SheetBlock>
 
@@ -226,9 +210,7 @@ export function WorkoutGoalSheet({
                   {
                     backgroundColor: isSelected
                       ? theme.color.primary
-                      : themeMode === "dark"
-                        ? "#1a1a1e"
-                        : theme.color.surface,
+                      : theme.color.control,
                     borderColor:
                       themeMode === "dark"
                         ? "rgba(255, 255, 255, 0.08)"
@@ -305,13 +287,6 @@ const styles = StyleSheet.create({
     color: "#dc2626",
     fontSize: 13,
     textAlign: "center",
-  },
-  valueDisplayArea: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    gap: 12,
-    marginVertical: 12,
   },
   numberWrapper: {
     position: "relative",

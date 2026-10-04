@@ -16,6 +16,17 @@ export type ThemeTokens = {
     glassBackground: string;
     glassBorder: string;
     glassTint: string;
+    /** Content cards on a page (Today, plan, preview). */
+    card: string;
+    /** Hairline border of `card`. */
+    cardBorder: string;
+    /** Tappable surfaces inside sheets: option cards, chips. */
+    control: string;
+    /** Secondary buttons and icon buttons. */
+    controlSecondary: string;
+    /** Destructive actions (delete): text/icon colour and its soft, opaque background. */
+    danger: string;
+    dangerSurface: string;
   };
   typography: {
     fontFamily: {
@@ -81,6 +92,12 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       glassBackground: "rgba(255, 255, 255, 0.35)",
       glassBorder: "rgba(0, 0, 0, 0.08)",
       glassTint: "rgba(255, 255, 255, 0.1)",
+      card: "#ffffff",
+      cardBorder: "rgba(0, 0, 0, 0.08)",
+      control: "#ffffff",
+      controlSecondary: "#e4e4e7",
+      danger: "#dc2626",
+      dangerSurface: "#fde4e4",
     },
     ...common,
   },
@@ -100,6 +117,12 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       glassBackground: "rgba(255, 255, 255, 0.02)",
       glassBorder: "rgba(255, 255, 255, 0.08)",
       glassTint: "rgba(255, 255, 255, 0.01)",
+      card: "#121214",
+      cardBorder: "rgba(255, 255, 255, 0.08)",
+      control: "#1a1a1e",
+      controlSecondary: "#1a1a1e",
+      danger: "#f87171",
+      dangerSurface: "#3a2023",
     },
     ...common,
   },

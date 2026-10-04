@@ -199,9 +199,7 @@ export function AddWorkoutSheet({
                   {
                     backgroundColor: selected
                       ? theme.color.primary
-                      : themeMode === "dark"
-                        ? "#1a1a1e"
-                        : theme.color.surface,
+                      : theme.color.control,
                     borderColor:
                       themeMode === "dark"
                         ? "rgba(255, 255, 255, 0.08)"

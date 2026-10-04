@@ -13,8 +13,8 @@ export function Card({ style, size = "default", variant = "default", theme, them
   const isDark = themeMode === "dark" || theme?.color.background === "#09090b" || theme?.color.surface === "#111111";
 
   // Deep dark charcoal surface matching the clean design
-  const cardBg = isDark ? "#121214" : (theme?.color.surface || "#ffffff");
-  const borderColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)";
+  const cardBg = theme?.color.card ?? "#ffffff";
+  const borderColor = theme?.color.cardBorder ?? "rgba(0, 0, 0, 0.08)";
 
   return (
     <View

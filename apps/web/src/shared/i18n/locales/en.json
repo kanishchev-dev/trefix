@@ -15,7 +15,9 @@
       "confirm": "Confirm",
       "continue": "Continue",
       "loading": "Loading",
-      "viewDetails": "View details"
+      "viewDetails": "View details",
+      "copied": "Copied to clipboard",
+      "copyFailed": "Could not copy to clipboard"
     },
     "states": {
       "empty": "Nothing here yet",
@@ -106,13 +108,19 @@
       "email": "Email",
       "referralCode": "Referral code",
       "emailVerified": "Email verified",
+      "emailVerifiedAt": "Email verified at",
       "password": "Password",
       "passwordHint": "Minimum 8 characters. Leave empty to send an invite instead",
-      "systemKey": "System key",
       "createdAt": "Created at",
       "updatedAt": "Updated at",
       "passwordChangedAt": "Password changed at",
-      "avatar": "Avatar"
+      "id": "User ID"
+    },
+    "email": {
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "verifiedHint": "The user confirmed this email address",
+      "notVerifiedHint": "The user has not confirmed this email address yet"
     },
     "tabs": {
       "profile": "Profile",
@@ -143,7 +151,8 @@
       "invite": "Send invite",
       "inviteSent": "Invite sent",
       "delete": "Delete user",
-      "openDetail": "Open"
+      "openDetail": "Open",
+      "copyId": "Copy user ID"
     },
     "system": "This is a system user. Some fields are read-only",
     "create": {

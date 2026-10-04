@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Stepper } from "./stepper";
+import { Ruler } from "./ruler";
 
 export type RangeValue = {
   min: number;
@@ -78,7 +78,7 @@ export function Range({
         >
           {minLabel}
         </Text>
-        <Stepper
+        <Ruler
           value={value.min}
           onChange={handleMinChange}
           min={absoluteMin}
@@ -103,7 +103,7 @@ export function Range({
         >
           {maxLabel}
         </Text>
-        <Stepper
+        <Ruler
           value={value.max}
           onChange={handleMaxChange}
           min={value.min}

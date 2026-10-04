@@ -83,7 +83,7 @@ export function GoalTypeCard({
       style={({ pressed }) => [
         styles.typeCard,
         {
-          backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+          backgroundColor: theme.color.control,
         },
         pressed && styles.pressed,
       ]}

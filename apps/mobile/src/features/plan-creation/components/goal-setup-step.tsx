@@ -1,29 +1,35 @@
-import { useCallback, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, type ReactNode } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 import {
   GOAL_CHALLENGE_METRICS,
   GOAL_CHALLENGE_PERIODS,
-  LEGACY_RACE_DISTANCE_METERS,
   type AthleteGoalPayloadInput,
   type AthleteGoalType,
   type GoalChallengeMetric,
   type GoalChallengePeriod,
 } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
+import { Ruler, Segmented } from "@workspace/ui-native";
 
-import { type AppLanguage, type MainCopy } from "../../../locales";
-import { CalendarDatePicker } from "./calendar-date-picker";
+import { type MainCopy } from "../../../locales";
 import {
-  CompoundPaceInputRow,
-  CompoundTimerInputRow,
-  CounterRow,
+  GOAL_FIELD_DEFAULTS as D,
+  RACE_DISTANCE_PRESETS_METERS,
+  fitTimeToRange,
+  raceTimeRange,
+} from "../plan-creation-types";
+import { SheetBlock } from "../../../shared/ui/bottom-sheet";
+import { TargetDatePicker } from "./target-date-picker";
+import {
+  CirclePicker,
+  FieldBlock,
   MultilineInputRow,
+  OptionalField,
+  OptionalSection,
   OptionChip,
-  RaceDistanceSelector,
-  SectionBlock,
-  SegmentedRow,
-  WheelInputRow,
+  PACE_RANGE,
+  TimeRuler,
 } from "./plan-creation-ui";
 
 type Props = {
@@ -31,572 +37,728 @@ type Props = {
   draft: AthleteGoalPayloadInput;
   theme: ThemeTokens;
   copy: MainCopy;
-  language: AppLanguage;
   onChangeDraft: (
     updater: (prev: AthleteGoalPayloadInput) => AthleteGoalPayloadInput,
   ) => void;
-  targetTimeError?: string | null;
 };
 
-const RACE_OPTIONS = [
-  { value: "5k", label: "5K" },
-  { value: "10k", label: "10K" },
-  { value: "half_marathon", label: "21.1 km" },
-  { value: "marathon", label: "42.2 km" },
-] as const;
+type Metrics = Record<string, unknown>;
+
+/** A block plus whether it is a collapsed "+ Add …" link (gets a tight gap). */
+type Item = ReactNode | { node: ReactNode; compact: boolean };
+
+const isTagged = (item: Item): item is { node: ReactNode; compact: boolean } =>
+  typeof item === "object" && item !== null && "compact" in (item as object) && "node" in (item as object);
+
+/**
+ * Vertical stack with two rhythms: `gap` between full blocks and `compactGap`
+ * in front of collapsed links, so a row of "+ Add …" links stays together.
+ */
+function Stack({ items, gap, compactGap }: { items: Item[]; gap: number; compactGap: number }) {
+  const visible = items.filter((item) => item !== null && item !== undefined && item !== false);
+  return (
+    <View>
+      {visible.map((item, index) => {
+        const compact = isTagged(item) && item.compact;
+        const node = isTagged(item) ? item.node : item;
+        return (
+          <View key={index} style={index === 0 ? undefined : { marginTop: compact ? compactGap : gap }}>
+            {node}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+const SECTION_GAP = 56;
+const FIELD_GAP = 44;
+const COMPACT_GAP = 8;
+type Kind = "target" | "current";
+
 
 const RUNS_PER_WEEK_SEGMENTS = [1, 2, 3, 4, 5, 6, 7].map((num) => ({
   label: String(num),
   value: num,
 }));
 
-function formatTimeOnFeet(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0 && mins > 0) return `${hours} ч ${mins} мин`;
-  if (hours > 0) return `${hours} ч`;
-  return `${mins} мин`;
+/** Ruler scale per challenge metric (values in the metric's own unit). */
+const CHALLENGE_SCALES: Record<GoalChallengeMetric, { min: number; max: number; step: number; fallback: number }> = {
+  total_distance: { min: 10, max: 5000, step: 10, fallback: 100 },
+  total_duration: { min: 1, max: 1000, step: 1, fallback: 20 },
+  runs_count: { min: 1, max: 365, step: 1, fallback: 20 },
+  active_days: { min: 1, max: 365, step: 1, fallback: 20 },
+};
+
+/** Default plan target date: a typical 12-week plan from today. */
+function defaultTargetDate() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 12 * 7);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function formatDuration(minutes: number): string {
+type DurationUnits = { h: string; min: string };
+
+/** Formats minutes as "1 ч 30 мин" / "1 h 30 min" using localized units. */
+function formatDuration(minutes: number, units: DurationUnits): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  if (hours > 0 && mins > 0) return `${hours} ч ${mins} мин`;
-  if (hours > 0) return `${hours} ч`;
-  return `${mins} мин`;
+  if (hours > 0 && mins > 0) return `${hours} ${units.h} ${mins} ${units.min}`;
+  if (hours > 0) return `${hours} ${units.h}`;
+  return `${mins} ${units.min}`;
 }
 
-export function GoalSetupStep({
-  goalType,
-  draft,
-  theme,
-  copy,
-  language,
-  onChangeDraft,
-  targetTimeError,
-}: Props) {
+const asNumber = (value: unknown): number | undefined =>
+  typeof value === "number" && Number.isFinite(value) ? value : undefined;
+
+/**
+ * Goal setup step.
+ * - "Goal": what the plan is built for. Required fields are pre-filled on
+ *   type selection (withRequiredGoalDefaults); optional ones sit behind
+ *   "+ Add …" links.
+ * - "Current level" and "Target date" are optional sections revealed by a
+ *   link; opening one stores its defaults, removing it clears them.
+ * - Only metric keys allowed for the goal type are written, in canonical
+ *   units (metres, seconds, minutes) — the backend rejects anything else.
+ */
+export function GoalSetupStep({ goalType, draft, theme, copy, onChangeDraft }: Props) {
   const creationCopy = copy.plan.creation;
-  const fieldsCopy = creationCopy.fields;
+  const f = creationCopy.goalForm;
+  const units = creationCopy.units;
   const challengeMetricsCopy = creationCopy.challengeMetrics;
   const challengePeriodsCopy = creationCopy.challengePeriods;
+  const paceUnit = `${units.min}/${units.km}`;
+  const durationLabel = (minutes: number) => formatDuration(minutes, units);
 
-  const target = draft.target ?? {};
-  const current = draft.current ?? {};
+  const target: Metrics = draft.target ?? {};
+  const current: Metrics = draft.current ?? {};
 
-  const setTargetValue = useCallback(
-    (key: string, value: unknown) => {
+  const update = useCallback(
+    (kind: Kind, changes: Metrics) => {
       onChangeDraft((prev) => {
-        const nextTarget = { ...(prev.target ?? {}) };
-        if (value === undefined || value === null || value === "") {
-          delete nextTarget[key];
-        } else {
-          nextTarget[key] = value;
+        const next: Metrics = { ...(prev[kind] ?? {}) };
+        for (const [key, value] of Object.entries(changes)) {
+          if (value === undefined || value === null || value === "") delete next[key];
+          else next[key] = value;
         }
-        return { ...prev, type: goalType, target: nextTarget };
+        return { ...prev, type: goalType, [kind]: Object.keys(next).length > 0 ? next : undefined };
       });
     },
     [goalType, onChangeDraft],
   );
+  const setter = (kind: Kind, key: string) => (value: unknown) => update(kind, { [key]: value });
+  const read = (kind: Kind, key: string, fallback: number) =>
+    asNumber((kind === "target" ? target : current)[key]) ?? fallback;
 
-  const setCurrentValue = useCallback(
-    (key: string, value: unknown) => {
-      onChangeDraft((prev) => {
-        const nextCurrent = { ...(prev.current ?? {}) };
-        if (value === undefined || value === null || value === "") {
-          delete nextCurrent[key];
-        } else {
-          nextCurrent[key] = value;
-        }
-        return { ...prev, type: goalType, current: nextCurrent };
-      });
-    },
-    [goalType, onChangeDraft],
+  // ---------- controls ----------
+
+  /** Ruler in km over a metres field. */
+  const kmRuler = (
+    meters: number,
+    onChange: (meters: number) => void,
+    { min, max, step = 1 }: { min: number; max: number; step?: number },
+    label: string,
+  ) => (
+    <Ruler
+      value={meters / 1000}
+      onChange={(km) => onChange(Math.round(km * 1000))}
+      min={min}
+      max={max}
+      step={step}
+      unit={units.km}
+      accessibilityLabel={label}
+      theme={theme}
+    />
   );
 
-  const setTargetDate = useCallback(
-    (targetDate?: string) => {
-      onChangeDraft((prev) => ({ ...prev, targetDate }));
+  const plainRuler = (
+    value: number,
+    onChange: (value: number) => void,
+    opts: {
+      min: number;
+      max: number;
+      step?: number;
+      unit?: string;
+      majorEvery?: number;
+      labelEvery?: number;
+      formatValue?: (v: number) => string;
+      formatLabel?: (v: number) => string;
     },
-    [onChangeDraft],
+    label: string,
+  ) => (
+    <Ruler
+      value={value}
+      onChange={onChange}
+      min={opts.min}
+      max={opts.max}
+      step={opts.step ?? 1}
+      unit={opts.unit}
+      majorEvery={opts.majorEvery}
+      labelEvery={opts.labelEvery}
+      formatValue={opts.formatValue}
+      formatLabel={opts.formatLabel}
+      accessibilityLabel={label}
+      theme={theme}
+    />
   );
 
-  const setDescription = useCallback(
-    (description: string) => {
-      onChangeDraft((prev) => ({ ...prev, description }));
-    },
-    [onChangeDraft],
+  const minutesRuler = (value: number, onChange: (v: number) => void, max: number, label: string) =>
+    plainRuler(value, onChange, { min: 5, max, step: 5, majorEvery: 15, labelEvery: 30, formatValue: durationLabel }, label);
+
+  const weeklyKmRuler = (value: number, onChange: (v: number) => void) =>
+    plainRuler(value, onChange, { min: 1, max: 400, unit: units.km }, f.weeklyDistance);
+
+  // Same round-button picker as weekdays / workouts per week on later steps.
+  const runsSegmented = (value: number, onChange: (v: number) => void) => (
+    <CirclePicker options={RUNS_PER_WEEK_SEGMENTS} selected={[value]} onPress={onChange} theme={theme} />
   );
 
-  // Helper for distance preset selection in race goals
-  const activeRaceDistancePreset = useMemo(() => {
-    const distMeters = target.distanceMeters as number | undefined;
-    if (!distMeters) return "10k";
-    if (Math.abs(distMeters - 5000) < 10) return "5k";
-    if (Math.abs(distMeters - 10000) < 10) return "10k";
-    if (Math.abs(distMeters - 21097) < 100) return "half_marathon";
-    if (Math.abs(distMeters - 42195) < 100) return "marathon";
-    return "10k";
-  }, [target.distanceMeters]);
+  /** Field that is part of a section as soon as the section exists. */
+  const field = (label: string, control: ReactNode, info?: string) => (
+    <FieldBlock key={label} label={label} info={info} theme={theme}>
+      {control}
+    </FieldBlock>
+  );
 
-  // Target Date Calendar Selector
-  const renderTargetDateSection = () => (
-    <SectionBlock title={fieldsCopy.targetDate} theme={theme}>
-      <CalendarDatePicker
-        value={draft.targetDate}
-        onChange={setTargetDate}
+  /** Optional field inside the goal section, hidden behind "+ Add …". */
+  const optionalTarget = (
+    key: string,
+    fallback: number,
+    label: string,
+    addLabel: string,
+    render: (value: number, onChange: (v: number) => void) => ReactNode,
+    info?: string,
+  ) => {
+    const value = asNumber(target[key]);
+    const set = setter("target", key);
+    const node = (
+      <OptionalField
+        key={`target-${key}`}
+        label={label}
+        info={info}
+        addLabel={addLabel}
+        removeLabel={f.remove}
+        isSet={value !== undefined}
+        onSet={() => set(fallback)}
+        onRemove={() => set(undefined)}
         theme={theme}
-        language={language}
-      />
-    </SectionBlock>
+      >
+        {value !== undefined ? render(value, set) : null}
+      </OptionalField>
+    );
+    return { node, compact: value === undefined };
+  };
+
+  // ---------- sections ----------
+
+  // The goal fields come first and need no heading: the step title already says it.
+  const goalSection = (...children: Item[]) => (
+    <SheetBlock theme={theme}>
+      <Stack items={children} gap={FIELD_GAP} compactGap={COMPACT_GAP} />
+    </SheetBlock>
   );
 
-  // Render per-type goal configuration forms
+  /** Optional "Current level" section; `defaults` are stored when it is opened. */
+  const currentSection = (defaults: Metrics, ...children: ReactNode[]): Item => ({
+    compact: Object.keys(current).length === 0,
+    node: (
+    <OptionalSection
+      title={f.currentSection}
+      description={f.currentHint}
+      addLabel={f.addCurrent}
+      removeLabel={f.removeCurrent}
+      isOpen={Object.keys(current).length > 0}
+      onOpen={() => update("current", defaults)}
+      onRemove={() => onChangeDraft((prev) => ({ ...prev, current: undefined }))}
+      theme={theme}
+    >
+      <View style={styles.fields}>{children}</View>
+    </OptionalSection>
+    ),
+  });
+
+  const targetDate = draft.targetDate;
+  const dateSection: Item = {
+    compact: !targetDate,
+    node: (
+    <OptionalSection
+      title={f.dateSection}
+      description={f.dateHint}
+      addLabel={f.addDate}
+      removeLabel={f.removeDate}
+      isOpen={Boolean(targetDate)}
+      onOpen={() => onChangeDraft((prev) => ({ ...prev, targetDate: defaultTargetDate() }))}
+      onRemove={() => onChangeDraft((prev) => ({ ...prev, targetDate: undefined }))}
+      theme={theme}
+    >
+      {targetDate ? (
+        <TargetDatePicker
+          value={targetDate}
+          onChange={(iso) => onChangeDraft((prev) => ({ ...prev, targetDate: iso }))}
+          theme={theme}
+          copy={copy}
+        />
+      ) : null}
+    </OptionalSection>
+    ),
+  };
+
+  const screen = (...sections: Item[]) => (
+    <Stack items={sections} gap={SECTION_GAP} compactGap={COMPACT_GAP} />
+  );
+
+  // ---------- per goal type ----------
+
   switch (goalType) {
     case "prepare_for_race":
     case "improve_race_result":
     case "run_new_distance": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.distance} theme={theme}>
-            <RaceDistanceSelector
-              options={RACE_OPTIONS.map((opt) => ({
-                value: opt.value,
-                label: opt.label,
-              }))}
-              value={activeRaceDistancePreset}
-              theme={theme}
-              onChange={(preset) => {
-                const meters = LEGACY_RACE_DISTANCE_METERS[preset] ?? 10000;
-                setTargetValue("distanceMeters", meters);
-              }}
-            />
-          </SectionBlock>
-
-          {goalType !== "run_new_distance" ? (
-            <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-              <CompoundTimerInputRow
-                label={fieldsCopy.targetTime}
-                value={(target.finishTimeText as string) ?? "45:00"}
-                error={targetTimeError}
-                badge={
-                  goalType === "improve_race_result"
-                    ? fieldsCopy.requiredLabel
-                    : fieldsCopy.optionalLabel
-                }
-                theme={theme}
-                onChangeText={(text) => setTargetValue("finishTimeText", text)}
-              />
-            </SectionBlock>
-          ) : null}
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <CompoundTimerInputRow
-              label={fieldsCopy.currentResult}
-              value={(current.finishTimeText as string) ?? "48:30"}
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) => setCurrentValue("finishTimeText", text)}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      const distanceMeters = read("target", "distanceMeters", 10_000);
+      const range = raceTimeRange(distanceMeters);
+      const timeRuler = (label: string) => (value: number, onChange: (v: number) => void) => (
+        <TimeRuler seconds={value} onChange={onChange} range={range} accessibilityLabel={label} theme={theme} />
       );
+
+      /** New distance: keep entered times if they still fit the new scale, else use its defaults. */
+      const setDistance = (meters: number) => {
+        const nextRange = raceTimeRange(meters);
+        const targetTime = asNumber(target.finishTimeSec);
+        update("target", {
+          distanceMeters: meters,
+          finishTimeSec:
+            targetTime === undefined ? undefined : fitTimeToRange(targetTime, nextRange, nextRange.defaultTarget),
+        });
+        const currentTime = asNumber(current.finishTimeSec);
+        if (currentTime !== undefined) {
+          update("current", { finishTimeSec: fitTimeToRange(currentTime, nextRange, nextRange.defaultCurrent) });
+        }
+      };
+
+      const distanceField = field(
+        f.raceDistance,
+        <View style={styles.fields}>
+          {/* 0.1 km steps so 21.1 / 42.2 are reachable; up to 300 km (backend bound). */}
+          <Ruler
+            value={distanceMeters / 1000}
+            onChange={(km) => setDistance(Math.round(km * 1000))}
+            min={1}
+            max={300}
+            step={0.1}
+            majorEvery={1}
+            labelEvery={1}
+            tickSpacing={10}
+            unit={units.km}
+            accessibilityLabel={f.raceDistance}
+            theme={theme}
+          />
+          <View style={styles.chipWrap}>
+            {RACE_DISTANCE_PRESETS_METERS.map((meters) => (
+              <OptionChip
+                key={meters}
+                label={`${Number((meters / 1000).toFixed(1))} ${units.km}`}
+                selected={Math.abs(distanceMeters - meters) < 50}
+                theme={theme}
+                onPress={() => setDistance(meters)}
+              />
+            ))}
+          </View>
+        </View>,
+        f.raceDistanceInfo,
+      );
+
+      const timeField =
+        goalType === "improve_race_result"
+          ? field(f.finishTime, timeRuler(f.finishTime)(read("target", "finishTimeSec", range.defaultTarget), setter("target", "finishTimeSec")))
+          : goalType === "prepare_for_race"
+            ? optionalTarget("finishTimeSec", range.defaultTarget, f.finishTime, f.addFinishTime, timeRuler(f.finishTime), f.finishTimeInfo)
+            : null;
+
+      const currentBlock =
+        goalType === "run_new_distance"
+          ? currentSection(
+              { distanceMeters: D.longestRunMeters },
+              field(
+                f.longestRun,
+                kmRuler(read("current", "distanceMeters", D.longestRunMeters), setter("current", "distanceMeters"), { min: 1, max: 100, step: 0.5 }, f.longestRun),
+                f.longestRunInfo,
+              ),
+            )
+          : currentSection(
+              { finishTimeSec: range.defaultCurrent },
+              field(
+                f.bestTime,
+                timeRuler(f.bestTime)(read("current", "finishTimeSec", range.defaultCurrent), setter("current", "finishTimeSec")),
+                f.bestTimeInfo,
+              ),
+            );
+
+      return screen(goalSection(distanceField, timeField), currentBlock, dateSection);
     }
 
     case "trail_preparation":
     case "ultra_preparation": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.distance}
-              value={(target.distanceKm as number) ?? 30}
-              onChange={(val) => setTargetValue("distanceKm", val)}
-              min={5}
-              max={100}
-              step={1}
-              unit="км"
-              theme={theme}
-            />
-            <View style={{ marginTop: 12 }}>
-              <WheelInputRow
-                label={fieldsCopy.elevationGain}
-                value={(target.elevationGainMeters as number) ?? 1500}
-                onChange={(val) => setTargetValue("elevationGainMeters", val)}
-                min={0}
-                max={5000}
-                step={100}
-                unit="м"
-                theme={theme}
-              />
-            </View>
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.continuousDistance}
-              value={(current.continuousDistanceKm as number) ?? 15}
-              onChange={(val) => setCurrentValue("continuousDistanceKm", val)}
-              min={1}
-              max={50}
-              step={1}
-              unit="км"
-              theme={theme}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      const isUltra = goalType === "ultra_preparation";
+      return screen(
+        goalSection(
+          field(
+            f.distance,
+            kmRuler(
+              read("target", "distanceMeters", isUltra ? D.ultraDistanceMeters : D.trailDistanceMeters),
+              setter("target", "distanceMeters"),
+              { min: 5, max: 300 },
+              f.distance,
+            ),
+            f.trailDistanceInfo,
+          ),
+          optionalTarget(
+            "elevationGainMeters",
+            isUltra ? D.ultraElevationMeters : D.trailElevationMeters,
+            f.elevation,
+            f.addElevation,
+            (value, onChange) => plainRuler(value, onChange, { min: 0, max: 10_000, step: 100, unit: units.m }, f.elevation),
+            f.trailElevationInfo,
+          ),
+        ),
+        currentSection(
+          { distanceMeters: D.longestRunMeters, weeklyDistanceKm: D.currentWeeklyDistanceKm },
+          field(
+            f.longestRun,
+            kmRuler(read("current", "distanceMeters", D.longestRunMeters), setter("current", "distanceMeters"), { min: 1, max: 300, step: 0.5 }, f.longestRun),
+            f.longestRunInfo,
+          ),
+          field(f.weeklyDistance, weeklyKmRuler(read("current", "weeklyDistanceKm", D.currentWeeklyDistanceKm), setter("current", "weeklyDistanceKm"))),
+        ),
+        dateSection,
       );
     }
 
     case "backyard_preparation": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <CounterRow
-              label={fieldsCopy.loopsCount}
-              value={(target.loopsCount as number) ?? 12}
-              min={1}
-              max={100}
-              theme={theme}
-              onChange={(value) => setTargetValue("loopsCount", value)}
-            />
-            <View style={{ marginTop: 12 }}>
-              <WheelInputRow
-                label={fieldsCopy.timeOnFeet}
-                value={(target.timeOnFeetMinutes as number) ?? 720}
-                onChange={(val) => setTargetValue("timeOnFeetMinutes", val)}
-                min={60}
-                max={2880}
-                step={30}
-                formatValue={formatTimeOnFeet}
-                theme={theme}
-              />
-            </View>
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      return screen(
+        goalSection(
+          field(
+            f.loops,
+            plainRuler(read("target", "loopsCount", D.loopsCount), setter("target", "loopsCount"), { min: 1, max: 100, majorEvery: 5, labelEvery: 5 }, f.loops),
+            f.loopsInfo,
+          ),
+        ),
+        currentSection(
+          { timeOnFeetMinutes: D.timeOnFeetMinutes },
+          field(
+            f.timeOnFeet,
+            plainRuler(
+              read("current", "timeOnFeetMinutes", D.timeOnFeetMinutes),
+              setter("current", "timeOnFeetMinutes"),
+              {
+                min: 30,
+                max: 4320,
+                step: 30,
+                majorEvery: 60,
+                labelEvery: 240,
+                formatValue: durationLabel,
+                formatLabel: (minutes) => `${minutes / 60} ${units.h}`,
+              },
+              f.timeOnFeet,
+            ),
+            f.timeOnFeetInfo,
+          ),
+        ),
+        dateSection,
       );
     }
 
     case "improve_speed":
     case "improve_pace": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <CompoundPaceInputRow
-              label={fieldsCopy.targetPace}
-              value={(target.paceText as string) ?? "5:30"}
-              badge={
-                goalType === "improve_pace"
-                  ? fieldsCopy.requiredLabel
-                  : fieldsCopy.optionalLabel
-              }
-              theme={theme}
-              onChangeText={(text) => setTargetValue("paceText", text)}
-            />
-            <View style={{ marginTop: 12 }}>
-              <WheelInputRow
-                label={fieldsCopy.distance}
-                value={(target.distanceKm as number) ?? 10}
-                onChange={(val) => setTargetValue("distanceKm", val)}
-                min={1}
-                max={50}
-                step={1}
-                unit="км"
-                theme={theme}
-              />
-            </View>
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <CompoundPaceInputRow
-              label={fieldsCopy.currentPace}
-              value={(current.paceText as string) ?? "6:00"}
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-              onChangeText={(text) => setCurrentValue("paceText", text)}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      const paceRuler = (value: number, onChange: (v: number) => void) => (
+        <TimeRuler seconds={value} onChange={onChange} range={PACE_RANGE} unit={paceUnit} accessibilityLabel={f.pace} theme={theme} />
+      );
+      return screen(
+        goalSection(
+          field(f.pace, paceRuler(read("target", "paceSecondsPerKm", D.targetPace), setter("target", "paceSecondsPerKm"))),
+          goalType === "improve_pace"
+            ? optionalTarget(
+                "distanceMeters",
+                D.paceDistanceMeters,
+                f.paceDistance,
+                f.addPaceDistance,
+                (value, onChange) => kmRuler(value, onChange, { min: 1, max: 50 }, f.paceDistance),
+                f.paceDistanceInfo,
+              )
+            : null,
+        ),
+        currentSection(
+          { paceSecondsPerKm: D.currentPace },
+          field(f.pace, paceRuler(read("current", "paceSecondsPerKm", D.currentPace), setter("current", "paceSecondsPerKm"))),
+        ),
+        dateSection,
       );
     }
 
     case "build_endurance":
     case "run_continuously": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.continuousDuration}
-              value={(target.continuousDurationMinutes as number) ?? 30}
-              onChange={(val) => setTargetValue("continuousDurationMinutes", val)}
-              min={5}
-              max={180}
-              step={5}
-              formatValue={formatDuration}
-              badge={fieldsCopy.requiredLabel}
-              theme={theme}
-            />
-            <View style={{ marginTop: 12 }}>
-              <WheelInputRow
-                label={fieldsCopy.continuousDistance}
-                value={(target.continuousDistanceKm as number) ?? 5}
-                onChange={(val) => setTargetValue("continuousDistanceKm", val)}
-                min={1}
-                max={50}
-                step={1}
-                unit="км"
+      const isEndurance = goalType === "build_endurance";
+      const byDistance = asNumber(target.continuousDistanceKm) !== undefined;
+      const switchMeasure = (toDistance: boolean) => {
+        if (toDistance === byDistance) return;
+        update("target", {
+          continuousDistanceKm: toDistance ? (isEndurance ? D.enduranceDistanceKm : D.continuousDistanceKm) : undefined,
+          continuousDurationMinutes: toDistance ? undefined : isEndurance ? D.enduranceMinutes : D.continuousMinutes,
+        });
+        // Keep the current level in the same measure as the goal.
+        if (Object.keys(current).length > 0) {
+          update("current", {
+            continuousDistanceKm: toDistance ? D.currentContinuousDistanceKm : undefined,
+            continuousDurationMinutes: toDistance ? undefined : D.currentContinuousMinutes,
+          });
+        }
+      };
+      const distanceRuler = (value: number, onChange: (v: number) => void) =>
+        plainRuler(value, onChange, { min: 0.5, max: 300, step: 0.5, unit: units.km }, f.continuous);
+
+      return screen(
+        goalSection(
+          field(
+            f.continuous,
+            <View style={styles.fields}>
+              <Segmented
+                segments={[
+                  { label: f.measureTime, value: "time" },
+                  { label: f.measureDistance, value: "distance" },
+                ]}
+                value={byDistance ? "distance" : "time"}
+                onChange={(measure) => switchMeasure(measure === "distance")}
                 theme={theme}
               />
-            </View>
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.continuousDuration}
-              value={(current.continuousDurationMinutes as number) ?? 15}
-              onChange={(val) => setCurrentValue("continuousDurationMinutes", val)}
-              min={5}
-              max={180}
-              step={5}
-              formatValue={formatDuration}
-              badge={fieldsCopy.optionalLabel}
-              theme={theme}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+              {byDistance
+                ? distanceRuler(read("target", "continuousDistanceKm", D.continuousDistanceKm), setter("target", "continuousDistanceKm"))
+                : minutesRuler(read("target", "continuousDurationMinutes", D.continuousMinutes), setter("target", "continuousDurationMinutes"), 1440, f.continuous)}
+            </View>,
+            f.continuousInfo,
+          ),
+        ),
+        byDistance
+          ? currentSection(
+              { continuousDistanceKm: D.currentContinuousDistanceKm },
+              field(f.continuous, distanceRuler(read("current", "continuousDistanceKm", D.currentContinuousDistanceKm), setter("current", "continuousDistanceKm"))),
+            )
+          : currentSection(
+              { continuousDurationMinutes: D.currentContinuousMinutes },
+              field(f.continuous, minutesRuler(read("current", "continuousDurationMinutes", D.currentContinuousMinutes), setter("current", "continuousDurationMinutes"), 1440, f.continuous)),
+            ),
+        dateSection,
       );
     }
 
     case "build_consistency": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <SegmentedRow
-              label={fieldsCopy.targetRunsPerWeek}
-              segments={RUNS_PER_WEEK_SEGMENTS}
-              value={(target.runsPerWeek as number) ?? 3}
-              theme={theme}
-              onChange={(value) => setTargetValue("runsPerWeek", value)}
-            />
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <SegmentedRow
-              label={fieldsCopy.currentRunsPerWeek}
-              segments={RUNS_PER_WEEK_SEGMENTS}
-              value={(current.runsPerWeek as number) ?? 2}
-              theme={theme}
-              onChange={(value) => setCurrentValue("runsPerWeek", value)}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      return screen(
+        goalSection(field(f.runsPerWeek, runsSegmented(read("target", "runsPerWeek", D.runsPerWeek), setter("target", "runsPerWeek")))),
+        currentSection(
+          { runsPerWeek: D.currentRunsPerWeek },
+          field(f.runsPerWeek, runsSegmented(read("current", "runsPerWeek", D.currentRunsPerWeek), setter("current", "runsPerWeek"))),
+        ),
+        dateSection,
       );
     }
 
     case "increase_running_volume": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.weeklyVolumeDistance}
-              value={(target.weeklyDistanceKm as number) ?? 40}
-              onChange={(val) => setTargetValue("weeklyDistanceKm", val)}
-              min={5}
-              max={150}
-              step={1}
-              unit="км"
-              theme={theme}
-            />
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.weeklyVolumeDistance}
-              value={(current.weeklyDistanceKm as number) ?? 25}
-              onChange={(val) => setCurrentValue("weeklyDistanceKm", val)}
-              min={5}
-              max={150}
-              step={1}
-              unit="км"
-              theme={theme}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      return screen(
+        goalSection(field(f.weeklyDistance, weeklyKmRuler(read("target", "weeklyDistanceKm", D.weeklyDistanceKm), setter("target", "weeklyDistanceKm")))),
+        currentSection(
+          { weeklyDistanceKm: D.currentWeeklyDistanceKm },
+          field(f.weeklyDistance, weeklyKmRuler(read("current", "weeklyDistanceKm", D.currentWeeklyDistanceKm), setter("current", "weeklyDistanceKm"))),
+        ),
+        dateSection,
       );
     }
 
     case "lose_weight": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.targetWeight}
-              value={(target.weightKg as number) ?? 75}
-              onChange={(val) => setTargetValue("weightKg", val)}
-              min={40}
-              max={180}
-              step={0.5}
-              unit="кг"
-              theme={theme}
-            />
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.currentSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.currentWeight}
-              value={(current.weightKg as number) ?? 82}
-              onChange={(val) => setCurrentValue("weightKg", val)}
-              min={40}
-              max={180}
-              step={0.5}
-              unit="кг"
-              theme={theme}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      const weightRuler = (value: number, onChange: (v: number) => void) =>
+        plainRuler(value, onChange, { min: 30, max: 250, step: 0.5, labelEvery: 5, unit: units.kg }, f.weight);
+      return screen(
+        goalSection(field(f.weight, weightRuler(read("target", "weightKg", D.targetWeightKg), setter("target", "weightKg")))),
+        currentSection(
+          { weightKg: D.currentWeightKg },
+          field(f.weight, weightRuler(read("current", "weightKg", D.currentWeightKg), setter("current", "weightKg"))),
+        ),
+        dateSection,
       );
     }
 
-    case "start_running":
-    case "return_to_running":
-    case "maintain_fitness":
-    case "general_health":
-    case "improve_aerobic_fitness":
-    case "improve_hills": {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <SegmentedRow
-              label={fieldsCopy.targetRunsPerWeek}
-              segments={RUNS_PER_WEEK_SEGMENTS}
-              value={(target.runsPerWeek as number) ?? 3}
-              theme={theme}
-              onChange={(value) => setTargetValue("runsPerWeek", value)}
-            />
-            <View style={{ marginTop: 12 }}>
-              <WheelInputRow
-                label={fieldsCopy.weeklyVolumeDistance}
-                value={(target.weeklyDistanceKm as number) ?? 20}
-                onChange={(val) => setTargetValue("weeklyDistanceKm", val)}
-                min={5}
-                max={150}
-                step={1}
-                unit="км"
-                theme={theme}
-              />
-            </View>
-          </SectionBlock>
+    case "start_running": {
+      return screen(
+        goalSection(
+          optionalTarget(
+            "continuousDurationMinutes",
+            D.startRunningTargetMinutes,
+            f.continuous,
+            f.addContinuous,
+            (value, onChange) => minutesRuler(value, onChange, 180, f.continuous),
+          ),
+        ),
+        currentSection(
+          { continuousDurationMinutes: D.startRunningCurrentMinutes },
+          field(f.continuous, minutesRuler(read("current", "continuousDurationMinutes", D.startRunningCurrentMinutes), setter("current", "continuousDurationMinutes"), 180, f.continuous)),
+        ),
+        dateSection,
+      );
+    }
 
-          {renderTargetDateSection()}
-        </View>
+    case "return_to_running": {
+      return screen(
+        goalSection(
+          optionalTarget("weeklyDistanceKm", D.weeklyDistanceKm, f.weeklyDistance, f.addWeeklyDistance, weeklyKmRuler),
+        ),
+        currentSection(
+          { continuousDurationMinutes: D.currentContinuousMinutes },
+          field(f.continuous, minutesRuler(read("current", "continuousDurationMinutes", D.currentContinuousMinutes), setter("current", "continuousDurationMinutes"), 1440, f.continuous)),
+        ),
+        dateSection,
+      );
+    }
+
+    case "maintain_fitness":
+    case "general_health": {
+      const isHealth = goalType === "general_health";
+      return screen(
+        goalSection(
+          optionalTarget("runsPerWeek", D.runsPerWeek, f.runsPerWeek, f.addRunsPerWeek, runsSegmented),
+          isHealth
+            ? optionalTarget("weeklyDurationMinutes", D.weeklyDurationMinutes, f.weeklyDuration, f.addWeeklyDuration, (value, onChange) =>
+                plainRuler(value, onChange, { min: 20, max: 1200, step: 10, majorEvery: 30, labelEvery: 60, unit: units.min }, f.weeklyDuration),
+              )
+            : optionalTarget("weeklyDistanceKm", D.weeklyDistanceKm, f.weeklyDistance, f.addWeeklyDistance, weeklyKmRuler),
+        ),
+        currentSection(
+          { runsPerWeek: D.currentRunsPerWeek },
+          field(f.runsPerWeek, runsSegmented(read("current", "runsPerWeek", D.currentRunsPerWeek), setter("current", "runsPerWeek"))),
+        ),
+        dateSection,
+      );
+    }
+
+    case "improve_hills": {
+      const elevationRuler = (value: number, onChange: (v: number) => void) =>
+        plainRuler(value, onChange, { min: 0, max: 3000, step: 50, majorEvery: 250, labelEvery: 500, unit: units.m }, f.elevation);
+      return screen(
+        goalSection(
+          optionalTarget("elevationGainMeters", D.hillsElevationMeters, f.elevation, f.addElevation, elevationRuler, f.hillsElevationInfo),
+        ),
+        currentSection(
+          { elevationGainMeters: D.hillsElevationMeters / 2 },
+          field(f.elevation, elevationRuler(read("current", "elevationGainMeters", D.hillsElevationMeters / 2), setter("current", "elevationGainMeters")), f.hillsElevationInfo),
+        ),
+        dateSection,
+      );
+    }
+
+    case "improve_aerobic_fitness": {
+      return screen(
+        goalSection(
+          <Text key="note" style={[styles.note, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+            {f.aerobicNote}
+          </Text>,
+        ),
+        dateSection,
       );
     }
 
     case "complete_challenge": {
-      const selectedMetric =
-        (target.challengeMetric as GoalChallengeMetric) || "total_distance";
-      const selectedPeriod =
-        (target.challengePeriod as GoalChallengePeriod) || "this_month";
+      const metric = (target.challengeMetric as GoalChallengeMetric) || "total_distance";
+      const period = (target.challengePeriod as GoalChallengePeriod) || "this_month";
+      const scale = CHALLENGE_SCALES[metric];
+      const challengeUnit =
+        metric === "total_distance"
+          ? units.km
+          : metric === "total_duration"
+            ? units.h
+            : metric === "runs_count"
+              ? f.runsUnit
+              : f.daysUnit;
 
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.challengeMetric} theme={theme}>
+      return screen(
+        goalSection(
+          field(
+            f.challengeMetric,
             <View style={styles.chipWrap}>
-              {GOAL_CHALLENGE_METRICS.map((metric) => (
+              {GOAL_CHALLENGE_METRICS.map((item) => (
                 <OptionChip
-                  key={metric}
-                  label={
-                    challengeMetricsCopy[
-                      metric as keyof typeof challengeMetricsCopy
-                    ] ?? metric
-                  }
-                  selected={selectedMetric === metric}
+                  key={item}
+                  label={challengeMetricsCopy[item as keyof typeof challengeMetricsCopy] ?? item}
+                  selected={metric === item}
                   theme={theme}
-                  onPress={() => setTargetValue("challengeMetric", metric)}
+                  onPress={() =>
+                    update("target", {
+                      challengeMetric: item,
+                      // Units differ per metric, so the old number would be nonsense.
+                      challengeTargetValue: CHALLENGE_SCALES[item].fallback,
+                    })
+                  }
                 />
               ))}
-            </View>
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <WheelInputRow
-              label={fieldsCopy.challengeTarget}
-              value={(target.challengeTargetValue as number) ?? 100}
-              onChange={(val) => setTargetValue("challengeTargetValue", val)}
-              min={10}
-              max={1000}
-              step={10}
-              theme={theme}
-            />
-          </SectionBlock>
-
-          <SectionBlock title={fieldsCopy.challengePeriod} theme={theme}>
+            </View>,
+          ),
+          field(
+            f.challengeTarget,
+            plainRuler(read("target", "challengeTargetValue", scale.fallback), setter("target", "challengeTargetValue"), {
+              min: scale.min,
+              max: scale.max,
+              step: scale.step,
+              unit: challengeUnit,
+            }, f.challengeTarget),
+          ),
+          field(
+            f.challengePeriod,
             <View style={styles.chipWrap}>
-              {GOAL_CHALLENGE_PERIODS.map((period) => (
+              {GOAL_CHALLENGE_PERIODS.map((item) => (
                 <OptionChip
-                  key={period}
-                  label={
-                    challengePeriodsCopy[
-                      period as keyof typeof challengePeriodsCopy
-                    ] ?? period
-                  }
-                  selected={selectedPeriod === period}
+                  key={item}
+                  label={challengePeriodsCopy[item as keyof typeof challengePeriodsCopy] ?? item}
+                  selected={period === item}
                   theme={theme}
-                  onPress={() => setTargetValue("challengePeriod", period)}
+                  onPress={() => update("target", { challengePeriod: item })}
                 />
               ))}
-            </View>
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+            </View>,
+          ),
+        ),
+        dateSection,
       );
     }
 
     case "custom":
     default: {
-      return (
-        <View style={styles.formContainer}>
-          <SectionBlock title={fieldsCopy.targetSection} theme={theme}>
-            <MultilineInputRow
-              label={fieldsCopy.customDescriptionLabel}
-              value={draft.description ?? ""}
-              placeholder={fieldsCopy.customDescriptionPlaceholder}
-              badge={fieldsCopy.requiredLabel}
-              theme={theme}
-              onChangeText={setDescription}
-            />
-          </SectionBlock>
-
-          {renderTargetDateSection()}
-        </View>
+      return screen(
+        goalSection(
+          <MultilineInputRow
+            key="description"
+            label={f.description}
+            value={draft.description ?? ""}
+            placeholder={f.descriptionPlaceholder}
+            theme={theme}
+            onChangeText={(description) => onChangeDraft((prev) => ({ ...prev, description }))}
+          />,
+        ),
+        dateSection,
       );
     }
   }
 }
 
 const styles = StyleSheet.create({
-  formContainer: {
-    gap: 20,
+  fields: {
+    gap: 44,
   },
   chipWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "center",
     gap: 8,
+  },
+  note: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
   },
 });

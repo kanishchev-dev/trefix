@@ -17,7 +17,20 @@ import {
 } from "@workspace/ui/components/select";
 import { Separator } from "@workspace/ui/components/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
-import { InfoIcon, PencilIcon, SendIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+import {
+  CheckCircle2Icon,
+  InfoIcon,
+  PencilIcon,
+  SendIcon,
+  Trash2Icon,
+  XCircleIcon,
+  XIcon,
+} from "lucide-react";
 
 import type {
   AdminUserDetail,
@@ -46,6 +59,7 @@ import { usePermissionLabels } from "@/features/permissions/hooks/use-permission
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
 import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
+import { CopyButton } from "@/widgets/copy-button";
 
 function DetailRow({
   label,
@@ -205,29 +219,67 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
               <CardTitle>{t("users.tabs.profile")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-x-8 md:grid-cols-2">
+              {/* Ordered identity → verification → identifiers → lifecycle, so
+                  the eye lands on who the person is before when they joined. */}
               <DetailRow
-                label={t("users.fields.avatar")}
+                label={t("users.fields.firstName")}
+                value={user.firstName || "—"}
+              />
+              <DetailRow
+                label={t("users.fields.lastName")}
+                value={user.lastName || "—"}
+              />
+              <DetailRow
+                label={t("users.fields.email")}
                 value={
-                  user.avatarUrl ? (
-                    <span className="break-all">{user.avatarUrl}</span>
-                  ) : (
-                    "—"
-                  )
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="break-all">{user.email}</span>
+                    {/* Verification is a property of this very address, so it
+                        reads as its annotation rather than a separate field. */}
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          user.emailVerified ? (
+                            <Badge variant="outline" />
+                          ) : (
+                            <Badge variant="secondary" />
+                          )
+                        }
+                      >
+                        {user.emailVerified ? (
+                          <CheckCircle2Icon data-icon="inline-start" />
+                        ) : (
+                          <XCircleIcon data-icon="inline-start" />
+                        )}
+                        {user.emailVerified
+                          ? t("users.email.verified")
+                          : t("users.email.notVerified")}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {user.emailVerified
+                          ? t("users.email.verifiedHint")
+                          : t("users.email.notVerifiedHint")}
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                }
+              />
+              <DetailRow
+                label={t("users.fields.emailVerifiedAt")}
+                value={formatDate(user.emailVerifiedAt, locale)}
+              />
+              <DetailRow
+                label={t("users.fields.id")}
+                value={
+                  <span className="flex items-center gap-1">
+                    <span className="font-mono text-xs break-all">{user.id}</span>
+                    <CopyButton value={user.id} label={t("users.actions.copyId")} />
+                  </span>
                 }
               />
               <DetailRow
                 label={t("users.fields.referralCode")}
                 value={user.referralCode ?? "—"}
-              />
-              <DetailRow
-                label={t("users.fields.emailVerified")}
-                value={
-                  user.emailVerified ? t("common.yes") : t("common.no")
-                }
-              />
-              <DetailRow
-                label={t("users.fields.systemKey")}
-                value={user.systemKey ?? "—"}
               />
               <DetailRow
                 label={t("users.fields.createdAt")}

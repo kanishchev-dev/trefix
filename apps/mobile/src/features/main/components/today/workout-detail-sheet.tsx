@@ -209,7 +209,7 @@ export function WorkoutDetailSheet({
               style={[
                 styles.statBox,
                 {
-                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                  backgroundColor: theme.color.control,
                   borderColor:
                     themeMode === "dark"
                       ? "rgba(255, 255, 255, 0.08)"
@@ -248,7 +248,7 @@ export function WorkoutDetailSheet({
               style={[
                 styles.statBox,
                 {
-                  backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+                  backgroundColor: theme.color.control,
                   borderColor:
                     themeMode === "dark"
                       ? "rgba(255, 255, 255, 0.08)"

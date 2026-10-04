@@ -36,7 +36,7 @@ export function PlanCreationMethodSheet({
     styles.methodCard,
     {
       backgroundColor:
-        themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
+        theme.color.control,
       borderWidth: 0,
     },
     pressed && styles.pressed,

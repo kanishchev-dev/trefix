@@ -449,7 +449,7 @@ export function BottomSheet({
                   borderColor:
                     themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
                   backgroundColor:
-                    themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+                    theme.color.card,
                 },
               ]}
             >
@@ -665,7 +665,7 @@ function StackLayer({
               borderColor:
                 themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
               backgroundColor:
-                themeMode === "dark" ? "#121214" : theme.color.surfaceElevated,
+                theme.color.card,
             },
           ]}
         >
@@ -732,7 +732,8 @@ export function SheetButton({
 }: {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary";
+  /** "destructive" — delete-type actions: danger text on a soft danger background. */
+  variant?: "primary" | "secondary" | "destructive";
   disabled?: boolean;
   pending?: boolean;
   theme: ThemeTokens;
@@ -753,9 +754,9 @@ export function SheetButton({
           backgroundColor:
             variant === "primary"
               ? theme.color.primary
-              : isDark
-                ? "#1a1a1e"
-                : theme.color.secondary,
+              : variant === "destructive"
+                ? theme.color.dangerSurface
+                : theme.color.controlSecondary,
         },
         disabled && !pending ? { opacity: 0.5 } : null,
         pending ? { opacity: 0.7 } : null,
@@ -774,7 +775,9 @@ export function SheetButton({
                 color:
                   variant === "primary"
                     ? theme.color.primaryForeground
-                    : theme.color.foreground,
+                    : variant === "destructive"
+                      ? theme.color.danger
+                      : theme.color.foreground,
                 fontFamily: theme.typography.fontFamily.sans.semibold,
               },
             ]}
@@ -943,6 +946,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   card: {
+    // Let tall content shrink to the container's maxHeight (85%) instead of
+    // overflowing it — otherwise the bottom gap disappears behind the screen edge.
+    flexShrink: 1,
     borderRadius: 44,
     borderWidth: StyleSheet.hairlineWidth,
     paddingTop: 0,

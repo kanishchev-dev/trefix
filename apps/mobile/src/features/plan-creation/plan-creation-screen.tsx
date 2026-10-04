@@ -15,29 +15,29 @@ import {
   type ManualPlanPreview,
 } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { Ruler } from "@workspace/ui-native";
+import { Card } from "../../shared/ui/card";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
 import { BottomSheet, SheetBlock, SheetButton, useSheetStack } from "../../shared/ui/bottom-sheet";
 import {
+  MANUAL_PLAN_MAX_DURATION_MINUTES,
   MANUAL_PLAN_MAX_SESSIONS,
+  MANUAL_PLAN_MIN_DURATION_MINUTES,
   MANUAL_PLAN_MAX_WEEKS,
   MANUAL_PLAN_MIN_SESSIONS,
   MANUAL_PLAN_MIN_WEEKS,
   PLAN_FOCUS_OPTIONS,
-  PLAN_WORKOUT_DURATION_OPTIONS,
-  formatTargetTime,
-  parseTargetTime,
   pruneStaleGoalFields,
-  validateTargetTime,
+  withRequiredGoalDefaults,
   type PlanCreationDraft,
 } from "./plan-creation-types";
 import { useManualPlanPreview } from "./hooks/use-manual-plan";
 import {
-  CounterRow,
+  CirclePicker,
   DayPicker,
   OptionChip,
   SectionBlock,
-  SegmentedRow,
 } from "./components/plan-creation-ui";
 import { GoalTypeStep } from "./components/goal-type-step";
 import { GoalSetupStep } from "./components/goal-setup-step";
@@ -111,38 +111,18 @@ export function PlanCreationScreen({
     [language],
   );
 
-  const targetTimeText =
-    (draft.goal.target?.finishTimeText as string) ||
-    draft.goal.targetTimeText ||
-    "";
-
-  const parsedTargetTime = targetTimeText.trim()
-    ? parseTargetTime(targetTimeText)
-    : null;
-
-  const targetTimeError = useMemo(() => {
-    if (targetTimeText.trim() && parsedTargetTime === null) {
-      return "invalidTargetTime";
-    }
-    const distPreset = draft.goal.raceDistance || "10k";
-    return validateTargetTime(distPreset, parsedTargetTime);
-  }, [targetTimeText, parsedTargetTime, draft.goal.raceDistance]);
-
   const isStepValid = useMemo(() => {
     if (step === "goalType") {
       return Boolean(draft.goal.type);
     }
     if (step === "goalSetup") {
-      if (targetTimeError !== null) return false;
       if (draft.goal.type === "custom") {
         return Boolean(draft.goal.description?.trim());
       }
+      // The draft already holds canonical metric keys; validate it as sent.
       const valResult = validateGoalPayload({
         type: draft.goal.type,
-        target: {
-          ...draft.goal.target,
-          ...(parsedTargetTime ? { finishTimeSec: parsedTargetTime } : {}),
-        },
+        target: draft.goal.target,
         current: draft.goal.current,
         description: draft.goal.description,
       });
@@ -157,7 +137,7 @@ export function PlanCreationScreen({
       draft.structure.totalWeeks >= MANUAL_PLAN_MIN_WEEKS &&
       draft.structure.totalWeeks <= MANUAL_PLAN_MAX_WEEKS
     );
-  }, [step, draft, targetTimeError, parsedTargetTime]);
+  }, [step, draft]);
 
   const requestClose = useCallback(() => {
     setPendingPreview(null);
@@ -176,26 +156,25 @@ export function PlanCreationScreen({
   const handleGoalTypeSelect = useCallback((newType: AthleteGoalType) => {
     setDraft((current) => ({
       ...current,
-      goal: pruneStaleGoalFields(current.goal, newType),
+      // Another goal type starts from scratch: opened sections (current level,
+      // target date) and optional fields are reset. Re-picking the same type keeps
+      // what was entered. Required fields are pre-filled so shown = sent.
+      goal:
+        newType === current.goal.type
+          ? withRequiredGoalDefaults(pruneStaleGoalFields(current.goal, newType))
+          : withRequiredGoalDefaults({ type: newType }),
     }));
     setStepIndex(1);
   }, []);
 
   const requestPreview = useCallback(async () => {
-    const finishTimeSec = parsedTargetTime ?? undefined;
-
     const goalPayload = {
       type: draft.goal.type,
-      target: {
-        ...draft.goal.target,
-        ...(finishTimeSec ? { finishTimeSec } : {}),
-      },
+      target: draft.goal.target,
       current: draft.goal.current,
       description: draft.goal.description,
       targetDate: draft.goal.targetDate,
       priority: draft.goal.priority,
-      raceDistance: draft.goal.raceDistance,
-      targetTimeSeconds: finishTimeSec,
     };
 
     try {
@@ -210,7 +189,7 @@ export function PlanCreationScreen({
     } catch {
       // Inline error will surface
     }
-  }, [draft, parsedTargetTime, previewMutation]);
+  }, [draft, previewMutation]);
 
   const handleContinue = useCallback(() => {
     if (!isStepValid) {
@@ -319,7 +298,6 @@ export function PlanCreationScreen({
             onSelectGoalType={handleGoalTypeSelect}
             onToggleDay={toggleDay}
             shortDayNames={shortDayNames}
-            targetTimeError={targetTimeError}
             isStepValid={isStepValid}
             previewMutation={{
               isPending: previewMutation.isPending,
@@ -346,7 +324,6 @@ function PlanCreationStepLayer({
   onSelectGoalType,
   onToggleDay,
   shortDayNames,
-  targetTimeError,
   isStepValid,
   previewMutation,
   onContinue,
@@ -363,7 +340,6 @@ function PlanCreationStepLayer({
   onSelectGoalType: (goalType: AthleteGoalType) => void;
   onToggleDay: (dayIndex: number) => void;
   shortDayNames: readonly string[];
-  targetTimeError: string | null;
   isStepValid: boolean;
   previewMutation: StepMutationState;
   onContinue: () => void;
@@ -385,17 +361,20 @@ function PlanCreationStepLayer({
       >
         {stepKey !== "goalType" && stepCopy?.question ? (
           <SheetBlock theme={theme}>
-            <Text
-              style={[
-                styles.stepQuestion,
-                {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            >
-              {stepCopy.question}
-            </Text>
+            {/* Step explanation: what is set here and how it affects the plan. */}
+            <Card size="sm" theme={theme} themeMode={themeMode} style={styles.stepInfoCard}>
+              <Text
+                style={[
+                  styles.stepQuestion,
+                  {
+                    color: theme.color.mutedForeground,
+                    fontFamily: theme.typography.fontFamily.sans.regular,
+                  },
+                ]}
+              >
+                {stepCopy.question}
+              </Text>
+            </Card>
           </SheetBlock>
         ) : null}
 
@@ -416,8 +395,6 @@ function PlanCreationStepLayer({
             draft={draft.goal}
             theme={theme}
             copy={copy}
-            language={language}
-            targetTimeError={targetTimeError}
             onChangeDraft={(updater) =>
               onDraftChange((current) => ({
                 ...current,
@@ -429,7 +406,11 @@ function PlanCreationStepLayer({
 
         {stepKey === "schedule" ? (
           <>
-            <SectionBlock title={creationCopy.trainingDaysSection} theme={theme}>
+            <SectionBlock
+              title={creationCopy.trainingDaysSection}
+              description={creationCopy.trainingDaysHint}
+              theme={theme}
+            >
               <DayPicker
                 selectedDays={draft.schedule.trainingDays}
                 theme={theme}
@@ -453,91 +434,119 @@ function PlanCreationStepLayer({
               </Text>
             </SectionBlock>
 
-            <SectionBlock title={creationCopy.longRunSection} theme={theme}>
-              <View style={styles.chipWrap}>
-                {draft.schedule.trainingDays.map((dayIndex) => (
-                  <OptionChip
-                    key={dayIndex}
-                    label={shortDayNames[dayIndex]}
-                    selected={draft.schedule.preferredLongRunDay === dayIndex}
-                    theme={theme}
-                    themeMode={themeMode}
-                    onPress={() =>
-                      onDraftChange((current) => ({
-                        ...current,
-                        schedule: {
-                          ...current.schedule,
-                          preferredLongRunDay:
-                            current.schedule.preferredLongRunDay === dayIndex ? undefined : dayIndex,
-                        },
-                      }))
-                    }
-                  />
-                ))}
-              </View>
+            <SectionBlock
+              title={creationCopy.longRunSection}
+              description={creationCopy.longRunHint}
+              theme={theme}
+            >
+              {/* Same week row as training days; only training days can be picked. Tap again to clear. */}
+              <DayPicker
+                selectedDays={
+                  draft.schedule.preferredLongRunDay !== undefined ? [draft.schedule.preferredLongRunDay] : []
+                }
+                disabledDays={[0, 1, 2, 3, 4, 5, 6].filter(
+                  (day) => !draft.schedule.trainingDays.includes(day),
+                )}
+                theme={theme}
+                themeMode={themeMode}
+                shortDayNames={shortDayNames}
+                onToggleDay={(dayIndex) =>
+                  onDraftChange((current) => ({
+                    ...current,
+                    schedule: {
+                      ...current.schedule,
+                      preferredLongRunDay:
+                        current.schedule.preferredLongRunDay === dayIndex ? undefined : dayIndex,
+                    },
+                  }))
+                }
+              />
             </SectionBlock>
 
-            <SectionBlock title={creationCopy.durationSection} theme={theme}>
-              <View style={styles.chipWrap}>
-                {PLAN_WORKOUT_DURATION_OPTIONS.map((minutes) => (
-                  <OptionChip
-                    key={minutes}
-                    label={`${minutes} min`}
-                    selected={draft.schedule.workoutDurationMinutes === minutes}
-                    theme={theme}
-                    themeMode={themeMode}
-                    onPress={() =>
-                      onDraftChange((current) => ({
-                        ...current,
-                        schedule: { ...current.schedule, workoutDurationMinutes: minutes },
-                      }))
-                    }
-                  />
-                ))}
-              </View>
+            <SectionBlock
+              title={creationCopy.durationSection}
+              description={creationCopy.durationHint}
+              theme={theme}
+            >
+              <Ruler
+                value={draft.schedule.workoutDurationMinutes ?? 45}
+                onChange={(minutes) =>
+                  onDraftChange((current) => ({
+                    ...current,
+                    schedule: { ...current.schedule, workoutDurationMinutes: minutes },
+                  }))
+                }
+                min={MANUAL_PLAN_MIN_DURATION_MINUTES}
+                max={MANUAL_PLAN_MAX_DURATION_MINUTES}
+                step={5}
+                majorEvery={15}
+                labelEvery={30}
+                unit={creationCopy.units.min}
+                accessibilityLabel={creationCopy.durationSection}
+                theme={theme}
+                themeMode={themeMode}
+              />
             </SectionBlock>
           </>
         ) : null}
 
         {stepKey === "structure" ? (
           <>
-            <SheetBlock theme={theme}>
-              <View style={styles.counterGroup}>
-                <CounterRow
-                  label={creationCopy.weeksLabel}
-                  value={draft.structure.totalWeeks}
-                  suffix={creationCopy.weeksSuffix}
-                  min={MANUAL_PLAN_MIN_WEEKS}
-                  max={MANUAL_PLAN_MAX_WEEKS}
-                  theme={theme}
-                  themeMode={themeMode}
-                  onChange={(value) =>
-                    onDraftChange((current) => ({
-                      ...current,
-                      structure: { ...current.structure, totalWeeks: value },
-                    }))
-                  }
-                />
-                <SegmentedRow
-                  label={creationCopy.sessionsLabel}
-                  segments={Array.from(
-                    { length: Math.max(draft.schedule.trainingDays.length, 1) },
-                    (_, i) => ({ label: String(i + 1), value: i + 1 }),
-                  )}
-                  value={draft.structure.sessionsPerWeek}
-                  theme={theme}
-                  themeMode={themeMode}
-                  onChange={(value) =>
-                    onDraftChange((current) => ({
-                      ...current,
-                      structure: { ...current.structure, sessionsPerWeek: value },
-                    }))
-                  }
-                />
-              </View>
-            </SheetBlock>
+            <SectionBlock
+              title={creationCopy.weeksLabel}
+              description={creationCopy.weeksHint}
+              theme={theme}
+            >
+              <Ruler
+                value={draft.structure.totalWeeks}
+                onChange={(value) =>
+                  onDraftChange((current) => ({
+                    ...current,
+                    structure: { ...current.structure, totalWeeks: value },
+                  }))
+                }
+                min={MANUAL_PLAN_MIN_WEEKS}
+                max={MANUAL_PLAN_MAX_WEEKS}
+                step={1}
+                tickSpacing={24}
+                majorEvery={4}
+                labelEvery={4}
+                unit={creationCopy.weeksSuffix}
+                accessibilityLabel={creationCopy.weeksLabel}
+                theme={theme}
+                themeMode={themeMode}
+              />
+            </SectionBlock>
 
-            <SectionBlock title={creationCopy.focusSection} theme={theme}>
+            <SectionBlock
+              title={creationCopy.sessionsLabel}
+              description={creationCopy.sessionsHint}
+              theme={theme}
+            >
+              {/* Same round-button look as the weekday pickers; counts above the
+                  number of training days are unavailable. */}
+              <CirclePicker
+                options={[1, 2, 3, 4, 5, 6, 7].map((count) => ({
+                  value: count,
+                  label: String(count),
+                  disabled: count > Math.max(draft.schedule.trainingDays.length, 1),
+                }))}
+                selected={[draft.structure.sessionsPerWeek]}
+                onPress={(value) =>
+                  onDraftChange((current) => ({
+                    ...current,
+                    structure: { ...current.structure, sessionsPerWeek: value },
+                  }))
+                }
+                theme={theme}
+              />
+            </SectionBlock>
+
+            <SectionBlock
+              title={creationCopy.focusSection}
+              description={creationCopy.focusHint}
+              theme={theme}
+            >
               <View style={styles.chipWrap}>
                 {PLAN_FOCUS_OPTIONS.map((focusKey) => (
                   <OptionChip
@@ -594,7 +603,7 @@ function PlanCreationStepLayer({
                   styles.iconButton,
                   {
                     backgroundColor:
-                      themeMode === "dark" ? "#1a1a1e" : theme.color.secondary,
+                      theme.color.controlSecondary,
                   },
                   pressed && styles.pressed,
                 ]}
@@ -641,26 +650,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    gap: 20,
+    // Vertical rhythm between blocks of a step; keep in sync with goal-setup-step.
+    gap: 52,
     paddingTop: 72,
     paddingBottom: 84,
   },
+  stepInfoCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
   stepQuestion: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: -6,
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 15,
   },
   chipWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "center",
     gap: 10,
   },
   dayCountText: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  counterGroup: {
-    gap: 12,
+    textAlign: "center",
   },
   actionsRow: {
     flexDirection: "row",
