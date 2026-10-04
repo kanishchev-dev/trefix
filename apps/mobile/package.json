@@ -25,6 +25,7 @@
     "@workspace/api-client": "workspace:*",
     "@workspace/config": "workspace:*",
     "@workspace/tokens": "workspace:*",
+    "@workspace/ui-native": "workspace:*",
     "expo": "57.0.23",
     "expo-apple-authentication": "~57.0.1",
     "expo-blur": "~57.0.3",

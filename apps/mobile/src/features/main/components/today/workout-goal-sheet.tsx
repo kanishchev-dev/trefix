@@ -4,10 +4,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import { Plus, Minus } from "lucide-react-native";
+import { Stepper, Scrubber } from "@workspace/ui-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import {
@@ -81,30 +80,6 @@ export function WorkoutGoalSheet({
   }, [mode, distanceVal, durationVal]);
 
   const isValid = parsedValue > 0 && isFutureOrToday && !createWorkoutMutation.isPending;
-
-  const handleDecrement = () => {
-    if (mode === "distance") {
-      const current = parseFloat(distanceVal.replace(",", ".")) || 0;
-      const next = Math.max(0.5, current - 1);
-      setDistanceVal(next.toString());
-    } else {
-      const current = parseInt(durationVal, 10) || 0;
-      const next = Math.max(5, current - 5);
-      setDurationVal(next.toString());
-    }
-  };
-
-  const handleIncrement = () => {
-    if (mode === "distance") {
-      const current = parseFloat(distanceVal.replace(",", ".")) || 0;
-      const next = current + 1;
-      setDistanceVal(next.toString());
-    } else {
-      const current = parseInt(durationVal, 10) || 0;
-      const next = current + 5;
-      setDurationVal(next.toString());
-    }
-  };
 
   const handleSubmit = async () => {
     setErrorMessage("");
@@ -183,72 +158,43 @@ export function WorkoutGoalSheet({
           </SheetBlock>
         ) : null}
 
-        {/* Display Main Goal Value Input with Stepper Controls */}
+        {/* Display Main Goal Value Input with Universal Metric Controls */}
         <SheetBlock theme={theme}>
           <View style={styles.valueDisplayArea}>
-            <View style={styles.inputRow}>
-              <Pressable
-                onPress={handleDecrement}
-                style={({ pressed }) => [
-                  styles.stepperButton,
-                  {
-                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-                    borderColor:
-                      themeMode === "dark"
-                        ? "rgba(255, 255, 255, 0.08)"
-                        : theme.color.border,
-                  },
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <Minus size={20} color={theme.color.foreground} />
-              </Pressable>
-
-              <View style={styles.numberWrapper}>
-                <TextInput
-                  editable={false}
-                  style={[
-                    styles.valueInput,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                  value={mode === "distance" ? distanceVal : durationVal}
-                />
-                <Text
-                  style={[
-                    styles.superscriptUnit,
-                    {
-                      color: theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  {mode === "distance"
-                    ? goalSheetCopy.distanceUnit || "км"
-                    : goalSheetCopy.durationUnit || "мин"}
-                </Text>
-              </View>
-
-              <Pressable
-                onPress={handleIncrement}
-                style={({ pressed }) => [
-                  styles.stepperButton,
-                  {
-                    backgroundColor: themeMode === "dark" ? "#1a1a1e" : theme.color.surface,
-                    borderColor:
-                      themeMode === "dark"
-                        ? "rgba(255, 255, 255, 0.08)"
-                        : theme.color.border,
-                  },
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <Plus size={20} color={theme.color.foreground} />
-              </Pressable>
-            </View>
+            <Stepper
+              value={mode === "distance" ? parseFloat(distanceVal) || 1 : parseInt(durationVal, 10) || 10}
+              onChange={(val) => {
+                if (mode === "distance") {
+                  setDistanceVal(val.toString());
+                } else {
+                  setDurationVal(val.toString());
+                }
+              }}
+              min={mode === "distance" ? 0.5 : 5}
+              max={mode === "distance" ? 100 : 300}
+              step={mode === "distance" ? 0.5 : 5}
+              unit={mode === "distance" ? goalSheetCopy.distanceUnit || "км" : goalSheetCopy.durationUnit || "мин"}
+              theme={theme}
+            />
           </View>
+        </SheetBlock>
+
+        <SheetBlock theme={theme}>
+          <Scrubber
+            value={mode === "distance" ? parseFloat(distanceVal) || 1 : parseInt(durationVal, 10) || 10}
+            onChange={(val) => {
+              if (mode === "distance") {
+                setDistanceVal(val.toString());
+              } else {
+                setDurationVal(val.toString());
+              }
+            }}
+            min={mode === "distance" ? 0.5 : 5}
+            max={mode === "distance" ? 50 : 180}
+            step={mode === "distance" ? 1 : 5}
+            unit={mode === "distance" ? goalSheetCopy.distanceUnit || "км" : goalSheetCopy.durationUnit || "мин"}
+            theme={theme}
+          />
         </SheetBlock>
 
         {/* Quick Presets Horizontal Slider (Edge-to-Edge) */}
