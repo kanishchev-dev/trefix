@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
+import { col, fn, Op, where as sequelizeWhere } from 'sequelize';
 
-import { PaginatedResponseDto, PaginationDto } from '@/common/dto/pagination.dto';
+import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { SystemEntityDeletionForbiddenException } from '@/common/exceptions/system-entity-deletion-forbidden.exception';
 import { User } from '@/modules/users/entities/user.entity';
 
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { CreatePermissionGroupDto } from './dto/create-permission-group.dto';
+import { PermissionQueryDto } from './dto/permission-query.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { UpdatePermissionGroupDto } from './dto/update-permission-group.dto';
 import { Permission } from './entities/permission.entity';
@@ -50,17 +52,32 @@ export class PermissionsService {
 
   /**
    * Retrieves all available permissions.
-   * @param pagination - Pagination options
+   * @param query - Pagination and search options
    * @returns Paginated list of permissions
    */
-  async findAllPermissions(pagination: PaginationDto = new PaginationDto()): Promise<PaginatedResponseDto<Permission>> {
-    const { page = 1, limit = 10 } = pagination;
+  async findAllPermissions(query: PermissionQueryDto = new PermissionQueryDto()): Promise<PaginatedResponseDto<Permission>> {
+    const { page = 1, limit = 10, search } = query;
     const { rows, count } = await this.permissionModel.findAndCountAll({
+      where: this.buildTextFilter(['name', 'description'], search),
+      // Deterministic order: without it, pagination can return overlapping
+      // or missing rows, and the grouped settings UI would shuffle on refetch.
+      order: [['name', 'ASC']],
       limit,
       offset: (page - 1) * limit,
     });
 
     return new PaginatedResponseDto(rows, count, page, limit);
+  }
+
+  /**
+   * Retrieves the complete permission catalog without pagination.
+   *
+   * The admin group settings screen renders every permission as a toggle, so
+   * it must never work off a truncated page of the paginated list.
+   * @returns All permissions ordered by name
+   */
+  async findPermissionCatalog(): Promise<Permission[]> {
+    return this.permissionModel.findAll({ order: [['name', 'ASC']] });
   }
 
   /**
@@ -124,12 +141,14 @@ export class PermissionsService {
 
   /**
    * Retrieves all permission groups.
-   * @param pagination - Pagination options
+   * @param query - Pagination and search options
    * @returns Paginated list of permission groups
    */
-  async findAllGroups(pagination: PaginationDto = new PaginationDto()): Promise<PaginatedResponseDto<PermissionGroup>> {
-    const { page = 1, limit = 10 } = pagination;
+  async findAllGroups(query: PermissionQueryDto = new PermissionQueryDto()): Promise<PaginatedResponseDto<PermissionGroup>> {
+    const { page = 1, limit = 10, search } = query;
     const { rows, count } = await this.permissionGroupModel.findAndCountAll({
+      where: this.buildTextFilter(['name', 'description'], search),
+      order: [['name', 'ASC']],
       limit,
       offset: (page - 1) * limit,
     });
@@ -138,13 +157,22 @@ export class PermissionsService {
   }
 
   /**
-   * Finds a permission group by ID.
+   * Finds a permission group by ID including its permissions and members.
    * @param id - Group UUID
-   * @returns Permission group with its permissions
+   * @returns Permission group with permissions and users
    */
   async findGroup(id: string): Promise<PermissionGroup> {
     const group = await this.permissionGroupModel.findByPk(id, {
-      include: [Permission],
+      include: [
+        { model: Permission, through: { attributes: [] } },
+        {
+          model: User,
+          as: 'users',
+          through: { attributes: [] },
+          attributes: ['id', 'firstName', 'lastName', 'email', 'isSystem'],
+          required: false,
+        },
+      ],
     });
     if (!group) {
       throw new EntityNotFoundException('PermissionGroup', id);
@@ -334,5 +362,26 @@ export class PermissionsService {
     });
 
     return Array.from(permissionNames);
+  }
+
+  /**
+   * Builds a case-insensitive OR filter across the given columns.
+   * Returns undefined when no search term is supplied so the query stays unfiltered.
+   */
+  private buildTextFilter(
+    columns: readonly string[],
+    search?: string,
+  ): Record<string, unknown> | undefined {
+    const term = search?.trim();
+    if (!term) {
+      return undefined;
+    }
+
+    // Escape LIKE wildcards so user input is matched literally.
+    const pattern = `%${term.toLowerCase().replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
+
+    return {
+      [Op.or]: columns.map((column) => sequelizeWhere(fn('lower', col(column)), { [Op.like]: pattern })),
+    };
   }
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
 import { RealtimeModule } from '@/modules/realtime/realtime.module';
@@ -23,7 +23,9 @@ import { PermissionsService } from './permissions.service';
       UserPermissionGroup,
       User,
     ]),
-    RealtimeModule,
+    // forwardRef breaks the RealtimeModule <-> PermissionsModule cycle:
+    // the realtime gateway resolves room permissions through PermissionsService.
+    forwardRef(() => RealtimeModule),
   ],
   controllers: [PermissionsController],
   providers: [PermissionsService, PermissionsListener],

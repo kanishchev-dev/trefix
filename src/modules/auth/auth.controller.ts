@@ -5,8 +5,10 @@ import { Request, Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 import { AuthService } from './auth.service';
+import { ActivateInviteDto } from '@/modules/users/dto/activate-invite.dto';
 import { AppleNativeExchangeDto } from './dto/apple-native-exchange.dto';
 import { AuthRegisterResponseDto } from './dto/auth-register-response.dto';
 import { AuthTokensResponseDto } from './dto/auth-tokens-response.dto';
@@ -196,6 +198,18 @@ export class AuthController {
     return this.authService.confirmPasswordReset(dto);
   }
 
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('invite/activate')
+  @ApiOperation({ summary: 'Activate an invited account by setting a password' })
+  @ApiResponse({ status: 200, type: AuthTokensResponseDto })
+  activateInvite(@Body() dto: ActivateInviteDto, @Req() request: Request, @Ip() ipAddress: string): Promise<AuthTokensResponseDto> {
+    const userAgentHeader = request.headers['user-agent'];
+    const userAgent = Array.isArray(userAgentHeader) ? userAgentHeader[0] : userAgentHeader;
+
+    return this.toTokensResponse(this.authService.activateInvite(dto, { userAgent, ipAddress }));
+  }
+
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the current authenticated user' })
@@ -204,7 +218,16 @@ export class AuthController {
     return this.authService.me(user);
   }
 
+  /**
+   * Self-service profile edits. Gated with `account.update` rather than
+   * `users.update`, because editing your own profile is not an admin
+   * capability — the permission is granted to every account by default and can
+   * still be revoked to lock a service account down. The remaining session
+   * endpoints (logout, password change) stay ungated: they are inseparable
+   * from holding a session at all.
+   */
   @Patch('me')
+  @RequirePermissions('account.update')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update the current authenticated user' })
   @ApiResponse({ status: 200, type: AuthUserResponseDto })
@@ -240,7 +263,7 @@ export class AuthController {
   }
 
   private async toTokensResponse(
-    resultPromise: Promise<{ user: User; tokens: AuthTokenResult }>,
+    resultPromise: Promise<{ user: User; tokens: AuthTokenResult; permissions: string[] }>,
   ): Promise<AuthTokensResponseDto> {
     const result = await resultPromise;
     return {
@@ -258,6 +281,7 @@ export class AuthController {
         referralCode: result.user.referralCode ?? undefined,
         emailVerified: result.user.emailVerified,
         createdAt: result.user.createdAt,
+        permissions: result.permissions,
         features: {
           showReferral: !!result.user.referralCode,
         },

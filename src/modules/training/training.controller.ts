@@ -37,6 +37,7 @@ import {
   TRAINING_WORKOUT_EXAMPLE,
 } from './training.openapi';
 import { TrainingService } from './training.service';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 @ApiTags('Training')
 @ApiBearerAuth()
@@ -48,6 +49,7 @@ export class TrainingController {
   constructor(private readonly trainingService: TrainingService) {}
 
   @Post('athletes')
+  @RequirePermissions('training.athletes.create')
   @ApiOperation({ summary: 'Create an athlete profile' })
   @ApiCreatedResponse({
     description: 'Athlete profile created',
@@ -62,6 +64,7 @@ export class TrainingController {
   }
 
   @Get('athletes/me')
+  @RequirePermissions('training.athletes.read')
   @ApiOperation({ summary: 'Get the current user athlete profile' })
   @ApiOkResponse({
     description: 'Athlete profile',
@@ -73,6 +76,7 @@ export class TrainingController {
   }
 
   @Get('athletes/:id')
+  @RequirePermissions('training.athletes.read')
   @ApiOperation({ summary: 'Get an athlete profile' })
   @ApiOkResponse({
     description: 'Athlete profile',
@@ -87,6 +91,7 @@ export class TrainingController {
   }
 
   @Get('athletes/:id/state')
+  @RequirePermissions('training.athletes.read')
   @ApiOperation({ summary: 'Get the latest athlete state' })
   @ApiOkResponse({
     description: 'Latest athlete state',
@@ -103,6 +108,7 @@ export class TrainingController {
   }
 
   @Get('progress')
+  @RequirePermissions('training.progress.read')
   @ApiOperation({ summary: 'Get progress snapshot for current athlete' })
   @ApiOkResponse({
     description: 'Progress snapshot',
@@ -116,6 +122,7 @@ export class TrainingController {
   }
 
   @Post('goals')
+  @RequirePermissions('training.goals.create')
   @ApiOperation({ summary: 'Create a universal training goal (polymorphic by goal.type)' })
   @ApiCreatedResponse({
     description: 'Goal created',
@@ -127,6 +134,7 @@ export class TrainingController {
   }
 
   @Get('goals/:id')
+  @RequirePermissions('training.goals.read')
   @ApiOperation({ summary: 'Get a running goal' })
   @ApiOkResponse({
     description: 'Running goal',
@@ -138,6 +146,7 @@ export class TrainingController {
   }
 
   @Post('plans/manual/preview')
+  @RequirePermissions('training.plans.create')
   @ApiOperation({ summary: 'Preview a manually configured training plan (not persisted)' })
   @ApiOkResponse({
     description: 'Manual plan preview structure',
@@ -151,6 +160,7 @@ export class TrainingController {
   }
 
   @Post('plans/manual')
+  @RequirePermissions('training.plans.create')
   @ApiOperation({ summary: 'Create a training plan from a manual configuration' })
   @ApiCreatedResponse({
     description: 'Training plan created from the manual configuration',
@@ -164,6 +174,7 @@ export class TrainingController {
   }
 
   @Post('plans')
+  @RequirePermissions('training.plans.create')
   @ApiOperation({ summary: 'Generate a training plan' })
   @ApiCreatedResponse({
     description: 'Training plan created',
@@ -175,6 +186,7 @@ export class TrainingController {
   }
 
   @Get('plans/:id')
+  @RequirePermissions('training.plans.read')
   @ApiOperation({ summary: 'Get a training plan' })
   @ApiOkResponse({
     description: 'Training plan',
@@ -186,6 +198,7 @@ export class TrainingController {
   }
 
   @Get('plans/:id/overview')
+  @RequirePermissions('training.plans.read')
   @ApiOperation({ summary: 'Get a training plan overview for the mobile UI' })
   @ApiOkResponse({
     description: 'Training plan overview',
@@ -196,6 +209,7 @@ export class TrainingController {
   }
 
   @Post('plans/:id/regenerate')
+  @RequirePermissions('training.plans.update')
   @ApiOperation({ summary: 'Regenerate a training plan' })
   @ApiOkResponse({
     description: 'Regenerated training plan',
@@ -211,6 +225,7 @@ export class TrainingController {
   }
 
   @Get('workouts')
+  @RequirePermissions('training.workouts.read')
   @ApiOperation({ summary: 'List workouts for a date range' })
   @ApiOkResponse({
     description: 'Workouts list',
@@ -225,6 +240,7 @@ export class TrainingController {
   }
 
   @Post('workouts')
+  @RequirePermissions('training.workouts.create')
   @ApiOperation({ summary: 'Create or log a workout' })
   @ApiCreatedResponse({
     description: 'Workout created',
@@ -238,6 +254,7 @@ export class TrainingController {
   }
 
   @Get('workouts/:id')
+  @RequirePermissions('training.workouts.read')
   @ApiOperation({ summary: 'Get a workout' })
   @ApiOkResponse({
     description: 'Workout',
@@ -249,6 +266,7 @@ export class TrainingController {
   }
 
   @Post('workouts/:id/complete')
+  @RequirePermissions('training.workouts.update')
   @ApiOperation({ summary: 'Complete a workout' })
   @ApiOkResponse({
     description: 'Completed workout',
@@ -264,6 +282,7 @@ export class TrainingController {
   }
 
   @Post('training/analyze')
+  @RequirePermissions('training.analyze')
   @ApiOperation({ summary: 'Analyze a workout' })
   @ApiOkResponse({
     description: 'Workout analysis',
@@ -278,6 +297,7 @@ export class TrainingController {
   }
 
   @Post('training/adapt')
+  @RequirePermissions('training.adapt')
   @ApiOperation({ summary: 'Adapt a training plan' })
   @ApiOkResponse({
     description: 'Adaptation decision',

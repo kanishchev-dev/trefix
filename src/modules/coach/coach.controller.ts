@@ -11,6 +11,7 @@ import { CoachChatDto } from './dto/coach-chat.dto';
 import { CoachChatResponseDto, CoachSessionDetailResponseDto, CoachSessionResponseDto } from './dto/coach-response.dto';
 import { CreateCoachSessionDto } from './dto/create-coach-session.dto';
 import { SendCoachMessageDto } from './dto/send-coach-message.dto';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 @ApiTags('Coach')
 @ApiBearerAuth()
@@ -22,6 +23,7 @@ export class CoachController {
   constructor(private readonly coachService: CoachService) {}
 
   @Post('sessions')
+  @RequirePermissions('coach.sessions.create')
   @ApiOperation({ summary: 'Create a coaching session' })
   @ApiCreatedResponse({
     description: 'Coach session created',
@@ -36,6 +38,7 @@ export class CoachController {
   }
 
   @Get('sessions/latest')
+  @RequirePermissions('coach.sessions.read')
   @ApiOperation({ summary: 'Get the latest coaching session' })
   @ApiOkResponse({
     description: 'Latest coach session with message history',
@@ -46,6 +49,7 @@ export class CoachController {
   }
 
   @Get('sessions/:id')
+  @RequirePermissions('coach.sessions.read')
   @ApiOperation({ summary: 'Get a coaching session' })
   @ApiOkResponse({
     description: 'Coach session with message history',
@@ -57,6 +61,7 @@ export class CoachController {
   }
 
   @Sse('sessions/:id/stream')
+  @RequirePermissions('coach.sessions.read')
   @ApiOperation({ summary: 'Stream a message from the coach' })
   async streamMessage(
     @CurrentUser() user: AuthUserContext,
@@ -72,6 +77,7 @@ export class CoachController {
   }
 
   @Post('sessions/:id/messages')
+  @RequirePermissions('coach.sessions.message')
   @ApiOperation({ summary: 'Send a message to the coach' })
   @ApiCreatedResponse({
     description: 'Coach reply generated',
@@ -87,6 +93,7 @@ export class CoachController {
   }
 
   @Post('chat')
+  @RequirePermissions('coach.sessions.message')
   @ApiOperation({ summary: 'Send a chat message to the coach' })
   @ApiCreatedResponse({
     description: 'Coach reply generated',

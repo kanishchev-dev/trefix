@@ -9,7 +9,10 @@ import { comparePassword, hashPassword } from '@/common/utils/password-hash.util
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
 import { User } from '@/modules/users/entities/user.entity';
+import { UserActivatedEvent } from '@/modules/users/events/user-activated.event';
 import { UsersService } from '@/modules/users/users.service';
+import { UserInviteService } from '@/modules/users/services/user-invite.service';
+import { ActivateInviteDto } from '@/modules/users/dto/activate-invite.dto';
 import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
 
 import {
@@ -49,6 +52,8 @@ import { AuthSessionCreatedEvent } from './events/auth-session-created.event';
 import { AuthSessionRevokedEvent } from './events/auth-session-revoked.event';
 import { AuthEmailAlreadyExistsException } from './exceptions/auth-email-already-exists.exception';
 import { AuthEmailNotVerifiedException } from './exceptions/auth-email-not-verified.exception';
+import { AuthInviteAlreadyActivatedException } from './exceptions/auth-invite-already-activated.exception';
+import { AuthInviteCodeInvalidException } from './exceptions/auth-invite-code-invalid.exception';
 import { AuthInvalidCredentialsException } from './exceptions/auth-invalid-credentials.exception';
 import { AuthPasswordResetCodeInvalidException } from './exceptions/auth-password-reset-code-invalid.exception';
 import { AuthPasswordResetTokenExpiredException } from './exceptions/auth-password-reset-token-expired.exception';
@@ -69,9 +74,23 @@ import { AuthRedisService } from './services/auth-redis.service';
 import { AuthTokenService } from './services/auth-token.service';
 import { parseDurationToMilliseconds } from './utils/duration.util';
 
+/**
+ * A freshly issued session together with everything the client needs to render
+ * an authenticated UI.
+ *
+ * `permissions` is part of the result on purpose. The sign-in response *is* the
+ * client's first and only source of the effective permission set: the frontend
+ * seeds its auth context from it and the session bootstrap does not run again
+ * for the rest of the page's life. Leaving `permissions` out made every
+ * permission check answer "no" right after a successful sign-in, which showed up
+ * as an almost empty sidebar and denied access to the sections that were visible.
+ * A reload papered over it, because that path goes through `GET /auth/me`, which
+ * has always returned them.
+ */
 interface AuthenticatedUserResult {
   user: User;
   tokens: AuthTokenResult;
+  permissions: string[];
 }
 
 interface SocialProfile {
@@ -125,6 +144,7 @@ interface GoogleCertsResponse {
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+    private readonly userInviteService: UserInviteService,
     private readonly authRedisService: AuthRedisService,
     private readonly authTokenService: AuthTokenService,
     private readonly mailerService: MailerService,
@@ -310,6 +330,7 @@ export class AuthService {
 
     return {
       user,
+      permissions: await this.permissionsService.getEffectivePermissions(user.id),
       tokens: {
         accessToken,
         refreshToken: nextRefreshToken,
@@ -439,6 +460,46 @@ export class AuthService {
     });
   }
 
+  /**
+   * Completes the admin invite flow: an invited (passwordless) user sets their
+   * own password using the one-time code from the invite email and is signed
+   * in immediately afterwards.
+   * @param dto - Email, invite code and the new password
+   * @returns The activated user together with a fresh session
+   */
+  async activateInvite(
+    dto: ActivateInviteDto,
+    context: { userAgent?: string; ipAddress?: string } = {},
+  ): Promise<AuthenticatedUserResult> {
+    const user = await this.usersService.findByEmail(dto.email);
+    // Same response for unknown email and wrong code so the endpoint cannot
+    // be used to enumerate accounts.
+    const isValidInvite =
+      Boolean(user) &&
+      !user!.passwordHash &&
+      (await this.userInviteService.consumeInviteCode(user!.id, dto.code));
+
+    if (!isValidInvite) {
+      if (user?.passwordHash) {
+        throw new AuthInviteAlreadyActivatedException();
+      }
+
+      throw new AuthInviteCodeInvalidException();
+    }
+
+    const passwordHash = await this.hashPassword(dto.newPassword);
+    // Activation also confirms the address: the invite was delivered to it.
+    const activatedUser = await this.usersService.updatePasswordAndVerification(user!.id, {
+      passwordHash,
+      emailVerified: true,
+    });
+
+    this.eventEmitter.emit('auth.password_changed', new AuthPasswordChangedEvent(activatedUser.id, activatedUser.email));
+    this.eventEmitter.emit('user.updated', new UserActivatedEvent(activatedUser.id, activatedUser.email));
+
+    return this.createAuthenticatedSession(activatedUser, context);
+  }
+
   async me(user: AuthUserContext): Promise<AuthUserResponseDto> {
     try {
       const currentUser = await this.usersService.findOne(user.id);
@@ -533,6 +594,7 @@ export class AuthService {
 
     return {
       user,
+      permissions: await this.permissionsService.getEffectivePermissions(user.id),
       tokens: record.tokens,
     };
   }
@@ -564,6 +626,7 @@ export class AuthService {
 
     return {
       user,
+      permissions: await this.permissionsService.getEffectivePermissions(user.id),
       tokens: {
         accessToken,
         refreshToken,

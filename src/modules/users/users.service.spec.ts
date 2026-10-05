@@ -2,6 +2,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { SettingsService } from '@/modules/settings/settings.service';
+
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -35,6 +37,15 @@ describe('UsersService', () => {
           provide: EventEmitter2,
           useValue: {
             emit: jest.fn(),
+          },
+        },
+        {
+          provide: SettingsService,
+          useValue: {
+            getDefaultAssignments: jest.fn().mockResolvedValue({
+              defaultGroups: [],
+              defaultPermissions: [],
+            }),
           },
         },
       ],
@@ -75,10 +86,21 @@ describe('UsersService', () => {
       const result = await service.findAll();
       expect(result.data).toEqual([mockUser]);
       expect(result.meta.total).toBe(1);
-      expect(model.findAndCountAll).toHaveBeenCalledWith({
-        limit: 10,
-        offset: 0,
-      });
+      expect(model.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 10,
+          offset: 0,
+        }),
+      );
+    });
+
+    it('should apply search filter when search term is provided', async () => {
+      await service.findAll({ page: 1, limit: 10, search: 'john' });
+      expect(model.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.anything(),
+        }),
+      );
     });
   });
 

@@ -98,6 +98,16 @@ export class SystemSeedService implements OnApplicationBootstrap {
     this.logger.log('System seed data is up to date');
   }
 
+  /**
+   * Detects whether the system has already been bootstrapped.
+   *
+   * The check is deliberately existence-only: it verifies that every system
+   * permission, system group, the initial admin and its group assignment exist.
+   * It must NOT compare the *contents* of the groups against the seed catalog,
+   * because admins are expected to modify group permissions through the admin
+   * panel. Any content comparison would make the seed treat those manual
+   * changes as "not seeded yet" and silently revert them on the next boot.
+   */
   private async isSystemSeedComplete(transaction: Transaction): Promise<boolean> {
     const permissionNames = SYSTEM_PERMISSION_CATALOG.map((permission) => permission.key);
     const groupKeys = SYSTEM_PERMISSION_GROUPS.map((group) => group.systemKey);
@@ -110,12 +120,8 @@ export class SystemSeedService implements OnApplicationBootstrap {
       transaction,
     });
 
-    if (existingPermissions.length !== permissionNames.length) {
-      return false;
-    }
-
-    const permissionsByName = new Map(existingPermissions.map((permission) => [permission.name, permission]));
-    if (permissionNames.some((permissionName) => !permissionsByName.has(permissionName))) {
+    const existingPermissionNames = new Set(existingPermissions.map((permission) => permission.name));
+    if (permissionNames.some((permissionName) => !existingPermissionNames.has(permissionName))) {
       return false;
     }
 
@@ -126,10 +132,6 @@ export class SystemSeedService implements OnApplicationBootstrap {
       paranoid: false,
       transaction,
     });
-
-    if (existingGroups.length !== groupKeys.length) {
-      return false;
-    }
 
     const groupsByKey = new Map(existingGroups.map((group) => [group.systemKey || '', group]));
     if (groupKeys.some((groupKey) => !groupsByKey.has(groupKey))) {
@@ -148,43 +150,20 @@ export class SystemSeedService implements OnApplicationBootstrap {
       return false;
     }
 
+    const administratorsGroup = groupsByKey.get(SYSTEM_PERMISSION_GROUPS[0].systemKey);
+    if (!administratorsGroup) {
+      return false;
+    }
+
     const adminAssignment = await this.userPermissionGroupModel.findOne({
       where: {
         userId: adminUser.id,
-        permissionGroupId: groupsByKey.get(SYSTEM_PERMISSION_GROUPS[0].systemKey)?.id,
+        permissionGroupId: administratorsGroup.id,
       },
       transaction,
     });
 
-    if (!adminAssignment) {
-      return false;
-    }
-
-    const administratorsGroup = groupsByKey.get(SYSTEM_PERMISSION_GROUPS[0].systemKey);
-    const registeredUsersGroup = groupsByKey.get(SYSTEM_PERMISSION_GROUPS[1].systemKey);
-
-    if (!administratorsGroup || !registeredUsersGroup) {
-      return false;
-    }
-
-    const [administratorsPermissions, registeredUsersPermissions] = await Promise.all([
-      administratorsGroup.$get('permissions', { transaction }),
-      registeredUsersGroup.$get('permissions', { transaction }),
-    ]);
-
-    return (
-      this.hasExactPermissions(administratorsPermissions, SYSTEM_PERMISSION_GROUPS[0].permissionKeys) &&
-      this.hasExactPermissions(registeredUsersPermissions, SYSTEM_PERMISSION_GROUPS[1].permissionKeys)
-    );
-  }
-
-  private hasExactPermissions(permissions: Permission[], expectedNames: readonly string[]): boolean {
-    if (permissions.length !== expectedNames.length) {
-      return false;
-    }
-
-    const actualNames = new Set(permissions.map((permission) => permission.name));
-    return expectedNames.every((permissionName) => actualNames.has(permissionName));
+    return Boolean(adminAssignment);
   }
 
   private async seedPermissions(transaction: Transaction): Promise<Map<string, Permission>> {
@@ -198,14 +177,20 @@ export class SystemSeedService implements OnApplicationBootstrap {
       });
 
       if (existingPermission) {
+        // Restore only: an existing permission may already have been renamed or
+        // re-described from the admin panel, and that must survive restarts.
         await existingPermission.restore({ transaction });
-        await existingPermission.update(
-          {
-            name: definition.key,
-            description: definition.description,
-          },
-          { transaction },
-        );
+
+        // The one exception is a missing description: it carries no operator
+        // intent, and the admin panel renders it, so backfilling it is safe and
+        // keeps permissions seeded by an older catalog readable.
+        if (!existingPermission.description) {
+          await existingPermission.update(
+            { description: definition.description },
+            { transaction },
+          );
+        }
+
         permissions.set(definition.key, existingPermission);
         continue;
       }
@@ -247,16 +232,8 @@ export class SystemSeedService implements OnApplicationBootstrap {
     });
 
     if (existingGroup) {
+      // Restore only, so manual renames done via the admin panel persist.
       await existingGroup.restore({ transaction });
-      await existingGroup.update(
-        {
-          name: definition.name,
-          description: definition.description,
-          systemKey: definition.systemKey,
-          isSystem: true,
-        },
-        { transaction },
-      );
       return existingGroup;
     }
 
@@ -305,14 +282,12 @@ export class SystemSeedService implements OnApplicationBootstrap {
       throw new Error(`Failed to resolve all permissions for system group ${group.systemKey || group.name}`);
     }
 
-    await group.$set('permissions', resolvedPermissions, { transaction });
+    // Additive only. `$set` would drop permissions that an admin granted to a
+    // system group through the admin panel; the seed must never revoke.
+    await group.$add('permissions', resolvedPermissions, { transaction });
   }
 
   private async seedAdminUser(transaction: Transaction): Promise<User> {
-    const adminEmail = this.configService.getOrThrow<string>('ADMIN_EMAIL').trim().toLowerCase();
-    const adminPassword = this.configService.getOrThrow<string>('ADMIN_PASSWORD');
-    const passwordHash = await hashPassword(adminPassword, 12);
-
     const existingAdmin = await this.userModel.findOne({
       where: { systemKey: SYSTEM_ADMIN_USER.systemKey },
       paranoid: false,
@@ -320,23 +295,15 @@ export class SystemSeedService implements OnApplicationBootstrap {
     });
 
     if (existingAdmin) {
+      // Never reset an existing admin's credentials: the password may have
+      // been changed from the admin panel after the initial bootstrap.
       await existingAdmin.restore({ transaction });
-      await existingAdmin.update(
-        {
-          email: adminEmail,
-          firstName: SYSTEM_ADMIN_USER.firstName,
-          lastName: SYSTEM_ADMIN_USER.lastName,
-          passwordHash,
-          systemKey: SYSTEM_ADMIN_USER.systemKey,
-          isSystem: true,
-          emailVerified: true,
-          emailVerifiedAt: new Date(),
-          passwordChangedAt: new Date(),
-        },
-        { transaction },
-      );
       return existingAdmin;
     }
+
+    const adminEmail = this.configService.getOrThrow<string>('ADMIN_EMAIL').trim().toLowerCase();
+    const adminPassword = this.configService.getOrThrow<string>('ADMIN_PASSWORD');
+    const passwordHash = await hashPassword(adminPassword, 12);
 
     return this.userModel.create(
       {

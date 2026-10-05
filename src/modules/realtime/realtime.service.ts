@@ -5,7 +5,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { Redis } from 'ioredis';
 import { Server } from 'socket.io';
 
-import { REALTIME_ROOM_PREFIX, REALTIME_USER_ROOM_PREFIX } from './constants/realtime.constants';
+import { REALTIME_ROOM_PREFIX, REALTIME_SESSION_ROOM_PREFIX, REALTIME_USER_ROOM_PREFIX } from './constants/realtime.constants';
 import { RealtimeEvent } from './interfaces/realtime-event.interface';
 
 const DEFAULT_REALTIME_SOURCE = 'backend';
@@ -63,6 +63,26 @@ export class RealtimeService implements OnApplicationShutdown {
     return `${REALTIME_ROOM_PREFIX}${room}`;
   }
 
+  getSessionRoom(sessionId: string): string {
+    return `${REALTIME_SESSION_ROOM_PREFIX}${sessionId}`;
+  }
+
+  /**
+   * Drops every socket opened by a revoked session.
+   *
+   * Goes through the session room rather than an in-memory socket list, so it
+   * also reaches connections held by other backend instances — the Redis
+   * adapter propagates the command to them.
+   */
+  disconnectSession(sessionId: string): boolean {
+    if (!this.server) {
+      return false;
+    }
+
+    this.server.in(this.getSessionRoom(sessionId)).disconnectSockets(true);
+    return true;
+  }
+
   emit<TData>(event: string, data: TData): boolean {
     return this.emitToAll(event, data);
   }
@@ -72,13 +92,62 @@ export class RealtimeService implements OnApplicationShutdown {
   }
 
   emitToRoom<TData>(room: string, event: string, data: TData): boolean {
-    return this.emitToTargets(
-      (envelope) => this.server?.to(this.getRoom(room)).emit(event, envelope) ?? false,
-      event,
-      data,
-      'room',
-      room,
-    );
+    const socketRoom = this.getRoom(room);
+
+    this.warnWhenNobodyListens(event, socketRoom);
+
+    return this.emitToTargets((envelope) => this.server?.to(socketRoom).emit(event, envelope) ?? false, event, data, 'room', room);
+  }
+
+  /**
+   * Warns when an event is published to a room nobody is in.
+   *
+   * A silent emit is the failure mode this whole pipeline is built to avoid:
+   * the socket reports "connected", nothing arrives, and the only symptom is a
+   * UI that looks frozen until somebody reloads. With this in the log, the
+   * distinction between "no client subscribed" and "the client ignored the
+   * event" is answerable without a debugger.
+   */
+  private warnWhenNobodyListens(event: string, socketRoom: string): void {
+    const rooms = this.adapterRooms();
+
+    if (!rooms) {
+      return;
+    }
+
+    if ((rooms.get(socketRoom)?.size ?? 0) === 0) {
+      this.logger.warn(`Realtime event "${event}" targets room "${socketRoom}", which has no subscribers.`);
+    }
+  }
+
+  /**
+   * Room membership of the adapter currently in use.
+   *
+   * The gateway hands over either the root server or a namespace server, and
+   * those two expose the adapter differently: on the root it is a getter
+   * function, on a namespace a plain property. Reading it the wrong way returns
+   * `undefined` and, worse, a stray throw here would abort the emit and swallow
+   * the event this check exists to diagnose.
+   */
+  private adapterRooms(): Map<string, Set<unknown>> | undefined {
+    const server = this.server as
+      | ({ adapter?: unknown; server?: { adapter?: unknown } } & Record<string, unknown>)
+      | undefined;
+
+    if (!server) {
+      return undefined;
+    }
+
+    const host =
+      typeof server.adapter === 'function'
+        ? server
+        : ((server.server?.adapter ? server.server : server) as Record<string, unknown>);
+
+    const adapter = typeof host.adapter === 'function' ? host.adapter() : host.adapter;
+
+    const rooms = (adapter as { rooms?: Map<string, Set<unknown>> } | undefined)?.rooms;
+
+    return rooms instanceof Map ? rooms : undefined;
   }
 
   emitToUser<TData>(userId: string, event: string, data: TData): boolean {

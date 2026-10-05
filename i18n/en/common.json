@@ -7,6 +7,21 @@
     "INVALID_DATE": "Invalid date",
     "MANUAL_PLAN_WORKOUT_NOT_FOUND": "This workout can't be added to the plan",
     "MANUAL_PLAN_WORKOUT_INVALID": "This workout can't be added to the plan. Choose different workout settings.",
-    "MANUAL_PLAN_CONFIG_INVALID": "This plan configuration isn't available. Try changing the number of training days or the plan duration."
+    "MANUAL_PLAN_CONFIG_INVALID": "This plan configuration isn't available. Try changing the number of training days or the plan duration.",
+    "AUTH_INVALID_CREDENTIALS": "Invalid email or password",
+    "AUTH_EMAIL_ALREADY_EXISTS": "A user with this email already exists",
+    "AUTH_EMAIL_NOT_VERIFIED": "Email address is not verified",
+    "AUTH_TOKEN_INVALID": "Session is no longer valid, please sign in again",
+    "AUTH_SESSION_NOT_FOUND": "Session not found, please sign in again",
+    "AUTH_REFRESH_TOKEN_REUSE": "Session was revoked, please sign in again",
+    "AUTH_VERIFICATION_CODE_INVALID": "Verification code is invalid or expired",
+    "AUTH_VERIFICATION_CODE_RATE_LIMIT": "Too many attempts, please request a new code",
+    "AUTH_PASSWORD_RESET_CODE_INVALID": "Password reset code is invalid or expired",
+    "AUTH_PASSWORD_RESET_TOKEN_EXPIRED": "Password reset code has expired",
+    "AUTH_INVITE_CODE_INVALID": "Invite code is invalid or expired",
+    "AUTH_INVITE_ALREADY_ACTIVATED": "This account has already been activated",
+    "AUTH_SOCIAL_FLOW_INVALID": "Social sign-in flow is invalid or expired",
+    "AUTH_SOCIAL_PROVIDER_UNAVAILABLE": "This sign-in provider is not available",
+    "AUTH_STORAGE_UNAVAILABLE": "Authentication storage is unavailable, try again later"
   }
 }

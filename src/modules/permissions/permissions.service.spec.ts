@@ -15,6 +15,7 @@ describe('PermissionsService', () => {
 
   const mockPermissionModel = {
     create: jest.fn(),
+    findAll: jest.fn(),
     findAndCountAll: jest.fn(),
     findByPk: jest.fn(),
   };
@@ -93,6 +94,7 @@ describe('PermissionsService', () => {
       expect(mockPermissionModel.findAndCountAll).toHaveBeenCalledWith({
         limit: 10,
         offset: 0,
+        order: [['name', 'ASC']],
       });
     });
   });
@@ -109,7 +111,26 @@ describe('PermissionsService', () => {
       expect(mockPermissionGroupModel.findAndCountAll).toHaveBeenCalledWith({
         limit: 10,
         offset: 0,
+        order: [['name', 'ASC']],
       });
+    });
+  });
+
+  describe('findPermissionCatalog', () => {
+    it('should return every permission without pagination, ordered by name', async () => {
+      const permissions = [
+        { id: 'perm-2', name: 'users.read' },
+        { id: 'perm-1', name: 'permissions.read' },
+      ];
+      mockPermissionModel.findAll.mockResolvedValue(permissions);
+
+      const result = await service.findPermissionCatalog();
+
+      expect(result).toEqual(permissions);
+      expect(mockPermissionModel.findAll).toHaveBeenCalledWith({
+        order: [['name', 'ASC']],
+      });
+      expect(mockPermissionModel.findAndCountAll).not.toHaveBeenCalled();
     });
   });
 

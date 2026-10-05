@@ -1,5 +1,8 @@
 {
   "ERRORS": {
-    "USER_NOT_FOUND": "User with ID {id} not found"
+    "USER_NOT_FOUND": "User with ID {id} not found",
+    "USER_EMAIL_ALREADY_EXISTS": "User with this email already exists",
+    "USER_INVITE_NOT_ALLOWED": "User already has a password and cannot be invited",
+    "USER_INVITE_UNAVAILABLE": "Invite storage is unavailable, try again later"
   }
 }

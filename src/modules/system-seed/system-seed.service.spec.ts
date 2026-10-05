@@ -9,6 +9,11 @@ import { UserPermissionGroup } from '@/modules/permissions/entities/user-permiss
 import { User } from '@/modules/users/entities/user.entity';
 
 import { SystemSeedService } from './system-seed.service';
+import {
+  SYSTEM_ADMIN_USER,
+  SYSTEM_PERMISSION_CATALOG,
+  SYSTEM_PERMISSION_GROUPS,
+} from '@/modules/permissions/constants/system-access.constants';
 
 describe('SystemSeedService', () => {
   const sequelize = {
@@ -96,5 +101,67 @@ describe('SystemSeedService', () => {
     await service.onApplicationBootstrap();
 
     expect(sequelize.transaction).not.toHaveBeenCalled();
+  });
+
+  describe('seedSystemData', () => {
+    const permissionNames = SYSTEM_PERMISSION_CATALOG.map((permission) => permission.key);
+    const groupKeys = SYSTEM_PERMISSION_GROUPS.map((group) => group.systemKey);
+
+    /**
+     * Simulates a database where bootstrap already ran AND an admin has since
+     * customised the system groups through the admin panel.
+     */
+    function stubBootstrappedDatabase(): void {
+      (permissionModel as { findAll: jest.Mock }).findAll = jest.fn().mockResolvedValue(
+        permissionNames.map((name) => ({ name })),
+      );
+      (permissionGroupModel as { findAll: jest.Mock }).findAll = jest.fn().mockResolvedValue(
+        groupKeys.map((systemKey, index) => ({ id: `group-${index}`, systemKey })),
+      );
+      (userModel as { findOne: jest.Mock }).findOne = jest.fn().mockResolvedValue({ id: 'admin-1' });
+      (userPermissionGroupModel as { findOne: jest.Mock }).findOne = jest
+        .fn()
+        .mockResolvedValue({ id: 'assignment-1' });
+    }
+
+    it('does not touch existing entities after the initial bootstrap', async () => {
+      const service = await createModule(true);
+      stubBootstrappedDatabase();
+
+      await service.seedSystemData();
+
+      expect(permissionModel).not.toHaveProperty('update');
+      expect(permissionGroupModel).not.toHaveProperty('update');
+      expect(userModel).not.toHaveProperty('create');
+    });
+
+    it('runs when the initial admin is missing', async () => {
+      const service = await createModule(true);
+      stubBootstrappedDatabase();
+      (userModel as { findOne: jest.Mock }).findOne.mockResolvedValue(null);
+      (permissionModel as { findOne: jest.Mock }).findOne = jest.fn().mockResolvedValue(null);
+      (permissionModel as { create: jest.Mock }).create = jest
+        .fn()
+        .mockImplementation(async ({ name }: { name: string }) => ({ id: `p-${name}`, name }));
+      (permissionGroupModel as { findOne: jest.Mock }).findOne = jest.fn().mockResolvedValue(null);
+      (permissionGroupModel as { create: jest.Mock }).create = jest
+        .fn()
+        .mockImplementation(async ({ systemKey }: { systemKey: string }) => ({
+          id: `group-${systemKey}`,
+          systemKey,
+          $add: jest.fn(),
+        }));
+      (userModel as { create: jest.Mock }).create = jest
+        .fn()
+        .mockImplementation(async (values: { email: string }) => ({ id: 'admin-1', ...values }));
+      configService.getOrThrow.mockImplementation((key: string) =>
+        key === 'ADMIN_EMAIL' ? 'admin@example.com' : 'secret-password',
+      );
+
+      await service.seedSystemData();
+
+      expect((userModel as { create: jest.Mock }).create).toHaveBeenCalled();
+      expect(configService.getOrThrow).toHaveBeenCalledWith('ADMIN_PASSWORD');
+    });
   });
 });

@@ -1,0 +1,27 @@
+{
+  "HELLO": "Привет",
+  "ERRORS": {
+    "INTERNAL": "Внутренняя ошибка сервера",
+    "NOT_FOUND": "Ресурс не найден",
+    "SYSTEM_ENTITY_DELETION_FORBIDDEN": "Системные сущности нельзя удалить",
+    "INVALID_DATE": "Некорректная дата",
+    "MANUAL_PLAN_WORKOUT_NOT_FOUND": "Эту тренировку нельзя добавить в план",
+    "MANUAL_PLAN_WORKOUT_INVALID": "Эту тренировку нельзя добавить в план. Выберите другие параметры тренировки",
+    "MANUAL_PLAN_CONFIG_INVALID": "Такая конфигурация плана недоступна. Попробуйте изменить количество дней или длительность плана",
+    "AUTH_INVALID_CREDENTIALS": "Неверный email или пароль",
+    "AUTH_EMAIL_ALREADY_EXISTS": "Пользователь с таким email уже существует",
+    "AUTH_EMAIL_NOT_VERIFIED": "Email не подтверждён",
+    "AUTH_TOKEN_INVALID": "Сессия истекла. Войдите снова",
+    "AUTH_SESSION_NOT_FOUND": "Сессия не найдена. Войдите снова",
+    "AUTH_REFRESH_TOKEN_REUSE": "Сессия была отозвана. Войдите снова",
+    "AUTH_VERIFICATION_CODE_INVALID": "Неверный или истёкший код подтверждения",
+    "AUTH_VERIFICATION_CODE_RATE_LIMIT": "Слишком много попыток. Запросите новый код",
+    "AUTH_PASSWORD_RESET_CODE_INVALID": "Неверный или истёкший код восстановления пароля",
+    "AUTH_PASSWORD_RESET_TOKEN_EXPIRED": "Срок действия кода восстановления пароля истёк",
+    "AUTH_INVITE_CODE_INVALID": "Неверный или истёкший код приглашения",
+    "AUTH_INVITE_ALREADY_ACTIVATED": "Аккаунт уже активирован",
+    "AUTH_SOCIAL_FLOW_INVALID": "Сессия входа через соцсеть истекла или некорректна",
+    "AUTH_SOCIAL_PROVIDER_UNAVAILABLE": "Этот способ входа недоступен",
+    "AUTH_STORAGE_UNAVAILABLE": "Хранилище данных авторизации недоступно. Попробуйте позже"
+  }
+}

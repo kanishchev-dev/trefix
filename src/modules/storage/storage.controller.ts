@@ -30,6 +30,7 @@ import { StorageUploadedFile } from './interfaces/storage-uploaded-file.interfac
 import { STORAGE_DEFAULT_MAX_UPLOAD_SIZE_BYTES } from './storage.constants';
 import { StorageService } from './storage.service';
 import { createContentDisposition } from './utils/storage-path.util';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 function buildTempFilename(originalname: string): string {
   const extension = extname(originalname);
@@ -63,6 +64,7 @@ export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post('files')
+  @RequirePermissions('storage.create')
   @ApiOperation({ summary: 'Upload a file' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -102,6 +104,7 @@ export class StorageController {
   }
 
   @Get('files/:id')
+  @RequirePermissions('storage.read')
   @ApiOperation({ summary: 'Download a file' })
   @ApiResponse({ status: 200, description: 'File stream' })
   async download(
@@ -121,6 +124,7 @@ export class StorageController {
   }
 
   @Delete('files/:id')
+  @RequirePermissions('storage.delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a file' })
   @ApiResponse({ status: 204, description: 'File deleted' })

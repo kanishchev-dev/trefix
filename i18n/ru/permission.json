@@ -1,0 +1,11 @@
+{
+  "ERRORS": {
+    "PERMISSION_NOT_FOUND": "Право с ID {id} не найдено",
+    "PERMISSION_GROUP_NOT_FOUND": "Группа прав с ID {id} не найдена",
+    "USER_NOT_FOUND": "Пользователь с ID {id} не найден"
+  },
+  "FIELDS": {
+    "NAME": "Название",
+    "DESCRIPTION": "Описание"
+  }
+}

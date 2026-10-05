@@ -8,12 +8,14 @@ import { MailerModule } from '@/modules/mailer/mailer.module';
 import { PermissionsModule } from '@/modules/permissions/permissions.module';
 import { UsersModule } from '@/modules/users/users.module';
 
+import { PermissionsGuard } from '@/common/guards/permissions.guard';
+
 import { AuthController } from './auth.controller';
+import { AuthRedisModule } from './auth-redis.module';
 import { AuthService } from './auth.service';
 import authConfig from './config/auth.config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserDeletedListener } from './listeners/user-deleted.listener';
-import { AuthRedisService } from './services/auth-redis.service';
 import { AuthTokenService } from './services/auth-token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
@@ -25,11 +27,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     PermissionsModule,
     MailerModule,
+    AuthRedisModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    AuthRedisService,
     AuthTokenService,
     JwtStrategy,
     JwtAuthGuard,
@@ -37,6 +39,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      // Global permission-based authorization for endpoints marked with @RequirePermissions
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
   ],
   exports: [AuthService],

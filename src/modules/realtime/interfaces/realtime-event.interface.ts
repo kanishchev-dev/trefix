@@ -20,6 +20,15 @@ export interface RealtimeUserContext {
 export interface RealtimeSocketData {
   user?: RealtimeUserContext;
   rooms?: string[];
+  /** Session the token was issued for; the socket is bound to its lifetime. */
+  sessionId?: string;
+  /**
+   * Set once the handshake middleware has authenticated the socket.
+   *
+   * Lets `handleConnection` tell "already done during the handshake" apart from
+   * "never done", so it never authenticates (and never joins rooms) twice.
+   */
+  authResolved?: boolean;
 }
 
 export interface RealtimeErrorPayload {
@@ -45,4 +54,5 @@ export interface RealtimeAuthPayload {
 export interface RealtimeAuthResult {
   readonly user: RealtimeUserContext;
   readonly rooms: string[];
+  readonly sessionId: string;
 }

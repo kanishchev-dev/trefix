@@ -17,7 +17,7 @@ import { StorageFileOperationException } from './exceptions/storage-file-operati
 import { StorageFileTooLargeException } from './exceptions/storage-file-too-large.exception';
 import { StorageInvalidUploadPayloadException } from './exceptions/storage-invalid-upload-payload.exception';
 import { StorageAccessContext, StorageUploadContext } from './interfaces/storage-access-context.interface';
-import { StorageAdapter } from './interfaces/storage-adapter.interface';
+import { StorageAdapter, StorageDownloadResult } from './interfaces/storage-adapter.interface';
 import { StorageUploadedFile } from './interfaces/storage-uploaded-file.interface';
 import { STORAGE_ADAPTER, STORAGE_EVENT_FILE_DELETED, STORAGE_EVENT_FILE_UPLOADED } from './storage.constants';
 import { buildStorageKey } from './utils/storage-path.util';
@@ -155,8 +155,7 @@ export class StorageService {
     }
   }
 
-  async deleteFile(id: string, context: StorageAccessContext = {}): Promise<void> {
-    const file = await this.findById(id);
+  async deleteFile(id: string, context: StorageAccessContext = {}): Promise<void> {    const file = await this.findById(id);
     this.assertCanDelete(file, context.requesterUserId);
 
     try {
@@ -177,6 +176,62 @@ export class StorageService {
         file.scopeId ?? null,
       ),
     );
+  }
+
+  /**
+   * Reads a file without any ownership check.
+   *
+   * Reserved for content that is public by design and served through its own
+   * endpoint, currently user avatars: they are rendered by clients that have
+   * no session at all (email clients, the mobile app on a cold start), so the
+   * per-user access check of {@link getFile} cannot apply. Callers must never
+   * route private documents through here.
+   */
+  async getFileForPublicAccess(id: string): Promise<{
+    file: StorageFile;
+    stream: Readable;
+    download: StorageDownloadResult;
+  }> {
+    const file = await this.findById(id);
+
+    let fileExists = false;
+
+    try {
+      fileExists = await this.adapter.exists(file.storageKey);
+    } catch {
+      throw new StorageFileOperationException('Failed to verify storage file');
+    }
+
+    if (!fileExists) {
+      throw new StorageFileNotFoundException(id);
+    }
+
+    try {
+      const download = await this.adapter.download(file.storageKey);
+      return {
+        file,
+        stream: download.stream,
+        download,
+      };
+    } catch {
+      throw new StorageFileOperationException('Failed to download storage file');
+    }
+  }
+
+  /**
+   * Deletes a file that this service owns by reference, ignoring failures.
+   *
+   * Used when replacing an avatar: the previous file must not survive, but a
+   * storage hiccup must not fail the upload that already succeeded.
+   */
+  async deleteFileQuietly(id: string): Promise<void> {
+    try {
+      await this.deleteFile(id, {});
+    } catch (error) {
+      this.logger.warn(
+        `Failed to delete storage file ${id}: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
+    }
   }
 
   buildKey(input: {

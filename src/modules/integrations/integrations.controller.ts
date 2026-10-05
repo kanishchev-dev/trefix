@@ -21,6 +21,7 @@ import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto
 import { StravaWebhookEventDto, StravaWebhookVerificationQueryDto } from './dto/strava-webhook.dto';
 import { IntegrationsService } from './integrations.service';
 import { ConfigService } from '@nestjs/config';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 @ApiTags('Integrations')
 @Controller('integrations')
@@ -31,6 +32,7 @@ export class IntegrationsController {
   ) {}
 
   @Get()
+  @RequirePermissions('integrations.read')
   @ApiOperation({ summary: 'List all integrations and their connection statuses' })
   @ApiResponse({ status: 200, type: IntegrationsListResponseDto })
   async listIntegrations(@CurrentUser() user: AuthUserContext): Promise<IntegrationsListResponseDto> {
@@ -38,6 +40,7 @@ export class IntegrationsController {
   }
 
   @Get('strava')
+  @RequirePermissions('integrations.read')
   @ApiOperation({ summary: 'Get Strava integration status' })
   @ApiResponse({ status: 200, type: IntegrationItemResponseDto })
   async getStravaIntegration(@CurrentUser() user: AuthUserContext): Promise<IntegrationItemResponseDto> {
@@ -45,6 +48,7 @@ export class IntegrationsController {
   }
 
   @Get('strava/connect')
+  @RequirePermissions('integrations.read')
   @ApiOperation({ summary: 'Initiate Strava OAuth connection flow' })
   @ApiResponse({ status: 200, type: StravaConnectResponseDto })
   async connectStrava(@CurrentUser() user: AuthUserContext): Promise<StravaConnectResponseDto> {
@@ -82,6 +86,7 @@ export class IntegrationsController {
   }
 
   @Delete('strava')
+  @RequirePermissions('integrations.delete')
   @ApiOperation({ summary: 'Disconnect Strava integration' })
   @ApiResponse({ status: 200, schema: { example: { success: true } } })
   async disconnectStrava(@CurrentUser() user: AuthUserContext): Promise<{ success: boolean }> {
@@ -89,6 +94,7 @@ export class IntegrationsController {
   }
 
   @Get('strava/sync')
+  @RequirePermissions('integrations.read')
   @ApiOperation({ summary: 'Get Strava sync status' })
   @ApiResponse({ status: 200, type: IntegrationSyncStatusResponseDto })
   async getStravaSyncStatus(@CurrentUser() user: AuthUserContext): Promise<IntegrationSyncStatusResponseDto> {
@@ -96,6 +102,7 @@ export class IntegrationsController {
   }
 
   @Get('strava/sync/trigger')
+  @RequirePermissions('integrations.sync')
   @ApiOperation({ summary: 'Trigger manual Strava sync' })
   @ApiResponse({ status: 200, type: IntegrationSyncStatusResponseDto })
   async triggerStravaSync(@CurrentUser() user: AuthUserContext): Promise<IntegrationSyncStatusResponseDto> {

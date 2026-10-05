@@ -16,6 +16,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { validationSchema } from './config/validation.schema';
+import { AvatarsModule } from '@/modules/avatars/avatars.module';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './modules/auth/config/auth.config';
 import { CoachModule } from './modules/coach/coach.module';
@@ -27,6 +28,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import storageConfig from './modules/storage/config/storage.config';
 import { StorageModule } from './modules/storage/storage.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { SystemSeedModule } from './modules/system-seed/system-seed.module';
 import { TrainingModule } from './modules/training/training.module';
 import { UsersModule } from './modules/users/users.module';
@@ -42,7 +44,9 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     UsersModule,
     StorageModule,
+    AvatarsModule,
     PermissionsModule,
+    SettingsModule,
     CoachModule,
     SystemSeedModule,
     RealtimeModule,
@@ -118,12 +122,16 @@ import { UsersModule } from './modules/users/users.module';
         },
       }),
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.getOrThrow<number>('app.throttleTtl'),
+          limit: configService.getOrThrow<number>('app.throttleLimit'),
+        },
+      ],
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
