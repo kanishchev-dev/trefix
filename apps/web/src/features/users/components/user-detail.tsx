@@ -1,21 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactElement } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
-import { Separator } from "@workspace/ui/components/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Switch } from "@workspace/ui/components/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import {
   Tooltip,
@@ -29,13 +21,12 @@ import {
   SendIcon,
   Trash2Icon,
   XCircleIcon,
-  XIcon,
 } from "lucide-react";
 
 import type {
   AdminUserDetail,
   AdminUserGroup,
-  AdminUserPermission,
+  Permission,
 } from "@workspace/api-client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -43,6 +34,7 @@ import { toInitials } from "@/entities/avatar/lib/initials";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { formatDate, useI18n } from "@/shared/i18n";
+import { PermissionCatalogTable } from "@/features/permissions/components/permission-catalog-table";
 import {
   useAssignGroupToUser,
   useAssignPermissionToUser,
@@ -55,11 +47,11 @@ import {
   useGroups,
   usePermissionCatalog,
 } from "@/features/permissions/hooks/use-permissions";
-import { usePermissionLabels } from "@/features/permissions/hooks/use-permission-labels";
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
 import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 import { CopyButton } from "@/widgets/copy-button";
+import { TableSkeleton } from "@/widgets/data-state";
 
 function DetailRow({
   label,
@@ -83,7 +75,6 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
 
   const groupsQuery = useGroups(1, 100);
   const permissionsQuery = usePermissionCatalog();
-  const labels = usePermissionLabels();
   const assignGroup = useAssignGroupToUser();
   const revokeGroup = useRevokeGroupFromUser();
   const assignPermission = useAssignPermissionToUser();
@@ -91,12 +82,9 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
   const inviteUser = useInviteUser();
   const deleteUser = useDeleteUser();
 
-  const [selectedGroupId, setSelectedGroupId] = useState("");
-  const [selectedPermissionId, setSelectedPermissionId] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [groupToRevoke, setGroupToRevoke] = useState<AdminUserGroup | null>(null);
-  const [permissionToRevoke, setPermissionToRevoke] =
-    useState<AdminUserPermission | null>(null);
+  const [pendingGroupId, setPendingGroupId] = useState<string | null>(null);
+  const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(null);
 
   const displayName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
@@ -105,21 +93,76 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
   const { isOnline } = useUserPresence([user.id]);
   const online = isOnline(user.id);
 
-  const assignedGroupIds = new Set(user.groups.map((group) => group.id));
-  const availableGroups =
-    groupsQuery.data?.data.filter((group) => !assignedGroupIds.has(group.id)) ?? [];
+  const userGroupIds = new Set(user.groups.map((group) => group.id));
+  const allGroups = groupsQuery.data?.data ?? [];
 
-  const individualPermissionNames = new Set(
-    user.individualPermissions.map((permission) => permission.name),
+  const userEffectivePermissionNames = new Set(user.effectivePermissions);
+
+  const grantedPermissionIds = new Set(
+    (permissionsQuery.data ?? [])
+      .filter((permission) => userEffectivePermissionNames.has(permission.name))
+      .map((permission) => permission.id),
   );
-  const availablePermissions =
-    permissionsQuery.data?.filter(
-      (permission) => !individualPermissionNames.has(permission.name),
-    ) ?? [];
 
   const canUpdate = hasPermission("users.update");
   const canManage = hasPermission("users.manage");
   const canDelete = hasPermission("users.delete") && !user.isSystem;
+
+  const toggleGroup = (group: AdminUserGroup, assigned: boolean) => {
+    setPendingGroupId(group.id);
+
+    const onSettled = () => setPendingGroupId(null);
+    const onError = (error: unknown) =>
+      notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
+
+    if (assigned) {
+      assignGroup.mutate(
+        { userId: user.id, groupId: group.id },
+        {
+          onSuccess: () => notifySuccess(t("users.toasts.groupAssigned")),
+          onError,
+          onSettled,
+        },
+      );
+    } else {
+      revokeGroup.mutate(
+        { userId: user.id, groupId: group.id },
+        {
+          onSuccess: () => notifySuccess(t("users.toasts.groupRevoked")),
+          onError,
+          onSettled,
+        },
+      );
+    }
+  };
+
+  const togglePermission = (permission: Permission, granted: boolean) => {
+    setPendingPermissionId(permission.id);
+
+    const onSettled = () => setPendingPermissionId(null);
+    const onError = (error: unknown) =>
+      notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
+
+    if (granted) {
+      assignPermission.mutate(
+        { userId: user.id, permissionId: permission.id },
+        {
+          onSuccess: () => notifySuccess(t("users.toasts.permissionAssigned")),
+          onError,
+          onSettled,
+        },
+      );
+    } else {
+      revokePermission.mutate(
+        { userId: user.id, permissionId: permission.id },
+        {
+          onSuccess: () => notifySuccess(t("users.toasts.permissionRevoked")),
+          onError,
+          onSettled,
+        },
+      );
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -139,9 +182,6 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
           <div className="space-y-1">
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               {displayName}
-              {/* Only ever a positive signal: labelling someone "offline"
-                  permanently is noise, and it would contradict the dot,
-                  which deliberately disappears. */}
               {online ? (
                 <span className="text-sm font-normal text-muted-foreground">
                   {t("presence.online")}
@@ -202,15 +242,7 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
       <Tabs defaultValue="profile">
         <TabsList>
           <TabsTrigger value="profile">{t("users.tabs.profile")}</TabsTrigger>
-          <TabsTrigger value="groups">
-            {t("users.tabs.groups")} ({user.groups.length})
-          </TabsTrigger>
-          <TabsTrigger value="permissions">
-            {t("users.tabs.permissions")} ({user.individualPermissions.length})
-          </TabsTrigger>
-          <TabsTrigger value="effective">
-            {t("users.tabs.effective")} ({user.effectivePermissions.length})
-          </TabsTrigger>
+          <TabsTrigger value="access">{t("users.tabs.access")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="mt-4">
@@ -219,8 +251,6 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
               <CardTitle>{t("users.tabs.profile")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-x-8 md:grid-cols-2">
-              {/* Ordered identity → verification → identifiers → lifecycle, so
-                  the eye lands on who the person is before when they joined. */}
               <DetailRow
                 label={t("users.fields.firstName")}
                 value={user.firstName || "—"}
@@ -234,8 +264,6 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
                 value={
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="break-all">{user.email}</span>
-                    {/* Verification is a property of this very address, so it
-                        reads as its annotation rather than a separate field. */}
                     <Tooltip>
                       <TooltipTrigger
                         render={
@@ -297,283 +325,79 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
           </Card>
         </TabsContent>
 
-        <TabsContent value="groups" className="mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{t("users.groups.assigned")}</CardTitle>
-              {canManage && availableGroups.length > 0 ? (
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={selectedGroupId.length > 0 ? selectedGroupId : undefined}
-                    onValueChange={(value) => setSelectedGroupId(value ?? "")}
-                  >
-                    <SelectTrigger className="w-56">
-                      <SelectValue placeholder={t("users.groups.assignPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableGroups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    size="sm"
-                    disabled={selectedGroupId.length === 0 || assignGroup.isPending}
-                    onClick={() =>
-                      assignGroup.mutate(
-                        { userId: user.id, groupId: selectedGroupId },
-                        {
-                          onSuccess: () => {
-                            setSelectedGroupId("");
-                            notifySuccess(t("users.toasts.groupAssigned"));
-                          },
-                          onError: (error) =>
-                            notifyError(
-                              t("common.states.error"),
-                              getFriendlyApiMessage(error, t),
-                            ),
-                        },
-                      )
-                    }
-                  >
-                    {t("users.groups.assignAction")}
-                  </Button>
-                </div>
-              ) : null}
-            </CardHeader>
-            <CardContent>
-              {user.groups.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("users.groups.empty")}
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y">
-                  {user.groups.map((group) => (
-                    <li
-                      key={group.id}
-                      className="flex items-center justify-between gap-2 py-2"
-                    >
-                      <Link
-                        href={`/users/groups/${group.id}`}
-                        className="text-sm font-medium hover:underline"
-                      >
-                        {group.name}
-                      </Link>
-                      <div className="flex items-center gap-2">
-                        {group.isSystem ? (
-                          <Badge variant="outline">{t("common.system")}</Badge>
-                        ) : null}
-                        {canManage ? (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={t("users.groups.revokeAction")}
-                            onClick={() => setGroupToRevoke(group)}
-                          >
-                            <XIcon />
-                          </Button>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="permissions" className="mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{t("users.permissions.individual")}</CardTitle>
-              {canManage && availablePermissions.length > 0 ? (
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={selectedPermissionId.length > 0 ? selectedPermissionId : undefined}
-                    onValueChange={(value) => setSelectedPermissionId(value ?? "")}
-                  >
-                    <SelectTrigger className="w-56">
-                      <SelectValue
-                        placeholder={t("users.permissions.addPlaceholder")}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availablePermissions.map((permission) => (
-                        <SelectItem key={permission.id} value={permission.id}>
-                          {labels.title(permission)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    size="sm"
-                    disabled={selectedPermissionId.length === 0 || assignPermission.isPending}
-                    onClick={() =>
-                      assignPermission.mutate(
-                        { userId: user.id, permissionId: selectedPermissionId },
-                        {
-                          onSuccess: () => {
-                            setSelectedPermissionId("");
-                            notifySuccess(t("users.toasts.permissionAssigned"));
-                          },
-                          onError: (error) =>
-                            notifyError(
-                              t("common.states.error"),
-                              getFriendlyApiMessage(error, t),
-                            ),
-                        },
-                      )
-                    }
-                  >
-                    {t("users.permissions.addAction")}
-                  </Button>
-                </div>
-              ) : null}
-            </CardHeader>
-            <CardContent>
-              {user.individualPermissions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("users.permissions.empty")}
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y">
-                  {user.individualPermissions.map((permission) => (
-                    <li
-                      key={permission.name}
-                      className="flex items-center justify-between gap-2 py-2"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {labels.title(permission)}
-                        </span>
-                        {labels.description(permission) ? (
-                          <span className="text-xs text-muted-foreground">
-                            {labels.description(permission)}
-                          </span>
-                        ) : null}
-                      </div>
-                      {canManage ? (
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={t("users.permissions.revokeAction")}
-                          onClick={() => setPermissionToRevoke(permission)}
-                        >
-                          <XIcon />
-                        </Button>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="effective" className="mt-4">
+        <TabsContent value="access" className="mt-4 flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t("users.permissions.effective")}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {t("users.permissions.effectiveDescription")}
-              </p>
+              <CardTitle>{t("users.access.groupsTitle")}</CardTitle>
+              <CardDescription>{t("users.access.groupsHint")}</CardDescription>
             </CardHeader>
             <CardContent>
-              {user.effectivePermissions.length === 0 ? (
+              {groupsQuery.isLoading ? (
+                <TableSkeleton rows={3} columns={2} />
+              ) : allGroups.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  {t("users.permissions.effectiveEmpty")}
+                  {t("users.access.groupsEmpty")}
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {user.effectivePermissions.map((permission) => (
-                    <Badge key={permission} variant="secondary">
-                      {permission}
-                    </Badge>
-                  ))}
-                </div>
+                <ul className="flex flex-col divide-y">
+                  {allGroups.map((group) => {
+                    const assigned = userGroupIds.has(group.id);
+                    const isPending = pendingGroupId === group.id;
+                    const switchId = `user-group-${group.id}`;
+
+                    return (
+                      <li
+                        key={group.id}
+                        className="flex items-center justify-between gap-4 py-3"
+                      >
+                        <label htmlFor={switchId} className="flex flex-col gap-0.5 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium hover:underline">
+                              {group.name}
+                            </span>
+                            {group.isSystem ? (
+                              <Badge variant="outline">{t("common.system")}</Badge>
+                            ) : null}
+                          </div>
+                          {group.description ? (
+                            <p className="text-xs text-muted-foreground">
+                              {group.description}
+                            </p>
+                          ) : null}
+                        </label>
+                        <Switch
+                          id={switchId}
+                          checked={assigned}
+                          disabled={!canManage || isPending}
+                          onCheckedChange={(checked) =>
+                            toggleGroup(group, checked)
+                          }
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("users.access.permissionsTitle")}</CardTitle>
+              <CardDescription>{t("users.access.permissionsHint")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PermissionCatalogTable
+                grantedPermissionIds={grantedPermissionIds}
+                onTogglePermission={togglePermission}
+                pendingPermissionId={pendingPermissionId}
+                disabled={!canManage}
+                idPrefix={`user-${user.id}`}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      <Separator className="opacity-0" />
-
-      <ConfirmDialog
-        open={groupToRevoke !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setGroupToRevoke(null);
-          }
-        }}
-        title={t("users.confirmRevokeGroup.title")}
-        description={t("users.confirmRevokeGroup.description", {
-          name: groupToRevoke?.name ?? "",
-        })}
-        confirmLabel={t("users.groups.revokeAction")}
-        isPending={revokeGroup.isPending}
-        onConfirm={() => {
-          if (!groupToRevoke) {
-            return;
-          }
-
-          revokeGroup.mutate(
-            { userId: user.id, groupId: groupToRevoke.id },
-            {
-              onSuccess: () => {
-                setGroupToRevoke(null);
-                notifySuccess(t("users.toasts.groupRevoked"));
-              },
-              onError: (error) =>
-                notifyError(
-                  t("common.states.error"),
-                  getFriendlyApiMessage(error, t),
-                ),
-            },
-          );
-        }}
-      />
-
-      <ConfirmDialog
-        open={permissionToRevoke !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPermissionToRevoke(null);
-          }
-        }}
-        title={t("users.confirmRevokePermission.title")}
-        description={t("users.confirmRevokePermission.description", {
-          name: permissionToRevoke ? labels.title(permissionToRevoke) : "",
-        })}
-        confirmLabel={t("users.permissions.revokeAction")}
-        isPending={revokePermission.isPending}
-        onConfirm={() => {
-          const permissionId = permissionsQuery.data?.find(
-            (item) => item.name === permissionToRevoke?.name,
-          )?.id;
-          if (!permissionId) {
-            setPermissionToRevoke(null);
-            return;
-          }
-
-          revokePermission.mutate(
-            { userId: user.id, permissionId },
-            {
-              onSuccess: () => {
-                setPermissionToRevoke(null);
-                notifySuccess(t("users.toasts.permissionRevoked"));
-              },
-              onError: (error) =>
-                notifyError(
-                  t("common.states.error"),
-                  getFriendlyApiMessage(error, t),
-                ),
-            },
-          );
-        }}
-      />
 
       <ConfirmDialog
         open={deleteOpen}

@@ -7,7 +7,6 @@ import { useState, type ReactElement } from "react";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Switch } from "@workspace/ui/components/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { InfoIcon, PencilIcon, Trash2Icon } from "lucide-react";
 
@@ -17,42 +16,29 @@ import { useAuth } from "@/components/auth-provider";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { formatDate, useI18n } from "@/shared/i18n";
-import {
-  UNGROUPED_RESOURCE,
-  groupPermissionsByModule,
-  splitPermissionName,
-} from "@/features/permissions/lib/permission-domains";
-import { usePermissionLabels } from "@/features/permissions/hooks/use-permission-labels";
+import { PermissionCatalogTable } from "@/features/permissions/components/permission-catalog-table";
 import {
   useAssignPermissionToGroup,
   useDeleteGroup,
-  usePermissionCatalog,
   useRevokePermissionFromGroup,
 } from "@/features/permissions/hooks/use-permissions";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
-import { TableSkeleton } from "@/widgets/data-state";
 
 export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement {
   const { t, locale } = useI18n();
   const router = useRouter();
   const { hasPermission } = useAuth();
 
-  const permissionsQuery = usePermissionCatalog();
   const assignPermission = useAssignPermissionToGroup();
   const revokePermission = useRevokePermissionFromGroup();
   const deleteGroup = useDeleteGroup();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  // Only the switch that is being saved is disabled, so the rest of the
-  // catalog stays interactive while a mutation is in flight.
   const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(null);
 
   const groupPermissionIds = new Set(
     (group.permissions ?? []).map((permission) => permission.id),
   );
-  const catalog = permissionsQuery.data ?? [];
-  const modules = groupPermissionsByModule(catalog);
-  const labels = usePermissionLabels();
 
   const canManage = hasPermission("permissions.manage");
 
@@ -63,25 +49,25 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
     const onError = (error: unknown) =>
       notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
 
-    const mutation = granted
-      ? assignPermission.mutate(
-          { groupId: group.id, permissionId: permission.id },
-          {
-            onSuccess: () => notifySuccess(t("groups.toasts.permissionAdded")),
-            onError,
-            onSettled,
-          },
-        )
-      : revokePermission.mutate(
-          { groupId: group.id, permissionId: permission.id },
-          {
-            onSuccess: () => notifySuccess(t("groups.toasts.permissionRemoved")),
-            onError,
-            onSettled,
-          },
-        );
-
-    return mutation;
+    if (granted) {
+      assignPermission.mutate(
+        { groupId: group.id, permissionId: permission.id },
+        {
+          onSuccess: () => notifySuccess(t("groups.toasts.permissionAdded")),
+          onError,
+          onSettled,
+        },
+      );
+    } else {
+      revokePermission.mutate(
+        { groupId: group.id, permissionId: permission.id },
+        {
+          onSuccess: () => notifySuccess(t("groups.toasts.permissionRemoved")),
+          onError,
+          onSettled,
+        },
+      );
+    }
   };
 
   return (
@@ -147,79 +133,13 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
               <CardDescription>{t("groups.permissions.hint")}</CardDescription>
             </CardHeader>
             <CardContent>
-              {permissionsQuery.isLoading ? (
-                <TableSkeleton rows={6} columns={2} />
-              ) : catalog.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("permissions.sectionEmpty")}
-                </p>
-              ) : (
-                <div className="flex flex-col gap-6">
-                  {modules.map(({ module, resources }) => (
-                    <section
-                      key={module || "ungrouped"}
-                      className="flex flex-col gap-1"
-                    >
-                      <h3 className="text-sm font-semibold text-muted-foreground">
-                        {labels.moduleLabel(module)}
-                      </h3>
-                      {resources.map(({ resource, permissions }) => {
-                        const resourceName =
-                          resource === UNGROUPED_RESOURCE
-                            ? ""
-                            : labels.resourceLabel(module, resource);
-
-                        return (
-                          <div key={resource || "root"} className="flex flex-col gap-1">
-                            {resourceName ? (
-                              <h4 className="pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground/80">
-                                {resourceName}
-                              </h4>
-                            ) : null}
-                            <ul className="flex flex-col divide-y">
-                              {permissions.map((permission) => {
-                                const { action } = splitPermissionName(permission.name);
-                                const granted = groupPermissionIds.has(permission.id);
-                                const isPending = pendingPermissionId === permission.id;
-                                const description = labels.description(permission);
-
-                                return (
-                                  <li
-                                    key={permission.id}
-                                    className="flex items-center justify-between gap-4 py-2.5"
-                                  >
-                                    <label
-                                      htmlFor={`group-permission-${permission.id}`}
-                                      className="flex flex-col"
-                                    >
-                                      <span className="text-sm font-medium">
-                                        {labels.actionLabel(action)}
-                                      </span>
-                                      {description ? (
-                                        <span className="text-xs text-muted-foreground">
-                                          {description}
-                                        </span>
-                                      ) : null}
-                                    </label>
-                                    <Switch
-                                      id={`group-permission-${permission.id}`}
-                                      checked={granted}
-                                      disabled={!canManage || isPending}
-                                      onCheckedChange={(checked) =>
-                                        togglePermission(permission, checked)
-                                      }
-                                    />
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        );
-                      })}
-                    </section>
-                  ))}
-                </div>
-              )}
+              <PermissionCatalogTable
+                grantedPermissionIds={groupPermissionIds}
+                onTogglePermission={togglePermission}
+                pendingPermissionId={pendingPermissionId}
+                disabled={!canManage}
+                idPrefix={`group-${group.id}`}
+              />
             </CardContent>
           </Card>
         </TabsContent>

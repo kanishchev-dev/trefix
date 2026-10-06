@@ -124,9 +124,15 @@
     },
     "tabs": {
       "profile": "Profile",
-      "groups": "Groups",
-      "permissions": "Permissions",
-      "effective": "Effective permissions"
+      "access": "Access permissions"
+    },
+    "access": {
+      "groupsTitle": "User groups",
+      "groupsHint": "Enabling a group grants the user all permissions belonging to it",
+      "groupsEmpty": "No available groups",
+      "permissionsTitle": "Personal permissions",
+      "permissionsHint": "Individual permissions override or complement permissions from groups",
+      "fromGroup": "From group"
     },
     "groups": {
       "assigned": "Assigned groups",

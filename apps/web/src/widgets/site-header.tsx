@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactElement } from "react";
+import { Fragment, type ReactElement } from "react";
 
 import {
   Breadcrumb,
@@ -17,28 +17,65 @@ import { SidebarTrigger } from "@workspace/ui/components/sidebar";
 
 import { useI18n } from "@/shared/i18n";
 
-const BREADCRUMB_KEYS: Array<{ prefix: string; key: string }> = [
-  { prefix: "/profile", key: "breadcrumbs.profile" },
-  { prefix: "/users/list", key: "breadcrumbs.list" },
-  { prefix: "/users/create", key: "breadcrumbs.create" },
-  { prefix: "/users/groups", key: "breadcrumbs.groups" },
-  { prefix: "/users", key: "breadcrumbs.users" },
-  { prefix: "/settings/authentication", key: "breadcrumbs.authentication" },
-  { prefix: "/settings", key: "breadcrumbs.settings" },
-];
+export interface BreadcrumbItemDef {
+  key: string;
+  href?: string;
+}
 
-function resolveBreadcrumbKey(pathname: string): string {
-  const match = [...BREADCRUMB_KEYS]
-    .reverse()
-    .find((entry) => pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`));
+export function resolveBreadcrumbs(pathname: string): BreadcrumbItemDef[] {
+  if (pathname === "/dashboard" || pathname === "/") {
+    return [{ key: "breadcrumbs.dashboard" }];
+  }
 
-  return match?.key ?? "breadcrumbs.dashboard";
+  if (pathname.startsWith("/profile")) {
+    return [{ key: "breadcrumbs.profile" }];
+  }
+
+  if (pathname === "/settings") {
+    return [{ key: "breadcrumbs.settings" }];
+  }
+
+  if (pathname.startsWith("/settings/authentication")) {
+    return [
+      { key: "breadcrumbs.settings", href: "/settings" },
+      { key: "breadcrumbs.authentication" },
+    ];
+  }
+
+  if (pathname.startsWith("/users/groups")) {
+    const items: BreadcrumbItemDef[] = [
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.groups", href: "/users/groups" },
+    ];
+    if (pathname === "/users/groups/create") {
+      items.push({ key: "breadcrumbs.create" });
+    } else if (pathname.endsWith("/edit")) {
+      items.push({ key: "breadcrumbs.edit" });
+    }
+    return items;
+  }
+
+  if (pathname.startsWith("/users")) {
+    const items: BreadcrumbItemDef[] = [
+      { key: "breadcrumbs.users", href: "/users/list" },
+    ];
+    if (pathname === "/users/list" || pathname === "/users") {
+      items.push({ key: "breadcrumbs.list" });
+    } else if (pathname === "/users/create") {
+      items.push({ key: "breadcrumbs.create" });
+    } else if (pathname.endsWith("/edit")) {
+      items.push({ key: "breadcrumbs.edit" });
+    }
+    return items;
+  }
+
+  return [{ key: "breadcrumbs.dashboard" }];
 }
 
 export function SiteHeader(): ReactElement {
   const pathname = usePathname();
   const { t } = useI18n();
-  const breadcrumbKey = resolveBreadcrumbKey(pathname);
+  const breadcrumbs = resolveBreadcrumbs(pathname);
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2">
@@ -50,15 +87,23 @@ export function SiteHeader(): ReactElement {
         />
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/dashboard" />}>
-                {t("breadcrumbs.dashboard")}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t(breadcrumbKey)}</BreadcrumbPage>
-            </BreadcrumbItem>
+            {breadcrumbs.map((item, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              return (
+                <Fragment key={`${item.key}-${index}`}>
+                  <BreadcrumbItem>
+                    {isLast || !item.href ? (
+                      <BreadcrumbPage>{t(item.key)}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink render={<Link href={item.href} />}>
+                        {t(item.key)}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                  {!isLast && <BreadcrumbSeparator />}
+                </Fragment>
+              );
+            })}
           </BreadcrumbList>
         </Breadcrumb>
       </div>

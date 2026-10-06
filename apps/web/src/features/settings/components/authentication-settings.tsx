@@ -5,26 +5,25 @@ import { useState, type ReactElement } from "react";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Checkbox } from "@workspace/ui/components/checkbox";
-import { Label } from "@workspace/ui/components/label";
-import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Switch } from "@workspace/ui/components/switch";
 import { InfoIcon } from "lucide-react";
 
-import type { AppSettings } from "@workspace/api-client";
+import type { AppSettings, Permission } from "@workspace/api-client";
 
+import { useAuth } from "@/components/auth-provider";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
-import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/shared/i18n";
+import { PermissionCatalogTable } from "@/features/permissions/components/permission-catalog-table";
 import {
   useGroups,
   usePermissionCatalog,
 } from "@/features/permissions/hooks/use-permissions";
-import { usePermissionLabels } from "@/features/permissions/hooks/use-permission-labels";
 import {
   useSettings,
   useUpdateSettings,
 } from "@/features/settings/hooks/use-settings";
+import { TableSkeleton } from "@/widgets/data-state";
 
 export function AuthenticationSettings(): ReactElement {
   const { t } = useI18n();
@@ -34,8 +33,6 @@ export function AuthenticationSettings(): ReactElement {
   const permissionsQuery = usePermissionCatalog();
   const updateSettings = useUpdateSettings();
 
-  // Remount the editor whenever server data changes so the local checkbox
-  // state always starts from the persisted settings (no sync effect needed).
   const editorKey = settingsQuery.data
     ? `settings-${settingsQuery.dataUpdatedAt}`
     : "settings-loading";
@@ -51,7 +48,6 @@ export function AuthenticationSettings(): ReactElement {
         isLoading={isLoading}
         canManage={hasPermission("permissions.manage")}
         groupsQuery={groupsQuery}
-        permissionsQuery={permissionsQuery}
         updateSettings={updateSettings}
         t={t}
       />
@@ -64,7 +60,6 @@ function EditorFields({
   isLoading,
   canManage,
   groupsQuery,
-  permissionsQuery,
   updateSettings,
   t,
 }: {
@@ -72,7 +67,6 @@ function EditorFields({
   isLoading: boolean;
   canManage: boolean;
   groupsQuery: ReturnType<typeof useGroups>;
-  permissionsQuery: ReturnType<typeof usePermissionCatalog>;
   updateSettings: ReturnType<typeof useUpdateSettings>;
   t: (key: string, params?: Record<string, string | number>) => string;
 }): ReactElement {
@@ -82,15 +76,21 @@ function EditorFields({
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
     settings?.defaultPermissions ?? [],
   );
-  const labels = usePermissionLabels();
 
-  function toggle(
-    list: string[],
-    setList: (value: string[]) => void,
-    id: string,
-  ): void {
-    setList(
-      list.includes(id) ? list.filter((item) => item !== id) : [...list, id],
+  const selectedGroupSet = new Set(selectedGroups);
+  const selectedPermissionSet = new Set(selectedPermissions);
+
+  function toggleGroup(groupId: string, active: boolean): void {
+    setSelectedGroups((prev) =>
+      active ? [...prev, groupId] : prev.filter((id) => id !== groupId),
+    );
+  }
+
+  function togglePermission(permission: Permission, active: boolean): void {
+    setSelectedPermissions((prev) =>
+      active
+        ? [...prev, permission.id]
+        : prev.filter((id) => id !== permission.id),
     );
   }
 
@@ -105,8 +105,10 @@ function EditorFields({
     );
   }
 
+  const allGroups = groupsQuery.data?.data ?? [];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.authentication.defaultGroups")}</CardTitle>
@@ -116,33 +118,47 @@ function EditorFields({
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-6 w-full max-w-sm" />
-              <Skeleton className="h-6 w-full max-w-xs" />
-            </div>
-          ) : groupsQuery.data && groupsQuery.data.data.length > 0 ? (
-            <div className="grid gap-2 md:grid-cols-2">
-              {groupsQuery.data.data.map((group) => (
-                <Label
-                  key={group.id}
-                  className="flex items-center gap-2 rounded-xl border p-3 text-sm font-normal"
-                >
-                  <Checkbox
-                    checked={selectedGroups.includes(group.id)}
-                    disabled={!canManage}
-                    onCheckedChange={() =>
-                      toggle(selectedGroups, setSelectedGroups, group.id)
-                    }
-                  />
-                  <span className="flex-1">{group.name}</span>
-                  {group.isSystem ? (
-                    <Badge variant="outline">{t("common.system")}</Badge>
-                  ) : null}
-                </Label>
-              ))}
-            </div>
-          ) : (
+            <TableSkeleton rows={3} columns={2} />
+          ) : allGroups.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("groups.empty")}</p>
+          ) : (
+            <ul className="flex flex-col divide-y">
+              {allGroups.map((group) => {
+                const assigned = selectedGroupSet.has(group.id);
+                const switchId = `default-group-${group.id}`;
+
+                return (
+                  <li
+                    key={group.id}
+                    className="flex items-center justify-between gap-4 py-3"
+                  >
+                    <label htmlFor={switchId} className="flex flex-col gap-0.5 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium hover:underline">
+                          {group.name}
+                        </span>
+                        {group.isSystem ? (
+                          <Badge variant="outline">{t("common.system")}</Badge>
+                        ) : null}
+                      </div>
+                      {group.description ? (
+                        <p className="text-xs text-muted-foreground">
+                          {group.description}
+                        </p>
+                      ) : null}
+                    </label>
+                    <Switch
+                      id={switchId}
+                      checked={assigned}
+                      disabled={!canManage}
+                      onCheckedChange={(checked) =>
+                        toggleGroup(group.id, checked)
+                      }
+                    />
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </CardContent>
       </Card>
@@ -155,49 +171,16 @@ function EditorFields({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-6 w-full max-w-sm" />
-              <Skeleton className="h-6 w-full max-w-xs" />
-            </div>
-          ) : permissionsQuery.data && permissionsQuery.data.length > 0 ? (
-            <div className="grid gap-2 md:grid-cols-2">
-              {permissionsQuery.data.map((permission) => (
-                <Label
-                  key={permission.id}
-                  className="flex items-center gap-2 rounded-xl border p-3 text-sm font-normal"
-                >
-                  <Checkbox
-                    checked={selectedPermissions.includes(permission.id)}
-                    disabled={!canManage}
-                    onCheckedChange={() =>
-                      toggle(
-                        selectedPermissions,
-                        setSelectedPermissions,
-                        permission.id,
-                      )
-                    }
-                  />
-                  <span className="flex-1">
-                    <span>{labels.title(permission)}</span>
-                    {labels.description(permission) ? (
-                      <span className="block text-xs text-muted-foreground">
-                        {labels.description(permission)}
-                      </span>
-                    ) : null}
-                  </span>
-                </Label>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {t("permissions.sectionEmpty")}
-            </p>
-          )}
+          <PermissionCatalogTable
+            grantedPermissionIds={selectedPermissionSet}
+            onTogglePermission={togglePermission}
+            disabled={!canManage}
+            idPrefix="default-permission"
+          />
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         {canManage ? (
           <Button onClick={handleSave} disabled={updateSettings.isPending || isLoading}>
             {updateSettings.isPending
@@ -206,7 +189,7 @@ function EditorFields({
           </Button>
         ) : (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <InfoIcon className="size-3" />
+            <InfoIcon className="size-4" />
             {t("accessDenied.description")}
           </p>
         )}
