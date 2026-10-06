@@ -1760,6 +1760,116 @@ export interface PaginatedResponse<T> {
   meta: PaginationMeta;
 }
 
+// --- Admin: user training calendar ---
+
+export const WORKOUT_TYPES = [
+  "recovery",
+  "easy",
+  "long_run",
+  "tempo",
+  "threshold",
+  "interval",
+  "hill",
+  "race",
+  "rest",
+] as const;
+export const WORKOUT_STATUSES = ["planned", "completed", "skipped", "cancelled"] as const;
+
+/**
+ * Statuses the admin panel may set. Completing a workout needs an actual
+ * result and load recalculation, and cancelling is a plan lifecycle outcome,
+ * so both stay with the athlete flow.
+ */
+export const ADMIN_WORKOUT_EDITABLE_STATUSES = ["planned", "skipped"] as const;
+
+/** Bounds mirrored from the backend admin calendar DTOs. */
+export const ADMIN_WORKOUT_LIMITS = {
+  durationMinutes: { min: 1, max: 300 },
+  distanceKm: { min: 0, max: 100 },
+  titleMaxLength: 120,
+} as const;
+
+/** Longest range the month summary endpoint accepts, in days. */
+export const ADMIN_CALENDAR_SUMMARY_MAX_DAYS = 62;
+
+export const workoutTypeSchema = z.enum(WORKOUT_TYPES);
+export const workoutStatusSchema = z.enum(WORKOUT_STATUSES);
+export const adminWorkoutEditableStatusSchema = z.enum(ADMIN_WORKOUT_EDITABLE_STATUSES);
+
+export const adminCalendarWorkoutSchema = z.object({
+  id: z.string(),
+  athleteId: z.string(),
+  planId: z.string().nullable(),
+  scheduledAt: z.string(),
+  type: workoutTypeSchema,
+  phase: z.string(),
+  status: workoutStatusSchema,
+  durationMinutes: z.number(),
+  distanceKm: z.number(),
+  title: z.string().nullable(),
+  source: z.string().nullable(),
+  hasActual: z.boolean(),
+  completedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const adminCalendarDaySchema = z.object({
+  date: z.string(),
+  timezone: z.string(),
+  workouts: z.array(adminCalendarWorkoutSchema),
+  total: z.number(),
+  hasAthleteProfile: z.boolean(),
+});
+
+export const adminCalendarSummaryDaySchema = z.object({
+  date: z.string(),
+  total: z.number(),
+  statuses: z.record(workoutStatusSchema, z.number()),
+});
+
+export const adminCalendarSummarySchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  timezone: z.string(),
+  days: z.array(adminCalendarSummaryDaySchema),
+});
+
+export const adminWorkoutMutationSchema = z.object({
+  workout: adminCalendarWorkoutSchema,
+});
+
+const adminWorkoutTitleSchema = z.string().trim().min(1).max(ADMIN_WORKOUT_LIMITS.titleMaxLength);
+
+export const adminCreateWorkoutSchema = z.object({
+  scheduledAt: z.string().datetime({ offset: true }),
+  type: workoutTypeSchema,
+  durationMinutes: z
+    .number()
+    .min(ADMIN_WORKOUT_LIMITS.durationMinutes.min)
+    .max(ADMIN_WORKOUT_LIMITS.durationMinutes.max)
+    .optional(),
+  distanceKm: z
+    .number()
+    .min(ADMIN_WORKOUT_LIMITS.distanceKm.min)
+    .max(ADMIN_WORKOUT_LIMITS.distanceKm.max)
+    .optional(),
+  status: adminWorkoutEditableStatusSchema.optional(),
+  title: adminWorkoutTitleSchema.optional(),
+});
+
+export const adminUpdateWorkoutSchema = adminCreateWorkoutSchema.partial();
+
+export type WorkoutType = z.infer<typeof workoutTypeSchema>;
+export type WorkoutStatus = z.infer<typeof workoutStatusSchema>;
+export type AdminWorkoutEditableStatus = z.infer<typeof adminWorkoutEditableStatusSchema>;
+export type AdminCalendarWorkout = z.infer<typeof adminCalendarWorkoutSchema>;
+export type AdminCalendarDay = z.infer<typeof adminCalendarDaySchema>;
+export type AdminCalendarSummary = z.infer<typeof adminCalendarSummarySchema>;
+export type AdminCalendarSummaryDay = z.infer<typeof adminCalendarSummaryDaySchema>;
+export type AdminCreateWorkoutInput = z.infer<typeof adminCreateWorkoutSchema>;
+export type AdminUpdateWorkoutInput = z.infer<typeof adminUpdateWorkoutSchema>;
+
 export class ApiClientError extends Error {
   readonly status: number;
   readonly code?: string;

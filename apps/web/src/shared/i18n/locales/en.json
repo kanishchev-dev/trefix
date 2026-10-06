@@ -124,7 +124,8 @@
     },
     "tabs": {
       "profile": "Profile",
-      "access": "Access permissions"
+      "access": "Access permissions",
+      "training": "Training calendar"
     },
     "access": {
       "groupsTitle": "User groups",
@@ -190,6 +191,68 @@
     "confirmRevokePermission": {
       "title": "Revoke permission",
       "description": "Permission {name} will be removed from this user. Effective permissions will change immediately."
+    }
+  },
+  "trainingCalendar": {
+    "noAthleteProfile": "The user has not created an athlete profile yet. Workouts can be added after the profile appears in the app.",
+    "timezoneHint": "Times are shown in your timezone: {timezone}",
+    "summaryError": "Could not load the days with workouts for this month",
+    "actions": {
+      "add": "Add workout",
+      "edit": "Edit workout"
+    },
+    "list": {
+      "count": "Workouts: {count}",
+      "metrics": "{type} · {distance} km · {duration} min",
+      "fromPlan": "From plan",
+      "lockedHint": "Completed workouts are training history and cannot be edited"
+    },
+    "empty": {
+      "title": "No workouts on this day",
+      "description": "Add a workout to the user's calendar",
+      "readOnlyDescription": "There is nothing scheduled for this day"
+    },
+    "form": {
+      "createTitle": "New workout",
+      "editTitle": "Edit workout",
+      "description": "The workout will appear in the user's calendar in the app",
+      "planWorkoutHint": "This workout belongs to a training plan. Changes apply to the plan as well",
+      "date": "Date",
+      "time": "Start time",
+      "type": "Type",
+      "status": "Status",
+      "distance": "Distance, km",
+      "duration": "Duration, min",
+      "title": "Title",
+      "titlePlaceholder": "Derived from the type when empty",
+      "errors": {
+        "date": "Enter a valid date",
+        "time": "Enter a time in HH:MM format",
+        "duration": "Duration must be between 1 and 300 minutes",
+        "distance": "Distance must be between 0 and 100 km",
+        "title": "The title is too long"
+      }
+    },
+    "toasts": {
+      "created": "Workout added",
+      "updated": "Workout updated"
+    },
+    "types": {
+      "recovery": "Recovery",
+      "easy": "Easy",
+      "long_run": "Long run",
+      "tempo": "Tempo",
+      "threshold": "Threshold",
+      "interval": "Intervals",
+      "hill": "Hills",
+      "race": "Race",
+      "rest": "Rest"
+    },
+    "statuses": {
+      "planned": "Planned",
+      "completed": "Completed",
+      "skipped": "Skipped",
+      "cancelled": "Cancelled"
     }
   },
   "groups": {
@@ -273,7 +336,8 @@
         "progress": "Progress",
         "goals": "Goals",
         "plans": "Plans",
-        "workouts": "Workouts"
+        "workouts": "Workouts",
+        "calendar": "Workout calendar"
       }
     },
     "descriptions": {
@@ -333,7 +397,11 @@
           "update": "Complete a workout and record its actual result"
         },
         "analyze": "Run a detailed AI analysis of a completed workout",
-        "adapt": "Adapt the current training plan to the athlete state and recovery"
+        "adapt": "Adapt the current training plan to the athlete state and recovery",
+        "calendar": {
+          "read": "View the workout calendar of any user in the admin panel",
+          "manage": "Add and edit workouts in the calendar of any user from the admin panel"
+        }
       },
       "account": {
         "update": "Edit the own profile: first name, last name and locale"
@@ -378,7 +446,11 @@
       "AUTH_INVITE_ALREADY_ACTIVATED": "This account has already been activated",
       "AUTH_TOKEN_INVALID": "Session expired. Please sign in again",
       "AUTH_SESSION_NOT_FOUND": "Session not found. Please sign in again",
-      "AUTH_REFRESH_TOKEN_REUSE": "Session was revoked. Please sign in again"
+      "AUTH_REFRESH_TOKEN_REUSE": "Session was revoked. Please sign in again",
+      "ATHLETE_NOT_FOUND": "The user has no athlete profile yet",
+      "WORKOUT_NOT_FOUND": "Workout not found. Refresh the calendar",
+      "WORKOUT_COMPLETED_IMMUTABLE": "A completed workout cannot be edited",
+      "CALENDAR_RANGE_INVALID": "The calendar period is invalid"
     },
     "byStatus": {
       "400": "Please check the entered data",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactElement } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
@@ -48,10 +48,17 @@ import {
   usePermissionCatalog,
 } from "@/features/permissions/hooks/use-permissions";
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
+import { UserTrainingCalendar } from "@/features/training-calendar/components/user-training-calendar";
 import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 import { CopyButton } from "@/widgets/copy-button";
 import { TableSkeleton } from "@/widgets/data-state";
+
+const USER_DETAIL_TABS = ["profile", "access", "training"] as const;
+type UserDetailTab = (typeof USER_DETAIL_TABS)[number];
+
+const isUserDetailTab = (value: unknown): value is UserDetailTab =>
+  USER_DETAIL_TABS.includes(value as UserDetailTab);
 
 function DetailRow({
   label,
@@ -71,6 +78,8 @@ function DetailRow({
 export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { hasPermission } = useAuth();
 
   const groupsQuery = useGroups(1, 100);
@@ -107,6 +116,28 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
   const canUpdate = hasPermission("users.update");
   const canManage = hasPermission("users.manage");
   const canDelete = hasPermission("users.delete") && !user.isSystem;
+  const canReadCalendar = hasPermission("training.calendar.read");
+
+  // The active tab lives in the URL so a reload or a shared link reopens it.
+  const requestedTab = searchParams.get("tab");
+  const activeTab: UserDetailTab =
+    isUserDetailTab(requestedTab) && (requestedTab !== "training" || canReadCalendar)
+      ? requestedTab
+      : "profile";
+
+  const changeTab = (tab: unknown) => {
+    if (!isUserDetailTab(tab)) {
+      return;
+    }
+
+    // Tab-specific parameters (e.g. the calendar day) do not carry over to another tab.
+    const params = new URLSearchParams();
+    if (tab !== "profile") {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const toggleGroup = (group: AdminUserGroup, assigned: boolean) => {
     setPendingGroupId(group.id);
@@ -239,10 +270,13 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
         </p>
       ) : null}
 
-      <Tabs defaultValue="profile">
+      <Tabs value={activeTab} onValueChange={changeTab}>
         <TabsList>
           <TabsTrigger value="profile">{t("users.tabs.profile")}</TabsTrigger>
           <TabsTrigger value="access">{t("users.tabs.access")}</TabsTrigger>
+          {canReadCalendar ? (
+            <TabsTrigger value="training">{t("users.tabs.training")}</TabsTrigger>
+          ) : null}
         </TabsList>
 
         <TabsContent value="profile" className="mt-4">
@@ -397,6 +431,12 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {canReadCalendar ? (
+          <TabsContent value="training" className="mt-4">
+            <UserTrainingCalendar userId={user.id} />
+          </TabsContent>
+        ) : null}
       </Tabs>
 
       <ConfirmDialog
