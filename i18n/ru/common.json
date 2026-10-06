@@ -36,6 +36,10 @@
     "AUTH_INVITE_ALREADY_ACTIVATED": "Аккаунт уже активирован",
     "AUTH_SOCIAL_FLOW_INVALID": "Сессия входа через соцсеть истекла или некорректна",
     "AUTH_SOCIAL_PROVIDER_UNAVAILABLE": "Этот способ входа недоступен",
-    "AUTH_STORAGE_UNAVAILABLE": "Хранилище данных авторизации недоступно. Попробуйте позже"
+    "AUTH_STORAGE_UNAVAILABLE": "Хранилище данных авторизации недоступно. Попробуйте позже",
+    "ATHLETE_NOT_FOUND": "У пользователя ещё нет профиля спортсмена",
+    "WORKOUT_NOT_FOUND": "Тренировка не найдена",
+    "WORKOUT_COMPLETED_IMMUTABLE": "Выполненная тренировка — это история, её нельзя изменить",
+    "CALENDAR_RANGE_INVALID": "Период календаря слишком длинный или некорректный"
   }
 }

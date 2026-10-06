@@ -18,6 +18,8 @@ import { PlanStartedEvent } from './events/plan-started.event';
 import { PlanUpdatedEvent } from './events/plan-updated.event';
 import { AthleteStateUpdatedEvent } from './events/state-updated.event';
 import { WorkoutCompletedEvent } from './events/workout-completed.event';
+import { WorkoutCreatedEvent } from './events/workout-created.event';
+import { WorkoutUpdatedEvent } from './events/workout-updated.event';
 
 @Injectable()
 export class TrainingListener {
@@ -95,6 +97,16 @@ export class TrainingListener {
     this.realtimeService.emitToRoom('training', 'training.workout.completed', event);
   }
 
+  @OnEvent('training.workout.created')
+  async handleWorkoutCreated(event: WorkoutCreatedEvent): Promise<void> {
+    await this.emitWorkoutsChanged(event.athleteId, 'created', event.workoutId, event.planId);
+  }
+
+  @OnEvent('training.workout.updated')
+  async handleWorkoutUpdated(event: WorkoutUpdatedEvent): Promise<void> {
+    await this.emitWorkoutsChanged(event.athleteId, 'updated', event.workoutId, event.planId);
+  }
+
   @OnEvent('training.plan.adapted')
   handlePlanAdapted(event: PlanAdaptedEvent): void {
     this.logger.log(`training.plan.adapted for plan ${event.planId}`);
@@ -118,6 +130,36 @@ export class TrainingListener {
     } catch (error) {
       // Realtime fan-out is best-effort and must never fail the domain flow.
       this.logger.warn(`Failed to emit training.plans.changed for plan ${planId}: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Tells the owning user's clients that their calendar changed elsewhere (the
+   * admin panel). A plan workout also refreshes plan caches, since plan
+   * progress and the week view are derived from its workouts.
+   */
+  private async emitWorkoutsChanged(
+    athleteId: string,
+    reason: 'created' | 'updated',
+    workoutId: string,
+    planId: string | null,
+  ): Promise<void> {
+    try {
+      const athlete = await this.athleteModel.findByPk(athleteId);
+      if (!athlete) {
+        this.logger.warn(`Skipping realtime workout event for missing athlete ${athleteId}`);
+        return;
+      }
+
+      this.realtimeService.emitToUser(athlete.userId, 'training.workouts.changed', { reason, workoutId, planId });
+      if (planId) {
+        this.realtimeService.emitToUser(athlete.userId, 'training.plans.changed', { reason: 'workouts', planId });
+      }
+    } catch (error) {
+      // Realtime fan-out is best-effort and must never fail the domain flow.
+      this.logger.warn(
+        `Failed to emit training.workouts.changed for workout ${workoutId}: ${(error as Error).message}`,
+      );
     }
   }
 }

@@ -3,7 +3,10 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
 import { RealtimeModule } from '@/modules/realtime/realtime.module';
+import { UsersModule } from '@/modules/users/users.module';
 
+import { AdminTrainingController } from './admin-training.controller';
+import { AdminTrainingService } from './admin-training.service';
 import { AdaptationEvent } from './entities/adaptation-event.entity';
 import { Athlete } from './entities/athlete.entity';
 import { AthleteGoal } from './entities/athlete-goal.entity';
@@ -39,14 +42,16 @@ import { TrainingService } from './training.service';
       AdaptationEvent,
     ]),
     RealtimeModule,
+    UsersModule,
     BullModule.registerQueue({
       name: PLAN_COMPLETION_QUEUE,
     }),
   ],
   // PlansController goes first: its static routes (`plans/active`, `plans/counts`)
   // must be registered before any parameterised `plans/:id` route.
-  controllers: [PlansController, TrainingController],
+  controllers: [PlansController, TrainingController, AdminTrainingController],
   providers: [
+    AdminTrainingService,
     TrainingService,
     TrainingEngine,
     TrainingListener,

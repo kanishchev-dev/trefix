@@ -36,6 +36,10 @@
     "AUTH_INVITE_ALREADY_ACTIVATED": "This account has already been activated",
     "AUTH_SOCIAL_FLOW_INVALID": "Social sign-in flow is invalid or expired",
     "AUTH_SOCIAL_PROVIDER_UNAVAILABLE": "This sign-in provider is not available",
-    "AUTH_STORAGE_UNAVAILABLE": "Authentication storage is unavailable, try again later"
+    "AUTH_STORAGE_UNAVAILABLE": "Authentication storage is unavailable, try again later",
+    "ATHLETE_NOT_FOUND": "The user has no athlete profile yet",
+    "WORKOUT_NOT_FOUND": "Workout not found",
+    "WORKOUT_COMPLETED_IMMUTABLE": "A completed workout is training history and cannot be edited",
+    "CALENDAR_RANGE_INVALID": "The calendar period is too long or invalid"
   }
 }

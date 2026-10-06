@@ -265,6 +265,20 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     description: 'Complete a workout and record its actual result',
   },
   {
+    key: 'training.calendar.read',
+    module: 'training',
+    resource: 'calendar',
+    action: 'read',
+    description: 'View the workout calendar of any user in the admin panel',
+  },
+  {
+    key: 'training.calendar.manage',
+    module: 'training',
+    resource: 'calendar',
+    action: 'manage',
+    description: 'Add and edit workouts in the calendar of any user from the admin panel',
+  },
+  {
     key: 'training.analyze',
     module: 'training',
     resource: '',
@@ -294,6 +308,7 @@ export const SYSTEM_PERMISSION_KEYS = SYSTEM_PERMISSION_CATALOG.map((permission)
 export const DEFAULT_USER_PERMISSION_KEYS: readonly string[] = SYSTEM_PERMISSION_CATALOG.filter(
   (permission) =>
     !permission.key.startsWith('permissions.') &&
+    !permission.key.startsWith('training.calendar.') &&
     !['users.create', 'users.update', 'users.delete', 'users.manage', 'settings.update'].includes(permission.key),
 ).map((permission) => permission.key);
 

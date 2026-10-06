@@ -30,17 +30,7 @@ function findRepoRoot(): string {
 type LocaleDictionary = Record<string, unknown>;
 
 function readLocale(name: 'en' | 'ru'): LocaleDictionary {
-  const path = join(
-    findRepoRoot(),
-    'frontend',
-    'apps',
-    'web',
-    'src',
-    'shared',
-    'i18n',
-    'locales',
-    `${name}.json`,
-  );
+  const path = join(findRepoRoot(), 'frontend', 'apps', 'web', 'src', 'shared', 'i18n', 'locales', `${name}.json`);
 
   return JSON.parse(readFileSync(path, 'utf8')) as LocaleDictionary;
 }
@@ -114,9 +104,7 @@ describe('SYSTEM_PERMISSION_CATALOG', () => {
   });
 
   it('covers every permission referenced by a guarded endpoint', () => {
-    const missing = collectGuardedPermissions().filter(
-      (key) => !SYSTEM_PERMISSION_KEYS.includes(key),
-    );
+    const missing = collectGuardedPermissions().filter((key) => !SYSTEM_PERMISSION_KEYS.includes(key));
 
     expect(missing).toEqual([]);
   });
@@ -150,6 +138,8 @@ describe('SYSTEM_PERMISSION_CATALOG', () => {
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('permissions.manage');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('users.manage');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('settings.update');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.calendar.read');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.calendar.manage');
     expect(DEFAULT_USER_PERMISSION_KEYS).toContain('training.plans.read');
   });
 
