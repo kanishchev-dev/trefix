@@ -243,6 +243,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       {/* Workout Details Modal Sheet */}
       <WorkoutDetailSheet
         copy={copy}
+        language={language}
         onClose={() => setDetailSheetVisible(false)}
         theme={theme}
         themeMode={themeMode}

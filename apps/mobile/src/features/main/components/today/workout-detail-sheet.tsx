@@ -26,7 +26,13 @@ import {
   SheetSectionLabel,
 } from "../../../../shared/ui/bottom-sheet";
 import { useCompleteWorkout } from "../../hooks/use-workouts";
-import { type MainCopy } from "../../../../locales";
+import { type AppLanguage, type MainCopy } from "../../../../locales";
+import { useActivePlan } from "../../../plans/hooks/use-active-plan";
+import { todayIso, workoutLocalDate } from "../../../plans/lib/plan-dates";
+import {
+  PlanWorkoutEditPanel,
+  type PlanWorkoutEditMode,
+} from "../../../plans/components/plan-workout-edit-panel";
 
 type Props = {
   workout: TrainingWorkout | null;
@@ -35,6 +41,7 @@ type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
+  language?: AppLanguage;
 };
 
 export function WorkoutDetailSheet({
@@ -44,8 +51,11 @@ export function WorkoutDetailSheet({
   theme,
   themeMode,
   copy,
+  language = "ru",
 }: Props) {
   const completeWorkoutMutation = useCompleteWorkout();
+  const activePlanQuery = useActivePlan({ enabled: visible && Boolean(workout?.planId) });
+  const [editMode, setEditMode] = useState<PlanWorkoutEditMode | null>(null);
   const locale = copy?.today?.detailSheet || {};
   const statuses = copy?.today?.workout?.statuses || {};
 
@@ -61,6 +71,7 @@ export function WorkoutDetailSheet({
     if (visible) {
       setIsCompleting(false);
       setErrorMessage("");
+      setEditMode(null);
     }
   }, [visible]);
 
@@ -71,6 +82,18 @@ export function WorkoutDetailSheet({
   }
 
   const isCompleted = workout.status === "completed";
+  const isCancelled = workout.status === "cancelled";
+  const workoutDate = workoutLocalDate(workout.scheduledAt);
+  const today = todayIso();
+  const activePlanId = activePlanQuery.data?.plan?.id ?? null;
+  const isActivePlanWorkout = Boolean(workout.planId) && workout.planId === activePlanId;
+  // Future workouts of the plan in progress are editable; the past is history.
+  const isPending = workout.status === "planned" || workout.status === "modified";
+  const isEditable = isActivePlanWorkout && isPending && workoutDate >= today;
+  const isLocked = isActivePlanWorkout && !isEditable && !isCancelled;
+  // Manual completion stays available whatever the plan status: Strava may be missing.
+  const canComplete = (isPending || workout.status === "missed") && workoutDate <= today;
+  const planCopy = copy.plans.edit;
   const actualData = (workout.actual as Record<string, unknown>) || {};
   const analysisData = workout.analysis;
 
@@ -160,6 +183,26 @@ export function WorkoutDetailSheet({
         </View>
       )}
     >
+      {editMode && activePlanId ? (
+        <PlanWorkoutEditPanel
+          planId={activePlanId}
+          mode={editMode}
+          workout={{
+            id: workout.id,
+            type: workout.type,
+            distanceKm: workout.distanceKm,
+            durationMinutes: workout.durationMinutes,
+            scheduledAt: typeof workout.scheduledAt === "string" ? workout.scheduledAt : workout.scheduledAt.toISOString(),
+          }}
+          onDone={onClose}
+          onCancel={() => setEditMode(null)}
+          theme={theme}
+          themeMode={themeMode}
+          copy={copy}
+          language={language}
+        />
+      ) : (
+      <>
       {/* Status Badge */}
       <View style={styles.badgeRow}>
         <View
@@ -298,6 +341,36 @@ export function WorkoutDetailSheet({
             </Text>
           ) : null}
         </View>
+
+        {isEditable && !isCompleting ? (
+          <View style={styles.planActionsRow}>
+            {(["edit", "move", "remove"] as const).map((action) => (
+              <SheetButton
+                key={action}
+                label={action === "edit" ? planCopy.edit : action === "move" ? planCopy.move : planCopy.remove}
+                variant={action === "remove" ? "destructive" : "secondary"}
+                onPress={() => setEditMode(action)}
+                theme={theme}
+                themeMode={themeMode}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {isLocked ? (
+          <Text
+            accessibilityHint={planCopy.locked}
+            style={[styles.infoText, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+          >
+            {planCopy.locked}
+          </Text>
+        ) : null}
+
+        {isCancelled ? (
+          <Text style={[styles.infoText, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+            {planCopy.cancelledWorkout}
+          </Text>
+        ) : null}
 
         {/* Actual Results (if completed) */}
         {isCompleted && (
@@ -533,7 +606,7 @@ export function WorkoutDetailSheet({
           themeMode={themeMode}
         />
 
-        {!isCompleted && !isCompleting && (
+        {canComplete && !isCompleting && (
           <SheetButton
             label={locale.completeButton || "Завершить"}
             onPress={handleStartCompleting}
@@ -555,6 +628,8 @@ export function WorkoutDetailSheet({
           />
         )}
       </View>
+      </>
+      )}
     </BottomSheet>
   );
 }
@@ -664,6 +739,10 @@ const styles = StyleSheet.create({
   metricsRow: {
     flexDirection: "row",
     gap: 12,
+  },
+  planActionsRow: {
+    flexDirection: "row",
+    gap: 8,
   },
   actionsRow: {
     flexDirection: "row",

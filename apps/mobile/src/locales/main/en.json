@@ -697,5 +697,319 @@
     },
     "logout": "Exit app",
     "version": "Version"
+  },
+  "plans": {
+    "title": "My plans",
+    "section": {
+      "active": "In progress"
+    },
+    "segment": {
+      "drafts": "Drafts · {{count}}",
+      "history": "History · {{count}}"
+    },
+    "badge": {
+      "ai": "AI",
+      "active": "In progress",
+      "stale": "Metrics outdated"
+    },
+    "card": {
+      "weeks": "{{count}} wk",
+      "perWeek": "{{count}}/wk",
+      "raceOn": "race {{date}}",
+      "activeProgress": "Week {{current}} of {{total}}",
+      "moreActions": "Plan actions",
+      "a11y": "{{name}}, {{status}}",
+      "progressA11y": "{{percent}} percent"
+    },
+    "status": {
+      "draft": "Draft · edited {{date}}",
+      "completed": "✓ Completed {{date}} · {{rate}}%",
+      "cancelled": "Cancelled {{date}} · {{rate}}%"
+    },
+    "empty": {
+      "drafts": "No drafts. Save a plan without starting it to begin later.",
+      "history": "Completed and cancelled plans will appear here.",
+      "createButton": "Create plan"
+    },
+    "actions": {
+      "title": "Plan",
+      "start": "Start",
+      "prepareAgain": "Prepare again",
+      "editWorkouts": "Edit workouts",
+      "editParams": "Change parameters",
+      "meta": "Name and notes",
+      "delete": "Delete"
+    },
+    "tab": {
+      "openPlans": "My plans",
+      "noActiveTitle": "No plan in progress",
+      "noActiveDescription": "Start one of your drafts or create a new plan.",
+      "historyTitle": "Getting ready for a new race?",
+      "historyDescription": "Take a past plan as the base — it will be recalculated for your current form.",
+      "prepareFromHistory": "Prepare again from a past plan",
+      "createPlan": "Create plan",
+      "draftsTitle": "Drafts",
+      "cancelledTitle": "Plan cancelled",
+      "cancelledDescription": "The plan is in history. Start a draft, prepare again or create a new plan."
+    },
+    "details": {
+      "goal": "Goal",
+      "structure": "{{weeks}} wk · {{sessions}}/wk",
+      "longRun": "long run {{day}}",
+      "raceOn": "race {{date}}",
+      "metrics": "Metrics",
+      "metricsAtStart": "At the start",
+      "capturedAt": "captured {{date}}",
+      "staleBanner": "Metrics are outdated — update them?",
+      "weeks": "Weeks",
+      "notes": "Notes",
+      "notesEmpty": "No notes yet",
+      "editNotes": "Edit",
+      "startButton": "Start plan",
+      "prepareAgainButton": "Prepare again",
+      "resultCompleted": "✓ Completed",
+      "resultCancelled": "Cancelled",
+      "workoutsDone": "{{done}}/{{total}} workouts",
+      "totalKm": "{{km}} km",
+      "raceResult": "result {{time}}",
+      "weekWorkouts": "{{count}} workouts · {{km}} km",
+      "plannedActual": "{{planned}} → {{actual}} km"
+    },
+    "menu": {
+      "title": "Plan in progress",
+      "schedule": "Change schedule",
+      "goalDate": "Change goal date",
+      "meta": "Name and notes",
+      "allPlans": "All plans",
+      "cancel": "Cancel plan"
+    },
+    "start": {
+      "title": "Start “{{name}}”?",
+      "when": "When do we start?",
+      "today": "Today, {{date}}",
+      "nextMonday": "From Monday, {{date}}",
+      "raceAligned": "For the race on {{race}} (from {{date}})",
+      "custom": "Pick a date…",
+      "until": "until {{date}}",
+      "recommended": "recommended",
+      "cta": "Start plan",
+      "ctaReplace": "Cancel current and start",
+      "saveDraft": "Save as draft",
+      "dontStart": "Don't start",
+      "raceNotFits": "Only {{available}} weeks to the race, the plan needs {{total}}. Start now or change the race date.",
+      "raceDatePassed": "The race date has already passed.",
+      "changeDate": "Change race date",
+      "raceDateTitle": "Race date",
+      "apply": "Apply",
+      "staleMetrics": "Metrics were captured a while ago — update them before starting?",
+      "dateInvalid": "This start date is no longer available. Pick another one.",
+      "started": "Plan “{{name}}” started",
+      "draftSaved": "Draft saved",
+      "loadFailed": "Couldn't load start dates",
+      "failed": "Couldn't start the plan"
+    },
+    "warning": {
+      "title": "“{{name}}” is in progress (week {{current}} of {{total}})",
+      "body": "If you start a new plan, the current one will be cancelled:",
+      "completedKept": {
+        "one": "{{count}} completed workout stays in history",
+        "other": "{{count}} completed workouts stay in history"
+      },
+      "plannedRemoved": {
+        "one": "{{count}} planned workout will be removed from the calendar",
+        "other": "{{count}} planned workouts will be removed from the calendar"
+      }
+    },
+    "cancel": {
+      "title": "Cancel “{{name}}”?",
+      "progress": "You're in week {{current}} of {{total}}.",
+      "body": "The plan stays in history — you can prepare again from it.",
+      "confirm": "Cancel plan",
+      "keep": "Keep",
+      "done": "Plan cancelled",
+      "failed": "Couldn't cancel the plan"
+    },
+    "delete": {
+      "title": "Delete “{{name}}”?",
+      "body": "Completed workouts stay in your calendar and progress.",
+      "confirm": "Delete",
+      "keep": "Keep",
+      "done": "Plan deleted",
+      "failed": "Couldn't delete the plan"
+    },
+    "meta": {
+      "title": "Name and notes",
+      "name": "Name",
+      "namePlaceholder": "Moscow Marathon 2027",
+      "notes": "Notes",
+      "notesPlaceholder": "Race result, how it went, what to change next time",
+      "counter": "{{count}}/{{max}}",
+      "save": "Save",
+      "nameRequired": "Enter a name",
+      "failed": "Couldn't save the changes"
+    },
+    "edit": {
+      "locked": "Past workouts can't be edited",
+      "cancelledWorkout": "Plan cancelled — log the run as a separate workout",
+      "edit": "Edit",
+      "move": "Move",
+      "remove": "Delete",
+      "addWorkout": "Add workout",
+      "editTitle": "Edit workout",
+      "moveTitle": "Move workout",
+      "addTitle": "New workout",
+      "dateLabel": "Date",
+      "removeTitle": "Delete this workout?",
+      "removeBody": "It will be removed from the plan and the calendar.",
+      "save": "Save",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "showChanges": "Show changes",
+      "applied": "Plan updated",
+      "workoutLocked": "This workout has already passed",
+      "failed": "Couldn't change the plan",
+      "invalid": "These changes can't be applied",
+      "conflict": "The plan has changed (adaptation or another device)",
+      "refresh": "Refresh",
+      "dateOutOfPlan": "Pick a date between today and the end of the plan"
+    },
+    "schedule": {
+      "title": "Change schedule",
+      "from": "Apply from",
+      "nextWeek": "Next week",
+      "tomorrow": "Tomorrow"
+    },
+    "goalDate": {
+      "title": "Change goal date",
+      "minHint": "At least 2 weeks from today",
+      "longer": {
+        "one": "The plan gets {{count}} week longer",
+        "other": "The plan gets {{count}} weeks longer"
+      },
+      "shorter": {
+        "one": "The plan gets {{count}} week shorter",
+        "other": "The plan gets {{count}} weeks shorter"
+      },
+      "same": "The plan length stays the same",
+      "tooShort": "Too little time to the race for this plan"
+    },
+    "diff": {
+      "title": "Plan changes",
+      "rebuildTitle": "What changed vs the previous plan",
+      "peakVolume": "Peak volume: {{before}} → {{after}} km",
+      "longestRun": "Long run: {{before}} → {{after}} km",
+      "threshold": "Threshold pace {{before}} → {{after}} /km",
+      "pacesRecalculated": "paces recalculated",
+      "volumeScale": "Volume ×{{scale}} ({{after}} vs {{before}} km/wk)",
+      "totalWeeks": "Plan: {{before}} → {{after}} weeks",
+      "finish": "finish {{date}}",
+      "week": "Week {{number}}",
+      "added": "+ {{label}}",
+      "removed": "− {{label}}",
+      "modified": "{{label}}: {{changes}}",
+      "showAll": "Show all ({{count}})",
+      "noChanges": "Nothing changes",
+      "regenerated": "The plan was rebuilt from the new parameters",
+      "wasNow": "was {{before}}, now {{after}}",
+      "addedBadge": "new",
+      "removedBadge": "removed",
+      "fields": {
+        "distanceKm": "distance",
+        "durationMinutes": "duration",
+        "type": "type",
+        "scheduledAt": "date",
+        "dayOfWeek": "day"
+      },
+      "adjustment": {
+        "VOLUME_SCALED": "Volume scaled to your current form",
+        "LONG_RUN_CAPPED": "Long run capped at {{km}} km",
+        "WEEKLY_GROWTH_CAPPED": "Weekly volume growth capped for safety",
+        "WEEKLY_RAMP_CAPPED": "Weekly volume growth capped for safety",
+        "STRUCTURE_REGENERATED": "Plan structure rebuilt",
+        "generic": "The plan was adjusted by safety rules"
+      },
+      "reason": {
+        "NOT_ENOUGH_TRAINING_DAYS": "not enough training days",
+        "RESIZE_REMOVED": "removed when the plan was resized",
+        "generic": "adjusted by safety rules"
+      },
+      "warning": {
+        "WORKOUTS_REMOVED_NOT_ENOUGH_DAYS": "Some workouts were removed: not enough training days",
+        "STRUCTURE_CHANGED_REGENERATED": "The structure changed — the plan was rebuilt",
+        "generic": "The plan was adjusted by safety rules"
+      }
+    },
+    "metrics": {
+      "title": "Current form",
+      "question": "Your current form sets the starting volume and paces. Values are filled in from your data — check and correct them if needed.",
+      "previous": "Last time",
+      "current": "Now",
+      "threshold": "Threshold pace",
+      "thresholdModePace": "I know my pace",
+      "thresholdModeResult": "I'll enter a result",
+      "recentResult": "Recent result",
+      "resultDistance": "Distance",
+      "resultTime": "Time",
+      "resultDate": "Date",
+      "weeklyKm": "Weekly volume, km",
+      "longestRun": "Longest run, km",
+      "hrMax": "Max HR",
+      "hrRest": "Resting HR",
+      "optional": "optional",
+      "source": {
+        "strava": "from Strava",
+        "manual_workouts": "from the workouts you logged",
+        "athlete_state": "from your profile",
+        "none": "enter manually"
+      },
+      "placeholder": "Enter manually",
+      "connectStrava": "Connect Strava to fill metrics automatically",
+      "skip": "Skip",
+      "required": "Required for scaling the plan",
+      "outOfRange": "Must be between {{min}} and {{max}}",
+      "invalid": "Check the values",
+      "weeklyShort": "{{km}} km/wk",
+      "longestShort": "long run {{km}} km",
+      "hrShort": "HR {{max}} / {{rest}}",
+      "setValue": "Set value",
+      "clearValue": "Clear",
+      "paceUnit": "/km",
+      "bpm": "bpm",
+      "kmUnit": "km",
+      "distances": {
+        "5k": "5K",
+        "10k": "10K",
+        "half_marathon": "Half",
+        "marathon": "Marathon"
+      }
+    },
+    "rebuild": {
+      "cta": "Prepare again",
+      "previousTargetDate": "Last time: {{date}}",
+      "previousResult": "Your result: {{time}}",
+      "improveGoal": "Goal: {{percent}}% faster",
+      "structureChangedWarning": "Changing the structure rebuilds the plan from scratch — manual edits of the previous plan won't carry over.",
+      "saveChanges": "Save changes",
+      "defaultName": "{{name}} {{year}}",
+      "loadFailed": "Couldn't load the plan parameters",
+      "updated": "Draft updated"
+    },
+    "preview": {
+      "saveButton": "Save plan",
+      "renameA11y": "Rename the plan",
+      "draftEditTitle": "Edit workouts",
+      "saveChanges": "Save changes",
+      "changesSaved": "Changes saved",
+      "draftHint": "Tap a workout to change or remove it. Dates are set when the plan starts."
+    },
+    "errors": {
+      "generic": "Something went wrong. Try again.",
+      "network": "No connection. Your changes are kept.",
+      "limit": "You've reached the limit of {{max}} plans. Delete old plans to create new ones.",
+      "notFound": "Plan not found",
+      "invalidStatus": "The plan status has changed",
+      "retry": "Try again",
+      "back": "Back"
+    }
   }
 }

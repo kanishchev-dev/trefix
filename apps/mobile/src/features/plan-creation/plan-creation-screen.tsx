@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
+  ActivityIndicator,
   BackHandler,
   Pressable,
   ScrollView,
@@ -13,102 +14,247 @@ import {
   validateGoalPayload,
   type AthleteGoalType,
   type ManualPlanPreview,
+  type MetricsSnapshot,
+  type PlanDetails,
+  type RebuildPreview,
 } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Ruler } from "@workspace/ui-native";
-import { Card } from "../../shared/ui/card";
 
-import { type AppLanguage, type MainCopy } from "../../locales";
+import { Card } from "../../shared/ui/card";
+import { fillTemplate, formatShortDate, type AppLanguage, type MainCopy } from "../../locales";
+import { trackEvent } from "../../lib/analytics";
 import { BottomSheet, SheetBlock, SheetButton, useSheetStack } from "../../shared/ui/bottom-sheet";
 import {
-  MANUAL_PLAN_MAX_DURATION_MINUTES,
-  MANUAL_PLAN_MAX_SESSIONS,
-  MANUAL_PLAN_MIN_DURATION_MINUTES,
+  INITIAL_PLAN_CREATION_DRAFT,
   MANUAL_PLAN_MAX_WEEKS,
   MANUAL_PLAN_MIN_SESSIONS,
   MANUAL_PLAN_MIN_WEEKS,
   PLAN_FOCUS_OPTIONS,
+  formatTargetTime,
   pruneStaleGoalFields,
   withRequiredGoalDefaults,
   type PlanCreationDraft,
 } from "./plan-creation-types";
-import { useManualPlanPreview } from "./hooks/use-manual-plan";
-import {
-  CirclePicker,
-  DayPicker,
-  OptionChip,
-  SectionBlock,
-} from "./components/plan-creation-ui";
+import { useCreateManualPlan, useManualPlanPreview } from "./hooks/use-manual-plan";
+import { CirclePicker, OptionChip, SectionBlock } from "./components/plan-creation-ui";
+import { Ruler } from "@workspace/ui-native";
 import { GoalTypeStep } from "./components/goal-type-step";
 import { GoalSetupStep } from "./components/goal-setup-step";
-import { PlanPreviewScreen } from "./plan-preview-screen";
+import { ScheduleStepFields, toggleTrainingDay } from "./components/schedule-step-fields";
+import { CurrentMetricsStep } from "./components/current-metrics-step";
+import { shortDayNamesFor } from "./components/workout-edit-form";
+import { PlanPreviewScreen, type PreviewOutcome, type PreviewSubmission } from "./plan-preview-screen";
+import { toDraftWeekOverrides, toManualWeekOverrides } from "./preview-edits";
+import { usePlanDetails } from "../plans/hooks/use-plan";
+import { useCurrentMetrics, useRebuildPlan, useRebuildPrefill, useRebuildPreview } from "../plans/hooks/use-plan-rebuild";
+import { Notice } from "../plans/components/plans-ui";
+import { daysBetween, getDeviceTimezone, todayIso } from "../plans/lib/plan-dates";
+import {
+  draftFromConfig,
+  goalPayload,
+  metricsFormFromCurrent,
+  metricsPayload,
+  structureChanged,
+  validateMetricsForm,
+  type MetricsErrors,
+  type MetricsForm,
+  type MetricsSources,
+} from "../plans/lib/plan-draft";
+import { hasErrorCode, planErrorMessage } from "../plans/lib/plan-errors";
+import { saveFieldsFor } from "../plans/lib/start-plan";
+
+/** How the creation flow is opened. */
+export type PlanCreationLaunch =
+  | { mode: "create" }
+  /** "Prepare again" from a completed or cancelled plan. */
+  | { mode: "rebuild"; sourcePlanId: string }
+  /** New parameters / metrics for a stored draft; optionally straight on the metrics step. */
+  | { mode: "draft-params"; planId: string; initialStep?: "metrics" };
+
+export type PlanCreationOutcome =
+  | { kind: "started"; name: string }
+  | { kind: "draft"; planId: string | null; name: string }
+  | { kind: "updated"; planId: string };
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
   language: AppLanguage;
+  launch?: PlanCreationLaunch;
   onClose: () => void;
   onOpenTrefix: () => void;
+  /** Called after the plan is saved or started; the flow is closed by the host. */
+  onCompleted?: (outcome: PlanCreationOutcome) => void;
+  /** Opens the integrations screen (Strava hint on the metrics step). */
+  onOpenIntegrations?: () => void;
 };
 
-type StepKey = "goalType" | "goalSetup" | "schedule" | "structure";
+type StepKey = "goalType" | "goalSetup" | "schedule" | "structure" | "metrics";
 
-const STEPS: StepKey[] = ["goalType", "goalSetup", "schedule", "structure"];
+const STEPS: StepKey[] = ["goalType", "goalSetup", "schedule", "structure", "metrics"];
 
-const INITIAL_DRAFT: PlanCreationDraft = {
-  goal: {
-    type: "prepare_for_race",
-    target: {
-      distanceMeters: 10000,
-    },
-    raceDistance: "10k",
-    targetTimeText: "",
-    targetTimeSeconds: undefined,
-    targetDate: undefined,
-  },
-  schedule: {
-    trainingDays: [0, 2, 5],
-    preferredLongRunDay: undefined,
-    workoutDurationMinutes: 45,
-  },
-  structure: {
-    totalWeeks: 8,
-    sessionsPerWeek: 3,
-    focus: ["easy", "long_run", "tempo"],
-  },
-};
+const IMPROVE_PERCENT = 5;
 
 type StepMutationState = {
   isPending: boolean;
-  isError: boolean;
+  error: string | null;
 };
 
-export function PlanCreationScreen({
+type FlowSetup = {
+  initialDraft: PlanCreationDraft;
+  metrics: { form: MetricsForm; sources: MetricsSources };
+  previousMetrics: MetricsSnapshot | null;
+  hints: { previousTargetDate: string | null; previousResultSeconds: number | null } | null;
+  initialStepIndex: number;
+  defaultName?: string;
+  initialNotes?: string | null;
+  source?: PlanDetails;
+};
+
+export function PlanCreationScreen(props: Props) {
+  const launch = props.launch ?? { mode: "create" };
+  if (launch.mode === "create") return <NewPlanFlow {...props} />;
+  return <PrefilledPlanFlow {...props} launch={launch} />;
+}
+
+/** Plain creation: defaults plus the current form estimate for the optional metrics step. */
+function NewPlanFlow(props: Props) {
+  const metricsQuery = useCurrentMetrics();
+  const setup = useMemo<FlowSetup>(
+    () => ({
+      initialDraft: INITIAL_PLAN_CREATION_DRAFT,
+      metrics: metricsFormFromCurrent(metricsQuery.data),
+      previousMetrics: null,
+      hints: null,
+      initialStepIndex: 0,
+    }),
+    [metricsQuery.data],
+  );
+  return <PlanCreationFlow {...props} launch={{ mode: "create" }} setup={setup} />;
+}
+
+/** Rebuild and draft parameters: every step is prefilled from the stored plan. */
+function PrefilledPlanFlow(props: Props & { launch: Exclude<PlanCreationLaunch, { mode: "create" }> }) {
+  const { launch, theme, copy, onClose } = props;
+  const planId = launch.mode === "rebuild" ? launch.sourcePlanId : launch.planId;
+  const prefillQuery = useRebuildPrefill(planId);
+  const detailsQuery = usePlanDetails(planId);
+  const tracked = useRef(false);
+
+  const setup = useMemo<FlowSetup | null>(() => {
+    const prefill = prefillQuery.data;
+    const details = detailsQuery.data;
+    if (!prefill || !details) return null;
+    const isRebuild = launch.mode === "rebuild";
+    const draft = draftFromConfig(prefill.config, {
+      targetDate: isRebuild ? prefill.goalSuggestion.targetDate : undefined,
+    });
+    const year = (draft.goal.targetDate ?? todayIso()).slice(0, 4);
+    return {
+      initialDraft: draft,
+      metrics: metricsFormFromCurrent(prefill.metrics.current),
+      previousMetrics: prefill.metrics.previous ?? details.metricsSnapshot,
+      hints: isRebuild
+        ? {
+            previousTargetDate: prefill.goalSuggestion.previousTargetDate,
+            previousResultSeconds: prefill.goalSuggestion.previousResult?.timeSeconds ?? null,
+          }
+        : null,
+      initialStepIndex: launch.mode === "draft-params" && launch.initialStep === "metrics" ? STEPS.length - 1 : 0,
+      defaultName: isRebuild ? fillTemplate(copy.plans.rebuild.defaultName, { name: details.name, year }) : details.name,
+      initialNotes: isRebuild ? null : details.notes,
+      source: details,
+    };
+  }, [copy.plans.rebuild.defaultName, detailsQuery.data, launch, prefillQuery.data]);
+
+  useEffect(() => {
+    if (tracked.current || launch.mode !== "rebuild" || !detailsQuery.data) return;
+    tracked.current = true;
+    const details = detailsQuery.data;
+    const reference = details.cancelledAt ?? details.endDate ?? details.updatedAt;
+    trackEvent("plan_rebuild_started", {
+      sourceStatus: details.status,
+      sourceAgeDays: Math.max(0, daysBetween(reference.slice(0, 10), todayIso())),
+    });
+  }, [detailsQuery.data, launch.mode]);
+
+  if (!setup) {
+    const failed = prefillQuery.isError || detailsQuery.isError;
+    return (
+      <View style={[styles.root, styles.loadingOverlay]}>
+        {failed ? (
+          <Card size="sm" theme={theme} themeMode={props.themeMode} style={styles.loadingCard}>
+            <Text style={[styles.stepQuestion, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+              {copy.plans.rebuild.loadFailed}
+            </Text>
+            <View style={styles.loadingActions}>
+              <SheetButton label={copy.plan.creation.common.close} variant="secondary" onPress={onClose} theme={theme} themeMode={props.themeMode} />
+              <SheetButton
+                label={copy.plans.errors.retry}
+                onPress={() => {
+                  void prefillQuery.refetch();
+                  void detailsQuery.refetch();
+                }}
+                theme={theme}
+                themeMode={props.themeMode}
+              />
+            </View>
+          </Card>
+        ) : (
+          <ActivityIndicator color={theme.color.foreground} />
+        )}
+      </View>
+    );
+  }
+
+  return <PlanCreationFlow {...props} launch={launch} setup={setup} />;
+}
+
+function PlanCreationFlow({
   theme,
   themeMode,
   copy,
   language,
+  launch,
+  setup,
   onClose,
-}: Props) {
+  onCompleted,
+  onOpenIntegrations,
+}: Props & { launch: PlanCreationLaunch; setup: FlowSetup }) {
   const creationCopy = copy.plan.creation;
+  const isCreate = launch.mode === "create";
 
   const [sheetVisible, setSheetVisible] = useState(true);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [draft, setDraft] = useState<PlanCreationDraft>(INITIAL_DRAFT);
-  const [preview, setPreview] = useState<ManualPlanPreview | null>(null);
-  const [pendingPreview, setPendingPreview] = useState<ManualPlanPreview | null>(null);
+  const [stepIndex, setStepIndex] = useState(setup.initialStepIndex);
+  const [draft, setDraft] = useState<PlanCreationDraft>(setup.initialDraft);
+  const [metricsForm, setMetricsForm] = useState<MetricsForm>(setup.metrics.form);
+  const [metricsSkipped, setMetricsSkipped] = useState(false);
+  const [metricsAttempted, setMetricsAttempted] = useState(false);
+  const [preview, setPreview] = useState<PreviewState | null>(null);
+  const [pendingPreview, setPendingPreview] = useState<PreviewState | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const createdPlanId = useRef<string | null>(null);
+  const savedName = useRef<string>("");
+  const metricsTouched = useRef(false);
 
-  const previewMutation = useManualPlanPreview();
+  // The current form estimate may arrive after the flow opened; keep the user's input.
+  useEffect(() => {
+    if (!metricsTouched.current) setMetricsForm(setup.metrics.form);
+  }, [setup.metrics.form]);
+
+  const manualPreviewMutation = useManualPlanPreview();
+  const rebuildPreviewMutation = useRebuildPreview();
+  const createMutation = useCreateManualPlan();
+  const rebuildMutation = useRebuildPlan();
 
   const step = STEPS[stepIndex];
+  const shortDayNames = useMemo(() => shortDayNamesFor(language), [language]);
+  const requireVolume = !isCreate;
 
-  const shortDayNames = useMemo(
-    () =>
-      language === "ru"
-        ? ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
-        : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    [language],
+  const metricsErrors = useMemo<MetricsErrors>(
+    () => validateMetricsForm(metricsForm, { requireVolume }),
+    [metricsForm, requireVolume],
   );
 
   const isStepValid = useMemo(() => {
@@ -131,12 +277,15 @@ export function PlanCreationScreen({
     if (step === "schedule") {
       return draft.schedule.trainingDays.length > 0;
     }
-    return (
-      draft.structure.sessionsPerWeek >= MANUAL_PLAN_MIN_SESSIONS &&
-      draft.schedule.trainingDays.length > 0 &&
-      draft.structure.totalWeeks >= MANUAL_PLAN_MIN_WEEKS &&
-      draft.structure.totalWeeks <= MANUAL_PLAN_MAX_WEEKS
-    );
+    if (step === "structure") {
+      return (
+        draft.structure.sessionsPerWeek >= MANUAL_PLAN_MIN_SESSIONS &&
+        draft.schedule.trainingDays.length > 0 &&
+        draft.structure.totalWeeks >= MANUAL_PLAN_MIN_WEEKS &&
+        draft.structure.totalWeeks <= MANUAL_PLAN_MAX_WEEKS
+      );
+    }
+    return true;
   }, [step, draft]);
 
   const requestClose = useCallback(() => {
@@ -167,29 +316,51 @@ export function PlanCreationScreen({
     setStepIndex(1);
   }, []);
 
-  const requestPreview = useCallback(async () => {
-    const goalPayload = {
-      type: draft.goal.type,
-      target: draft.goal.target,
-      current: draft.goal.current,
-      description: draft.goal.description,
-      targetDate: draft.goal.targetDate,
-      priority: draft.goal.priority,
-    };
-
-    try {
-      const result = await previewMutation.mutateAsync({
-        goal: goalPayload,
-        schedule: draft.schedule,
-        structure: draft.structure,
-      });
-
-      setPendingPreview(result);
-      setSheetVisible(false);
-    } catch {
-      // Inline error will surface
-    }
-  }, [draft, previewMutation]);
+  const requestPreview = useCallback(
+    async (skipMetrics: boolean) => {
+      setPreviewError(null);
+      const metrics = skipMetrics ? undefined : metricsPayload(metricsForm);
+      const timezone = getDeviceTimezone();
+      try {
+        if (launch.mode === "create") {
+          const result = await manualPreviewMutation.mutateAsync({
+            goal: goalPayload(draft),
+            schedule: draft.schedule,
+            structure: draft.structure,
+            metrics,
+            timezone,
+          });
+          setPendingPreview({ kind: "manual", preview: result });
+        } else {
+          const planId = launch.mode === "rebuild" ? launch.sourcePlanId : launch.planId;
+          const result = await rebuildPreviewMutation.mutateAsync({
+            planId,
+            goal: goalPayload(draft),
+            schedule: draft.schedule,
+            structure: draft.structure,
+            metrics: metrics ?? {},
+            target: launch.mode === "rebuild" ? "new_draft" : "in_place",
+            timezone,
+          });
+          const volumeScale = result.diff.summary.adjustments.find((item) => item.code === "VOLUME_SCALED")?.params?.k;
+          trackEvent("plan_rebuild_previewed", {
+            mode: result.mode,
+            volumeScale: typeof volumeScale === "number" ? volumeScale : null,
+          });
+          setPendingPreview({ kind: "rebuild", data: result });
+        }
+        setMetricsSkipped(skipMetrics);
+        setSheetVisible(false);
+      } catch (error) {
+        setPreviewError(
+          hasErrorCode(error, "PLAN_METRICS_INVALID")
+            ? copy.plans.metrics.invalid
+            : planErrorMessage(error, copy, creationCopy.errors.generationFailed),
+        );
+      }
+    },
+    [copy, creationCopy.errors.generationFailed, draft, launch, manualPreviewMutation, metricsForm, rebuildPreviewMutation],
+  );
 
   const handleContinue = useCallback(() => {
     if (!isStepValid) {
@@ -201,43 +372,30 @@ export function PlanCreationScreen({
       return;
     }
 
-    void requestPreview();
-  }, [isStepValid, requestPreview, stepIndex]);
+    setMetricsAttempted(true);
+    if (Object.keys(metricsErrors).length > 0) return;
+    void requestPreview(false);
+  }, [isStepValid, metricsErrors, requestPreview, stepIndex]);
 
-  const toggleDay = useCallback(
-    (dayIndex: number) => {
-      setDraft((current) => {
-        const selected = current.schedule.trainingDays.includes(dayIndex);
-        const trainingDays = selected
-          ? current.schedule.trainingDays.filter((day) => day !== dayIndex)
-          : [...current.schedule.trainingDays, dayIndex].sort((a, b) => a - b);
-
-        const preferredLongRunDay =
-          current.schedule.preferredLongRunDay !== undefined &&
-          trainingDays.includes(current.schedule.preferredLongRunDay)
-            ? current.schedule.preferredLongRunDay
-            : undefined;
-
-        return {
-          ...current,
-          schedule: { ...current.schedule, trainingDays, preferredLongRunDay },
-          structure: {
-            ...current.structure,
-            sessionsPerWeek: Math.min(
-              current.structure.sessionsPerWeek,
-              Math.max(trainingDays.length, 1),
-            ),
-          },
-        };
-      });
-    },
-    [],
-  );
+  const toggleDay = useCallback((dayIndex: number) => {
+    setDraft((current) => {
+      const schedule = toggleTrainingDay(current.schedule, dayIndex);
+      return {
+        ...current,
+        schedule,
+        structure: {
+          ...current.structure,
+          sessionsPerWeek: Math.min(current.structure.sessionsPerWeek, Math.max(schedule.trainingDays.length, 1)),
+        },
+      };
+    });
+  }, []);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
       if (preview) {
         setPreview(null);
+        setSheetVisible(true);
         setStepIndex(0);
         return true;
       }
@@ -248,27 +406,126 @@ export function PlanCreationScreen({
     return () => subscription.remove();
   }, [preview]);
 
+  const handleSubmit = useCallback(
+    async ({ edits, name, notes, decision }: PreviewSubmission) => {
+      const metrics = metricsSkipped ? undefined : metricsPayload(metricsForm);
+      savedName.current = name ?? setup.defaultName ?? "";
+
+      if (launch.mode === "create") {
+        if (!decision) return;
+        const plan = await createMutation.mutateAsync({
+          goal: {
+            ...goalPayload(draft),
+            raceDistance: draft.goal.raceDistance,
+            targetTimeSeconds: draft.goal.targetTimeSeconds,
+          },
+          schedule: draft.schedule,
+          structure: draft.structure,
+          metrics,
+          timezone: getDeviceTimezone(),
+          weekOverrides: toManualWeekOverrides(edits),
+          ...saveFieldsFor(decision, { name, notes }),
+        });
+        createdPlanId.current = plan.id;
+        if (decision.kind === "draft") trackEvent("plan_saved_as_draft", { source: "manual" });
+        return;
+      }
+
+      const planId = launch.mode === "rebuild" ? launch.sourcePlanId : launch.planId;
+      const result = await rebuildMutation.mutateAsync({
+        planId,
+        goal: goalPayload(draft),
+        schedule: draft.schedule,
+        structure: draft.structure,
+        metrics: metrics ?? {},
+        target: launch.mode === "rebuild" ? "new_draft" : "in_place",
+        weekOverrides: toDraftWeekOverrides(edits),
+        expectedVersion: launch.mode === "draft-params" ? setup.source?.version : undefined,
+        ...(decision ? saveFieldsFor(decision, { name, notes }) : {}),
+      });
+      createdPlanId.current = result.id;
+      if (launch.mode === "rebuild") {
+        trackEvent("plan_rebuild_saved", {
+          saveAsDraft: decision?.kind === "draft",
+          started: decision?.kind === "start",
+        });
+        if (decision?.kind === "draft") trackEvent("plan_saved_as_draft", { source: "rebuild" });
+      }
+    },
+    [createMutation, draft, launch, metricsForm, metricsSkipped, rebuildMutation, setup.defaultName, setup.source?.version],
+  );
+
+  const handleCompleted = useCallback(
+    (outcome: PreviewOutcome) => {
+      if (outcome === "started") {
+        onCompleted?.({ kind: "started", name: savedName.current });
+      } else if (outcome === "draft") {
+        onCompleted?.({ kind: "draft", planId: createdPlanId.current, name: savedName.current });
+      } else if (launch.mode === "draft-params") {
+        onCompleted?.({ kind: "updated", planId: launch.planId });
+      }
+      onClose();
+    },
+    [launch, onClose, onCompleted],
+  );
+
   if (preview) {
+    const backToSettings = () => {
+      setPreview(null);
+      setSheetVisible(true);
+      setStepIndex(0);
+    };
+    if (preview.kind === "manual") {
+      return (
+        <PlanPreviewScreen
+          theme={theme}
+          themeMode={themeMode}
+          copy={copy}
+          language={language}
+          mode="creation"
+          preview={preview.preview}
+          draft={draft}
+          startOptions={preview.preview.startOptions ?? null}
+          onEditSettings={backToSettings}
+          onDiscard={onClose}
+          onSubmit={handleSubmit}
+          onCompleted={handleCompleted}
+        />
+      );
+    }
+    const isDraftParams = launch.mode === "draft-params";
     return (
       <PlanPreviewScreen
         theme={theme}
         themeMode={themeMode}
         copy={copy}
         language={language}
-        preview={preview}
+        mode={isDraftParams ? "draft-params" : "rebuild"}
+        // A draft has no dates until it is started.
+        preview={isDraftParams ? { ...preview.data.preview, startDate: "" } : preview.data.preview}
         draft={draft}
-        onEditSettings={() => {
-          setPreview(null);
-          setSheetVisible(true);
-          setStepIndex(0);
+        diffInfo={{
+          mode: preview.data.mode,
+          diff: preview.data.diff,
+          warnings: preview.data.warnings,
+          metricsVolume: {
+            before: setup.previousMetrics?.weeklyMileageKm ?? null,
+            after: metricsSkipped ? null : metricsForm.weeklyMileageKm,
+          },
         }}
+        startOptions={preview.data.startOptions}
+        initialName={setup.defaultName}
+        initialNotes={setup.initialNotes}
+        onEditSettings={backToSettings}
         onDiscard={onClose}
-        onCreated={onClose}
+        onSubmit={handleSubmit}
+        onCompleted={handleCompleted}
       />
     );
   }
 
   const visibleLayers = STEPS.slice(0, stepIndex + 1);
+  const previewPending = manualPreviewMutation.isPending || rebuildPreviewMutation.isPending;
 
   return (
     <View style={styles.root} pointerEvents="none">
@@ -278,8 +535,8 @@ export function PlanCreationScreen({
         onClose={handleFlowClosed}
         onStackPop={() => setStepIndex((current) => Math.max(current - 1, 0))}
         onDismissRequest={requestClose}
-        layerTitles={visibleLayers.map(
-          (stepKey) => creationCopy.steps[stepKey]?.title ?? stepKey,
+        layerTitles={visibleLayers.map((stepKey) =>
+          stepKey === "metrics" ? copy.plans.metrics.title : creationCopy.steps[stepKey]?.title ?? stepKey,
         )}
         theme={theme}
         themeMode={themeMode}
@@ -293,24 +550,46 @@ export function PlanCreationScreen({
             themeMode={themeMode}
             copy={copy}
             language={language}
+            launchMode={launch.mode}
             draft={draft}
+            initialDraft={setup.initialDraft}
             onDraftChange={setDraft}
             onSelectGoalType={handleGoalTypeSelect}
             onToggleDay={toggleDay}
             shortDayNames={shortDayNames}
             isStepValid={isStepValid}
-            previewMutation={{
-              isPending: previewMutation.isPending,
-              isError: previewMutation.isError,
-            }}
+            previewMutation={{ isPending: previewPending, error: previewError }}
             onContinue={handleContinue}
+            onSkipMetrics={() => void requestPreview(true)}
             onCancelRequest={requestClose}
+            hints={setup.hints}
+            metrics={{
+              form: metricsForm,
+              onChange: (updater) => {
+                metricsTouched.current = true;
+                setMetricsForm(updater);
+              },
+              sources: setup.metrics.sources,
+              previous: setup.previousMetrics,
+              errors: metricsAttempted ? metricsErrors : {},
+            }}
+            onOpenIntegrations={onOpenIntegrations}
           />
         ))}
       </BottomSheet>
     </View>
   );
 }
+
+type PreviewState = { kind: "manual"; preview: ManualPlanPreview } | { kind: "rebuild"; data: RebuildPreview };
+
+type MetricsBinding = {
+  form: MetricsForm;
+  onChange: (updater: (current: MetricsForm) => MetricsForm) => void;
+  sources: MetricsSources;
+  previous: MetricsSnapshot | null;
+  errors: MetricsErrors;
+};
 
 function PlanCreationStepLayer({
   stepKey,
@@ -319,7 +598,9 @@ function PlanCreationStepLayer({
   themeMode,
   copy,
   language,
+  launchMode,
   draft,
+  initialDraft,
   onDraftChange,
   onSelectGoalType,
   onToggleDay,
@@ -327,7 +608,11 @@ function PlanCreationStepLayer({
   isStepValid,
   previewMutation,
   onContinue,
+  onSkipMetrics,
   onCancelRequest,
+  hints,
+  metrics,
+  onOpenIntegrations,
 }: {
   stepKey: StepKey;
   isActive: boolean;
@@ -335,21 +620,31 @@ function PlanCreationStepLayer({
   themeMode: ThemeMode;
   copy: MainCopy;
   language: AppLanguage;
+  launchMode: PlanCreationLaunch["mode"];
   draft: PlanCreationDraft;
-  onDraftChange: React.Dispatch<React.SetStateAction<PlanCreationDraft>>;
+  initialDraft: PlanCreationDraft;
+  onDraftChange: Dispatch<SetStateAction<PlanCreationDraft>>;
   onSelectGoalType: (goalType: AthleteGoalType) => void;
   onToggleDay: (dayIndex: number) => void;
   shortDayNames: readonly string[];
   isStepValid: boolean;
   previewMutation: StepMutationState;
   onContinue: () => void;
+  onSkipMetrics: () => void;
   onCancelRequest: () => void;
+  hints: FlowSetup["hints"];
+  metrics: MetricsBinding;
+  onOpenIntegrations?: () => void;
 }) {
   const { pop } = useSheetStack();
   const creationCopy = copy.plan.creation;
-  const stepCopy = creationCopy.steps[stepKey];
+  const rebuildCopy = copy.plans.rebuild;
+  const stepQuestion =
+    stepKey === "metrics" ? copy.plans.metrics.question : creationCopy.steps[stepKey]?.question;
   const stepIndex = STEPS.indexOf(stepKey);
-  const isLastStep = stepKey === "structure";
+  const isLastStep = stepKey === "metrics";
+  const isCreate = launchMode === "create";
+  const previousResult = hints?.previousResultSeconds ?? null;
 
   return (
     <View style={styles.stepLayerRoot}>
@@ -359,7 +654,7 @@ function PlanCreationStepLayer({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {stepKey !== "goalType" && stepCopy?.question ? (
+        {stepKey !== "goalType" && stepQuestion ? (
           <SheetBlock theme={theme}>
             {/* Step explanation: what is set here and how it affects the plan. */}
             <Card size="sm" theme={theme} themeMode={themeMode} style={styles.stepInfoCard}>
@@ -372,7 +667,7 @@ function PlanCreationStepLayer({
                   },
                 ]}
               >
-                {stepCopy.question}
+                {stepQuestion}
               </Text>
             </Card>
           </SheetBlock>
@@ -387,6 +682,42 @@ function PlanCreationStepLayer({
             onSelectType={onSelectGoalType}
             onCancel={onCancelRequest}
           />
+        ) : null}
+
+        {stepKey === "goalSetup" && hints && (hints.previousTargetDate || previousResult) ? (
+          <SheetBlock theme={theme}>
+            <Notice
+              theme={theme}
+              action={
+                previousResult
+                  ? {
+                      label: fillTemplate(rebuildCopy.improveGoal, { percent: IMPROVE_PERCENT }),
+                      // Display helper only: fills the target field, the plan is computed by the server.
+                      onPress: () =>
+                        onDraftChange((current) => ({
+                          ...current,
+                          goal: {
+                            ...current.goal,
+                            target: {
+                              ...(current.goal.target ?? {}),
+                              finishTimeSec: Math.round((previousResult * (100 - IMPROVE_PERCENT)) / 100),
+                            },
+                          },
+                        })),
+                    }
+                  : undefined
+              }
+            >
+              {[
+                hints.previousTargetDate
+                  ? fillTemplate(rebuildCopy.previousTargetDate, { date: formatShortDate(hints.previousTargetDate, language) })
+                  : null,
+                previousResult ? fillTemplate(rebuildCopy.previousResult, { time: formatTargetTime(previousResult) }) : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </Notice>
+          </SheetBlock>
         ) : null}
 
         {stepKey === "goalSetup" ? (
@@ -405,93 +736,27 @@ function PlanCreationStepLayer({
         ) : null}
 
         {stepKey === "schedule" ? (
-          <>
-            <SectionBlock
-              title={creationCopy.trainingDaysSection}
-              description={creationCopy.trainingDaysHint}
-              theme={theme}
-            >
-              <DayPicker
-                selectedDays={draft.schedule.trainingDays}
-                theme={theme}
-                themeMode={themeMode}
-                shortDayNames={shortDayNames}
-                onToggleDay={onToggleDay}
-              />
-              <Text
-                style={[
-                  styles.dayCountText,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {creationCopy.sessionsPerWeekText.replace(
-                  "{{count}}",
-                  String(draft.schedule.trainingDays.length),
-                )}
-              </Text>
-            </SectionBlock>
-
-            <SectionBlock
-              title={creationCopy.longRunSection}
-              description={creationCopy.longRunHint}
-              theme={theme}
-            >
-              {/* Same week row as training days; only training days can be picked. Tap again to clear. */}
-              <DayPicker
-                selectedDays={
-                  draft.schedule.preferredLongRunDay !== undefined ? [draft.schedule.preferredLongRunDay] : []
-                }
-                disabledDays={[0, 1, 2, 3, 4, 5, 6].filter(
-                  (day) => !draft.schedule.trainingDays.includes(day),
-                )}
-                theme={theme}
-                themeMode={themeMode}
-                shortDayNames={shortDayNames}
-                onToggleDay={(dayIndex) =>
-                  onDraftChange((current) => ({
-                    ...current,
-                    schedule: {
-                      ...current.schedule,
-                      preferredLongRunDay:
-                        current.schedule.preferredLongRunDay === dayIndex ? undefined : dayIndex,
-                    },
-                  }))
-                }
-              />
-            </SectionBlock>
-
-            <SectionBlock
-              title={creationCopy.durationSection}
-              description={creationCopy.durationHint}
-              theme={theme}
-            >
-              <Ruler
-                value={draft.schedule.workoutDurationMinutes ?? 45}
-                onChange={(minutes) =>
-                  onDraftChange((current) => ({
-                    ...current,
-                    schedule: { ...current.schedule, workoutDurationMinutes: minutes },
-                  }))
-                }
-                min={MANUAL_PLAN_MIN_DURATION_MINUTES}
-                max={MANUAL_PLAN_MAX_DURATION_MINUTES}
-                step={5}
-                majorEvery={15}
-                labelEvery={30}
-                unit={creationCopy.units.min}
-                accessibilityLabel={creationCopy.durationSection}
-                theme={theme}
-                themeMode={themeMode}
-              />
-            </SectionBlock>
-          </>
+          <ScheduleStepFields
+            schedule={draft.schedule}
+            onToggleDay={onToggleDay}
+            onChange={(updater) => onDraftChange((current) => ({ ...current, schedule: updater(current.schedule) }))}
+            shortDayNames={shortDayNames}
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+          />
         ) : null}
 
         {stepKey === "structure" ? (
           <>
+            {!isCreate && structureChanged(initialDraft, draft) ? (
+              <SheetBlock theme={theme}>
+                <Notice tone="warning" theme={theme}>
+                  {rebuildCopy.structureChangedWarning}
+                </Notice>
+              </SheetBlock>
+            ) : null}
+
             <SectionBlock
               title={creationCopy.weeksLabel}
               description={creationCopy.weeksHint}
@@ -573,9 +838,25 @@ function PlanCreationStepLayer({
             </SectionBlock>
           </>
         ) : null}
+
+        {stepKey === "metrics" ? (
+          <CurrentMetricsStep
+            form={metrics.form}
+            onChange={metrics.onChange}
+            sources={metrics.sources}
+            previous={metrics.previous}
+            showPrevious={!isCreate}
+            errors={metrics.errors}
+            onConnectStrava={onOpenIntegrations}
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            language={language}
+          />
+        ) : null}
       </ScrollView>
 
-      {previewMutation.isError && isActive ? (
+      {previewMutation.error && isActive ? (
         <SheetBlock theme={theme}>
           <View style={styles.inlineErrorRow}>
             <AlertCircle color="#dc2626" size={14} />
@@ -585,7 +866,7 @@ function PlanCreationStepLayer({
                 { fontFamily: theme.typography.fontFamily.sans.regular },
               ]}
             >
-              {creationCopy.errors.generationFailed}
+              {previewMutation.error}
             </Text>
           </View>
         </SheetBlock>
@@ -612,13 +893,24 @@ function PlanCreationStepLayer({
               </Pressable>
             ) : null}
 
-            <SheetButton
-              label={creationCopy.common.cancel}
-              onPress={onCancelRequest}
-              variant="secondary"
-              theme={theme}
-              themeMode={themeMode}
-            />
+            {isLastStep && isCreate ? (
+              <SheetButton
+                label={copy.plans.metrics.skip}
+                onPress={onSkipMetrics}
+                variant="secondary"
+                disabled={previewMutation.isPending}
+                theme={theme}
+                themeMode={themeMode}
+              />
+            ) : (
+              <SheetButton
+                label={creationCopy.common.cancel}
+                onPress={onCancelRequest}
+                variant="secondary"
+                theme={theme}
+                themeMode={themeMode}
+              />
+            )}
 
             <SheetButton
               label={isLastStep ? creationCopy.common.buildPlan : creationCopy.common.continue}
@@ -642,6 +934,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  loadingOverlay: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.25)",
+  },
+  loadingCard: {
+    alignSelf: "stretch",
+    gap: 16,
+    borderRadius: 32,
+    padding: 20,
+  },
+  loadingActions: {
+    flexDirection: "row",
+    gap: 12,
   },
   stepLayerRoot: {
     flex: 1,
@@ -670,11 +978,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 10,
-  },
-  dayCountText: {
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: "center",
   },
   actionsRow: {
     flexDirection: "row",

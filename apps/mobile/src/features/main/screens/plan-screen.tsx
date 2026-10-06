@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
 
 import { type PlanAdaptation, type PlanWeek } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
@@ -22,33 +21,41 @@ import { PlanSkeleton } from "../../plan/components/plan-skeleton";
 import { PlanTimeline } from "../../plan/components/plan-timeline";
 import { PlanWeekDetailsSheet } from "../../plan/components/plan-week-details-sheet";
 import { RecentAdaptationsCard } from "../../plan/components/recent-adaptations-card";
-import {
-  usePlanOverview,
-  type PlanDisplayState,
-} from "../../plan/hooks/use-plan-overview";
-import { type MainCopy } from "../../../locales";
+import { usePlanOverview } from "../../plan/hooks/use-plan-overview";
+import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-form";
+import { PlanActionsMenu } from "../../plans/components/plan-actions-menu";
+import { PlanWorkoutAddSheet } from "../../plans/components/plan-workout-add-sheet";
+import { PlanWorkoutSheet } from "../../plans/components/plan-workout-sheet";
+import { usePlanDetails } from "../../plans/hooks/use-plan";
+import { usePlanCounts, usePlansList } from "../../plans/hooks/use-plans";
+import { addDaysIso, mondayBasedWeekday, todayIso, workoutLocalDate } from "../../plans/lib/plan-dates";
+import { weekWorkoutRows } from "../../plans/lib/plan-weeks";
+import { usePlansNavigation } from "../../plans/plans-navigation";
+import { formatDayMonth, type AppLanguage, type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-  /** Opens the manual plan creation flow (native stack screen in App.tsx). */
-  onOpenPlanCreation?: () => void;
-  /** Opens the AI (Trefix) flow. */
-  onOpenTrefix?: () => void;
+  language: AppLanguage;
 };
 
-export function PlanScreen({
-  theme,
-  themeMode,
-  copy,
-  onOpenPlanCreation,
-}: Props) {
+export function PlanScreen({ theme, themeMode, copy, language }: Props) {
+  const navigation = usePlansNavigation();
   const { displayState, data, refresh, isRefreshing } = usePlanOverview();
+  const isEmpty = displayState === "empty";
+  const countsQuery = usePlanCounts();
+  const draftsQuery = usePlansList("draft", isEmpty && (countsQuery.data?.draft ?? 0) > 0);
+  const planId = data && !isEmpty ? data.plan.id : null;
+  const detailsQuery = usePlanDetails(planId);
+  const details = detailsQuery.data;
 
   const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
   const [selectedAdaptation, setSelectedAdaptation] =
     useState<PlanAdaptation | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [workoutId, setWorkoutId] = useState<string | null>(null);
+  const [addTarget, setAddTarget] = useState<{ planId: string; date: string } | null>(null);
 
   const logoSource =
     themeMode === "dark"
@@ -57,11 +64,18 @@ export function PlanScreen({
 
   useHeaderOptions(
     {
-      leftAction: null,
+      leftAction: (
+        <HeaderTemplateButton
+          accessibilityLabel={copy.plans.tab.openPlans}
+          onPress={() => navigation.openPlans({ source: "plan_tab" })}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ),
       centerContent: <HeaderLogo source={logoSource} />,
       rightAction: (
         <HeaderPlusButton
-          onPress={() => onOpenPlanCreation?.()}
+          onPress={navigation.openCreationMethod}
           theme={theme}
           themeMode={themeMode}
         />
@@ -69,15 +83,37 @@ export function PlanScreen({
       variant: "default",
       bottomContent: null,
     },
-    [logoSource],
+    [logoSource, copy.plans.tab.openPlans, navigation],
   );
+
+  const dayNames = shortDayNamesFor(language);
+  const weekRows = useMemo(() => {
+    if (!details || !selectedWeek) return undefined;
+    return weekWorkoutRows(details, selectedWeek.weekNumber, dayNames, (iso) => {
+      const date = workoutLocalDate(iso);
+      return `${dayNames[mondayBasedWeekday(date)]} ${formatDayMonth(date, language)}`;
+    });
+  }, [dayNames, details, language, selectedWeek]);
+
+  // Workouts can be added to the current and future weeks of the plan in progress.
+  const addWorkoutTo = (week: PlanWeek): (() => void) | undefined => {
+    if (displayState !== "active" || !details?.startDate || week.status === "completed") return undefined;
+    const weekStart = addDaysIso(details.startDate, (week.weekNumber - 1) * 7);
+    const today = todayIso();
+    return () => setAddTarget({ planId: details.id, date: weekStart > today ? weekStart : today });
+  };
+
+  const handleRefresh = () => {
+    refresh();
+    void countsQuery.refetch();
+  };
 
   return (
     <SectionLayout
       hasHeader={false}
       scrollable
       refreshing={isRefreshing}
-      onRefresh={refresh}
+      onRefresh={handleRefresh}
       theme={theme}
       themeMode={themeMode}
     >
@@ -94,7 +130,13 @@ export function PlanScreen({
       ) : displayState === "empty" || !data ? (
         <PlanEmptyState
           copy={copy}
-          onCreatePlan={() => onOpenPlanCreation?.()}
+          language={language}
+          counts={countsQuery.data}
+          drafts={draftsQuery.data?.pages[0]?.items}
+          onCreatePlan={navigation.openCreationMethod}
+          onOpenPlans={() => navigation.openPlans({ segment: "draft", source: "plan_tab_empty" })}
+          onOpenHistory={() => navigation.openPlans({ segment: "history", source: "plan_tab_empty" })}
+          onStartDraft={(plan) => navigation.startDraft(plan, "plan_tab_empty")}
           theme={theme}
           themeMode={themeMode}
         />
@@ -109,9 +151,9 @@ export function PlanScreen({
       ) : displayState === "completed" ? (
         <PlanCompletedState
           copy={copy}
-          onNewGoal={() => {
-            onOpenPlanCreation?.();
-          }}
+          onNewGoal={navigation.openCreationMethod}
+          onPrepareAgain={() => navigation.openCreation({ mode: "rebuild", sourcePlanId: data.plan.id })}
+          onOpenPlans={() => navigation.openPlans({ segment: "history", source: "plan_completed" })}
           onSelectWeek={setSelectedWeek}
           overview={data}
           theme={theme}
@@ -124,6 +166,7 @@ export function PlanScreen({
           <PlanOverviewCard
             copy={copy}
             overview={data}
+            onOpenActions={() => setActionsOpen(true)}
             theme={theme}
             themeMode={themeMode}
           />
@@ -162,11 +205,15 @@ export function PlanScreen({
       <PlanWeekDetailsSheet
         adaptations={data?.adaptations}
         copy={copy}
+        mode={displayState === "completed" ? "history" : "active"}
+        week={selectedWeek}
+        workouts={weekRows}
+        onSelectWorkout={setWorkoutId}
+        onAddWorkout={selectedWeek ? addWorkoutTo(selectedWeek) : undefined}
         onClose={() => setSelectedWeek(null)}
         theme={theme}
         themeMode={themeMode}
         visible={selectedWeek !== null}
-        week={selectedWeek}
       />
 
       {/* Adaptation Details Sheet */}
@@ -178,27 +225,38 @@ export function PlanScreen({
         themeMode={themeMode}
         visible={selectedAdaptation !== null}
       />
+
+      {data && displayState === "active" ? (
+        <PlanActionsMenu
+          visible={actionsOpen}
+          onClose={() => setActionsOpen(false)}
+          overview={data}
+          theme={theme}
+          themeMode={themeMode}
+          copy={copy}
+          language={language}
+        />
+      ) : null}
+
+      <PlanWorkoutSheet
+        workoutId={workoutId}
+        onClose={() => setWorkoutId(null)}
+        theme={theme}
+        themeMode={themeMode}
+        copy={copy}
+        language={language}
+      />
+
+      <PlanWorkoutAddSheet
+        visible={addTarget !== null}
+        planId={addTarget?.planId ?? null}
+        defaultDate={addTarget?.date}
+        onClose={() => setAddTarget(null)}
+        theme={theme}
+        themeMode={themeMode}
+        copy={copy}
+        language={language}
+      />
     </SectionLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  stateBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    marginBottom: 12,
-  },
-  stateBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  stateBadgeText: {
-    fontSize: 11,
-    lineHeight: 15,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-});

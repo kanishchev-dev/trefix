@@ -245,8 +245,12 @@ export const trainingPlanSchema = z.object({
   id: z.string(),
   athleteId: z.string(),
   goalId: z.string().nullable(),
-  startDate: z.string(),
-  endDate: z.string(),
+  name: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  version: z.number().optional(),
+  // Drafts have no dates until they are started.
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
   trainingFrequency: z.number(),
   weeklyTargetKm: z.number(),
   status: z.string(),
@@ -648,6 +652,121 @@ export function deriveLegacyRaceFields(goal: {
   return { raceDistance: 'just_running', targetTimeSeconds };
 }
 
+// --- Plan start options & athlete metrics ---
+
+export const PLAN_NAME_MAX_LENGTH = 80;
+export const PLAN_NOTES_MAX_LENGTH = 2000;
+export const PLANS_LIMIT = 100;
+
+/** Server-side validation ranges of user-entered athlete metrics. */
+export const PLAN_METRIC_RANGES = {
+  thresholdPaceSecondsPerKm: { min: 150, max: 600 },
+  weeklyMileageKm: { min: 0, max: 300 },
+  longestRunKm: { min: 0, max: 200 },
+  maxHeartRate: { min: 120, max: 230 },
+  restingHeartRate: { min: 30, max: 100 },
+} as const;
+
+export const activePlanSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  currentWeek: z.number(),
+  totalWeeks: z.number(),
+  completedWorkouts: z.number(),
+  futurePlannedWorkouts: z.number(),
+});
+
+export const planStartOptionKindSchema = z.enum(["today", "next_monday", "race_aligned"]);
+
+export const planStartOptionSchema = z.object({
+  kind: planStartOptionKindSchema,
+  startDate: z.string(),
+  endDate: z.string(),
+  goalTargetDate: z.string().optional(),
+  fits: z.boolean().optional(),
+  weeksAvailable: z.number().optional(),
+  reason: z.literal("target_date_passed").optional(),
+});
+
+export const planStartOptionsSchema = z.object({
+  today: z.string(),
+  totalWeeks: z.number(),
+  options: z.array(planStartOptionSchema),
+  recommended: planStartOptionKindSchema,
+  metricsStale: z.boolean(),
+  activePlan: activePlanSummarySchema.nullable(),
+});
+
+export const planStartBlockSchema = z.object({
+  startDate: z.string(),
+  goalTargetDate: z.string().optional(),
+  replaceActive: z.boolean(),
+  timezone: z.string().optional(),
+});
+
+export const recentResultSchema = z.object({
+  distance: z.string(),
+  timeSeconds: z.number(),
+  date: z.string(),
+});
+
+/** Metrics entered by the user; every field is optional. */
+export const athleteMetricsSchema = z.object({
+  thresholdPaceSecondsPerKm: z.number().optional(),
+  thresholdHeartRate: z.number().int().optional(),
+  maxHeartRate: z.number().int().optional(),
+  restingHeartRate: z.number().int().optional(),
+  weeklyMileageKm: z.number().optional(),
+  longestRunKm: z.number().optional(),
+  recentResult: recentResultSchema.optional(),
+});
+
+/** Metrics captured when a plan started; the "before" side of rebuild diffs. */
+export const metricsSnapshotSchema = z.object({
+  capturedAt: z.string().optional(),
+  thresholdPaceSecondsPerKm: z.number().nullable().optional(),
+  thresholdHeartRate: z.number().nullable().optional(),
+  maxHeartRate: z.number().nullable().optional(),
+  restingHeartRate: z.number().nullable().optional(),
+  weeklyMileageKm: z.number().nullable().optional(),
+  longestRunKm: z.number().nullable().optional(),
+  recentResult: recentResultSchema.nullable().optional(),
+  source: z.string().optional(),
+});
+
+export const metricsSourceSchema = z.enum(["strava", "manual_workouts", "athlete_state", "none"]);
+
+const sourcedNumberSchema = z.object({
+  value: z.number().nullable(),
+  source: metricsSourceSchema,
+});
+
+export const currentMetricsSchema = z.object({
+  thresholdPaceSecondsPerKm: sourcedNumberSchema,
+  thresholdHeartRate: sourcedNumberSchema,
+  maxHeartRate: sourcedNumberSchema,
+  restingHeartRate: sourcedNumberSchema,
+  weeklyMileageKm: sourcedNumberSchema,
+  longestRunKm: sourcedNumberSchema,
+  recentResult: z.object({
+    value: recentResultSchema.nullable(),
+    source: metricsSourceSchema,
+  }),
+});
+
+export type ActivePlanSummary = z.infer<typeof activePlanSummarySchema>;
+export type PlanStartOptionKind = z.infer<typeof planStartOptionKindSchema>;
+export type PlanStartOption = z.infer<typeof planStartOptionSchema>;
+export type PlanStartOptions = z.infer<typeof planStartOptionsSchema>;
+export type PlanStartBlock = z.infer<typeof planStartBlockSchema>;
+export type RecentResult = z.infer<typeof recentResultSchema>;
+export type AthleteMetrics = z.infer<typeof athleteMetricsSchema>;
+export type MetricsSnapshot = z.infer<typeof metricsSnapshotSchema>;
+export type MetricsSource = z.infer<typeof metricsSourceSchema>;
+export type CurrentMetrics = z.infer<typeof currentMetricsSchema>;
+
 // --- Manual Plan Creation ---
 
 export const manualPlanGoalSchema = z.object({
@@ -705,6 +824,7 @@ export const manualPlanPreviewSchema = z.object({
   trainingFrequency: z.number(),
   weeklyTargetKm: z.number(),
   weeks: z.array(manualPlanPreviewWeekSchema),
+  startOptions: planStartOptionsSchema.optional(),
 });
 
 export const manualPlanWorkoutOverrideSchema = z.object({
@@ -733,12 +853,22 @@ export const previewManualPlanSchema = z.object({
   goal: manualPlanGoalSchema,
   schedule: manualPlanScheduleSchema,
   structure: manualPlanStructureSchema,
+  metrics: athleteMetricsSchema.optional(),
+  timezone: z.string().optional(),
+});
+
+/** Name, notes and save mode shared by every plan creation endpoint. */
+export const planSaveFieldsSchema = z.object({
+  name: z.string().trim().min(1).max(PLAN_NAME_MAX_LENGTH).optional(),
+  notes: z.string().max(PLAN_NOTES_MAX_LENGTH).nullable().optional(),
+  saveAsDraft: z.boolean().optional(),
+  start: planStartBlockSchema.optional(),
 });
 
 export const createManualPlanSchema = previewManualPlanSchema.extend({
   startDate: z.string().optional(),
   weekOverrides: z.array(manualPlanWeekOverridesSchema).optional(),
-});
+}).extend(planSaveFieldsSchema.shape);
 
 export type ManualPlanGoalInput = z.infer<typeof manualPlanGoalSchema>;
 export type ManualPlanScheduleInput = z.infer<typeof manualPlanScheduleSchema>;
@@ -751,6 +881,7 @@ export type ManualPlanNewWorkout = z.infer<typeof manualPlanNewWorkoutSchema>;
 export type ManualPlanWeekOverrides = z.infer<typeof manualPlanWeekOverridesSchema>;
 export type PreviewManualPlanInput = z.infer<typeof previewManualPlanSchema>;
 export type CreateManualPlanInput = z.infer<typeof createManualPlanSchema>;
+export type PlanSaveFields = z.infer<typeof planSaveFieldsSchema>;
 
 // --- Plan Overview ---
 
@@ -821,7 +952,27 @@ export const planStatusSchema = z.enum([
   "not_started",
   "active",
   "completed",
+  "cancelled",
 ]);
+
+/** Creation parameters of a plan; AI plans may store only part of them. */
+export const planConfigSchema = z.object({
+  goal: z.record(z.string(), z.unknown()).default({}),
+  schedule: z
+    .object({
+      trainingDays: z.array(z.number()).optional(),
+      preferredLongRunDay: z.number().nullable().optional(),
+      workoutDurationMinutes: z.number().nullable().optional(),
+    })
+    .default({}),
+  structure: z
+    .object({
+      totalWeeks: z.number().optional(),
+      sessionsPerWeek: z.number().optional(),
+      focus: z.array(z.string()).optional(),
+    })
+    .default({}),
+});
 
 export const planOverviewSchema = z.object({
   plan: z.object({
@@ -834,6 +985,9 @@ export const planOverviewSchema = z.object({
     progress: z.number(),
     currentPhase: planPhaseSchema,
     startDate: z.string().optional(),
+    notes: z.string().nullable().optional(),
+    version: z.number().optional(),
+    config: planConfigSchema.partial().optional(),
   }),
   weeks: z.array(planWeekSchema),
   currentWeekContext: currentWeekContextSchema.optional(),
@@ -849,6 +1003,328 @@ export type PlanAdaptation = z.infer<typeof planAdaptationSchema>;
 export type PlanGoal = z.infer<typeof planGoalSchema>;
 export type PlanStatus = z.infer<typeof planStatusSchema>;
 export type PlanOverview = z.infer<typeof planOverviewSchema>;
+export type PlanConfig = z.infer<typeof planConfigSchema>;
+
+// --- Plans library: drafts, active plan, history ---
+
+export const planLifecycleStatusSchema = z.enum(["draft", "active", "completed", "cancelled", "paused"]);
+export const planListGroupSchema = z.enum(["draft", "active", "history"]);
+
+export const planGoalSummarySchema = z.object({
+  type: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  targetDate: z.string().nullable().optional(),
+});
+
+export const planStatsSchema = z.object({
+  completedWorkouts: z.number(),
+  plannedWorkouts: z.number(),
+  completionRate: z.number(),
+  totalDistanceKm: z.number(),
+});
+
+const planSummaryShape = {
+  id: z.string(),
+  name: z.string(),
+  status: planLifecycleStatusSchema,
+  creationSource: z.string(),
+  goal: planGoalSummarySchema,
+  totalWeeks: z.number(),
+  sessionsPerWeek: z.number().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  cancelledAt: z.string().nullable().optional(),
+  stats: planStatsSchema.nullable().optional(),
+  sourcePlanId: z.string().nullable().optional(),
+  metricsStale: z.boolean().optional(),
+  currentWeek: z.number().optional(),
+  progress: z.number().optional(),
+  updatedAt: z.string(),
+};
+
+export const planListItemSchema = z.object({
+  ...planSummaryShape,
+  notesPreview: z.string().nullable().optional(),
+});
+
+export const planListResponseSchema = z.object({
+  items: z.array(planListItemSchema),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    hasNext: z.boolean(),
+  }),
+});
+
+export const planCountsSchema = z.object({
+  draft: z.number(),
+  active: z.number(),
+  history: z.number(),
+});
+
+export const activePlanResponseSchema = z.object({
+  plan: activePlanSummarySchema.nullable(),
+});
+
+/** Workout of a relative (undated) draft week; `dayOfWeek`: 0 = Monday. */
+export const relativeWorkoutSchema = z.object({
+  key: z.string(),
+  dayOfWeek: z.number(),
+  orderInWeek: z.number(),
+  type: z.string(),
+  phase: z.string(),
+  title: z.string().optional(),
+  durationMinutes: z.number(),
+  distanceKm: z.number(),
+  target: z.record(z.string(), z.unknown()),
+  steps: z.array(z.record(z.string(), z.unknown())),
+});
+
+export const relativeWeekSchema = z.object({
+  weekNumber: z.number(),
+  phase: z.string(),
+  title: z.string().nullable().optional(),
+  intent: z.string().nullable().optional(),
+  weeklyLoadTarget: z.number().nullable().optional(),
+  workouts: z.array(relativeWorkoutSchema),
+});
+
+/** Week record of a plan: relative on drafts, dated (workoutIds) otherwise. */
+export const planDetailsWeekSchema = z.object({
+  weekNumber: z.number(),
+  phase: z.string(),
+  title: z.string().nullable().optional(),
+  intent: z.string().nullable().optional(),
+  weeklyLoadTarget: z.number().nullable().optional(),
+  workouts: z.array(relativeWorkoutSchema).optional(),
+  workoutIds: z.array(z.string()).optional(),
+});
+
+export const planWorkoutItemSchema = z.object({
+  id: z.string(),
+  weekNumber: z.number(),
+  orderInWeek: z.number(),
+  scheduledAt: z.string(),
+  type: z.string(),
+  status: z.string(),
+  durationMinutes: z.number(),
+  distanceKm: z.number(),
+  target: z.record(z.string(), z.unknown()),
+  actual: z.record(z.string(), z.unknown()).nullable(),
+});
+
+export const planDetailsSchema = z.object({
+  ...planSummaryShape,
+  cancelReason: z.string().nullable().optional(),
+  notes: z.string().nullable(),
+  version: z.number(),
+  config: planConfigSchema,
+  metricsSnapshot: metricsSnapshotSchema.nullable(),
+  replacedByPlanId: z.string().nullable().optional(),
+  weeks: z.array(planDetailsWeekSchema),
+  workouts: z.array(planWorkoutItemSchema),
+});
+
+export const planMetaResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  notes: z.string().nullable(),
+  version: z.number(),
+});
+
+export const planVersionResponseSchema = z.object({
+  version: z.number(),
+});
+
+export const cancelPlanResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  cancelledWorkouts: z.number(),
+});
+
+export const updatePlanMetaSchema = z.object({
+  name: z.string().trim().min(1).max(PLAN_NAME_MAX_LENGTH).optional(),
+  notes: z.string().max(PLAN_NOTES_MAX_LENGTH).nullable().optional(),
+  expectedVersion: z.number().int().min(0),
+});
+
+/** Draft structure edits; workouts are addressed by their relative key. */
+export const draftWorkoutOverrideSchema = z.object({
+  key: z.string(),
+  type: z.string().optional(),
+  dayOfWeek: z.number().int().min(0).max(6).optional(),
+  distanceKm: z.number().min(0).optional(),
+  durationMinutes: z.number().int().optional(),
+});
+
+export const draftWeekOverrideSchema = z.object({
+  weekNumber: z.number().int().min(1),
+  workoutOverrides: z.array(draftWorkoutOverrideSchema).optional(),
+  removedWorkoutKeys: z.array(z.string()).optional(),
+  newWorkouts: z.array(manualPlanNewWorkoutSchema).optional(),
+});
+
+export const updatePlanStructureSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  weekOverrides: z.array(draftWeekOverrideSchema),
+});
+
+// Changes of the active plan
+
+export const planWorkoutOperationSchema = z.object({
+  op: z.enum(["update", "move", "remove", "add"]),
+  workoutId: z.string().optional(),
+  date: z.string().optional(),
+  type: z.string().optional(),
+  distanceKm: z.number().optional(),
+  durationMinutes: z.number().int().optional(),
+});
+
+export const planScheduleChangeSchema = z.object({
+  trainingDays: z.array(z.number().int().min(0).max(6)).min(1),
+  preferredLongRunDay: z.number().int().min(0).max(6).optional(),
+  workoutDurationMinutes: z.number().int().optional(),
+});
+
+export const planChangeRequestSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("workouts"),
+    expectedVersion: z.number().int(),
+    timezone: z.string().optional(),
+    operations: z.array(planWorkoutOperationSchema).min(1),
+  }),
+  z.object({
+    kind: z.literal("schedule"),
+    expectedVersion: z.number().int(),
+    timezone: z.string().optional(),
+    schedule: planScheduleChangeSchema,
+    effectiveFrom: z.enum(["next_week", "tomorrow"]).optional(),
+  }),
+  z.object({
+    kind: z.literal("goal_date"),
+    expectedVersion: z.number().int(),
+    timezone: z.string().optional(),
+    goalTargetDate: z.string(),
+  }),
+]);
+
+export const planDiffAdjustmentSchema = z.object({
+  code: z.string(),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const planDiffWorkoutSchema = z.object({
+  key: z.string(),
+  change: z.enum(["added", "removed", "modified"]),
+  fields: z.record(z.string(), z.tuple([z.unknown(), z.unknown()])).optional(),
+  reason: z.string().optional(),
+});
+
+export const planDiffWeekSchema = z.object({
+  weekNumber: z.number(),
+  change: z.enum(["added", "removed", "modified"]),
+  workouts: z.array(planDiffWorkoutSchema),
+});
+
+const beforeAfterNumber = z.object({ before: z.number().nullable(), after: z.number().nullable() });
+
+export const planDiffSchema = z.object({
+  summary: z.object({
+    weeklyVolumeKm: z.object({ before: z.array(z.number()), after: z.array(z.number()) }),
+    peakWeekKm: beforeAfterNumber,
+    longestRunKm: beforeAfterNumber,
+    thresholdPace: beforeAfterNumber,
+    totalWeeks: beforeAfterNumber,
+    adjustments: z.array(planDiffAdjustmentSchema),
+  }),
+  weeks: z.array(planDiffWeekSchema),
+});
+
+export const planChangePreviewSchema = z.object({
+  diff: planDiffSchema,
+  warnings: z.array(z.string()),
+  resultingEndDate: z.string().nullable().optional(),
+  version: z.number(),
+});
+
+// "Prepare again" (rebuild)
+
+export const rebuildPrefillSchema = z.object({
+  config: planConfigSchema,
+  goalSuggestion: z.object({
+    targetDate: z.string().nullable(),
+    previousTargetDate: z.string().nullable(),
+    previousResult: z.object({ timeSeconds: z.number(), workoutId: z.string() }).nullable(),
+  }),
+  metrics: z.object({
+    previous: metricsSnapshotSchema.nullable().optional(),
+    current: currentMetricsSchema,
+  }),
+});
+
+export const rebuildTargetSchema = z.enum(["new_draft", "in_place"]);
+
+export const rebuildPreviewRequestSchema = z.object({
+  goal: manualPlanGoalSchema,
+  schedule: manualPlanScheduleSchema,
+  structure: manualPlanStructureSchema,
+  metrics: athleteMetricsSchema,
+  target: rebuildTargetSchema,
+  timezone: z.string().optional(),
+});
+
+export const rebuildRequestSchema = rebuildPreviewRequestSchema
+  .extend({
+    weekOverrides: z.array(draftWeekOverrideSchema).optional(),
+    expectedVersion: z.number().int().optional(),
+  })
+  .extend(planSaveFieldsSchema.shape);
+
+export const rebuildPreviewSchema = z.object({
+  mode: z.enum(["rebased", "regenerated"]),
+  weeks: z.array(relativeWeekSchema),
+  preview: manualPlanPreviewSchema,
+  diff: planDiffSchema,
+  warnings: z.array(z.string()),
+  startOptions: planStartOptionsSchema,
+});
+
+export const startPlanSchema = planStartBlockSchema;
+
+export type PlanLifecycleStatus = z.infer<typeof planLifecycleStatusSchema>;
+export type PlanListGroup = z.infer<typeof planListGroupSchema>;
+export type PlanGoalSummary = z.infer<typeof planGoalSummarySchema>;
+export type PlanStats = z.infer<typeof planStatsSchema>;
+export type PlanListItem = z.infer<typeof planListItemSchema>;
+export type PlanListResponse = z.infer<typeof planListResponseSchema>;
+export type PlanCounts = z.infer<typeof planCountsSchema>;
+export type ActivePlanResponse = z.infer<typeof activePlanResponseSchema>;
+export type RelativeWorkout = z.infer<typeof relativeWorkoutSchema>;
+export type RelativeWeek = z.infer<typeof relativeWeekSchema>;
+export type PlanDetailsWeek = z.infer<typeof planDetailsWeekSchema>;
+export type PlanWorkoutItem = z.infer<typeof planWorkoutItemSchema>;
+export type PlanDetails = z.infer<typeof planDetailsSchema>;
+export type PlanMetaResponse = z.infer<typeof planMetaResponseSchema>;
+export type CancelPlanResponse = z.infer<typeof cancelPlanResponseSchema>;
+export type UpdatePlanMetaInput = z.infer<typeof updatePlanMetaSchema>;
+export type DraftWorkoutOverride = z.infer<typeof draftWorkoutOverrideSchema>;
+export type DraftWeekOverride = z.infer<typeof draftWeekOverrideSchema>;
+export type UpdatePlanStructureInput = z.infer<typeof updatePlanStructureSchema>;
+export type PlanWorkoutOperation = z.infer<typeof planWorkoutOperationSchema>;
+export type PlanScheduleChange = z.infer<typeof planScheduleChangeSchema>;
+export type PlanChangeRequest = z.infer<typeof planChangeRequestSchema>;
+export type PlanDiffAdjustment = z.infer<typeof planDiffAdjustmentSchema>;
+export type PlanDiffWorkout = z.infer<typeof planDiffWorkoutSchema>;
+export type PlanDiffWeek = z.infer<typeof planDiffWeekSchema>;
+export type PlanDiff = z.infer<typeof planDiffSchema>;
+export type PlanChangePreview = z.infer<typeof planChangePreviewSchema>;
+export type RebuildPrefill = z.infer<typeof rebuildPrefillSchema>;
+export type RebuildTarget = z.infer<typeof rebuildTargetSchema>;
+export type RebuildPreviewInput = z.infer<typeof rebuildPreviewRequestSchema>;
+export type RebuildInput = z.infer<typeof rebuildRequestSchema>;
+export type RebuildPreview = z.infer<typeof rebuildPreviewSchema>;
+export type StartPlanInput = z.infer<typeof startPlanSchema>;
 
 // --- Coach ---
 

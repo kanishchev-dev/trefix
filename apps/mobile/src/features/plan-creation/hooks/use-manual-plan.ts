@@ -1,5 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   createManualPlan,
@@ -9,31 +8,28 @@ import type {
   CreateManualPlanInput,
   ManualPlanPreview,
   PreviewManualPlanInput,
+  TrainingPlan,
 } from "@workspace/api-client";
-
-type PreviewVariables = PreviewManualPlanInput;
-type CreateVariables = CreateManualPlanInput;
+import { invalidatePlanQueries } from "../../plans/hooks/plan-query-keys";
 
 /**
  * Builds a non-persisted preview of the manual plan.
- * Server-side validation is authoritative (PRD section 24).
+ * Server-side validation is authoritative.
  */
 export function useManualPlanPreview() {
-  return useMutation<ManualPlanPreview, Error, PreviewVariables>({
+  return useMutation<ManualPlanPreview, Error, PreviewManualPlanInput>({
     mutationFn: (input) => previewManualPlan(input),
   });
 }
 
-/** Creates the final training plan and refreshes plan cache. */
-export function useCreateManualPlan(onCreated?: () => void) {
+/** Creates a manual plan as a draft or started; refreshes the affected caches. */
+export function useCreateManualPlan() {
   const queryClient = useQueryClient();
 
-  return useMutation<unknown, Error, CreateVariables>({
+  return useMutation<TrainingPlan, Error, CreateManualPlanInput>({
     mutationFn: (input) => createManualPlan(input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["plan"] });
-      queryClient.invalidateQueries({ queryKey: ["workouts"] });
-      onCreated?.();
+    onSuccess: (_plan, input) => {
+      invalidatePlanQueries(queryClient, input.saveAsDraft ? "library" : "lifecycle");
     },
   });
 }

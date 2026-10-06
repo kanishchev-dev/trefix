@@ -17,7 +17,8 @@ export function useCreateWorkout() {
     mutationFn: (dto: CreateWorkoutInput) => createWorkout(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workouts"] });
-      queryClient.invalidateQueries({ queryKey: ["plan-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["plan"] });
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
       queryClient.invalidateQueries({ queryKey: ["progress"] });
     },
   });
@@ -31,7 +32,8 @@ export function useCompleteWorkout() {
       completeWorkout(workoutId, dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workouts"] });
-      queryClient.invalidateQueries({ queryKey: ["plan-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["plan"] });
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
       queryClient.invalidateQueries({ queryKey: ["progress"] });
     },
   });

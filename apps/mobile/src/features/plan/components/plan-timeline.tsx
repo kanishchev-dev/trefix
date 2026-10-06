@@ -5,6 +5,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { PlanWeekItem } from "./plan-week-item";
 import { type MainCopy } from "../../../locales";
+import { type PlanTimelineMode } from "../../plans/lib/plan-weeks";
 
 type Props = {
   weeks: PlanWeek[];
@@ -12,6 +13,8 @@ type Props = {
   themeMode: ThemeMode;
   copy: MainCopy;
   onSelectWeek: (week: PlanWeek) => void;
+  /** `relative` — draft weeks without dates, `history` — a finished plan. */
+  mode?: PlanTimelineMode;
 };
 
 export function PlanTimeline({
@@ -20,6 +23,7 @@ export function PlanTimeline({
   themeMode,
   copy,
   onSelectWeek,
+  mode = "active",
 }: Props) {
   const planCopy = copy.plan;
 
@@ -97,6 +101,7 @@ export function PlanTimeline({
                 ) : null}
 
                 <PlanWeekItem
+                  mode={mode}
                   copy={copy}
                   onPress={onSelectWeek}
                   theme={theme}

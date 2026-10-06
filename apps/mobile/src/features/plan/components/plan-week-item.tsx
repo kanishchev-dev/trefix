@@ -5,6 +5,7 @@ import { type PlanWeek } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { type PlanTimelineMode } from "../../plans/lib/plan-weeks";
 
 type Props = {
   week: PlanWeek;
@@ -12,6 +13,7 @@ type Props = {
   themeMode: ThemeMode;
   copy: MainCopy;
   onPress: (week: PlanWeek) => void;
+  mode?: PlanTimelineMode;
 };
 
 export function PlanWeekItem({
@@ -20,6 +22,7 @@ export function PlanWeekItem({
   themeMode,
   copy,
   onPress,
+  mode = "active",
 }: Props) {
   const planCopy = copy.plan;
   const isCurrent = week.status === "current";
@@ -46,13 +49,18 @@ export function PlanWeekItem({
     week.summaryText ||
     [workoutsText, distanceText].filter(Boolean).join(" · ");
 
+  // Draft weeks have no dates, so they carry no progress status.
+  const statusText =
+    mode === "relative"
+      ? null
+      : isCurrent
+        ? planCopy.timeline.currentBadge
+        : isCompleted
+          ? planCopy.timeline.completedBadge
+          : planCopy.timeline.upcomingBadge;
   const accessibilityText = `${planCopy.timeline.weekLabel.replace("{{number}}", String(week.weekNumber))}. ${
-    isCurrent
-      ? planCopy.timeline.currentBadge
-      : isCompleted
-        ? planCopy.timeline.completedBadge
-        : planCopy.timeline.upcomingBadge
-  }. ${phaseLabel}. ${week.title}.${summaryText ? ` ${summaryText}.` : ""}`;
+    statusText ? `${statusText}. ` : ""
+  }${phaseLabel}. ${week.title}.${summaryText ? ` ${summaryText}.` : ""}`;
 
   return (
     <Pressable

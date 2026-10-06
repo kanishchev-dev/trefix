@@ -57,6 +57,30 @@ export type PlanCreationDraft = {
   structure: ManualPlanStructureInput;
 };
 
+/** Starting point of a new plan in the creation flow. */
+export const INITIAL_PLAN_CREATION_DRAFT: PlanCreationDraft = {
+  goal: {
+    type: "prepare_for_race",
+    target: {
+      distanceMeters: 10000,
+    },
+    raceDistance: "10k",
+    targetTimeText: "",
+    targetTimeSeconds: undefined,
+    targetDate: undefined,
+  },
+  schedule: {
+    trainingDays: [0, 2, 5],
+    preferredLongRunDay: undefined,
+    workoutDurationMinutes: 45,
+  },
+  structure: {
+    totalWeeks: 8,
+    sessionsPerWeek: 3,
+    focus: ["easy", "long_run", "tempo"],
+  },
+};
+
 export const MANUAL_PLAN_MIN_WEEKS = 4;
 export const MANUAL_PLAN_MAX_WEEKS = 16;
 export const MANUAL_PLAN_MIN_SESSIONS = 1;
@@ -323,7 +347,7 @@ export function validateTargetDate(
 }
 
 /**
- * Clears metrics in target / current when changing goal type (PRD section 13).
+ * Clears metrics in target / current when changing goal type.
  * Fields belonging to another goal type must not leak into the active goal.
  */
 export function pruneStaleGoalFields(
@@ -364,7 +388,7 @@ export function pruneStaleGoalFields(
 }
 
 /**
- * Formats a localized summary for any goal type (PRD section 23).
+ * Formats a localized summary for any goal type.
  */
 export function formatGoalSummary(
   goal: PlanCreationDraft["goal"],

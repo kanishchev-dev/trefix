@@ -15,6 +15,9 @@ type Props = {
   copy: MainCopy;
   onSelectWeek: (week: PlanWeek) => void;
   onNewGoal: () => void;
+  /** "Prepare again" from the completed plan. */
+  onPrepareAgain: () => void;
+  onOpenPlans: () => void;
 };
 
 export function PlanCompletedState({
@@ -24,6 +27,8 @@ export function PlanCompletedState({
   copy,
   onSelectWeek,
   onNewGoal,
+  onPrepareAgain,
+  onOpenPlans,
 }: Props) {
   const completedCopy = copy.plan.completedState;
 
@@ -72,7 +77,7 @@ export function PlanCompletedState({
 
         <Pressable
           accessibilityRole="button"
-          onPress={onNewGoal}
+          onPress={onPrepareAgain}
           style={({ pressed }) => [
             styles.button,
             { backgroundColor: theme.color.primary },
@@ -88,9 +93,37 @@ export function PlanCompletedState({
               },
             ]}
           >
-            {completedCopy.newGoalButton}
+            {copy.plans.rebuild.cta}
           </Text>
         </Pressable>
+
+        <View style={styles.secondaryRow}>
+          {[
+            { label: copy.plans.tab.openPlans, onPress: onOpenPlans },
+            { label: copy.plans.tab.createPlan, onPress: onNewGoal },
+          ].map((action) => (
+            <Pressable
+              key={action.label}
+              accessibilityRole="button"
+              onPress={action.onPress}
+              style={({ pressed }) => [
+                styles.button,
+                styles.secondaryButton,
+                { backgroundColor: theme.color.controlSecondary },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+                ]}
+              >
+                {action.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       <PlanOverviewCard
@@ -148,6 +181,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 4,
+  },
+  secondaryRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  secondaryButton: {
+    marginTop: 0,
   },
   pressed: {
     transform: [{ scale: 0.98 }],

@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
-import { Calendar, Target } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Calendar, MoreHorizontal, Target } from "lucide-react-native";
 
 import { type PlanOverview } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
@@ -12,9 +12,11 @@ type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
+  /** Opens the actions of the plan in progress. */
+  onOpenActions?: () => void;
 };
 
-export function PlanOverviewCard({ overview, theme, themeMode, copy }: Props) {
+export function PlanOverviewCard({ overview, theme, themeMode, copy, onOpenActions }: Props) {
   const { plan } = overview;
   const planCopy = copy.plan;
 
@@ -92,6 +94,21 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy }: Props) {
               {plan.name}
             </Text>
           ) : null}
+
+          {plan.notes ? (
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.planNotes,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
+              {plan.notes.split("\n")[0]}
+            </Text>
+          ) : null}
         </View>
 
         {/* Phase Chip */}
@@ -116,6 +133,18 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy }: Props) {
             {phaseLabel}
           </Text>
         </View>
+
+        {onOpenActions ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.plans.card.moreActions}
+            hitSlop={10}
+            onPress={onOpenActions}
+            style={({ pressed }) => [styles.moreButton, pressed && { opacity: 0.6 }]}
+          >
+            <MoreHorizontal color={theme.color.mutedForeground} size={20} />
+          </Pressable>
+        ) : null}
       </View>
 
       {/* Target Date / Days to race */}
@@ -207,6 +236,18 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 16,
     marginBottom: 24,
+  },
+  planNotes: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  moreButton: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -4,
+    marginRight: -6,
   },
   headerRow: {
     flexDirection: "row",

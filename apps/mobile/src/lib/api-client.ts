@@ -7,7 +7,7 @@ const BACKEND_BASE_URL =
   "http://127.0.0.1:3000/v1";
 
 export type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   useAuth?: boolean;
   skipAutoRefresh?: boolean;

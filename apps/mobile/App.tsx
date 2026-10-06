@@ -39,7 +39,6 @@ import { AuthScreen } from "./src/features/auth/auth-screen";
 import { AuthVerificationScreen } from "./src/features/auth/auth-verification-screen";
 import { MainTabsScreen } from "./src/features/main/main-tabs-screen";
 import { TrefixScreen } from "./src/features/main/screens/trefix-screen";
-import { PlanCreationScreen } from "./src/features/plan-creation/plan-creation-screen";
 import { ProfileEditScreen } from "./src/features/main/screens/profile-edit-screen";
 import { NotificationsSettingsScreen } from "./src/features/main/screens/notifications-settings-screen";
 import { LanguageSettingsScreen } from "./src/features/main/screens/language-settings-screen";
@@ -81,7 +80,6 @@ type AuthStackParamList = {
 type MainStackParamList = {
   main: undefined;
   trefix: undefined;
-  planCreation: undefined;
   profileEdit: undefined;
   notificationsSettings: undefined;
   languageSettings: undefined;
@@ -429,9 +427,6 @@ export default function App() {
                       onOpenTrefix={() => {
                         navigation.navigate("trefix");
                       }}
-                      onOpenPlanCreation={() => {
-                        navigation.navigate("planCreation");
-                      }}
                       onLogout={handleLogout}
                       onEditProfile={() => {
                         navigation.navigate("profileEdit");
@@ -524,25 +519,6 @@ export default function App() {
                       theme={theme}
                       themeMode={themeMode}
                       copy={mainCopy.trefix}
-                    />
-                  )}
-                </MainStack.Screen>
-                <MainStack.Screen
-                  name="planCreation"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <PlanCreationScreen
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy}
-                      language={language}
-                      onClose={() => {
-                        navigation.goBack();
-                      }}
-                      onOpenTrefix={() => {
-                        navigation.replace("trefix");
-                      }}
                     />
                   )}
                 </MainStack.Screen>

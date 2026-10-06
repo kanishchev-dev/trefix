@@ -46,6 +46,8 @@ export function usePlanOverview() {
     if (status === "active") return "active";
     if (status === "not_started") return "not_started";
     if (status === "completed") return "completed";
+    // A cancelled plan is history; the tab shows the empty state with its variants.
+    if (status === "cancelled") return "empty";
 
     return "active";
   };
