@@ -140,7 +140,11 @@ export class TrainingGoalResponseDto implements GoalView {
   @ApiProperty({ description: 'Universal goal type discriminator' })
   type!: string;
 
-  @ApiPropertyOptional({ nullable: true, type: Object, description: 'Type-specific metric payload { current?, target?, description? }' })
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Object,
+    description: 'Type-specific metric payload { current?, target?, description? }',
+  })
   payload!: GoalView['payload'];
 
   @ApiProperty()
@@ -252,10 +256,19 @@ export class TrainingPlanResponseDto implements TrainingPlanView {
   goalId!: string | null;
 
   @ApiProperty()
-  startDate!: string;
+  name!: string;
 
-  @ApiProperty()
-  endDate!: string;
+  @ApiPropertyOptional({ nullable: true })
+  notes!: string | null;
+
+  @ApiProperty({ description: 'Version to pass as expectedVersion when editing the plan' })
+  version!: number;
+
+  @ApiPropertyOptional({ nullable: true, description: 'Null for drafts' })
+  startDate!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, description: 'Null for drafts' })
+  endDate!: string | null;
 
   @ApiProperty()
   trainingFrequency!: number;

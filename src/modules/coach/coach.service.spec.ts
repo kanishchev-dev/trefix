@@ -66,8 +66,9 @@ describe('CoachService', () => {
     getAthlete: jest.fn(),
     getAthleteState: jest.fn(),
     getLatestGoalForAthlete: jest.fn(),
-    getLatestPlanForAthlete: jest.fn(),
+    getActivePlanForAthlete: jest.fn(),
     listRecentWorkoutsForAthlete: jest.fn(),
+    listRecentUserEdits: jest.fn().mockResolvedValue([]),
   };
 
   const openAiService = {
@@ -142,7 +143,7 @@ describe('CoachService', () => {
       updatedAt: new Date('2026-09-01T00:00:00.000Z'),
     });
     trainingService.getLatestGoalForAthlete.mockResolvedValue(null);
-    trainingService.getLatestPlanForAthlete.mockResolvedValue(null);
+    trainingService.getActivePlanForAthlete.mockResolvedValue(null);
     trainingService.listRecentWorkoutsForAthlete.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({

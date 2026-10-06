@@ -12,11 +12,13 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
 import * as path from 'path';
 
+import { AvatarsModule } from '@/modules/avatars/avatars.module';
+
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
+import trainingConfig from './config/training.config';
 import { validationSchema } from './config/validation.schema';
-import { AvatarsModule } from '@/modules/avatars/avatars.module';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './modules/auth/config/auth.config';
 import { CoachModule } from './modules/coach/coach.module';
@@ -26,9 +28,9 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import mailerConfig from './modules/mailer/config/mailer.config';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import storageConfig from './modules/storage/config/storage.config';
 import { StorageModule } from './modules/storage/storage.module';
-import { SettingsModule } from './modules/settings/settings.module';
 import { SystemSeedModule } from './modules/system-seed/system-seed.module';
 import { TrainingModule } from './modules/training/training.module';
 import { UsersModule } from './modules/users/users.module';
@@ -37,7 +39,7 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, storageConfig, mailerConfig, authConfig, integrationsConfig],
+      load: [appConfig, databaseConfig, trainingConfig, storageConfig, mailerConfig, authConfig, integrationsConfig],
       validationSchema,
     }),
     HealthModule,

@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
@@ -10,6 +11,17 @@ import { AthleteState } from './entities/athlete-state.entity';
 import { TrainingLoad } from './entities/training-load.entity';
 import { TrainingPlan } from './entities/training-plan.entity';
 import { Workout } from './entities/workout.entity';
+import { PLAN_COMPLETION_QUEUE } from './jobs/plan-completion.constants';
+import { PlanCompletionProcessor } from './jobs/plan-completion.processor';
+import { PlanCompletionScheduler } from './jobs/plan-completion.scheduler';
+import { AthleteMetricsService } from './plans/athlete-metrics.service';
+import { PlanChangeCalculator } from './plans/plan-change-calculator';
+import { PlanEditingService } from './plans/plan-editing.service';
+import { PlanLifecycleService } from './plans/plan-lifecycle.service';
+import { PlanListService } from './plans/plan-list.service';
+import { PlanRebuildService } from './plans/plan-rebuild.service';
+import { PlanStatsService } from './plans/plan-stats.service';
+import { PlansController } from './plans/plans.controller';
 import { TrainingController } from './training.controller';
 import { TrainingEngine } from './training.engine';
 import { TrainingListener } from './training.listener';
@@ -27,9 +39,27 @@ import { TrainingService } from './training.service';
       AdaptationEvent,
     ]),
     RealtimeModule,
+    BullModule.registerQueue({
+      name: PLAN_COMPLETION_QUEUE,
+    }),
   ],
-  controllers: [TrainingController],
-  providers: [TrainingService, TrainingEngine, TrainingListener],
+  // PlansController goes first: its static routes (`plans/active`, `plans/counts`)
+  // must be registered before any parameterised `plans/:id` route.
+  controllers: [PlansController, TrainingController],
+  providers: [
+    TrainingService,
+    TrainingEngine,
+    TrainingListener,
+    AthleteMetricsService,
+    PlanStatsService,
+    PlanLifecycleService,
+    PlanChangeCalculator,
+    PlanEditingService,
+    PlanRebuildService,
+    PlanListService,
+    PlanCompletionProcessor,
+    PlanCompletionScheduler,
+  ],
   exports: [TrainingService],
 })
 export class TrainingModule {}

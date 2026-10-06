@@ -1,4 +1,5 @@
 import type {
+  AdaptationEventView,
   AthleteStateView,
   AthleteView,
   GoalView,
@@ -14,6 +15,8 @@ export interface CoachContextInput {
   state: AthleteStateView;
   goal: GoalView | null;
   plan: TrainingPlanView | null;
+  /** Latest edits the user made to the active plan. */
+  recentPlanEdits?: AdaptationEventView[];
   recentWorkouts: WorkoutView[];
   recentMessages: CoachMessageResponseDto[];
 }
@@ -40,6 +43,7 @@ export class CoachPromptBuilder {
         athleteState: context.state,
         goal: context.goal,
         plan: context.plan,
+        recentPlanEdits: context.recentPlanEdits ?? [],
         recentWorkouts: context.recentWorkouts.slice(0, COACH_CONTEXT_WORKOUT_LIMIT),
         recentMessages: context.recentMessages.slice(-COACH_CHAT_HISTORY_LIMIT),
         toolNames: COACH_TOOL_NAMES,

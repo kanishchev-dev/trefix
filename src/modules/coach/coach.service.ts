@@ -342,8 +342,10 @@ export class CoachService {
     const athlete = await this.trainingService.getAthlete(session.athleteId, userId);
     const state = await this.trainingService.getAthleteState(session.athleteId, userId);
     const goal = await this.trainingService.getLatestGoalForAthlete(session.athleteId, userId);
-    const plan = await this.trainingService.getLatestPlanForAthlete(session.athleteId, userId);
+    // The coach works with the plan in work, not with the latest created row.
+    const plan = await this.trainingService.getActivePlanForAthlete(session.athleteId, userId);
     const recentWorkouts = await this.trainingService.listRecentWorkoutsForAthlete(session.athleteId, userId);
+    const recentPlanEdits = plan ? await this.trainingService.listRecentUserEdits(plan.id) : [];
 
     return {
       session: this.toSessionView(session),
@@ -351,6 +353,7 @@ export class CoachService {
       state,
       goal,
       plan,
+      recentPlanEdits,
       recentWorkouts,
       recentMessages: await this.getRecentMessageViews(session.id),
     };

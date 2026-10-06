@@ -24,8 +24,8 @@ export class PlanOverviewDataDto {
   @ApiProperty({ type: PlanGoalDto })
   goal!: PlanGoalDto;
 
-  @ApiProperty({ enum: ['not_started', 'active', 'completed'] })
-  status!: 'not_started' | 'active' | 'completed';
+  @ApiProperty({ enum: ['not_started', 'active', 'completed', 'cancelled'] })
+  status!: 'not_started' | 'active' | 'completed' | 'cancelled';
 
   @ApiProperty()
   currentWeek!: number;
@@ -41,6 +41,15 @@ export class PlanOverviewDataDto {
 
   @ApiPropertyOptional()
   startDate?: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  notes?: string | null;
+
+  @ApiProperty({ description: 'Version to pass as expectedVersion when editing the plan' })
+  version!: number;
+
+  @ApiProperty({ type: Object, description: 'Goal, schedule and structure the plan was built from' })
+  config!: Record<string, unknown>;
 }
 
 export class PlanWeekDto {

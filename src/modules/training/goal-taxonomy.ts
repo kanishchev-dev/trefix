@@ -1,9 +1,9 @@
 /**
- * Universal training goal taxonomy (PRD "Universal Training Goals").
+ * Universal training goal taxonomy.
  *
  * The canonical goal model is polymorphic / discriminated by `type`.
  * Every goal type owns a dedicated subset of metric fields; fields of one
- * goal type must never leak into another goal's payload (PRD sections 9, 13).
+ * goal type must never leak into another goal's payload.
  *
  * Canonical units (normalised backend values):
  *  - distances in metres
@@ -56,7 +56,7 @@ export const ATHLETE_GOAL_CATEGORIES = [
 
 export type AthleteGoalCategory = (typeof ATHLETE_GOAL_CATEGORIES)[number];
 
-/** UI grouping (PRD section 6.3): users never see technical enum names. */
+/** UI grouping: users never see technical enum names. */
 export const GOAL_TYPE_CATEGORY: Record<AthleteGoalType, AthleteGoalCategory> = {
   prepare_for_race: 'race_event',
   improve_race_result: 'race_event',
@@ -123,8 +123,8 @@ export const GOAL_CHALLENGE_PERIODS: readonly GoalChallengePeriod[] = [
 ];
 
 /**
- * Domain bounds for metric values (PRD section 16: bounds live in the domain
- * layer / configuration, not hardcoded across UI).
+ * Domain bounds for metric values: they live in the domain layer, not
+ * hardcoded across the UI.
  */
 export const GOAL_METRIC_BOUNDS: Record<GoalMetricKey, { min: number; max: number; integer?: boolean }> = {
   distanceMeters: { min: 500, max: 300_000, integer: true },
@@ -158,7 +158,7 @@ export interface GoalTypeConfig {
    * means the type needs no numeric target (intent-only goals).
    */
   requiredTargetGroups: readonly (readonly GoalMetricKey[])[];
-  /** Custom goals require a free-text description (PRD section 8.21). */
+  /** Custom goals require a free-text description. */
   requiresDescription?: boolean;
 }
 
@@ -174,7 +174,7 @@ const T: Record<string, readonly GoalMetricKey[]> = {
 
 const RACE_CURRENT: readonly GoalMetricKey[] = ['distanceMeters', 'finishTimeSec', 'paceSecondsPerKm'];
 
-/** Goal configuration matrix (PRD section 8). */
+/** Goal configuration matrix. */
 export const GOAL_TYPE_CONFIG: Record<AthleteGoalType, GoalTypeConfig> = {
   prepare_for_race: {
     // Distance required; target finish time intentionally optional (finish the race).
@@ -323,7 +323,7 @@ function validateMetricObject(
 
   for (const [field, value] of Object.entries(metrics)) {
     if (!allowedFields.includes(field as GoalMetricKey)) {
-      // Fields of one goal type must not pollute another (PRD section 9.4).
+      // Fields of one goal type must not pollute another.
       return { valid: false, code: 'GOAL_METRIC_NOT_ALLOWED', field };
     }
 
@@ -363,7 +363,7 @@ function validateMetricObject(
 }
 
 /**
- * Schema-aware goal validation (PRD section 14). One race schema for every
+ * Schema-aware goal validation. One race schema for every
  * goal is explicitly not allowed: required/optional fields follow the matrix.
  */
 export function validateGoalPayload(goal: GoalPayloadShape): GoalValidationResult {
@@ -402,7 +402,7 @@ export function validateGoalPayload(goal: GoalPayloadShape): GoalValidationResul
   return { valid: true };
 }
 
-/** Legacy race-distance presets kept for backward compatibility (PRD section 26). */
+/** Legacy race-distance presets kept for backward compatibility. */
 export const LEGACY_RACE_DISTANCE_METERS: Record<string, number> = {
   '5k': 5_000,
   '10k': 10_000,

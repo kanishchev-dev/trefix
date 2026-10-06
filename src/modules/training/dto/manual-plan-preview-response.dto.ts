@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import type { TrainingPhase, WorkoutType } from '../training.constants';
+import { StartOptionsResponseDto } from './plan-lifecycle.dto';
 
 export class ManualPlanPreviewWorkoutDto {
   @ApiProperty({ description: 'Stable preview identifier, e.g. "1-1" for week 1 workout 1' })
@@ -78,4 +79,10 @@ export class ManualPlanPreviewResponseDto {
 
   @ApiProperty({ type: [ManualPlanPreviewWeekDto] })
   weeks!: ManualPlanPreviewWeekDto[];
+
+  @ApiPropertyOptional({
+    type: StartOptionsResponseDto,
+    description: 'Start options for the confirmation sheet shown before the plan is saved',
+  })
+  startOptions?: StartOptionsResponseDto;
 }

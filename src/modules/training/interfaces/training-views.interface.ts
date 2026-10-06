@@ -46,7 +46,7 @@ export interface AthleteStateView {
   updatedAt: Date;
 }
 
-/** Type-specific metric payload of the universal goal model (PRD section 9). */
+/** Type-specific metric payload of the universal goal model. */
 export interface GoalMetricsPayload {
   current?: Record<string, unknown>;
   target?: Record<string, unknown>;
@@ -56,7 +56,7 @@ export interface GoalMetricsPayload {
 export interface GoalView {
   id: string;
   athleteId: string;
-  /** Universal goal discriminator (PRD sections 6, 9). */
+  /** Universal goal discriminator. */
   type: string;
   /** Type-specific metrics; separate from current state, may be absent. */
   payload: GoalMetricsPayload | null;
@@ -114,8 +114,12 @@ export interface TrainingPlanView {
   id: string;
   athleteId: string;
   goalId: string | null;
-  startDate: string;
-  endDate: string;
+  name: string;
+  notes: string | null;
+  version: number;
+  /** Drafts have no dates. */
+  startDate: string | null;
+  endDate: string | null;
   trainingFrequency: number;
   weeklyTargetKm: number;
   status: TrainingPlanStatus;

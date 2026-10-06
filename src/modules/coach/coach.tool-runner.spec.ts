@@ -11,7 +11,7 @@ describe('CoachToolRunner', () => {
     getAthlete: jest.fn(),
     getAthleteState: jest.fn(),
     getLatestGoalForAthlete: jest.fn(),
-    getLatestPlanForAthlete: jest.fn(),
+    getActivePlanForAthlete: jest.fn(),
     getWorkout: jest.fn(),
     listRecentWorkoutsForAthlete: jest.fn(),
     adaptPlan: jest.fn(),
@@ -24,7 +24,7 @@ describe('CoachToolRunner', () => {
     trainingService.getAthlete.mockResolvedValue({ id: 'athlete-1' });
     trainingService.getAthleteState.mockResolvedValue({ id: 'state-1', confidence: 0.86 });
     trainingService.getLatestGoalForAthlete.mockResolvedValue({ id: 'goal-1' });
-    trainingService.getLatestPlanForAthlete.mockResolvedValue({ id: 'plan-1' });
+    trainingService.getActivePlanForAthlete.mockResolvedValue({ id: 'plan-1' });
     trainingService.getWorkout.mockResolvedValue({ id: 'workout-1' });
     trainingService.listRecentWorkoutsForAthlete.mockResolvedValue([{ id: 'workout-1' }]);
     trainingService.adaptPlan.mockResolvedValue({ id: 'adaptation-1' });

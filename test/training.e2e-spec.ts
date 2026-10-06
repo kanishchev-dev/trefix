@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -10,6 +11,9 @@ import { AthleteState } from '@/modules/training/entities/athlete-state.entity';
 import { TrainingLoad } from '@/modules/training/entities/training-load.entity';
 import { TrainingPlan } from '@/modules/training/entities/training-plan.entity';
 import { Workout } from '@/modules/training/entities/workout.entity';
+import { AthleteMetricsService } from '@/modules/training/plans/athlete-metrics.service';
+import { PlanLifecycleService } from '@/modules/training/plans/plan-lifecycle.service';
+import { PlanStatsService } from '@/modules/training/plans/plan-stats.service';
 import { TrainingEngine } from '@/modules/training/training.engine';
 import { TrainingService } from '@/modules/training/training.service';
 
@@ -38,10 +42,11 @@ type GoalRecord = {
   targetTimeSeconds: number | null;
   targetDate: string;
   priority: number;
-  status: 'active' | 'completed' | 'paused';
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  save?: () => Promise<GoalRecord>;
 };
 
 type StateRecord = {
@@ -67,11 +72,19 @@ type PlanRecord = {
   id: string;
   athleteId: string;
   goalId: string | null;
-  startDate: string;
-  endDate: string;
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  config: Record<string, unknown>;
+  metricsSnapshot: Record<string, unknown> | null;
+  creationSource: string;
+  version: number;
+  cancelledAt?: Date | null;
+  cancelReason?: string | null;
+  replacedByPlanId?: string | null;
   trainingFrequency: number;
   weeklyTargetKm: number;
-  status: 'draft' | 'active' | 'completed' | 'paused';
+  status: 'draft' | 'active' | 'completed' | 'paused' | 'cancelled';
   algorithmVersion: string;
   weeks: Array<Record<string, unknown>>;
   createdAt: Date;
@@ -212,9 +225,17 @@ describe('Training loop (e2e)', () => {
           createdAt: now,
           updatedAt: now,
         };
+        goal.save = async (): Promise<GoalRecord> => goal;
 
         goals.set(goal.id, goal);
         return goal;
+      }),
+      update: jest.fn(async (values: Partial<GoalRecord>, options: { where: { id: string } }) => {
+        const goal = goals.get(options.where.id);
+        if (goal) {
+          Object.assign(goal, values);
+        }
+        return [goal ? 1 : 0];
       }),
       findByPk: jest.fn(async (id: string) => goals.get(id) ?? null),
       findOne: jest.fn(async (options: { where?: { athleteId?: string } }) => {
@@ -272,38 +293,77 @@ describe('Training loop (e2e)', () => {
   }
 
   function createPlanModel(): typeof TrainingPlan {
+    const matches = (plan: PlanRecord, where: Record<string, unknown> = {}): boolean =>
+      Object.entries(where).every(([key, value]) => {
+        if (value && typeof value === 'object') {
+          // Only `{ [Op.ne]: id }` is used by the lifecycle service.
+          return Object.getOwnPropertySymbols(value).every(
+            (symbol) =>
+              (plan as unknown as Record<string, unknown>)[key] !== (value as Record<symbol, unknown>)[symbol],
+          );
+        }
+        return (plan as unknown as Record<string, unknown>)[key] === value;
+      });
+
     return {
       create: jest.fn(async (data: Partial<PlanRecord>) => {
         const now = new Date('2026-09-11T00:00:00.000Z');
-        const plan: PlanRecord = {
+        const plan = {
+          version: 0,
+          metricsSnapshot: null,
+          creationSource: 'ai',
+          config: {},
+          name: 'Training Plan',
+          ...data,
           id: `plan-${plans.size + 1}`,
-          athleteId: String(data.athleteId),
           goalId: (data.goalId as string | null | undefined) ?? null,
-          startDate: String(data.startDate),
-          endDate: String(data.endDate),
-          trainingFrequency: Number(data.trainingFrequency),
-          weeklyTargetKm: Number(data.weeklyTargetKm),
           status: (data.status as PlanRecord['status']) ?? 'active',
-          algorithmVersion: String(data.algorithmVersion),
           weeks: Array.isArray(data.weeks) ? [...data.weeks] : [],
           createdAt: now,
           updatedAt: now,
-          save: jest.fn(async () => {
-            plan.updatedAt = new Date();
-            plans.set(plan.id, plan);
-            return plan;
-          }),
-        };
+        } as PlanRecord;
+        plan.save = jest.fn(async () => {
+          plan.updatedAt = new Date();
+          plan.version += 1;
+          plans.set(plan.id, plan);
+          return plan;
+        });
 
         plans.set(plan.id, plan);
         return plan;
       }),
       findByPk: jest.fn(async (id: string) => plans.get(id) ?? null),
+      findOne: jest.fn(
+        async (options: { where?: Record<string, unknown> }) =>
+          Array.from(plans.values()).find((plan) => matches(plan, options.where)) ?? null,
+      ),
+      findAll: jest.fn(async (options: { where?: Record<string, unknown> }) =>
+        Array.from(plans.values()).filter((plan) => plan.status === options.where?.status),
+      ),
+      count: jest.fn(
+        async (options: { where?: Record<string, unknown> }) =>
+          Array.from(plans.values()).filter((plan) => matches(plan, options.where)).length,
+      ),
+      increment: jest.fn(),
+      sequelize: {
+        transaction: jest.fn(async (work: (transaction: unknown) => Promise<unknown>) =>
+          work({ LOCK: { UPDATE: 'UPDATE' }, afterCommit: (callback: () => void) => callback() }),
+        ),
+      },
     } as unknown as typeof TrainingPlan;
   }
 
   function createWorkoutModel(): typeof Workout {
-    return {
+    const model: Record<string, unknown> = {
+      bulkCreate: jest.fn(async (rows: Array<Partial<WorkoutRecord>>) => {
+        const created: unknown[] = [];
+        for (const row of rows) {
+          created.push(await (model.create as (data: Partial<WorkoutRecord>) => Promise<unknown>)(row));
+        }
+        return created;
+      }),
+    };
+    return Object.assign(model, {
       create: jest.fn(async (data: Partial<WorkoutRecord>) => {
         const now = new Date('2026-09-11T00:00:00.000Z');
         const workout: WorkoutRecord = {
@@ -390,7 +450,25 @@ describe('Training loop (e2e)', () => {
         return deleted;
       }),
       count: jest.fn(async () => workouts.size),
-    } as unknown as typeof Workout;
+      update: jest.fn(async (values: Partial<WorkoutRecord>, options: { where: Record<string, unknown> }) => {
+        const fromDate = Object.getOwnPropertySymbols(options.where.scheduledAt ?? {}).map(
+          (symbol) => (options.where.scheduledAt as Record<symbol, Date>)[symbol],
+        )[0];
+        let updated = 0;
+        for (const workout of workouts.values()) {
+          if (
+            workout.planId === options.where.planId &&
+            workout.status === options.where.status &&
+            (!fromDate || workout.scheduledAt >= fromDate)
+          ) {
+            Object.assign(workout, values);
+            updated += 1;
+          }
+        }
+        return [updated];
+      }),
+      sequelize: { query: jest.fn(async () => []) },
+    }) as unknown as typeof Workout;
   }
 
   function createTrainingLoadModel(): typeof TrainingLoad {
@@ -442,12 +520,18 @@ describe('Training loop (e2e)', () => {
   }
 
   beforeEach(async () => {
+    // Plans in the scenarios start on 2026-09-15; "today" is the day before.
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] }).setSystemTime(new Date('2026-09-14T08:00:00Z'));
     resetStores();
 
     moduleRef = await Test.createTestingModule({
       providers: [
         TrainingService,
         TrainingEngine,
+        PlanLifecycleService,
+        PlanStatsService,
+        AthleteMetricsService,
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(100) } },
         { provide: getModelToken(Athlete), useValue: createAthleteModel() },
         { provide: getModelToken(AthleteGoal), useValue: createGoalModel() },
         { provide: getModelToken(AthleteState), useValue: createStateModel() },
@@ -463,6 +547,7 @@ describe('Training loop (e2e)', () => {
   });
 
   afterEach(async () => {
+    jest.useRealTimers();
     if (moduleRef) {
       await moduleRef.close();
     }
@@ -542,5 +627,46 @@ describe('Training loop (e2e)', () => {
         experienceLevel: 'intermediate',
       }),
     ).rejects.toBeInstanceOf(EntityAlreadyExistsException);
+  });
+
+  it('keeps one active plan: a start over an active plan needs explicit confirmation', async () => {
+    const athlete = await trainingService.createAthlete('user-1', {
+      experienceLevel: 'intermediate',
+      weeklyMileageKm: 30,
+      availableTrainingDays: ['tuesday', 'thursday', 'saturday'],
+    });
+    const goal = await trainingService.createGoal('user-1', {
+      athleteId: athlete.id,
+      goal: { type: 'prepare_for_race', target: { distanceMeters: 10_000 }, targetDate: '2026-11-29', priority: 5 },
+    });
+    const lifecycle = moduleRef.get(PlanLifecycleService);
+
+    const first = await trainingService.createPlan('user-1', {
+      athleteId: athlete.id,
+      goalId: goal.id,
+      start: { startDate: '2026-09-15', replaceActive: false },
+    });
+    const draft = await trainingService.createPlan('user-1', {
+      athleteId: athlete.id,
+      goalId: goal.id,
+      saveAsDraft: true,
+    });
+    expect(first.status).toBe('active');
+    expect(draft.status).toBe('draft');
+
+    await expect(
+      lifecycle.startPlan(draft.id, { startDate: '2026-09-21', replaceActive: false }),
+    ).rejects.toMatchObject({ code: 'ACTIVE_PLAN_EXISTS' });
+    expect(plans.get(first.id)?.status).toBe('active');
+
+    await lifecycle.startPlan(draft.id, { startDate: '2026-09-21', replaceActive: true });
+    expect(plans.get(first.id)?.status).toBe('cancelled');
+    expect(plans.get(draft.id)?.status).toBe('active');
+    const activeCount = Array.from(plans.values()).filter((plan) => plan.status === 'active').length;
+    expect(activeCount).toBe(1);
+    const firstPlanned = Array.from(workouts.values()).filter(
+      (workout) => workout.planId === first.id && workout.status === 'planned',
+    );
+    expect(firstPlanned).toHaveLength(0);
   });
 });

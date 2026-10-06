@@ -1,8 +1,9 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { AdaptPlanDto } from './dto/adapt-plan.dto';
@@ -13,6 +14,8 @@ import { CreateGoalDto } from './dto/create-goal.dto';
 import { CreateManualPlanDto, PreviewManualPlanDto } from './dto/create-manual-plan.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
+import { ManualPlanPreviewResponseDto } from './dto/manual-plan-preview-response.dto';
+import { PlanOverviewResponseDto } from './dto/plan-overview-response.dto';
 import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
 import { RegeneratePlanDto } from './dto/regenerate-plan.dto';
 import {
@@ -25,8 +28,8 @@ import {
   TrainingWorkoutCompletionResponseDto,
   TrainingWorkoutResponseDto,
 } from './dto/training-response.dto';
-import { ManualPlanPreviewResponseDto } from './dto/manual-plan-preview-response.dto';
-import { PlanOverviewResponseDto } from './dto/plan-overview-response.dto';
+import { CurrentMetrics } from './plans/athlete-metrics.service';
+import { PLAN_CREATE_THROTTLE } from './plans/plan-create-throttle';
 import {
   TRAINING_ADAPTATION_EXAMPLE,
   TRAINING_ATHLETE_EXAMPLE,
@@ -37,7 +40,6 @@ import {
   TRAINING_WORKOUT_EXAMPLE,
 } from './training.openapi';
 import { TrainingService } from './training.service';
-import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 @ApiTags('Training')
 @ApiBearerAuth()
@@ -98,7 +100,10 @@ export class TrainingController {
     type: TrainingStateResponseDto,
     schema: { example: TRAINING_STATE_EXAMPLE },
   })
-  async getAthleteState(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingStateResponseDto> {
+  async getAthleteState(
+    @CurrentUser() user: AuthUserContext,
+    @Param('id') id: string,
+  ): Promise<TrainingStateResponseDto> {
     let targetId = id;
     if (id === 'me') {
       const athlete = await this.trainingService.getOrCreateAthlete(user.id);
@@ -160,6 +165,7 @@ export class TrainingController {
   }
 
   @Post('plans/manual')
+  @Throttle(PLAN_CREATE_THROTTLE)
   @RequirePermissions('training.plans.create')
   @ApiOperation({ summary: 'Create a training plan from a manual configuration' })
   @ApiCreatedResponse({
@@ -174,6 +180,7 @@ export class TrainingController {
   }
 
   @Post('plans')
+  @Throttle(PLAN_CREATE_THROTTLE)
   @RequirePermissions('training.plans.create')
   @ApiOperation({ summary: 'Generate a training plan' })
   @ApiCreatedResponse({
@@ -183,18 +190,6 @@ export class TrainingController {
   })
   createPlan(@CurrentUser() user: AuthUserContext, @Body() dto: CreatePlanDto): Promise<TrainingPlanResponseDto> {
     return this.trainingService.createPlan(user.id, dto);
-  }
-
-  @Get('plans/:id')
-  @RequirePermissions('training.plans.read')
-  @ApiOperation({ summary: 'Get a training plan' })
-  @ApiOkResponse({
-    description: 'Training plan',
-    type: TrainingPlanResponseDto,
-    schema: { example: TRAINING_PLAN_EXAMPLE },
-  })
-  getPlan(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingPlanResponseDto> {
-    return this.trainingService.getPlan(id, user.id);
   }
 
   @Get('plans/:id/overview')
@@ -210,7 +205,7 @@ export class TrainingController {
 
   @Post('plans/:id/regenerate')
   @RequirePermissions('training.plans.update')
-  @ApiOperation({ summary: 'Regenerate a training plan' })
+  @ApiOperation({ summary: 'Regenerate a training plan (deprecated: use plan editing endpoints)', deprecated: true })
   @ApiOkResponse({
     description: 'Regenerated training plan',
     type: TrainingPlanResponseDto,
@@ -226,7 +221,7 @@ export class TrainingController {
 
   @Get('workouts')
   @RequirePermissions('training.workouts.read')
-  @ApiOperation({ summary: 'List workouts for a date range' })
+  @ApiOperation({ summary: 'List workouts for a date range (cancelled excluded by default)' })
   @ApiOkResponse({
     description: 'Workouts list',
     type: [TrainingWorkoutResponseDto],
@@ -235,8 +230,19 @@ export class TrainingController {
     @CurrentUser() user: AuthUserContext,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('includeCancelled') includeCancelled?: string,
   ): Promise<TrainingWorkoutResponseDto[]> {
-    return this.trainingService.listWorkoutsForDateRange(user.id, from, to);
+    return this.trainingService.listWorkoutsForDateRange(user.id, from, to, includeCancelled === 'true');
+  }
+
+  @Get('athletes/me/current-metrics')
+  @RequirePermissions('training.athletes.read')
+  @ApiOperation({ summary: 'Current metrics estimate with per-field sources, for the plan creation prefill' })
+  @ApiOkResponse({
+    description: 'Each field is `{ value, source }`; source is strava | manual_workouts | athlete_state | none',
+  })
+  getCurrentMetrics(@CurrentUser() user: AuthUserContext): Promise<CurrentMetrics> {
+    return this.trainingService.getCurrentMetrics(user.id);
   }
 
   @Post('workouts')

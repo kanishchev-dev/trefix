@@ -41,13 +41,10 @@ describe('goal taxonomy validation', () => {
   });
 
   it('validates build_consistency through runs per week', () => {
-    expect(
-      validateGoalPayload({ type: 'build_consistency', target: { runsPerWeek: 4 } }).valid,
-    ).toBe(true);
+    expect(validateGoalPayload({ type: 'build_consistency', target: { runsPerWeek: 4 } }).valid).toBe(true);
 
     expect(
-      validateGoalPayload({ type: 'build_consistency', current: { runsPerWeek: 2 }, target: { runsPerWeek: 4 } })
-        .valid,
+      validateGoalPayload({ type: 'build_consistency', current: { runsPerWeek: 2 }, target: { runsPerWeek: 4 } }).valid,
     ).toBe(true);
 
     const invalid = validateGoalPayload({ type: 'build_consistency', target: { runsPerWeek: 0 } });
@@ -56,17 +53,23 @@ describe('goal taxonomy validation', () => {
   });
 
   it('allows volume goals through weekly distance or weekly duration', () => {
-    expect(
-      validateGoalPayload({ type: 'increase_running_volume', target: { weeklyDistanceKm: 40 } }).valid,
-    ).toBe(true);
-    expect(
-      validateGoalPayload({ type: 'increase_running_volume', target: { weeklyDurationMinutes: 240 } }).valid,
-    ).toBe(true);
+    expect(validateGoalPayload({ type: 'increase_running_volume', target: { weeklyDistanceKm: 40 } }).valid).toBe(true);
+    expect(validateGoalPayload({ type: 'increase_running_volume', target: { weeklyDurationMinutes: 240 } }).valid).toBe(
+      true,
+    );
     expect(validateGoalPayload({ type: 'increase_running_volume', target: {} }).valid).toBe(false);
   });
 
   it('allows intent-only goals without a numeric target', () => {
-    for (const type of ['maintain_fitness', 'general_health', 'improve_speed', 'improve_aerobic_fitness', 'start_running', 'return_to_running', 'improve_hills'] as const) {
+    for (const type of [
+      'maintain_fitness',
+      'general_health',
+      'improve_speed',
+      'improve_aerobic_fitness',
+      'start_running',
+      'return_to_running',
+      'improve_hills',
+    ] as const) {
       expect(validateGoalPayload({ type, target: {} }).valid).toBe(true);
     }
   });
@@ -155,8 +158,9 @@ describe('goal taxonomy validation', () => {
       deriveLegacyRaceFields({ type: 'improve_race_result', target: { distanceMeters: 10_000, finishTimeSec: 2700 } }),
     ).toEqual({ raceDistance: '10k', targetTimeSeconds: 2700 });
 
-    expect(
-      deriveLegacyRaceFields({ type: 'lose_weight', target: { weightKg: 75 } }),
-    ).toEqual({ raceDistance: 'just_running', targetTimeSeconds: null });
+    expect(deriveLegacyRaceFields({ type: 'lose_weight', target: { weightKg: 75 } })).toEqual({
+      raceDistance: 'just_running',
+      targetTimeSeconds: null,
+    });
   });
 });

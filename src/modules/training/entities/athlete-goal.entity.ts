@@ -4,7 +4,7 @@ import { uuidv7 } from 'uuidv7';
 import { ATHLETE_GOAL_STATUSES, AthleteGoalStatus } from '../training.constants';
 
 /**
- * Canonical athlete goal (PRD section 9).
+ * Canonical athlete goal.
  *
  * The row is polymorphic: `type` discriminates the payload stored in the
  * `payload` JSONB column ({ current?, target?, description? }). Legacy

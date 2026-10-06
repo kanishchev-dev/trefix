@@ -1,14 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsDateString,
   IsIn,
   IsInt,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  IsTimeZone,
   Max,
   MaxLength,
   Min,
@@ -23,17 +26,23 @@ import {
   MANUAL_PLAN_MAX_WEEKS,
   MANUAL_PLAN_MIN_DURATION_MINUTES,
   MANUAL_PLAN_MIN_WEEKS,
+  PLAN_NAME_MAX_LENGTH,
+  PLAN_NOTES_MAX_LENGTH,
   WORKOUT_TYPES,
 } from '../training.constants';
 import { AthleteGoalPayloadDto } from './create-goal.dto';
+import { AthleteMetricsDto, PlanStartBlockDto } from './plan-metrics.dto';
 
 /**
- * Manual plan goal: universal polymorphic payload (PRD sections 9, 19).
+ * Manual plan goal: universal polymorphic payload.
  * Legacy flat race fields remain accepted for backward compatibility
- * (PRD section 26) and are normalised into the universal shape.
+ * and are normalised into the universal shape.
  */
 export class ManualPlanGoalDto extends AthleteGoalPayloadDto {
-  @ApiPropertyOptional({ enum: ATHLETE_GOAL_DISTANCES, description: 'Legacy race distance; normalised into the universal goal' })
+  @ApiPropertyOptional({
+    enum: ATHLETE_GOAL_DISTANCES,
+    description: 'Legacy race distance; normalised into the universal goal',
+  })
   @IsIn(ATHLETE_GOAL_DISTANCES as unknown as string[])
   @IsOptional()
   raceDistance?: (typeof ATHLETE_GOAL_DISTANCES)[number];
@@ -191,6 +200,14 @@ export class ManualPlanWeekOverrideDto {
 }
 
 export class PreviewManualPlanDto {
+  @ApiPropertyOptional({
+    type: AthleteMetricsDto,
+    description: 'User-entered current metrics (optional step)',
+  })
+  @ValidateNested()
+  @Type(() => AthleteMetricsDto)
+  @IsOptional()
+  metrics?: AthleteMetricsDto;
   @ApiProperty({ type: ManualPlanGoalDto })
   @ValidateNested()
   @Type(() => ManualPlanGoalDto)
@@ -210,6 +227,11 @@ export class PreviewManualPlanDto {
   @IsDateString()
   @IsOptional()
   startDate?: string;
+
+  @ApiPropertyOptional({ example: 'Europe/Moscow', description: 'IANA timezone used for the start options' })
+  @IsTimeZone()
+  @IsOptional()
+  timezone?: string;
 }
 
 export class CreateManualPlanDto extends PreviewManualPlanDto {
@@ -220,9 +242,33 @@ export class CreateManualPlanDto extends PreviewManualPlanDto {
   @IsOptional()
   weekOverrides?: ManualPlanWeekOverrideDto[];
 
-  @ApiPropertyOptional({ maxLength: 200 })
+  @ApiPropertyOptional({ maxLength: PLAN_NAME_MAX_LENGTH, description: 'Defaults to the goal summary' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
-  @MaxLength(200)
+  @IsNotEmpty()
+  @MaxLength(PLAN_NAME_MAX_LENGTH)
   @IsOptional()
   name?: string;
+
+  @ApiPropertyOptional({ nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
+  @IsString()
+  @MaxLength(PLAN_NOTES_MAX_LENGTH)
+  @IsOptional()
+  notes?: string | null;
+
+  @ApiPropertyOptional({ description: 'Store the plan as a draft without starting it' })
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  saveAsDraft?: boolean;
+
+  @ApiPropertyOptional({
+    type: PlanStartBlockDto,
+    description:
+      'Create and start in one transaction. Without `saveAsDraft` and `start` the deprecated behavior applies: the plan starts at once and replaces the active one',
+  })
+  @ValidateNested()
+  @Type(() => PlanStartBlockDto)
+  @IsOptional()
+  start?: PlanStartBlockDto;
 }

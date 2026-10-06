@@ -45,8 +45,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     module: 'permissions',
     resource: '',
     action: 'manage',
-    description:
-      'Create, edit and delete permissions and groups, and assign them to users and new accounts',
+    description: 'Create, edit and delete permissions and groups, and assign them to users and new accounts',
   },
 
   // ----------------------------------------------------------------- users
@@ -238,6 +237,13 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     description: 'Regenerate a training plan and change its weeks and volume',
   },
   {
+    key: 'training.plans.delete',
+    module: 'training',
+    resource: 'plans',
+    action: 'delete',
+    description: 'Delete draft and history training plans',
+  },
+  {
     key: 'training.workouts.read',
     module: 'training',
     resource: 'workouts',
@@ -288,9 +294,7 @@ export const SYSTEM_PERMISSION_KEYS = SYSTEM_PERMISSION_CATALOG.map((permission)
 export const DEFAULT_USER_PERMISSION_KEYS: readonly string[] = SYSTEM_PERMISSION_CATALOG.filter(
   (permission) =>
     !permission.key.startsWith('permissions.') &&
-    !['users.create', 'users.update', 'users.delete', 'users.manage', 'settings.update'].includes(
-      permission.key,
-    ),
+    !['users.create', 'users.update', 'users.delete', 'users.manage', 'settings.update'].includes(permission.key),
 ).map((permission) => permission.key);
 
 /**

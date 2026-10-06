@@ -7,6 +7,8 @@ import {
   MANUAL_PLAN_MAX_WEEKS,
   MANUAL_PLAN_MIN_DURATION_MINUTES,
   MANUAL_PLAN_MIN_WEEKS,
+  REBUILD_VOLUME_SCALE_MAX,
+  REBUILD_VOLUME_SCALE_MIN,
   TRAINING_DEFAULT_DURATION_MINUTES,
   TRAINING_DEFAULT_FREQUENCY,
   TRAINING_DEFAULT_TARGET_CONFIDENCE,
@@ -17,6 +19,9 @@ import {
   TRAINING_WEEKDAY_ORDER,
   WORKOUT_TYPE_INTENSITY_FACTORS,
 } from './training.constants';
+
+/** Session types that must not land on adjacent days. */
+const INTENSIVE_WORKOUT_TYPES: readonly string[] = ['tempo', 'threshold', 'interval', 'hill', 'race'];
 
 export interface TrainingStateComputation {
   fitness: number;
@@ -86,9 +91,136 @@ export interface AdaptationResult {
   changes: Array<Record<string, unknown>>;
 }
 
+// ---------------------------------------------------------------------------
+// Plan lifecycle transforms
+// ---------------------------------------------------------------------------
+
+/** Athlete metrics used by rebuild flows. */
+export interface AthleteMetrics {
+  capturedAt?: string;
+  thresholdPaceSecondsPerKm?: number | null;
+  thresholdHeartRate?: number | null;
+  maxHeartRate?: number | null;
+  restingHeartRate?: number | null;
+  weeklyMileageKm?: number | null;
+  longestRunKm?: number | null;
+  recentResult?: { distance: string; timeSeconds: number; date: string } | null;
+  source?: string;
+}
+
+/** Workout of a relative (undated) plan week; `dayOfWeek`: 0 = Monday. */
+export interface RelativeWorkout {
+  key: string;
+  dayOfWeek: number;
+  orderInWeek: number;
+  type: WorkoutView['type'];
+  phase: string;
+  title?: string;
+  durationMinutes: number;
+  distanceKm: number;
+  target: Record<string, unknown>;
+  steps: Array<Record<string, unknown>>;
+}
+
+/** Relative plan structure stored on drafts. */
+export interface RelativeWeek {
+  weekNumber: number;
+  phase: string;
+  title?: string;
+  intent?: string;
+  weeklyLoadTarget?: number;
+  workouts: RelativeWorkout[];
+}
+
+/** Concrete dated workout produced by materializeWeeks. */
+export interface MaterializedWorkout {
+  key: string;
+  weekNumber: number;
+  scheduledAt: Date;
+  orderInWeek: number;
+  type: WorkoutView['type'];
+  phase: string;
+  durationMinutes: number;
+  distanceKm: number;
+  target: Record<string, unknown>;
+  steps: Array<Record<string, unknown>>;
+}
+
+export interface MaterializeResult {
+  startDate: string;
+  endDate: string;
+  totalWeeks: number;
+  /** Dated week records ready for `plan.weeks` (workoutIds hold keys until persist). */
+  weeks: Array<Record<string, unknown>>;
+  workouts: MaterializedWorkout[];
+  dropped: Array<{ key: string; reason: string }>;
+}
+
+export interface RemapResult {
+  weeks: RelativeWeek[];
+  removed: Array<{ key: string; reason: string }>;
+}
+
+export interface PlanDiffAdjustment {
+  code: string;
+  params?: Record<string, unknown>;
+}
+
+export interface PlanDiffWorkout {
+  key: string;
+  change: 'added' | 'removed' | 'modified';
+  fields?: Record<string, [unknown, unknown]>;
+  reason?: string;
+}
+
+export interface PlanDiffWeek {
+  weekNumber: number;
+  change: 'added' | 'removed' | 'modified';
+  workouts: PlanDiffWorkout[];
+}
+
+export interface PlanDiff {
+  summary: {
+    weeklyVolumeKm: { before: number[]; after: number[] };
+    peakWeekKm: { before: number; after: number };
+    longestRunKm: { before: number | null; after: number | null };
+    thresholdPace: { before: number | null; after: number | null };
+    totalWeeks: { before: number; after: number };
+    adjustments: PlanDiffAdjustment[];
+  };
+  weeks: PlanDiffWeek[];
+}
+
+/** Minimal workout shape extractFinalVersion consumes. */
+export interface ExtractableWorkout {
+  /** Persisted id; used as the relative key when projecting an active plan. */
+  id?: string;
+  weekNumber: number;
+  orderInWeek: number;
+  scheduledAt: Date;
+  type: string;
+  phase: string;
+  durationMinutes: number;
+  distanceKm: number;
+  target: Record<string, unknown>;
+  steps: Array<Record<string, unknown>>;
+}
+
+/** Error name used when a target-date resize is impossible. */
+export const PLAN_RESIZE_ERROR = 'PLAN_RESIZE_NOT_POSSIBLE';
+
+/** Options of materializeWeeks. */
+export interface MaterializeOptions {
+  /**
+   * Moves first-week sessions that fall before the start weekday. Disabled when
+   * the weeks continue an already running plan, where every weekday is valid.
+   */
+  relocateFirstWeek?: boolean;
+}
+
 export class TrainingEngine {
   /**
-   * Maps a goal type onto its default workout emphasis (PRD section 17).
+   * Maps a goal type onto its default workout emphasis.
    * Explicit user focus always wins; this only steers plans when the user
    * did not pick a manual focus.
    */
@@ -782,15 +914,15 @@ export class TrainingEngine {
   }
 
   private resolveThresholdPace(athlete: AthleteView, goal: GoalView | null): number | null {
-    // Universal payload takes priority (PRD section 17: engine distinguishes
-    // goal types instead of treating every goal as a generic race target).
+    // Universal payload takes priority: the engine distinguishes goal types
+    // instead of treating every goal as a generic race target.
     const universalPace = this.resolveUniversalGoalPace(goal);
     if (universalPace) {
       return universalPace;
     }
 
     // Legacy race columns stay supported for goals created before the
-    // universal model (PRD section 26).
+    // universal model.
     if (
       goal?.targetTimeSeconds &&
       ATHLETE_GOAL_DISTANCES.includes(goal.raceDistance as (typeof ATHLETE_GOAL_DISTANCES)[number])
@@ -939,14 +1071,14 @@ export class TrainingEngine {
   /**
    * Validates a user-provided workout override against the engine constraints.
    * The override carries only changed fields; the caller must merge it with the
-   * existing workout before calling (PRD section 14: validated user change).
+   * existing workout before calling.
    */
-  validateWorkoutOverride(input: {
-    type: string;
-    dayOfWeek?: number;
-    distanceKm?: number;
-    durationMinutes?: number;
-  }): { valid: true; value: { type: WorkoutView['type']; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number } } | { valid: false; reason: string } {
+  validateWorkoutOverride(input: { type: string; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number }):
+    | {
+        valid: true;
+        value: { type: WorkoutView['type']; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number };
+      }
+    | { valid: false; reason: string } {
     if (!(WORKOUT_TYPE_INTENSITY_FACTORS as Record<string, number>)[input.type]) {
       return { valid: false, reason: 'unsupported_workout_type' };
     }
@@ -955,10 +1087,7 @@ export class TrainingEngine {
       return { valid: false, reason: 'invalid_day_of_week' };
     }
 
-    if (
-      input.distanceKm !== undefined &&
-      (input.distanceKm <= 0 || input.distanceKm > MANUAL_PLAN_MAX_DISTANCE_KM)
-    ) {
+    if (input.distanceKm !== undefined && (input.distanceKm <= 0 || input.distanceKm > MANUAL_PLAN_MAX_DISTANCE_KM)) {
       return { valid: false, reason: 'invalid_distance' };
     }
 
@@ -970,7 +1099,803 @@ export class TrainingEngine {
       return { valid: false, reason: 'invalid_duration' };
     }
 
-    return { valid: true, value: input as { type: WorkoutView['type']; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number } };
+    return {
+      valid: true,
+      value: input as { type: WorkoutView['type']; dayOfWeek?: number; distanceKm?: number; durationMinutes?: number },
+    };
+  }
+
+  /**
+   * Dated generated plan → relative weeks (draft format). Keys reuse the
+   * generator's order in week (`w{week}-{order}`), so ids shown in the manual
+   * preview (`{week}-{order}`) map onto keys one to one.
+   */
+  toRelativeWeeks(generated: PlanBuildResult): RelativeWeek[] {
+    return generated.weeks.map((week) => {
+      const weekNumber = Number(week.weekNumber);
+      const weekWorkouts = generated.workouts
+        .filter((workout) => workout.weekNumber === weekNumber)
+        .sort((left, right) => left.orderInWeek - right.orderInWeek)
+        .map((workout) => ({
+          key: `w${weekNumber}-${workout.orderInWeek}`,
+          dayOfWeek: this.resolveWeekdayIndex(workout.scheduledAt),
+          orderInWeek: workout.orderInWeek,
+          type: workout.type,
+          phase: workout.phase,
+          title: this.getWorkoutTitle(workout.type),
+          durationMinutes: workout.durationMinutes,
+          distanceKm: workout.distanceKm,
+          target: workout.target,
+          steps: workout.steps,
+        }));
+
+      const phase = String(week.phase ?? 'base');
+      return {
+        weekNumber,
+        phase,
+        weeklyLoadTarget: Number(week.weeklyLoadTarget ?? 0),
+        title: this.getWeekTitle(phase, weekNumber),
+        intent: this.getWeekIntent(phase, weekNumber),
+        workouts: weekWorkouts,
+      };
+    });
+  }
+
+  /**
+   * Plan's final version → relative weeks. Completed workouts contribute their
+   * planned values: the history is rebuilt as it was designed, not as it was
+   * run. With `keyById` the persisted ids become keys, which lets the editing
+   * flow map diff entries back to rows.
+   */
+  extractFinalVersion(
+    plan: { startDate: string | null; endDate: string | null },
+    workouts: ExtractableWorkout[],
+    options: { keyById?: boolean } = {},
+  ): RelativeWeek[] {
+    if (!plan.startDate) {
+      return [];
+    }
+
+    const startDate = new Date(`${plan.startDate}T00:00:00Z`);
+    const totalWeeks = plan.endDate
+      ? Math.max(
+          1,
+          Math.round((new Date(`${plan.endDate}T00:00:00Z`).getTime() - startDate.getTime()) / 86_400_000 / 7),
+        )
+      : Math.max(1, ...workouts.map((workout) => workout.weekNumber));
+
+    const weekNumbers = new Set(workouts.map((workout) => workout.weekNumber));
+    for (let weekNumber = 1; weekNumber <= totalWeeks; weekNumber += 1) {
+      weekNumbers.add(weekNumber);
+    }
+
+    return [...weekNumbers]
+      .sort((left, right) => left - right)
+      .map((weekNumber) => {
+        const weekWorkouts = workouts
+          .filter((workout) => workout.weekNumber === weekNumber)
+          .sort((left, right) =>
+            left.scheduledAt.getTime() === right.scheduledAt.getTime()
+              ? left.orderInWeek - right.orderInWeek
+              : left.scheduledAt.getTime() - right.scheduledAt.getTime(),
+          )
+          .map((workout, index) => ({
+            key: options.keyById && workout.id ? workout.id : `w${weekNumber}-${index + 1}`,
+            dayOfWeek: this.resolveWeekdayIndex(workout.scheduledAt),
+            orderInWeek: index + 1,
+            type: workout.type as WorkoutView['type'],
+            phase: workout.phase,
+            title: this.getWorkoutTitle(workout.type as WorkoutView['type']),
+            durationMinutes: workout.durationMinutes,
+            distanceKm: workout.distanceKm,
+            target: workout.target,
+            steps: workout.steps,
+          }));
+
+        const phase = weekWorkouts[0]?.phase ?? this.resolvePhase(weekNumber, totalWeeks);
+        return {
+          weekNumber,
+          phase,
+          title: this.getWeekTitle(phase, weekNumber),
+          intent: this.getWeekIntent(phase, weekNumber),
+          workouts: weekWorkouts,
+        };
+      });
+  }
+
+  /**
+   * Relative weeks → dated workouts from startDate. Week numbers are treated
+   * as positions relative to `startDate` (week 1 starts on it). When the
+   * plan starts mid-week, first-week sessions scheduled before the start
+   * weekday move to the nearest free day of that week or are dropped.
+   */
+  materializeWeeks(weeks: RelativeWeek[], startDate: Date, options: MaterializeOptions = {}): MaterializeResult {
+    const relocateFirstWeek = options.relocateFirstWeek ?? true;
+    const start = this.toUtcMidnight(startDate);
+    const startWeekday = this.resolveWeekdayIndex(start);
+    const totalWeeks = weeks.length;
+    const materialized: MaterializedWorkout[] = [];
+    const dropped: Array<{ key: string; reason: string }> = [];
+
+    for (const week of [...weeks].sort((left, right) => left.weekNumber - right.weekNumber)) {
+      const weekStart = this.addDays(start, (week.weekNumber - 1) * 7);
+      const weekDaysUsed = new Set<number>();
+
+      const ordered = [...week.workouts].sort((left, right) =>
+        left.dayOfWeek === right.dayOfWeek ? left.orderInWeek - right.orderInWeek : left.dayOfWeek - right.dayOfWeek,
+      );
+
+      for (const workout of ordered) {
+        let dayOfWeek = workout.dayOfWeek;
+
+        if (relocateFirstWeek && week.weekNumber === 1 && dayOfWeek < startWeekday) {
+          const relocation = this.findRelocationDay(
+            dayOfWeek,
+            startWeekday,
+            week.workouts.map((entry) => entry.dayOfWeek).filter((day) => day >= startWeekday),
+            weekDaysUsed,
+          );
+          if (relocation === null) {
+            dropped.push({ key: workout.key, reason: 'NO_FREE_DAY_IN_WEEK' });
+            continue;
+          }
+          dayOfWeek = relocation;
+        }
+
+        weekDaysUsed.add(dayOfWeek);
+        materialized.push({
+          key: workout.key,
+          weekNumber: week.weekNumber,
+          scheduledAt: this.resolveWeekdayDate(weekStart, 1, dayOfWeek),
+          orderInWeek: workout.orderInWeek,
+          type: workout.type,
+          phase: workout.phase,
+          durationMinutes: workout.durationMinutes,
+          distanceKm: workout.distanceKm,
+          target: workout.target,
+          steps: workout.steps,
+        });
+      }
+    }
+
+    const datedWeeks = weeks.map((week) => ({
+      weekNumber: week.weekNumber,
+      phase: week.phase,
+      weeklyLoadTarget: week.weeklyLoadTarget ?? 0,
+      title: week.title ?? this.getWeekTitle(week.phase, week.weekNumber),
+      intent: week.intent ?? this.getWeekIntent(week.phase, week.weekNumber),
+      workoutIds: materialized
+        .filter((workout) => workout.weekNumber === week.weekNumber)
+        .map((workout) => workout.key),
+    }));
+
+    return {
+      startDate: this.formatDate(start),
+      endDate: this.formatDate(this.addDays(start, totalWeeks * 7 - 1)),
+      totalWeeks,
+      weeks: datedWeeks,
+      workouts: materialized,
+      dropped,
+    };
+  }
+
+  /**
+   * Re-targets workout intensities to a new threshold pace.
+   * Threshold resolution: explicit value → best recent result → caller-provided
+   * athlete state values. `rest` workouts stay untouched.
+   */
+  retargetIntensity(weeks: RelativeWeek[], metrics: AthleteMetrics): RelativeWeek[] {
+    const threshold = this.resolveThresholdFromMetrics(metrics);
+    if (!threshold) {
+      return weeks;
+    }
+
+    return weeks.map((week) => ({
+      ...week,
+      workouts: week.workouts.map((workout) => {
+        if (workout.type === 'rest') {
+          return workout;
+        }
+
+        const paceRange = this.resolvePaceRange(workout.type, threshold);
+        const target: Record<string, unknown> = {
+          ...workout.target,
+          paceMinSecondsPerKm: paceRange.min,
+          paceMaxSecondsPerKm: paceRange.max,
+          zone: paceRange.zone,
+        };
+
+        const thresholdHeartRate = metrics.thresholdHeartRate;
+        if (
+          typeof thresholdHeartRate === 'number' &&
+          (target.heartRateMinBpm !== undefined || target.heartRateMaxBpm !== undefined)
+        ) {
+          // Heart rate grows as pace gets faster: the slow edge of the pace
+          // range maps to the low edge of the heart-rate range.
+          target.heartRateMinBpm = Math.round(thresholdHeartRate * (threshold / paceRange.max));
+          target.heartRateMaxBpm = Math.round(thresholdHeartRate * (threshold / paceRange.min));
+        }
+
+        const steps = workout.steps.map((step) => {
+          const stepTarget = step.target;
+          if (!stepTarget || typeof stepTarget !== 'object') {
+            return step;
+          }
+          return {
+            ...step,
+            target: {
+              ...(stepTarget as Record<string, unknown>),
+              paceMinSecondsPerKm: paceRange.min,
+              paceMaxSecondsPerKm: paceRange.max,
+              zone: paceRange.zone,
+            },
+          };
+        });
+
+        return { ...workout, target, steps };
+      }),
+    }));
+  }
+
+  /**
+   * Scales distances/durations by `k` with per-type rules and safety caps
+   *. Returns the applied adjustments for the plan diff.
+   */
+  scaleVolume(
+    weeks: RelativeWeek[],
+    k: number,
+    metrics: AthleteMetrics,
+  ): { weeks: RelativeWeek[]; adjustments: PlanDiffAdjustment[] } {
+    const clamped = Number(this.clamp(k, REBUILD_VOLUME_SCALE_MIN, REBUILD_VOLUME_SCALE_MAX).toFixed(3));
+    const adjustments: PlanDiffAdjustment[] = [{ code: 'VOLUME_SCALED', params: { k: clamped } }];
+    const longestRunCapKm =
+      metrics.longestRunKm && metrics.longestRunKm > 0
+        ? Math.max(metrics.longestRunKm * 1.15, metrics.longestRunKm + 3)
+        : null;
+
+    const scaled = weeks.map((week) => ({
+      ...week,
+      workouts: week.workouts.map((workout) => this.scaleWorkoutVolume(workout, clamped)),
+    }));
+
+    if (longestRunCapKm !== null) {
+      for (const week of scaled) {
+        for (const workout of week.workouts) {
+          if (workout.type === 'long_run' && workout.distanceKm > longestRunCapKm) {
+            workout.distanceKm = Math.round(longestRunCapKm * 10) / 10;
+            adjustments.push({ code: 'LONG_RUN_CAPPED', params: { week: week.weekNumber, km: workout.distanceKm } });
+          }
+        }
+      }
+    }
+
+    this.capEarlyWeeklyGrowth(scaled, adjustments);
+
+    return { weeks: scaled, adjustments };
+  }
+
+  /**
+   * Remaps workouts of weeks starting at `fromWeek` onto new training days,
+   * keeping keys stable and key sessions in place: the long run goes to its
+   * preferred day and intensive sessions are spread apart. When a week has
+   * more sessions than days, the least valuable ones (recovery, then easy)
+   * are removed with an explicit reason. `allowedDaysByWeek` narrows the days
+   * of a particular week (e.g. the current week only keeps upcoming days).
+   */
+  remapSchedule(
+    weeks: RelativeWeek[],
+    schedule: { trainingDays: number[]; preferredLongRunDay?: number | null },
+    fromWeek: number,
+    allowedDaysByWeek: Map<number, number[]> = new Map(),
+  ): RemapResult {
+    const baseDays = [...new Set(schedule.trainingDays)].filter((day) => day >= 0 && day <= 6).sort((a, b) => a - b);
+    const removed: Array<{ key: string; reason: string }> = [];
+
+    if (baseDays.length === 0) {
+      return { weeks, removed };
+    }
+
+    const result = weeks.map((week) => {
+      if (week.weekNumber < fromWeek) {
+        return week;
+      }
+
+      const days = allowedDaysByWeek.get(week.weekNumber) ?? baseDays;
+      const movable = week.workouts.filter((workout) => workout.type !== 'rest');
+      const rests = week.workouts.filter((workout) => workout.type === 'rest');
+
+      let kept = [...movable];
+      while (kept.length > days.length) {
+        const victimIndex = kept.findIndex((workout) => workout.type === 'recovery');
+        const fallbackIndex = kept.findIndex((workout) => workout.type === 'easy');
+        const removeIndex = victimIndex >= 0 ? victimIndex : fallbackIndex >= 0 ? fallbackIndex : kept.length - 1;
+        const [victim] = kept.splice(removeIndex, 1);
+        removed.push({ key: victim.key, reason: 'NOT_ENOUGH_TRAINING_DAYS' });
+      }
+
+      const assignments = this.assignTrainingDays(kept, days, schedule.preferredLongRunDay ?? null);
+      kept = kept
+        .map((workout) => ({ ...workout, dayOfWeek: assignments.get(workout.key) ?? workout.dayOfWeek }))
+        .sort((left, right) => left.dayOfWeek - right.dayOfWeek)
+        .map((workout, index) => ({ ...workout, orderInWeek: index + 1 }));
+
+      return { ...week, workouts: [...kept, ...rests] };
+    });
+
+    return { weeks: result, removed };
+  }
+
+  /**
+   * Extends or shortens the plan to `newTotalWeeks`. Weeks before
+   * `currentWeek` are never touched; taper and race weeks survive a
+   * reduction. Extension inserts copies of the last non-taper week right
+   * before the taper with volume progression of at most 5 % per week.
+   * Existing workout keys stay stable; inserted copies get derived keys.
+   */
+  resizeToTargetDate(weeks: RelativeWeek[], currentWeek: number, newTotalWeeks: number): RelativeWeek[] {
+    const currentTotal = weeks.length;
+    const passedWeeks = Math.max(0, currentWeek - 1);
+    const protectedTail = this.countTrailingTaperWeeks(weeks);
+
+    if (newTotalWeeks === currentTotal) {
+      return weeks;
+    }
+
+    if (newTotalWeeks > currentTotal) {
+      const insertCount = newTotalWeeks - currentTotal;
+      const templateIndex = this.findExtensionTemplateIndex(weeks, passedWeeks);
+      if (templateIndex === null) {
+        throw new Error(PLAN_RESIZE_ERROR);
+      }
+
+      const template = weeks[templateIndex];
+      const inserted: RelativeWeek[] = [];
+      for (let index = 0; index < insertCount; index += 1) {
+        const progression = Math.pow(1.05, index + 1);
+        inserted.push({
+          ...template,
+          workouts: template.workouts.map((workout) => ({
+            ...workout,
+            key: `${workout.key}~x${index + 1}`,
+            distanceKm: Math.round(workout.distanceKm * progression * 10) / 10,
+          })),
+        });
+      }
+
+      return this.renumberWeeks([...weeks.slice(0, templateIndex + 1), ...inserted, ...weeks.slice(templateIndex + 1)]);
+    }
+
+    const removableCount = currentTotal - newTotalWeeks;
+    const removable = weeks.filter(
+      (week) => week.weekNumber > passedWeeks && week.weekNumber <= currentTotal - protectedTail,
+    );
+    const remainingNonTaper = newTotalWeeks - protectedTail;
+    if (removable.length < removableCount || remainingNonTaper < 2) {
+      throw new Error(PLAN_RESIZE_ERROR);
+    }
+
+    // Remove from the end of the base/build remainder first.
+    const removedWeekNumbers = new Set(removable.slice(-removableCount).map((week) => week.weekNumber));
+    return this.renumberWeeks(weeks.filter((week) => !removedWeekNumbers.has(week.weekNumber)));
+  }
+
+  /**
+   * Week- and workout-level diff between two relative plans. Workouts are
+   * matched by key across weeks, so a session moved to another week or day
+   * shows up as one `modified` entry (with `weekNumber` / `dayOfWeek`
+   * fields) instead of a remove/add pair.
+   */
+  diffPlans(
+    before: RelativeWeek[],
+    after: RelativeWeek[],
+    metricsBefore?: AthleteMetrics | null,
+    metricsAfter?: AthleteMetrics | null,
+    adjustments: PlanDiffAdjustment[] = [],
+  ): PlanDiff {
+    const volumeOf = (weeks: RelativeWeek[]): number[] =>
+      [...weeks]
+        .sort((left, right) => left.weekNumber - right.weekNumber)
+        .map((week) => Math.round(week.workouts.reduce((sum, workout) => sum + workout.distanceKm, 0) * 10) / 10);
+    const longestRun = (weeks: RelativeWeek[]): number | null => {
+      const runs = weeks.flatMap((week) => week.workouts.filter((workout) => workout.type === 'long_run'));
+      return runs.length > 0 ? Math.round(Math.max(...runs.map((workout) => workout.distanceKm)) * 10) / 10 : null;
+    };
+    const thresholdOf = (metrics: AthleteMetrics | null | undefined, weeks: RelativeWeek[]): number | null => {
+      if (metrics?.thresholdPaceSecondsPerKm) {
+        return metrics.thresholdPaceSecondsPerKm;
+      }
+      for (const week of weeks) {
+        for (const workout of week.workouts) {
+          const estimate = this.estimateThresholdFromTarget(workout.type, workout.target);
+          if (estimate) {
+            return estimate;
+          }
+        }
+      }
+      return null;
+    };
+
+    const index = (weeks: RelativeWeek[]): Map<string, { weekNumber: number; workout: RelativeWorkout }> => {
+      const map = new Map<string, { weekNumber: number; workout: RelativeWorkout }>();
+      for (const week of weeks) {
+        for (const workout of week.workouts) {
+          map.set(workout.key, { weekNumber: week.weekNumber, workout });
+        }
+      }
+      return map;
+    };
+
+    const beforeIndex = index(before);
+    const afterIndex = index(after);
+    const beforeWeeks = new Map(before.map((week) => [week.weekNumber, week]));
+    const afterWeeks = new Map(after.map((week) => [week.weekNumber, week]));
+    const diffsByWeek = new Map<number, PlanDiffWorkout[]>();
+    const push = (weekNumber: number, entry: PlanDiffWorkout): void => {
+      diffsByWeek.set(weekNumber, [...(diffsByWeek.get(weekNumber) ?? []), entry]);
+    };
+
+    for (const [key, entry] of afterIndex) {
+      const previous = beforeIndex.get(key);
+      if (!previous) {
+        push(entry.weekNumber, { key, change: 'added' });
+        continue;
+      }
+      const fields = this.diffWorkoutFields(previous.workout, entry.workout);
+      if (previous.weekNumber !== entry.weekNumber) {
+        fields.weekNumber = [previous.weekNumber, entry.weekNumber];
+      }
+      if (Object.keys(fields).length > 0) {
+        push(entry.weekNumber, { key, change: 'modified', fields });
+      }
+    }
+    for (const [key, entry] of beforeIndex) {
+      if (!afterIndex.has(key)) {
+        push(entry.weekNumber, { key, change: 'removed' });
+      }
+    }
+
+    const weekNumbers = [...new Set([...beforeWeeks.keys(), ...afterWeeks.keys()])].sort((a, b) => a - b);
+    const weeks: PlanDiffWeek[] = [];
+    for (const weekNumber of weekNumbers) {
+      const beforeWeek = beforeWeeks.get(weekNumber);
+      const afterWeek = afterWeeks.get(weekNumber);
+      const workouts = diffsByWeek.get(weekNumber) ?? [];
+
+      if (beforeWeek && !afterWeek) {
+        weeks.push({ weekNumber, change: 'removed', workouts });
+        continue;
+      }
+      if (!beforeWeek && afterWeek) {
+        weeks.push({ weekNumber, change: 'added', workouts });
+        continue;
+      }
+      const metadataChanged =
+        !!beforeWeek &&
+        !!afterWeek &&
+        (beforeWeek.phase !== afterWeek.phase ||
+          Number(beforeWeek.weeklyLoadTarget ?? 0) !== Number(afterWeek.weeklyLoadTarget ?? 0));
+      if (workouts.length > 0 || metadataChanged) {
+        weeks.push({ weekNumber, change: 'modified', workouts });
+      }
+    }
+
+    const beforeVolume = volumeOf(before);
+    const afterVolume = volumeOf(after);
+    return {
+      summary: {
+        weeklyVolumeKm: { before: beforeVolume, after: afterVolume },
+        peakWeekKm: { before: Math.max(0, ...beforeVolume), after: Math.max(0, ...afterVolume) },
+        longestRunKm: { before: longestRun(before), after: longestRun(after) },
+        thresholdPace: { before: thresholdOf(metricsBefore, before), after: thresholdOf(metricsAfter, after) },
+        totalWeeks: { before: before.length, after: after.length },
+        adjustments,
+      },
+      weeks,
+    };
+  }
+
+  /**
+   * Rebuilds target and steps of a workout after its type or volume changed,
+   * so pace zones always match the session type. The threshold pace comes
+   * from the explicit value, else is recovered from the previous target.
+   */
+  rebuildWorkoutTarget(input: {
+    type: WorkoutView['type'];
+    durationMinutes: number;
+    previousType?: WorkoutView['type'] | null;
+    previousTarget?: Record<string, unknown> | null;
+    thresholdPaceSecondsPerKm?: number | null;
+  }): { target: Record<string, unknown>; steps: Array<Record<string, unknown>> } {
+    const threshold =
+      input.thresholdPaceSecondsPerKm ??
+      (input.previousType && input.previousTarget
+        ? this.estimateThresholdFromTarget(input.previousType, input.previousTarget)
+        : null);
+    const target = this.buildWorkoutTarget(input.type, threshold);
+    return { target, steps: this.buildWorkoutSteps(input.type, input.durationMinutes, target) };
+  }
+
+  /** Recovers the threshold pace a target was built from, if possible. */
+  estimateThresholdFromTarget(type: WorkoutView['type'], target: Record<string, unknown> | null): number | null {
+    const paceMin = target?.paceMinSecondsPerKm;
+    if (typeof paceMin !== 'number' || paceMin <= 0) {
+      return null;
+    }
+    const reference = this.resolvePaceRange(type, 1000).min;
+    return reference > 0 ? Math.round((paceMin * 1000) / reference) : null;
+  }
+
+  /** Resolves the threshold pace used by retargetIntensity. */
+  resolveThresholdFromMetrics(metrics: AthleteMetrics): number | null {
+    const explicit = metrics.thresholdPaceSecondsPerKm;
+    if (typeof explicit === 'number' && explicit > 0) {
+      return Math.round(explicit);
+    }
+
+    const result = metrics.recentResult;
+    if (result && typeof result.timeSeconds === 'number' && result.timeSeconds > 0) {
+      const distanceKm = this.resolveDistanceKilometres(result.distance);
+      if (distanceKm > 0) {
+        return Math.round(result.timeSeconds / distanceKm);
+      }
+    }
+
+    return null;
+  }
+
+  /** Exposes the pace-range resolution so services reuse the same zones. */
+  resolvePaceRangeFor(
+    workoutType: WorkoutView['type'],
+    thresholdPaceSecondsPerKm: number | null,
+  ): { min: number; max: number; zone: string } {
+    return this.resolvePaceRange(workoutType, thresholdPaceSecondsPerKm);
+  }
+
+  private scaleWorkoutVolume(workout: RelativeWorkout, k: number): RelativeWorkout {
+    if (workout.type === 'race' || workout.type === 'rest') {
+      return workout;
+    }
+
+    if (workout.type === 'interval') {
+      // Only warm-up and cool-down absorb the scale; work repeats stay intact.
+      return {
+        ...workout,
+        steps: workout.steps.map((step) =>
+          ['warmup', 'cooldown'].includes(String(step.type))
+            ? { ...step, durationMinutes: Math.round(Number(step.durationMinutes ?? 0) * k) }
+            : step,
+        ),
+      };
+    }
+
+    const distanceKm = Math.round(workout.distanceKm * k * 10) / 10;
+    const durationMinutes = Math.round(workout.durationMinutes * k);
+
+    const validation = this.validateWorkoutOverride({ type: workout.type, distanceKm, durationMinutes });
+    if (!validation.valid) {
+      return workout;
+    }
+
+    return { ...workout, distanceKm, durationMinutes };
+  }
+
+  /** Limits week-over-week growth to 10 % on the first four weeks. */
+  private capEarlyWeeklyGrowth(weeks: RelativeWeek[], adjustments: PlanDiffAdjustment[]): void {
+    const volumes = weeks.map((week) => week.workouts.reduce((sum, workout) => sum + workout.distanceKm, 0));
+
+    for (let index = 1; index < Math.min(weeks.length, 4); index += 1) {
+      const previous = volumes[index - 1];
+      const current = volumes[index];
+      if (previous <= 0 || current <= previous * 1.1) {
+        continue;
+      }
+
+      const factor = (previous * 1.1) / current;
+      for (const workout of weeks[index].workouts) {
+        if (workout.type === 'race' || workout.type === 'rest') {
+          continue;
+        }
+        workout.distanceKm = Math.round(workout.distanceKm * factor * 10) / 10;
+        if (workout.type !== 'interval') {
+          workout.durationMinutes = Math.max(1, Math.round(workout.durationMinutes * factor));
+        }
+      }
+      volumes[index] = weeks[index].workouts.reduce((sum, workout) => sum + workout.distanceKm, 0);
+      adjustments.push({
+        code: 'WEEKLY_GROWTH_CAPPED',
+        params: { week: weeks[index].weekNumber, km: Math.round(volumes[index] * 10) / 10 },
+      });
+    }
+  }
+
+  /** Greedy day assignment: long run on its day, intensives spread out. */
+  private assignTrainingDays(
+    workouts: RelativeWorkout[],
+    days: number[],
+    preferredLongRunDay: number | null,
+  ): Map<string, number> {
+    const assignments = new Map<string, number>();
+    const free = new Set(days);
+
+    const longRun = workouts.find((workout) => workout.type === 'long_run');
+    if (longRun) {
+      const day =
+        preferredLongRunDay !== null && free.has(preferredLongRunDay)
+          ? preferredLongRunDay
+          : Math.max(...free.values());
+      assignments.set(longRun.key, day);
+      free.delete(day);
+    }
+
+    const intensives = workouts.filter(
+      (workout) => workout.type !== 'long_run' && INTENSIVE_WORKOUT_TYPES.includes(workout.type),
+    );
+    const others = workouts.filter(
+      (workout) => workout.type !== 'long_run' && !INTENSIVE_WORKOUT_TYPES.includes(workout.type),
+    );
+
+    const assignedIntensiveDays: number[] = [];
+    for (const workout of intensives) {
+      const day = this.pickSpreadDay([...free], assignedIntensiveDays);
+      if (day === null) {
+        break;
+      }
+      assignments.set(workout.key, day);
+      assignedIntensiveDays.push(day);
+      free.delete(day);
+    }
+
+    for (const workout of others) {
+      const day = [...free].sort((left, right) => left - right)[0];
+      if (day === undefined) {
+        break;
+      }
+      assignments.set(workout.key, day);
+      free.delete(day);
+    }
+
+    return assignments;
+  }
+
+  /** Picks the free day with the largest gap to already-assigned intensives. */
+  private pickSpreadDay(freeDays: number[], assignedIntensiveDays: number[]): number | null {
+    if (freeDays.length === 0) {
+      return null;
+    }
+
+    let bestDay = freeDays[0];
+    let bestGap = -1;
+    for (const day of freeDays) {
+      const gap =
+        assignedIntensiveDays.length === 0
+          ? 7
+          : Math.min(
+              ...assignedIntensiveDays.map((assigned) =>
+                Math.min(Math.abs(day - assigned), 7 - Math.abs(day - assigned)),
+              ),
+            );
+      if (gap > bestGap) {
+        bestGap = gap;
+        bestDay = day;
+      }
+    }
+    return bestDay;
+  }
+
+  private findRelocationDay(
+    preferredDay: number,
+    startWeekday: number,
+    weekDays: number[],
+    usedDays: Set<number>,
+  ): number | null {
+    const candidates = [...new Set(weekDays)].sort(
+      (left, right) => this.cyclicDistance(left, preferredDay) - this.cyclicDistance(right, preferredDay),
+    );
+    for (const candidate of candidates) {
+      if (!usedDays.has(candidate)) {
+        return candidate;
+      }
+    }
+
+    // Every training day is taken: allow any free weekday on or after the
+    // start weekday as a last resort (earlier days are already in the past).
+    for (let candidate = startWeekday; candidate <= 6; candidate += 1) {
+      if (!usedDays.has(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  private cyclicDistance(left: number, right: number): number {
+    const distance = Math.abs(left - right);
+    return Math.min(distance, 7 - distance);
+  }
+
+  private countTrailingTaperWeeks(weeks: RelativeWeek[]): number {
+    let count = 0;
+    for (let index = weeks.length - 1; index >= 0; index -= 1) {
+      if (['taper', 'race'].includes(weeks[index].phase)) {
+        count += 1;
+      } else {
+        break;
+      }
+    }
+    return count;
+  }
+
+  /** Last build/specific (or base) week usable as an extension template. */
+  private findExtensionTemplateIndex(weeks: RelativeWeek[], passedWeeks: number): number | null {
+    for (let index = weeks.length - 1; index >= passedWeeks; index -= 1) {
+      if (!['taper', 'race'].includes(weeks[index].phase)) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  /** Renumbers weeks sequentially; workout keys stay stable. */
+  private renumberWeeks(weeks: RelativeWeek[]): RelativeWeek[] {
+    return weeks.map((week, index) => ({ ...week, weekNumber: index + 1 }));
+  }
+
+  private diffWorkoutFields(before: RelativeWorkout, after: RelativeWorkout): Record<string, [unknown, unknown]> {
+    const fields: Record<string, [unknown, unknown]> = {};
+    const compare = (path: string, left: unknown, right: unknown): void => {
+      if (left !== right) {
+        fields[path] = [left, right];
+      }
+    };
+
+    compare('type', before.type, after.type);
+    compare('dayOfWeek', before.dayOfWeek, after.dayOfWeek);
+    compare('durationMinutes', before.durationMinutes, after.durationMinutes);
+    compare('distanceKm', before.distanceKm, after.distanceKm);
+    compare('target.paceMinSecondsPerKm', before.target.paceMinSecondsPerKm, after.target.paceMinSecondsPerKm);
+    compare('target.paceMaxSecondsPerKm', before.target.paceMaxSecondsPerKm, after.target.paceMaxSecondsPerKm);
+
+    return fields;
+  }
+
+  private getWeekTitle(phase: string, weekNumber: number): string {
+    const p = phase.toLowerCase();
+    if (p === 'base') return 'Building consistency';
+    if (p === 'build') return 'Increasing training load';
+    if (p === 'specific') return 'Race-specific work';
+    if (p === 'peak') return 'Peak preparation';
+    if (p === 'taper') return 'Reducing load';
+    if (p === 'race') return 'Race week';
+    if (p === 'recovery') return 'Volume recovery';
+    return `Week ${weekNumber} focus`;
+  }
+
+  // The optional week number keeps the signature aligned with getWeekTitle;
+  // intents today depend on the phase only.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private getWeekIntent(phase: string, _weekNumber?: number): string {
+    const p = phase.toLowerCase();
+    if (p === 'base') return 'Establish steady running routine and comfortable easy effort aerobic base.';
+    if (p === 'build') return 'Build aerobic strength while maintaining recovery between quality sessions.';
+    if (p === 'specific') return 'Develop target race pace efficiency and rhythm.';
+    if (p === 'peak') return 'Execute final key race simulation session before reducing volume.';
+    if (p === 'taper') return 'Shed residual fatigue while preserving neural sharpness.';
+    if (p === 'race') return 'Rest, hydrate, carb load and execute your goal race.';
+    if (p === 'recovery') return 'Allow body to adapt to previous load while maintaining frequency.';
+    return 'Focus on consistent training and proper recovery.';
+  }
+
+  private getWorkoutTitle(type: WorkoutView['type']): string {
+    return type
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  private toUtcMidnight(date: Date): Date {
+    if (!Number.isNaN(date.getUTCFullYear())) {
+      return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    }
+    return new Date(date);
   }
 
   /** Resolves the concrete date of a weekday index within a plan week. */

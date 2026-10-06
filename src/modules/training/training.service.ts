@@ -12,22 +12,30 @@ import { AnalyzeWorkoutDto } from './dto/analyze-workout.dto';
 import { CompleteWorkoutDto } from './dto/complete-workout.dto';
 import { CreateAthleteDto } from './dto/create-athlete.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
+import { CreateManualPlanDto, ManualPlanWeekOverrideDto, PreviewManualPlanDto } from './dto/create-manual-plan.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
+import {
+  ManualPlanPreviewResponseDto,
+  ManualPlanPreviewWeekDto,
+  ManualPlanPreviewWorkoutDto,
+} from './dto/manual-plan-preview-response.dto';
+import { CurrentWeekContextDto, PlanOverviewResponseDto, PlanWeekDto } from './dto/plan-overview-response.dto';
+import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
 import { AdaptationEvent } from './entities/adaptation-event.entity';
 import { Athlete } from './entities/athlete.entity';
 import { AthleteGoal } from './entities/athlete-goal.entity';
 import { AthleteState } from './entities/athlete-state.entity';
 import { TrainingLoad } from './entities/training-load.entity';
-import { TrainingPlan } from './entities/training-plan.entity';
+import { TrainingPlan, TrainingPlanConfig, TrainingPlanMetricsSnapshot } from './entities/training-plan.entity';
 import { Workout } from './entities/workout.entity';
 import { AthleteCreatedEvent } from './events/athlete-created.event';
 import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
 import { PlanAdaptedEvent } from './events/plan-adapted.event';
-import { PlanGeneratedEvent } from './events/plan-generated.event';
 import { AthleteStateUpdatedEvent } from './events/state-updated.event';
 import { WorkoutCompletedEvent } from './events/workout-completed.event';
+import { deriveLegacyRaceFields, type GoalPayloadShape, mapLegacyRaceGoal, validateGoalPayload } from './goal-taxonomy';
 import {
   AdaptationEventView,
   AthleteStateView,
@@ -37,16 +45,12 @@ import {
   WorkoutAnalysisView,
   WorkoutView,
 } from './interfaces/training-views.interface';
-import { CreateManualPlanDto, ManualPlanWeekOverrideDto, PreviewManualPlanDto } from './dto/create-manual-plan.dto';
-import { ManualPlanPreviewResponseDto, ManualPlanPreviewWeekDto, ManualPlanPreviewWorkoutDto } from './dto/manual-plan-preview-response.dto';
-import { ProgressSnapshotResponseDto } from './dto/progress-response.dto';
+import { AthleteMetricsService, CurrentMetrics } from './plans/athlete-metrics.service';
+import { PlanLifecycleService, PlanStartInput } from './plans/plan-lifecycle.service';
+import { applyRelativeOverrides, RelativeWeekOverride } from './plans/plan-structure';
+import { resolveGoalSummaryTitle, todayIsoInTz } from './plans/plan-utils';
 import {
-  CurrentWeekContextDto,
-  PlanAdaptationDto,
-  PlanOverviewResponseDto,
-  PlanWeekDto,
-} from './dto/plan-overview-response.dto';
-import {
+  ADAPTATION_TYPE_USER_EDIT,
   ATHLETE_GOAL_STATUSES,
   TRAINING_DEFAULT_AVAILABILITY,
   TRAINING_DEFAULT_DURATION_MINUTES,
@@ -55,13 +59,18 @@ import {
   TRAINING_LOAD_ALGORITHM_VERSION,
   TRAINING_WEEKDAY_ORDER,
 } from './training.constants';
-import { TrainingEngine, TrainingStateComputation } from './training.engine';
 import {
-  deriveLegacyRaceFields,
-  mapLegacyRaceGoal,
-  validateGoalPayload,
-  type GoalPayloadShape,
-} from './goal-taxonomy';
+  type AthleteMetrics,
+  type PlanBuildResult,
+  TrainingEngine,
+  type TrainingStateComputation,
+} from './training.engine';
+
+/** Days a completed plan is still shown as the current one. */
+const CURRENT_PLAN_COMPLETED_GRACE_DAYS = 14;
+
+/** The parts of a manual configuration the engine generates from. */
+type ManualPlanConfigInput = Pick<PreviewManualPlanDto, 'goal' | 'schedule' | 'structure'>;
 
 interface WorkoutCompletionResult {
   workout: WorkoutView;
@@ -91,6 +100,8 @@ export class TrainingService {
     private readonly adaptationEventModel: typeof AdaptationEvent,
     private readonly eventEmitter: EventEmitter2,
     private readonly trainingEngine: TrainingEngine,
+    private readonly planLifecycleService: PlanLifecycleService,
+    private readonly athleteMetricsService: AthleteMetricsService,
   ) {}
 
   /** Creates an athlete profile for the authenticated user. */
@@ -175,7 +186,7 @@ export class TrainingService {
     };
 
     // 2. Goal Progress — representation depends on the goal type
-    // (PRD section 21: no race distance/time may be assumed for every goal).
+    // (no race distance/time may be assumed for every goal).
     let goalProgress = null;
     if (goal) {
       goalProgress = this.buildGoalProgress(goal, state);
@@ -310,7 +321,11 @@ export class TrainingService {
           { date: 'Aug 16', value: 360, label: '360' },
           { date: 'Aug 30', value: 380, label: '380' },
           { date: 'Sep 10', value: 405, label: '405' },
-          { date: 'Sep 20', value: Math.round(state.weeklyLoad || 420), label: `${Math.round(state.weeklyLoad || 420)}` },
+          {
+            date: 'Sep 20',
+            value: Math.round(state.weeklyLoad || 420),
+            label: `${Math.round(state.weeklyLoad || 420)}`,
+          },
         ],
       },
       {
@@ -399,9 +414,7 @@ export class TrainingService {
     };
 
     const validPeriodKey: '4W' | '8W' | '3M' | '6M' | '1Y' =
-      periodKey === '4W' || periodKey === '8W' || periodKey === '3M' || periodKey === '1Y'
-        ? periodKey
-        : '6M';
+      periodKey === '4W' || periodKey === '8W' || periodKey === '3M' || periodKey === '1Y' ? periodKey : '6M';
 
     return {
       period: {
@@ -427,7 +440,9 @@ export class TrainingService {
     return this.createAthlete(userId, { experienceLevel: 'intermediate' });
   }
 
-  /** Finds an athlete profile by owner user id. */  async findAthleteByUserId(userId: string): Promise<AthleteView | null> {
+  /** Finds an athlete profile by owner user id. */ async findAthleteByUserId(
+    userId: string,
+  ): Promise<AthleteView | null> {
     const athlete = await this.athleteModel.findOne({ where: { userId } });
     return athlete ? this.toAthleteView(athlete) : null;
   }
@@ -440,15 +455,19 @@ export class TrainingService {
     return goal ? this.toGoalView(goal) : null;
   }
 
-  /** Returns the latest training plan for the authenticated athlete, if any. */
-  async getLatestPlanForAthlete(athleteId: string, actorUserId: string): Promise<TrainingPlanView | null> {
+  /**
+   * Returns the plan in work for the authenticated athlete.
+   * Replaces the legacy "latest by createdAt" lookup so the coach and the AI
+   * always see the plan that is actually running.
+   */
+  async getActivePlanForAthlete(athleteId: string, actorUserId: string): Promise<TrainingPlanView | null> {
     const athlete = await this.loadAthleteOrThrow(athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
+
     const plan = await this.planModel.findOne({
-      where: { athleteId },
+      where: { athleteId, status: 'active' },
       order: [['createdAt', 'DESC']],
     });
-
     if (!plan) {
       return null;
     }
@@ -463,6 +482,16 @@ export class TrainingService {
     });
 
     return this.toPlanView(plan, workouts);
+  }
+
+  /** Latest edits the user made to a plan; context for the coach. */
+  async listRecentUserEdits(planId: string, limit = 5): Promise<AdaptationEventView[]> {
+    const events = await this.adaptationEventModel.findAll({
+      where: { planId, type: ADAPTATION_TYPE_USER_EDIT },
+      order: [['createdAt', 'DESC']],
+      limit,
+    });
+    return events.map((event) => this.toAdaptationEventView(event));
   }
 
   /** Returns recent workouts for the authenticated athlete. */
@@ -483,10 +512,20 @@ export class TrainingService {
   }
 
   /** Returns workouts for the authenticated athlete within a date range. */
-  async listWorkoutsForDateRange(actorUserId: string, fromStr?: string, toStr?: string): Promise<WorkoutView[]> {
+  async listWorkoutsForDateRange(
+    actorUserId: string,
+    fromStr?: string,
+    toStr?: string,
+    includeCancelled = false,
+  ): Promise<WorkoutView[]> {
     const athleteView = await this.getOrCreateAthlete(actorUserId);
 
     const whereClause: Record<string, unknown> = { athleteId: athleteView.id };
+    // Cancelled workouts (cancelled plans / moves) stay out of Today unless
+    // explicitly requested for history views.
+    if (!includeCancelled) {
+      whereClause.status = { [Op.ne]: 'cancelled' };
+    }
     if (fromStr || toStr) {
       const scheduledAtWhere: Record<symbol, Date> = {};
       if (fromStr) {
@@ -526,10 +565,7 @@ export class TrainingService {
       const now = new Date();
       const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
       if (scheduledDate <= todayEnd) {
-        throw new DomainException(
-          'INVALID_DATE',
-          'Плановую тренировку можно добавить только на будущую дату.',
-        );
+        throw new DomainException('INVALID_DATE', 'Плановую тренировку можно добавить только на будущую дату.');
       }
     }
 
@@ -609,8 +645,8 @@ export class TrainingService {
 
   /**
    * Creates a goal linked to the authenticated athlete from the universal
-   * polymorphic payload (PRD sections 9, 19). Validation is schema-aware and
-   * authoritative (PRD section 14).
+   * polymorphic payload. Validation is schema-aware and
+   * authoritative.
    */
   async createGoal(actorUserId: string, dto: CreateGoalDto & { athleteId: string }): Promise<GoalView> {
     const athlete = await this.loadAthleteOrThrow(dto.athleteId);
@@ -657,7 +693,11 @@ export class TrainingService {
     return this.toGoalView(goal);
   }
 
-  /** Generates a training plan for the athlete's active goal. */
+  /**
+   * Generates a plan for an existing goal (AI flow). The plan is stored as a
+   * draft, or created and started in one transaction; see `resolveStart` for
+   * the deprecated no-option behavior.
+   */
   async createPlan(actorUserId: string, dto: CreatePlanDto): Promise<TrainingPlanView> {
     const athlete = await this.loadAthleteOrThrow(dto.athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
@@ -667,133 +707,122 @@ export class TrainingService {
       throw new EntityNotFoundException('Goal', dto.goalId);
     }
 
-    const state = await this.getLatestStateSnapshot(athlete.id, true);
+    const state = this.withMetrics(
+      this.toStateComputation(await this.getLatestStateSnapshot(athlete.id, true)),
+      dto.metrics,
+    );
     const athleteView = {
       ...this.toAthleteView(athlete),
       sessionsPerWeek: dto.targetTrainingFrequency ?? athlete.sessionsPerWeek,
+      weeklyMileageKm: dto.metrics?.weeklyMileageKm ?? athlete.weeklyMileageKm,
     };
-    const generatedPlan = this.trainingEngine.generatePlan(
+    const generated = this.trainingEngine.generatePlan(
       athleteView,
       this.toGoalView(goal),
-      this.toStateComputation(state),
+      state,
       dto.startDate ? new Date(dto.startDate) : new Date(),
     );
 
-    const plan = await this.planModel.create({
-      athleteId: athlete.id,
-      goalId: goal.id,
-      startDate: generatedPlan.startDate,
-      endDate: generatedPlan.endDate,
-      trainingFrequency: dto.targetTrainingFrequency ?? generatedPlan.trainingFrequency,
-      weeklyTargetKm: generatedPlan.weeklyTargetKm,
-      status: 'active',
-      algorithmVersion: TRAINING_LOAD_ALGORITHM_VERSION,
-      weeks: generatedPlan.weeks,
-    });
+    const metricsSnapshot = await this.buildMetricsSnapshot(athlete.id, dto.metrics);
+    const { start, legacy } = this.resolveStart(dto);
+    const plan = await this.planLifecycleService.createPlan(
+      {
+        athleteId: athlete.id,
+        name: dto.name ?? resolveGoalSummaryTitle(this.toGoalView(goal)),
+        notes: dto.notes ?? null,
+        config: this.buildPlanConfig(goal, dto.scheduleSnapshot, {
+          totalWeeks: generated.weeks.length,
+          sessionsPerWeek: dto.targetTrainingFrequency ?? generated.trainingFrequency,
+          ...(dto.structureSnapshot ?? {}),
+        }),
+        creationSource: 'ai',
+        trainingFrequency: dto.targetTrainingFrequency ?? generated.trainingFrequency,
+        weeklyTargetKm: generated.weeklyTargetKm,
+        weeks: this.trainingEngine.toRelativeWeeks(generated),
+        metricsSnapshot,
+      },
+      start,
+      { existingGoalId: goal.id, metrics: metricsSnapshot, clampPastStartDate: legacy },
+    );
 
-    const workouts = await this.persistGeneratedWorkouts(plan, athlete, goal, generatedPlan.workouts);
-    await this.updatePlanWeeksWithWorkoutIds(plan, generatedPlan.weeks, workouts);
-
-    this.eventEmitter.emit('training.plan.generated', new PlanGeneratedEvent(athlete.id, plan.id));
-    return this.toPlanView(plan, workouts);
+    return this.toPlanViewWithWorkouts(plan);
   }
 
-  /** Builds a non-persisted manual plan preview from the user configuration. */
+  /**
+   * Engine generation from a manual configuration. User-entered metrics take
+   * precedence over the stored athlete state (threshold pace, volume).
+   */
+  async generateFromConfig(
+    athleteId: string,
+    input: ManualPlanConfigInput & { metrics?: AthleteMetrics | null; startDate?: string },
+  ): Promise<PlanBuildResult> {
+    const athlete = await this.loadAthleteOrThrow(athleteId);
+    this.ensureManualScheduleConsistency(input);
+
+    const goal = this.buildManualGoalView(athlete.id, input);
+    const athleteView = {
+      ...this.applyManualScheduleToAthlete(athlete, input),
+      weeklyMileageKm: input.metrics?.weeklyMileageKm ?? athlete.weeklyMileageKm,
+    };
+    const state = this.withMetrics(
+      this.toStateComputation(await this.getLatestStateSnapshot(athlete.id, true)),
+      input.metrics,
+    );
+
+    return this.trainingEngine.generatePlan(
+      athleteView,
+      goal,
+      state,
+      input.startDate ? new Date(input.startDate) : new Date(),
+      {
+        totalWeeks: input.structure.totalWeeks,
+        preferredLongRunDay: input.schedule.preferredLongRunDay,
+        focus: input.structure.focus,
+      },
+    );
+  }
+
+  /** Non-persisted manual plan preview with start options for the confirmation sheet. */
   async previewManualPlan(actorUserId: string, dto: PreviewManualPlanDto): Promise<ManualPlanPreviewResponseDto> {
     const athlete = await this.loadAthleteOrThrow((await this.getOrCreateAthlete(actorUserId)).id);
     this.ensureAthleteOwnership(athlete, actorUserId);
 
-    this.ensureManualScheduleConsistency(dto);
-
-    const goal = this.buildManualGoalView(athlete.id, dto);
-    const athleteView = this.applyManualScheduleToAthlete(athlete, dto);
-    const state = await this.getLatestStateSnapshot(athlete.id, true);
-
-    const generatedPlan = this.trainingEngine.generatePlan(
-      athleteView,
-      goal,
-      this.toStateComputation(state),
-      dto.startDate ? new Date(dto.startDate) : new Date(),
-      {
-        totalWeeks: dto.structure.totalWeeks,
-        preferredLongRunDay: dto.schedule.preferredLongRunDay,
-        focus: dto.structure.focus,
-      },
-    );
-
-    return this.toManualPreview(generatedPlan);
+    const generated = await this.generateFromConfig(athlete.id, dto);
+    const preview = this.toManualPreview(generated);
+    preview.startOptions = await this.planLifecycleService.buildStartOptions({
+      athleteId: athlete.id,
+      totalWeeks: generated.weeks.length,
+      targetDate: dto.goal.targetDate ?? null,
+      timezone: dto.timezone,
+    });
+    return preview;
   }
 
-  /** Creates a persisted training plan from the manual configuration and optional workout overrides. */
+  /**
+   * Creates a plan from the manual configuration with the edits the user
+   * made on the preview. Saved as a draft, or created and started in one
+   * transaction; see `resolveStart` for the deprecated no-option behavior.
+   */
   async createManualPlan(actorUserId: string, dto: CreateManualPlanDto): Promise<TrainingPlanView> {
     const athlete = await this.loadAthleteOrThrow((await this.getOrCreateAthlete(actorUserId)).id);
     this.ensureAthleteOwnership(athlete, actorUserId);
 
-    // Authoritative validation: the client must send a configuration the engine accepts.
-    await this.previewManualPlan(actorUserId, dto);
-
     const goalPayload = this.normalizeManualGoalPayload(dto.goal);
     this.ensureGoalPayloadValid(goalPayload);
-    const legacyFields = deriveLegacyRaceFields(goalPayload);
+    const generated = await this.generateFromConfig(athlete.id, dto);
+    const metricsSnapshot = await this.buildMetricsSnapshot(athlete.id, dto.metrics);
 
-    const goalEntity = await this.goalModel.create({
-      athleteId: athlete.id,
-      type: goalPayload.type,
-      payload: {
-        current: goalPayload.current,
-        target: goalPayload.target ?? {},
-        description: goalPayload.description,
-      },
-      raceDistance: legacyFields.raceDistance,
-      targetTimeSeconds: legacyFields.targetTimeSeconds,
-      targetDate: dto.goal.targetDate ?? null,
-      priority: 5,
-      status: ATHLETE_GOAL_STATUSES[0],
-      notes: 'Created via manual plan flow',
-    });
-    this.eventEmitter.emit('training.goal.created', new GoalCreatedEvent(athlete.id, goalEntity.id));
-
-    const athleteView = this.applyManualScheduleToAthlete(athlete, dto);
-    const state = await this.getLatestStateSnapshot(athlete.id, true);
-    const goalView = this.toGoalView(goalEntity);
-
-    const generatedPlan = this.trainingEngine.generatePlan(
-      athleteView,
-      goalView,
-      this.toStateComputation(state),
-      dto.startDate ? new Date(dto.startDate) : new Date(),
+    const weeks = applyRelativeOverrides(
+      this.trainingEngine,
+      this.trainingEngine.toRelativeWeeks(generated),
+      this.toRelativeOverrides(dto.weekOverrides ?? []),
       {
-        totalWeeks: dto.structure.totalWeeks,
-        preferredLongRunDay: dto.schedule.preferredLongRunDay,
-        focus: dto.structure.focus,
+        errorCode: 'MANUAL_PLAN_WORKOUT_INVALID',
+        thresholdPaceSecondsPerKm: metricsSnapshot.thresholdPaceSecondsPerKm ?? null,
       },
     );
 
-    const plan = await this.planModel.create({
-      athleteId: athlete.id,
-      goalId: goalEntity.id,
-      startDate: generatedPlan.startDate,
-      endDate: generatedPlan.endDate,
-      trainingFrequency: generatedPlan.trainingFrequency,
-      weeklyTargetKm: generatedPlan.weeklyTargetKm,
-      status: 'active',
-      creationSource: 'manual',
-      algorithmVersion: TRAINING_LOAD_ALGORITHM_VERSION,
-      weeks: generatedPlan.weeks,
-    });
-
-    const workouts = await this.persistGeneratedWorkouts(plan, athlete, goalEntity, generatedPlan.workouts);
-    const validatedWorkouts = await this.applyManualWorkoutOverrides(
-      plan,
-      athlete,
-      goalEntity,
-      generatedPlan.startDate,
-      dto.weekOverrides ?? [],
-      workouts,
-    );
-    await this.updatePlanWeeksWithWorkoutIds(plan, generatedPlan.weeks, validatedWorkouts);
-
-    // Persist the user-schedule preferences so future regenerations respect them.
+    // The user's schedule preferences drive future generations.
     athlete.availableTrainingDays = this.normalizeDays(
       dto.schedule.trainingDays.map((dayIndex) => TRAINING_WEEKDAY_ORDER[dayIndex]).filter(Boolean),
     );
@@ -804,206 +833,160 @@ export class TrainingService {
     await athlete.save();
     this.eventEmitter.emit('training.athlete.updated', new AthleteUpdatedEvent(athlete.id, actorUserId));
 
-    this.eventEmitter.emit(
-      'training.plan.generated',
-      new PlanGeneratedEvent(athlete.id, plan.id, 'manual'),
+    const { start, legacy } = this.resolveStart(dto);
+    const plan = await this.planLifecycleService.createPlan(
+      {
+        athleteId: athlete.id,
+        name: dto.name ?? resolveGoalSummaryTitle(this.buildManualGoalView(athlete.id, dto)),
+        notes: dto.notes ?? null,
+        config: {
+          goal: {
+            type: goalPayload.type,
+            current: goalPayload.current ?? null,
+            target: goalPayload.target ?? null,
+            description: goalPayload.description ?? null,
+            targetDate: dto.goal.targetDate ?? null,
+            priority: dto.goal.priority ?? 5,
+          },
+          schedule: {
+            trainingDays: dto.schedule.trainingDays,
+            preferredLongRunDay: dto.schedule.preferredLongRunDay ?? null,
+            workoutDurationMinutes: dto.schedule.workoutDurationMinutes ?? null,
+          },
+          structure: {
+            totalWeeks: dto.structure.totalWeeks,
+            sessionsPerWeek: dto.structure.sessionsPerWeek,
+            focus: dto.structure.focus ?? [],
+          },
+        },
+        creationSource: 'manual',
+        trainingFrequency: dto.structure.sessionsPerWeek,
+        weeklyTargetKm: generated.weeklyTargetKm,
+        weeks,
+        metricsSnapshot,
+      },
+      start,
+      { metrics: metricsSnapshot, clampPastStartDate: legacy },
     );
-    return this.toPlanView(plan, validatedWorkouts);
+
+    return this.toPlanViewWithWorkouts(plan);
   }
 
-  /** Applies validated client-side workout overrides to freshly generated planned workouts. */
   /**
-   * Guards the PRD section 11 rule: sessions per week must stay consistent with
-   * the selected training days. Both preview and create go through this check.
+   * Save mode of a create request: a draft, an explicit start, or — for
+   * clients built before plans could be saved without starting — an
+   * immediate start that replaces the active plan (deprecated).
    */
-  private ensureManualScheduleConsistency(dto: PreviewManualPlanDto): void {
-    if (dto.structure.sessionsPerWeek > dto.schedule.trainingDays.length) {
+  private resolveStart(dto: { saveAsDraft?: boolean; start?: PlanStartInput; startDate?: string }): {
+    start: PlanStartInput | null;
+    legacy: boolean;
+  } {
+    if (dto.saveAsDraft) {
+      return { start: null, legacy: false };
+    }
+    if (dto.start) {
+      return { start: dto.start, legacy: false };
+    }
+    return {
+      start: { startDate: (dto.startDate ?? new Date().toISOString()).slice(0, 10), replaceActive: true },
+      legacy: true,
+    };
+  }
+
+  /** Preview ids are `{week}-{order}`; relative keys are `w{week}-{order}`. */
+  private toRelativeOverrides(overrides: ManualPlanWeekOverrideDto[]): RelativeWeekOverride[] {
+    const toKey = (id: string): string => `w${id}`;
+    return overrides.map((override) => ({
+      weekNumber: override.weekNumber,
+      removedWorkoutKeys: (override.removedWorkoutIds ?? []).map(toKey),
+      workoutOverrides: (override.workoutOverrides ?? []).map((change) => ({
+        key: toKey(change.id),
+        type: change.type,
+        dayOfWeek: change.dayOfWeek,
+        distanceKm: change.distanceKm,
+        durationMinutes: change.durationMinutes,
+      })),
+      newWorkouts: override.newWorkouts ?? [],
+    }));
+  }
+
+  private async toPlanViewWithWorkouts(plan: TrainingPlan): Promise<TrainingPlanView> {
+    const workouts =
+      plan.status === 'draft'
+        ? []
+        : await this.workoutModel.findAll({
+            where: { planId: plan.id },
+            order: [
+              ['weekNumber', 'ASC'],
+              ['orderInWeek', 'ASC'],
+            ],
+          });
+    return this.toPlanView(plan, workouts);
+  }
+
+  /** User-entered metrics override the athlete state used for generation. */
+  private withMetrics(state: TrainingStateComputation, metrics?: AthleteMetrics | null): TrainingStateComputation {
+    if (!metrics) {
+      return state;
+    }
+    return {
+      ...state,
+      thresholdPaceSecondsPerKm:
+        this.trainingEngine.resolveThresholdFromMetrics(metrics) ?? state.thresholdPaceSecondsPerKm,
+      thresholdHeartRate: metrics.thresholdHeartRate ?? state.thresholdHeartRate,
+    };
+  }
+
+  /** Metrics snapshot: user input merged over the current estimate. */
+  private async buildMetricsSnapshot(
+    athleteId: string,
+    metrics?: AthleteMetrics | null,
+  ): Promise<TrainingPlanMetricsSnapshot> {
+    const snapshot = await this.planLifecycleService.captureMetricsSnapshot(athleteId);
+    if (!metrics) {
+      return snapshot;
+    }
+
+    const violations = this.athleteMetricsService.validateMetrics(metrics);
+    if (violations.length > 0) {
+      throw new DomainException('PLAN_METRICS_INVALID', `Invalid metrics: ${violations.join(', ')}`, 400);
+    }
+
+    const provided = Object.fromEntries(
+      Object.entries(metrics).filter(([, value]) => value !== null && value !== undefined),
+    );
+    return { ...snapshot, ...provided, capturedAt: new Date().toISOString(), source: 'user_input' };
+  }
+
+  /** Plan config snapshot from a goal entity. */
+  private buildPlanConfig(
+    goal: AthleteGoal,
+    scheduleSnapshot?: Record<string, unknown>,
+    structureSnapshot?: Record<string, unknown>,
+  ): TrainingPlanConfig {
+    return {
+      goal: {
+        type: goal.type,
+        current: goal.payload?.current ?? null,
+        target: goal.payload?.target ?? null,
+        description: goal.payload?.description ?? null,
+        targetDate: goal.targetDate ?? null,
+        priority: goal.priority,
+      },
+      schedule: scheduleSnapshot ?? {},
+      structure: structureSnapshot ?? {},
+    };
+  }
+
+  /** Sessions per week must not exceed the number of selected training days. */
+  private ensureManualScheduleConsistency(input: ManualPlanConfigInput): void {
+    if (input.structure.sessionsPerWeek > input.schedule.trainingDays.length) {
       throw new DomainException(
         'MANUAL_PLAN_CONFIG_INVALID',
-        `sessionsPerWeek (${dto.structure.sessionsPerWeek}) cannot exceed the number of training days (${dto.schedule.trainingDays.length})`,
+        `sessionsPerWeek (${input.structure.sessionsPerWeek}) cannot exceed the number of training days (${input.schedule.trainingDays.length})`,
         400,
       );
     }
-  }
-
-  /**
-   * Applies validated client-side changes (edit / remove / add) to freshly
-   * generated planned workouts. Every change passes Training Engine validation
-   * before persistence (PRD sections 14-16).
-   */
-  private async applyManualWorkoutOverrides(
-    plan: TrainingPlan,
-    athlete: Athlete,
-    goal: AthleteGoal,
-    planStartDate: string,
-    weekOverrides: ManualPlanWeekOverrideDto[],
-    workouts: Workout[],
-  ): Promise<Workout[]> {
-    if (weekOverrides.length === 0) {
-      return workouts;
-    }
-
-    const result = [...workouts];
-    const athleteView = this.toAthleteView(athlete);
-    const goalView = this.toGoalView(goal);
-    const state = this.toStateComputation(await this.getLatestStateSnapshot(athlete.id, true));
-
-    for (const weekOverride of weekOverrides) {
-      let maxOrderInWeek = result
-        .filter((workout) => workout.weekNumber === weekOverride.weekNumber)
-        .reduce((max, workout) => Math.max(max, workout.orderInWeek), 0);
-
-      // --- Removals (PRD section 15: remove workout) ---
-      for (const removedId of weekOverride.removedWorkoutIds ?? []) {
-        const [weekRaw, orderRaw] = removedId.split('-');
-        const removedWeekNumber = Number(weekRaw);
-        const removedOrder = Number(orderRaw);
-        const target = result.find(
-          (workout) =>
-            workout.weekNumber === removedWeekNumber &&
-            workout.orderInWeek === removedOrder &&
-            workout.planId === plan.id,
-        );
-        if (!target) {
-          throw new DomainException(
-            'MANUAL_PLAN_WORKOUT_NOT_FOUND',
-            `Workout ${removedId} not found in the generated plan`,
-            400,
-          );
-        }
-        await target.destroy();
-        const targetIndex = result.indexOf(target);
-        if (targetIndex >= 0) {
-          result.splice(targetIndex, 1);
-        }
-      }
-
-      // --- Edits (PRD section 14: user change → engine validation) ---
-      const workoutByKey = new Map<string, Workout>();
-      for (const workout of result) {
-        workoutByKey.set(`${workout.weekNumber}-${workout.orderInWeek}`, workout);
-      }
-
-      for (const override of weekOverride.workoutOverrides ?? []) {
-        const target = workoutByKey.get(override.id);
-        if (!target) {
-          throw new DomainException(
-            'MANUAL_PLAN_WORKOUT_NOT_FOUND',
-            `Workout ${override.id} not found in the generated plan`,
-            400,
-          );
-        }
-
-        // Merge override over the existing workout, then validate the combined result.
-        const mergedType = override.type ?? target.type;
-        const mergedDistanceKm = override.distanceKm ?? Number(target.distanceKm);
-        const mergedDurationMinutes = override.durationMinutes ?? target.durationMinutes;
-        const validation = this.trainingEngine.validateWorkoutOverride({
-          type: mergedType,
-          dayOfWeek: override.dayOfWeek,
-          distanceKm: mergedDistanceKm,
-          durationMinutes: mergedDurationMinutes,
-        });
-        if (!validation.valid) {
-          throw new DomainException('MANUAL_PLAN_WORKOUT_INVALID', validation.reason, 400);
-        }
-
-        const typeChanged = override.type !== undefined && override.type !== target.type;
-        if (override.type) {
-          target.type = override.type as Workout['type'];
-        }
-        if (override.dayOfWeek !== undefined) {
-          target.scheduledAt = this.trainingEngine.resolveWeekdayDate(
-            new Date(planStartDate),
-            target.weekNumber,
-            override.dayOfWeek,
-          );
-        }
-
-        // A changed type or metrics rebuild target/steps from the engine blueprint
-        // so intensity zones stay consistent with the new workout shape.
-        if (typeChanged || override.distanceKm !== undefined || override.durationMinutes !== undefined) {
-          const planWeek = this.toPlanWeeks(plan.weeks).find((week) => week.weekNumber === target.weekNumber);
-          const weekLoadTarget = planWeek?.weeklyLoadTarget ?? Math.round(plan.weeklyTargetKm);
-          const rebuilt = this.trainingEngine.createWorkoutBlueprint({
-            athlete: athleteView,
-            goal: goalView,
-            state,
-            phase: target.phase,
-            weekNumber: target.weekNumber,
-            workoutType: target.type,
-            scheduledAt: target.scheduledAt,
-            orderInWeek: target.orderInWeek,
-            weekLoadTarget,
-          });
-          target.durationMinutes = override.durationMinutes ?? rebuilt.durationMinutes;
-          target.distanceKm = override.distanceKm ?? rebuilt.distanceKm;
-          target.target = rebuilt.target;
-          target.steps = rebuilt.steps;
-        }
-        await target.save();
-      }
-
-      // --- Additions (PRD section 15: add workout) ---
-      for (const newWorkout of weekOverride.newWorkouts ?? []) {
-        // Validate only the fields the client actually provided: distance is
-        // optional for additions (e.g. a recovery jog), so it must not be
-        // coerced to 0 and fail the engine distance rule.
-        const validation = this.trainingEngine.validateWorkoutOverride({
-          type: newWorkout.type,
-          dayOfWeek: newWorkout.dayOfWeek,
-          ...(newWorkout.distanceKm !== undefined ? { distanceKm: newWorkout.distanceKm } : {}),
-          durationMinutes: newWorkout.durationMinutes,
-        });
-        if (!validation.valid) {
-          throw new DomainException('MANUAL_PLAN_WORKOUT_INVALID', validation.reason, 400);
-        }
-
-        const scheduledAt = this.trainingEngine.resolveWeekdayDate(
-          new Date(planStartDate),
-          weekOverride.weekNumber,
-          newWorkout.dayOfWeek,
-        );
-        const nextOrder = maxOrderInWeek + 1;
-        maxOrderInWeek += 1;
-
-        const planWeek = this.toPlanWeeks(plan.weeks).find((week) => week.weekNumber === weekOverride.weekNumber);
-        const weekLoadTarget = planWeek?.weeklyLoadTarget ?? Math.round(plan.weeklyTargetKm);
-        const blueprint = this.trainingEngine.createWorkoutBlueprint({
-          athlete: athleteView,
-          goal: goalView,
-          state,
-          phase: (planWeek?.phase as string) ?? 'base',
-          weekNumber: weekOverride.weekNumber,
-          workoutType: newWorkout.type as Workout['type'],
-          scheduledAt,
-          orderInWeek: nextOrder,
-          weekLoadTarget,
-        });
-
-        const created = await this.workoutModel.create({
-          athleteId: athlete.id,
-          goalId: goal.id,
-          planId: plan.id,
-          weekNumber: weekOverride.weekNumber,
-          scheduledAt,
-          type: newWorkout.type as Workout['type'],
-          phase: blueprint.phase,
-          status: 'planned',
-          orderInWeek: nextOrder,
-          durationMinutes: newWorkout.durationMinutes,
-          distanceKm: newWorkout.distanceKm ?? blueprint.distanceKm,
-          target: blueprint.target,
-          steps: blueprint.steps,
-          actual: null,
-          analysis: null,
-          completedAt: null,
-        });
-        result.push(created);
-      }
-    }
-
-    return result;
   }
 
   /**
@@ -1011,7 +994,7 @@ export class TrainingService {
    * Legacy flat race fields (raceDistance / targetTimeSeconds) are mapped onto
    * the universal model; universal fields win when both are provided.
    */
-  private normalizeManualGoalPayload(dtoGoal: PreviewManualPlanDto['goal']): GoalPayloadShape & {
+  private normalizeManualGoalPayload(dtoGoal: ManualPlanConfigInput['goal']): GoalPayloadShape & {
     targetDate?: string;
   } {
     const hasUniversalType = Boolean(dtoGoal.type);
@@ -1025,11 +1008,8 @@ export class TrainingService {
       };
     }
 
-    // Legacy flat race payload (PRD section 26 backward compatibility).
-    const legacy = mapLegacyRaceGoal(
-      dtoGoal.raceDistance ?? 'just_running',
-      dtoGoal.targetTimeSeconds ?? null,
-    );
+    // Legacy flat race payload kept for older clients.
+    const legacy = mapLegacyRaceGoal(dtoGoal.raceDistance ?? 'just_running', dtoGoal.targetTimeSeconds ?? null);
     return {
       type: legacy.type,
       target: legacy.target,
@@ -1037,7 +1017,7 @@ export class TrainingService {
     };
   }
 
-  /** Validates the universal goal payload authoritatively (PRD section 14). */
+  /** Validates the universal goal payload authoritatively. */
   private ensureGoalPayloadValid(goal: GoalPayloadShape): void {
     const result = validateGoalPayload(goal);
     if (result.valid) {
@@ -1052,7 +1032,7 @@ export class TrainingService {
   }
 
   /** Builds an in-memory goal view for preview without persisting anything. */
-  private buildManualGoalView(athleteId: string, dto: PreviewManualPlanDto): GoalView {
+  private buildManualGoalView(athleteId: string, dto: ManualPlanConfigInput): GoalView {
     const payload = this.normalizeManualGoalPayload(dto.goal);
     this.ensureGoalPayloadValid(payload);
 
@@ -1079,19 +1059,20 @@ export class TrainingService {
   }
 
   /** Derives the athlete view used by the engine from the user's manual schedule. */
-  private applyManualScheduleToAthlete(athlete: Athlete, dto: PreviewManualPlanDto): AthleteView {
-    const trainingDays = dto.schedule.trainingDays.length > 0
-      ? dto.schedule.trainingDays
-          .map((dayIndex) => TRAINING_WEEKDAY_ORDER[dayIndex])
-          .filter((day): day is (typeof TRAINING_WEEKDAY_ORDER)[number] => Boolean(day))
-      : [...TRAINING_DEFAULT_AVAILABILITY];
+  private applyManualScheduleToAthlete(athlete: Athlete, dto: ManualPlanConfigInput): AthleteView {
+    const trainingDays =
+      dto.schedule.trainingDays.length > 0
+        ? dto.schedule.trainingDays
+            .map((dayIndex) => TRAINING_WEEKDAY_ORDER[dayIndex])
+            .filter((day): day is (typeof TRAINING_WEEKDAY_ORDER)[number] => Boolean(day))
+        : [...TRAINING_DEFAULT_AVAILABILITY];
 
     return {
       ...this.toAthleteView(athlete),
       sessionsPerWeek: dto.structure.sessionsPerWeek,
       availableTrainingDays: trainingDays,
       preferredWorkoutDurationMinutes: dto.schedule.workoutDurationMinutes ?? athlete.preferredWorkoutDurationMinutes,
-    }; 
+    };
   }
 
   /** Maps an engine build result into the preview DTO. */
@@ -1190,23 +1171,25 @@ export class TrainingService {
   async getPlanOverview(id: string, actorUserId: string): Promise<PlanOverviewResponseDto> {
     let plan: TrainingPlan | null = null;
     if (id === 'current') {
-      // Find the most relevant plan: active, then not_started, then most recent completed
+      const athleteId = (await this.getOrCreateAthlete(actorUserId)).id;
+      // `current` is the active plan, or a recently completed one so the user
+      // still sees the result; drafts and cancelled plans are never current.
       plan = await this.planModel.findOne({
-        where: { athleteId: (await this.getOrCreateAthlete(actorUserId)).id, status: 'active' },
+        where: { athleteId, status: 'active' },
         order: [['createdAt', 'DESC']],
       });
 
       if (!plan) {
+        const twoWeeksAgo = new Date(Date.now() - CURRENT_PLAN_COMPLETED_GRACE_DAYS * 86_400_000)
+          .toISOString()
+          .slice(0, 10);
         plan = await this.planModel.findOne({
-          where: { athleteId: (await this.getOrCreateAthlete(actorUserId)).id, status: 'draft' },
-          order: [['createdAt', 'DESC']],
-        });
-      }
-
-      if (!plan) {
-        plan = await this.planModel.findOne({
-          where: { athleteId: (await this.getOrCreateAthlete(actorUserId)).id },
-          order: [['createdAt', 'DESC']],
+          where: {
+            athleteId,
+            status: 'completed',
+            endDate: { [Op.gte]: twoWeeksAgo },
+          },
+          order: [['endDate', 'DESC']],
         });
       }
     } else {
@@ -1220,13 +1203,7 @@ export class TrainingService {
     const athlete = await this.loadAthleteOrThrow(plan.athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
 
-    // Auto-completion logic
-    const now = new Date();
-    const endDate = new Date(plan.endDate);
-    if (plan.status === 'active' && endDate < now) {
-      plan.status = 'completed';
-      await plan.save();
-    }
+    await this.planLifecycleService.completeIfEnded(plan);
 
     const goal = plan.goalId ? await this.loadGoalOrThrow(plan.goalId) : null;
     const workouts = await this.workoutModel.findAll({
@@ -1243,7 +1220,8 @@ export class TrainingService {
       limit: 10,
     });
 
-    const startDate = new Date(plan.startDate);
+    const startDate = plan.startDate ? new Date(plan.startDate) : new Date();
+    const now = new Date();
     let currentWeekNumber = 0;
 
     if (now >= startDate) {
@@ -1252,7 +1230,7 @@ export class TrainingService {
       currentWeekNumber = Math.max(1, Math.min(plan.weeks.length, Math.floor(diffDays / 7) + 1));
     }
 
-    const weeks: PlanWeekDto[] = plan.weeks.map((week: any) => {
+    const weeks: PlanWeekDto[] = plan.weeks.map((week: Record<string, unknown>) => {
       const weekNumber = Number(week.weekNumber);
       const weekWorkouts = workouts.filter((w) => w.weekNumber === weekNumber);
       const totalDistance = weekWorkouts.reduce((sum, w) => sum + w.distanceKm, 0);
@@ -1268,17 +1246,19 @@ export class TrainingService {
         status = 'upcoming';
       }
 
+      const phase = String(week.phase ?? 'base');
+
       return {
         id: `week-${plan.id}-${weekNumber}`,
         weekNumber,
-        phase: (week.phase || 'BASE').toUpperCase(),
-        title: this.getWeekTitle(week.phase, weekNumber),
+        phase: phase.toUpperCase(),
+        title: this.getWeekTitle(phase, weekNumber),
         status,
         plannedWorkoutsCount: weekWorkouts.length,
         plannedDistance: Math.round(totalDistance),
-        plannedLoad: Math.round(week.weeklyLoadTarget || 0),
+        plannedLoad: Math.round(Number(week.weeklyLoadTarget ?? 0)),
         summaryText: `${weekWorkouts.length} workouts · ${Math.round(totalDistance)} km`,
-        intent: this.getWeekIntent(week.phase, weekNumber),
+        intent: this.getWeekIntent(phase),
         keySessions: weekWorkouts
           .filter((w) => ['interval', 'threshold', 'tempo', 'long_run'].includes(w.type))
           .map((w) => `${w.type.charAt(0).toUpperCase() + w.type.slice(1)} ${Math.round(w.distanceKm)}km`),
@@ -1295,21 +1275,22 @@ export class TrainingService {
           }
         : undefined;
 
-    const planStatusMap: Record<string, 'not_started' | 'active' | 'completed'> = {
+    const planStatusMap: Record<string, 'not_started' | 'active' | 'completed' | 'cancelled'> = {
       draft: 'not_started',
       active: 'active',
       completed: 'completed',
       paused: 'active',
+      cancelled: 'cancelled',
     };
 
-    // Universal goals must not assume race distance/time (PRD section 23):
+    // Universal goals must not assume race distance/time:
     // the summary derives from the goal type, custom goals keep user text.
     const goalTitle = goal ? this.resolveGoalSummaryTitle(goal) : undefined;
 
     return {
       plan: {
         id: plan.id,
-        name: goalTitle ?? 'Training Plan',
+        name: plan.name || goalTitle || 'Training Plan',
         goal: {
           title: goalTitle,
           distance: goal?.raceDistance || 'Unknown',
@@ -1323,7 +1304,10 @@ export class TrainingService {
         totalWeeks: plan.weeks.length,
         progress: currentWeekNumber > 0 ? currentWeekNumber / plan.weeks.length : 0,
         currentPhase,
-        startDate: plan.startDate,
+        startDate: plan.startDate ?? undefined,
+        notes: plan.notes,
+        version: plan.version,
+        config: { ...plan.config },
       },
       weeks,
       currentWeekContext,
@@ -1341,13 +1325,13 @@ export class TrainingService {
   /**
    * Builds the type-aware goal progress for the Progress snapshot.
    * Types without a reliable numeric target produce no invented percentages
-   * (PRD section 21).
+   *.
    */
   private buildGoalProgress(
     goal: GoalView | AthleteGoal,
     state: AthleteStateView,
   ): ProgressSnapshotResponseDto['goal'] {
-    const formatTime = (secs: number) => {
+    const formatTime = (secs: number): string => {
       const mins = Math.floor(secs / 60);
       const s = Math.abs(secs % 60);
       return `${mins}:${String(s).padStart(2, '0')}`;
@@ -1355,8 +1339,6 @@ export class TrainingService {
 
     const target = goal.payload?.target ?? {};
     const current = goal.payload?.current ?? {};
-    const statusOf = (ratio: number): 'ON_TRACK' | 'IMPROVING' | 'BEHIND' | 'ACHIEVED' | 'NO_LONGER_ACTIVE' =>
-      ratio >= 1 ? 'ACHIEVED' : ratio >= 0.6 ? 'ON_TRACK' : 'BEHIND';
 
     // Race-family goals: target finish time over a distance.
     const distanceMeters = typeof target.distanceMeters === 'number' ? target.distanceMeters : null;
@@ -1419,9 +1401,7 @@ export class TrainingService {
     const paceTarget = typeof target.paceSecondsPerKm === 'number' ? target.paceSecondsPerKm : null;
     if (paceTarget) {
       const paceCurrent =
-        typeof current.paceSecondsPerKm === 'number'
-          ? current.paceSecondsPerKm
-          : state.thresholdPaceSecondsPerKm;
+        typeof current.paceSecondsPerKm === 'number' ? current.paceSecondsPerKm : state.thresholdPaceSecondsPerKm;
       const reached = paceCurrent !== null && paceCurrent !== undefined && paceCurrent <= paceTarget;
       return {
         type: 'PACE' as const,
@@ -1462,14 +1442,14 @@ export class TrainingService {
     };
   }
 
-  /** Human-readable goal summary used by the plan overview (PRD section 23). */
+  /** Human-readable goal summary used by the plan overview. */
   private resolveGoalSummaryTitle(goal: GoalView | AthleteGoal): string {
     if (goal.type === 'custom' && goal.payload?.description) {
       return goal.payload.description;
     }
 
     const target = goal.payload?.target ?? {};
-    const formatTime = (secs: number) => {
+    const formatTime = (secs: number): string => {
       const mins = Math.floor(secs / 60);
       const s = Math.abs(Math.round(secs % 60));
       return `${mins}:${String(s).padStart(2, '0')}`;
@@ -1510,7 +1490,7 @@ export class TrainingService {
     return `Week ${weekNumber} focus`;
   }
 
-  private getWeekIntent(phase: string, weekNumber: number): string {
+  private getWeekIntent(phase: string): string {
     const p = phase.toLowerCase();
     if (p === 'base') return 'Establish steady running routine and comfortable easy effort aerobic base.';
     if (p === 'build') return 'Build aerobic strength while maintaining recovery between quality sessions.';
@@ -1532,11 +1512,37 @@ export class TrainingService {
     return 'Plan adaptation';
   }
 
-  /** Regenerates the future part of an existing training plan. */
+  /**
+   * Regenerates the future part of an existing training plan.
+   * Deprecated: only active engine-created plans support it;
+   * manual plans must use the editing endpoints instead.
+   */
   async regeneratePlan(actorUserId: string, planId: string, startDate?: string): Promise<TrainingPlanView> {
     const plan = await this.loadPlanOrThrow(planId);
     const athlete = await this.loadAthleteOrThrow(plan.athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
+
+    if (plan.status !== 'active') {
+      throw new DomainException('PLAN_INVALID_STATUS', 'Only the active plan can be regenerated', 409);
+    }
+    if (plan.creationSource === 'manual') {
+      throw new DomainException(
+        'PLAN_REGENERATE_UNSUPPORTED',
+        'Manual plans are edited with the plan editing endpoints instead',
+        409,
+      );
+    }
+
+    // Regeneration rewrites every workout; once training has history it would
+    // destroy it, so started plans are edited with the change endpoints.
+    const completedCount = await this.workoutModel.count({ where: { planId: plan.id, status: 'completed' } });
+    if (completedCount > 0) {
+      throw new DomainException(
+        'PLAN_REGENERATE_UNSUPPORTED',
+        'The plan already has completed workouts; use the plan editing endpoints instead',
+        409,
+      );
+    }
 
     if (!plan.goalId) {
       throw new EntityNotFoundException('Goal', plan.id);
@@ -1552,7 +1558,7 @@ export class TrainingService {
       athleteView,
       this.toGoalView(goal),
       this.toStateComputation(state),
-      startDate ? new Date(startDate) : new Date(plan.startDate),
+      startDate ? new Date(startDate) : new Date(plan.startDate!),
     );
 
     await this.workoutModel.destroy({ where: { planId: plan.id } });
@@ -1562,12 +1568,17 @@ export class TrainingService {
     plan.endDate = generatedPlan.endDate;
     plan.trainingFrequency = generatedPlan.trainingFrequency;
     plan.weeklyTargetKm = generatedPlan.weeklyTargetKm;
-    plan.status = 'active';
     plan.weeks = generatedPlan.weeks;
     await plan.save();
     await this.updatePlanWeeksWithWorkoutIds(plan, generatedPlan.weeks, workouts);
 
     return this.toPlanView(plan, workouts);
+  }
+
+  /** Current metrics estimate for the plan creation prefill. */
+  async getCurrentMetrics(actorUserId: string): Promise<CurrentMetrics> {
+    const athlete = await this.getOrCreateAthlete(actorUserId);
+    return this.athleteMetricsService.currentMetrics(athlete.id);
   }
 
   /** Returns a workout if it belongs to the authenticated user. */
@@ -1596,7 +1607,12 @@ export class TrainingService {
     return analysis.analysis;
   }
 
-  /** Completes a workout, stores load, updates state, and adapts the plan. */
+  /**
+   * Marks the fact of a completed workout. Allowed for
+   * planned workouts in any plan status — including history plans — because
+   * this records a fact instead of editing the plan. Cancelled workouts of a
+   * cancelled plan stay blocked: that run is logged as a separate workout.
+   */
   async completeWorkout(
     actorUserId: string,
     workoutId: string,
@@ -1605,6 +1621,17 @@ export class TrainingService {
     const workout = await this.loadWorkoutOrThrow(workoutId);
     const athlete = await this.loadAthleteOrThrow(workout.athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
+
+    if (workout.status === 'cancelled') {
+      throw new DomainException(
+        'WORKOUT_CANCELLED',
+        'A cancelled workout cannot be marked as completed; log it as a separate workout instead',
+        409,
+      );
+    }
+    if (workout.status === 'skipped') {
+      throw new DomainException('WORKOUT_LOCKED', 'A skipped workout cannot be marked as completed', 409);
+    }
 
     if (workout.status === 'completed' && workout.analysis) {
       const state = await this.getLatestStateSnapshot(athlete.id, true);
@@ -1673,6 +1700,9 @@ export class TrainingService {
     const plan = await this.loadPlanOrThrow(dto.planId);
     const athlete = await this.loadAthleteOrThrow(plan.athleteId);
     this.ensureAthleteOwnership(athlete, actorUserId);
+    if (plan.status !== 'active') {
+      throw new DomainException('PLAN_INVALID_STATUS', 'Only the active plan can be adapted', 409);
+    }
 
     const state = await this.getLatestStateSnapshot(athlete.id, true);
     const workouts = await this.workoutModel.findAll({
@@ -1711,12 +1741,16 @@ export class TrainingService {
     forcedAction?: string,
     reasonOverride?: string,
   ): Promise<AdaptationEventView> {
-    const plan = workout.planId ? await this.loadPlanOrThrow(workout.planId) : null;
+    // Only the active plan adapts; history and drafts are never rewritten,
+    // and sessions before today are locked as history.
+    const workoutPlan = workout.planId ? await this.loadPlanOrThrow(workout.planId) : null;
+    const plan = workoutPlan?.status === 'active' ? workoutPlan : null;
     const upcomingWorkouts = plan
       ? await this.workoutModel.findAll({
           where: {
             planId: plan.id,
             status: 'planned',
+            scheduledAt: { [Op.gte]: new Date(`${todayIsoInTz('UTC')}T00:00:00Z`) },
             [Op.or]: [
               {
                 weekNumber: {
@@ -1748,6 +1782,11 @@ export class TrainingService {
     );
 
     await this.applyWorkoutChanges(upcomingWorkouts, athlete, plan, state, decision.changes);
+    if (plan && decision.changes.length > 0) {
+      // Adaptations change the plan too: bump the version so a pending user
+      // edit based on the previous state is rejected instead of overwriting it.
+      await this.planModel.increment('version', { where: { id: plan.id } });
+    }
 
     const adaptationEvent = await this.adaptationEventModel.create({
       athleteId: athlete.id,
@@ -2174,6 +2213,9 @@ export class TrainingService {
       id: plan.id,
       athleteId: plan.athleteId,
       goalId: plan.goalId,
+      name: plan.name,
+      notes: plan.notes,
+      version: plan.version,
       startDate: plan.startDate,
       endDate: plan.endDate,
       trainingFrequency: plan.trainingFrequency,

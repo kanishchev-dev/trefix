@@ -12,7 +12,6 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 import { ATHLETE_GOAL_TYPES } from '../goal-taxonomy';
 
@@ -76,7 +75,7 @@ export class CreateGoalDto {
   notes?: string;
 }
 
-/** Flat legacy DTO kept for backward compatibility (PRD section 26). */
+/** Flat legacy DTO kept for backward compatibility. */
 export class CreateLegacyGoalDto {
   @ApiProperty()
   @IsString()

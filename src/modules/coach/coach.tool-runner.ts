@@ -24,11 +24,12 @@ export class CoachToolRunner {
           });
           break;
         case 'getCurrentPlan':
+          // Only the plan in work is exposed to the coach.
           results.push({
             name: request.name,
             input: request.arguments,
             output: {
-              plan: await this.trainingService.getLatestPlanForAthlete(athleteId, userId),
+              plan: await this.trainingService.getActivePlanForAthlete(athleteId, userId),
             },
           });
           break;

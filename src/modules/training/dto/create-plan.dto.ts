@@ -1,8 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsInt, IsObject, IsOptional, IsUUID, Max, Min, ValidateNested } from 'class-validator';
 
-export class CreatePlanDto {
+import { AthleteMetricsDto, PlanSaveFieldsDto } from './plan-metrics.dto';
+
+/** Engine-generated plan for an existing goal (AI flow). */
+export class CreatePlanDto extends PlanSaveFieldsDto {
   @ApiProperty()
   @IsUUID()
   athleteId!: string;
@@ -16,10 +19,33 @@ export class CreatePlanDto {
   @IsOptional()
   startDate?: string;
 
-  @ApiProperty({ minimum: 1, maximum: 14, required: false })
+  @ApiProperty({ minimum: 1, maximum: 7, required: false })
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(7)
   @IsOptional()
   targetTrainingFrequency?: number;
+
+  @ApiPropertyOptional({ type: AthleteMetricsDto, description: 'User-entered current metrics' })
+  @ValidateNested()
+  @Type(() => AthleteMetricsDto)
+  @IsOptional()
+  metrics?: AthleteMetricsDto;
+
+  @ApiPropertyOptional({
+    type: Object,
+    description: 'Schedule the plan was configured with, stored in the plan config',
+  })
+  @IsObject()
+  @IsOptional()
+  scheduleSnapshot?: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    type: Object,
+    description: 'Structure the plan was configured with, stored in the plan config',
+  })
+  @IsObject()
+  @IsOptional()
+  structureSnapshot?: Record<string, unknown>;
 }
