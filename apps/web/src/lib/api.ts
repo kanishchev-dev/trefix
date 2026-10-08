@@ -23,7 +23,7 @@ import {
 
 import { authPaths } from "@/lib/auth";
 
-type ApiMethod = "GET" | "POST" | "PATCH" | "DELETE";
+type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 /** Query string values; arrays become repeated parameters rather than a joined blob. */
 type SearchParamValue = string | number | readonly string[] | undefined;

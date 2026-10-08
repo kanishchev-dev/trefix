@@ -10,7 +10,21 @@ import { ShieldXIcon } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/shared/i18n";
 
-const SECTION_PERMISSIONS: Array<{ prefix: string; permission: string }> = [
+type SectionPermission =
+  | { prefix: string; permission: string }
+  | { pattern: RegExp; permission: string };
+
+const SECTION_PERMISSIONS: SectionPermission[] = [
+  // A user's plans are a section of their own inside the user profile: creating
+  // and rebuilding need the manage right, viewing the read right.
+  {
+    pattern: /^\/users\/[^/]+\/plans\/(create|[^/]+\/rebuild)\/?$/,
+    permission: "training.userplans.manage",
+  },
+  {
+    pattern: /^\/users\/[^/]+\/plans(\/|$)/,
+    permission: "training.userplans.read",
+  },
   { prefix: "/users/list", permission: "users.read" },
   { prefix: "/users/create", permission: "users.create" },
   { prefix: "/users", permission: "users.read" },
@@ -20,8 +34,12 @@ const SECTION_PERMISSIONS: Array<{ prefix: string; permission: string }> = [
   { prefix: "/profile", permission: "account.update" },
 ];
 
-function requiredPermission(pathname: string): string | null {
-  const match = SECTION_PERMISSIONS.find((entry) => pathname.startsWith(entry.prefix));
+export function requiredPermission(pathname: string): string | null {
+  const match = SECTION_PERMISSIONS.find((entry) =>
+    "pattern" in entry
+      ? entry.pattern.test(pathname)
+      : pathname.startsWith(entry.prefix),
+  );
   return match?.permission ?? null;
 }
 

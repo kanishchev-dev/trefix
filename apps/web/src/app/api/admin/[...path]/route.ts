@@ -15,7 +15,7 @@ const ACCESS_COOKIE = "trefix_access_token";
 const REFRESH_COOKIE = "trefix_refresh_token";
 const SESSION_COOKIE = "trefix_session_id";
 
-type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 type AuthTokens = {
   accessToken: string;
@@ -199,6 +199,13 @@ export async function POST(
   context: { params: Promise<{ path: string[] }> },
 ) {
   return handleRequest(request, context, "POST");
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+) {
+  return handleRequest(request, context, "PUT");
 }
 
 export async function PATCH(

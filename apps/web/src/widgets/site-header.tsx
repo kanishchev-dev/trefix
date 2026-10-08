@@ -55,6 +55,30 @@ export function resolveBreadcrumbs(pathname: string): BreadcrumbItemDef[] {
     return items;
   }
 
+  const planMatch = /^\/users\/([^/]+)\/plans\/([^/]+)(\/rebuild)?\/?$/.exec(
+    pathname,
+  );
+  if (planMatch) {
+    const [, userId, planSegment, rebuild] = planMatch;
+    const items: BreadcrumbItemDef[] = [
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.user", href: `/users/${userId}` },
+      { key: "breadcrumbs.plans", href: `/users/${userId}?tab=plans` },
+    ];
+    if (planSegment === "create") {
+      items.push({ key: "breadcrumbs.createPlan" });
+    } else if (rebuild) {
+      items.push({
+        key: "breadcrumbs.plan",
+        href: `/users/${userId}/plans/${planSegment}`,
+      });
+      items.push({ key: "breadcrumbs.rebuild" });
+    } else {
+      items.push({ key: "breadcrumbs.plan" });
+    }
+    return items;
+  }
+
   if (pathname.startsWith("/users")) {
     const items: BreadcrumbItemDef[] = [
       { key: "breadcrumbs.users", href: "/users/list" },

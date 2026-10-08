@@ -71,4 +71,23 @@ describe("resolveBreadcrumbs", () => {
       { key: "breadcrumbs.edit" },
     ]);
   });
+
+  it("resolves a user plan path", () => {
+    expect(resolveBreadcrumbs("/users/u1/plans/p1")).toEqual([
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.user", href: "/users/u1" },
+      { key: "breadcrumbs.plans", href: "/users/u1?tab=plans" },
+      { key: "breadcrumbs.plan" },
+    ]);
+  });
+
+  it("resolves plan creation and rebuild paths", () => {
+    expect(resolveBreadcrumbs("/users/u1/plans/create").at(-1)).toEqual({
+      key: "breadcrumbs.createPlan",
+    });
+    expect(resolveBreadcrumbs("/users/u1/plans/p1/rebuild").slice(-2)).toEqual([
+      { key: "breadcrumbs.plan", href: "/users/u1/plans/p1" },
+      { key: "breadcrumbs.rebuild" },
+    ]);
+  });
 });

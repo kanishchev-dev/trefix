@@ -49,12 +49,13 @@ import {
 } from "@/features/permissions/hooks/use-permissions";
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
 import { UserTrainingCalendar } from "@/features/training-calendar/components/user-training-calendar";
+import { UserPlansPanel } from "@/features/training-plans/components/user-plans-panel";
 import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 import { CopyButton } from "@/widgets/copy-button";
 import { TableSkeleton } from "@/widgets/data-state";
 
-const USER_DETAIL_TABS = ["profile", "access", "training"] as const;
+const USER_DETAIL_TABS = ["profile", "access", "training", "plans"] as const;
 type UserDetailTab = (typeof USER_DETAIL_TABS)[number];
 
 const isUserDetailTab = (value: unknown): value is UserDetailTab =>
@@ -117,11 +118,18 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
   const canManage = hasPermission("users.manage");
   const canDelete = hasPermission("users.delete") && !user.isSystem;
   const canReadCalendar = hasPermission("training.calendar.read");
+  const canReadPlans = hasPermission("training.userplans.read");
+  const tabAllowed: Record<UserDetailTab, boolean> = {
+    profile: true,
+    access: true,
+    training: canReadCalendar,
+    plans: canReadPlans,
+  };
 
   // The active tab lives in the URL so a reload or a shared link reopens it.
   const requestedTab = searchParams.get("tab");
   const activeTab: UserDetailTab =
-    isUserDetailTab(requestedTab) && (requestedTab !== "training" || canReadCalendar)
+    isUserDetailTab(requestedTab) && tabAllowed[requestedTab]
       ? requestedTab
       : "profile";
 
@@ -277,6 +285,7 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
           {canReadCalendar ? (
             <TabsTrigger value="training">{t("users.tabs.training")}</TabsTrigger>
           ) : null}
+          {canReadPlans ? <TabsTrigger value="plans">{t("users.tabs.plans")}</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent value="profile" className="mt-4">
@@ -435,6 +444,12 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
         {canReadCalendar ? (
           <TabsContent value="training" className="mt-4">
             <UserTrainingCalendar userId={user.id} />
+          </TabsContent>
+        ) : null}
+
+        {canReadPlans ? (
+          <TabsContent value="plans" className="mt-4">
+            <UserPlansPanel userId={user.id} />
           </TabsContent>
         ) : null}
       </Tabs>
