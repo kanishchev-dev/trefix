@@ -17,6 +17,8 @@ import { Workout } from './entities/workout.entity';
 import { PLAN_COMPLETION_QUEUE } from './jobs/plan-completion.constants';
 import { PlanCompletionProcessor } from './jobs/plan-completion.processor';
 import { PlanCompletionScheduler } from './jobs/plan-completion.scheduler';
+import { AdminPlansController } from './plans/admin-plans.controller';
+import { AdminPlansService } from './plans/admin-plans.service';
 import { AthleteMetricsService } from './plans/athlete-metrics.service';
 import { PlanChangeCalculator } from './plans/plan-change-calculator';
 import { PlanEditingService } from './plans/plan-editing.service';
@@ -49,9 +51,10 @@ import { TrainingService } from './training.service';
   ],
   // PlansController goes first: its static routes (`plans/active`, `plans/counts`)
   // must be registered before any parameterised `plans/:id` route.
-  controllers: [PlansController, TrainingController, AdminTrainingController],
+  controllers: [PlansController, TrainingController, AdminTrainingController, AdminPlansController],
   providers: [
     AdminTrainingService,
+    AdminPlansService,
     TrainingService,
     TrainingEngine,
     TrainingListener,

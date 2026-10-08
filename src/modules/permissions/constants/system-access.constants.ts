@@ -279,6 +279,20 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     description: 'Add and edit workouts in the calendar of any user from the admin panel',
   },
   {
+    key: 'training.userplans.read',
+    module: 'training',
+    resource: 'userplans',
+    action: 'read',
+    description: 'View training plans of any user in the admin panel, with diffs and previews',
+  },
+  {
+    key: 'training.userplans.manage',
+    module: 'training',
+    resource: 'userplans',
+    action: 'manage',
+    description: 'Create, edit, start, cancel, delete and rebuild training plans of any user from the admin panel',
+  },
+  {
     key: 'training.analyze',
     module: 'training',
     resource: '',
@@ -309,6 +323,7 @@ export const DEFAULT_USER_PERMISSION_KEYS: readonly string[] = SYSTEM_PERMISSION
   (permission) =>
     !permission.key.startsWith('permissions.') &&
     !permission.key.startsWith('training.calendar.') &&
+    !permission.key.startsWith('training.userplans.') &&
     !['users.create', 'users.update', 'users.delete', 'users.manage', 'settings.update'].includes(permission.key),
 ).map((permission) => permission.key);
 

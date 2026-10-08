@@ -12,7 +12,7 @@ export const TRAINING_PLAN_STATUSES = ['draft', 'active', 'completed', 'paused',
 /** List groups of the plans library screen. */
 export const PLAN_LIST_GROUPS = ['draft', 'active', 'history'] as const;
 /** Why a plan left the `active` state. */
-export const PLAN_CANCEL_REASONS = ['replaced', 'user', 'migration'] as const;
+export const PLAN_CANCEL_REASONS = ['replaced', 'user', 'admin', 'migration'] as const;
 
 export const PLAN_NAME_MAX_LENGTH = 80;
 export const PLAN_NOTES_MAX_LENGTH = 2000;

@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
 
 import { Athlete } from './entities/athlete.entity';
+import { AdminPlanActionEvent } from './events/admin-plan-action.event';
 import { AthleteCreatedEvent } from './events/athlete-created.event';
 import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
@@ -105,6 +106,17 @@ export class TrainingListener {
   @OnEvent('training.workout.updated')
   async handleWorkoutUpdated(event: WorkoutUpdatedEvent): Promise<void> {
     await this.emitWorkoutsChanged(event.athleteId, 'updated', event.workoutId, event.planId);
+  }
+
+  /**
+   * Audit trail of admin-panel plan changes. The plan's own domain events
+   * already refresh the athlete's clients; this one only records the actor.
+   */
+  @OnEvent('training.plan.admin_action')
+  handleAdminPlanAction(event: AdminPlanActionEvent): void {
+    this.logger.log(
+      `training.plan.admin_action: ${event.action} plan ${event.planId} of user ${event.userId} by ${event.actorUserId}`,
+    );
   }
 
   @OnEvent('training.plan.adapted')

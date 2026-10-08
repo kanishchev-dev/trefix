@@ -140,6 +140,8 @@ describe('SYSTEM_PERMISSION_CATALOG', () => {
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('settings.update');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.calendar.read');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.calendar.manage');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.userplans.read');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.userplans.manage');
     expect(DEFAULT_USER_PERMISSION_KEYS).toContain('training.plans.read');
   });
 
