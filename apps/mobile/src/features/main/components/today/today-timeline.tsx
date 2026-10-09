@@ -7,6 +7,7 @@ import { DayHeader, WorkoutCard, RecoveryCard, EmptyDayCard } from "./day-event-
 import { AddWorkoutSection } from "./add-workout-section";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
 import { formatDateLong, type AppLanguage, type MainCopy } from "../../../../locales";
+import { parseIsoDate } from "../../../plans/lib/plan-dates";
 
 type Props = {
   theme: ThemeTokens;
@@ -54,7 +55,7 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
 
     if (!day) return null;
 
-    const dateObj = new Date(day.date);
+    const dateObj = parseIsoDate(day.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);

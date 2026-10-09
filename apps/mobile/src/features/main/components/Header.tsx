@@ -29,7 +29,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 const HEADER_CONTENT_HEIGHT = 56;
 const BACKGROUND_TOP_OFFSET = 0; // Start blur exactly from the notch boundary
-const BACKGROUND_TOTAL_HEIGHT = 90; // Slightly reduced for cleaner look
+const BACKGROUND_TOTAL_HEIGHT = 82;
 const ACTION_SIZE = 44;
 const ACTION_SLOT_WIDTH = 96;
 
@@ -254,7 +254,7 @@ export function Header({
                   "rgba(0, 0, 0, 0.05)",
                   "rgba(0, 0, 0, 0)",
                 ]}
-                locations={[0, 0.7, 0.8, 0.88, 0.94, 0.97, 0.99, 1]}
+                locations={[0, 0.55, 0.68, 0.8, 0.9, 0.96, 0.99, 1]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={StyleSheet.absoluteFill}
@@ -265,7 +265,7 @@ export function Header({
               <BlurView
                 blurMethod="dimezisBlurViewSdk31Plus"
                 blurTarget={blurTarget}
-                intensity={25}
+                intensity={16}
                 pointerEvents="none"
                 style={StyleSheet.absoluteFill}
                 tint="regular"
@@ -277,7 +277,7 @@ export function Header({
                   StyleSheet.absoluteFill,
                   {
                     backgroundColor: theme.color.background,
-                    opacity: themeMode === "dark" ? 0.9 : 0.8,
+                    opacity: themeMode === "dark" ? 0.72 : 0.62,
                   },
                 ]}
               />

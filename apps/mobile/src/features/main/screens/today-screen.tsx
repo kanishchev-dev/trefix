@@ -21,6 +21,7 @@ import { WorkoutGoalSheet, type ManualWorkoutType } from "../components/today/wo
 import { useWorkouts } from "../hooks/use-workouts";
 import { type Day, type DayEvent, type CalendarMode } from "../today-types";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
+import { toIsoDate, workoutLocalDate } from "../../plans/lib/plan-dates";
 
 type Props = {
   theme: ThemeTokens;
@@ -35,7 +36,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const timelineRef = useRef<TodayTimelineRef>(null);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [visibleDate, setVisibleDate] = useState(new Date().toISOString().split("T")[0]);
+  const [visibleDate, setVisibleDate] = useState(toIsoDate(new Date()));
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("week");
 
   // Sheet states
@@ -52,8 +53,8 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
     const to = new Date(selectedDate);
     to.setDate(to.getDate() + 30);
     return {
-      fromStr: from.toISOString().split("T")[0],
-      toStr: to.toISOString().split("T")[0],
+      fromStr: toIsoDate(from),
+      toStr: toIsoDate(to),
     };
   }, [selectedDate]);
 
@@ -67,7 +68,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
 
     for (const workout of workoutsData) {
       byId.set(workout.id, workout);
-      const dateStr = new Date(workout.scheduledAt).toISOString().split("T")[0];
+      const dateStr = workoutLocalDate(workout.scheduledAt);
 
       const existing = map.get(dateStr) || [];
       const isRecovery = workout.type === "recovery";
@@ -93,14 +94,14 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const eventDates = useMemo(() => Array.from(daysMap.keys()), [daysMap]);
 
   const selectedDay = useMemo(() => {
-    const dateStr = selectedDate.toISOString().split("T")[0];
+    const dateStr = toIsoDate(selectedDate);
     const events = daysMap.get(dateStr) || [];
     return { date: dateStr, events };
   }, [selectedDate, daysMap]);
 
   const handleSelectDate = useCallback((date: Date) => {
     setSelectedDate(date);
-    setVisibleDate(date.toISOString().split("T")[0]);
+    setVisibleDate(toIsoDate(date));
   }, []);
 
   const handleBackToToday = () => {
@@ -124,7 +125,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   );
 
   const isShowingToday = useMemo(() => {
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = toIsoDate(new Date());
     return visibleDate === todayStr;
   }, [visibleDate]);
 
@@ -224,7 +225,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       {/* Add Workout Modal Sheet */}
       <AddWorkoutSheet
         copy={copy}
-        defaultDate={selectedDate.toISOString().split("T")[0]}
+        defaultDate={toIsoDate(selectedDate)}
         onClose={() => setAddSheetVisible(false)}
         theme={theme}
         themeMode={themeMode}
@@ -234,7 +235,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       {/* Planned Workout Goal Sheet */}
       <WorkoutGoalSheet
         copy={copy}
-        date={selectedDate.toISOString().split("T")[0]}
+        date={toIsoDate(selectedDate)}
         onClose={() => setGoalSheetVisible(false)}
         theme={theme}
         themeMode={themeMode}

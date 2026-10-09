@@ -16,7 +16,9 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { StatusBar } from "expo-status-bar";
+
+import { getMobileThemeTokens, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { AuthSocialButtons } from "./components/auth-social-buttons";
 import { AuthDivider } from "./components/auth-divider";
 import { AuthEmailField } from "./components/auth-email-field";
@@ -30,6 +32,7 @@ if (
 }
 
 type Props = {
+  /** Ignored: the screen is always dark, see `SCREEN_THEME`. */
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: AuthCopy;
@@ -45,9 +48,15 @@ type Props = {
   onApplePress?: () => void | Promise<void>;
 };
 
+/**
+ * The background video is always covered by the dark overlay, in both app themes:
+ * a light veil washes the video out. Everything on top uses the dark palette too,
+ * so text and buttons stay readable on it.
+ */
+const SCREEN_MODE: ThemeMode = "dark";
+const SCREEN_THEME = getMobileThemeTokens(SCREEN_MODE);
+
 export function AuthScreen({
-  theme,
-  themeMode,
   copy,
   email,
   isEmailSubmitting = false,
@@ -60,6 +69,8 @@ export function AuthScreen({
   onGooglePress,
   onApplePress,
 }: Props) {
+  const theme = SCREEN_THEME;
+  const themeMode = SCREEN_MODE;
   const insets = useSafeAreaInsets();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const isFocused = useIsFocused();
@@ -125,6 +136,7 @@ export function AuthScreen({
 
   return (
     <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+      {isFocused ? <StatusBar style="light" /> : null}
       <VideoView
         style={styles.video}
         player={videoPlayer}

@@ -1,42 +1,41 @@
-import React, { useState, useMemo, useEffect } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-  Platform,
-  UIManager,
-  Dimensions,
-  LayoutAnimation,
-} from "react-native";
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-  interpolate,
   Extrapolation,
+  cancelAnimation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  type SharedValue,
 } from "react-native-reanimated";
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
-import {
-  getShortDayName,
-  type AppLanguage,
-} from "../../../../locales";
-import { type CalendarMode } from "../../today-types";
+import * as Haptics from "expo-haptics";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+
+import { getShortDayName, type AppLanguage } from "../../../../locales";
+import { toIsoDate } from "../../../plans/lib/plan-dates";
+import { type CalendarMode } from "../../today-types";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const PAGE_WIDTH = SCREEN_WIDTH - 32;
-const SWIPE_THRESHOLD = PAGE_WIDTH * 0.4;
-const WEEK_CONTENT_HEIGHT = 44;
-const MONTH_CONTENT_HEIGHT = 224;
+
+/** One day cell: 32 px circle, 2 px gap, 6 px event marker. */
+const DAY_HEIGHT = 40;
+const ROW_PADDING = 4;
+const WEEK_HEIGHT = ROW_PADDING + DAY_HEIGHT;
+const MONTH_HEIGHT = ROW_PADDING + 6 * DAY_HEIGHT;
+const SHUTTER_RANGE = MONTH_HEIGHT - WEEK_HEIGHT;
+
+/** Shutter spring: quick and without bounce, but it carries the flick's velocity. */
+const SHUTTER_SPRING = { damping: 26, stiffness: 300, mass: 0.8 };
+const PAGE_SPRING = { damping: 30, stiffness: 280, mass: 0.8, overshootClamping: true };
+const RETURN_SPRING = { damping: 22, stiffness: 240 };
+/** A flick faster than this decides the direction regardless of how far it went. */
+const FLICK_VELOCITY = 450;
+const AXIS_LOCK_DISTANCE = 8;
 
 type Props = {
   theme: ThemeTokens;
@@ -46,12 +45,13 @@ type Props = {
   onSelectDate: (date: Date) => void;
   calendarMode: CalendarMode;
   setCalendarMode: (mode: CalendarMode) => void;
-  eventDates: string[]; // YYYY-MM-DD
+  eventDates: string[]; // YYYY-MM-DD, device calendar dates
 };
+
+type Shift = (delta: number) => void;
 
 export function TodayCalendarHeader({
   theme,
-  themeMode,
   language,
   selectedDate,
   onSelectDate,
@@ -59,322 +59,293 @@ export function TodayCalendarHeader({
   setCalendarMode,
   eventDates,
 }: Props) {
-  const insets = useSafeAreaInsets();
-  const [viewDate, setViewDate] = useState(new Date(selectedDate));
+  const [viewDate, setViewDate] = useState(() => new Date(selectedDate));
+  const isMonth = calendarMode === "month";
 
   useEffect(() => {
     setViewDate(new Date(selectedDate));
   }, [selectedDate]);
 
-  const isMonth = calendarMode === "month";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const eventSet = useMemo(() => new Set(eventDates), [eventDates]);
+  const todayIso = toIsoDate(new Date());
+  const selectedIso = toIsoDate(selectedDate);
 
-  const changeMonth = (delta: number) => {
-    const next = new Date(viewDate);
-    next.setMonth(next.getMonth() + delta);
-    setViewDate(next);
-  };
+  // ------------------------------------------------------------------ animation state
 
-  const changeWeek = (delta: number) => {
-    const next = new Date(viewDate);
-    next.setDate(next.getDate() + delta * 7);
-    setViewDate(next);
-  };
-
-  const toggleMode = () => {
-    runOnJS(setCalendarMode)(isMonth ? "week" : "month");
-  };
-
-  // --- Advanced Gestures & Animations ---
+  /** 0 = week, 1 = month; follows the finger while the shutter is dragged. */
+  const progress = useSharedValue(isMonth ? 1 : 0);
+  /** Where the shutter is heading after a gesture, so the mode effect does not restart it. */
+  const settlingTo = useSharedValue(isMonth ? 1 : 0);
+  const startProgress = useSharedValue(0);
   const translateX = useSharedValue(0);
-  const shutterProgress = useSharedValue(isMonth ? 1 : 0);
-  const gestureAxis = useSharedValue(0); // 0: none, 1: horizontal, 2: vertical
+  const axis = useSharedValue(0); // 0 undecided, 1 horizontal, 2 vertical
+  const modeValue = useSharedValue(isMonth ? 1 : 0);
 
   useEffect(() => {
-    shutterProgress.value = withSpring(isMonth ? 1 : 0, { damping: 20, stiffness: 100 });
-  }, [isMonth]);
+    const target = isMonth ? 1 : 0;
+    modeValue.value = target;
+    if (settlingTo.value === target) return;
+    settlingTo.value = target;
+    progress.value = withSpring(target, SHUTTER_SPRING);
+  }, [isMonth, modeValue, progress, settlingTo]);
 
-  const carouselAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+  // A page turn finishes on the UI thread; the carousel snaps back only once the new
+  // page is committed, so the old content never flashes in between.
+  const pendingReset = useRef(false);
+  const shiftPage = useCallback<Shift>(
+    (delta) => {
+      pendingReset.current = true;
+      setViewDate((current) => {
+        const next = new Date(current);
+        if (modeValue.value === 1) next.setMonth(next.getMonth() + delta, 1);
+        else next.setDate(next.getDate() + delta * 7);
+        return next;
+      });
+      void Haptics.selectionAsync();
+    },
+    [modeValue],
+  );
+  useLayoutEffect(() => {
+    if (!pendingReset.current) return;
+    pendingReset.current = false;
+    translateX.value = 0;
+  }, [viewDate, translateX]);
+
+  const commitMode = useCallback(
+    (target: number) => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setCalendarMode(target === 1 ? "month" : "week");
+    },
+    [setCalendarMode],
+  );
+
+  const toggle = useCallback(() => {
+    const target = isMonth ? 0 : 1;
+    settlingTo.value = target;
+    progress.value = withSpring(target, SHUTTER_SPRING);
+    commitMode(target);
+  }, [isMonth, settlingTo, progress, commitMode]);
+
+  const gesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .onStart(() => {
+          axis.value = 0;
+          startProgress.value = progress.value;
+          cancelAnimation(progress);
+        })
+        .onUpdate((event) => {
+          const { translationX, translationY } = event;
+          if (axis.value === 0) {
+            const ax = Math.abs(translationX);
+            const ay = Math.abs(translationY);
+            // Pages turn only while the shutter rests fully open or closed.
+            const settled = startProgress.value < 0.01 || startProgress.value > 0.99;
+            if (ax > AXIS_LOCK_DISTANCE && ax > ay && settled) axis.value = 1;
+            else if (ay > AXIS_LOCK_DISTANCE && ay >= ax) axis.value = 2;
+          }
+          if (axis.value === 1) {
+            translateX.value = translationX;
+          } else if (axis.value === 2) {
+            progress.value = Math.min(1, Math.max(0, startProgress.value + translationY / SHUTTER_RANGE));
+          }
+        })
+        .onEnd((event) => {
+          if (axis.value === 2) {
+            const velocity = event.velocityY / SHUTTER_RANGE;
+            let target: number;
+            if (Math.abs(event.velocityY) > FLICK_VELOCITY) target = event.velocityY > 0 ? 1 : 0;
+            else target = progress.value + velocity * 0.15 > 0.5 ? 1 : 0;
+            settlingTo.value = target;
+            progress.value = withSpring(target, { ...SHUTTER_SPRING, velocity });
+            if (target !== modeValue.value) runOnJS(commitMode)(target);
+          } else if (axis.value === 1) {
+            const { translationX, velocityX } = event;
+            const flick = Math.abs(velocityX) > FLICK_VELOCITY;
+            const direction = flick
+              ? velocityX < 0
+                ? 1
+                : -1
+              : translationX < -PAGE_WIDTH * 0.35
+                ? 1
+                : translationX > PAGE_WIDTH * 0.35
+                  ? -1
+                  : 0;
+            if (direction === 0) {
+              translateX.value = withSpring(0, { ...RETURN_SPRING, velocity: velocityX });
+            } else {
+              translateX.value = withSpring(-direction * PAGE_WIDTH, { ...PAGE_SPRING, velocity: velocityX }, (finished) => {
+                if (finished) runOnJS(shiftPage)(direction);
+              });
+            }
+          }
+        })
+        .onFinalize(() => {
+          // A touch that never picked an axis leaves the shutter where it rests.
+          if (axis.value === 0 && progress.value !== settlingTo.value) {
+            progress.value = withSpring(settlingTo.value, SHUTTER_SPRING);
+          }
+          axis.value = 0;
+        }),
+    [axis, startProgress, progress, translateX, settlingTo, modeValue, commitMode, shiftPage],
+  );
+
+  // ------------------------------------------------------------------ styles
+
+  const shutterStyle = useAnimatedStyle(() => ({
+    height: interpolate(progress.value, [0, 1], [WEEK_HEIGHT, MONTH_HEIGHT], Extrapolation.CLAMP),
   }));
-
-  const shutterAnimatedStyle = useAnimatedStyle(() => {
-    const height = interpolate(
-      shutterProgress.value,
-      [0, 1],
-      [WEEK_CONTENT_HEIGHT, MONTH_CONTENT_HEIGHT],
-      Extrapolation.CLAMP
-    );
-    return { height };
-  });
-
-  const weekViewAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(shutterProgress.value, [0, 0.4], [1, 0], Extrapolation.CLAMP),
-    pointerEvents: shutterProgress.value > 0.4 ? "none" : "auto",
+  const carouselStyle = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }] }));
+  const handleStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: interpolate(progress.value, [0, 1], [1, 0.75], Extrapolation.CLAMP) }],
   }));
-
-  const monthViewAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(shutterProgress.value, [0.4, 1], [0, 1], Extrapolation.CLAMP),
-    transform: [
-      { scale: interpolate(shutterProgress.value, [0, 1], [0.95, 1], Extrapolation.CLAMP) }
-    ],
-    pointerEvents: shutterProgress.value < 0.6 ? "none" : "auto",
-  }));
-
-  const handleAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{
-      scaleX: interpolate(shutterProgress.value, [0, 1], [1, 0.75], Extrapolation.CLAMP)
-    }]
-  }));
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      const { translationX, translationY } = event;
-
-      // Lock gesture axis on first significant movement
-      if (gestureAxis.value === 0) {
-        if (Math.abs(translationX) > Math.abs(translationY) && Math.abs(translationX) > 10) {
-          gestureAxis.value = 1; // Horizontal Carousel
-        } else if (Math.abs(translationY) > Math.abs(translationX) && Math.abs(translationY) > 10) {
-          gestureAxis.value = 2; // Vertical Shutter
-        }
-      }
-
-      if (gestureAxis.value === 1) {
-        // Only allow horizontal carousel if fully expanded or fully collapsed
-        if (shutterProgress.value === 0 || shutterProgress.value === 1) {
-          translateX.value = translationX;
-        }
-      } else if (gestureAxis.value === 2) {
-        // Shutter logic
-        const delta = translationY / (MONTH_CONTENT_HEIGHT - WEEK_CONTENT_HEIGHT);
-        const startValue = isMonth ? 1 : 0;
-        shutterProgress.value = Math.max(0, Math.min(1, startValue + delta));
-      }
-    })
-    .onEnd((event) => {
-      const { translationX, translationY, velocityX, velocityY } = event;
-      const currentAxis = gestureAxis.value;
-      gestureAxis.value = 0; // Reset for next gesture
-
-      if (currentAxis === 2 || (currentAxis === 0 && Math.abs(translationY) > 20)) {
-        const shouldExpand = shutterProgress.value > 0.5 || velocityY > 500;
-        const shouldCollapse = shutterProgress.value <= 0.5 || velocityY < -500;
-
-        if (shouldExpand && !isMonth) {
-          runOnJS(setCalendarMode)("month");
-        } else if (shouldCollapse && isMonth) {
-          runOnJS(setCalendarMode)("week");
-        } else {
-          shutterProgress.value = withSpring(isMonth ? 1 : 0, { damping: 20 });
-        }
-        translateX.value = withSpring(0);
-      } else if (currentAxis === 1) {
-        const snapThreshold = SWIPE_THRESHOLD;
-        const fastSwipeThreshold = 500;
-        const shouldSwipeNext = translationX < -snapThreshold || velocityX < -fastSwipeThreshold;
-        const shouldSwipePrev = translationX > snapThreshold || velocityX > fastSwipeThreshold;
-
-        if (shouldSwipeNext) {
-          translateX.value = withTiming(-PAGE_WIDTH, { duration: 200 }, () => {
-            runOnJS(isMonth ? changeMonth : changeWeek)(1);
-            translateX.value = 0;
-          });
-        } else if (shouldSwipePrev) {
-          translateX.value = withTiming(PAGE_WIDTH, { duration: 200 }, () => {
-            runOnJS(isMonth ? changeMonth : changeWeek)(-1);
-            translateX.value = 0;
-          });
-        } else {
-          translateX.value = withSpring(0, { damping: 20, stiffness: 150 });
-        }
-      } else {
-        translateX.value = withSpring(0);
-        shutterProgress.value = withSpring(isMonth ? 1 : 0);
-      }
-    });
-
-  // --- Data Helpers ---
-
-  const getMonthData = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    let startDay = firstDay.getDay();
-    if (startDay === 0) startDay = 7;
-    const padding = startDay - 1;
-
-    const days = [];
-    for (let i = 0; i < padding; i++) {
-      days.push({ date: new Date(year, month, 1 - (padding - i)), isCurrentMonth: false });
-    }
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push({ date: new Date(year, month, i), isCurrentMonth: true });
-    }
-    const remaining = 42 - days.length;
-    for (let i = 1; i <= remaining; i++) {
-      days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
-    }
-    return days;
-  };
-
-  const getWeekData = (date: Date) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(d.setDate(diff));
-
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const next = new Date(monday);
-      next.setDate(monday.getDate() + i);
-      days.push(next);
-    }
-    return days;
-  };
-
-  const isSelected = (date: Date) => {
-    return (
-      date.getDate() === selectedDate.getDate() &&
-      date.getMonth() === selectedDate.getMonth() &&
-      date.getFullYear() === selectedDate.getFullYear()
-    );
-  };
-
-  const isToday = (date: Date) => {
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
-
-  const hasEvents = (date: Date) => {
-    const iso = date.toISOString().split("T")[0];
-    return eventDates.includes(iso);
-  };
-
-  const renderDay = (date: Date, isCurrentMonth: boolean = true) => {
-    const selected = isSelected(date);
-    const todayFlag = isToday(date);
-    const hasEv = hasEvents(date);
-
-    return (
-      <Pressable
-        key={date.toISOString()}
-        onPress={() => onSelectDate(date)}
-        style={styles.dayItem}
-      >
-        <View
-          style={[
-            styles.circle,
-            selected && { backgroundColor: theme.color.primary },
-          ]}
-        >
-          <Text
-            style={[
-              styles.dayText,
-              {
-                color: isCurrentMonth ? theme.color.foreground : theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-              selected && { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.bold },
-              todayFlag && !selected && { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.bold },
-            ]}
-          >
-            {date.getDate()}
-          </Text>
-        </View>
-        <View style={styles.markerContainer}>
-          {hasEv && (
-            <View
-              style={[
-                styles.marker,
-                { backgroundColor: theme.color.primary },
-              ]}
-            />
-          )}
-        </View>
-      </Pressable>
-    );
-  };
-
-  const renderCalendarPage = (date: Date) => {
-    const monthData = getMonthData(date);
-    const weekData = getWeekData(date);
-
-    return (
-      <View style={styles.page}>
-        {/* Layer 1: Week View */}
-        <Animated.View style={[styles.weekLayer, weekViewAnimatedStyle]}>
-          <View style={styles.row}>
-            {weekData.map((d: any) => renderDay(d.date ?? d))}
-          </View>
-        </Animated.View>
-
-        {/* Layer 2: Month View */}
-        <Animated.View style={[styles.monthLayer, monthViewAnimatedStyle]}>
-          <View style={styles.grid}>
-            {monthData.map((d: any) => renderDay(d.date, d.isCurrentMonth))}
-          </View>
-        </Animated.View>
-      </View>
-    );
-  };
 
   const prevDate = useMemo(() => {
     const d = new Date(viewDate);
-    if (isMonth) d.setMonth(d.getMonth() - 1);
+    if (isMonth) d.setMonth(d.getMonth() - 1, 1);
     else d.setDate(d.getDate() - 7);
     return d;
   }, [viewDate, isMonth]);
 
   const nextDate = useMemo(() => {
     const d = new Date(viewDate);
-    if (isMonth) d.setMonth(d.getMonth() + 1);
+    if (isMonth) d.setMonth(d.getMonth() + 1, 1);
     else d.setDate(d.getDate() + 7);
     return d;
   }, [viewDate, isMonth]);
 
+  const pageProps = { theme, progress, eventSet, todayIso, selectedIso, onSelectDate };
+
   return (
     <View style={styles.root}>
-      <GestureDetector gesture={panGesture}>
+      <GestureDetector gesture={gesture}>
         <View style={styles.inner}>
-          {/* Days of Week Row */}
           <View style={styles.daysOfWeekContainer}>
             {[1, 2, 3, 4, 5, 6, 0].map((d) => (
               <View key={d} style={styles.dayOfWeekItem}>
-                <Text style={[styles.dayOfWeekText, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+                <Text
+                  style={[
+                    styles.dayOfWeekText,
+                    { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+                  ]}
+                >
                   {getShortDayName(d, language)}
                 </Text>
               </View>
             ))}
           </View>
 
-          {/* Carousel with interactive cross-fade layers */}
-          <Animated.View style={[styles.content, shutterAnimatedStyle]}>
-            <Animated.View style={[styles.carousel, carouselAnimatedStyle]}>
-              <View style={[styles.pageWrapper, { position: "absolute", left: -PAGE_WIDTH }]}>
-                {renderCalendarPage(prevDate)}
+          <Animated.View style={[styles.content, shutterStyle]}>
+            <Animated.View style={[styles.carousel, carouselStyle]}>
+              <View style={[styles.pageWrapper, styles.pagePrev]}>
+                <CalendarPage date={prevDate} {...pageProps} />
               </View>
               <View style={styles.pageWrapper}>
-                {renderCalendarPage(viewDate)}
+                <CalendarPage date={viewDate} {...pageProps} />
               </View>
-              <View style={[styles.pageWrapper, { position: "absolute", left: PAGE_WIDTH }]}>
-                {renderCalendarPage(nextDate)}
+              <View style={[styles.pageWrapper, styles.pageNext]}>
+                <CalendarPage date={nextDate} {...pageProps} />
               </View>
             </Animated.View>
           </Animated.View>
 
-          {/* Bottom handle indicator */}
-          <Animated.View style={[styles.footer, handleAnimatedStyle]}>
-            <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
-          </Animated.View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isMonth ? "Collapse calendar" : "Expand calendar"}
+            hitSlop={{ top: 6, bottom: 6, left: 40, right: 40 }}
+            onPress={toggle}
+          >
+            <Animated.View style={[styles.footer, handleStyle]}>
+              <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+            </Animated.View>
+          </Pressable>
         </View>
       </GestureDetector>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------- page
+
+type PageProps = {
+  date: Date;
+  theme: ThemeTokens;
+  progress: SharedValue<number>;
+  eventSet: Set<string>;
+  todayIso: string;
+  selectedIso: string;
+  onSelectDate: (date: Date) => void;
+};
+
+type GridDay = { date: Date; iso: string; inMonth: boolean };
+
+function monthGrid(date: Date): GridDay[] {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const padding = (new Date(year, month, 1).getDay() + 6) % 7;
+  return Array.from({ length: 42 }, (_, index) => {
+    const day = new Date(year, month, 1 - padding + index);
+    return { date: day, iso: toIsoDate(day), inMonth: day.getMonth() === month };
+  });
+}
+
+/**
+ * Week and month of one carousel page. The month grid slides so that the week of
+ * `date` sits exactly where the week row is: while the shutter moves, that row stays
+ * put and the rest of the month unfolds around it.
+ */
+function CalendarPage({ date, theme, progress, eventSet, todayIso, selectedIso, onSelectDate }: PageProps) {
+  const grid = useMemo(() => monthGrid(date), [date]);
+  const rowIndex = Math.floor(grid.findIndex((day) => day.iso === toIsoDate(date)) / 7);
+  const week = grid.slice(rowIndex * 7, rowIndex * 7 + 7);
+
+  const weekStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.12], [1, 0], Extrapolation.CLAMP),
+    pointerEvents: progress.value > 0.5 ? "none" : "auto",
+  }));
+  const monthStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.12], [0, 1], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [-rowIndex * DAY_HEIGHT, 0], Extrapolation.CLAMP) },
+    ],
+    pointerEvents: progress.value > 0.5 ? "auto" : "none",
+  }));
+
+  const cell = (day: GridDay, muted: boolean) => {
+    const selected = day.iso === selectedIso;
+    const isToday = day.iso === todayIso;
+    return (
+      <Pressable key={day.iso} onPress={() => onSelectDate(day.date)} style={styles.dayItem}>
+        <View style={[styles.circle, selected && { backgroundColor: theme.color.primary }]}>
+          <Text
+            style={[
+              styles.dayText,
+              {
+                color: muted ? theme.color.mutedForeground : theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+              isToday && !selected && { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.bold },
+              selected && { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.bold },
+            ]}
+          >
+            {day.date.getDate()}
+          </Text>
+        </View>
+        <View style={styles.markerContainer}>
+          {eventSet.has(day.iso) ? <View style={[styles.marker, { backgroundColor: theme.color.primary }]} /> : null}
+        </View>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={styles.page}>
+      <Animated.View style={[styles.layer, monthStyle]}>
+        <View style={styles.grid}>{grid.map((day) => cell(day, !day.inMonth))}</View>
+      </Animated.View>
+      <Animated.View style={[styles.layer, weekStyle]}>
+        <View style={styles.grid}>{week.map((day) => cell(day, !day.inMonth))}</View>
+      </Animated.View>
     </View>
   );
 }
@@ -410,39 +381,34 @@ const styles = StyleSheet.create({
   pageWrapper: {
     width: PAGE_WIDTH,
   },
+  pagePrev: {
+    position: "absolute",
+    left: -PAGE_WIDTH,
+  },
+  pageNext: {
+    position: "absolute",
+    left: PAGE_WIDTH,
+  },
   page: {
     width: "100%",
+    height: MONTH_HEIGHT,
   },
-  weekLayer: {
+  layer: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1,
-  },
-  monthLayer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 0,
-  },
-  row: {
-    width: "100%",
-    flexDirection: "row",
-    paddingVertical: 4,
+    paddingTop: ROW_PADDING,
   },
   grid: {
     width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingVertical: 4,
   },
   dayItem: {
     width: "14.28%",
+    height: DAY_HEIGHT,
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 2,
   },
   circle: {
     width: 32,
@@ -455,10 +421,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   markerContainer: {
-    height: 8,
+    height: 6,
+    marginTop: 2,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 2,
   },
   marker: {
     width: 4,

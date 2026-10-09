@@ -22,6 +22,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
 import { updateMe, uploadAvatar } from "../../../lib/auth-api";
+import { resolveBackendMediaUrl } from "../../../lib/backend-url";
 import { useProfile } from "../hooks/use-profile";
 import { type MainCopy } from "../../../locales";
 import { GlassInput } from "../../../shared/ui/glass-input";
@@ -86,6 +87,8 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
         setIsUploading(true);
         const uploadedUrl = await uploadAvatar(result.assets[0].uri);
         setValue("avatarUrl", uploadedUrl, { shouldDirty: true });
+        // The server has already saved the new avatar on the user.
+        void queryClient.invalidateQueries({ queryKey: ["profile"] });
       } catch (error) {
         Alert.alert("Upload Failed", error instanceof Error ? error.message : "Could not upload image");
       } finally {
@@ -127,7 +130,7 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
             ]}
           >
             {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+              <Image source={{ uri: resolveBackendMediaUrl(avatarUrl) ?? undefined }} style={styles.avatarImage} />
             ) : (
               <UserRound
                 color={theme.color.foreground}

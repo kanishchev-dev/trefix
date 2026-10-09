@@ -842,7 +842,8 @@
           "update": "Edit the own athlete profile: body, heart rate and zones, schedule, experience"
         },
         "progress": {
-          "read": "View the progress snapshot: load, form and recovery trends"
+          "read": "View the progress snapshot: load, form and recovery trends",
+          "manage": "Add own race results and exclude erroneous workouts from records"
         },
         "goals": {
           "read": "View training goals",

@@ -39,6 +39,7 @@ import {
 import { useTrefixRuntime } from "./use-trefix-runtime";
 import { type MainCopy } from "../../locales";
 import { useAthlete } from "../main/hooks/use-athlete";
+import { BottomFade } from "../../shared/ui/bottom-fade";
 import { getLatestCoachSession } from "../../lib/coach-api";
 
 type Props = {
@@ -160,6 +161,9 @@ function TrefixChatContent({
   );
 }
 
+/** Messages fade into blur from this far above the bottom edge (composer plus a margin). */
+const COMPOSER_FADE_HEIGHT = 110;
+
 function ChatSurface({
   theme,
   themeMode,
@@ -199,6 +203,11 @@ function ChatSurface({
           }
         </ThreadPrimitive.MessagesFlatList>
 
+        <BottomFade
+          height={Math.max(insets.bottom - 12, 0) + COMPOSER_FADE_HEIGHT}
+          theme={theme}
+          themeMode={themeMode}
+        />
         <ComposerDock
           theme={theme}
           themeMode={themeMode}

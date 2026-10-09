@@ -225,11 +225,11 @@ export async function uploadAvatar(uri: string): Promise<string> {
     name: filename,
     type,
   });
-  formData.append('scopeType', 'users');
-  formData.append('folder', 'avatars');
 
   const session = await loadAuthSession();
-  const url = `${AUTH_BACKEND_BASE_URL}/storage/files`;
+  // Public avatar endpoint: stores the file, updates the user and returns a link
+  // that loads without a token (the storage file endpoint requires one).
+  const url = `${AUTH_BACKEND_BASE_URL}/avatars/me`;
 
   console.log(`[AuthAPI] Uploading avatar to: ${url}`);
 
@@ -264,10 +264,9 @@ export async function uploadAvatar(uri: string): Promise<string> {
       );
     }
 
-    const data = await response.json();
-    console.log(`[AuthAPI] Upload success, file ID: ${data.id}`);
-    // Return the stable URL for the uploaded file
-    return `${AUTH_BACKEND_BASE_URL}/storage/files/${data.id}`;
+    const data = (await response.json()) as { avatarUrl: string };
+    console.log(`[AuthAPI] Avatar uploaded: ${data.avatarUrl}`);
+    return data.avatarUrl;
   } catch (error) {
     console.error(`[AuthAPI] Avatar upload exception:`, error);
     throw error;

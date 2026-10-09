@@ -41,3 +41,18 @@ export const BACKEND_BASE_URL = resolveBackendUrl();
 if (__DEV__ && BACKEND_BASE_URL !== CONFIGURED_URL) {
   console.log(`[API] Backend URL follows the dev server: ${BACKEND_BASE_URL} (configured ${CONFIGURED_URL})`);
 }
+
+const BACKEND_ORIGIN = /^https?:\/\/[^/]+/.exec(BACKEND_BASE_URL)?.[0] ?? null;
+
+/**
+ * Media URL the device can load. The backend builds absolute links from its own
+ * configured base URL (often `http://localhost:3000` in development), which on a
+ * phone points at the phone itself: such local links are moved to the host the
+ * app actually talks to.
+ */
+export function resolveBackendMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const match = /^(https?:\/\/)([^/:]+)(:\d+)?/.exec(url);
+  if (!match || !BACKEND_ORIGIN || !LOCAL_HOST.test(match[2])) return url;
+  return BACKEND_ORIGIN + url.slice(match[0].length);
+}

@@ -8,7 +8,6 @@ import { TabBar } from "./components/tab-bar";
 import { HeaderContext, type HeaderOptions } from "./context/header-context";
 import { type MainTabKey } from "./main-types";
 import { PlanScreen } from "./screens/plan-screen";
-import { ProgressScreen } from "./screens/progress-screen";
 import { TodayScreen } from "./screens/today-screen";
 import { IntegrationsScreen } from "./screens/integrations-screen";
 import { StravaIntegrationScreen } from "./screens/strava-integration-screen";
@@ -31,6 +30,10 @@ import { PlanDetailsScreen } from "../plans/screens/plan-details-screen";
 import { PlanDraftEditScreen } from "../plans/screens/plan-draft-edit-screen";
 import { PlansScreen } from "../plans/screens/plans-screen";
 import { useProfileRealtime } from "../profile/hooks/use-athlete-profile";
+import { useProgressRealtime } from "../progress/hooks/use-progress-v2";
+import { MetricScreen } from "../progress/screens/metric-screen";
+import { ProgressScreen } from "../progress/screens/progress-screen";
+import { RecordsScreen } from "../progress/screens/records-screen";
 import { usePreferences } from "../profile/hooks/use-preferences";
 import { type ProfileRoute } from "../profile/profile-routes";
 import { BodyScreen } from "../profile/screens/body-screen";
@@ -66,6 +69,8 @@ type SubScreen =
   | { kind: "strava-integration" }
   | { kind: "plans"; segment?: PlansSegment; highlightPlanId?: string | null }
   | { kind: "plan-details"; planId: string }
+  | { kind: "progress-records" }
+  | { kind: "progress-metric"; metric: "threshold_pace" | "vo2max" }
   | ProfileRoute;
 
 type StartTarget = { id: string; name: string; entry: string };
@@ -109,6 +114,7 @@ function MainTabsContent({
 
   usePlansRealtime();
   useProfileRealtime();
+  useProgressRealtime();
   const { preferences } = usePreferences();
   // With the coach off the chat is unavailable: lead to the setting that turns it back on.
   const onOpenTrefix = useCallback(() => {
@@ -294,6 +300,19 @@ function MainTabsContent({
                 language={userLanguage}
                 onClose={pop}
               />
+            ) : subScreen?.kind === "progress-records" ? (
+              <RecordsScreen theme={theme} themeMode={themeMode} copy={copy} language={userLanguage} onBack={pop} />
+            ) : subScreen?.kind === "progress-metric" ? (
+              <MetricScreen
+                key={subScreen.metric}
+                metric={subScreen.metric}
+                theme={theme}
+                themeMode={themeMode}
+                copy={copy}
+                language={userLanguage}
+                onBack={pop}
+                onOpenHeart={() => push({ kind: "profile-heart" })}
+              />
             ) : subScreen?.kind === "settings-coach" ? (
               <CoachSettingsScreen theme={theme} themeMode={themeMode} copy={copy} onBack={pop} />
             ) : activeTab === "today" ? (
@@ -303,9 +322,15 @@ function MainTabsContent({
             ) : activeTab === "progress" ? (
               <ProgressScreen
                 copy={copy}
-                onOpenTrefix={onOpenTrefix}
+                language={userLanguage}
                 theme={theme}
                 themeMode={themeMode}
+                coachEnabled={preferences.coachEnabled}
+                onOpenTrefix={onOpenTrefix}
+                onOpenRecords={() => push({ kind: "progress-records" })}
+                onOpenMetric={(metric) => push({ kind: "progress-metric", metric })}
+                onOpenHeart={() => push({ kind: "profile-heart" })}
+                onOpenSchedule={() => push({ kind: "profile-schedule" })}
               />
             ) : activeTab === "profile" ? (
               <ProfileScreen

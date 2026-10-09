@@ -1568,163 +1568,169 @@ export type SendCoachMessageInput = z.infer<typeof sendCoachMessageSchema>;
 
 // --- Progress ---
 
-export const progressPeriodSchema = z.enum(["4W", "8W", "3M", "6M", "1Y"]);
+export const progressPeriodKeySchema = z.enum(["4W", "8W", "3M", "6M", "1Y"]);
+export const recordDistanceSchema = z.enum(["1k", "5k", "10k", "half_marathon", "marathon"]);
+export const capabilityTypeSchema = z.enum(["endurance", "threshold", "speed", "recovery", "consistency"]);
+export const trendSchema = z.enum(["up", "down", "stable"]);
 
-export const progressFormStatusSchema = z.enum([
-  "BUILDING",
-  "MAINTAINING",
-  "RECOVERING",
-  "PEAK",
-  "TAPERING",
-]);
-
-export const progressTrendSchema = z.enum([
-  "IMPROVING",
-  "STABLE",
-  "DECLINING",
-]);
-
-export const progressFormSchema = z.object({
-  fitness: z.number(),
-  fatigue: z.number(),
-  form: z.number(),
-  status: progressFormStatusSchema,
-  trend: progressTrendSchema,
-  change: z.number(),
-  periodComparison: z.string().optional(),
-});
-
-export const progressGoalTypeSchema = z.enum([
-  "RACE_TIME",
-  "DISTANCE",
-  "PACE",
-  "CONSISTENCY",
-  "CUSTOM",
-]);
-
-export const progressGoalStatusSchema = z.enum([
-  "ON_TRACK",
-  "IMPROVING",
-  "BEHIND",
-  "ACHIEVED",
-  "NO_LONGER_ACTIVE",
-]);
+const secondsPointSchema = z.object({ date: z.string(), seconds: z.number() });
 
 export const progressGoalSchema = z.object({
-  type: progressGoalTypeSchema,
-  title: z.string().optional(),
-  distance: z.union([z.string(), z.number()]).optional(),
-  target: z.string(),
-  currentEstimate: z.string(),
-  delta: z.string(),
-  progress: z.number().optional(),
-  status: progressGoalStatusSchema,
-  targetDate: z.string().optional(),
-});
-
-export const progressCapabilityTypeSchema = z.enum([
-  "ENDURANCE",
-  "SPEED",
-  "THRESHOLD",
-  "RECOVERY",
-  "CONSISTENCY",
-]);
-
-export const progressCapabilityTrendSchema = z.enum(["UP", "STABLE", "DOWN"]);
-
-export const progressCapabilitySchema = z.object({
-  type: progressCapabilityTypeSchema,
-  name: z.string().optional(),
-  value: z.number(),
-  change: z.number(),
-  trend: progressCapabilityTrendSchema,
-  period: z.string().optional(),
-  description: z.string().optional(),
-  currentMetric: z.string().optional(),
-  previousMetric: z.string().optional(),
-  trainingFactors: z.array(z.string()).optional(),
-});
-
-export const progressPerformancePointSchema = z.object({
-  date: z.string(),
-  value: z.number(),
-  label: z.string().optional(),
-});
-
-export const progressPerformanceMetricKeySchema = z.enum([
-  "distance",
-  "pace",
-  "heartRate",
-  "trainingLoad",
-  "elevation",
-]);
-
-export const progressPerformanceMetricSchema = z.object({
-  metric: progressPerformanceMetricKeySchema,
-  title: z.string(),
-  currentValue: z.string(),
-  previousValue: z.string().optional(),
-  comparableContext: z.string().optional(),
-  changePercent: z.number().optional(),
-  unit: z.string(),
-  dataPoints: z.array(progressPerformancePointSchema),
-});
-
-export const progressMilestoneSchema = z.object({
   id: z.string(),
-  title: z.string(),
-  value: z.string(),
+  type: z.string(),
+  date: z.string().nullable(),
+  weeksLeft: z.number().nullable(),
+  distanceKm: z.number().nullable(),
+  targetSeconds: z.number().nullable(),
+  forecastSeconds: z.number().nullable(),
+  status: z.enum(["achieved", "on_track", "behind", "no_data", "no_forecast"]),
+  series: z.array(secondsPointSchema),
+  projection: z.array(secondsPointSchema),
+  planName: z.string().nullable(),
+});
+
+export const recordBestSchema = z.object({
+  seconds: z.number(),
   date: z.string(),
-  previousBest: z.string().optional(),
-  change: z.string().optional(),
-  context: z.string().optional(),
-  workoutId: z.string().optional(),
-  category: z.string().optional(),
+  source: z.enum(["workout", "result"]),
+  kind: z.enum(["race", "workout", "test"]),
+  provider: z.string().nullable(),
+  name: z.string().nullable(),
+  isNew: z.boolean(),
+  workoutId: z.string().nullable(),
+  resultId: z.string().nullable(),
 });
 
-export const progressTrainingImpactFactorSchema = z.object({
-  name: z.string(),
-  percentage: z.number(),
-  description: z.string().optional(),
+export const progressRecordSchema = z.object({
+  distance: recordDistanceSchema,
+  best: recordBestSchema.nullable(),
+  predictionSeconds: z.number().nullable().optional(),
 });
 
-export const progressTrainingImpactSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  factors: z.array(progressTrainingImpactFactorSchema),
+const dynamicsSeriesSchema = z.object({
+  average: z.number().nullable(),
+  changePercent: z.number().nullable(),
+  points: z.array(z.object({ start: z.string(), value: z.number().nullable() })),
 });
 
-export const progressSnapshotSchema = z.object({
-  period: z.object({
-    from: z.string(),
-    to: z.string(),
-    periodKey: progressPeriodSchema,
+export const progressOverviewSchema = z.object({
+  period: z.object({ key: progressPeriodKeySchema, from: z.string(), to: z.string() }),
+  metricsUnlock: z.object({ required: z.number(), completed: z.number(), unlocked: z.boolean() }),
+  goal: progressGoalSchema.nullable(),
+  predictions: z.array(z.object({ distance: recordDistanceSchema, seconds: z.number() })),
+  predictionBasis: z.number(),
+  form: z
+    .object({
+      fitness: z.number(),
+      fatigue: z.number(),
+      form: z.number(),
+      fitnessChange: z.number(),
+      changeWeeks: z.number(),
+    })
+    .nullable(),
+  metrics: z.object({
+    thresholdPace: z.object({ value: z.number(), change: z.number().nullable() }).nullable(),
+    vo2max: z.object({ value: z.number(), change: z.number().nullable() }).nullable(),
+    thresholdHeartRate: z.object({ value: z.number(), estimated: z.boolean() }).nullable(),
   }),
-  form: progressFormSchema,
-  goal: progressGoalSchema.nullable().optional(),
-  capabilities: z.array(progressCapabilitySchema),
-  performance: z.array(progressPerformanceMetricSchema),
-  milestones: z.array(progressMilestoneSchema),
-  trainingImpact: progressTrainingImpactSchema.nullable().optional(),
+  capabilities: z
+    .array(z.object({ type: capabilityTypeSchema, value: z.number().nullable(), trend: trendSchema }))
+    .nullable(),
+  records: z.array(progressRecordSchema),
+  dynamics: z.object({
+    bucket: z.enum(["week", "month"]),
+    metrics: z.object({
+      distance: dynamicsSeriesSchema,
+      pace: dynamicsSeriesSchema,
+      heartRate: dynamicsSeriesSchema,
+      load: dynamicsSeriesSchema,
+    }),
+    profileVolumeHint: z.object({ profileKm: z.number(), actualKm: z.number() }).nullable(),
+  }),
+  achievements: z.array(
+    z.object({
+      kind: z.enum(["longest_run", "streak", "new_record", "total_distance"]),
+      value: z.number(),
+      date: z.string().nullable(),
+      distance: recordDistanceSchema.optional(),
+    }),
+  ),
 });
 
-export type ProgressPeriod = z.infer<typeof progressPeriodSchema>;
-export type ProgressFormStatus = z.infer<typeof progressFormStatusSchema>;
-export type ProgressTrend = z.infer<typeof progressTrendSchema>;
-export type ProgressForm = z.infer<typeof progressFormSchema>;
-export type ProgressGoalType = z.infer<typeof progressGoalTypeSchema>;
-export type ProgressGoalStatus = z.infer<typeof progressGoalStatusSchema>;
+export const progressMetricSchema = z.object({
+  metric: z.enum(["threshold_pace", "vo2max"]),
+  value: z.number().nullable(),
+  change: z.number().nullable(),
+  updatedAt: z.string().nullable(),
+  series: z.array(z.object({ date: z.string(), value: z.number() })),
+  accuracy: z.object({ level: z.enum(["high", "medium", "low"]), efforts: z.number() }),
+  zones: z
+    .object({
+      method: z.string(),
+      maxHeartRate: z.number().nullable(),
+      thresholdHeartRate: z.number().nullable(),
+    })
+    .optional(),
+  paces: z
+    .object({
+      easy: z.tuple([z.number(), z.number()]),
+      tempo: z.tuple([z.number(), z.number()]),
+      interval: z.tuple([z.number(), z.number()]),
+    })
+    .optional(),
+  topEfforts: z
+    .array(
+      z.object({
+        id: z.string(),
+        workoutId: z.string().nullable(),
+        resultId: z.string().nullable(),
+        title: z.string().nullable(),
+        workoutType: z.string().nullable(),
+        date: z.string(),
+        distanceKm: z.number(),
+        paceSecondsPerKm: z.number(),
+      }),
+    )
+    .optional(),
+});
+
+export const progressRecordsSchema = z.object({ items: z.array(progressRecordSchema) });
+
+export const recordAttemptSchema = z.object({
+  id: z.string(),
+  source: z.enum(["workout", "result"]),
+  kind: z.enum(["race", "workout", "test"]),
+  provider: z.string().nullable(),
+  name: z.string().nullable(),
+  date: z.string(),
+  seconds: z.number(),
+  workoutId: z.string().nullable(),
+  resultId: z.string().nullable(),
+});
+
+export const recordHistorySchema = z.object({
+  distance: recordDistanceSchema,
+  attempts: z.array(recordAttemptSchema),
+});
+
+export const raceResultInputSchema = z.object({
+  distanceM: z.number().int().min(400).max(100000),
+  timeSeconds: z.number().int().min(60),
+  date: z.string(),
+  kind: z.enum(["race", "workout", "test"]),
+  name: z.string().max(120).optional(),
+});
+
+export type ProgressPeriodKey = z.infer<typeof progressPeriodKeySchema>;
+export type RecordDistance = z.infer<typeof recordDistanceSchema>;
+export type CapabilityType = z.infer<typeof capabilityTypeSchema>;
 export type ProgressGoal = z.infer<typeof progressGoalSchema>;
-export type ProgressCapabilityType = z.infer<typeof progressCapabilityTypeSchema>;
-export type ProgressCapabilityTrend = z.infer<typeof progressCapabilityTrendSchema>;
-export type ProgressCapability = z.infer<typeof progressCapabilitySchema>;
-export type ProgressPerformancePoint = z.infer<typeof progressPerformancePointSchema>;
-export type ProgressPerformanceMetricKey = z.infer<typeof progressPerformanceMetricKeySchema>;
-export type ProgressPerformanceMetric = z.infer<typeof progressPerformanceMetricSchema>;
-export type ProgressMilestone = z.infer<typeof progressMilestoneSchema>;
-export type ProgressTrainingImpactFactor = z.infer<typeof progressTrainingImpactFactorSchema>;
-export type ProgressTrainingImpact = z.infer<typeof progressTrainingImpactSchema>;
-export type ProgressSnapshot = z.infer<typeof progressSnapshotSchema>;
+export type ProgressRecord = z.infer<typeof progressRecordSchema>;
+export type ProgressOverview = z.infer<typeof progressOverviewSchema>;
+export type ProgressMetricDetail = z.infer<typeof progressMetricSchema>;
+export type RecordAttempt = z.infer<typeof recordAttemptSchema>;
+export type RecordHistory = z.infer<typeof recordHistorySchema>;
+export type RaceResultInput = z.infer<typeof raceResultInputSchema>;
 
 // --- Integrations ---
 

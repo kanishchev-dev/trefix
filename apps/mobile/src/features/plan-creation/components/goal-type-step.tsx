@@ -64,7 +64,7 @@ export function GoalTypeStep({
           contentContainerStyle={styles.categoriesContent}
         >
           <OptionChip
-            label={copy.progress.milestones.viewAll}
+            label={creationCopy.categoriesAll}
             selected={activeCategory === "all"}
             theme={theme}
             themeMode={themeMode}

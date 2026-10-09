@@ -488,7 +488,8 @@
         "generationFailed": "Не\u00a0удалось собрать план",
         "creationFailed": "Не\u00a0удалось создать план",
         "tryAgain": "Попробовать снова"
-      }
+      },
+      "categoriesAll": "Все"
     },
     "notStartedState": {
       "title": "Ваш план скоро начнётся",
@@ -523,100 +524,226 @@
     "composerPlaceholder": "Напишите сообщение..."
   },
   "progress": {
-    "title": "Прогресс",
-    "askTrefix": "Спросить Трефикс",
     "periods": {
-      "4W": "4Т",
-      "8W": "8Т",
+      "4W": "4Н",
+      "8W": "8Н",
       "3M": "3М",
       "6M": "6М",
       "1Y": "1Г"
     },
+    "askCoach": "Спросить коуча",
+    "sections": {
+      "goal": "Цель",
+      "plan": "План",
+      "forecast": "Прогноз результатов",
+      "formMetrics": "Форма и показатели",
+      "capabilities": "Качества бегуна",
+      "records": "Рекорды",
+      "all": "Все",
+      "dynamics": "Динамика",
+      "achievements": "Достижения"
+    },
+    "goal": {
+      "status": {
+        "achieved": "Достигнута",
+        "on_track": "По графику",
+        "behind": "Отстаёте",
+        "no_data": "Мало данных",
+        "no_forecast": "Без прогноза"
+      },
+      "title": "{{distance}} за {{time}}",
+      "distanceOnly": "{{distance}}",
+      "start": "Старт {{date}}",
+      "weeksLeft": {
+        "one": "через {{count}} неделю",
+        "few": "через {{count}} недели",
+        "many": "через {{count}} недель",
+        "other": "через {{count}} недели"
+      },
+      "forecastNow": "Прогноз сейчас",
+      "remaining": "Осталось сбросить",
+      "ahead": "Запас",
+      "targetLine": "цель {{time}}",
+      "projectionNote": "Пунктир — прогноз при текущем темпе роста",
+      "noDataHint": "Добавьте результат или тренировку дольше 10 минут — появится прогноз"
+    },
+    "forecastCard": {
+      "basis": {
+        "one": "Оценка по {{count}} тренировке",
+        "few": "Оценка по {{count}} тренировкам",
+        "many": "Оценка по {{count}} тренировкам",
+        "other": "Оценка по {{count}} тренировкам"
+      },
+      "setGoal": "Поставить цель",
+      "setGoalDescription": "Коуч соберёт план под неё",
+      "empty": "Нужна хотя бы одна тренировка дольше 10 минут"
+    },
     "form": {
-      "sectionTitle": "ТЕКУЩАЯ ФОРМА",
-      "strongForm": "ОТЛИЧНАЯ ФОРМА",
-      "buildingForm": "НАБОР ФОРМЫ",
-      "recoveringForm": "ВОССТАНОВЛЕНИЕ",
-      "peakForm": "ПИКОВАЯ ФОРМА",
-      "taperingForm": "ПОДВОДКА",
+      "title": "Набор формы",
       "fitness": "Фитнес",
       "fatigue": "Усталость",
       "form": "Форма",
-      "improving": "Растёт",
-      "stable": "Стабильно",
-      "declining": "Снижается",
-      "comparisonText": "+{{change}} за\u00a0последние 6 недель",
-      "statuses": {
-        "BUILDING": "Набор формы",
-        "MAINTAINING": "Поддержание",
-        "RECOVERING": "Восстановление",
-        "PEAK": "Пик",
-        "TAPERING": "Подводка"
-      }
-    },
-    "goal": {
-      "sectionTitle": "ТВОЯ ЦЕЛЬ",
-      "target": "ЦЕЛЬ",
-      "currentEstimate": "ТЕКУЩИЙ ПРОГНОЗ",
-      "toGo": "ОСТАЛОСЬ",
-      "statuses": {
-        "ON_TRACK": "По\u00a0графику",
-        "IMPROVING": "Улучшается",
-        "BEHIND": "Отстаёт",
-        "ACHIEVED": "Достигнуто",
-        "NO_LONGER_ACTIVE": "Неактивно"
-      }
+      "change": "за {{weeks}} нед.",
+      "thresholdPace": "Порог. темп",
+      "vo2max": "VO₂max",
+      "thresholdHr": "Порог ЧСС",
+      "estimate": "оценка",
+      "fromProfile": "из профиля",
+      "locked": {
+        "one": "Ещё {{count}} тренировка",
+        "few": "Ещё {{count}} тренировки",
+        "many": "Ещё {{count}} тренировок",
+        "other": "Ещё {{count}} тренировки"
+      },
+      "lockedDescription": "Откроются форма, порог и VO₂max"
     },
     "capabilities": {
-      "sectionTitle": "КАЧЕСТВА БЕГУНА",
-      "types": {
-        "ENDURANCE": "Выносливость",
-        "SPEED": "Скорость",
-        "THRESHOLD": "Порог",
-        "RECOVERY": "Восстановление",
-        "CONSISTENCY": "Регулярность"
-      },
-      "relatedFactors": "Ключевые факторы роста",
-      "detailTitle": "Детали качества"
+      "endurance": "Выносливость",
+      "threshold": "Порог",
+      "speed": "Скорость",
+      "recovery": "Восстановление",
+      "consistency": "Регулярность"
     },
-    "performance": {
-      "sectionTitle": "ДИНАМИКА РЕЗУЛЬТАТОВ",
+    "records": {
+      "distances": {
+        "1k": "1 км",
+        "5k": "5 км",
+        "10k": "10 км",
+        "half_marathon": "Полумарафон",
+        "marathon": "Марафон"
+      },
+      "noResult": "Нет результата",
+      "add": "Добавить",
+      "new": "Новый",
+      "sources": {
+        "strava": "из Strava",
+        "workout": "тренировка",
+        "race": "забег",
+        "test": "тест",
+        "manual": "вручную"
+      },
+      "emptyTitle": "Пока нет результатов",
+      "emptyDescription": "Коуч учтёт их в прогнозах",
+      "addResult": "Добавить результат"
+    },
+    "dynamics": {
       "metrics": {
         "distance": "Дистанция",
         "pace": "Темп",
         "heartRate": "Пульс",
-        "trainingLoad": "Нагрузка",
-        "elevation": "Набор высоты"
+        "load": "Нагрузка"
       },
-      "comparableNote": "Сравнение при\u00a0сопоставимых условиях"
+      "captions": {
+        "distance": {
+          "week": "в неделю в среднем",
+          "month": "в месяц в среднем"
+        },
+        "pace": "средний темп",
+        "heartRate": "средний пульс",
+        "load": {
+          "week": "нагрузка в неделю",
+          "month": "нагрузка в месяц"
+        }
+      },
+      "profileHint": "Привычный объём в профиле — {{value}}",
+      "update": "Обновить",
+      "noData": "Нет тренировок за период",
+      "bpm": "уд/мин"
     },
-    "milestones": {
-      "sectionTitle": "ДОСТИЖЕНИЯ",
-      "viewAll": "Все",
-      "allTitle": "Все достижения",
-      "detailTitle": "Детали достижения",
-      "achievedDate": "Достигнуто {{date}}",
-      "previousBest": "Предыдущий результат",
-      "improvedBy": "Улучшение на",
-      "context": "Контекст"
+    "achievements": {
+      "longest_run": "Самая длинная тренировка",
+      "streak": {
+        "one": "{{count}} неделя без пропусков",
+        "few": "{{count}} недели без пропусков",
+        "many": "{{count}} недель без пропусков",
+        "other": "{{count}} недели без пропусков"
+      },
+      "new_record": "Рекорд на {{distance}}",
+      "total_distance": "{{value}} всего",
+      "since": "с {{date}}",
+      "empty": "Появятся по мере тренировок"
     },
-    "impact": {
-      "sectionTitle": "ВЛИЯНИЕ ТРЕНИРОВОК",
-      "mainContribution": "Наибольший вклад внесли:"
+    "recordsScreen": {
+      "title": "Рекорды",
+      "distance": "Дистанция",
+      "best": "Лучшее",
+      "prediction": "Прогноз",
+      "footnote": "Прогноз — оценка по текущей форме, если бежать на максимум сегодня.",
+      "history": "{{distance}} · история",
+      "excludeFootnote": "Долгое нажатие — исключить ошибочную тренировку или удалить результат.",
+      "exclude": "Исключить из рекордов",
+      "delete": "Удалить результат",
+      "cancel": "Отмена",
+      "noAttempts": "Пока нет попыток на этой дистанции"
     },
-    "emptyState": {
-      "title": "Твой прогресс только начинается",
-      "description": "Выполни первые тренировки, и\u00a0Трефикс начнет формировать твой профиль бегуна."
+    "addResult": {
+      "title": "Добавить результат",
+      "distance": "Дистанция",
+      "other": "Другая",
+      "time": "Время",
+      "hours": "ч",
+      "minutes": "мин",
+      "seconds": "с",
+      "pace": "Темп {{pace}}",
+      "where": "Где",
+      "kinds": {
+        "race": "Забег",
+        "workout": "Тренировка",
+        "test": "Тест"
+      },
+      "name": "Название",
+      "namePlaceholder": "Необязательно",
+      "date": "Дата",
+      "note": "Коуч обновит прогнозы",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "saved": "Результат добавлен"
     },
-    "insufficientData": {
-      "title": "Недостаточно данных",
-      "description": "Выполни ещё несколько качественных тренировок, чтобы открыть этот показатель."
+    "metric": {
+      "titles": {
+        "threshold_pace": "Пороговый темп",
+        "vo2max": "VO₂max"
+      },
+      "faster": "на {{value}} быстрее",
+      "slower": "на {{value}} медленнее",
+      "higher": "+{{value}}",
+      "lower": "−{{value}}",
+      "unchanged": "без изменений",
+      "forPeriod": "за период",
+      "updated": "обновлён {{ago}}",
+      "howTitle": "Как посчитано",
+      "source": "Источник",
+      "sourceValue": "Лучшие тренировки и результаты за 90 дней",
+      "accuracy": "Точность",
+      "accuracyLevels": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "accuracyCount": {
+        "one": "{{count}} тренировка",
+        "few": "{{count}} тренировки",
+        "many": "{{count}} тренировок",
+        "other": "{{count}} тренировки"
+      },
+      "zones": "Пульсовые зоны",
+      "zonesByMax": "По макс. пульсу {{value}}",
+      "zonesByThreshold": "По порогу {{value}}",
+      "zonesNotSet": "Пульс не указан",
+      "thresholdHint": "Укажите пороговый пульс в профиле — зоны станут точнее",
+      "planTitle": "Что это значит для тренировок",
+      "easy": "Лёгкий бег",
+      "tempo": "Темповые",
+      "interval": "Интервалы",
+      "topTitle": "Повлияли сильнее всего",
+      "noData": "Пока нет данных — нужна тренировка дольше 10 минут"
     },
-    "errorState": {
-      "title": "Не\u00a0удалось загрузить прогресс",
-      "description": "Проверьте соединение с\u00a0сетью и\u00a0попробуйте снова.",
-      "retry": "Попробовать снова"
-    }
+    "errors": {
+      "generic": "Не получилось сохранить. Попробуйте ещё раз",
+      "RESULT_INVALID": "Проверьте дистанцию, время и дату"
+    },
+    "retry": "Повторить",
+    "loadError": "Не удалось загрузить прогресс"
   },
   "profile": {
     "hero": {

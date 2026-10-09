@@ -24,6 +24,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import appConfig from "../../../../app.json";
 import { fillTemplate, formatProfileJoinedDate, type AppLanguage, type MainCopy } from "../../../locales";
 import { trackEvent } from "../../../lib/analytics";
+import { resolveBackendMediaUrl } from "../../../lib/backend-url";
 import { ListCard, ListRow, Pill, SectionTitle, SourceBadge } from "../../../shared/ui/list-card";
 import { HeaderLogo, HeaderQrButton, HeaderTextButton } from "../../main/components/header";
 import { QrDialog } from "../../main/components/qr-dialog";
@@ -146,7 +147,7 @@ export function ProfileScreen({
             style={[styles.avatar, { backgroundColor: theme.color.card }]}
           >
             {user?.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+              <Image source={{ uri: resolveBackendMediaUrl(user.avatarUrl) ?? undefined }} style={styles.avatarImage} />
             ) : (
               <UserRound color={theme.color.foreground} size={34} strokeWidth={1.9} />
             )}

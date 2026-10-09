@@ -488,7 +488,8 @@
         "generationFailed": "We couldn't build your plan",
         "creationFailed": "We couldn't create your plan",
         "tryAgain": "Try again"
-      }
+      },
+      "categoriesAll": "All"
     },
     "notStartedState": {
       "title": "Your plan starts soon",
@@ -523,8 +524,6 @@
     "composerPlaceholder": "Write a message..."
   },
   "progress": {
-    "title": "Progress",
-    "askTrefix": "Ask Trefix",
     "periods": {
       "4W": "4W",
       "8W": "8W",
@@ -532,91 +531,219 @@
       "6M": "6M",
       "1Y": "1Y"
     },
+    "askCoach": "Ask the coach",
+    "sections": {
+      "goal": "Goal",
+      "plan": "Plan",
+      "forecast": "Race predictions",
+      "formMetrics": "Form & metrics",
+      "capabilities": "Runner capabilities",
+      "records": "Records",
+      "all": "All",
+      "dynamics": "Trends",
+      "achievements": "Achievements"
+    },
+    "goal": {
+      "status": {
+        "achieved": "Achieved",
+        "on_track": "On track",
+        "behind": "Behind",
+        "no_data": "Not enough data",
+        "no_forecast": "No forecast"
+      },
+      "title": "{{distance}} in {{time}}",
+      "distanceOnly": "{{distance}}",
+      "start": "Race on {{date}}",
+      "weeksLeft": {
+        "one": "in {{count}} week",
+        "few": "in {{count}} weeks",
+        "many": "in {{count}} weeks",
+        "other": "in {{count}} weeks"
+      },
+      "forecastNow": "Forecast now",
+      "remaining": "Still to cut",
+      "ahead": "Ahead by",
+      "targetLine": "goal {{time}}",
+      "projectionNote": "Dashed — forecast at the current rate of progress",
+      "noDataHint": "Add a result or a workout longer than 10 minutes to get a forecast"
+    },
+    "forecastCard": {
+      "basis": {
+        "one": "Based on {{count}} workout",
+        "few": "Based on {{count}} workouts",
+        "many": "Based on {{count}} workouts",
+        "other": "Based on {{count}} workouts"
+      },
+      "setGoal": "Set a goal",
+      "setGoalDescription": "The coach will build a plan for it",
+      "empty": "Needs at least one workout longer than 10 minutes"
+    },
     "form": {
-      "sectionTitle": "CURRENT FORM",
-      "strongForm": "STRONG FORM",
-      "buildingForm": "BUILDING FORM",
-      "recoveringForm": "RECOVERING FORM",
-      "peakForm": "PEAK FORM",
-      "taperingForm": "TAPERING FORM",
+      "title": "Fitness build-up",
       "fitness": "Fitness",
       "fatigue": "Fatigue",
       "form": "Form",
-      "improving": "Improving",
-      "stable": "Stable",
-      "declining": "Declining",
-      "comparisonText": "+{{change}} compared with 6 weeks ago",
-      "statuses": {
-        "BUILDING": "Building",
-        "MAINTAINING": "Maintaining",
-        "RECOVERING": "Recovering",
-        "PEAK": "Peak",
-        "TAPERING": "Tapering"
-      }
-    },
-    "goal": {
-      "sectionTitle": "YOUR GOAL",
-      "target": "TARGET",
-      "currentEstimate": "CURRENT ESTIMATE",
-      "toGo": "TO GO",
-      "statuses": {
-        "ON_TRACK": "On track",
-        "IMPROVING": "Improving",
-        "BEHIND": "Behind",
-        "ACHIEVED": "Achieved",
-        "NO_LONGER_ACTIVE": "Inactive"
-      }
+      "change": "in {{weeks}} wk",
+      "thresholdPace": "Threshold pace",
+      "vo2max": "VO₂max",
+      "thresholdHr": "Threshold HR",
+      "estimate": "estimate",
+      "fromProfile": "from profile",
+      "locked": {
+        "one": "{{count}} more workout",
+        "few": "{{count}} more workouts",
+        "many": "{{count}} more workouts",
+        "other": "{{count}} more workouts"
+      },
+      "lockedDescription": "Unlocks form, threshold and VO₂max"
     },
     "capabilities": {
-      "sectionTitle": "RUNNER CAPABILITIES",
-      "types": {
-        "ENDURANCE": "Endurance",
-        "SPEED": "Speed",
-        "THRESHOLD": "Threshold",
-        "RECOVERY": "Recovery",
-        "CONSISTENCY": "Consistency"
-      },
-      "relatedFactors": "Key contributing factors",
-      "detailTitle": "Capability Details"
+      "endurance": "Endurance",
+      "threshold": "Threshold",
+      "speed": "Speed",
+      "recovery": "Recovery",
+      "consistency": "Consistency"
     },
-    "performance": {
-      "sectionTitle": "PERFORMANCE TRENDS",
+    "records": {
+      "distances": {
+        "1k": "1 km",
+        "5k": "5 km",
+        "10k": "10 km",
+        "half_marathon": "Half marathon",
+        "marathon": "Marathon"
+      },
+      "noResult": "No result",
+      "add": "Add",
+      "new": "New",
+      "sources": {
+        "strava": "from Strava",
+        "workout": "workout",
+        "race": "race",
+        "test": "test",
+        "manual": "manual"
+      },
+      "emptyTitle": "No results yet",
+      "emptyDescription": "The coach uses them in predictions",
+      "addResult": "Add a result"
+    },
+    "dynamics": {
       "metrics": {
         "distance": "Distance",
         "pace": "Pace",
-        "heartRate": "Heart Rate",
-        "trainingLoad": "Load",
-        "elevation": "Elevation"
+        "heartRate": "Heart rate",
+        "load": "Load"
       },
-      "comparableNote": "Compared at similar conditions"
+      "captions": {
+        "distance": {
+          "week": "per week on average",
+          "month": "per month on average"
+        },
+        "pace": "average pace",
+        "heartRate": "average heart rate",
+        "load": {
+          "week": "load per week",
+          "month": "load per month"
+        }
+      },
+      "profileHint": "Usual volume in your profile — {{value}}",
+      "update": "Update",
+      "noData": "No workouts in this period",
+      "bpm": "bpm"
     },
-    "milestones": {
-      "sectionTitle": "MILESTONES",
-      "viewAll": "View all",
-      "allTitle": "All Milestones",
-      "detailTitle": "Milestone Details",
-      "achievedDate": "Achieved on {{date}}",
-      "previousBest": "Previous best",
-      "improvedBy": "You improved by",
-      "context": "Context"
+    "achievements": {
+      "longest_run": "Longest workout",
+      "streak": {
+        "one": "{{count}} week without misses",
+        "few": "{{count}} weeks without misses",
+        "many": "{{count}} weeks without misses",
+        "other": "{{count}} weeks without misses"
+      },
+      "new_record": "Record on {{distance}}",
+      "total_distance": "{{value}} in total",
+      "since": "since {{date}}",
+      "empty": "They will appear as you train"
     },
-    "impact": {
-      "sectionTitle": "TRAINING IMPACT",
-      "mainContribution": "The biggest contribution came from:"
+    "recordsScreen": {
+      "title": "Records",
+      "distance": "Distance",
+      "best": "Best",
+      "prediction": "Prediction",
+      "footnote": "Prediction — an estimate of your current form if you ran all-out today.",
+      "history": "{{distance}} · history",
+      "excludeFootnote": "Long press to exclude a broken workout or delete a result.",
+      "exclude": "Exclude from records",
+      "delete": "Delete result",
+      "cancel": "Cancel",
+      "noAttempts": "No attempts on this distance yet"
     },
-    "emptyState": {
-      "title": "Your progress is just beginning",
-      "description": "Complete a few more runs and Trefix will start building your runner profile."
+    "addResult": {
+      "title": "Add a result",
+      "distance": "Distance",
+      "other": "Other",
+      "time": "Time",
+      "hours": "h",
+      "minutes": "min",
+      "seconds": "s",
+      "pace": "Pace {{pace}}",
+      "where": "Where",
+      "kinds": {
+        "race": "Race",
+        "workout": "Workout",
+        "test": "Test"
+      },
+      "name": "Name",
+      "namePlaceholder": "Optional",
+      "date": "Date",
+      "note": "The coach will update predictions",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Result added"
     },
-    "insufficientData": {
-      "title": "Not enough data yet",
-      "description": "Complete a few more quality sessions to unlock this trend."
+    "metric": {
+      "titles": {
+        "threshold_pace": "Threshold pace",
+        "vo2max": "VO₂max"
+      },
+      "faster": "{{value}} faster",
+      "slower": "{{value}} slower",
+      "higher": "+{{value}}",
+      "lower": "−{{value}}",
+      "unchanged": "no change",
+      "forPeriod": "over the period",
+      "updated": "updated {{ago}}",
+      "howTitle": "How it's calculated",
+      "source": "Source",
+      "sourceValue": "Best workouts and results of the last 90 days",
+      "accuracy": "Accuracy",
+      "accuracyLevels": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "accuracyCount": {
+        "one": "{{count}} workout",
+        "few": "{{count}} workouts",
+        "many": "{{count}} workouts",
+        "other": "{{count}} workouts"
+      },
+      "zones": "Heart rate zones",
+      "zonesByMax": "By max HR {{value}}",
+      "zonesByThreshold": "By threshold {{value}}",
+      "zonesNotSet": "Heart rate not set",
+      "thresholdHint": "Set your threshold heart rate in the profile for more accurate zones",
+      "planTitle": "What it means for training",
+      "easy": "Easy run",
+      "tempo": "Tempo",
+      "interval": "Intervals",
+      "topTitle": "Influenced it most",
+      "noData": "No data yet — needs a workout longer than 10 minutes"
     },
-    "errorState": {
-      "title": "Couldn't load progress",
-      "description": "Please check your network connection and try again.",
-      "retry": "Try again"
-    }
+    "errors": {
+      "generic": "Couldn't save. Please try again",
+      "RESULT_INVALID": "Check the distance, time and date"
+    },
+    "retry": "Retry",
+    "loadError": "Couldn't load progress"
   },
   "profile": {
     "hero": {
