@@ -130,7 +130,7 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
 
         <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
           <SectionCaption text={plansCopy.details.goal} theme={theme} />
-          <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+          <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {[details.goal.title, raceResult(details, copy)].filter(Boolean).join(" · ") || details.name}
           </Text>
           {details.goal.targetDate ? (
@@ -268,7 +268,7 @@ function ResultCard({
 
   return (
     <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
-      <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+      <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
         {parts.join(" · ")}
       </Text>
       {stats ? (

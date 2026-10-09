@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type MobileAuthChallenge } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
 import { formatCountdown, type AuthCopy } from "../../locales";
+import { glassBorderColor } from "./components/glass-border";
 
 type Props = {
   theme: ThemeTokens;
@@ -198,7 +199,7 @@ export function AuthVerificationScreen({
                 styles.title,
                 {
                   color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.extrabold,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
                 },
               ]}
             >
@@ -341,12 +342,8 @@ type CodeCellProps = {
 function CodeCell({ theme, value, isActive, highlightState }: CodeCellProps) {
   const borderColor =
     highlightState === "error"
-      ? "#ef4444" // danger
-      : highlightState === "success"
-        ? theme.color.foreground // or primary
-        : isActive
-          ? theme.color.foreground
-          : theme.color.glassBorder;
+      ? "rgba(239, 68, 68, 0.6)"
+      : glassBorderColor(theme, isActive || highlightState === "success");
 
   const overlayColor =
     highlightState === "error"

@@ -51,7 +51,7 @@ export const AddWorkoutSection = React.memo(
             styles.sectionTitle,
             {
               color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >

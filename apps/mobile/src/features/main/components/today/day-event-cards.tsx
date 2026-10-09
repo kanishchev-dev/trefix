@@ -58,7 +58,7 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
                 styles.cardTitle,
                 {
                   color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
                 },
                 event.status === "completed" && { color: theme.color.foreground },
               ]}
@@ -149,7 +149,7 @@ export const RecoveryCard = React.memo(({ theme, themeMode, copy }: Omit<CardPro
             styles.cardTitle,
             {
               color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.bold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >
@@ -207,7 +207,7 @@ export const DayHeader = React.memo(({ theme, date, isToday, isTomorrow, copy }:
             styles.dayBadge,
             {
               color: theme.color.primary,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >
@@ -219,7 +219,7 @@ export const DayHeader = React.memo(({ theme, date, isToday, isTomorrow, copy }:
           styles.dayDate,
           {
             color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.bold,
+            fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
       >

@@ -46,7 +46,7 @@ export function SectionPlaceholderScreen({ theme, themeMode, title }: Props) {
           styles.title,
           {
             color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.extrabold,
+            fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
       >

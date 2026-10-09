@@ -256,7 +256,7 @@ function TrefixEmptyState({
           styles.emptyTitle,
           {
             color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.extrabold,
+            fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
       >
@@ -666,13 +666,13 @@ function createMarkdownStyles(theme: ThemeTokens) {
     },
     heading1: {
       color: theme.color.foreground,
-      fontFamily: theme.typography.fontFamily.sans.extrabold,
+      fontFamily: theme.typography.fontFamily.sans.medium,
       marginTop: 8,
       marginBottom: 10,
     },
     heading2: {
       color: theme.color.foreground,
-      fontFamily: theme.typography.fontFamily.sans.bold,
+      fontFamily: theme.typography.fontFamily.sans.medium,
       marginTop: 8,
       marginBottom: 8,
     },

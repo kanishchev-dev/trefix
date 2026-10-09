@@ -40,7 +40,7 @@ export function PlanDiffSummaryCard({ diff, mode, warnings, metricsVolume, theme
         ))}
       {lines.length > 0 ? (
         <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
-          <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+          <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {copy.plans.diff.rebuildTitle}
           </Text>
           {lines.map((line) => (

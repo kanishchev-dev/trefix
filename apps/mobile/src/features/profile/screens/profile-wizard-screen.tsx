@@ -102,7 +102,7 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
           <Text style={[styles.stepLabel, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {fillTemplate(w.step, { n: step })}
           </Text>
-          <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+          <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {stepCopy.title}
           </Text>
           <Text numberOfLines={1} style={[styles.subtitle, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>

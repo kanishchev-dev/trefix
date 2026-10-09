@@ -183,7 +183,7 @@ export function SectionBlock({
           color: isDivider ? theme.color.mutedForeground : theme.color.foreground,
           fontFamily: isDivider
             ? theme.typography.fontFamily.sans.medium
-            : theme.typography.fontFamily.sans.semibold,
+            : theme.typography.fontFamily.sans.medium,
         },
       ]}
     >

@@ -152,7 +152,7 @@ export function ProfileScreen({
               <UserRound color={theme.color.foreground} size={34} strokeWidth={1.9} />
             )}
           </Pressable>
-          <Text style={[styles.name, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+          <Text style={[styles.name, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {isLoading ? "…" : `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()}
           </Text>
           <Text

@@ -11,6 +11,7 @@ import { GlassView } from "expo-glass-effect";
 import { mobileAuthEmailRequestSchema } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
 import { type AuthCopy } from "../../../locales";
+import { glassBorderColor } from "./glass-border";
 
 type Props = {
   theme: ThemeTokens;
@@ -54,9 +55,7 @@ export function AuthEmailField({
       style={[
         styles.root,
         {
-          borderColor: isFocused
-            ? theme.color.foreground
-            : theme.color.glassBorder,
+          borderColor: glassBorderColor(theme, isFocused),
           backgroundColor: theme.color.glassBackground,
         },
       ]}
@@ -159,10 +158,11 @@ const styles = StyleSheet.create({
   submitButton: {
     position: "absolute",
     right: 10,
-    top: 11,
-    width: 34,
-    height: 34,
-    borderRadius: 9999,
+    top: 10,
+    width: 36,
+    height: 36,
+    // Concentric with the field: its 20 px corner minus the 10 px inset.
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },

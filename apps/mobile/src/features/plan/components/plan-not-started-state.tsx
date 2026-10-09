@@ -50,7 +50,7 @@ export function PlanNotStartedState({
               styles.bannerTitle,
               {
                 color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
+                fontFamily: theme.typography.fontFamily.sans.medium,
               },
             ]}
           >

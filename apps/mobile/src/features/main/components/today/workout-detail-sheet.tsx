@@ -175,7 +175,7 @@ export function WorkoutDetailSheet({
               styles.title,
               {
                 color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.semibold,
+                fontFamily: theme.typography.fontFamily.sans.medium,
               },
             ]}
           >
@@ -509,7 +509,7 @@ export function WorkoutDetailSheet({
                       styles.analysisTitle,
                       {
                         color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.bold,
+                        fontFamily: theme.typography.fontFamily.sans.medium,
                       },
                     ]}
                   >

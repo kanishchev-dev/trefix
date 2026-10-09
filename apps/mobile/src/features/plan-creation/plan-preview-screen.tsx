@@ -407,13 +407,13 @@ export function PlanPreviewScreen({
             onPress={() => setMetaSheetVisible(true)}
             style={({ pressed }) => [styles.headerTitleButton, pressed && styles.rowPressed]}
           >
-            <Text numberOfLines={1} style={[styles.headerTitle, { color: theme.color.foreground, fontFamily: semibold }]}>
+            <Text numberOfLines={1} style={[styles.headerTitle, { color: theme.color.foreground, fontFamily: medium }]}>
               {headerTitle}
             </Text>
             <Pencil color={theme.color.mutedForeground} size={14} />
           </Pressable>
         ) : (
-          <Text numberOfLines={1} style={[styles.headerTitle, styles.headerTitleFill, { color: theme.color.foreground, fontFamily: semibold }]}>
+          <Text numberOfLines={1} style={[styles.headerTitle, styles.headerTitleFill, { color: theme.color.foreground, fontFamily: medium }]}>
             {headerTitle}
           </Text>
         )}
@@ -448,7 +448,7 @@ export function PlanPreviewScreen({
 
         {/* Plan summary */}
         <Card size="sm" theme={theme} themeMode={themeMode} style={styles.summaryCard}>
-          <Text style={[styles.summaryTitle, { color: theme.color.foreground, fontFamily: semibold }]}>
+          <Text style={[styles.summaryTitle, { color: theme.color.foreground, fontFamily: medium }]}>
             {goalSummary}
           </Text>
           <View style={styles.summaryStats}>
@@ -501,7 +501,7 @@ export function PlanPreviewScreen({
                 <Text style={[styles.weekLabel, { color: theme.color.mutedForeground, fontFamily: medium }]}>
                   {previewCopy.weekLabel.replace("{{number}}", String(week.weekNumber))} · {phaseLabel}
                 </Text>
-                <Text style={[styles.weekTitle, { color: theme.color.foreground, fontFamily: semibold }]}>
+                <Text style={[styles.weekTitle, { color: theme.color.foreground, fontFamily: medium }]}>
                   {weekTitle}
                 </Text>
                 <Text style={[styles.weekMeta, { color: theme.color.mutedForeground, fontFamily: regular }]}>

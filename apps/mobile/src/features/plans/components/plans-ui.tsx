@@ -178,7 +178,7 @@ export function Notice({
           <Text
             style={[
               styles.noticeTitle,
-              { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+              { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium },
             ]}
           >
             {title}

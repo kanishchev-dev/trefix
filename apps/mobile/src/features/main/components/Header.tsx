@@ -540,7 +540,7 @@ export function HeaderTitlePill({
           styles.titlePillTitle,
           {
             color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.extrabold,
+            fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
       >
@@ -729,7 +729,7 @@ export function HeaderTitle({
       numberOfLines={1}
       style={{
         color: theme.color.foreground,
-        fontFamily: theme.typography.fontFamily.sans.semibold,
+        fontFamily: theme.typography.fontFamily.sans.medium,
         fontSize: 17,
         lineHeight: 22,
         textAlign: "center",

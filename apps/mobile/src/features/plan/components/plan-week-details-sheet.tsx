@@ -361,7 +361,7 @@ export function PlanWeekDetailsSheet({
                         styles.adaptationTitle,
                         {
                           color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.bold,
+                          fontFamily: theme.typography.fontFamily.sans.medium,
                         },
                       ]}
                     >

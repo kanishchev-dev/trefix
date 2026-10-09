@@ -57,7 +57,7 @@ export function PlanCard({
         style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       >
         <View style={styles.titleRow}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.color.foreground, fontFamily: semibold }]}>
+          <Text numberOfLines={1} style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {plan.name}
           </Text>
           {plan.creationSource === "ai" ? (

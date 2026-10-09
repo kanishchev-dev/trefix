@@ -39,7 +39,7 @@ export function PlanErrorState({
             styles.title,
             {
               color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.bold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >

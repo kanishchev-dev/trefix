@@ -467,7 +467,7 @@ export function BottomSheet({
                           styles.title,
                           {
                             color: theme.color.foreground,
-                            fontFamily: theme.typography.fontFamily.sans.semibold,
+                            fontFamily: theme.typography.fontFamily.sans.medium,
                           },
                         ]}
                       >
@@ -681,7 +681,7 @@ function StackLayer({
                       styles.title,
                       {
                         color: theme.color.foreground,
-                        fontFamily: theme.typography.fontFamily.sans.semibold,
+                        fontFamily: theme.typography.fontFamily.sans.medium,
                       },
                     ]}
                   >

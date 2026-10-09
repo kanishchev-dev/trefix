@@ -53,7 +53,7 @@ export function PlanCompletedState({
             styles.bannerTitle,
             {
               color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >

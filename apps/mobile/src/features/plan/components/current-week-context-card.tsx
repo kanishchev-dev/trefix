@@ -36,7 +36,7 @@ export function CurrentWeekContextCard({
               styles.sectionTitle,
               {
                 color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
+                fontFamily: theme.typography.fontFamily.sans.medium,
               },
             ]}
           >
@@ -49,7 +49,7 @@ export function CurrentWeekContextCard({
             styles.contextTitle,
             {
               color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >

@@ -113,7 +113,7 @@ export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {
       ) : (
         <>
           <View style={[styles.offCard, { backgroundColor: theme.color.card }]}>
-            <Text style={[styles.offTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+            <Text style={[styles.offTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
               {c.offTitle}
             </Text>
             {c.off.map((line, index) => {

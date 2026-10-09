@@ -58,7 +58,7 @@ export function PlanDiffView({ preview, describeWorkout, copy, language, theme }
 
       {visibleWeeks.map((week) => (
         <View key={week.weekNumber} style={styles.week}>
-          <Text style={[styles.weekTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+          <Text style={[styles.weekTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
             {week.title}
           </Text>
           {week.lines.map((line, index) => (

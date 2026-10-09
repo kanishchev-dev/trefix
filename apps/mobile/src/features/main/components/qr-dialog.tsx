@@ -59,7 +59,7 @@ export function QrDialog({
                   styles.title,
                   {
                     color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.semibold,
+                    fontFamily: theme.typography.fontFamily.sans.medium,
                   },
                 ]}
               >

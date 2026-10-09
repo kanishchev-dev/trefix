@@ -34,7 +34,7 @@ export function PlanTimeline({
           styles.sectionHeader,
           {
             color: theme.color.mutedForeground,
-            fontFamily: theme.typography.fontFamily.sans.bold,
+            fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
       >

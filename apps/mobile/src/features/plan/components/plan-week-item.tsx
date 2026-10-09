@@ -205,7 +205,7 @@ export function PlanWeekItem({
                   ? theme.color.mutedForeground
                   : theme.color.foreground,
               fontFamily: isCurrent
-                ? theme.typography.fontFamily.sans.bold
+                ? theme.typography.fontFamily.sans.medium
                 : theme.typography.fontFamily.sans.medium,
             },
           ]}

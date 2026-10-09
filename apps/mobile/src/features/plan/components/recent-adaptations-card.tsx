@@ -42,7 +42,7 @@ export function RecentAdaptationsCard({
               styles.sectionTitle,
               {
                 color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.bold,
+                fontFamily: theme.typography.fontFamily.sans.medium,
               },
             ]}
           >
@@ -90,7 +90,7 @@ export function RecentAdaptationsCard({
             styles.sectionTitle,
             {
               color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.bold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >
@@ -120,7 +120,7 @@ export function RecentAdaptationsCard({
                     styles.itemTitle,
                     {
                       color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.bold,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
                     },
                   ]}
                 >
