@@ -145,4 +145,13 @@ export class Workout extends Model {
     field: 'gear_id',
   })
   gearId!: string | null;
+
+  /** An erroneous track: kept in history but ignored by records and VDOT. */
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'exclude_from_records',
+  })
+  excludeFromRecords!: boolean;
 }

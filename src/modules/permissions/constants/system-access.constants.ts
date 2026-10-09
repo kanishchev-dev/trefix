@@ -251,6 +251,13 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     description: 'View the progress snapshot: load, form and recovery trends',
   },
   {
+    key: 'training.progress.manage',
+    module: 'training',
+    resource: 'progress',
+    action: 'manage',
+    description: 'Add own race results and exclude erroneous workouts from records',
+  },
+  {
     key: 'training.goals.read',
     module: 'training',
     resource: 'goals',

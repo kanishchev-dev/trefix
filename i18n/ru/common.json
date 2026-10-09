@@ -52,6 +52,10 @@
     "ADAPTATION_NOT_PROPOSED": "Это изменение плана уже не ждёт решения",
     "STRAVA_NOT_CONNECTED": "Сначала подключите Strava",
     "STRAVA_PROFILE_ACCESS_REQUIRED": "Сначала разрешите Strava передавать данные профиля",
-    "ACCOUNT_DELETION_FORBIDDEN": "Этот аккаунт нельзя удалить"
+    "ACCOUNT_DELETION_FORBIDDEN": "Этот аккаунт нельзя удалить",
+    "RESULT_INVALID": "Проверьте дистанцию, время и дату результата",
+    "RESULT_NOT_FOUND": "Результат не найден",
+    "PROGRESS_METRIC_UNKNOWN": "Неизвестный показатель",
+    "PROGRESS_DISTANCE_UNKNOWN": "Неизвестная дистанция"
   }
 }

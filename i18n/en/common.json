@@ -52,6 +52,10 @@
     "ADAPTATION_NOT_PROPOSED": "This plan change is no longer waiting for your decision",
     "STRAVA_NOT_CONNECTED": "Connect Strava first",
     "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava to share your profile first",
-    "ACCOUNT_DELETION_FORBIDDEN": "This account cannot be deleted"
+    "ACCOUNT_DELETION_FORBIDDEN": "This account cannot be deleted",
+    "RESULT_INVALID": "Check the distance, time and date of the result",
+    "RESULT_NOT_FOUND": "Result not found",
+    "PROGRESS_METRIC_UNKNOWN": "Unknown metric",
+    "PROGRESS_DISTANCE_UNKNOWN": "Unknown distance"
   }
 }

@@ -16,6 +16,7 @@ import { Athlete } from './entities/athlete.entity';
 import { AthleteGoal } from './entities/athlete-goal.entity';
 import { AthleteState } from './entities/athlete-state.entity';
 import { Gear } from './entities/gear.entity';
+import { RaceResult } from './entities/race-result.entity';
 import { TrainingLoad } from './entities/training-load.entity';
 import { TrainingPlan } from './entities/training-plan.entity';
 import { Workout } from './entities/workout.entity';
@@ -35,6 +36,9 @@ import { PlanListService } from './plans/plan-list.service';
 import { PlanRebuildService } from './plans/plan-rebuild.service';
 import { PlanStatsService } from './plans/plan-stats.service';
 import { PlansController } from './plans/plans.controller';
+import { ProgressController } from './progress/progress.controller';
+import { ProgressListener } from './progress/progress.listener';
+import { ProgressService } from './progress/progress.service';
 import { TrainingController } from './training.controller';
 import { TrainingEngine } from './training.engine';
 import { TrainingListener } from './training.listener';
@@ -51,6 +55,7 @@ import { TrainingService } from './training.service';
       TrainingLoad,
       AdaptationEvent,
       Gear,
+      RaceResult,
     ]),
     RealtimeModule,
     UsersModule,
@@ -67,6 +72,7 @@ import { TrainingService } from './training.service';
     AthletesController,
     TrainingController,
     GearController,
+    ProgressController,
     AdminTrainingController,
     AdminPlansController,
   ],
@@ -89,6 +95,8 @@ import { TrainingService } from './training.service';
     AthleteProfileListener,
     GearService,
     GearListener,
+    ProgressService,
+    ProgressListener,
   ],
   exports: [TrainingService, AthleteProfileService, GearService],
 })

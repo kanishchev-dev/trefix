@@ -176,6 +176,19 @@ export const GEAR_BRAND_MAX_LENGTH = 60;
 export const GEAR_MODEL_MAX_LENGTH = 80;
 export const GEAR_NICKNAME_MAX_LENGTH = 60;
 
+export const RACE_RESULT_KINDS = ['race', 'workout', 'test'] as const;
+export const PROGRESS_PERIODS = ['4W', '8W', '3M', '6M', '1Y'] as const;
+export const RECORD_DISTANCES = {
+  '1k': 1000,
+  '5k': 5000,
+  '10k': 10000,
+  half_marathon: 21097.5,
+  marathon: 42195,
+} as const;
+export const PROGRESS_METRICS = ['threshold_pace', 'vo2max'] as const;
+/** Completed workouts within 42 days needed before form and threshold metrics are shown. */
+export const PROGRESS_METRICS_MIN_WORKOUTS = 6;
+
 export const ADAPTATION_EVENT_STATUSES = ['applied', 'proposed', 'suggested', 'dismissed'] as const;
 
 export type AthleteExperienceLevel = (typeof ATHLETE_EXPERIENCE_LEVELS)[number];
@@ -204,3 +217,7 @@ export type GearStatus = (typeof GEAR_STATUSES)[number];
 export type AdaptationEventStatus = (typeof ADAPTATION_EVENT_STATUSES)[number];
 /** Per-field provenance stored in `athletes.field_sources`. */
 export type AthleteFieldSources = Partial<Record<string, { source: FieldSource; updatedAt: string }>>;
+export type RaceResultKind = (typeof RACE_RESULT_KINDS)[number];
+export type ProgressPeriodKey = (typeof PROGRESS_PERIODS)[number];
+export type RecordDistance = keyof typeof RECORD_DISTANCES;
+export type ProgressMetric = (typeof PROGRESS_METRICS)[number];
