@@ -1,5 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import { AppState, type AppStateStatus } from "react-native";
+
+import { BACKEND_BASE_URL } from "../backend-url";
 import {
   type RealtimeAuthErrorListener,
   type RealtimeConnectionStatus,
@@ -11,10 +13,7 @@ import {
 const DEFAULT_BACKEND_URL = "http://127.0.0.1:3000";
 
 function resolveSocketOrigin(): string {
-  const envUrl =
-    process.env.EXPO_PUBLIC_BACKEND_URL ||
-    process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ||
-    DEFAULT_BACKEND_URL;
+  const envUrl = BACKEND_BASE_URL || DEFAULT_BACKEND_URL;
 
   // Remove trailing `/v1` or `/v1/` REST versioning path to get WS base origin
   return envUrl.replace(/\/v1\/?$/, "");

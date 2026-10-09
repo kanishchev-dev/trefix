@@ -25,9 +25,9 @@ import {
 import { getGoogleSigninModule } from "./google-signin";
 import { loadAuthSession, saveAuthSession } from "./auth-session";
 import { request } from "./api-client";
+import { BACKEND_BASE_URL } from "./backend-url";
 
-const AUTH_BACKEND_BASE_URL =
-  process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
+const AUTH_BACKEND_BASE_URL = BACKEND_BASE_URL;
 
 export async function requestEmailOtp(
   email: string,
@@ -188,6 +188,15 @@ export async function getMe(): Promise<AuthUser> {
 export async function logout(): Promise<void> {
   await request<void>("/auth/logout", {
     method: "POST",
+    useAuth: true,
+  });
+}
+
+/** Deletes the account and all data permanently; every session ends at once. */
+export async function deleteAccount(): Promise<void> {
+  await request<void>("/auth/me", {
+    method: "DELETE",
+    body: { confirm: true },
     useAuth: true,
   });
 }

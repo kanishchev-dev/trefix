@@ -20,6 +20,7 @@ import { WorkoutDetailSheet } from "../components/today/workout-detail-sheet";
 import { WorkoutGoalSheet, type ManualWorkoutType } from "../components/today/workout-goal-sheet";
 import { useWorkouts } from "../hooks/use-workouts";
 import { type Day, type DayEvent, type CalendarMode } from "../today-types";
+import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 
 type Props = {
   theme: ThemeTokens;
@@ -29,6 +30,7 @@ type Props = {
 
 export function TodayScreen({ theme, themeMode, copy }: Props) {
   const language = getAppLanguage();
+  const format = useUnitFormat(copy, language);
   const insets = useSafeAreaInsets();
   const timelineRef = useRef<TodayTimelineRef>(null);
 
@@ -78,7 +80,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
           ((workout.target as any)?.title as string) ||
           `${workout.type.toUpperCase()} Run`,
         duration: `${Math.round(workout.durationMinutes)} min`,
-        distance: `${workout.distanceKm} km`,
+        distance: format.distance(workout.distanceKm),
         description: ((workout.target as any)?.description as string) || "",
       });
 
@@ -86,7 +88,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
     }
 
     return { daysMap: map, workoutById: byId };
-  }, [workoutsData]);
+  }, [workoutsData, format]);
 
   const eventDates = useMemo(() => Array.from(daysMap.keys()), [daysMap]);
 

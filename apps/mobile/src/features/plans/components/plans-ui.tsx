@@ -250,17 +250,17 @@ export function ProgressBar({
   );
 }
 
-/** Uppercase caption above a block of a plans screen. */
+/** Caption above a block: sentence case, medium weight, like the admin sidebar group labels. */
 export function SectionCaption({ text, theme }: { text: string; theme: ThemeTokens }) {
   return (
     <Text
       accessibilityRole="header"
       style={[
         styles.sectionCaption,
-        { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.bold },
+        { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium },
       ]}
     >
-      {text.toUpperCase()}
+      {text}
     </Text>
   );
 }
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   sectionCaption: {
     fontSize: 12,
     lineHeight: 16,
-    letterSpacing: 1.2,
+    opacity: 0.7,
   },
   actionsColumn: {
     gap: 10,

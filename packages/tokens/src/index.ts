@@ -27,6 +27,14 @@ export type ThemeTokens = {
     /** Destructive actions (delete): text/icon colour and its soft, opaque background. */
     danger: string;
     dangerSurface: string;
+    /** Background of bottom sheets; option tiles inside use `control`. */
+    sheet: string;
+    /** Circle behind a row or tile icon. */
+    iconSurface: string;
+    /** Hairline between rows inside a card. */
+    separator: string;
+    /** Attention: missing values, wear warnings. */
+    warning: string;
   };
   typography: {
     fontFamily: {
@@ -98,6 +106,10 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       controlSecondary: "#e4e4e7",
       danger: "#dc2626",
       dangerSurface: "#fde4e4",
+      sheet: "#ffffff",
+      iconSurface: "#f2f2f5",
+      separator: "rgba(0, 0, 0, 0.07)",
+      warning: "#d97706",
     },
     ...common,
   },
@@ -117,12 +129,16 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       glassBackground: "rgba(255, 255, 255, 0.02)",
       glassBorder: "rgba(255, 255, 255, 0.08)",
       glassTint: "rgba(255, 255, 255, 0.01)",
-      card: "#121214",
-      cardBorder: "rgba(255, 255, 255, 0.08)",
+      card: "#1a1a1e",
+      cardBorder: "transparent",
       control: "#1a1a1e",
       controlSecondary: "#1a1a1e",
       danger: "#f87171",
       dangerSurface: "#3a2023",
+      sheet: "#121214",
+      iconSurface: "rgba(255, 255, 255, 0.06)",
+      separator: "rgba(255, 255, 255, 0.07)",
+      warning: "#fbbf24",
     },
     ...common,
   },

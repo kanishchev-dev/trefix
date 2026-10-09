@@ -139,6 +139,20 @@ export default function App() {
     }
   }
 
+  /** After the account is deleted: drop local data except language and theme, then end the session. */
+  async function handleAccountDeleted(): Promise<void> {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      await AsyncStorage.multiRemove(keys.filter((key) => key !== "@trefix/language" && key !== "@trefix/theme"));
+      await getGoogleSigninModule()?.GoogleSignin.signOut();
+    } catch (error) {
+      console.warn("Local cleanup after account deletion failed:", error);
+    }
+    await clearAuthSession();
+    setSession(null);
+    queryClient.clear();
+  }
+
   useAuthSessionMonitor({
     session,
     onSessionUpdated: (nextSession) => {
@@ -428,6 +442,7 @@ export default function App() {
                         navigation.navigate("trefix");
                       }}
                       onLogout={handleLogout}
+                      onAccountDeleted={() => void handleAccountDeleted()}
                       onEditProfile={() => {
                         navigation.navigate("profileEdit");
                       }}

@@ -448,8 +448,7 @@ export function BottomSheet({
                 {
                   borderColor:
                     themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-                  backgroundColor:
-                    theme.color.card,
+                  backgroundColor: theme.color.sheet,
                 },
               ]}
             >
@@ -664,8 +663,7 @@ function StackLayer({
             {
               borderColor:
                 themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
-              backgroundColor:
-                theme.color.card,
+              backgroundColor: theme.color.sheet,
             },
           ]}
         >
@@ -797,8 +795,9 @@ export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeT
       style={[
         styles.sectionLabel,
         {
-          color: theme.color.mutedForeground,
-          fontFamily: theme.typography.fontFamily.sans.bold,
+          color: theme.color.foreground,
+          fontFamily: theme.typography.fontFamily.sans.medium,
+          opacity: 0.7,
         },
       ]}
     >
@@ -1034,9 +1033,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.985 }],
   },
   sectionLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    letterSpacing: 0.8,
+    fontSize: 12,
+    lineHeight: 16,
   },
   sheetContent: {
     flexGrow: 1,

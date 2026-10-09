@@ -729,7 +729,7 @@ export function HeaderTitle({
       numberOfLines={1}
       style={{
         color: theme.color.foreground,
-        fontFamily: theme.typography.fontFamily.sans.bold,
+        fontFamily: theme.typography.fontFamily.sans.semibold,
         fontSize: 17,
         lineHeight: 22,
         textAlign: "center",

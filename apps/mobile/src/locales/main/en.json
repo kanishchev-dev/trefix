@@ -696,7 +696,367 @@
       "title": "Delete account"
     },
     "logout": "Exit app",
-    "version": "Version"
+    "version": "Version",
+    "sections": {
+      "athlete": "Athlete",
+      "trefix": "Tref",
+      "app": "App",
+      "account": "Account"
+    },
+    "rows": {
+      "body": "Body",
+      "heart": "Heart rate & zones",
+      "schedule": "Schedule & volume",
+      "gear": "Gear",
+      "experience": "Experience & limitations",
+      "coach": "AI coach",
+      "units": "Units & format",
+      "notifications": "Notifications",
+      "language": "Language",
+      "theme": "Theme",
+      "integrations": "Integrations",
+      "signIn": "Sign-in & email",
+      "privacy": "Data & privacy",
+      "delete": "Delete account",
+      "logout": "Log out"
+    },
+    "summary": {
+      "notSet": "Not set",
+      "gearEmpty": "Track the wear of your shoes",
+      "runningSince": "Running since {{year}}",
+      "age": "{{age}}",
+      "heart": "Rest {{rest}} · max {{max}}",
+      "heartThreshold": "threshold {{value}}",
+      "volume": "~{{value}}",
+      "on": "On",
+      "off": "Off",
+      "replaceSoon": "Replace soon",
+      "synced": "Synced {{ago}}",
+      "notConnected": "Not connected",
+      "years": {
+        "one": "{{count}} yr",
+        "few": "{{count}} yrs",
+        "many": "{{count}} yrs",
+        "other": "{{count}} yrs"
+      }
+    },
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "completeness": {
+      "title": "Tell us about yourself",
+      "description": "The coach will tune your load better · {{percent}}%",
+      "action": "Fill in"
+    },
+    "stravaCard": {
+      "title": "Connect Strava",
+      "description": "Workouts, weight and shoes sync on their own",
+      "action": "Connect"
+    },
+    "body": {
+      "title": "Body",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "height": "Height",
+      "weight": "Weight",
+      "sexes": {
+        "female": "Female",
+        "male": "Male",
+        "other": "Other",
+        "prefer_not_to_say": "Prefer not to say"
+      },
+      "source": "Data source",
+      "stravaSync": "Update from Strava",
+      "stravaSyncDescription": "Pull weight, sex and shoes",
+      "allowAccess": "Allow profile access",
+      "allowAccessDescription": "Strava will ask you to confirm",
+      "footnote": "S marks a value from Strava. A field you edit by hand is never overwritten"
+    },
+    "heart": {
+      "title": "Heart rate & zones",
+      "values": "Your values",
+      "rest": "Resting heart rate",
+      "max": "Max heart rate",
+      "threshold": "Threshold heart rate",
+      "notSet": "Not set",
+      "estimate": "≈ {{value}} by age",
+      "thresholdHint": "Don't know your threshold? Zones can use max heart rate for now",
+      "zones": "Heart rate zones",
+      "methods": {
+        "threshold": "Threshold",
+        "max_hr": "Max HR",
+        "custom": "Custom"
+      },
+      "unavailable": {
+        "threshold_missing": "Set your threshold heart rate",
+        "max_missing": "Set your max heart rate",
+        "custom_missing": "Set the zone bounds"
+      },
+      "specify": "Set",
+      "zoneNames": [
+        "Recovery",
+        "Aerobic",
+        "Tempo",
+        "Threshold",
+        "Maximum"
+      ],
+      "editZones": "Edit bounds",
+      "customTitle": "Zone bounds",
+      "zoneUpper": "Top of Z{{zone}}",
+      "planNote": "The coach will offer to update heart rate in your plan"
+    },
+    "schedule": {
+      "title": "Schedule & volume",
+      "days": "Training days",
+      "time": "Preferred time",
+      "times": {
+        "morning": "Morning",
+        "day": "Day",
+        "evening": "Evening",
+        "any": "Any"
+      },
+      "perWeek": "Workouts per week",
+      "longRunDay": "Long run day",
+      "usual": "Regular workout",
+      "longRun": "Long run",
+      "upTo": "up to {{value}}",
+      "volume": "Usual volume",
+      "volumeValue": "~{{value}} per week",
+      "suggestion": "Your workouts average {{value}} per week",
+      "suggestionApply": "Use it",
+      "footnote": "Your current plan stays as is — rebuild it to use the new schedule"
+    },
+    "experience": {
+      "title": "Experience & limitations",
+      "level": "Level",
+      "since": "Running since",
+      "limitations": "Injuries & limitations",
+      "limitationsPlaceholder": "E.g. knee after an injury",
+      "none": "No limitations",
+      "noneValue": "None",
+      "save": "Save"
+    },
+    "unitsScreen": {
+      "title": "Units & format",
+      "system": "System",
+      "metric": "Metric",
+      "imperial": "Imperial",
+      "preview": "This is how your data will look",
+      "distance": "Distance",
+      "pace": "Pace",
+      "weight": "Weight",
+      "height": "Height",
+      "format": "Format",
+      "weekStart": "Week starts on",
+      "mon": "Mon",
+      "sun": "Sun",
+      "timeFormat": "Time format",
+      "h24": "24 h",
+      "h12": "12 h"
+    },
+    "coach": {
+      "title": "AI coach",
+      "name": "Coach",
+      "statusOn": "On",
+      "statusOff": "Off",
+      "adaptation": "Plan adaptation",
+      "modes": {
+        "auto": {
+          "title": "Automatic",
+          "description": "The coach changes the plan and lets you know"
+        },
+        "confirm": {
+          "title": "With confirmation",
+          "description": "Changes apply after you say yes"
+        },
+        "suggest": {
+          "title": "Advice only",
+          "description": "The plan stays, the coach only advises"
+        }
+      },
+      "messages": "Messages",
+      "quietHours": "Quiet hours",
+      "quietHoursDescription": "The coach doesn't write at this time",
+      "quietHoursFrom": "From",
+      "quietHoursTo": "To",
+      "quietHoursDisable": "Turn off quiet hours",
+      "data": "Data",
+      "clearHistory": "Clear chat history",
+      "clearHistoryDescription": "Plans and workouts are not affected",
+      "clearTitle": "Clear the history?",
+      "clearBody": "Messages with the coach will be deleted. Plans and workouts stay.",
+      "clearConfirm": "Clear",
+      "cleared": "History cleared",
+      "offTitle": "Without the coach the app works like this",
+      "off": [
+        "The Trefix tab is hidden, chat and tips are off",
+        "The plan doesn't adapt — you change it yourself",
+        "Plans, workouts, progress and Strava work as before",
+        "Chat history is kept — turn the coach on any time"
+      ],
+      "enable": "Turn the coach on",
+      "modeLabel": {
+        "auto": "Automatic",
+        "confirm": "With confirmation",
+        "suggest": "Advice only"
+      }
+    },
+    "gear": {
+      "title": "Gear",
+      "active": "Shoes",
+      "archive": "Archive · {{count}}",
+      "empty": "Add your shoes to track their mileage",
+      "add": "Add shoes",
+      "importStrava": "Import from Strava",
+      "importing": "Importing shoes from Strava",
+      "since": "since {{date}}",
+      "stats": "{{distance}} · {{count}} workouts",
+      "limit": "limit {{limit}}",
+      "replaceSoon": "Replace soon",
+      "replaceNotice": "{{name}}: time to think about a new pair",
+      "retire": "Archive",
+      "restore": "Restore",
+      "delete": "Delete",
+      "edit": "Edit",
+      "deleteTitle": "Delete the shoes?",
+      "deleteBody": "Workouts stay, just without this pair",
+      "cancel": "Cancel"
+    },
+    "gearEdit": {
+      "newTitle": "New shoes",
+      "editTitle": "Shoes",
+      "model": "Model",
+      "brand": "Brand",
+      "modelName": "Model",
+      "nickname": "Name",
+      "optional": "Optional",
+      "resource": "Lifespan",
+      "presets": {
+        "race": "Racing",
+        "training": "Training",
+        "trail": "Trail"
+      },
+      "mileage": "Mileage",
+      "initial": "Already run",
+      "start": "Start",
+      "notSet": "Not set",
+      "defaults": "Default for workouts",
+      "defaultsMoved": "Selected types move from other pairs",
+      "reminder": "Replacement reminder",
+      "reminderDescription": "When 10% of the lifespan is left",
+      "add": "Add",
+      "save": "Save"
+    },
+    "workoutTypes": {
+      "recovery": "Recovery",
+      "easy": "Easy",
+      "long_run": "Long run",
+      "tempo": "Tempo",
+      "threshold": "Threshold",
+      "interval": "Intervals",
+      "hill": "Hills",
+      "race": "Race"
+    },
+    "weekdays": {
+      "short": [
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Su"
+      ],
+      "full": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    "valueSheet": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "fromStrava": "From Strava · {{ago}}",
+      "afterSave": "After saving, the value becomes manual",
+      "resetToStrava": "Use the value from Strava",
+      "clear": "Clear"
+    },
+    "deleteAccount": {
+      "title": "Delete the account?",
+      "body": "This is permanent and can't be undone",
+      "items": [
+        "Profile and settings",
+        "Plans and workouts",
+        "Gear",
+        "Chat history with the coach",
+        "Strava connection"
+      ],
+      "confirm": "Delete forever",
+      "cancel": "Cancel",
+      "deleted": "Account deleted"
+    },
+    "unitLabels": {
+      "km": "km",
+      "mi": "mi",
+      "kg": "kg",
+      "lb": "lb",
+      "cm": "cm",
+      "ft": "ft",
+      "in": "in",
+      "perKm": "/km",
+      "perMi": "/mi",
+      "bpm": "bpm",
+      "min": "min",
+      "h": "h"
+    },
+    "ago": {
+      "justNow": "just now",
+      "minutes": "{{count}} min ago",
+      "hours": "{{count}} h ago",
+      "days": "{{count}} d ago"
+    },
+    "errors": {
+      "generic": "Couldn't save. Please try again",
+      "ATHLETE_FIELD_OUT_OF_RANGE": "The value is outside the accepted range",
+      "ATHLETE_HEART_RATE_INCONSISTENT": "Resting heart rate must be below threshold, and threshold below max",
+      "ATHLETE_ZONES_INVALID": "Zone bounds must grow from Z1 to Z4",
+      "STRAVA_NOT_CONNECTED": "Connect Strava first",
+      "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava profile access first"
+    },
+    "wizard": {
+      "later": "Later",
+      "next": "Next",
+      "done": "Done",
+      "step": "Step {{n}} of 3",
+      "steps": [
+        {
+          "title": "Body",
+          "subtitle": "Needed to calculate load and calories"
+        },
+        {
+          "title": "Threshold heart rate",
+          "subtitle": "The most accurate basis for your zones"
+        },
+        {
+          "title": "Injuries & limitations",
+          "subtitle": "The coach takes them into account"
+        }
+      ],
+      "know": "I know it",
+      "knowDescription": "From a test or your watch",
+      "dontKnow": "I don't know",
+      "dontKnowDescription": "Zones will use max heart rate",
+      "noLimits": "No limitations",
+      "noLimitsDescription": "You can change it any time",
+      "hasLimits": "I have limitations",
+      "hasLimitsDescription": "Describe them briefly"
+    }
   },
   "plans": {
     "title": "My plans",
@@ -960,7 +1320,8 @@
         "strava": "from Strava",
         "manual_workouts": "from the workouts you logged",
         "athlete_state": "from your profile",
-        "none": "enter manually"
+        "none": "enter manually",
+        "profile": "from your profile"
       },
       "placeholder": "Enter manually",
       "connectStrava": "Connect Strava to fill metrics automatically",
@@ -1010,6 +1371,32 @@
       "invalidStatus": "The plan status has changed",
       "retry": "Try again",
       "back": "Back"
+    },
+    "pendingAdaptations": {
+      "proposedTitle": "The coach suggests changing the plan",
+      "suggestedTitle": "Coach's advice",
+      "apply": "Apply",
+      "dismiss": "Dismiss",
+      "ok": "Got it",
+      "applied": "Plan updated",
+      "workouts": {
+        "one": "{{count}} workout",
+        "few": "{{count}} workouts",
+        "many": "{{count}} workouts",
+        "other": "{{count}} workouts"
+      },
+      "actions": {
+        "REDUCE_VOLUME": "Reduce volume of the next workouts",
+        "REDUCE_INTENSITY": "Reduce intensity",
+        "INCREASE_VOLUME": "Add a bit of volume",
+        "INCREASE_INTENSITY": "Add intensity",
+        "MOVE": "Move a workout",
+        "REPLACE": "Replace a workout",
+        "ADD_RECOVERY": "Add recovery",
+        "REGENERATE_PLAN": "Rebuild the plan",
+        "UPDATE_HEART_RATE": "Update heart rate to the new zones",
+        "default": "Adjust the plan"
+      }
     }
   }
 }

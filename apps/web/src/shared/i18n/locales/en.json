@@ -629,7 +629,8 @@
       "sources": {
         "strava": "Strava",
         "manual_workouts": "Workouts",
-        "athlete_state": "Estimate"
+        "athlete_state": "Estimate",
+        "profile": "Profile"
       }
     },
     "units": {
@@ -793,7 +794,11 @@
         "plans": "Plans",
         "workouts": "Workouts",
         "calendar": "Workout calendar",
-        "userplans": "User plans"
+        "userplans": "User plans",
+        "gear": "Gear"
+      },
+      "account": {
+        "preferences": "Preferences"
       }
     },
     "descriptions": {
@@ -826,13 +831,15 @@
         "sessions": {
           "read": "View coaching sessions, their messages and the streaming answer",
           "create": "Start a new coaching session with the AI coach",
-          "message": "Send messages to the AI coach and receive answers"
+          "message": "Send messages to the AI coach and receive answers",
+          "delete": "Clear the own chat history with the AI coach"
         }
       },
       "training": {
         "athletes": {
           "read": "View the athlete profile and the latest calculated athlete state",
-          "create": "Create an athlete profile and fill in the training input data"
+          "create": "Create an athlete profile and fill in the training input data",
+          "update": "Edit the own athlete profile: body, heart rate and zones, schedule, experience"
         },
         "progress": {
           "read": "View the progress snapshot: load, form and recovery trends"
@@ -861,10 +868,19 @@
         "userplans": {
           "read": "View training plans of any user in the admin panel, with diffs and previews",
           "manage": "Create, edit, start, cancel, delete and rebuild training plans of any user from the admin panel"
+        },
+        "gear": {
+          "read": "View own running gear with its mileage",
+          "manage": "Add, edit, retire and delete own running gear and assign it to workouts"
         }
       },
       "account": {
-        "update": "Edit the own profile: first name, last name and locale"
+        "update": "Edit the own profile: first name, last name and locale",
+        "preferences": {
+          "read": "View own app preferences: units, week start, time format and AI coach settings",
+          "update": "Change own app preferences, including turning the AI coach on or off"
+        },
+        "delete": "Delete the own account and all its data permanently"
       }
     }
   },

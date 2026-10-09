@@ -3,10 +3,12 @@ import {
   integrationsListSchema,
   integrationSyncStatusSchema,
   stravaConnectResponseSchema,
+  stravaProfileAccessSchema,
   type IntegrationItem,
   type IntegrationsList,
   type IntegrationSyncStatus,
   type StravaConnectResponse,
+  type StravaProfileAccess,
 } from "@workspace/api-client";
 import { request } from "./api-client";
 
@@ -50,4 +52,18 @@ export async function getStravaSyncStatus(): Promise<IntegrationSyncStatus> {
     useAuth: true,
   });
   return integrationSyncStatusSchema.parse(response);
+}
+
+/** Authorization URL that adds profile access (weight, sex, shoes) to the Strava connection. */
+export async function requestStravaProfileAccess(): Promise<StravaProfileAccess> {
+  const response = await request<unknown>("/integrations/strava/profile-access", {
+    method: "POST",
+    useAuth: true,
+  });
+  return stravaProfileAccessSchema.parse(response);
+}
+
+/** Pulls weight, sex and shoes from Strava now. */
+export async function syncStravaProfile(): Promise<void> {
+  await request<unknown>("/integrations/strava/profile-sync", { method: "POST", useAuth: true });
 }

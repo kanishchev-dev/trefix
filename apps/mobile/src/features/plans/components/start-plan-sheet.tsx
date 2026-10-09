@@ -257,7 +257,7 @@ export function StartPlanSheet({
 
         <SheetBlock theme={theme}>
           <View style={styles.options}>
-            <SheetSectionLabel text={startCopy.when.toUpperCase()} theme={theme} />
+            <SheetSectionLabel text={startCopy.when} theme={theme} />
             {loading ? (
               <Text style={[styles.muted, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
                 …

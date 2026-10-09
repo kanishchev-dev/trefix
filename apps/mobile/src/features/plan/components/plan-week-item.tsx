@@ -6,6 +6,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { type PlanTimelineMode } from "../../plans/lib/plan-weeks";
+import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 
 type Props = {
   week: PlanWeek;
@@ -25,6 +26,7 @@ export function PlanWeekItem({
   mode = "active",
 }: Props) {
   const planCopy = copy.plan;
+  const format = useUnitFormat(copy);
   const isCurrent = week.status === "current";
   const isCompleted = week.status === "completed";
 
@@ -38,12 +40,7 @@ export function PlanWeekItem({
       )
     : null;
 
-  const distanceText = week.plannedDistance
-    ? planCopy.timeline.distanceKm.replace(
-        "{{distance}}",
-        String(week.plannedDistance),
-      )
-    : null;
+  const distanceText = week.plannedDistance ? format.distance(week.plannedDistance, 0) : null;
 
   const summaryText =
     week.summaryText ||

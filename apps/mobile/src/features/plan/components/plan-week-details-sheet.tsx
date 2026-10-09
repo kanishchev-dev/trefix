@@ -8,6 +8,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { type MainCopy } from "../../../locales";
 import { BottomSheet, SheetSectionLabel } from "../../../shared/ui/bottom-sheet";
 import { type PlanTimelineMode, type WeekWorkoutRow } from "../../plans/lib/plan-weeks";
+import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 
 type Props = {
   week: PlanWeek | null;
@@ -55,6 +56,8 @@ export function PlanWeekDetailsSheet({
     }
   }, [visible]);
 
+  const format = useUnitFormat(copy);
+
   const closeThen = (action?: () => void) => {
     afterClose.current = action ?? null;
     setOpen(false);
@@ -100,7 +103,7 @@ export function PlanWeekDetailsSheet({
         {/* Focus Title */}
         <View style={styles.section}>
           <SheetSectionLabel
-            text={planCopy.weekDetails.weeklyFocus.toUpperCase()}
+            text={planCopy.weekDetails.weeklyFocus}
             theme={theme}
           />
           <Text
@@ -120,7 +123,7 @@ export function PlanWeekDetailsSheet({
         {week.intent ? (
           <View style={styles.section}>
             <SheetSectionLabel
-              text={planCopy.weekDetails.trainingIntent.toUpperCase()}
+              text={planCopy.weekDetails.trainingIntent}
               theme={theme}
             />
             <Text
@@ -141,7 +144,7 @@ export function PlanWeekDetailsSheet({
         {(week.plannedWorkoutsCount || week.plannedDistance) ? (
           <View style={styles.section}>
             <SheetSectionLabel
-              text={planCopy.weekDetails.plannedVolume.toUpperCase()}
+              text={planCopy.weekDetails.plannedVolume}
               theme={theme}
             />
 
@@ -228,15 +231,15 @@ export function PlanWeekDetailsSheet({
         {/* Workouts of the week */}
         {workouts && workouts.length > 0 ? (
           <View style={styles.section}>
-            <SheetSectionLabel text={planCopy.weekDetails.workouts.toUpperCase()} theme={theme} />
+            <SheetSectionLabel text={planCopy.weekDetails.workouts} theme={theme} />
             <View style={styles.sessionsList}>
               {workouts.map((workout) => {
                 const status = workout.status ? statuses[workout.status] ?? workout.status : null;
                 const actual =
                   workout.actualDistanceKm !== null && workout.actualDistanceKm !== undefined
-                    ? ` → ${Math.round(workout.actualDistanceKm * 10) / 10} ${units.km}`
+                    ? ` → ${format.distance(workout.actualDistanceKm)}`
                     : "";
-                const meta = `${Math.round(workout.distanceKm * 10) / 10} ${units.km}${actual} · ${workout.durationMinutes} ${units.min}`;
+                const meta = `${format.distance(workout.distanceKm)}${actual} · ${workout.durationMinutes} ${units.min}`;
                 const label = `${workout.dayLabel} · ${typeLabels[workout.type] ?? workout.type}`;
                 const content = (
                   <>
@@ -297,7 +300,7 @@ export function PlanWeekDetailsSheet({
         {!workouts && week.keySessions && week.keySessions.length > 0 ? (
           <View style={styles.section}>
             <SheetSectionLabel
-              text={planCopy.weekDetails.keySessions.toUpperCase()}
+              text={planCopy.weekDetails.keySessions}
               theme={theme}
             />
             <View style={styles.sessionsList}>
@@ -336,7 +339,7 @@ export function PlanWeekDetailsSheet({
         {weekAdaptations.length > 0 ? (
           <View style={styles.section}>
             <SheetSectionLabel
-              text={planCopy.weekDetails.changesThisWeek.toUpperCase()}
+              text={planCopy.weekDetails.changesThisWeek}
               theme={theme}
             />
             <View style={styles.adaptationsList}>

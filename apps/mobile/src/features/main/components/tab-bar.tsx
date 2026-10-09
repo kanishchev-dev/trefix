@@ -35,6 +35,8 @@ type Props = {
   onOpenTrefix: () => void;
   userEmail: string;
   themeMode: "light" | "dark";
+  /** The Trefix (AI coach) button is hidden when the coach is turned off. */
+  showTrefix?: boolean;
 };
 
 type TabItem = {
@@ -56,13 +58,14 @@ export function TabBar({
   onOpenTrefix,
   userEmail,
   themeMode,
+  showTrefix = true,
 }: Props) {
   const insets = useSafeAreaInsets();
   const isDark = themeMode === "dark";
   const { width: windowWidth } = useWindowDimensions();
 
   const barWidth = windowWidth - HORIZONTAL_MARGIN * 2;
-  const tabsCount = 5;
+  const tabsCount = showTrefix ? 5 : 4;
   const tabWidth = (barWidth - BAR_PADDING * 2) / tabsCount;
   const indicatorBaseWidth = Math.min(tabWidth - 6, INDICATOR_HEIGHT + 16);
 
@@ -71,7 +74,7 @@ export function TabBar({
     return trimmed.slice(0, 1).toUpperCase() || "U";
   }, [userEmail]);
 
-  const tabs: TabItem[] = [
+  const allTabs: TabItem[] = [
     {
       key: "today",
       onPress: () => onChangeTab("today"),
@@ -120,6 +123,8 @@ export function TabBar({
       badge: true,
     },
   ];
+
+  const tabs = showTrefix ? allTabs : allTabs.filter((tab) => tab.key !== "trefix");
 
   const activeIndex = tabs.findIndex((t) => t.key !== "trefix" && t.key === activeTab);
   const position = useSharedValue(Math.max(activeIndex, 0));

@@ -179,9 +179,183 @@ export const trainingAthleteSchema = z.object({
   preferredTrainingDays: z.array(z.string()),
   availableTrainingDays: z.array(z.string()),
   preferredWorkoutDurationMinutes: z.number().nullable(),
+  birthDate: z.string().nullable().optional(),
+  restingHeartRate: z.number().nullable().optional(),
+  maxHeartRate: z.number().nullable().optional(),
+  thresholdHeartRate: z.number().nullable().optional(),
+  hrZonesMethod: z.enum(["threshold", "max_hr", "custom"]).optional(),
+  hrZonesCustom: z.array(z.number()).nullable().optional(),
+  runningSinceYear: z.number().nullable().optional(),
+  limitations: z.string().nullable().optional(),
+  preferredTimeOfDay: z.enum(["morning", "day", "evening", "any"]).optional(),
+  longRunDay: z.string().nullable().optional(),
+  longRunMaxDurationMinutes: z.number().nullable().optional(),
+  fieldSources: z
+    .record(z.string(), z.object({ source: z.enum(["manual", "strava"]), updatedAt: z.string() }))
+    .optional(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
+
+export const hrZonesMethodSchema = z.enum(["threshold", "max_hr", "custom"]);
+export const timeOfDaySchema = z.enum(["morning", "day", "evening", "any"]);
+export const athleteSexSchema = z.enum(["female", "male", "other", "prefer_not_to_say"]);
+export const experienceLevelSchema = z.enum(["beginner", "intermediate", "advanced"]);
+export const trainingWeekdaySchema = z.enum([
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+]);
+
+export const hrZoneSchema = z.object({
+  zone: z.number(),
+  min: z.number().nullable(),
+  max: z.number().nullable(),
+});
+
+export const profileCompletenessSchema = z.object({
+  percent: z.number(),
+  missing: z.array(z.string()),
+});
+
+/** `GET/PATCH /athletes/me`: stored inputs plus values the server derives from them. */
+export const athleteProfileSchema = trainingAthleteSchema.extend({
+  maxHeartRateEstimate: z.number().nullable().optional(),
+  hrZones: z.array(hrZoneSchema).nullable().optional(),
+  hrZonesUnavailableReason: z.enum(["threshold_missing", "max_missing", "custom_missing"]).nullable().optional(),
+  weeklyMileageSuggestion: z
+    .object({ valueKm: z.number(), source: z.string(), windowDays: z.number() })
+    .nullable()
+    .optional(),
+  completeness: profileCompletenessSchema.optional(),
+});
+
+/** Partial profile update; `null` clears a field. */
+export const athleteProfileUpdateSchema = z
+  .object({
+    birthDate: z.string().nullable(),
+    sex: athleteSexSchema.nullable(),
+    heightCm: z.number().int().nullable(),
+    weightKg: z.number().nullable(),
+    restingHeartRate: z.number().int().nullable(),
+    maxHeartRate: z.number().int().nullable(),
+    thresholdHeartRate: z.number().int().nullable(),
+    hrZonesMethod: hrZonesMethodSchema,
+    hrZonesCustom: z.array(z.number().int()).length(4).nullable(),
+    experienceLevel: experienceLevelSchema,
+    runningSinceYear: z.number().int().nullable(),
+    limitations: z.string().max(500).nullable(),
+    availableTrainingDays: z.array(trainingWeekdaySchema),
+    preferredTimeOfDay: timeOfDaySchema,
+    sessionsPerWeek: z.number().int(),
+    longRunDay: trainingWeekdaySchema.nullable(),
+    preferredWorkoutDurationMinutes: z.number().int().nullable(),
+    longRunMaxDurationMinutes: z.number().int().nullable(),
+    weeklyMileageKm: z.number().nullable(),
+    resetSources: z.array(z.enum(["weightKg", "sex", "heightCm", "birthDate"])),
+  })
+  .partial();
+
+export type HrZonesMethod = z.infer<typeof hrZonesMethodSchema>;
+export type TimeOfDay = z.infer<typeof timeOfDaySchema>;
+export type AthleteSex = z.infer<typeof athleteSexSchema>;
+export type ExperienceLevel = z.infer<typeof experienceLevelSchema>;
+export type TrainingWeekday = z.infer<typeof trainingWeekdaySchema>;
+export type HrZone = z.infer<typeof hrZoneSchema>;
+export type ProfileCompleteness = z.infer<typeof profileCompletenessSchema>;
+export type AthleteProfile = z.infer<typeof athleteProfileSchema>;
+export type AthleteProfileUpdate = z.infer<typeof athleteProfileUpdateSchema>;
+
+// --- Gear ---
+
+export const gearStatusSchema = z.enum(["active", "retired"]);
+
+export const gearSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  brand: z.string(),
+  model: z.string(),
+  nickname: z.string().nullable(),
+  initialDistanceKm: z.number(),
+  limitKm: z.number(),
+  startedAt: z.string().nullable(),
+  retiredAt: z.string().nullable(),
+  status: gearStatusSchema,
+  defaultWorkoutTypes: z.array(z.string()),
+  replaceReminder: z.boolean(),
+  source: z.enum(["manual", "strava"]),
+  distanceKm: z.number(),
+  workoutsCount: z.number(),
+  remainingKm: z.number(),
+  wearPercent: z.number(),
+  replaceSoon: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const gearListSchema = z.object({ items: z.array(gearSchema) });
+
+export const gearInputSchema = z.object({
+  brand: z.string().trim().min(1).max(60),
+  model: z.string().trim().min(1).max(80),
+  nickname: z.string().trim().max(60).nullable().optional(),
+  initialDistanceKm: z.number().min(0).max(10000).optional(),
+  limitKm: z.number().int().min(100).max(2000).optional(),
+  startedAt: z.string().nullable().optional(),
+  defaultWorkoutTypes: z.array(z.string()).optional(),
+  replaceReminder: z.boolean().optional(),
+});
+
+export type GearStatus = z.infer<typeof gearStatusSchema>;
+export type Gear = z.infer<typeof gearSchema>;
+export type GearList = z.infer<typeof gearListSchema>;
+export type GearInput = z.infer<typeof gearInputSchema>;
+
+// --- User preferences ---
+
+export const coachAdaptationModeSchema = z.enum(["auto", "confirm", "suggest"]);
+
+export const quietHoursSchema = z.object({ from: z.string(), to: z.string() });
+
+export const userPreferencesSchema = z.object({
+  units: z.enum(["metric", "imperial"]),
+  weekStart: z.enum(["mon", "sun"]),
+  timeFormat: z.enum(["24h", "12h"]),
+  coachEnabled: z.boolean(),
+  coachAdaptationMode: coachAdaptationModeSchema,
+  coachQuietHours: quietHoursSchema.nullable(),
+  stravaProfileSync: z.boolean(),
+  timezone: z.string().nullable().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const userPreferencesUpdateSchema = userPreferencesSchema
+  .omit({ updatedAt: true })
+  .extend({ timezone: z.string() })
+  .partial();
+
+export type CoachAdaptationMode = z.infer<typeof coachAdaptationModeSchema>;
+
+/** Adaptation of the active plan waiting for the user (`proposed`) or shown as advice (`suggested`). */
+export const pendingAdaptationSchema = z.object({
+  id: z.string(),
+  planId: z.string().nullable(),
+  workoutId: z.string().nullable(),
+  type: z.string(),
+  reason: z.string(),
+  status: z.enum(["applied", "proposed", "suggested", "dismissed"]).optional(),
+  decision: z.record(z.string(), z.unknown()),
+  createdAt: z.string(),
+});
+export const pendingAdaptationListSchema = z.object({ items: z.array(pendingAdaptationSchema) });
+export type PendingAdaptation = z.infer<typeof pendingAdaptationSchema>;
+export type QuietHours = z.infer<typeof quietHoursSchema>;
+export type UserPreferences = z.infer<typeof userPreferencesSchema>;
+export type UserPreferencesUpdate = z.infer<typeof userPreferencesUpdateSchema>;
 
 export const trainingStateSchema = z.object({
   id: z.string(),
@@ -230,6 +404,7 @@ export const trainingWorkoutSchema = z.object({
   actual: z.record(z.string(), z.unknown()).nullable(),
   analysis: trainingWorkoutAnalysisSchema.nullable(),
   completedAt: z.string().or(z.date()).nullable(),
+  gearId: z.string().nullable().optional(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -736,7 +911,7 @@ export const metricsSnapshotSchema = z.object({
   source: z.string().optional(),
 });
 
-export const metricsSourceSchema = z.enum(["strava", "manual_workouts", "athlete_state", "none"]);
+export const metricsSourceSchema = z.enum(["profile", "strava", "manual_workouts", "athlete_state", "none"]);
 
 const sourcedNumberSchema = z.object({
   value: z.number().nullable(),
@@ -1576,7 +1751,15 @@ export const integrationItemSchema = z.object({
   lastSyncedAt: z.string().nullable().optional(),
   externalUserId: z.string().nullable().optional(),
   importedActivitiesCount: z.number().optional(),
+  profileAccess: z.boolean().optional(),
+  lastProfileSyncAt: z.string().nullable().optional(),
 });
+
+export const stravaProfileAccessSchema = z.object({
+  authorizeUrl: z.string(),
+  state: z.string(),
+});
+export type StravaProfileAccess = z.infer<typeof stravaProfileAccessSchema>;
 
 export const integrationsListSchema = z.object({
   items: z.array(integrationItemSchema),

@@ -8,7 +8,6 @@ import { TabBar } from "./components/tab-bar";
 import { HeaderContext, type HeaderOptions } from "./context/header-context";
 import { type MainTabKey } from "./main-types";
 import { PlanScreen } from "./screens/plan-screen";
-import { ProfileScreen } from "./screens/profile-screen";
 import { ProgressScreen } from "./screens/progress-screen";
 import { TodayScreen } from "./screens/today-screen";
 import { IntegrationsScreen } from "./screens/integrations-screen";
@@ -31,6 +30,19 @@ import { PlansNavigationProvider, type PlansNavigation } from "../plans/plans-na
 import { PlanDetailsScreen } from "../plans/screens/plan-details-screen";
 import { PlanDraftEditScreen } from "../plans/screens/plan-draft-edit-screen";
 import { PlansScreen } from "../plans/screens/plans-screen";
+import { useProfileRealtime } from "../profile/hooks/use-athlete-profile";
+import { usePreferences } from "../profile/hooks/use-preferences";
+import { type ProfileRoute } from "../profile/profile-routes";
+import { BodyScreen } from "../profile/screens/body-screen";
+import { CoachSettingsScreen } from "../profile/screens/coach-settings-screen";
+import { ExperienceScreen } from "../profile/screens/experience-screen";
+import { GearEditScreen } from "../profile/screens/gear-edit-screen";
+import { GearScreen } from "../profile/screens/gear-screen";
+import { HeartScreen } from "../profile/screens/heart-screen";
+import { ProfileScreen } from "../profile/screens/profile-screen";
+import { ProfileWizardScreen } from "../profile/screens/profile-wizard-screen";
+import { ScheduleScreen } from "../profile/screens/schedule-screen";
+import { UnitsScreen } from "../profile/screens/units-screen";
 
 type Props = {
   theme: ThemeTokens;
@@ -41,6 +53,7 @@ type Props = {
   userTheme: ThemePreference;
   onOpenTrefix: () => void;
   onLogout: () => void;
+  onAccountDeleted: () => void;
   onEditProfile: () => void;
   onOpenNotifications: () => void;
   onOpenLanguage: () => void;
@@ -52,7 +65,8 @@ type SubScreen =
   | { kind: "integrations" }
   | { kind: "strava-integration" }
   | { kind: "plans"; segment?: PlansSegment; highlightPlanId?: string | null }
-  | { kind: "plan-details"; planId: string };
+  | { kind: "plan-details"; planId: string }
+  | ProfileRoute;
 
 type StartTarget = { id: string; name: string; entry: string };
 
@@ -71,8 +85,9 @@ function MainTabsContent({
   userEmail,
   userLanguage,
   userTheme,
-  onOpenTrefix,
+  onOpenTrefix: openTrefixChat,
   onLogout,
+  onAccountDeleted,
   onEditProfile,
   onOpenNotifications,
   onOpenLanguage,
@@ -93,6 +108,16 @@ function MainTabsContent({
   const startPlanMutation = useStartPlan();
 
   usePlansRealtime();
+  useProfileRealtime();
+  const { preferences } = usePreferences();
+  // With the coach off the chat is unavailable: lead to the setting that turns it back on.
+  const onOpenTrefix = useCallback(() => {
+    if (preferences.coachEnabled) {
+      openTrefixChat();
+    } else {
+      setSubScreens((current) => [...current, { kind: "settings-coach" }]);
+    }
+  }, [openTrefixChat, preferences.coachEnabled]);
 
   const subScreen = subScreens[subScreens.length - 1] ?? null;
 
@@ -231,6 +256,46 @@ function MainTabsContent({
                 copy={copy}
                 language={userLanguage}
               />
+            ) : subScreen?.kind === "profile-body" ? (
+              <BodyScreen theme={theme} themeMode={themeMode} copy={copy} language={userLanguage} onBack={pop} />
+            ) : subScreen?.kind === "profile-heart" ? (
+              <HeartScreen theme={theme} themeMode={themeMode} copy={copy} onBack={pop} />
+            ) : subScreen?.kind === "profile-schedule" ? (
+              <ScheduleScreen theme={theme} themeMode={themeMode} copy={copy} language={userLanguage} onBack={pop} />
+            ) : subScreen?.kind === "profile-experience" ? (
+              <ExperienceScreen theme={theme} themeMode={themeMode} copy={copy} onBack={pop} />
+            ) : subScreen?.kind === "profile-gear" ? (
+              <GearScreen
+                theme={theme}
+                themeMode={themeMode}
+                copy={copy}
+                language={userLanguage}
+                onBack={pop}
+                onNavigate={push}
+              />
+            ) : subScreen?.kind === "profile-gear-edit" ? (
+              <GearEditScreen
+                key={subScreen.gearId ?? "new"}
+                gearId={subScreen.gearId}
+                theme={theme}
+                themeMode={themeMode}
+                copy={copy}
+                language={userLanguage}
+                onBack={pop}
+              />
+            ) : subScreen?.kind === "settings-units" ? (
+              <UnitsScreen theme={theme} themeMode={themeMode} copy={copy} language={userLanguage} onBack={pop} />
+            ) : subScreen?.kind === "profile-wizard" ? (
+              <ProfileWizardScreen
+                initialStep={subScreen.step}
+                theme={theme}
+                themeMode={themeMode}
+                copy={copy}
+                language={userLanguage}
+                onClose={pop}
+              />
+            ) : subScreen?.kind === "settings-coach" ? (
+              <CoachSettingsScreen theme={theme} themeMode={themeMode} copy={copy} onBack={pop} />
             ) : activeTab === "today" ? (
               <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
             ) : activeTab === "plan" ? (
@@ -255,6 +320,9 @@ function MainTabsContent({
                 onOpenLanguage={onOpenLanguage}
                 onOpenTheme={onOpenTheme}
                 onOpenIntegrations={() => push({ kind: "integrations" })}
+                onOpenStrava={() => push({ kind: "strava-integration" })}
+                onNavigate={push}
+                onAccountDeleted={onAccountDeleted}
               />
             ) : null}
           </Animated.View>
@@ -266,6 +334,7 @@ function MainTabsContent({
             activeTab={activeTab}
             onChangeTab={handleTabChange}
             onOpenTrefix={onOpenTrefix}
+            showTrefix={preferences.coachEnabled}
           />
 
           <PlanCreationMethodSheet

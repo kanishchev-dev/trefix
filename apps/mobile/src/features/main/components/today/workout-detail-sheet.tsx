@@ -33,6 +33,7 @@ import {
   PlanWorkoutEditPanel,
   type PlanWorkoutEditMode,
 } from "../../../plans/components/plan-workout-edit-panel";
+import { useUnitFormat } from "../../../profile/hooks/use-unit-format";
 
 type Props = {
   workout: TrainingWorkout | null;
@@ -57,6 +58,7 @@ export function WorkoutDetailSheet({
   const activePlanQuery = useActivePlan({ enabled: visible && Boolean(workout?.planId) });
   const [editMode, setEditMode] = useState<PlanWorkoutEditMode | null>(null);
   const locale = copy?.today?.detailSheet || {};
+  const format = useUnitFormat(copy);
   const statuses = copy?.today?.workout?.statuses || {};
 
   const [isCompleting, setIsCompleting] = useState(false);
@@ -271,7 +273,7 @@ export function WorkoutDetailSheet({
                     },
                   ]}
                 >
-                  {workout.distanceKm} км
+                  {format.distance(workout.distanceKm)}
                 </Text>
                 <Text
                   style={[

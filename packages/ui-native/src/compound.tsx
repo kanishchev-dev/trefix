@@ -73,7 +73,7 @@ export function Compound({
                   },
                 ]}
               >
-                {part.label.toUpperCase()}
+                {part.label}
               </Text>
               <Wheel
                 value={part.value}

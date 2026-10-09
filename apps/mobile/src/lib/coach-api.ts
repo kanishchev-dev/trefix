@@ -9,6 +9,7 @@ import {
   type SendCoachMessageInput,
 } from "@workspace/api-client";
 import { request } from "./api-client";
+import { BACKEND_BASE_URL } from "./backend-url";
 import { fetchSseStream } from "./stream-utils";
 
 export async function createCoachSession(
@@ -65,14 +66,15 @@ export async function streamCoachMessage(
   message: string,
   abortSignal?: AbortSignal,
 ) {
-  const BACKEND_BASE_URL =
-    process.env.EXPO_PUBLIC_BACKEND_URL ||
-    process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ||
-    "http://127.0.0.1:3000/v1";
 
   const url = `${BACKEND_BASE_URL}/coach/sessions/${sessionId}/stream?message=${encodeURIComponent(
     message,
   )}`;
 
   return fetchSseStream(url, abortSignal);
+}
+
+/** Clears the chat history with the coach; plans and workouts stay. */
+export async function clearCoachHistory(): Promise<void> {
+  await request<void>("/coach/sessions", { method: "DELETE", useAuth: true });
 }

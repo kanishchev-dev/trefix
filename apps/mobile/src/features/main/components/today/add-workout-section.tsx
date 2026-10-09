@@ -85,7 +85,7 @@ export const AddWorkoutSection = React.memo(
                 <View
                   style={[
                     styles.iconContainer,
-                    { backgroundColor: isDark ? "#222226" : theme.color.surface },
+                    { backgroundColor: theme.color.iconSurface },
                   ]}
                 >
                   <Icon size={20} color={theme.color.primary} />

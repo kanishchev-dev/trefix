@@ -70,7 +70,7 @@ export function PlanCreationMethodSheet({
                   styles.methodIcon,
                   {
                     backgroundColor:
-                      themeMode === "dark" ? "rgba(255, 255, 255, 0.06)" : theme.color.surfaceElevated,
+                      theme.color.iconSurface,
                   },
                 ]}
               >
@@ -113,7 +113,7 @@ export function PlanCreationMethodSheet({
                   styles.methodIcon,
                   {
                     backgroundColor:
-                      themeMode === "dark" ? "rgba(255, 255, 255, 0.06)" : theme.color.surfaceElevated,
+                      theme.color.iconSurface,
                   },
                 ]}
               >

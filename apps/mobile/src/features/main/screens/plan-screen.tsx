@@ -23,6 +23,7 @@ import { PlanWeekDetailsSheet } from "../../plan/components/plan-week-details-sh
 import { RecentAdaptationsCard } from "../../plan/components/recent-adaptations-card";
 import { usePlanOverview } from "../../plan/hooks/use-plan-overview";
 import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-form";
+import { PendingAdaptationsCard } from "../../plans/components/pending-adaptations-card";
 import { PlanActionsMenu } from "../../plans/components/plan-actions-menu";
 import { PlanWorkoutAddSheet } from "../../plans/components/plan-workout-add-sheet";
 import { PlanWorkoutSheet } from "../../plans/components/plan-workout-sheet";
@@ -170,6 +171,8 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
             theme={theme}
             themeMode={themeMode}
           />
+
+          <PendingAdaptationsCard copy={copy} language={language} theme={theme} themeMode={themeMode} />
 
           {/* Training Plan Timeline */}
           <PlanTimeline

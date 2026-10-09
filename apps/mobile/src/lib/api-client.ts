@@ -1,10 +1,7 @@
 import { ApiClientError, type ApiErrorShape } from "@workspace/api-client";
 import { loadAuthSession } from "./auth-session";
 
-const BACKEND_BASE_URL =
-  process.env.EXPO_PUBLIC_BACKEND_URL ||
-  process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ||
-  "http://127.0.0.1:3000/v1";
+import { BACKEND_BASE_URL } from "./backend-url";
 
 export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

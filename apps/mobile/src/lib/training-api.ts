@@ -13,12 +13,23 @@ import {
   planVersionResponseSchema,
   rebuildPrefillSchema,
   rebuildPreviewSchema,
+  athleteProfileSchema,
+  athleteProfileUpdateSchema,
+  pendingAdaptationListSchema,
+  gearListSchema,
+  gearSchema,
   trainingAthleteSchema,
   trainingPlanSchema,
   trainingStateSchema,
   trainingWorkoutSchema,
   z,
   type ActivePlanResponse,
+  type AthleteProfile,
+  type PendingAdaptation,
+  type AthleteProfileUpdate,
+  type Gear,
+  type GearInput,
+  type GearStatus,
   type CancelPlanResponse,
   type CompleteWorkoutInput,
   type CreateManualPlanInput,
@@ -56,15 +67,58 @@ export async function getAthlete(athleteId: string): Promise<TrainingAthlete> {
   return trainingAthleteSchema.parse(response);
 }
 
-export async function getMyAthlete(): Promise<TrainingAthlete | null> {
+export async function getMyAthlete(): Promise<AthleteProfile | null> {
   try {
     const response = await request<unknown>("/athletes/me", {
       useAuth: true,
     });
-    return trainingAthleteSchema.parse(response);
+    return athleteProfileSchema.parse(response);
   } catch (error) {
     return null;
   }
+}
+
+/** Partial update of the own athlete profile; `null` clears a field. */
+export async function updateMyAthlete(patch: AthleteProfileUpdate): Promise<AthleteProfile> {
+  const response = await request<unknown>("/athletes/me", {
+    method: "PATCH",
+    body: athleteProfileUpdateSchema.parse(patch),
+    useAuth: true,
+  });
+  return athleteProfileSchema.parse(response);
+}
+
+export async function listGear(status: GearStatus = "active"): Promise<Gear[]> {
+  const response = await request<unknown>(`/gear?status=${status}`, { useAuth: true });
+  return gearListSchema.parse(response).items;
+}
+
+export async function createGear(input: GearInput): Promise<Gear> {
+  const response = await request<unknown>("/gear", { method: "POST", body: input, useAuth: true });
+  return gearSchema.parse(response);
+}
+
+export async function updateGear(gearId: string, input: Partial<GearInput>): Promise<Gear> {
+  const response = await request<unknown>(`/gear/${gearId}`, { method: "PATCH", body: input, useAuth: true });
+  return gearSchema.parse(response);
+}
+
+export async function retireGear(gearId: string): Promise<Gear> {
+  const response = await request<unknown>(`/gear/${gearId}/retire`, { method: "POST", useAuth: true });
+  return gearSchema.parse(response);
+}
+
+export async function restoreGear(gearId: string): Promise<Gear> {
+  const response = await request<unknown>(`/gear/${gearId}/restore`, { method: "POST", useAuth: true });
+  return gearSchema.parse(response);
+}
+
+export async function deleteGear(gearId: string): Promise<void> {
+  await request<void>(`/gear/${gearId}`, { method: "DELETE", useAuth: true });
+}
+
+export async function setWorkoutGear(workoutId: string, gearId: string | null): Promise<void> {
+  await request<unknown>(`/workouts/${workoutId}/gear`, { method: "PATCH", body: { gearId }, useAuth: true });
 }
 
 export async function getAthleteState(
@@ -279,4 +333,13 @@ export async function previewRebuild(planId: string, dto: RebuildPreviewInput): 
 export async function rebuildPlan(planId: string, dto: RebuildInput): Promise<PlanDetails> {
   const response = await request<unknown>(`/plans/${planId}/rebuild`, { method: "POST", body: dto, useAuth: true });
   return planDetailsSchema.parse(response);
+}
+
+export async function listPendingAdaptations(): Promise<PendingAdaptation[]> {
+  const response = await request<unknown>("/plans/active/adaptations", { useAuth: true });
+  return pendingAdaptationListSchema.parse(response).items;
+}
+
+export async function resolveAdaptation(adaptationId: string, action: "apply" | "dismiss"): Promise<void> {
+  await request<unknown>(`/plans/active/adaptations/${adaptationId}/${action}`, { method: "POST", useAuth: true });
 }
