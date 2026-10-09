@@ -12,8 +12,35 @@ export const TRAINING_ATHLETE_EXAMPLE = {
   preferredTrainingDays: ['tuesday', 'thursday', 'saturday'],
   availableTrainingDays: ['tuesday', 'thursday', 'saturday', 'sunday'],
   preferredWorkoutDurationMinutes: 50,
+  birthDate: '1995-03-14',
+  restingHeartRate: 52,
+  maxHeartRate: 189,
+  thresholdHeartRate: null,
+  hrZonesMethod: 'max_hr',
+  hrZonesCustom: null,
+  runningSinceYear: 2021,
+  limitations: null,
+  preferredTimeOfDay: 'morning',
+  longRunDay: 'saturday',
+  longRunMaxDurationMinutes: 120,
+  fieldSources: { weightKg: { source: 'strava', updatedAt: '2026-10-05T07:12:00.000Z' } },
   createdAt: '2026-09-11T00:00:00.000Z',
   updatedAt: '2026-09-11T00:00:00.000Z',
+};
+
+export const ATHLETE_PROFILE_EXAMPLE = {
+  ...TRAINING_ATHLETE_EXAMPLE,
+  maxHeartRateEstimate: null,
+  hrZones: [
+    { zone: 1, min: null, max: 113 },
+    { zone: 2, min: 113, max: 132 },
+    { zone: 3, min: 132, max: 151 },
+    { zone: 4, min: 151, max: 170 },
+    { zone: 5, min: 170, max: 189 },
+  ],
+  hrZonesUnavailableReason: null,
+  weeklyMileageSuggestion: { valueKm: 34, source: 'strava', windowDays: 28 },
+  completeness: { percent: 80, missing: ['thresholdHeartRate', 'limitations'] },
 };
 
 export const TRAINING_STATE_EXAMPLE = {

@@ -38,6 +38,32 @@ export interface StravaActivitySummary {
   device_name?: string;
   private?: boolean;
   visibility?: string;
+  gear_id?: string | null;
+}
+
+export interface StravaSummaryGear {
+  id: string;
+  name: string;
+  /** Meters. */
+  distance: number;
+  primary?: boolean;
+  retired?: boolean;
+}
+
+/** `GET /athlete` with `profile:read_all`. */
+export interface StravaDetailedAthlete {
+  id: number;
+  sex?: 'M' | 'F' | null;
+  /** Kilograms. */
+  weight?: number | null;
+  shoes?: StravaSummaryGear[];
+}
+
+/** `GET /gear/{id}`. */
+export interface StravaDetailedGear extends StravaSummaryGear {
+  brand_name?: string | null;
+  model_name?: string | null;
+  description?: string | null;
 }
 
 export interface StravaWebhookPayload {

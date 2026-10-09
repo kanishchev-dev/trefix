@@ -9,6 +9,7 @@ import type {
   WorkoutAnalysisView,
   WorkoutView,
 } from '../interfaces/training-views.interface';
+import { ADAPTATION_EVENT_STATUSES, HR_ZONES_METHODS, TIMES_OF_DAY } from '../training.constants';
 
 export class TrainingWorkoutAnalysisResponseDto implements WorkoutAnalysisView {
   @ApiProperty()
@@ -72,6 +73,46 @@ export class TrainingAthleteResponseDto implements AthleteView {
 
   @ApiPropertyOptional({ nullable: true })
   preferredWorkoutDurationMinutes!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: '1992-03-14' })
+  birthDate!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 52 })
+  restingHeartRate!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 189 })
+  maxHeartRate!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, example: null })
+  thresholdHeartRate!: number | null;
+
+  @ApiProperty({ enum: HR_ZONES_METHODS, example: 'max_hr' })
+  hrZonesMethod!: AthleteView['hrZonesMethod'];
+
+  @ApiPropertyOptional({ type: [Number], nullable: true })
+  hrZonesCustom!: number[] | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 2021 })
+  runningSinceYear!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, description: '`null` — not answered, empty string — no limitations' })
+  limitations!: string | null;
+
+  @ApiProperty({ enum: TIMES_OF_DAY, example: 'morning' })
+  preferredTimeOfDay!: AthleteView['preferredTimeOfDay'];
+
+  @ApiPropertyOptional({ nullable: true, example: 'saturday' })
+  longRunDay!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 120 })
+  longRunMaxDurationMinutes!: number | null;
+
+  @ApiProperty({
+    type: Object,
+    example: { weightKg: { source: 'strava', updatedAt: '2026-10-05T07:12:00Z' } },
+    description: 'Provenance of fields an external source may fill in; manual values are never overwritten',
+  })
+  fieldSources!: AthleteView['fieldSources'];
 
   @ApiProperty()
   createdAt!: Date;
@@ -224,6 +265,9 @@ export class TrainingWorkoutResponseDto implements WorkoutView {
   @ApiPropertyOptional({ nullable: true })
   completedAt!: Date | null;
 
+  @ApiPropertyOptional({ nullable: true, description: 'Gear (shoes) used for the workout' })
+  gearId?: string | null;
+
   @ApiProperty()
   createdAt!: Date;
 
@@ -322,6 +366,9 @@ export class TrainingAdaptationResponseDto implements AdaptationEventView {
 
   @ApiProperty()
   confidence!: number;
+
+  @ApiPropertyOptional({ enum: ADAPTATION_EVENT_STATUSES, example: 'applied' })
+  status?: AdaptationEventView['status'];
 
   @ApiProperty()
   createdAt!: Date;

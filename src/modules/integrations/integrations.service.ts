@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
@@ -7,24 +7,32 @@ import { Queue } from 'bullmq';
 import { createHash, randomBytes } from 'crypto';
 import { Op } from 'sequelize';
 
+import { DomainException } from '@/common/exceptions/domain.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { decryptToken, encryptToken } from '@/common/utils/encryption.util';
-import { TrainingService } from '../training/training.service';
+
+import { AthleteProfileService } from '../training/athletes/athlete-profile.service';
+import { Athlete } from '../training/entities/athlete.entity';
 import { Workout } from '../training/entities/workout.entity';
+import { GearService } from '../training/gear/gear.service';
+import { TrainingService } from '../training/training.service';
+import { UserPreferencesService } from '../users/preferences/user-preferences.service';
 import {
-  INTEGRATIONS_QUEUE_NAME,
   INTEGRATION_PROVIDERS,
   INTEGRATION_STATUSES,
+  INTEGRATIONS_QUEUE_NAME,
   JOB_STRAVA_INITIAL_SYNC,
   JOB_STRAVA_PROCESS_WEBHOOK,
+  JOB_STRAVA_PROFILE_SYNC,
+  STRAVA_PROFILE_SCOPE,
   SYNC_STATUSES,
   SYNC_TYPES,
   WEBHOOK_EVENT_STATUSES,
 } from './constants/integrations.constants';
 import { IntegrationItemResponseDto, IntegrationsListResponseDto } from './dto/integration-response.dto';
 import { StravaConnectResponseDto } from './dto/strava-connect-response.dto';
-import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
 import { StravaWebhookEventDto } from './dto/strava-webhook.dto';
+import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
 import { Integration } from './entities/integration.entity';
 import { IntegrationSyncState } from './entities/integration-sync-state.entity';
 import { StravaWebhookEvent } from './entities/strava-webhook-event.entity';
@@ -37,7 +45,10 @@ import { StravaProvider } from './providers/strava/strava.provider';
 @Injectable()
 export class IntegrationsService {
   private readonly logger = new Logger(IntegrationsService.name);
-  private readonly stateStore = new Map<string, { athleteId: string; expiresAt: number }>();
+  private readonly stateStore = new Map<
+    string,
+    { athleteId: string; expiresAt: number; purpose: 'connect' | 'profile' }
+  >();
 
   constructor(
     @InjectModel(Integration)
@@ -54,6 +65,11 @@ export class IntegrationsService {
     private readonly trainingService: TrainingService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly athleteProfileService: AthleteProfileService,
+    private readonly gearService: GearService,
+    private readonly preferencesService: UserPreferencesService,
+    @InjectModel(Athlete)
+    private readonly athleteModel: typeof Athlete,
   ) {}
 
   private get encryptionKey(): string {
@@ -78,6 +94,8 @@ export class IntegrationsService {
             lastSyncedAt: null,
             externalUserId: null,
             importedActivitiesCount: 0,
+            profileAccess: false,
+            lastProfileSyncAt: null,
           };
         }
 
@@ -95,6 +113,8 @@ export class IntegrationsService {
           lastSyncedAt: found.lastSyncAt ? found.lastSyncAt.toISOString() : null,
           externalUserId: found.externalUserId,
           importedActivitiesCount: count,
+          profileAccess: this.hasProfileScope(found),
+          lastProfileSyncAt: found.lastProfileSyncAt ? found.lastProfileSyncAt.toISOString() : null,
         };
       }),
     );
@@ -114,6 +134,8 @@ export class IntegrationsService {
         lastSyncedAt: null,
         externalUserId: null,
         importedActivitiesCount: 0,
+        profileAccess: false,
+        lastProfileSyncAt: null,
       };
     }
     return strava;
@@ -125,14 +147,128 @@ export class IntegrationsService {
     const state = randomBytes(16).toString('hex');
     const expiresAt = Date.now() + 1000 * 60 * 15; // 15 mins TTL
 
-    this.stateStore.set(state, { athleteId: athlete.id, expiresAt });
+    this.stateStore.set(state, { athleteId: athlete.id, expiresAt, purpose: 'connect' });
     const authUrl = this.stravaProvider.generateAuthUrl(athlete.id, state);
 
     return { authUrl, state };
   }
 
+  /** Re-authorization URL that adds `profile:read_all` (weight, sex, shoes) to an existing connection. */
+  async requestStravaProfileAccess(actorUserId: string): Promise<{ authorizeUrl: string; state: string }> {
+    const athlete = await this.trainingService.getOrCreateAthlete(actorUserId);
+    await this.loadConnectedStravaOrThrow(athlete.id);
+    const state = randomBytes(16).toString('hex');
+    this.stateStore.set(state, { athleteId: athlete.id, expiresAt: Date.now() + 1000 * 60 * 15, purpose: 'profile' });
+    return { authorizeUrl: this.stravaProvider.generateProfileAuthUrl(state), state };
+  }
+
+  /** Queues a profile sync outside of the daily schedule. */
+  async triggerStravaProfileSync(actorUserId: string): Promise<{ status: 'queued' }> {
+    const athlete = await this.trainingService.getOrCreateAthlete(actorUserId);
+    const integration = await this.loadConnectedStravaOrThrow(athlete.id);
+    if (!this.hasProfileScope(integration)) {
+      throw new DomainException(
+        'STRAVA_PROFILE_ACCESS_REQUIRED',
+        'Allow Strava to share your profile first',
+        HttpStatus.CONFLICT,
+      );
+    }
+    await this.enqueueProfileSync(integration.id);
+    return { status: 'queued' };
+  }
+
+  /**
+   * Pulls weight, sex and shoes from Strava. Fields the user edited by hand
+   * are left alone; nothing happens when profile sync is off in preferences.
+   */
+  async syncStravaProfile(integrationId: string): Promise<void> {
+    const integration = await this.integrationModel.findByPk(integrationId);
+    if (
+      !integration ||
+      integration.status === INTEGRATION_STATUSES.DISCONNECTED ||
+      !this.hasProfileScope(integration)
+    ) {
+      return;
+    }
+    const athlete = await this.athleteModel.findByPk(integration.athleteId, { attributes: ['id', 'userId'] });
+    if (!athlete) {
+      return;
+    }
+    const preferences = await this.preferencesService.getEntity(athlete.userId);
+    if (!preferences.stravaProfileSync) {
+      return;
+    }
+
+    await this.ensureValidAccessToken(integration);
+    const profile = await this.stravaProvider.fetchAthleteProfile(integration);
+    await this.athleteProfileService.applySourcedValues(athlete.id, 'strava', {
+      weightKg: profile.weightKg ?? undefined,
+      sex: profile.sex ?? undefined,
+    });
+    await this.gearService.upsertExternalShoes(athlete.id, profile.shoes);
+
+    integration.lastProfileSyncAt = new Date();
+    await integration.save();
+  }
+
+  /** Daily job: queues a profile sync for every Strava connection that granted profile access. */
+  async syncAllStravaProfiles(): Promise<number> {
+    const integrations = await this.integrationModel.findAll({
+      where: { provider: 'strava', status: { [Op.ne]: INTEGRATION_STATUSES.DISCONNECTED } },
+      attributes: ['id', 'scopes'],
+    });
+    const eligible = integrations.filter((integration) => this.hasProfileScope(integration));
+    for (const integration of eligible) {
+      await this.enqueueProfileSync(integration.id);
+    }
+    return eligible.length;
+  }
+
+  /** Revokes Strava access of a user whose account is being deleted. */
+  async revokeAllForUser(userId: string): Promise<void> {
+    const athlete = await this.athleteModel.findOne({ where: { userId }, attributes: ['id'] });
+    if (!athlete) {
+      return;
+    }
+    const integrations = await this.integrationModel.findAll({ where: { athleteId: athlete.id } });
+    for (const integration of integrations) {
+      if (integration.provider === 'strava') {
+        await this.stravaProvider.revokeAccess(integration);
+      }
+      integration.status = INTEGRATION_STATUSES.DISCONNECTED;
+      integration.disconnectedAt = new Date();
+      integration.accessTokenEncrypted = null;
+      integration.refreshTokenEncrypted = null;
+      await integration.save();
+    }
+  }
+
+  private hasProfileScope(integration: Integration): boolean {
+    return Array.isArray(integration.scopes) && integration.scopes.includes(STRAVA_PROFILE_SCOPE);
+  }
+
+  private async enqueueProfileSync(integrationId: string): Promise<void> {
+    await this.queue.add(
+      JOB_STRAVA_PROFILE_SYNC,
+      { integrationId },
+      { attempts: 3, backoff: { type: 'exponential', delay: 5000 }, removeOnComplete: true },
+    );
+  }
+
+  private async loadConnectedStravaOrThrow(athleteId: string): Promise<Integration> {
+    const integration = await this.integrationModel.findOne({ where: { athleteId, provider: 'strava' } });
+    if (!integration || integration.status === INTEGRATION_STATUSES.DISCONNECTED) {
+      throw new DomainException('STRAVA_NOT_CONNECTED', 'Connect Strava first', HttpStatus.CONFLICT);
+    }
+    return integration;
+  }
+
   /** Handles OAuth callback from Strava. */
-  async handleStravaCallback(code: string, state: string): Promise<{ success: boolean; message: string }> {
+  async handleStravaCallback(
+    code: string,
+    state: string,
+    grantedScope?: string,
+  ): Promise<{ success: boolean; message: string }> {
     const stored = this.stateStore.get(state);
     if (!stored || stored.expiresAt < Date.now()) {
       this.stateStore.delete(state);
@@ -140,7 +276,13 @@ export class IntegrationsService {
     }
     this.stateStore.delete(state);
 
-    const tokens = await this.stravaProvider.exchangeCode(code);
+    const grantedScopes = grantedScope
+      ? grantedScope
+          .split(',')
+          .map((scope) => scope.trim())
+          .filter(Boolean)
+      : undefined;
+    const tokens = await this.stravaProvider.exchangeCode(code, grantedScopes);
     const athleteId = stored.athleteId;
 
     let integration = await this.integrationModel.findOne({
@@ -179,8 +321,16 @@ export class IntegrationsService {
       });
     }
 
+    if (tokens.scopes.includes(STRAVA_PROFILE_SCOPE)) {
+      await this.enqueueProfileSync(integration.id);
+    }
+    if (stored.purpose === 'profile') {
+      // Only the scope changed: activities are already imported.
+      return { success: true, message: 'Strava profile access granted.' };
+    }
+
     // Create sync state record
-    const syncState = await this.syncStateModel.create({
+    await this.syncStateModel.create({
       integrationId: integration.id,
       syncType: SYNC_TYPES.INITIAL,
       startedAt: new Date(),
@@ -500,7 +650,7 @@ export class IntegrationsService {
   /** Upserts normalized running activity into canonical Workout. */
   private async upsertRunningActivity(activity: RunningActivity): Promise<boolean> {
     // 1. Check if workout with this source and external activity ID already exists
-    let workout = await this.workoutModel.findOne({
+    const workout = await this.workoutModel.findOne({
       where: {
         athleteId: activity.athleteId,
         sourceProvider: activity.source,
@@ -575,7 +725,13 @@ export class IntegrationsService {
 
       this.eventEmitter.emit(
         'integrations.activity_imported',
-        new ActivityImportedEvent(activity.athleteId, plannedWorkout.id, activity.source, activity.sourceActivityId),
+        new ActivityImportedEvent(
+          activity.athleteId,
+          plannedWorkout.id,
+          activity.source,
+          activity.sourceActivityId,
+          activity.gearExternalId ?? null,
+        ),
       );
 
       return true;
@@ -607,7 +763,13 @@ export class IntegrationsService {
 
     this.eventEmitter.emit(
       'integrations.activity_imported',
-      new ActivityImportedEvent(activity.athleteId, createdWorkout.id, activity.source, activity.sourceActivityId),
+      new ActivityImportedEvent(
+        activity.athleteId,
+        createdWorkout.id,
+        activity.source,
+        activity.sourceActivityId,
+        activity.gearExternalId ?? null,
+      ),
     );
 
     return true;

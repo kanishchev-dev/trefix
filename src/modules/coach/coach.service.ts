@@ -6,6 +6,7 @@ import { map, Observable, tap } from 'rxjs';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { OpenAiService } from '@/modules/openai/openai.service';
 import { TrainingService } from '@/modules/training/training.service';
+import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
 
 import { COACH_DEFAULT_TITLE } from './coach.constants';
 import { CoachDraftResponse, CoachFinalResponse, CoachToolExecutionResult } from './coach.interfaces';
@@ -39,10 +40,12 @@ export class CoachService {
     private readonly promptBuilder: CoachPromptBuilder,
     private readonly toolRunner: CoachToolRunner,
     private readonly eventEmitter: EventEmitter2,
+    private readonly coachPolicyService: CoachPolicyService,
   ) {}
 
   /** Creates a coaching session for an athlete. */
   async createSession(userId: string, dto: CreateCoachSessionDto): Promise<CoachSessionResponseDto> {
+    await this.coachPolicyService.assertEnabled(userId);
     const athlete = await this.trainingService.getAthlete(dto.athleteId, userId);
     const session = await this.sessionModel.create({
       userId,
@@ -55,6 +58,22 @@ export class CoachService {
 
     this.eventEmitter.emit('coach.session.created', new CoachSessionCreatedEvent(userId, athlete.id, session.id));
     return this.toSessionView(session);
+  }
+
+  /**
+   * Clears the chat history: soft-deletes every session of the user with its
+   * messages. Allowed while the coach is off. Plans and workouts are untouched.
+   */
+  async clearHistory(userId: string): Promise<void> {
+    const sessions = await this.sessionModel.findAll({ where: { userId }, attributes: ['id'] });
+    const sessionIds = sessions.map((session) => session.id);
+    if (sessionIds.length === 0) {
+      return;
+    }
+    await this.sessionModel.sequelize!.transaction(async (transaction) => {
+      await this.messageModel.destroy({ where: { sessionId: sessionIds }, transaction });
+      await this.sessionModel.destroy({ where: { id: sessionIds }, transaction });
+    });
   }
 
   /** Returns a coaching session and its message history. */
@@ -71,7 +90,10 @@ export class CoachService {
   async getLatestSession(userId: string): Promise<CoachSessionDetailResponseDto> {
     const session = await this.sessionModel.findOne({
       where: { userId },
-      order: [['lastMessageAt', 'DESC'], ['createdAt', 'DESC']],
+      order: [
+        ['lastMessageAt', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
     });
 
     if (!session) {
@@ -87,6 +109,7 @@ export class CoachService {
     sessionId: string,
     dto: SendCoachMessageDto,
   ): Promise<Observable<{ delta?: string; isDone: boolean }>> {
+    await this.coachPolicyService.assertEnabled(userId);
     const session = await this.loadSessionOrThrow(userId, sessionId);
 
     // 1. Record user message
@@ -102,7 +125,7 @@ export class CoachService {
     // 2. Generation Phase
     const context = await this.buildCoachContext(userId, session);
     const history = await this.getMessages(session.id);
-    let instructions = this.promptBuilder.buildInstructions();
+    const instructions = this.promptBuilder.buildInstructions();
 
     return new Observable<{ delta?: string; isDone: boolean }>((subscriber) => {
       let fullReply = '';
@@ -144,7 +167,8 @@ export class CoachService {
                       // If JSON.parse fails (e.g. partial escape sequence like \n), try manual cleanup for immediate output
                       const rawReply = replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                       const newText = rawReply.slice(lastReplyLength);
-                      if (newText && !newText.endsWith('\\')) { // Don't yield if it might be a partial escape
+                      if (newText && !newText.endsWith('\\')) {
+                        // Don't yield if it might be a partial escape
                         lastReplyLength = rawReply.length;
                         subscriber.next({ delta: newText, isDone: false });
                       }
@@ -245,6 +269,7 @@ export class CoachService {
 
   /** Sends a message to the coach and returns the generated reply. */
   async sendMessage(userId: string, sessionId: string, dto: SendCoachMessageDto): Promise<CoachChatResponseDto> {
+    await this.coachPolicyService.assertEnabled(userId);
     const session = await this.loadSessionOrThrow(userId, sessionId);
     await this.messageModel.create({
       sessionId: session.id,
@@ -369,9 +394,7 @@ export class CoachService {
     content: Array<{ type: 'input_text' | 'output_text'; text: string }>;
   }> {
     const systemContent = this.promptBuilder.buildContextMessage(context);
-    const toolContent = toolResults?.length
-      ? `\n\nTool Results:\n${JSON.stringify(toolResults, null, 2)}`
-      : '';
+    const toolContent = toolResults?.length ? `\n\nTool Results:\n${JSON.stringify(toolResults, null, 2)}` : '';
 
     const messages: Array<{
       role: 'system' | 'developer' | 'user' | 'assistant';

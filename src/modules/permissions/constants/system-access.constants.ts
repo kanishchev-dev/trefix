@@ -155,6 +155,27 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     action: 'update',
     description: 'Edit the own profile: first name, last name and locale',
   },
+  {
+    key: 'account.preferences.read',
+    module: 'account',
+    resource: 'preferences',
+    action: 'read',
+    description: 'View own app preferences: units, week start, time format and AI coach settings',
+  },
+  {
+    key: 'account.preferences.update',
+    module: 'account',
+    resource: 'preferences',
+    action: 'update',
+    description: 'Change own app preferences, including turning the AI coach on or off',
+  },
+  {
+    key: 'account.delete',
+    module: 'account',
+    resource: '',
+    action: 'delete',
+    description: 'Delete the own account and all its data permanently',
+  },
 
   // ----------------------------------------------------------------- coach
   {
@@ -178,6 +199,13 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     action: 'message',
     description: 'Send messages to the AI coach and receive answers',
   },
+  {
+    key: 'coach.sessions.delete',
+    module: 'coach',
+    resource: 'sessions',
+    action: 'delete',
+    description: 'Clear the own chat history with the AI coach',
+  },
 
   // -------------------------------------------------------------- training
   {
@@ -193,6 +221,27 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     resource: 'athletes',
     action: 'create',
     description: 'Create an athlete profile and fill in the training input data',
+  },
+  {
+    key: 'training.athletes.update',
+    module: 'training',
+    resource: 'athletes',
+    action: 'update',
+    description: 'Edit the own athlete profile: body, heart rate and zones, schedule, experience',
+  },
+  {
+    key: 'training.gear.read',
+    module: 'training',
+    resource: 'gear',
+    action: 'read',
+    description: 'View own running gear with its mileage',
+  },
+  {
+    key: 'training.gear.manage',
+    module: 'training',
+    resource: 'gear',
+    action: 'manage',
+    description: 'Add, edit, retire and delete own running gear and assign it to workouts',
   },
   {
     key: 'training.progress.read',

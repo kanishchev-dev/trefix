@@ -9,6 +9,7 @@ import type { ManualPlanGoalDto, ManualPlanScheduleDto, ManualPlanStructureDto }
 import type { PlanStartBlockDto } from '../dto/plan-metrics.dto';
 import { TrainingPlan, TrainingPlanConfig, TrainingPlanMetricsSnapshot } from '../entities/training-plan.entity';
 import { Workout } from '../entities/workout.entity';
+import { PlanMetricsEnteredEvent } from '../events/plan-metrics-entered.event';
 import { PlanUpdatedEvent } from '../events/plan-updated.event';
 import { type AthleteMetrics, type PlanDiff, type RelativeWeek, TrainingEngine } from '../training.engine';
 import { TrainingService } from '../training.service';
@@ -196,6 +197,12 @@ export class PlanRebuildService {
       capturedAt: input.metrics.capturedAt ?? new Date().toISOString(),
       source: input.metrics.source ?? 'user_input',
     };
+    if (metricsSnapshot.source === 'user_input') {
+      this.eventEmitter.emit(
+        'training.plan.metrics_entered',
+        new PlanMetricsEnteredEvent(source.athleteId, input.metrics),
+      );
+    }
     const config: TrainingPlanConfig = {
       goal: { ...input.goal } as Record<string, unknown>,
       schedule: { ...input.schedule } as Record<string, unknown>,

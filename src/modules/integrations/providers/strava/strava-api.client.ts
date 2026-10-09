@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { STRAVA_ACTIVITY_SCOPES } from '../../constants/integrations.constants';
 import {
   StravaActivitySummary,
+  StravaDetailedAthlete,
+  StravaDetailedGear,
   StravaTokenResponse,
 } from '../../interfaces/strava-api.interface';
 
@@ -32,15 +35,14 @@ export class StravaApiClient {
     return this.configService.get<string>('integrations.strava.oauthBaseUrl') || 'https://www.strava.com/oauth';
   }
 
-  /** Generates Strava OAuth authorization URL. */
-  generateAuthUrl(state: string): string {
-    const scope = 'activity:read_all';
+  /** Generates Strava OAuth authorization URL. `force` shows the consent screen again to grant new scopes. */
+  generateAuthUrl(state: string, scopes: readonly string[] = STRAVA_ACTIVITY_SCOPES, force = false): string {
     const params = new URLSearchParams({
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
       response_type: 'code',
-      approval_prompt: 'auto',
-      scope,
+      approval_prompt: force ? 'force' : 'auto',
+      scope: scopes.join(','),
       state,
     });
 
@@ -138,6 +140,29 @@ export class StravaApiClient {
     }
 
     return (await response.json()) as StravaActivitySummary;
+  }
+
+  /** The authenticated athlete; weight, sex and shoes need `profile:read_all`. */
+  async fetchAthlete(accessToken: string): Promise<StravaDetailedAthlete> {
+    return this.getJson<StravaDetailedAthlete>(accessToken, '/athlete');
+  }
+
+  /** Brand and model of a piece of gear. */
+  async fetchGear(accessToken: string, gearId: string): Promise<StravaDetailedGear> {
+    return this.getJson<StravaDetailedGear>(accessToken, `/gear/${encodeURIComponent(gearId)}`);
+  }
+
+  private async getJson<T>(accessToken: string, path: string): Promise<T> {
+    const response = await fetch(`${this.apiBaseUrl}${path}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.logger.error(`Strava GET ${path} failed: ${response.status} ${errorText}`);
+      throw new Error(`Strava GET ${path} failed with status ${response.status}`);
+    }
+    return (await response.json()) as T;
   }
 
   /** Revokes integration access / token. */

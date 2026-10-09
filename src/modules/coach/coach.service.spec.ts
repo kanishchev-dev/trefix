@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { OpenAiService } from '@/modules/openai/openai.service';
 import { TrainingService } from '@/modules/training/training.service';
+import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
 
 import { COACH_DEFAULT_TITLE } from './coach.constants';
 import { CoachPromptBuilder } from './coach.prompt';
@@ -156,6 +157,7 @@ describe('CoachService', () => {
         { provide: CoachPromptBuilder, useValue: promptBuilder },
         { provide: CoachToolRunner, useValue: toolRunner },
         { provide: EventEmitter2, useValue: eventEmitter },
+        { provide: CoachPolicyService, useValue: { assertEnabled: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

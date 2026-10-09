@@ -1,27 +1,22 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Query, Res } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
-import { AuthUserContext } from '../auth/interfaces/auth-user-context.interface';
-import { IntegrationItemResponseDto, IntegrationsListResponseDto } from './dto/integration-response.dto';
-import { StravaConnectResponseDto } from './dto/strava-connect-response.dto';
-import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
-import { StravaWebhookEventDto, StravaWebhookVerificationQueryDto } from './dto/strava-webhook.dto';
-import { IntegrationsService } from './integrations.service';
-import { ConfigService } from '@nestjs/config';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+
+import { AuthUserContext } from '../auth/interfaces/auth-user-context.interface';
+import {
+  IntegrationItemResponseDto,
+  IntegrationsListResponseDto,
+  StravaProfileAccessResponseDto,
+} from './dto/integration-response.dto';
+import { StravaConnectResponseDto } from './dto/strava-connect-response.dto';
+import { StravaWebhookEventDto, StravaWebhookVerificationQueryDto } from './dto/strava-webhook.dto';
+import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
+import { IntegrationsService } from './integrations.service';
 
 @ApiTags('Integrations')
 @Controller('integrations')
@@ -62,15 +57,18 @@ export class IntegrationsController {
     @Query('code') code: string,
     @Query('state') state: string,
     @Query('error') error: string,
+    @Query('scope') scope: string | undefined,
     @Res() res: Response,
   ): Promise<void> {
     if (error || !code) {
-      res.status(400).send(`<html><body><h2>Strava authorization denied or failed: ${error || 'Missing code'}</h2></body></html>`);
+      res
+        .status(400)
+        .send(`<html><body><h2>Strava authorization denied or failed: ${error || 'Missing code'}</h2></body></html>`);
       return;
     }
 
     try {
-      await this.integrationsService.handleStravaCallback(code, state);
+      await this.integrationsService.handleStravaCallback(code, state, scope);
       res.status(200).send(`
         <html>
           <head><title>Strava Connected</title></head>
@@ -83,6 +81,30 @@ export class IntegrationsController {
     } catch (err: any) {
       res.status(400).send(`<html><body><h2>Failed to connect Strava: ${err.message}</h2></body></html>`);
     }
+  }
+
+  @Post('strava/profile-access')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('integrations.sync')
+  @ApiOperation({
+    summary: 'Authorization URL that adds profile access (weight, sex, shoes) to the Strava connection',
+    description: 'Errors: STRAVA_NOT_CONNECTED',
+  })
+  @ApiResponse({ status: 200, type: StravaProfileAccessResponseDto })
+  requestStravaProfileAccess(@CurrentUser() user: AuthUserContext): Promise<StravaProfileAccessResponseDto> {
+    return this.integrationsService.requestStravaProfileAccess(user.id);
+  }
+
+  @Post('strava/profile-sync')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @RequirePermissions('integrations.sync')
+  @ApiOperation({
+    summary: 'Sync weight, sex and shoes from Strava now',
+    description: 'Errors: STRAVA_NOT_CONNECTED, STRAVA_PROFILE_ACCESS_REQUIRED',
+  })
+  @ApiResponse({ status: 202, schema: { example: { status: 'queued' } } })
+  triggerStravaProfileSync(@CurrentUser() user: AuthUserContext): Promise<{ status: 'queued' }> {
+    return this.integrationsService.triggerStravaProfileSync(user.id);
   }
 
   @Delete('strava')

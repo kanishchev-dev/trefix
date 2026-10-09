@@ -32,6 +32,8 @@ export const PLAN_CREATE_RATE_LIMIT_DEFAULT = 30;
 export const PLAN_CREATE_RATE_TTL_MS = 3_600_000;
 /** Adaptation-event type used to log user edits of a plan. */
 export const ADAPTATION_TYPE_USER_EDIT = 'user_edit';
+/** Adaptation-event type for heart-rate targets updated after the zones changed. */
+export const ADAPTATION_TYPE_HEART_RATE = 'UPDATE_HEART_RATE';
 
 /** Accepted metric ranges for plan start / rebuild. */
 export const PLAN_METRIC_RANGES = {
@@ -127,6 +129,55 @@ export const TRAINING_DEFAULT_DURATION_MINUTES = 45;
 export const TRAINING_DEFAULT_WEEKLY_MILEAGE_KM = 30;
 export const TRAINING_DEFAULT_TARGET_CONFIDENCE = 0.6;
 
+/** Accepted ranges of athlete profile fields (metric units). */
+export const ATHLETE_RANGES = {
+  heightCm: { min: 120, max: 230 },
+  weightKg: { min: 30, max: 250 },
+  restingHeartRate: PLAN_METRIC_RANGES.restingHeartRate,
+  maxHeartRate: PLAN_METRIC_RANGES.maxHeartRate,
+  thresholdHeartRate: { min: 100, max: 220 },
+  sessionsPerWeek: { min: 1, max: 7 },
+  weeklyMileageKm: PLAN_METRIC_RANGES.weeklyMileageKm,
+  preferredWorkoutDurationMinutes: { min: 15, max: 240 },
+  longRunMaxDurationMinutes: { min: 30, max: 360 },
+  runningSinceYear: { min: 1950 },
+  ageYears: { min: 10, max: 100 },
+} as const;
+export const ATHLETE_LIMITATIONS_MAX_LENGTH = 500;
+export const HR_ZONES_METHODS = ['threshold', 'max_hr', 'custom'] as const;
+export const HR_ZONES_METHOD_DEFAULT = 'max_hr' as const;
+/** Upper bounds of Z1–Z4 as a share of LTHR (Friel). Z5 runs up to max HR. */
+export const HR_ZONES_THRESHOLD_SHARES = [0.81, 0.89, 0.93, 0.99] as const;
+/** Upper bounds of Z1–Z4 as a share of max HR. */
+export const HR_ZONES_MAX_HR_SHARES = [0.6, 0.7, 0.8, 0.9] as const;
+export const TIMES_OF_DAY = ['morning', 'day', 'evening', 'any'] as const;
+/** Profile fields an external source (Strava) may fill in. */
+export const ATHLETE_SOURCED_FIELDS = ['weightKg', 'sex', 'heightCm', 'birthDate'] as const;
+/** Plan inputs whose manual value takes priority over estimates from workouts. */
+export const ATHLETE_MANUAL_TRACKED_FIELDS = [
+  'restingHeartRate',
+  'maxHeartRate',
+  'thresholdHeartRate',
+  'weeklyMileageKm',
+] as const;
+export const FIELD_SOURCES = ['manual', 'strava'] as const;
+/** A fact-based weekly volume is suggested when it differs from the profile by more than this share. */
+export const WEEKLY_MILEAGE_SUGGESTION_THRESHOLD = 0.1;
+
+export const GEAR_TYPES = ['shoes'] as const;
+export const GEAR_SOURCES = ['manual', 'strava'] as const;
+export const GEAR_STATUSES = ['active', 'retired'] as const;
+export const GEAR_LIMIT_KM_RANGE = { min: 100, max: 2000 } as const;
+export const GEAR_LIMIT_KM_DEFAULT = 700;
+export const GEAR_INITIAL_DISTANCE_MAX_KM = 10_000;
+/** A pair is due for replacement when this share of its limit is left. */
+export const GEAR_REPLACE_THRESHOLD = 0.1;
+export const GEAR_BRAND_MAX_LENGTH = 60;
+export const GEAR_MODEL_MAX_LENGTH = 80;
+export const GEAR_NICKNAME_MAX_LENGTH = 60;
+
+export const ADAPTATION_EVENT_STATUSES = ['applied', 'proposed', 'suggested', 'dismissed'] as const;
+
 export type AthleteExperienceLevel = (typeof ATHLETE_EXPERIENCE_LEVELS)[number];
 export type AthleteSexValue = (typeof ATHLETE_SEX_VALUES)[number];
 export type AthleteGoalDistance = (typeof ATHLETE_GOAL_DISTANCES)[number];
@@ -135,10 +186,21 @@ export type TrainingPlanStatus = (typeof TRAINING_PLAN_STATUSES)[number];
 export type PlanListGroup = (typeof PLAN_LIST_GROUPS)[number];
 export type PlanCancelReason = (typeof PLAN_CANCEL_REASONS)[number];
 /** Where a metrics value came from, reported per field to the client. */
-export type PlanMetricsSource = 'user_input' | 'athlete_state' | 'strava' | 'manual_workouts' | 'none';
+export type PlanMetricsSource = 'user_input' | 'profile' | 'athlete_state' | 'strava' | 'manual_workouts' | 'none';
 export type PlanCreationSource = (typeof PLAN_CREATION_SOURCES)[number];
 export type ManualPlanFocusType = (typeof MANUAL_PLAN_FOCUS_TYPES)[number];
 export type WorkoutStatus = (typeof WORKOUT_STATUSES)[number];
 export type WorkoutType = (typeof WORKOUT_TYPES)[number];
 export type TrainingPhase = (typeof TRAINING_PHASES)[number];
 export type AdaptationAction = (typeof ADAPTATION_ACTIONS)[number];
+export type HrZonesMethod = (typeof HR_ZONES_METHODS)[number];
+export type TimeOfDay = (typeof TIMES_OF_DAY)[number];
+export type AthleteSourcedField = (typeof ATHLETE_SOURCED_FIELDS)[number];
+export type FieldSource = (typeof FIELD_SOURCES)[number];
+export type TrainingWeekday = (typeof TRAINING_WEEKDAY_ORDER)[number];
+export type GearType = (typeof GEAR_TYPES)[number];
+export type GearSource = (typeof GEAR_SOURCES)[number];
+export type GearStatus = (typeof GEAR_STATUSES)[number];
+export type AdaptationEventStatus = (typeof ADAPTATION_EVENT_STATUSES)[number];
+/** Per-field provenance stored in `athletes.field_sources`. */
+export type AthleteFieldSources = Partial<Record<string, { source: FieldSource; updatedAt: string }>>;

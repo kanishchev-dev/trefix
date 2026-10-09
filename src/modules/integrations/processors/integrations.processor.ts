@@ -7,6 +7,8 @@ import {
   JOB_STRAVA_FETCH_ACTIVITY,
   JOB_STRAVA_INITIAL_SYNC,
   JOB_STRAVA_PROCESS_WEBHOOK,
+  JOB_STRAVA_PROFILE_SYNC,
+  JOB_STRAVA_PROFILE_SYNC_ALL,
 } from '../constants/integrations.constants';
 import { IntegrationsService } from '../integrations.service';
 
@@ -50,6 +52,14 @@ export class IntegrationsProcessor extends WorkerHost {
         const { integrationId, activityId } = job.data as FetchActivityJobData;
         return this.integrationsService.fetchAndImportSingleActivity(integrationId, activityId);
       }
+
+      case JOB_STRAVA_PROFILE_SYNC: {
+        const { integrationId } = job.data as InitialSyncJobData;
+        return this.integrationsService.syncStravaProfile(integrationId);
+      }
+
+      case JOB_STRAVA_PROFILE_SYNC_ALL:
+        return this.integrationsService.syncAllStravaProfiles();
 
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

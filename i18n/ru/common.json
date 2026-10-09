@@ -40,6 +40,18 @@
     "ATHLETE_NOT_FOUND": "У пользователя ещё нет профиля спортсмена",
     "WORKOUT_NOT_FOUND": "Тренировка не найдена",
     "WORKOUT_COMPLETED_IMMUTABLE": "Выполненная тренировка — это история, её нельзя изменить",
-    "CALENDAR_RANGE_INVALID": "Период календаря слишком длинный или некорректный"
+    "CALENDAR_RANGE_INVALID": "Период календаря слишком длинный или некорректный",
+    "ATHLETE_FIELD_OUT_OF_RANGE": "Значение вне допустимого диапазона",
+    "ATHLETE_HEART_RATE_INCONSISTENT": "Пульс покоя должен быть ниже порогового, а пороговый — ниже максимального",
+    "ATHLETE_ZONES_INVALID": "Зоны — четыре возрастающих значения между пульсом покоя и максимальным",
+    "GEAR_NOT_FOUND": "Снаряжение не найдено",
+    "GEAR_RETIRED": "Действие недоступно для снаряжения в архиве",
+    "GEAR_INVALID": "Проверьте данные снаряжения",
+    "COACH_DISABLED": "Коуч выключен. Включите его в настройках",
+    "ADAPTATION_NOT_FOUND": "Изменение плана не найдено",
+    "ADAPTATION_NOT_PROPOSED": "Это изменение плана уже не ждёт решения",
+    "STRAVA_NOT_CONNECTED": "Сначала подключите Strava",
+    "STRAVA_PROFILE_ACCESS_REQUIRED": "Сначала разрешите Strava передавать данные профиля",
+    "ACCOUNT_DELETION_FORBIDDEN": "Этот аккаунт нельзя удалить"
   }
 }

@@ -1,8 +1,12 @@
 import type {
   AdaptationAction,
+  AdaptationEventStatus,
+  AthleteFieldSources,
   AthleteGoalDistance,
   AthleteGoalStatus,
   AthleteSexValue,
+  HrZonesMethod,
+  TimeOfDay,
   TrainingPhase,
   TrainingPlanStatus,
   WorkoutStatus,
@@ -23,6 +27,18 @@ export interface AthleteView {
   preferredTrainingDays: string[];
   availableTrainingDays: string[];
   preferredWorkoutDurationMinutes: number | null;
+  birthDate: string | null;
+  restingHeartRate: number | null;
+  maxHeartRate: number | null;
+  thresholdHeartRate: number | null;
+  hrZonesMethod: HrZonesMethod;
+  hrZonesCustom: number[] | null;
+  runningSinceYear: number | null;
+  limitations: string | null;
+  preferredTimeOfDay: TimeOfDay;
+  longRunDay: string | null;
+  longRunMaxDurationMinutes: number | null;
+  fieldSources: AthleteFieldSources;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,6 +115,8 @@ export interface WorkoutView {
   actual: Record<string, unknown> | null;
   analysis: WorkoutAnalysisView | null;
   completedAt: Date | null;
+  /** Shoes the workout was done in; resolved by the client from the gear list. */
+  gearId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -140,6 +158,8 @@ export interface AdaptationEventView {
   decision: Record<string, unknown>;
   reason: string;
   confidence: number;
+  /** `applied` — in the plan; `proposed` — waits for the user; `suggested` — advice only; `dismissed`. */
+  status?: AdaptationEventStatus;
   createdAt: Date;
 }
 

@@ -6,7 +6,9 @@ import { Op } from 'sequelize';
 import { DomainException } from '@/common/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
 
+import { calculateHrZones, heartRateRangeForZone } from './athletes/hr-zones';
 import { AdaptPlanDto } from './dto/adapt-plan.dto';
 import { AnalyzeWorkoutDto } from './dto/analyze-workout.dto';
 import { CompleteWorkoutDto } from './dto/complete-workout.dto';
@@ -32,7 +34,8 @@ import { Workout } from './entities/workout.entity';
 import { AthleteCreatedEvent } from './events/athlete-created.event';
 import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
-import { PlanAdaptedEvent } from './events/plan-adapted.event';
+import { PlanAdaptationProposedEvent, PlanAdaptedEvent } from './events/plan-adapted.event';
+import { PlanMetricsEnteredEvent } from './events/plan-metrics-entered.event';
 import { AthleteStateUpdatedEvent } from './events/state-updated.event';
 import { WorkoutCompletedEvent } from './events/workout-completed.event';
 import { deriveLegacyRaceFields, type GoalPayloadShape, mapLegacyRaceGoal, validateGoalPayload } from './goal-taxonomy';
@@ -50,6 +53,7 @@ import { PlanLifecycleService, PlanStartInput } from './plans/plan-lifecycle.ser
 import { applyRelativeOverrides, RelativeWeekOverride } from './plans/plan-structure';
 import { resolveGoalSummaryTitle, todayIsoInTz } from './plans/plan-utils';
 import {
+  ADAPTATION_TYPE_HEART_RATE,
   ADAPTATION_TYPE_USER_EDIT,
   ATHLETE_GOAL_STATUSES,
   TRAINING_DEFAULT_AVAILABILITY,
@@ -102,6 +106,7 @@ export class TrainingService {
     private readonly trainingEngine: TrainingEngine,
     private readonly planLifecycleService: PlanLifecycleService,
     private readonly athleteMetricsService: AthleteMetricsService,
+    private readonly coachPolicyService: CoachPolicyService,
   ) {}
 
   /** Creates an athlete profile for the authenticated user. */
@@ -955,6 +960,7 @@ export class TrainingService {
     const provided = Object.fromEntries(
       Object.entries(metrics).filter(([, value]) => value !== null && value !== undefined),
     );
+    this.eventEmitter.emit('training.plan.metrics_entered', new PlanMetricsEnteredEvent(athleteId, metrics));
     return { ...snapshot, ...provided, capturedAt: new Date().toISOString(), source: 'user_input' };
   }
 
@@ -1680,7 +1686,15 @@ export class TrainingService {
     });
 
     const state = await this.recalculateAthleteState(athlete.id);
-    const adaptation = await this.applyAdaptationDecision(athlete, workout, analysisResult.analysis, state);
+    const adaptation = await this.applyAdaptationDecision(
+      athlete,
+      workout,
+      analysisResult.analysis,
+      state,
+      undefined,
+      undefined,
+      'automatic',
+    );
 
     this.eventEmitter.emit(
       'training.workout.completed',
@@ -1693,6 +1707,203 @@ export class TrainingService {
       state,
       adaptation,
     };
+  }
+
+  /** Adaptations of the active plan waiting for the user's decision (`proposed`) or shown as advice (`suggested`). */
+  async listPendingAdaptations(actorUserId: string): Promise<AdaptationEventView[]> {
+    const athlete = await this.getOrCreateAthlete(actorUserId);
+    const plan = await this.planModel.findOne({ where: { athleteId: athlete.id, status: 'active' } });
+    if (!plan) {
+      return [];
+    }
+    const events = await this.adaptationEventModel.findAll({
+      where: { planId: plan.id, status: { [Op.in]: ['proposed', 'suggested'] } },
+      order: [['createdAt', 'DESC']],
+      limit: 20,
+    });
+    return events.map((event) => this.toAdaptationEventView(event));
+  }
+
+  /**
+   * Brings heart-rate targets of upcoming workouts of the active plan in line
+   * with the athlete's current zones. Follows the coach adaptation mode:
+   * applied at once, kept as a proposal, or only suggested.
+   */
+  async recalculateHeartRateTargets(athleteId: string): Promise<AdaptationEventView | null> {
+    const athlete = await this.athleteModel.findByPk(athleteId);
+    if (!athlete) {
+      return null;
+    }
+    const plan = await this.planModel.findOne({ where: { athleteId, status: 'active' } });
+    if (!plan) {
+      return null;
+    }
+    const { zones } = calculateHrZones({
+      method: athlete.hrZonesMethod,
+      restingHeartRate: athlete.restingHeartRate,
+      maxHeartRate: athlete.maxHeartRate,
+      thresholdHeartRate: athlete.thresholdHeartRate,
+      customUpperBounds: athlete.hrZonesCustom,
+    });
+    if (!zones) {
+      return null;
+    }
+
+    const upcoming = await this.workoutModel.findAll({
+      where: {
+        planId: plan.id,
+        status: 'planned',
+        scheduledAt: { [Op.gte]: new Date(`${todayIsoInTz('UTC')}T00:00:00Z`) },
+      },
+    });
+    const changes = upcoming
+      .map((workout) => {
+        const target = this.toRecord(workout.target);
+        const range = heartRateRangeForZone(zones, target.zone, athlete.restingHeartRate);
+        if (!range || (target.heartRateMinBpm === range.min && target.heartRateMaxBpm === range.max)) {
+          return null;
+        }
+        return { workoutId: workout.id, heartRateMinBpm: range.min, heartRateMaxBpm: range.max };
+      })
+      .filter((change): change is NonNullable<typeof change> => change !== null);
+    if (changes.length === 0) {
+      return null;
+    }
+
+    const policy = await this.coachPolicyService.automaticAdaptationPolicy(athlete.userId);
+    if (policy === 'skip') {
+      return null;
+    }
+    const status = policy === 'apply' ? 'applied' : policy === 'propose' ? 'proposed' : 'suggested';
+    if (status === 'applied') {
+      await this.applyHeartRateChanges(plan, changes);
+    }
+    const event = await this.adaptationEventModel.create({
+      athleteId,
+      planId: plan.id,
+      workoutId: null,
+      type: ADAPTATION_TYPE_HEART_RATE,
+      input: { zones },
+      decision: { action: ADAPTATION_TYPE_HEART_RATE, changes },
+      reason: 'Heart rate zones changed',
+      confidence: 1,
+      status,
+      resolvedAt: status === 'applied' ? new Date() : null,
+    });
+    if (status === 'applied') {
+      this.eventEmitter.emit('training.plan.adapted', new PlanAdaptedEvent(athleteId, plan.id, event.reason));
+    } else {
+      this.eventEmitter.emit(
+        'training.plan.adaptation_proposed',
+        new PlanAdaptationProposedEvent(
+          athlete.userId,
+          athleteId,
+          plan.id,
+          event.id,
+          status,
+          ADAPTATION_TYPE_HEART_RATE,
+          changes.length,
+        ),
+      );
+    }
+    return this.toAdaptationEventView(event);
+  }
+
+  private async applyHeartRateChanges(plan: TrainingPlan, changes: Array<Record<string, unknown>>): Promise<number> {
+    const byId = new Map(changes.map((change) => [String(change.workoutId), change]));
+    const workouts = await this.workoutModel.findAll({
+      where: {
+        id: { [Op.in]: [...byId.keys()] },
+        planId: plan.id,
+        status: 'planned',
+        scheduledAt: { [Op.gte]: new Date(`${todayIsoInTz('UTC')}T00:00:00Z`) },
+      },
+    });
+    for (const workout of workouts) {
+      const change = byId.get(workout.id);
+      if (!change) continue;
+      workout.target = {
+        ...this.toRecord(workout.target),
+        heartRateMinBpm: change.heartRateMinBpm,
+        heartRateMaxBpm: change.heartRateMaxBpm,
+      };
+      await workout.save();
+    }
+    if (workouts.length > 0) {
+      await this.planModel.increment('version', { where: { id: plan.id } });
+    }
+    return workouts.length;
+  }
+
+  /** Applies a proposed adaptation; workouts that already happened or changed status are left alone. */
+  async applyProposedAdaptation(actorUserId: string, adaptationId: string): Promise<AdaptationEventView> {
+    const { event, athlete, plan } = await this.loadPendingAdaptation(actorUserId, adaptationId);
+    if (event.type === ADAPTATION_TYPE_HEART_RATE) {
+      const hrChanges = Array.isArray(event.decision?.changes)
+        ? (event.decision.changes as Array<Record<string, unknown>>)
+        : [];
+      await this.applyHeartRateChanges(plan, hrChanges);
+      event.status = 'applied';
+      event.resolvedAt = new Date();
+      await event.save();
+      this.eventEmitter.emit('training.plan.adapted', new PlanAdaptedEvent(athlete.id, plan.id, event.reason));
+      return this.toAdaptationEventView(event);
+    }
+    const changes = Array.isArray(event.decision?.changes)
+      ? (event.decision.changes as Array<Record<string, unknown>>)
+      : [];
+    const workoutIds = changes
+      .map((change) => (typeof change.workoutId === 'string' ? change.workoutId : null))
+      .filter((id): id is string => id !== null);
+    const workouts = workoutIds.length
+      ? await this.workoutModel.findAll({
+          where: {
+            id: { [Op.in]: workoutIds },
+            planId: plan.id,
+            status: 'planned',
+            scheduledAt: { [Op.gte]: new Date(`${todayIsoInTz('UTC')}T00:00:00Z`) },
+          },
+        })
+      : [];
+    const state = await this.getLatestStateSnapshot(athlete.id, true);
+    await this.applyWorkoutChanges(workouts, athlete, plan, state, changes);
+    if (workouts.length > 0) {
+      await this.planModel.increment('version', { where: { id: plan.id } });
+    }
+    event.status = 'applied';
+    event.resolvedAt = new Date();
+    await event.save();
+    this.eventEmitter.emit('training.plan.adapted', new PlanAdaptedEvent(athlete.id, plan.id, event.reason));
+    return this.toAdaptationEventView(event);
+  }
+
+  async dismissProposedAdaptation(actorUserId: string, adaptationId: string): Promise<AdaptationEventView> {
+    const { event } = await this.loadPendingAdaptation(actorUserId, adaptationId, ['proposed', 'suggested']);
+    event.status = 'dismissed';
+    event.resolvedAt = new Date();
+    await event.save();
+    return this.toAdaptationEventView(event);
+  }
+
+  private async loadPendingAdaptation(
+    actorUserId: string,
+    adaptationId: string,
+    allowed: string[] = ['proposed'],
+  ): Promise<{ event: AdaptationEvent; athlete: Athlete; plan: TrainingPlan }> {
+    const athleteView = await this.getOrCreateAthlete(actorUserId);
+    const event = await this.adaptationEventModel.findOne({ where: { id: adaptationId, athleteId: athleteView.id } });
+    if (!event) {
+      throw new DomainException('ADAPTATION_NOT_FOUND', 'Adaptation not found', 404);
+    }
+    if (!allowed.includes(event.status)) {
+      throw new DomainException('ADAPTATION_NOT_PROPOSED', 'This adaptation is no longer waiting for a decision', 409);
+    }
+    const plan = event.planId ? await this.planModel.findByPk(event.planId) : null;
+    if (!plan || plan.status !== 'active') {
+      throw new DomainException('ADAPTATION_NOT_PROPOSED', 'The plan of this adaptation is no longer active', 409);
+    }
+    const athlete = await this.loadAthleteOrThrow(athleteView.id);
+    return { event, athlete, plan };
   }
 
   /** Applies an explicit or implicit adaptation decision to a plan. */
@@ -1740,6 +1951,7 @@ export class TrainingService {
     state: AthleteStateView,
     forcedAction?: string,
     reasonOverride?: string,
+    origin: 'automatic' | 'explicit' = 'explicit',
   ): Promise<AdaptationEventView> {
     // Only the active plan adapts; history and drafts are never rewritten,
     // and sessions before today are locked as history.
@@ -1780,6 +1992,42 @@ export class TrainingService {
       analysis,
       forcedAction,
     );
+
+    // Automatic adaptations follow the user's coach settings; explicit requests
+    // (the user or the coach acting on the user's message) always apply.
+    const policy =
+      origin === 'automatic' && plan && decision.changes.length > 0
+        ? await this.coachPolicyService.automaticAdaptationPolicy(athlete.userId)
+        : 'apply';
+    if (policy === 'skip') {
+      return this.buildNoopAdaptationView(athlete.id, workout);
+    }
+    if (policy === 'propose' || policy === 'suggest') {
+      const pending = await this.adaptationEventModel.create({
+        athleteId: athlete.id,
+        planId: plan?.id ?? null,
+        workoutId: workout.id,
+        type: decision.action,
+        input: { state, analysis },
+        decision: { action: decision.action, changes: decision.changes },
+        reason: reasonOverride ?? decision.reason,
+        confidence: decision.confidence,
+        status: policy === 'propose' ? 'proposed' : 'suggested',
+      });
+      this.eventEmitter.emit(
+        'training.plan.adaptation_proposed',
+        new PlanAdaptationProposedEvent(
+          athlete.userId,
+          athlete.id,
+          plan?.id ?? null,
+          pending.id,
+          pending.status,
+          decision.action,
+          decision.changes.length,
+        ),
+      );
+      return this.toAdaptationEventView(pending);
+    }
 
     await this.applyWorkoutChanges(upcomingWorkouts, athlete, plan, state, decision.changes);
     if (plan && decision.changes.length > 0) {
@@ -2089,7 +2337,8 @@ export class TrainingService {
     }
   }
 
-  private toAthleteView(athlete: Athlete): AthleteView {
+  /** Maps the entity to its API view; shared with the athlete profile service. */
+  toAthleteView(athlete: Athlete): AthleteView {
     return {
       id: athlete.id,
       userId: athlete.userId,
@@ -2104,6 +2353,18 @@ export class TrainingService {
       preferredTrainingDays: [...athlete.preferredTrainingDays],
       availableTrainingDays: [...athlete.availableTrainingDays],
       preferredWorkoutDurationMinutes: athlete.preferredWorkoutDurationMinutes,
+      birthDate: athlete.birthDate ?? null,
+      restingHeartRate: athlete.restingHeartRate ?? null,
+      maxHeartRate: athlete.maxHeartRate ?? null,
+      thresholdHeartRate: athlete.thresholdHeartRate ?? null,
+      hrZonesMethod: athlete.hrZonesMethod ?? 'max_hr',
+      hrZonesCustom: athlete.hrZonesCustom ?? null,
+      runningSinceYear: athlete.runningSinceYear ?? null,
+      limitations: athlete.limitations ?? null,
+      preferredTimeOfDay: athlete.preferredTimeOfDay ?? 'any',
+      longRunDay: athlete.longRunDay ?? null,
+      longRunMaxDurationMinutes: athlete.longRunMaxDurationMinutes ?? null,
+      fieldSources: { ...(athlete.fieldSources ?? {}) },
       createdAt: athlete.createdAt,
       updatedAt: athlete.updatedAt,
     };
@@ -2183,6 +2444,7 @@ export class TrainingService {
       actual: workout.actual ? this.toRecord(workout.actual) : null,
       analysis: workout.analysis ? this.toWorkoutAnalysisView(workout.analysis) : null,
       completedAt: workout.completedAt,
+      gearId: workout.gearId ?? null,
       createdAt: workout.createdAt,
       updatedAt: workout.updatedAt,
     };
@@ -2251,6 +2513,7 @@ export class TrainingService {
       decision: this.toRecord(event.decision),
       reason: event.reason,
       confidence: event.confidence,
+      status: event.status ?? 'applied',
       createdAt: event.createdAt,
     };
   }

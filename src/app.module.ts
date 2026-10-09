@@ -33,6 +33,8 @@ import storageConfig from './modules/storage/config/storage.config';
 import { StorageModule } from './modules/storage/storage.module';
 import { SystemSeedModule } from './modules/system-seed/system-seed.module';
 import { TrainingModule } from './modules/training/training.module';
+import { AccountDeletionModule } from './modules/users/account-deletion/account-deletion.module';
+import { PreferencesModule } from './modules/users/preferences/preferences.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -54,6 +56,8 @@ import { UsersModule } from './modules/users/users.module';
     RealtimeModule,
     TrainingModule,
     IntegrationsModule,
+    PreferencesModule,
+    AccountDeletionModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

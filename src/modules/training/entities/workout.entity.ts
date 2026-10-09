@@ -138,4 +138,11 @@ export class Workout extends Model {
     field: 'source_activity_id',
   })
   sourceActivityId!: string | null;
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'gear_id',
+  })
+  gearId!: string | null;
 }

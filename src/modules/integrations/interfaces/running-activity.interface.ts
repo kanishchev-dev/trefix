@@ -25,6 +25,8 @@ export interface RunningActivity {
   elapsedTimeSec?: number;
   trainingLoad?: number;
   rawDataReference?: string;
+  /** Provider gear id (Strava `gear_id`), used to link the workout to shoes. */
+  gearExternalId?: string;
   importedAt: Date;
   updatedAt: Date;
   status: RunningActivityStatus;

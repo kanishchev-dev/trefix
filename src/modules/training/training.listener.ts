@@ -9,7 +9,7 @@ import { AdminPlanActionEvent } from './events/admin-plan-action.event';
 import { AthleteCreatedEvent } from './events/athlete-created.event';
 import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
-import { PlanAdaptedEvent } from './events/plan-adapted.event';
+import { PlanAdaptationProposedEvent, PlanAdaptedEvent } from './events/plan-adapted.event';
 import { PlanCancelledEvent } from './events/plan-cancelled.event';
 import { PlanCompletedEvent } from './events/plan-completed.event';
 import { PlanCreatedEvent } from './events/plan-created.event';
@@ -42,6 +42,12 @@ export class TrainingListener {
   handleAthleteUpdated(event: AthleteUpdatedEvent): void {
     this.logger.log(`training.athlete.updated for athlete ${event.athleteId}`);
     this.realtimeService.emitToRoom('training', 'training.athlete.updated', event);
+    this.realtimeService.emitToUser(event.actorUserId, 'athlete.updated', { athleteId: event.athleteId });
+  }
+
+  @OnEvent('training.plan.adaptation_proposed')
+  handleAdaptationProposed(event: PlanAdaptationProposedEvent): void {
+    this.realtimeService.emitToUser(event.userId, 'plan.adaptation.proposed', event);
   }
 
   @OnEvent('training.goal.created')
@@ -120,9 +126,10 @@ export class TrainingListener {
   }
 
   @OnEvent('training.plan.adapted')
-  handlePlanAdapted(event: PlanAdaptedEvent): void {
+  async handlePlanAdapted(event: PlanAdaptedEvent): Promise<void> {
     this.logger.log(`training.plan.adapted for plan ${event.planId}`);
     this.realtimeService.emitToRoom('training', 'training.plan.adapted', event);
+    await this.emitPlansChanged(event.athleteId, 'workouts', event.planId);
   }
 
   /**

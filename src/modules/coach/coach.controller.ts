@@ -1,8 +1,28 @@
-import { Body, Controller, Get, Param, Post, Query, Sse, MessageEvent } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  MessageEvent,
+  Param,
+  Post,
+  Query,
+  Sse,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { map, Observable } from 'rxjs';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { COACH_CHAT_RESPONSE_EXAMPLE, COACH_SESSION_DETAIL_EXAMPLE, COACH_SESSION_EXAMPLE } from './coach.openapi';
@@ -11,7 +31,6 @@ import { CoachChatDto } from './dto/coach-chat.dto';
 import { CoachChatResponseDto, CoachSessionDetailResponseDto, CoachSessionResponseDto } from './dto/coach-response.dto';
 import { CreateCoachSessionDto } from './dto/create-coach-session.dto';
 import { SendCoachMessageDto } from './dto/send-coach-message.dto';
-import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 @ApiTags('Coach')
 @ApiBearerAuth()
@@ -102,5 +121,14 @@ export class CoachController {
   })
   chat(@CurrentUser() user: AuthUserContext, @Body() dto: CoachChatDto): Promise<CoachChatResponseDto> {
     return this.coachService.sendMessage(user.id, dto.sessionId, { message: dto.message });
+  }
+
+  @Delete('sessions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermissions('coach.sessions.delete')
+  @ApiOperation({ summary: 'Clear the chat history; plans and workouts are not affected' })
+  @ApiNoContentResponse({ description: 'All coaching sessions and messages removed' })
+  clearHistory(@CurrentUser() user: AuthUserContext): Promise<void> {
+    return this.coachService.clearHistory(user.id);
   }
 }

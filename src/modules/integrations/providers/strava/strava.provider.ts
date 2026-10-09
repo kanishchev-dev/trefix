@@ -2,14 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { decryptToken } from '../../../../common/utils/encryption.util';
+import { STRAVA_ACTIVITY_SCOPES, STRAVA_PROFILE_SCOPE } from '../../constants/integrations.constants';
 import { Integration } from '../../entities/integration.entity';
-import {
-  IntegrationProvider,
-  OAuthTokens,
-} from '../../interfaces/integration-provider.interface';
+import { IntegrationProvider, OAuthTokens } from '../../interfaces/integration-provider.interface';
 import { RunningActivity } from '../../interfaces/running-activity.interface';
-import { StravaApiClient } from './strava-api.client';
 import { StravaMapper } from './strava.mapper';
+import { StravaApiClient } from './strava-api.client';
 
 @Injectable()
 export class StravaProvider implements IntegrationProvider {
@@ -29,7 +27,56 @@ export class StravaProvider implements IntegrationProvider {
     return this.client.generateAuthUrl(state);
   }
 
-  async exchangeCode(code: string): Promise<OAuthTokens> {
+  /** Authorization URL that also asks for the athlete profile (weight, sex, shoes). */
+  generateProfileAuthUrl(state: string): string {
+    return this.client.generateAuthUrl(state, [...STRAVA_ACTIVITY_SCOPES, STRAVA_PROFILE_SCOPE], true);
+  }
+
+  /** Weight, sex and shoes with brand/model. Requires `profile:read_all`. */
+  async fetchAthleteProfile(integration: Integration): Promise<{
+    weightKg: number | null;
+    sex: 'male' | 'female' | null;
+    shoes: Array<{
+      externalId: string;
+      brand: string;
+      model: string;
+      nickname: string | null;
+      distanceKm: number;
+      retired: boolean;
+    }>;
+  }> {
+    const accessToken = this.getAccessToken(integration);
+    const athlete = await this.client.fetchAthlete(accessToken);
+    const shoes = [];
+    for (const summary of athlete.shoes ?? []) {
+      let brand = '';
+      let model = '';
+      let retired = summary.retired ?? false;
+      try {
+        const detail = await this.client.fetchGear(accessToken, summary.id);
+        brand = detail.brand_name?.trim() ?? '';
+        model = detail.model_name?.trim() ?? '';
+        retired = detail.retired ?? retired;
+      } catch (error) {
+        this.logger.warn(`Strava gear ${summary.id} details unavailable: ${error}`);
+      }
+      shoes.push({
+        externalId: summary.id,
+        brand: brand || summary.name,
+        model: model || summary.name,
+        nickname: summary.name && summary.name !== `${brand} ${model}`.trim() ? summary.name : null,
+        distanceKm: Math.round((summary.distance / 1000) * 10) / 10,
+        retired,
+      });
+    }
+    return {
+      weightKg: typeof athlete.weight === 'number' && athlete.weight > 0 ? Math.round(athlete.weight * 10) / 10 : null,
+      sex: athlete.sex === 'M' ? 'male' : athlete.sex === 'F' ? 'female' : null,
+      shoes,
+    };
+  }
+
+  async exchangeCode(code: string, grantedScopes?: string[]): Promise<OAuthTokens> {
     const tokenRes = await this.client.exchangeCode(code);
     const expiresAt = new Date(tokenRes.expires_at * 1000);
     const externalUserId = tokenRes.athlete ? String(tokenRes.athlete.id) : '';
@@ -38,7 +85,7 @@ export class StravaProvider implements IntegrationProvider {
       accessToken: tokenRes.access_token,
       refreshToken: tokenRes.refresh_token,
       expiresAt,
-      scopes: ['activity:read_all'],
+      scopes: grantedScopes && grantedScopes.length > 0 ? grantedScopes : ['activity:read_all'],
       externalUserId,
     };
   }
@@ -75,10 +122,7 @@ export class StravaProvider implements IntegrationProvider {
       .map((act) => StravaMapper.toRunningActivity(integration.athleteId, act));
   }
 
-  async fetchActivity(
-    integration: Integration,
-    activityId: string,
-  ): Promise<RunningActivity | null> {
+  async fetchActivity(integration: Integration, activityId: string): Promise<RunningActivity | null> {
     const accessToken = this.getAccessToken(integration);
     const stravaActivity = await this.client.fetchActivity(accessToken, activityId);
 

@@ -40,6 +40,18 @@
     "ATHLETE_NOT_FOUND": "The user has no athlete profile yet",
     "WORKOUT_NOT_FOUND": "Workout not found",
     "WORKOUT_COMPLETED_IMMUTABLE": "A completed workout is training history and cannot be edited",
-    "CALENDAR_RANGE_INVALID": "The calendar period is too long or invalid"
+    "CALENDAR_RANGE_INVALID": "The calendar period is too long or invalid",
+    "ATHLETE_FIELD_OUT_OF_RANGE": "The value is outside the accepted range",
+    "ATHLETE_HEART_RATE_INCONSISTENT": "Resting heart rate must be below threshold, and threshold below max",
+    "ATHLETE_ZONES_INVALID": "Zones must be four increasing values between resting and max heart rate",
+    "GEAR_NOT_FOUND": "Gear not found",
+    "GEAR_RETIRED": "This action is not available for retired gear",
+    "GEAR_INVALID": "Check the gear details",
+    "COACH_DISABLED": "The coach is turned off. Turn it on in settings",
+    "ADAPTATION_NOT_FOUND": "Plan change not found",
+    "ADAPTATION_NOT_PROPOSED": "This plan change is no longer waiting for your decision",
+    "STRAVA_NOT_CONNECTED": "Connect Strava first",
+    "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava to share your profile first",
+    "ACCOUNT_DELETION_FORBIDDEN": "This account cannot be deleted"
   }
 }

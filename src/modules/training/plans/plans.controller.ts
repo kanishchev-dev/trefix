@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
@@ -32,6 +45,9 @@ import {
   RebuildPreviewResponseDto,
   RebuildRequestDto,
 } from '../dto/plan-rebuild.dto';
+import { TrainingAdaptationResponseDto } from '../dto/training-response.dto';
+import type { AdaptationEventView } from '../interfaces/training-views.interface';
+import { TrainingService } from '../training.service';
 import { PLAN_CREATE_THROTTLE } from './plan-create-throttle';
 import { PlanEditingService, PlanPreviewResult } from './plan-editing.service';
 import { PlanLifecycleService, StartOptionsResult } from './plan-lifecycle.service';
@@ -49,6 +65,7 @@ export class PlansController {
     private readonly planEditingService: PlanEditingService,
     private readonly planLifecycleService: PlanLifecycleService,
     private readonly planRebuildService: PlanRebuildService,
+    private readonly trainingService: TrainingService,
   ) {}
 
   @Get()
@@ -76,6 +93,45 @@ export class PlansController {
     @Query() query: TimezoneQueryDto,
   ): Promise<{ plan: ActivePlanSummary | null }> {
     return { plan: await this.planListService.getActive(user.id, query.timezone) };
+  }
+
+  @Get('active/adaptations')
+  @RequirePermissions('training.plans.read')
+  @ApiOperation({
+    summary: 'Pending adaptations of the active plan',
+    description:
+      '`proposed` waits for apply/dismiss (coach mode "confirm"); `suggested` is advice only (mode "suggest")',
+  })
+  @ApiOkResponse({ type: [TrainingAdaptationResponseDto] })
+  async listAdaptations(@CurrentUser() user: AuthUserContext): Promise<{ items: AdaptationEventView[] }> {
+    return { items: await this.trainingService.listPendingAdaptations(user.id) };
+  }
+
+  @Post('active/adaptations/:adaptationId/apply')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('training.adapt')
+  @ApiOperation({
+    summary: 'Apply a proposed adaptation',
+    description: 'Errors: ADAPTATION_NOT_FOUND, ADAPTATION_NOT_PROPOSED',
+  })
+  @ApiOkResponse({ type: TrainingAdaptationResponseDto })
+  applyAdaptation(
+    @CurrentUser() user: AuthUserContext,
+    @Param('adaptationId', ParseUUIDPipe) adaptationId: string,
+  ): Promise<AdaptationEventView> {
+    return this.trainingService.applyProposedAdaptation(user.id, adaptationId);
+  }
+
+  @Post('active/adaptations/:adaptationId/dismiss')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('training.adapt')
+  @ApiOperation({ summary: 'Dismiss a proposed or suggested adaptation' })
+  @ApiOkResponse({ type: TrainingAdaptationResponseDto })
+  dismissAdaptation(
+    @CurrentUser() user: AuthUserContext,
+    @Param('adaptationId', ParseUUIDPipe) adaptationId: string,
+  ): Promise<AdaptationEventView> {
+    return this.trainingService.dismissProposedAdaptation(user.id, adaptationId);
   }
 
   @Get(':id')

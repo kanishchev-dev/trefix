@@ -91,18 +91,27 @@ export class AthleteMetricsService {
 
     const recentResult = this.pickRecentResult(completed);
 
+    // The profile is the source of truth for what the athlete entered; estimates fill the gaps.
+    const athlete = await this.athleteModel.findByPk(athleteId);
+    const fromProfile = (value: number | null | undefined): SourcedValue<number | null> | null =>
+      typeof value === 'number' ? { value, source: 'profile' } : null;
+    const profileMileage =
+      athlete?.fieldSources?.weeklyMileageKm && typeof athlete.weeklyMileageKm === 'number'
+        ? fromProfile(athlete.weeklyMileageKm)
+        : null;
+
     return {
       thresholdPaceSecondsPerKm: {
         value: state?.thresholdPaceSecondsPerKm ?? null,
         source: state?.thresholdPaceSecondsPerKm ? 'athlete_state' : 'none',
       },
-      thresholdHeartRate: {
+      thresholdHeartRate: fromProfile(athlete?.thresholdHeartRate) ?? {
         value: state?.thresholdHeartRate ?? null,
         source: state?.thresholdHeartRate ? 'athlete_state' : 'none',
       },
-      maxHeartRate: { value: null, source: 'none' },
-      restingHeartRate: { value: null, source: 'none' },
-      weeklyMileageKm: { value: weeklyMileageKm, source: volumeSource },
+      maxHeartRate: fromProfile(athlete?.maxHeartRate) ?? { value: null, source: 'none' },
+      restingHeartRate: fromProfile(athlete?.restingHeartRate) ?? { value: null, source: 'none' },
+      weeklyMileageKm: profileMileage ?? { value: weeklyMileageKm, source: volumeSource },
       longestRunKm: { value: longestRunKm, source: volumeSource },
       recentResult,
     };
@@ -206,6 +215,8 @@ export class AthleteMetricsService {
     const sources = [
       current.thresholdPaceSecondsPerKm.source,
       current.thresholdHeartRate.source,
+      current.maxHeartRate.source,
+      current.restingHeartRate.source,
       current.weeklyMileageKm.source,
       current.longestRunKm.source,
       current.recentResult.source,
@@ -215,6 +226,9 @@ export class AthleteMetricsService {
     }
     if (sources.includes('manual_workouts')) {
       return 'manual_workouts';
+    }
+    if (sources.includes('profile')) {
+      return 'profile';
     }
     if (sources.includes('athlete_state')) {
       return 'athlete_state';

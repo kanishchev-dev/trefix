@@ -1,7 +1,4 @@
-import {
-  RunningActivity,
-  RunningActivityType,
-} from '../../interfaces/running-activity.interface';
+import { RunningActivity, RunningActivityType } from '../../interfaces/running-activity.interface';
 import { StravaActivitySummary } from '../../interfaces/strava-api.interface';
 
 const RUNNING_TYPES = new Set(['Run', 'TrailRun', 'VirtualRun']);
@@ -14,10 +11,7 @@ export class StravaMapper {
   }
 
   /** Maps Strava activity summary payload to domain RunningActivity DTO. */
-  static toRunningActivity(
-    athleteId: string,
-    stravaActivity: StravaActivitySummary,
-  ): RunningActivity {
+  static toRunningActivity(athleteId: string, stravaActivity: StravaActivitySummary): RunningActivity {
     const startedAt = new Date(stravaActivity.start_date);
     const durationSec = stravaActivity.elapsed_time || stravaActivity.moving_time || 0;
     const endedAt = new Date(startedAt.getTime() + durationSec * 1000);
@@ -26,8 +20,7 @@ export class StravaMapper {
     const movingTimeSec = stravaActivity.moving_time || durationSec;
     const elapsedTimeSec = stravaActivity.elapsed_time || durationSec;
 
-    const averagePaceSecPerKm =
-      distanceMeters > 0 ? Math.round((movingTimeSec / distanceMeters) * 1000) : undefined;
+    const averagePaceSecPerKm = distanceMeters > 0 ? Math.round((movingTimeSec / distanceMeters) * 1000) : undefined;
 
     const rawType = stravaActivity.sport_type || stravaActivity.type;
     let activityType: RunningActivityType = 'run';
@@ -56,6 +49,7 @@ export class StravaMapper {
       cadence: stravaActivity.average_cadence ?? undefined,
       movingTimeSec,
       elapsedTimeSec,
+      gearExternalId: stravaActivity.gear_id ?? undefined,
       importedAt: new Date(),
       updatedAt: new Date(),
       status: 'imported',

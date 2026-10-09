@@ -4,5 +4,6 @@ export class ActivityImportedEvent {
     public readonly workoutId: string,
     public readonly sourceProvider: string,
     public readonly sourceActivityId: string,
+    public readonly gearExternalId: string | null = null,
   ) {}
 }

@@ -18,6 +18,20 @@ export class IntegrationItemResponseDto {
 
   @ApiPropertyOptional({ example: 42 })
   importedActivitiesCount?: number;
+
+  @ApiPropertyOptional({ example: true, description: 'Strava shares weight, sex and shoes (profile:read_all)' })
+  profileAccess?: boolean;
+
+  @ApiPropertyOptional({ example: '2026-10-09T04:00:00.000Z', nullable: true })
+  lastProfileSyncAt?: string | null;
+}
+
+export class StravaProfileAccessResponseDto {
+  @ApiProperty({ example: 'https://www.strava.com/oauth/authorize?…' })
+  authorizeUrl!: string;
+
+  @ApiProperty({ example: '6f1d7c3a9a553b4f1e2d9c10' })
+  state!: string;
 }
 
 export class IntegrationsListResponseDto {

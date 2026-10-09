@@ -65,18 +65,6 @@ export class TrainingController {
     return this.trainingService.createAthlete(user.id, dto);
   }
 
-  @Get('athletes/me')
-  @RequirePermissions('training.athletes.read')
-  @ApiOperation({ summary: 'Get the current user athlete profile' })
-  @ApiOkResponse({
-    description: 'Athlete profile',
-    type: TrainingAthleteResponseDto,
-    schema: { example: TRAINING_ATHLETE_EXAMPLE },
-  })
-  async getMyAthlete(@CurrentUser() user: AuthUserContext): Promise<TrainingAthleteResponseDto> {
-    return this.trainingService.getOrCreateAthlete(user.id);
-  }
-
   @Get('athletes/:id')
   @RequirePermissions('training.athletes.read')
   @ApiOperation({ summary: 'Get an athlete profile' })
@@ -239,7 +227,8 @@ export class TrainingController {
   @RequirePermissions('training.athletes.read')
   @ApiOperation({ summary: 'Current metrics estimate with per-field sources, for the plan creation prefill' })
   @ApiOkResponse({
-    description: 'Each field is `{ value, source }`; source is strava | manual_workouts | athlete_state | none',
+    description:
+      'Each field is `{ value, source }`; source is profile | strava | manual_workouts | athlete_state | none',
   })
   getCurrentMetrics(@CurrentUser() user: AuthUserContext): Promise<CurrentMetrics> {
     return this.trainingService.getCurrentMetrics(user.id);

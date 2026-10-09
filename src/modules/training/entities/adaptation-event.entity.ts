@@ -1,6 +1,8 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
+import type { AdaptationEventStatus } from '../training.constants';
+
 @Table({
   tableName: 'adaptation_events',
   underscored: true,
@@ -66,4 +68,18 @@ export class AdaptationEvent extends Model {
     allowNull: false,
   })
   confidence!: number;
+
+  @Column({
+    type: DataType.STRING(16),
+    allowNull: false,
+    defaultValue: 'applied',
+  })
+  status!: AdaptationEventStatus;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'resolved_at',
+  })
+  resolvedAt!: Date | null;
 }

@@ -105,4 +105,11 @@ export class Integration extends Model {
     field: 'last_sync_error',
   })
   lastSyncError!: string | null;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'last_profile_sync_at',
+  })
+  lastProfileSyncAt!: Date | null;
 }
