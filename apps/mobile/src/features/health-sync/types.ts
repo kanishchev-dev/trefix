@@ -35,6 +35,11 @@ export interface DeviceHealthSource {
   /** `since` bounds the first read; later reads continue from the cursor. */
   readWorkoutChanges(cursor: SyncCursor | null, since: Date): Promise<WorkoutChangesPage>;
   readProfileMetrics(now: Date): Promise<DeviceProfileMetricsRequest>;
+  /**
+   * Foreground only: asks for read types added after the connection was made
+   * (the system dialog shows only the new ones). No-op when nothing is missing.
+   */
+  ensureReadAccess?(): Promise<void>;
   openSystemSettings(): Promise<void>;
   /** Android: the Play Store page of Health Connect. */
   openStorePage?(): Promise<void>;

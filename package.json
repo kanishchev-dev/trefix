@@ -16,5 +16,10 @@
     "prettier": "3.6.2",
     "turbo": "2.10.12",
     "typescript": "5.9.3"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "expo-modules-jsi@57.1.0": "patches/expo-modules-jsi@57.1.0.patch"
+    }
   }
 }

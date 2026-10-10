@@ -136,21 +136,22 @@ export async function runSync(deps: SyncDeps, request: SyncRequest): Promise<Syn
   }
 
   if (request.profileSync && (request.budgetMs === undefined || now() - startedAt < request.budgetMs)) {
-    result.profileSynced = await pushProfileMetrics(deps, request.userId);
+    // A manual sync always re-reads the profile; automatic runs are throttled.
+    result.profileSynced = await pushProfileMetrics(deps, request.userId, request.syncType === "manual");
   }
   return result;
 }
 
-/** Weight and resting HR, at most every 12 hours. Failures are not fatal for the run. */
-async function pushProfileMetrics(deps: SyncDeps, userId: string): Promise<boolean> {
+/** Weight, height and resting HR, at most every 12 hours unless forced. Failures are not fatal for the run. */
+async function pushProfileMetrics(deps: SyncDeps, userId: string, force: boolean): Promise<boolean> {
   const { source, api, store, now } = deps;
   const last = await store.getLastProfileSyncAt(userId, source.provider);
-  if (last !== null && now() - last < PROFILE_METRICS_INTERVAL_MS) {
+  if (!force && last !== null && now() - last < PROFILE_METRICS_INTERVAL_MS) {
     return false;
   }
   try {
     const metrics = await source.readProfileMetrics(new Date(now()));
-    if (!metrics.weight && !metrics.restingHeartRate?.length) {
+    if (!metrics.weight && !metrics.height && !metrics.restingHeartRate?.length) {
       await store.setLastProfileSyncAt(userId, source.provider, now());
       return false;
     }

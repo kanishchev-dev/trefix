@@ -44,6 +44,7 @@ const READ_PERMISSIONS: Array<{ recordType: RecordType; scope: DeviceScope }> = 
   { recordType: "Steps", scope: "steps" },
   { recordType: "ActiveCaloriesBurned", scope: "calories" },
   { recordType: "Weight", scope: "weight" },
+  { recordType: "Height", scope: "height" },
   { recordType: "RestingHeartRate", scope: "resting_heart_rate" },
 ];
 
@@ -244,6 +245,16 @@ export const healthConnectSource: DeviceHealthSource = {
     return scopesFrom(await getGrantedPermissions());
   },
 
+  async ensureReadAccess(): Promise<void> {
+    await ensureInitialized();
+    const granted = new Set((await getGrantedPermissions()).map((permission) => permission.recordType));
+    // Not connected through this app yet: the connect flow asks for everything.
+    if (!granted.has("ExerciseSession")) return;
+    const missing = READ_PERMISSIONS.filter((entry) => !granted.has(entry.recordType));
+    if (missing.length === 0) return;
+    await requestPermission(missing.map((entry): Permission => ({ accessType: "read", recordType: entry.recordType })));
+  },
+
   async readWorkoutChanges(cursor, since): Promise<WorkoutChangesPage> {
     await ensureInitialized();
     const state = parseCursor(cursor) ?? {
@@ -274,6 +285,23 @@ export const healthConnectSource: DeviceHealthSource = {
       }
     } catch {
       // No access or no data: the profile keeps its value.
+    }
+    try {
+      const heights = await readRecords("Height", {
+        timeRangeFilter: { operator: "after", startTime: new Date(0).toISOString() },
+        ascendingOrder: false,
+        pageSize: 1,
+      });
+      const latest = heights.records[0];
+      if (latest && latest.height.inMeters > 0) {
+        metrics.height = {
+          valueCm: Math.round(latest.height.inMeters * 100),
+          measuredAt: new Date(latest.time).toISOString(),
+          originAppId: latest.metadata?.dataOrigin,
+        };
+      }
+    } catch {
+      // Same as above.
     }
     try {
       const resting = await readRecords("RestingHeartRate", {

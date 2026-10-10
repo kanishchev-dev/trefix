@@ -23,6 +23,10 @@ export async function syncHealthNow(syncType: DeviceSyncType, budgetMs?: number)
   if (!session || session.user.id !== active.userId) return null;
   const source = getHealthSource();
   if (!source || source.provider !== active.provider) return null;
+  // Types added in an app update need their own grant; only a user-started sync may show the dialog.
+  if (syncType === "manual" && source.ensureReadAccess) {
+    await source.ensureReadAccess().catch(() => undefined);
+  }
   const result = await runSyncOnce(
     {
       source,

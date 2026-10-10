@@ -1814,6 +1814,7 @@ export const deviceScopeSchema = z.enum([
   "steps",
   "calories",
   "weight",
+  "height",
   "resting_heart_rate",
   "history",
   "background",
@@ -1896,12 +1897,18 @@ export type DeviceSyncStatus = z.infer<typeof deviceSyncStatusSchema>;
 
 export type DeviceProfileMetricsRequest = {
   weight?: { valueKg: number; measuredAt: string; originAppId?: string };
+  height?: { valueCm: number; measuredAt: string; originAppId?: string };
+  /** iOS only: HealthKit characteristics. */
+  sex?: "female" | "male" | "other";
+  birthDate?: string;
   restingHeartRate?: Array<{ date: string; bpm: number }>;
 };
 
 export const deviceProfileMetricsResultSchema = z.object({
-  applied: z.array(z.enum(["weightKg", "restingHeartRate"])),
-  skipped: z.array(z.object({ field: z.enum(["weightKg", "restingHeartRate"]), reason: z.string() })),
+  applied: z.array(z.enum(["weightKg", "heightCm", "sex", "birthDate", "restingHeartRate"])),
+  skipped: z.array(
+    z.object({ field: z.enum(["weightKg", "heightCm", "sex", "birthDate", "restingHeartRate"]), reason: z.string() }),
+  ),
 });
 export type DeviceProfileMetricsResult = z.infer<typeof deviceProfileMetricsResultSchema>;
 

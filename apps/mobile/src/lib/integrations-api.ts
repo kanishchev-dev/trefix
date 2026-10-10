@@ -138,7 +138,11 @@ export async function postDeviceProfileMetrics(
     body,
     useAuth: true,
   });
-  return deviceProfileMetricsResultSchema.parse(response);
+  const result = deviceProfileMetricsResultSchema.parse(response);
+  if (__DEV__) {
+    console.log("[health] profile metrics", JSON.stringify(body), "→", JSON.stringify(result));
+  }
+  return result;
 }
 
 export async function getWorkoutSources(workoutId: string): Promise<WorkoutSources> {

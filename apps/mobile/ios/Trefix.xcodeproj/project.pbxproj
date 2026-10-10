@@ -25,7 +25,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Trefix/Info.plist; sourceTree = "<group>"; };
 		13CEE2FC1BF27FED43FF0A95 /* libPods-Trefix.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trefix.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		42CEEFB68465441BB779CA5B /* InfoPlist.strings */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		47D1588065F25A5EE5EB75C6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Trefix/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		47D1588065F25A5EE5EB75C6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Trefix/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5E49C732D28374C5EEFEADF9 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Trefix/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		9D9BC73E8D03E3B770ADAD58 /* Pods-Trefix.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trefix.debug.xcconfig"; path = "Target Support Files/Pods-Trefix/Pods-Trefix.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Trefix/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -62,7 +62,6 @@
 				9D9BC73E8D03E3B770ADAD58 /* Pods-Trefix.debug.xcconfig */,
 				BA7083D9BFCF227AE4383AAB /* Pods-Trefix.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -103,7 +102,6 @@
 				42CEEFB68465441BB779CA5B /* InfoPlist.strings */,
 			);
 			name = en.lproj;
-			path = "";
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -153,7 +151,6 @@
 				0E5074DE73584575A8C3CCA2 /* InfoPlist.strings */,
 			);
 			name = ru.lproj;
-			path = "";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -399,6 +396,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Trefix/Trefix.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KT22FA2C2R;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -436,6 +434,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Trefix/Trefix.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KT22FA2C2R;
 				INFOPLIST_FILE = Trefix/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (

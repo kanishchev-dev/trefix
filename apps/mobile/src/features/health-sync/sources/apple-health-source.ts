@@ -1,5 +1,7 @@
 import { Linking } from "react-native";
 import {
+  getBiologicalSexAsync,
+  getDateOfBirthAsync,
   getMostRecentQuantitySample,
   isHealthDataAvailableAsync,
   queryQuantitySamples,
@@ -25,8 +27,14 @@ const READ_TYPES = [
   "HKQuantityTypeIdentifierStepCount",
   "HKQuantityTypeIdentifierActiveEnergyBurned",
   "HKQuantityTypeIdentifierBodyMass",
+  "HKQuantityTypeIdentifierHeight",
   "HKQuantityTypeIdentifierRestingHeartRate",
+  "HKCharacteristicTypeIdentifierBiologicalSex",
+  "HKCharacteristicTypeIdentifierDateOfBirth",
 ] as const;
+
+/** HealthKit BiologicalSex: 0 notSet, 1 female, 2 male, 3 other. */
+const SEX_BY_HEALTHKIT: Record<number, DeviceProfileMetricsRequest["sex"]> = { 1: "female", 2: "male", 3: "other" };
 
 /** iOS never tells whether read access was granted: these are the scopes that were requested. */
 const REQUESTED_SCOPES: DeviceScope[] = [
@@ -36,6 +44,7 @@ const REQUESTED_SCOPES: DeviceScope[] = [
   "steps",
   "calories",
   "weight",
+  "height",
   "resting_heart_rate",
   "background",
 ];
@@ -102,6 +111,11 @@ export const appleHealthSource: DeviceHealthSource = {
     return REQUESTED_SCOPES;
   },
 
+  async ensureReadAccess(): Promise<void> {
+    // HealthKit shows the sheet only for types the user has not answered yet.
+    await requestAuthorization({ toRead: [...READ_TYPES] });
+  },
+
   async readWorkoutChanges(cursor, since): Promise<WorkoutChangesPage> {
     const state = parseCursor(cursor) ?? { anchor: "", since: since.toISOString() };
     const response = await queryWorkoutSamplesWithAnchor({
@@ -145,6 +159,31 @@ export const appleHealthSource: DeviceHealthSource = {
       }
     } catch {
       // No access or no data: the profile keeps its value.
+    }
+    try {
+      const height = await getMostRecentQuantitySample("HKQuantityTypeIdentifierHeight", "cm");
+      if (height && height.quantity > 0) {
+        metrics.height = {
+          valueCm: Math.round(height.quantity),
+          measuredAt: new Date(height.endDate).toISOString(),
+          originAppId: height.sourceRevision?.source?.bundleIdentifier,
+        };
+      }
+    } catch {
+      // Same as above.
+    }
+    try {
+      const sex = SEX_BY_HEALTHKIT[Number(await getBiologicalSexAsync())];
+      if (sex) metrics.sex = sex;
+    } catch {
+      // Same as above.
+    }
+    try {
+      const birth = await getDateOfBirthAsync();
+      // The date of birth is a calendar date stored at local midnight.
+      if (birth) metrics.birthDate = localDateKey(birth);
+    } catch {
+      // Same as above.
     }
     try {
       const samples = await queryQuantitySamples("HKQuantityTypeIdentifierRestingHeartRate", {
