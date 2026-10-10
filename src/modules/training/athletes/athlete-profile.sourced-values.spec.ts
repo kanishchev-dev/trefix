@@ -62,17 +62,36 @@ describe('AthleteProfileService.applySourcedValues', () => {
     expect(athlete.save).not.toHaveBeenCalled();
   });
 
-  it('accepts resting HR from Health and keeps manual values untouched', async () => {
-    athlete.fieldSources.weightKg = { source: 'manual', updatedAt: '2026-01-01T00:00:00.000Z' };
+  it('accepts resting HR from Health and keeps a manual value entered after the measurement', async () => {
+    athlete.fieldSources.weightKg = { source: 'manual', updatedAt: '2026-10-09T00:00:00.000Z' };
     await service.applySourcedValues(
       'athlete-1',
       'apple_health',
       { weightKg: 60, restingHeartRate: 52 },
-      { weightKg: new Date(), restingHeartRate: new Date() },
+      { weightKg: new Date('2026-10-08T00:00:00Z'), restingHeartRate: new Date() },
     );
     expect(athlete.weightKg).toBe(72);
     expect(athlete.restingHeartRate).toBe(52);
     expect(athlete.fieldSources.restingHeartRate?.source).toBe('apple_health');
+  });
+
+  it('replaces a manual value with a later Health measurement', async () => {
+    athlete.fieldSources.weightKg = { source: 'manual', updatedAt: '2026-01-01T00:00:00.000Z' };
+    const changed = await service.applySourcedValues(
+      'athlete-1',
+      'apple_health',
+      { weightKg: 70.2 },
+      { weightKg: new Date('2026-10-08T06:00:00Z') },
+    );
+    expect(changed).toBe(true);
+    expect(athlete.weightKg).toBe(70.2);
+    expect(athlete.fieldSources.weightKg?.source).toBe('apple_health');
+  });
+
+  it('never lets Strava overwrite a manual value', async () => {
+    athlete.fieldSources.weightKg = { source: 'manual', updatedAt: '2026-01-01T00:00:00.000Z' };
+    await service.applySourcedValues('athlete-1', 'strava', { weightKg: 80 });
+    expect(athlete.weightKg).toBe(72);
   });
 
   it('keeps the Strava behaviour without measurement times', async () => {

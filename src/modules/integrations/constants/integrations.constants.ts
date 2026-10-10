@@ -110,6 +110,7 @@ export const DEVICE_SCOPES = [
   'steps',
   'calories',
   'weight',
+  'height',
   'resting_heart_rate',
   'history',
   'background',

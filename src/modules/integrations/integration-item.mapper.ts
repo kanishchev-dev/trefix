@@ -21,7 +21,7 @@ export function toIntegrationItem(
   const device = isDeviceProvider(provider);
   const scopes = Array.isArray(integration?.scopes) ? integration.scopes : [];
   const profileAccess = device
-    ? scopes.includes('weight') || scopes.includes('resting_heart_rate')
+    ? ['weight', 'height', 'resting_heart_rate'].some((scope) => scopes.includes(scope))
     : scopes.includes(STRAVA_PROFILE_SCOPE);
 
   return {

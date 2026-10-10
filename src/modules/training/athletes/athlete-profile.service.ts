@@ -217,7 +217,7 @@ export class AthleteProfileService {
     let changed = false;
     let touched = false;
     for (const [field, value] of Object.entries(values) as Array<[AthleteSourcedField, unknown]>) {
-      if (value === undefined || value === null || sources[field]?.source === 'manual') {
+      if (value === undefined || value === null) {
         continue;
       }
       if (field !== 'sex' && field !== 'birthDate' && !this.inRange(field, Number(value))) {
@@ -225,6 +225,16 @@ export class AthleteProfileService {
       }
       const at = measuredAt[field] ?? now;
       const storedAt = sources[field]?.updatedAt ? Date.parse(sources[field]!.updatedAt) : Number.NaN;
+      const current: unknown = athlete.get(field);
+      const isEmpty = current === null || current === undefined;
+      // A manual value is replaced only by a measurement dated after it was entered; an empty field is always filled.
+      if (
+        !isEmpty &&
+        sources[field]?.source === 'manual' &&
+        (!measuredAt[field] || Number.isNaN(storedAt) || storedAt >= at.getTime())
+      ) {
+        continue;
+      }
       if (measuredAt[field] && !Number.isNaN(storedAt) && storedAt > at.getTime()) {
         continue;
       }

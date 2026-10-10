@@ -389,16 +389,16 @@ describe('DeviceIntegrationsService', () => {
       );
     });
 
-    it('never overwrites manual values and skips older measurements', async () => {
+    it('keeps manual values entered after the measurement and skips older measurements', async () => {
       athleteModel.findByPk.mockResolvedValue({
         id: 'athlete-1',
         fieldSources: {
-          weightKg: { source: 'manual', updatedAt: '2026-01-01T00:00:00Z' },
+          weightKg: { source: 'manual', updatedAt: new Date().toISOString() },
           restingHeartRate: { source: 'strava', updatedAt: new Date().toISOString() },
         },
       });
       const result = await service.applyProfileMetrics('user-1', 'apple_health', {
-        weight: { valueKg: 70, measuredAt: new Date().toISOString() },
+        weight: { valueKg: 70, measuredAt: new Date(Date.now() - 3_600_000).toISOString() },
         restingHeartRate: [
           { date: recentDay(2), bpm: 52 },
           { date: recentDay(3), bpm: 54 },
@@ -413,6 +413,61 @@ describe('DeviceIntegrationsService', () => {
       expect(profileService.applySourcedValues).not.toHaveBeenCalled();
     });
 
+    it('replaces a manual value with a later measurement and writes height', async () => {
+      athleteModel.findByPk.mockResolvedValue({
+        id: 'athlete-1',
+        fieldSources: { weightKg: { source: 'manual', updatedAt: '2026-01-01T00:00:00Z' } },
+      });
+      const weighedAt = new Date(Date.now() - 3_600_000).toISOString();
+      const result = await service.applyProfileMetrics('user-1', 'apple_health', {
+        weight: { valueKg: 70, measuredAt: weighedAt },
+        height: { valueCm: 181.2, measuredAt: '2024-05-01T00:00:00Z' },
+      });
+      expect(result).toEqual({ applied: ['weightKg', 'heightCm'], skipped: [] });
+      expect(profileService.applySourcedValues).toHaveBeenCalledWith(
+        'athlete-1',
+        'apple_health',
+        { heightCm: 181 },
+        { heightCm: new Date('2024-05-01T00:00:00Z') },
+      );
+    });
+
+    it('fills empty sex, birth date and weight from an old weigh-in, keeps manual sex', async () => {
+      athleteModel.findByPk.mockResolvedValue({
+        id: 'athlete-1',
+        weightKg: null,
+        sex: null,
+        birthDate: null,
+        fieldSources: {},
+      });
+      const result = await service.applyProfileMetrics('user-1', 'apple_health', {
+        weight: { valueKg: 80, measuredAt: '2024-01-01T00:00:00Z' },
+        sex: 'male',
+        birthDate: '1990-04-12',
+      });
+      expect(result).toEqual({ applied: ['weightKg', 'sex', 'birthDate'], skipped: [] });
+      expect(profileService.applySourcedValues).toHaveBeenCalledWith('athlete-1', 'apple_health', { sex: 'male' });
+
+      profileService.applySourcedValues.mockClear();
+      athleteModel.findByPk.mockResolvedValue({
+        id: 'athlete-1',
+        weightKg: 70,
+        sex: 'female',
+        birthDate: '1990-04-12',
+        fieldSources: { sex: { source: 'manual', updatedAt: '2026-01-01T00:00:00Z' } },
+      });
+      const second = await service.applyProfileMetrics('user-1', 'apple_health', {
+        sex: 'male',
+        birthDate: '1990-04-12',
+        weight: { valueKg: 80, measuredAt: '2024-01-01T00:00:00Z' },
+      });
+      expect(second.applied).toEqual([]);
+      expect(second.skipped).toEqual([
+        { field: 'weightKg', reason: 'stale' },
+        { field: 'sex', reason: 'manual_source' },
+      ]);
+    });
+
     it('reports insufficient data, out of range and old measurements', async () => {
       const result = await service.applyProfileMetrics('user-1', 'apple_health', {
         weight: { valueKg: 20, measuredAt: new Date().toISOString() },
@@ -422,6 +477,7 @@ describe('DeviceIntegrationsService', () => {
         { field: 'weightKg', reason: 'out_of_range' },
         { field: 'restingHeartRate', reason: 'insufficient_data' },
       ]);
+      athleteModel.findByPk.mockResolvedValue({ id: 'athlete-1', weightKg: 72, fieldSources: {} });
       const old = await service.applyProfileMetrics('user-1', 'apple_health', {
         weight: { valueKg: 70, measuredAt: '2025-01-01T00:00:00Z' },
       });
