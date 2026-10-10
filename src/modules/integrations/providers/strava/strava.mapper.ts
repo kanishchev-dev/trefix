@@ -10,6 +10,20 @@ export class StravaMapper {
     return RUNNING_TYPES.has(type);
   }
 
+  /**
+   * Strava sends `start_date_local` as the wall clock marked with `Z`; its
+   * distance from `start_date` is the athlete's offset at the start.
+   */
+  static utcOffsetMinutes(stravaActivity: StravaActivitySummary): number | undefined {
+    const asUtc = (value: string): number => Date.parse(value.endsWith('Z') ? value : `${value}Z`);
+    const utc = asUtc(stravaActivity.start_date);
+    const local = asUtc(stravaActivity.start_date_local);
+    if (Number.isNaN(utc) || Number.isNaN(local)) {
+      return undefined;
+    }
+    return Math.round((local - utc) / 60000 / 15) * 15;
+  }
+
   /** Maps Strava activity summary payload to domain RunningActivity DTO. */
   static toRunningActivity(athleteId: string, stravaActivity: StravaActivitySummary): RunningActivity {
     const startedAt = new Date(stravaActivity.start_date);
@@ -46,10 +60,12 @@ export class StravaMapper {
       averageHeartRate: stravaActivity.average_heartrate ?? undefined,
       maxHeartRate: stravaActivity.max_heartrate ?? undefined,
       calories: stravaActivity.calories ?? undefined,
-      cadence: stravaActivity.average_cadence ?? undefined,
+      // Strava reports running cadence per leg; the domain uses steps per minute.
+      cadence: stravaActivity.average_cadence ? Math.round(stravaActivity.average_cadence * 2) : undefined,
       movingTimeSec,
       elapsedTimeSec,
       gearExternalId: stravaActivity.gear_id ?? undefined,
+      utcOffsetMinutes: StravaMapper.utcOffsetMinutes(stravaActivity),
       importedAt: new Date(),
       updatedAt: new Date(),
       status: 'imported',

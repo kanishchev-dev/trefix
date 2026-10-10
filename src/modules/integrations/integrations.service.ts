@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Queue } from 'bullmq';
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 import { Op } from 'sequelize';
 
 import { DomainException } from '@/common/exceptions/domain.exception';
@@ -18,6 +18,7 @@ import { GearService } from '../training/gear/gear.service';
 import { TrainingService } from '../training/training.service';
 import { UserPreferencesService } from '../users/preferences/user-preferences.service';
 import {
+  DEVICE_PROVIDERS,
   INTEGRATION_PROVIDERS,
   INTEGRATION_STATUSES,
   INTEGRATIONS_QUEUE_NAME,
@@ -33,13 +34,15 @@ import { IntegrationItemResponseDto, IntegrationsListResponseDto } from './dto/i
 import { StravaConnectResponseDto } from './dto/strava-connect-response.dto';
 import { StravaWebhookEventDto } from './dto/strava-webhook.dto';
 import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
+import { DeviceSyncBatch } from './entities/device-sync-batch.entity';
 import { Integration } from './entities/integration.entity';
 import { IntegrationSyncState } from './entities/integration-sync-state.entity';
 import { StravaWebhookEvent } from './entities/strava-webhook-event.entity';
-import { ActivityImportedEvent } from './events/activity-imported.event';
+import { WorkoutSource } from './entities/workout-source.entity';
 import { IntegrationConnectedEvent } from './events/integration-connected.event';
 import { IntegrationDisconnectedEvent } from './events/integration-disconnected.event';
-import { RunningActivity } from './interfaces/running-activity.interface';
+import { ActivityIngestionService } from './ingestion/activity-ingestion.service';
+import { toIntegrationItem } from './integration-item.mapper';
 import { StravaProvider } from './providers/strava/strava.provider';
 
 @Injectable()
@@ -70,52 +73,46 @@ export class IntegrationsService {
     private readonly preferencesService: UserPreferencesService,
     @InjectModel(Athlete)
     private readonly athleteModel: typeof Athlete,
+    private readonly ingestion: ActivityIngestionService,
+    @InjectModel(WorkoutSource)
+    private readonly workoutSourceModel: typeof WorkoutSource,
+    @InjectModel(DeviceSyncBatch)
+    private readonly deviceBatchModel: typeof DeviceSyncBatch,
   ) {}
 
   private get encryptionKey(): string {
     return this.configService.get<string>('integrations.encryptionKey') || 'default_key_32_chars_placeholder!!';
   }
 
-  /** Lists connected integrations for an athlete user. */
+  /** Lists every provider with its connection status for the user. */
   async listIntegrations(actorUserId: string): Promise<IntegrationsListResponseDto> {
     const athlete = await this.trainingService.getOrCreateAthlete(actorUserId);
     const integrations = await this.integrationModel.findAll({
       where: { athleteId: athlete.id },
     });
+    const healthEnabled = this.configService.get<boolean>('integrations.health.enabled') === true;
 
     const items: IntegrationItemResponseDto[] = await Promise.all(
       INTEGRATION_PROVIDERS.map(async (provider) => {
-        const found = integrations.find((entry) => entry.provider === provider);
-        if (!found) {
-          return {
-            provider,
-            status: INTEGRATION_STATUSES.DISCONNECTED,
-            connectedAt: null,
-            lastSyncedAt: null,
-            externalUserId: null,
-            importedActivitiesCount: 0,
-            profileAccess: false,
-            lastProfileSyncAt: null,
-          };
-        }
-
-        const count = await this.workoutModel.count({
-          where: {
-            athleteId: athlete.id,
-            sourceProvider: provider,
-          },
+        const found = integrations.find((entry) => entry.provider === provider) ?? null;
+        const isDevice = (DEVICE_PROVIDERS as readonly string[]).includes(provider);
+        const importedActivitiesCount = found
+          ? await this.workoutSourceModel.count({ where: { athleteId: athlete.id, provider } })
+          : 0;
+        const pendingBatches =
+          found && isDevice
+            ? await this.deviceBatchModel.count({
+                where: {
+                  integrationId: found.id,
+                  status: [WEBHOOK_EVENT_STATUSES.PENDING, WEBHOOK_EVENT_STATUSES.PROCESSING],
+                },
+              })
+            : 0;
+        return toIntegrationItem(provider, found, {
+          importedActivitiesCount,
+          pendingBatches,
+          available: provider === 'garmin' ? false : isDevice ? healthEnabled : true,
         });
-
-        return {
-          provider: found.provider,
-          status: found.status,
-          connectedAt: found.connectedAt ? found.connectedAt.toISOString() : null,
-          lastSyncedAt: found.lastSyncAt ? found.lastSyncAt.toISOString() : null,
-          externalUserId: found.externalUserId,
-          importedActivitiesCount: count,
-          profileAccess: this.hasProfileScope(found),
-          lastProfileSyncAt: found.lastProfileSyncAt ? found.lastProfileSyncAt.toISOString() : null,
-        };
       }),
     );
 
@@ -136,6 +133,10 @@ export class IntegrationsService {
         importedActivitiesCount: 0,
         profileAccess: false,
         lastProfileSyncAt: null,
+        available: true,
+        profileSync: null,
+        pendingBatches: 0,
+        scopes: [],
       };
     }
     return strava;
@@ -501,8 +502,8 @@ export class IntegrationsService {
         for (const activity of activities) {
           processedCount += 1;
           try {
-            const imported = await this.upsertRunningActivity(activity);
-            if (imported) {
+            const { outcome } = await this.ingestion.ingest(activity);
+            if (!outcome.startsWith('skipped')) {
               importedCount += 1;
             } else {
               skippedCount += 1;
@@ -539,7 +540,8 @@ export class IntegrationsService {
         syncState.completedAt = new Date();
         await syncState.save();
       }
-    } catch (err: any) {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
       this.logger.error(`Initial sync failed for integration ${integrationId}: ${err.message}`, err.stack);
       integration.status = INTEGRATION_STATUSES.ERROR;
       integration.lastSyncError = err.message;
@@ -613,10 +615,10 @@ export class IntegrationsService {
           if (event.aspectType === 'create' || event.aspectType === 'update') {
             const activity = await this.stravaProvider.fetchActivity(integration, event.objectId);
             if (activity) {
-              await this.upsertRunningActivity(activity);
+              await this.ingestion.ingest(activity);
             }
           } else if (event.aspectType === 'delete') {
-            await this.handleActivityDeleted('strava', event.objectId);
+            await this.ingestion.removeSource(integration.athleteId, 'strava', event.objectId);
           }
         }
       }
@@ -624,7 +626,8 @@ export class IntegrationsService {
       event.status = WEBHOOK_EVENT_STATUSES.PROCESSED;
       event.processedAt = new Date();
       await event.save();
-    } catch (err: any) {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
       this.logger.error(`Failed to process webhook event ${webhookEventId}: ${err.message}`, err.stack);
       event.status = WEBHOOK_EVENT_STATUSES.FAILED;
       event.error = err.message;
@@ -643,151 +646,7 @@ export class IntegrationsService {
     await this.ensureValidAccessToken(integration);
     const activity = await this.stravaProvider.fetchActivity(integration, activityId);
     if (activity) {
-      await this.upsertRunningActivity(activity);
-    }
-  }
-
-  /** Upserts normalized running activity into canonical Workout. */
-  private async upsertRunningActivity(activity: RunningActivity): Promise<boolean> {
-    // 1. Check if workout with this source and external activity ID already exists
-    const workout = await this.workoutModel.findOne({
-      where: {
-        athleteId: activity.athleteId,
-        sourceProvider: activity.source,
-        sourceActivityId: activity.sourceActivityId,
-      },
-    });
-
-    const durationMinutes = Math.round((activity.movingTimeSec || activity.durationSec) / 60);
-    const distanceKm = Math.round((activity.distanceMeters / 1000) * 10) / 10;
-    const actualPaceSecondsPerKm = activity.averagePaceSecPerKm ?? null;
-    const actualAverageHeartRate = activity.averageHeartRate ?? null;
-
-    if (workout) {
-      // Update existing imported workout
-      workout.scheduledAt = activity.startedAt;
-      workout.completedAt = activity.endedAt;
-      workout.durationMinutes = durationMinutes;
-      workout.distanceKm = distanceKm;
-      workout.status = 'completed';
-      workout.actual = {
-        actualDurationMinutes: durationMinutes,
-        actualDistanceKm: distanceKm,
-        actualAveragePaceSecondsPerKm: actualPaceSecondsPerKm,
-        actualAverageHeartRate,
-        calories: activity.calories ?? null,
-        cadence: activity.cadence ?? null,
-        elevationGainMeters: activity.elevationGainMeters ?? null,
-      };
-
-      const analysisResult = await this.trainingService.analyzeWorkout(activity.athleteId, {
-        workoutId: workout.id,
-        actualDurationMinutes: durationMinutes,
-        actualDistanceKm: distanceKm,
-        actualAveragePaceSecondsPerKm: actualPaceSecondsPerKm ?? undefined,
-        actualAverageHeartRate: actualAverageHeartRate ?? undefined,
-      });
-
-      workout.analysis = analysisResult as unknown as Record<string, unknown>;
-      await workout.save();
-
-      return true;
-    }
-
-    // 2. Try to match with an uncompleted planned workout on the same day
-    const dayStart = new Date(activity.startedAt);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(activity.startedAt);
-    dayEnd.setHours(23, 59, 59, 999);
-
-    const plannedWorkout = await this.workoutModel.findOne({
-      where: {
-        athleteId: activity.athleteId,
-        status: 'planned',
-        scheduledAt: {
-          [Op.between]: [dayStart, dayEnd],
-        },
-      },
-    });
-
-    if (plannedWorkout) {
-      plannedWorkout.sourceProvider = activity.source;
-      plannedWorkout.sourceActivityId = activity.sourceActivityId;
-      await plannedWorkout.save();
-
-      await this.trainingService.completeWorkout(activity.athleteId, plannedWorkout.id, {
-        actualDurationMinutes: durationMinutes,
-        actualDistanceKm: distanceKm,
-        actualAveragePaceSecondsPerKm: actualPaceSecondsPerKm ?? undefined,
-        actualAverageHeartRate: actualAverageHeartRate ?? undefined,
-        notes: `Imported from ${activity.source}`,
-      });
-
-      this.eventEmitter.emit(
-        'integrations.activity_imported',
-        new ActivityImportedEvent(
-          activity.athleteId,
-          plannedWorkout.id,
-          activity.source,
-          activity.sourceActivityId,
-          activity.gearExternalId ?? null,
-        ),
-      );
-
-      return true;
-    }
-
-    // 3. Create ad-hoc completed workout
-    const createdWorkout = await this.trainingService.createWorkout(activity.athleteId, {
-      scheduledAt: activity.startedAt.toISOString(),
-      type: activity.type === 'trail_run' ? 'easy' : 'easy',
-      title: `Strava Run`,
-      description: `${distanceKm} km run imported from Strava`,
-      status: 'completed',
-      durationMinutes,
-      distanceKm,
-      actualDurationMinutes: durationMinutes,
-      actualDistanceKm: distanceKm,
-      actualAveragePaceSecondsPerKm: actualPaceSecondsPerKm ?? undefined,
-      actualAverageHeartRate: actualAverageHeartRate ?? undefined,
-      notes: `Imported from Strava`,
-    });
-
-    // Attach source provider and source activity id to created workout
-    const dbWorkout = await this.workoutModel.findByPk(createdWorkout.id);
-    if (dbWorkout) {
-      dbWorkout.sourceProvider = activity.source;
-      dbWorkout.sourceActivityId = activity.sourceActivityId;
-      await dbWorkout.save();
-    }
-
-    this.eventEmitter.emit(
-      'integrations.activity_imported',
-      new ActivityImportedEvent(
-        activity.athleteId,
-        createdWorkout.id,
-        activity.source,
-        activity.sourceActivityId,
-        activity.gearExternalId ?? null,
-      ),
-    );
-
-    return true;
-  }
-
-  /** Marks a workout as deleted when deleted on provider. */
-  private async handleActivityDeleted(provider: string, sourceActivityId: string): Promise<void> {
-    const workout = await this.workoutModel.findOne({
-      where: {
-        sourceProvider: provider,
-        sourceActivityId,
-      },
-    });
-
-    if (workout) {
-      workout.status = 'cancelled';
-      await workout.save();
-      await workout.destroy(); // paranoid soft delete
+      await this.ingestion.ingest(activity);
     }
   }
 

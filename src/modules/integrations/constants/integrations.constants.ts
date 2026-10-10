@@ -1,4 +1,49 @@
-export const INTEGRATION_PROVIDERS = ['strava', 'garmin', 'apple_health', 'health_connect'] as const;
+export const OAUTH_PROVIDERS = ['strava', 'garmin'] as const;
+export const DEVICE_PROVIDERS = ['apple_health', 'health_connect'] as const;
+export const INTEGRATION_PROVIDERS = [...OAUTH_PROVIDERS, ...DEVICE_PROVIDERS] as const;
+
+export type OAuthProviderName = (typeof OAUTH_PROVIDERS)[number];
+export type DeviceProviderName = (typeof DEVICE_PROVIDERS)[number];
+export type IntegrationProviderName = (typeof INTEGRATION_PROVIDERS)[number];
+
+/** Providers whose activities are stored as `workout_sources`; other `workouts.source_provider` values mean manual/admin. */
+export const IMPORTED_ACTIVITY_SOURCES: readonly string[] = INTEGRATION_PROVIDERS;
+
+/** Lower index wins when one run comes from several sources. */
+export const ACTIVITY_SOURCE_PRIORITY: readonly IntegrationProviderName[] = [
+  'garmin',
+  'strava',
+  'apple_health',
+  'health_connect',
+];
+
+/**
+ * Apps that write runs into Apple Health / Health Connect on behalf of an
+ * OAuth provider. While that provider is connected, its copies in Health are
+ * skipped: the provider delivers the same run with more detail.
+ */
+export const HEALTH_ORIGIN_PROVIDER_MAP: Readonly<Record<string, OAuthProviderName>> = {
+  'com.strava.stravaride': 'strava',
+  'com.strava': 'strava',
+  'com.garmin.connect.mobile': 'garmin',
+  'com.garmin.android.apps.connectmobile': 'garmin',
+};
+
+/** Trefix's own app ids: records written by Trefix are never imported back. */
+export const TREFIX_APP_IDS: readonly string[] = ['Kanishchev.Trefix'];
+
+/** Two records are the same run when all three thresholds hold. */
+export const ACTIVITY_DEDUP = {
+  minOverlapRatio: 0.8,
+  maxStartDiffSec: 10 * 60,
+  maxDistanceDiffRatio: 0.05,
+  maxDistanceDiffMeters: 300,
+  /** Search window around the start for candidate sources. */
+  candidateWindowSec: 6 * 60 * 60,
+} as const;
+
+/** A manually closed workout of the same day takes a device record when distances differ by no more than this. */
+export const MANUAL_MATCH_MAX_DISTANCE_DIFF_RATIO = 0.15;
 
 export const INTEGRATION_STATUSES = {
   CONNECTING: 'connecting',
@@ -14,6 +59,8 @@ export const SYNC_TYPES = {
   WEBHOOK: 'webhook',
   MANUAL: 'manual',
   BACKFILL: 'backfill',
+  FOREGROUND: 'foreground',
+  BACKGROUND: 'background',
 } as const;
 
 export const SYNC_STATUSES = {
@@ -42,3 +89,70 @@ export const JOB_STRAVA_PROFILE_SYNC_ALL = 'strava.profile-sync-all';
 export const STRAVA_ACTIVITY_SCOPES = ['read', 'activity:read_all'] as const;
 /** Extra scope for weight, sex and shoes of the athlete. */
 export const STRAVA_PROFILE_SCOPE = 'profile:read_all';
+
+// ---------------------------------------------------------------- device providers (Apple Health, Health Connect)
+
+export const JOB_DEVICE_PROCESS_BATCH = 'device.process-batch';
+export const JOB_DEVICE_BATCHES_CLEANUP = 'device.batches-cleanup';
+
+/** The only platform each device provider works on. */
+export const DEVICE_PROVIDER_PLATFORMS: Readonly<Record<DeviceProviderName, 'ios' | 'android'>> = {
+  apple_health: 'ios',
+  health_connect: 'android',
+};
+
+/** Normalized permissions the app reports after the system dialog (iOS: what was requested). */
+export const DEVICE_SCOPES = [
+  'workouts',
+  'heart_rate',
+  'distance',
+  'elevation',
+  'steps',
+  'calories',
+  'weight',
+  'resting_heart_rate',
+  'history',
+  'background',
+] as const;
+export type DeviceScope = (typeof DEVICE_SCOPES)[number];
+
+export const DEVICE_SYNC_TYPES = ['initial', 'foreground', 'background', 'manual', 'backfill'] as const;
+export type DeviceSyncType = (typeof DEVICE_SYNC_TYPES)[number];
+
+export const DEVICE_SYNC_BATCH_MAX = 50;
+export const DEVICE_SYNC_HISTORY_MAX_DAYS = 365;
+export const DEVICE_SYNC_HISTORY_DEFAULT_DAYS = 180;
+/** Accepted batches hold health data; processed ones are purged after this many days. */
+export const DEVICE_BATCH_RETENTION_DAYS = 30;
+export const DEVICE_SYNC_RATE_LIMIT = { limit: 60, ttl: 60_000 } as const;
+
+/** Plausibility rules for a device run; a record outside them is rejected with a per-item code. */
+export const DEVICE_ACTIVITY_LIMITS = {
+  minDistanceMeters: 500,
+  minDurationSec: 180,
+  maxDurationSec: 86_400,
+  futureToleranceSec: 300,
+  fastestPaceSecPerKm: 150,
+  slowestPaceSecPerKm: 900,
+  heartRate: { min: 30, max: 240 },
+  cadence: { min: 60, max: 260 },
+} as const;
+
+export const DEVICE_ACTIVITY_REJECT_CODES = [
+  'ACTIVITY_NOT_RUNNING',
+  'ACTIVITY_TOO_SHORT',
+  'ACTIVITY_DURATION_INVALID',
+  'ACTIVITY_IN_FUTURE',
+  'ACTIVITY_TOO_OLD',
+  'ACTIVITY_PACE_IMPLAUSIBLE',
+  'ACTIVITY_TIME_RANGE_INVALID',
+  'DUPLICATE_IN_BATCH',
+] as const;
+export type DeviceActivityRejectCode = (typeof DEVICE_ACTIVITY_REJECT_CODES)[number];
+
+/** Resting HR of the profile = median of daily values over the latest days with data. */
+export const RESTING_HR_MEDIAN_DAYS = 7;
+export const RESTING_HR_MIN_DAYS = 3;
+export const RESTING_HR_MAX_SAMPLES = 14;
+/** Metrics measured longer ago than this are not applied to the profile. */
+export const PROFILE_METRIC_MAX_AGE_DAYS = 90;

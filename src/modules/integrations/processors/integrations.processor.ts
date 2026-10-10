@@ -4,12 +4,15 @@ import { Job } from 'bullmq';
 
 import {
   INTEGRATIONS_QUEUE_NAME,
+  JOB_DEVICE_BATCHES_CLEANUP,
+  JOB_DEVICE_PROCESS_BATCH,
   JOB_STRAVA_FETCH_ACTIVITY,
   JOB_STRAVA_INITIAL_SYNC,
   JOB_STRAVA_PROCESS_WEBHOOK,
   JOB_STRAVA_PROFILE_SYNC,
   JOB_STRAVA_PROFILE_SYNC_ALL,
 } from '../constants/integrations.constants';
+import { DeviceIntegrationsService, ProcessBatchJobData } from '../device/device-integrations.service';
 import { IntegrationsService } from '../integrations.service';
 
 export interface InitialSyncJobData {
@@ -25,12 +28,19 @@ export interface FetchActivityJobData {
   activityId: string;
 }
 
+/**
+ * Concurrency stays at the default of 1: ingestion relies on jobs of one
+ * athlete never running in parallel (Strava webhooks and device batches alike).
+ */
 @Injectable()
 @Processor(INTEGRATIONS_QUEUE_NAME)
 export class IntegrationsProcessor extends WorkerHost {
   private readonly logger = new Logger(IntegrationsProcessor.name);
 
-  constructor(private readonly integrationsService: IntegrationsService) {
+  constructor(
+    private readonly integrationsService: IntegrationsService,
+    private readonly deviceService: DeviceIntegrationsService,
+  ) {
     super();
   }
 
@@ -60,6 +70,14 @@ export class IntegrationsProcessor extends WorkerHost {
 
       case JOB_STRAVA_PROFILE_SYNC_ALL:
         return this.integrationsService.syncAllStravaProfiles();
+
+      case JOB_DEVICE_PROCESS_BATCH: {
+        const { batchId } = job.data as ProcessBatchJobData;
+        return this.deviceService.processBatch(batchId);
+      }
+
+      case JOB_DEVICE_BATCHES_CLEANUP:
+        return this.deviceService.cleanupBatches();
 
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

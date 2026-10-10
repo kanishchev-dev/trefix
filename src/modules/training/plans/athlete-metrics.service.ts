@@ -8,6 +8,7 @@ import { Workout } from '../entities/workout.entity';
 import type { PlanMetricsSource } from '../training.constants';
 import { ATHLETE_GOAL_DISTANCES, PLAN_METRIC_RANGES } from '../training.constants';
 import type { AthleteMetrics } from '../training.engine';
+import { workoutsMetricsSource } from './plan-utils';
 
 /** Per-field provenance of an estimated metric. */
 export interface SourcedValue<T> {
@@ -77,9 +78,7 @@ export class AthleteMetricsService {
 
     const volumeAvailable = withDistance.length >= MIN_COMPLETED_FOR_VOLUME;
     const volumeSource: PlanMetricsSource = volumeAvailable
-      ? withDistance.some((workout) => workout.sourceProvider === 'strava')
-        ? 'strava'
-        : 'manual_workouts'
+      ? workoutsMetricsSource(withDistance.map((workout) => workout.sourceProvider))
       : 'none';
 
     const weeklyMileageKm = volumeAvailable
@@ -195,7 +194,7 @@ export class AthleteMetricsService {
         timeSeconds: best.timeSeconds,
         date: best.date,
       },
-      source: best.sourceProvider === 'strava' ? 'strava' : 'manual_workouts',
+      source: workoutsMetricsSource([best.sourceProvider]),
     };
   }
 
@@ -223,6 +222,9 @@ export class AthleteMetricsService {
     ];
     if (sources.includes('strava')) {
       return 'strava';
+    }
+    if (sources.includes('health')) {
+      return 'health';
     }
     if (sources.includes('manual_workouts')) {
       return 'manual_workouts';

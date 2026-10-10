@@ -38,6 +38,7 @@ import { PlanMetricsEnteredEvent } from './events/plan-metrics-entered.event';
 import { AthleteStateUpdatedEvent } from './events/state-updated.event';
 import { WorkoutCompletedEvent } from './events/workout-completed.event';
 import { deriveLegacyRaceFields, type GoalPayloadShape, mapLegacyRaceGoal, validateGoalPayload } from './goal-taxonomy';
+import { ImportedWorkoutFacts } from './interfaces/imported-workout.interface';
 import {
   AdaptationEventView,
   AthleteStateView,
@@ -55,12 +56,16 @@ import {
   ADAPTATION_TYPE_HEART_RATE,
   ADAPTATION_TYPE_USER_EDIT,
   ATHLETE_GOAL_STATUSES,
+  IMPORTED_LONG_RUN_FACTOR,
+  IMPORTED_LONG_RUN_MIN_KM,
+  IMPORTED_LONG_RUN_WINDOW_DAYS,
   TRAINING_DEFAULT_AVAILABILITY,
   TRAINING_DEFAULT_DURATION_MINUTES,
   TRAINING_DEFAULT_FREQUENCY,
   TRAINING_DEFAULT_WEEKLY_MILEAGE_KM,
   TRAINING_LOAD_ALGORITHM_VERSION,
   TRAINING_WEEKDAY_ORDER,
+  type WorkoutType,
 } from './training.constants';
 import {
   type AthleteMetrics,
@@ -1301,6 +1306,222 @@ export class TrainingService {
       state,
       adaptation,
     };
+  }
+
+  /**
+   * Completes a planned workout with imported facts. System actor: ownership
+   * is established by the integration that delivered the facts.
+   */
+  async completeWorkoutFromImport(workoutId: string, facts: ImportedWorkoutFacts): Promise<WorkoutView> {
+    const workout = await this.loadWorkoutOrThrow(workoutId);
+    const athlete = await this.loadAthleteOrThrow(workout.athleteId);
+    if (workout.status !== 'planned') {
+      throw new DomainException('WORKOUT_NOT_PLANNED', 'Only a planned workout can be completed by an import', 409);
+    }
+
+    const analysisResult = this.analyzeImportedFacts(workout, facts);
+    workout.status = 'completed';
+    workout.sourceProvider = facts.sourceProvider;
+    workout.sourceActivityId = facts.sourceActivityId;
+    workout.actual = this.toImportedActual(facts, null);
+    workout.analysis = analysisResult.analysis as unknown as Record<string, unknown>;
+    workout.completedAt = facts.endedAt;
+    await workout.save();
+
+    const loadRecord = await this.upsertWorkoutLoad(athlete.id, workout, analysisResult);
+    const state = await this.recalculateAthleteState(athlete.id);
+    await this.applyAdaptationDecision(
+      athlete,
+      workout,
+      analysisResult.analysis,
+      state,
+      undefined,
+      undefined,
+      'automatic',
+    );
+
+    this.eventEmitter.emit(
+      'training.workout.completed',
+      new WorkoutCompletedEvent(athlete.id, workout.id, loadRecord.load),
+    );
+    return this.toWorkoutView(workout);
+  }
+
+  /** Creates a completed ad-hoc workout from imported facts. System actor. */
+  async createImportedWorkout(athleteId: string, facts: ImportedWorkoutFacts): Promise<WorkoutView> {
+    const athlete = await this.loadAthleteOrThrow(athleteId);
+    const type = await this.resolveImportedWorkoutType(athlete.id, facts);
+
+    const workout = await this.workoutModel.create({
+      athleteId: athlete.id,
+      goalId: null,
+      planId: null,
+      weekNumber: 1,
+      scheduledAt: facts.startedAt,
+      type,
+      phase: 'adhoc',
+      status: 'completed',
+      orderInWeek: 1,
+      durationMinutes: facts.durationMinutes,
+      distanceKm: facts.distanceKm,
+      target: { source: facts.sourceProvider },
+      steps: [],
+      actual: null,
+      analysis: null,
+      completedAt: facts.endedAt,
+      sourceProvider: facts.sourceProvider,
+      sourceActivityId: facts.sourceActivityId,
+    });
+
+    const analysisResult = this.analyzeImportedFacts(workout, facts);
+    workout.actual = this.toImportedActual(facts, null);
+    workout.analysis = analysisResult.analysis as unknown as Record<string, unknown>;
+    await workout.save();
+
+    const loadRecord = await this.upsertWorkoutLoad(athlete.id, workout, analysisResult);
+    await this.recalculateAthleteState(athlete.id);
+
+    this.eventEmitter.emit(
+      'training.workout.completed',
+      new WorkoutCompletedEvent(athlete.id, workout.id, loadRecord.load),
+    );
+    return this.toWorkoutView(workout);
+  }
+
+  /**
+   * Replaces the facts of a completed workout: a provider updated the activity,
+   * its sources were merged, or a manually closed workout got a device record.
+   * RPE and notes entered by the user are kept. System actor.
+   */
+  async applyImportedFacts(workoutId: string, facts: ImportedWorkoutFacts): Promise<WorkoutView> {
+    const workout = await this.loadWorkoutOrThrow(workoutId);
+    if (workout.status !== 'completed') {
+      throw new DomainException('WORKOUT_NOT_COMPLETED', 'Imported facts update only completed workouts', 409);
+    }
+
+    const analysisResult = this.analyzeImportedFacts(workout, facts);
+    workout.sourceProvider = facts.sourceProvider;
+    workout.sourceActivityId = facts.sourceActivityId;
+    workout.actual = this.toImportedActual(facts, workout.actual);
+    workout.analysis = analysisResult.analysis as unknown as Record<string, unknown>;
+    workout.completedAt = facts.endedAt;
+    if (!workout.planId) {
+      workout.scheduledAt = facts.startedAt;
+      workout.durationMinutes = facts.durationMinutes;
+      workout.distanceKm = facts.distanceKm;
+    }
+    await workout.save();
+
+    await this.upsertWorkoutLoad(workout.athleteId, workout, analysisResult);
+    await this.recalculateAthleteState(workout.athleteId);
+    return this.toWorkoutView(workout);
+  }
+
+  /**
+   * Undoes an import whose last source disappeared: a plan workout returns to
+   * `planned`, an ad-hoc one is deleted. System actor.
+   */
+  async revertImportedWorkout(workoutId: string): Promise<'replanned' | 'deleted'> {
+    const workout = await this.loadWorkoutOrThrow(workoutId);
+    const athleteId = workout.athleteId;
+    await this.trainingLoadModel.destroy({ where: { workoutId: workout.id } });
+
+    let outcome: 'replanned' | 'deleted';
+    if (workout.planId) {
+      workout.status = 'planned';
+      workout.actual = null;
+      workout.analysis = null;
+      workout.completedAt = null;
+      workout.gearId = null;
+      workout.sourceProvider = null;
+      workout.sourceActivityId = null;
+      await workout.save();
+      outcome = 'replanned';
+    } else {
+      // Frees the (athlete, provider, activity) unique slot held by the soft-deleted row.
+      workout.sourceActivityId = null;
+      await workout.save();
+      await workout.destroy();
+      outcome = 'deleted';
+    }
+
+    await this.recalculateAthleteState(athleteId);
+    return outcome;
+  }
+
+  private analyzeImportedFacts(
+    workout: Workout,
+    facts: ImportedWorkoutFacts,
+  ): ReturnType<TrainingEngine['analyzeWorkout']> {
+    return this.trainingEngine.analyzeWorkout({
+      plannedWorkout: this.toWorkoutView(workout),
+      actualDurationMinutes: facts.durationMinutes,
+      actualDistanceKm: facts.distanceKm,
+      actualAveragePaceSecondsPerKm: facts.averagePaceSecondsPerKm ?? undefined,
+      actualAverageHeartRate: facts.averageHeartRate ?? undefined,
+    });
+  }
+
+  private toImportedActual(
+    facts: ImportedWorkoutFacts,
+    previous: Record<string, unknown> | null,
+  ): Record<string, unknown> {
+    return {
+      actualDurationMinutes: facts.durationMinutes,
+      actualDistanceKm: facts.distanceKm,
+      actualAveragePaceSecondsPerKm: facts.averagePaceSecondsPerKm,
+      actualAverageHeartRate: facts.averageHeartRate,
+      maxHeartRate: facts.maxHeartRate,
+      cadence: facts.cadence,
+      calories: facts.calories,
+      elevationGainMeters: facts.elevationGainMeters,
+      indoor: facts.indoor,
+      rpe: previous?.rpe ?? null,
+      notes: previous?.notes ?? null,
+    };
+  }
+
+  private async upsertWorkoutLoad(
+    athleteId: string,
+    workout: Workout,
+    analysisResult: { trainingLoad: number; intensityFactor: number },
+  ): Promise<TrainingLoad> {
+    const occurredAt = workout.completedAt ?? workout.scheduledAt;
+    const existing = await this.trainingLoadModel.findOne({ where: { workoutId: workout.id } });
+    if (existing) {
+      existing.load = analysisResult.trainingLoad;
+      existing.intensityFactor = analysisResult.intensityFactor;
+      existing.occurredAt = occurredAt;
+      existing.algorithmVersion = TRAINING_LOAD_ALGORITHM_VERSION;
+      return existing.save();
+    }
+    return this.trainingLoadModel.create({
+      athleteId,
+      workoutId: workout.id,
+      occurredAt,
+      load: analysisResult.trainingLoad,
+      intensityFactor: analysisResult.intensityFactor,
+      algorithmVersion: TRAINING_LOAD_ALGORITHM_VERSION,
+    });
+  }
+
+  /** `long_run` when the run is clearly longer than usual, otherwise `easy`; analysis refines it later. */
+  private async resolveImportedWorkoutType(athleteId: string, facts: ImportedWorkoutFacts): Promise<WorkoutType> {
+    const windowStart = new Date(facts.startedAt.getTime() - IMPORTED_LONG_RUN_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+    const recent = await this.workoutModel.findAll({
+      where: {
+        athleteId,
+        status: 'completed',
+        scheduledAt: { [Op.gte]: windowStart, [Op.lt]: facts.startedAt },
+      },
+      attributes: ['distanceKm', 'actual'],
+    });
+    const distances = recent
+      .map((entry) => Number(entry.actual?.actualDistanceKm ?? entry.distanceKm))
+      .filter((value) => Number.isFinite(value) && value > 0);
+    const average = distances.length ? distances.reduce((sum, value) => sum + value, 0) / distances.length : 0;
+    const threshold = Math.max(IMPORTED_LONG_RUN_MIN_KM, average * IMPORTED_LONG_RUN_FACTOR);
+    return facts.distanceKm >= threshold ? 'long_run' : 'easy';
   }
 
   /** Adaptations of the active plan waiting for the user's decision (`proposed`) or shown as advice (`suggested`). */

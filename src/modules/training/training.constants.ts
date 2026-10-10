@@ -151,8 +151,8 @@ export const HR_ZONES_THRESHOLD_SHARES = [0.81, 0.89, 0.93, 0.99] as const;
 /** Upper bounds of Z1–Z4 as a share of max HR. */
 export const HR_ZONES_MAX_HR_SHARES = [0.6, 0.7, 0.8, 0.9] as const;
 export const TIMES_OF_DAY = ['morning', 'day', 'evening', 'any'] as const;
-/** Profile fields an external source (Strava) may fill in. */
-export const ATHLETE_SOURCED_FIELDS = ['weightKg', 'sex', 'heightCm', 'birthDate'] as const;
+/** Profile fields an external source (Strava, Apple Health, Health Connect) may fill in. */
+export const ATHLETE_SOURCED_FIELDS = ['weightKg', 'sex', 'heightCm', 'birthDate', 'restingHeartRate'] as const;
 /** Plan inputs whose manual value takes priority over estimates from workouts. */
 export const ATHLETE_MANUAL_TRACKED_FIELDS = [
   'restingHeartRate',
@@ -160,11 +160,16 @@ export const ATHLETE_MANUAL_TRACKED_FIELDS = [
   'thresholdHeartRate',
   'weeklyMileageKm',
 ] as const;
-export const FIELD_SOURCES = ['manual', 'strava'] as const;
+export const FIELD_SOURCES = ['manual', 'strava', 'apple_health', 'health_connect'] as const;
 /** A fact-based weekly volume is suggested when it differs from the profile by more than this share. */
 export const WEEKLY_MILEAGE_SUGGESTION_THRESHOLD = 0.1;
 
 export const GEAR_TYPES = ['shoes'] as const;
+/** Imported run counts as a long run from this distance, or when it beats the recent average by the factor. */
+export const IMPORTED_LONG_RUN_MIN_KM = 16;
+export const IMPORTED_LONG_RUN_FACTOR = 1.4;
+export const IMPORTED_LONG_RUN_WINDOW_DAYS = 28;
+
 export const GEAR_SOURCES = ['manual', 'strava'] as const;
 export const GEAR_STATUSES = ['active', 'retired'] as const;
 export const GEAR_LIMIT_KM_RANGE = { min: 100, max: 2000 } as const;
@@ -199,7 +204,8 @@ export type TrainingPlanStatus = (typeof TRAINING_PLAN_STATUSES)[number];
 export type PlanListGroup = (typeof PLAN_LIST_GROUPS)[number];
 export type PlanCancelReason = (typeof PLAN_CANCEL_REASONS)[number];
 /** Where a metrics value came from, reported per field to the client. */
-export type PlanMetricsSource = 'user_input' | 'profile' | 'athlete_state' | 'strava' | 'manual_workouts' | 'none';
+export type PlanMetricsSource =
+  'user_input' | 'profile' | 'athlete_state' | 'strava' | 'health' | 'manual_workouts' | 'none';
 export type PlanCreationSource = (typeof PLAN_CREATION_SOURCES)[number];
 export type ManualPlanFocusType = (typeof MANUAL_PLAN_FOCUS_TYPES)[number];
 export type WorkoutStatus = (typeof WORKOUT_STATUSES)[number];

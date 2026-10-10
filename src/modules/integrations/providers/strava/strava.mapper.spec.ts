@@ -51,4 +51,19 @@ describe('StravaMapper', () => {
     expect(mapped.elevationGainMeters).toEqual(120);
     expect(mapped.averagePaceSecPerKm).toEqual(300); // 300s/km = 5:00/km
   });
+
+  it('derives the UTC offset from start_date_local', () => {
+    expect(StravaMapper.toRunningActivity('a', sampleRunActivity).utcOffsetMinutes).toBe(120);
+    expect(
+      StravaMapper.utcOffsetMinutes({
+        ...sampleRunActivity,
+        start_date: '2026-09-24T22:30:00Z',
+        start_date_local: '2026-09-25T01:30:00Z',
+      }),
+    ).toBe(180);
+  });
+
+  it('reports cadence in steps per minute', () => {
+    expect(StravaMapper.toRunningActivity('a', sampleRunActivity).cadence).toBe(168);
+  });
 });

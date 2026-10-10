@@ -10,12 +10,13 @@ import { Workout } from '../entities/workout.entity';
 import { AthleteUpdatedEvent } from '../events/athlete-updated.event';
 import { AthleteZonesChangedEvent } from '../events/athlete-zones-changed.event';
 import type { AthleteView } from '../interfaces/training-views.interface';
-import { todayIsoInTz } from '../plans/plan-utils';
+import { todayIsoInTz, workoutsMetricsSource } from '../plans/plan-utils';
 import {
   ATHLETE_MANUAL_TRACKED_FIELDS,
   ATHLETE_RANGES,
   ATHLETE_SOURCED_FIELDS,
   type AthleteFieldSources,
+  type AthleteSourcedField,
   type FieldSource,
   type PlanMetricsSource,
   TRAINING_WEEKDAY_ORDER,
@@ -196,30 +197,46 @@ export class AthleteProfileService {
    * Sets a value that came from an external source unless the user owns the
    * field. Returns `true` when the profile changed.
    */
+  /**
+   * Writes values reported by an external source. Fields the user edited by
+   * hand are left alone. With `measuredAt`, a value older than the one already
+   * stored (from any source) is skipped, so Strava and Health compete by freshness.
+   */
   async applySourcedValues(
     athleteId: string,
     source: Exclude<FieldSource, 'manual'>,
-    values: Partial<Pick<Athlete, 'weightKg' | 'sex' | 'heightCm' | 'birthDate'>>,
+    values: Partial<Pick<Athlete, 'weightKg' | 'sex' | 'heightCm' | 'birthDate' | 'restingHeartRate'>>,
+    measuredAt: Partial<Record<AthleteSourcedField, Date>> = {},
   ): Promise<boolean> {
     const athlete = await this.athleteModel.findByPk(athleteId);
     if (!athlete) {
       return false;
     }
-    const now = new Date().toISOString();
+    const now = new Date();
     const sources: AthleteFieldSources = { ...(athlete.fieldSources ?? {}) };
     let changed = false;
-    for (const [field, value] of Object.entries(values) as Array<[keyof typeof values, unknown]>) {
+    let touched = false;
+    for (const [field, value] of Object.entries(values) as Array<[AthleteSourcedField, unknown]>) {
       if (value === undefined || value === null || sources[field]?.source === 'manual') {
         continue;
       }
       if (field !== 'sex' && field !== 'birthDate' && !this.inRange(field, Number(value))) {
         continue;
       }
+      const at = measuredAt[field] ?? now;
+      const storedAt = sources[field]?.updatedAt ? Date.parse(sources[field]!.updatedAt) : Number.NaN;
+      if (measuredAt[field] && !Number.isNaN(storedAt) && storedAt > at.getTime()) {
+        continue;
+      }
       if (JSON.stringify(athlete.get(field)) !== JSON.stringify(value)) {
         athlete.set(field, value as never);
         changed = true;
       }
-      sources[field] = { source, updatedAt: now };
+      sources[field] = { source, updatedAt: at.toISOString() };
+      touched = true;
+    }
+    if (!touched) {
+      return false;
     }
     athlete.fieldSources = sources;
     athlete.changed('fieldSources', true);
@@ -298,7 +315,7 @@ export class AthleteProfileService {
     }
     return {
       valueKm,
-      source: workouts.some((workout) => workout.sourceProvider === 'strava') ? 'strava' : 'manual_workouts',
+      source: workoutsMetricsSource(workouts.map((workout) => workout.sourceProvider)),
       windowDays: VOLUME_WINDOW_DAYS,
     };
   }

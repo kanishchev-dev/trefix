@@ -10,4 +10,8 @@ export default registerAs('integrations', () => ({
     apiBaseUrl: process.env.STRAVA_API_BASE_URL || 'https://www.strava.com/api/v3',
     oauthBaseUrl: process.env.STRAVA_OAUTH_BASE_URL || 'https://www.strava.com/oauth',
   },
+  health: {
+    /** Apple Health / Health Connect endpoints; off until the Health Connect declaration is approved. */
+    enabled: process.env.HEALTH_INTEGRATIONS_ENABLED === 'true',
+  },
 }));

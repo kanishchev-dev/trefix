@@ -121,3 +121,16 @@ export function resolveGoalSummaryTitle(goal: GoalView | null | undefined): stri
 export function mondayIndex(date: Date): number {
   return (date.getUTCDay() + 6) % 7;
 }
+
+/** Label for metrics computed from workouts: the strongest external source among them, else manual logging. */
+export function workoutsMetricsSource(
+  providers: ReadonlyArray<string | null | undefined>,
+): 'strava' | 'health' | 'manual_workouts' {
+  if (providers.includes('strava')) {
+    return 'strava';
+  }
+  if (providers.some((provider) => provider === 'apple_health' || provider === 'health_connect')) {
+    return 'health';
+  }
+  return 'manual_workouts';
+}

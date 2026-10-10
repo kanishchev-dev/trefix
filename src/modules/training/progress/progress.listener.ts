@@ -30,6 +30,13 @@ export class ProgressListener {
     await this.notifyAthlete(event.athleteId);
   }
 
+  @OnEvent('integrations.activity_updated', { async: true })
+  @OnEvent('integrations.activity_merged', { async: true })
+  @OnEvent('integrations.activity_source_removed', { async: true })
+  async handleActivityChanged(event: { athleteId: string }): Promise<void> {
+    await this.notifyAthlete(event.athleteId);
+  }
+
   private async notifyAthlete(athleteId: string): Promise<void> {
     const event = { athleteId };
     const athlete = await this.athleteModel.findByPk(event.athleteId, { attributes: ['userId'] });

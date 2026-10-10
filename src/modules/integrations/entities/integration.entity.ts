@@ -112,4 +112,12 @@ export class Integration extends Model {
     field: 'last_profile_sync_at',
   })
   lastProfileSyncAt!: Date | null;
+
+  /** Device providers: platform, app version, requested history depth, profile sync flag. */
+  @Column({
+    type: DataType.JSONB,
+    allowNull: false,
+    defaultValue: {},
+  })
+  metadata!: Record<string, unknown>;
 }

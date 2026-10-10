@@ -34,6 +34,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { SystemSeedModule } from './modules/system-seed/system-seed.module';
 import { TrainingModule } from './modules/training/training.module';
 import { AccountDeletionModule } from './modules/users/account-deletion/account-deletion.module';
+import { ConsentsModule } from './modules/users/consents/consents.module';
 import { PreferencesModule } from './modules/users/preferences/preferences.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -57,6 +58,7 @@ import { UsersModule } from './modules/users/users.module';
     TrainingModule,
     IntegrationsModule,
     PreferencesModule,
+    ConsentsModule,
     AccountDeletionModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],

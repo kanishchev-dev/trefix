@@ -7,7 +7,7 @@ import { GearUpdatedEvent } from '../events/gear.events';
 import { WorkoutCompletedEvent } from '../events/workout-completed.event';
 import { GearService } from './gear.service';
 
-/** Payload of `integrations.activity_imported` used here; declared locally to avoid a module cycle. */
+/** Payload of `integrations.activity_imported` / `_updated` / `_merged` used here; declared locally to avoid a module cycle. */
 interface ImportedActivity {
   workoutId: string;
   gearExternalId?: string | null;
@@ -28,6 +28,8 @@ export class GearListener {
   }
 
   @OnEvent('integrations.activity_imported', { async: true })
+  @OnEvent('integrations.activity_updated', { async: true })
+  @OnEvent('integrations.activity_merged', { async: true })
   async handleActivityImported(event: ImportedActivity): Promise<void> {
     await this.safely(() => this.gearService.autoAssign(event.workoutId, event.gearExternalId ?? null));
   }

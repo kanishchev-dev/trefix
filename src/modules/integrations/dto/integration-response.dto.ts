@@ -24,6 +24,22 @@ export class IntegrationItemResponseDto {
 
   @ApiPropertyOptional({ example: '2026-10-09T04:00:00.000Z', nullable: true })
   lastProfileSyncAt?: string | null;
+
+  @ApiPropertyOptional({ example: true, description: 'The provider can be connected in this environment' })
+  available?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    nullable: true,
+    description: 'Device providers: profile metrics sync from Health is on',
+  })
+  profileSync?: boolean | null;
+
+  @ApiPropertyOptional({ example: 0, description: 'Device providers: accepted batches not processed yet' })
+  pendingBatches?: number;
+
+  @ApiPropertyOptional({ example: ['workouts', 'heart_rate'], type: [String] })
+  scopes?: string[];
 }
 
 export class StravaProfileAccessResponseDto {

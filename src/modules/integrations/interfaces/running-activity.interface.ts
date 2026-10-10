@@ -1,6 +1,6 @@
 export type ActivitySource = 'strava' | 'garmin' | 'apple_health' | 'health_connect';
 
-export type RunningActivityType = 'run' | 'trail_run' | 'virtual_run';
+export type RunningActivityType = 'run' | 'trail_run' | 'virtual_run' | 'treadmill';
 
 export type RunningActivityStatus = 'imported' | 'analyzed' | 'failed' | 'deleted' | 'unavailable';
 
@@ -27,6 +27,12 @@ export interface RunningActivity {
   rawDataReference?: string;
   /** Provider gear id (Strava `gear_id`), used to link the workout to shoes. */
   gearExternalId?: string;
+  /** Offset of the athlete's wall clock at the start, minutes east of UTC. */
+  utcOffsetMinutes?: number;
+  /** Bundle id / package of the app that wrote the record into Apple Health / Health Connect. */
+  originAppId?: string;
+  /** Recording device, e.g. "Apple Watch". */
+  originDevice?: string;
   importedAt: Date;
   updatedAt: Date;
   status: RunningActivityStatus;
