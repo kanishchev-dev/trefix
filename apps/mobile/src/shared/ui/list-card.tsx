@@ -4,18 +4,12 @@ import { ChevronRight } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 
-/**
- * Group title: above a card — sentence case, 12px medium, foreground at 70%;
- * `large` — the heading of a section laid straight on the page.
- */
-export function SectionTitle({ text, theme, large = false }: { text: string; theme: ThemeTokens; large?: boolean }) {
+/** Group title above a card: sentence case, 12px medium, foreground at 70%. */
+export function SectionTitle({ text, theme }: { text: string; theme: ThemeTokens }) {
   return (
     <Text
       accessibilityRole="header"
-      style={[
-        large ? styles.sectionTitleLarge : styles.sectionTitle,
-        { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium },
-      ]}
+      style={[styles.sectionTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}
     >
       {text}
     </Text>
@@ -260,10 +254,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     opacity: 0.7,
     paddingHorizontal: 8,
-  },
-  sectionTitleLarge: {
-    fontSize: 17,
-    lineHeight: 22,
   },
   card: {
     borderRadius: 24,

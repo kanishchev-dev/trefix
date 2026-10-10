@@ -22,14 +22,14 @@ type Common = { copy: MainCopy; language: AppLanguage; theme: ThemeTokens; forma
 
 const fontOf = (theme: ThemeTokens, weight: "regular" | "medium" | "semibold") => theme.typography.fontFamily.sans[weight];
 
-/** Section heading on the page with an optional link on the right. */
+/** Group title with an optional link on the right. */
 export function SectionHeader({ title, link, onLink, theme }: { title: string; link?: string; onLink?: () => void; theme: ThemeTokens }) {
   return (
     <View style={styles.sectionHeader}>
-      <SectionTitle text={title} theme={theme} large />
+      <SectionTitle text={title} theme={theme} />
       {link && onLink ? (
         <Pressable accessibilityRole="link" hitSlop={8} onPress={onLink}>
-          <Text style={[styles.sectionLink, { color: theme.color.mutedForeground, fontFamily: fontOf(theme, "medium") }]}>{link}</Text>
+          <Text style={[styles.sectionLink, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>{link}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -531,8 +531,8 @@ export function AchievementsSection({ overview, ...common }: Common & { overview
 
 const styles = StyleSheet.create({
   section: { gap: 12 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionLink: { fontSize: 13, lineHeight: 18 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 8 },
+  sectionLink: { fontSize: 12, lineHeight: 16, opacity: 0.7 },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   flexText: { flex: 1, minWidth: 0, gap: 2 },
   title: { fontSize: 17, lineHeight: 22 },
