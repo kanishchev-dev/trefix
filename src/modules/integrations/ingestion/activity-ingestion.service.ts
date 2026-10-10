@@ -15,6 +15,7 @@ import {
   IMPORTED_ACTIVITY_SOURCES,
   INTEGRATION_STATUSES,
   MANUAL_MATCH_MAX_DISTANCE_DIFF_RATIO,
+  RECORDING_LIMITS,
   TREFIX_APP_IDS,
 } from '../constants/integrations.constants';
 import { Integration } from '../entities/integration.entity';
@@ -32,6 +33,11 @@ export type IngestOutcome =
   | 'matched_manual'
   | 'skipped_own_record'
   | 'skipped_origin_connected';
+
+export interface IngestOptions {
+  /** The run was started from this planned workout: close it instead of guessing a match. */
+  plannedWorkoutId?: string | null;
+}
 
 export interface IngestResult {
   outcome: IngestOutcome;
@@ -82,7 +88,7 @@ export class ActivityIngestionService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async ingest(activity: RunningActivity): Promise<IngestResult> {
+  async ingest(activity: RunningActivity, options: IngestOptions = {}): Promise<IngestResult> {
     const originSkip = await this.checkOrigin(activity);
     if (originSkip) {
       return { outcome: originSkip, workoutId: null };
@@ -110,7 +116,9 @@ export class ActivityIngestionService {
     const facts = this.dedup.merge([record]);
     const dayRange = await this.resolveLocalDay(activity);
 
-    const planned = await this.findPlannedMatch(activity.athleteId, dayRange, record);
+    const planned =
+      (await this.findChosenPlanned(activity.athleteId, options.plannedWorkoutId, dayRange)) ??
+      (await this.findPlannedMatch(activity.athleteId, dayRange, record));
     if (planned) {
       const source = await this.createSource(activity, planned.id, true);
       try {
@@ -280,6 +288,29 @@ export class ActivityIngestionService {
       return null;
     }
     return duplicate;
+  }
+
+  /** The planned workout the athlete started the run from, if it is still open and dated around the run. */
+  private async findChosenPlanned(
+    athleteId: string,
+    workoutId: string | null | undefined,
+    dayRange: { start: Date; endExclusive: Date },
+  ): Promise<Workout | null> {
+    if (!workoutId) {
+      return null;
+    }
+    const tolerance = RECORDING_LIMITS.plannedWorkoutDayTolerance * DAY_MS;
+    return this.workoutModel.findOne({
+      where: {
+        id: workoutId,
+        athleteId,
+        status: 'planned',
+        scheduledAt: {
+          [Op.gte]: new Date(dayRange.start.getTime() - tolerance),
+          [Op.lt]: new Date(dayRange.endExclusive.getTime() + tolerance),
+        },
+      },
+    });
   }
 
   private async findPlannedMatch(

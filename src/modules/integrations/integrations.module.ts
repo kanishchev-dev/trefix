@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 
 import { RealtimeModule } from '../realtime/realtime.module';
+import { StorageModule } from '../storage/storage.module';
 import { Athlete } from '../training/entities/athlete.entity';
 import { Workout } from '../training/entities/workout.entity';
 import { TrainingModule } from '../training/training.module';
@@ -28,6 +29,9 @@ import { IntegrationsService } from './integrations.service';
 import { IntegrationsProcessor } from './processors/integrations.processor';
 import { StravaProvider } from './providers/strava/strava.provider';
 import { StravaApiClient } from './providers/strava/strava-api.client';
+import { RecordedActivity } from './recordings/recorded-activity.entity';
+import { RecordingsController } from './recordings/recordings.controller';
+import { RecordingsService } from './recordings/recordings.service';
 
 @Module({
   imports: [
@@ -38,6 +42,7 @@ import { StravaApiClient } from './providers/strava/strava-api.client';
       StravaWebhookEvent,
       WorkoutSource,
       DeviceSyncBatch,
+      RecordedActivity,
       Workout,
       Athlete,
     ]),
@@ -48,9 +53,10 @@ import { StravaApiClient } from './providers/strava/strava-api.client';
     PreferencesModule,
     ConsentsModule,
     RealtimeModule,
+    StorageModule,
   ],
   // Order matters: static `strava/*` routes must be registered before `:provider/*`.
-  controllers: [IntegrationsController, DeviceIntegrationsController],
+  controllers: [IntegrationsController, DeviceIntegrationsController, RecordingsController],
   providers: [
     StravaApiClient,
     StravaProvider,
@@ -62,6 +68,7 @@ import { StravaApiClient } from './providers/strava/strava-api.client';
     IntegrationsListener,
     DeviceIntegrationsService,
     DeviceIntegrationsListener,
+    RecordingsService,
   ],
   exports: [IntegrationsService],
 })

@@ -1,4 +1,4 @@
-export type ActivitySource = 'strava' | 'garmin' | 'apple_health' | 'health_connect';
+export type ActivitySource = 'strava' | 'garmin' | 'apple_health' | 'health_connect' | 'trefix';
 
 export type RunningActivityType = 'run' | 'trail_run' | 'virtual_run' | 'treadmill';
 

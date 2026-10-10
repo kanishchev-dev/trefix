@@ -73,7 +73,7 @@ function sourceRow(overrides: Partial<WorkoutSource> = {}): MockSource {
 
 describe('ActivityIngestionService', () => {
   let sourceModel: Mocked<Pick<typeof WorkoutSource, 'findOne' | 'findAll' | 'create' | 'count' | 'destroy'>>;
-  let workoutModel: Mocked<Pick<typeof Workout, 'findAll' | 'findByPk' | 'count'>>;
+  let workoutModel: Mocked<Pick<typeof Workout, 'findAll' | 'findByPk' | 'findOne' | 'count'>>;
   let integrationModel: Mocked<Pick<typeof Integration, 'count'>>;
   let athleteModel: Mocked<Pick<typeof Athlete, 'findByPk'>>;
   let trainingService: Mocked<
@@ -97,6 +97,7 @@ describe('ActivityIngestionService', () => {
     workoutModel = {
       findAll: jest.fn().mockResolvedValue([]),
       findByPk: jest.fn().mockResolvedValue({ id: 'w-1', status: 'completed' }),
+      findOne: jest.fn().mockResolvedValue(null),
       count: jest.fn().mockResolvedValue(1),
     };
     integrationModel = { count: jest.fn().mockResolvedValue(0) };
@@ -235,6 +236,36 @@ describe('ActivityIngestionService', () => {
       expect.objectContaining({ sourceProvider: 'apple_health', distanceKm: 10 }),
     );
     expect(eventEmitter.emit).toHaveBeenCalledWith('integrations.activity_imported', expect.any(Object));
+  });
+
+  it('closes the planned workout the run was started from', async () => {
+    workoutModel.findOne.mockResolvedValue({ id: 'w-chosen', status: 'planned' });
+    workoutModel.findAll.mockResolvedValue([{ id: 'w-closer', distanceKm: 10, durationMinutes: 50 }]);
+
+    const result = await service.ingest(
+      activity({ source: 'trefix', sourceActivityId: 'session-1', originAppId: undefined }),
+      {
+        plannedWorkoutId: 'w-chosen',
+      },
+    );
+
+    expect(result).toEqual({ outcome: 'matched_planned', workoutId: 'w-chosen' });
+    expect(trainingService.completeWorkoutFromImport).toHaveBeenCalledWith('w-chosen', expect.any(Object));
+    const where = workoutModel.findOne.mock.calls[0][0].where;
+    expect(where).toMatchObject({ id: 'w-chosen', athleteId: 'athlete-1', status: 'planned' });
+  });
+
+  it('falls back to matching when the chosen workout is no longer open', async () => {
+    workoutModel.findAll.mockResolvedValue([{ id: 'w-1', distanceKm: 10, durationMinutes: 50 }]);
+
+    const result = await service.ingest(
+      activity({ source: 'trefix', sourceActivityId: 'session-1', originAppId: undefined }),
+      {
+        plannedWorkoutId: 'w-done',
+      },
+    );
+
+    expect(result).toEqual({ outcome: 'matched_planned', workoutId: 'w-1' });
   });
 
   it("falls back to the user's timezone when the offset is unknown", async () => {

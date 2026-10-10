@@ -6,16 +6,49 @@ export type OAuthProviderName = (typeof OAUTH_PROVIDERS)[number];
 export type DeviceProviderName = (typeof DEVICE_PROVIDERS)[number];
 export type IntegrationProviderName = (typeof INTEGRATION_PROVIDERS)[number];
 
-/** Providers whose activities are stored as `workout_sources`; other `workouts.source_provider` values mean manual/admin. */
-export const IMPORTED_ACTIVITY_SOURCES: readonly string[] = INTEGRATION_PROVIDERS;
+/** Runs recorded by the Trefix tracker on the phone. */
+export const TRACKER_PROVIDER = 'trefix' as const;
+/** Every source of activity records: connected services plus the in-app tracker. */
+export const ACTIVITY_PROVIDERS = [...INTEGRATION_PROVIDERS, TRACKER_PROVIDER] as const;
+export type ActivityProviderName = (typeof ACTIVITY_PROVIDERS)[number];
 
-/** Lower index wins when one run comes from several sources. */
-export const ACTIVITY_SOURCE_PRIORITY: readonly IntegrationProviderName[] = [
+/** Providers whose activities are stored as `workout_sources`; other `workouts.source_provider` values mean manual/admin. */
+export const IMPORTED_ACTIVITY_SOURCES: readonly string[] = ACTIVITY_PROVIDERS;
+
+/**
+ * Lower index wins when one run comes from several sources. A phone recording
+ * yields to a watch: when both recorded the run, the watch is the primary record.
+ */
+export const ACTIVITY_SOURCE_PRIORITY: readonly ActivityProviderName[] = [
   'garmin',
   'strava',
   'apple_health',
   'health_connect',
+  TRACKER_PROVIDER,
 ];
+
+export const RECORDING_ENVIRONMENTS = ['outdoor', 'trail', 'treadmill'] as const;
+export type RecordingEnvironment = (typeof RECORDING_ENVIRONMENTS)[number];
+/** `mixed` — GPS with stretches counted by the pedometer while the signal was lost. */
+export const DISTANCE_SOURCES = ['gps', 'pedometer', 'manual', 'mixed'] as const;
+export type DistanceSource = (typeof DISTANCE_SOURCES)[number];
+/** Distance sources measured by satellites; others do not count towards distance records. */
+export const GPS_DISTANCE_SOURCES: readonly DistanceSource[] = ['gps', 'mixed'];
+
+export const RECORDING_LIMITS = {
+  maxDurationSec: 12 * 60 * 60,
+  maxDistanceM: 200_000,
+  minPaceSecPerKm: 150,
+  maxPaceSecPerKm: 1200,
+  maxTrackFileBytes: 5 * 1024 * 1024,
+  maxRouteLineLength: 20_000,
+  maxSplits: 250,
+  maxLaps: 200,
+  maxPauses: 500,
+  maxNotesLength: 2000,
+  /** A run started from a plan closes that workout only within this many days of its date. */
+  plannedWorkoutDayTolerance: 1,
+} as const;
 
 /**
  * Apps that write runs into Apple Health / Health Connect on behalf of an

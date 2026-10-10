@@ -20,6 +20,8 @@ import { RaceResult } from './entities/race-result.entity';
 import { TrainingLoad } from './entities/training-load.entity';
 import { TrainingPlan } from './entities/training-plan.entity';
 import { Workout } from './entities/workout.entity';
+import { WorkoutExecutionBuilder } from './execution/workout-execution.builder';
+import { WorkoutExecutionController } from './execution/workout-execution.controller';
 import { GearController } from './gear/gear.controller';
 import { GearListener } from './gear/gear.listener';
 import { GearService } from './gear/gear.service';
@@ -73,6 +75,7 @@ import { TrainingService } from './training.service';
     TrainingController,
     GearController,
     ProgressController,
+    WorkoutExecutionController,
     AdminTrainingController,
     AdminPlansController,
   ],
@@ -97,6 +100,7 @@ import { TrainingService } from './training.service';
     GearListener,
     ProgressService,
     ProgressListener,
+    WorkoutExecutionBuilder,
   ],
   exports: [TrainingService, AthleteProfileService, GearService],
 })
