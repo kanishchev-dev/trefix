@@ -60,6 +60,8 @@ import {
 } from "./src/lib/auth-session";
 import { useAuthSessionMonitor } from "./src/lib/use-auth-session-monitor";
 import { RealtimeProvider } from "./src/lib/realtime";
+import { disableHealthBackground } from "./src/features/health-sync/background-control";
+import { clearHealthSyncState } from "./src/features/health-sync/state";
 import {
   getGoogleSigninModule,
 } from "./src/lib/google-signin";
@@ -133,6 +135,9 @@ export default function App() {
     } catch (error) {
       console.warn("Logout request failed:", error);
     } finally {
+      // The next account on this device must not inherit Health sync or its background wake-ups.
+      await disableHealthBackground();
+      await clearHealthSyncState();
       await clearAuthSession();
       setSession(null);
       queryClient.clear();
@@ -141,6 +146,7 @@ export default function App() {
 
   /** After the account is deleted: drop local data except language and theme, then end the session. */
   async function handleAccountDeleted(): Promise<void> {
+    await disableHealthBackground();
     try {
       const keys = await AsyncStorage.getAllKeys();
       await AsyncStorage.multiRemove(keys.filter((key) => key !== "@trefix/language" && key !== "@trefix/theme"));

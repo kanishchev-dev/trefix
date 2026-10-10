@@ -202,7 +202,7 @@ export function ActionCard({
   );
 }
 
-/** Round "S" mark next to a value that came from Strava. */
+/** Round mark next to a value that came from an external source: "S" — Strava, "H" — Apple Health / Health Connect. */
 export function SourceBadge({ theme, label = "S" }: { theme: ThemeTokens; label?: string }) {
   return (
     <View style={[styles.badge, { backgroundColor: theme.color.iconSurface }]}>

@@ -628,6 +628,7 @@
       },
       "sources": {
         "strava": "Strava",
+        "health": "Health",
         "manual_workouts": "Workouts",
         "athlete_state": "Estimate",
         "profile": "Profile"
@@ -951,6 +952,11 @@
       "500": "Operation failed. Please try later"
     },
     "fallback": "Something went wrong"
+  },
+  "backendUnavailable": {
+    "title": "Server unavailable",
+    "description": "Cannot reach the server. We'll try again automatically in a few seconds.",
+    "retry": "Retry"
   },
   "accessDenied": {
     "title": "Access denied",

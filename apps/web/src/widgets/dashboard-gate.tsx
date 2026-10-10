@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactElement, type ReactNode } from "react";
 
 import { Button } from "@workspace/ui/components/button";
-import { ShieldXIcon } from "lucide-react";
+import { ServerCrashIcon, ShieldXIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/shared/i18n";
@@ -34,6 +34,9 @@ const SECTION_PERMISSIONS: SectionPermission[] = [
   { prefix: "/profile", permission: "account.update" },
 ];
 
+/** Pause before asking the backend again while it is unavailable. */
+const BACKEND_RETRY_MS = 10_000;
+
 export function requiredPermission(pathname: string): string | null {
   const match = SECTION_PERMISSIONS.find((entry) =>
     "pattern" in entry
@@ -48,7 +51,7 @@ export function DashboardGate({
 }: {
   children: ReactNode;
 }): ReactElement {
-  const { status, isAuthenticated, hasPermission } = useAuth();
+  const { status, isAuthenticated, hasPermission, retrySession } = useAuth();
   const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
@@ -68,8 +71,32 @@ export function DashboardGate({
     }
   }, [router, status]);
 
+  // The backend did not answer: keep trying quietly instead of leaving the page.
+  useEffect(() => {
+    if (status !== "error") {
+      return;
+    }
+    const timer = setTimeout(retrySession, BACKEND_RETRY_MS);
+    return () => clearTimeout(timer);
+  }, [retrySession, status]);
+
   if (status === "loading") {
     return <span aria-hidden="true" />;
+  }
+
+  if (status === "error") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
+        <ServerCrashIcon className="size-10 text-muted-foreground" />
+        <p className="text-lg font-medium">{t("backendUnavailable.title")}</p>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          {t("backendUnavailable.description")}
+        </p>
+        <Button variant="outline" onClick={retrySession}>
+          {t("backendUnavailable.retry")}
+        </Button>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

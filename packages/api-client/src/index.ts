@@ -191,7 +191,10 @@ export const trainingAthleteSchema = z.object({
   longRunDay: z.string().nullable().optional(),
   longRunMaxDurationMinutes: z.number().nullable().optional(),
   fieldSources: z
-    .record(z.string(), z.object({ source: z.enum(["manual", "strava"]), updatedAt: z.string() }))
+    .record(
+      z.string(),
+      z.object({ source: z.enum(["manual", "strava", "apple_health", "health_connect"]), updatedAt: z.string() }),
+    )
     .optional(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
@@ -911,7 +914,7 @@ export const metricsSnapshotSchema = z.object({
   source: z.string().optional(),
 });
 
-export const metricsSourceSchema = z.enum(["profile", "strava", "manual_workouts", "athlete_state", "none"]);
+export const metricsSourceSchema = z.enum(["profile", "strava", "health", "manual_workouts", "athlete_state", "none"]);
 
 const sourcedNumberSchema = z.object({
   value: z.number().nullable(),
@@ -1759,6 +1762,10 @@ export const integrationItemSchema = z.object({
   importedActivitiesCount: z.number().optional(),
   profileAccess: z.boolean().optional(),
   lastProfileSyncAt: z.string().nullable().optional(),
+  available: z.boolean().optional(),
+  profileSync: z.boolean().nullable().optional(),
+  pendingBatches: z.number().optional(),
+  scopes: z.array(z.string()).optional(),
 });
 
 export const stravaProfileAccessSchema = z.object({
@@ -1793,6 +1800,143 @@ export type IntegrationItem = z.infer<typeof integrationItemSchema>;
 export type IntegrationsList = z.infer<typeof integrationsListSchema>;
 export type StravaConnectResponse = z.infer<typeof stravaConnectResponseSchema>;
 export type IntegrationSyncStatus = z.infer<typeof integrationSyncStatusSchema>;
+
+// --- Device integrations (Apple Health, Health Connect) ---
+
+export const deviceProviderSchema = z.enum(["apple_health", "health_connect"]);
+export type DeviceProvider = z.infer<typeof deviceProviderSchema>;
+
+export const deviceScopeSchema = z.enum([
+  "workouts",
+  "heart_rate",
+  "distance",
+  "elevation",
+  "steps",
+  "calories",
+  "weight",
+  "resting_heart_rate",
+  "history",
+  "background",
+]);
+export type DeviceScope = z.infer<typeof deviceScopeSchema>;
+
+export const deviceSyncTypeSchema = z.enum(["initial", "foreground", "background", "manual", "backfill"]);
+export type DeviceSyncType = z.infer<typeof deviceSyncTypeSchema>;
+
+export type DeviceConnectionRequest = {
+  platform: "ios" | "android";
+  deviceId: string;
+  osVersion?: string;
+  appVersion?: string;
+  grantedScopes?: DeviceScope[];
+  historyDepthDays?: number;
+  profileSync?: boolean;
+};
+
+export type DeviceConnectionUpdate = Partial<
+  Pick<DeviceConnectionRequest, "osVersion" | "appVersion" | "grantedScopes" | "profileSync">
+>;
+
+/** A run read on the device, in the shape the backend accepts. */
+export type DeviceActivity = {
+  sourceActivityId: string;
+  type: "run" | "trail_run" | "treadmill";
+  startedAt: string;
+  endedAt: string;
+  utcOffsetMinutes?: number;
+  durationSec: number;
+  elapsedTimeSec?: number;
+  distanceMeters: number;
+  elevationGainMeters?: number;
+  averageHeartRate?: number;
+  maxHeartRate?: number;
+  cadence?: number;
+  calories?: number;
+  originAppId?: string;
+  originDevice?: string;
+};
+
+export type DeviceSyncBatchRequest = {
+  syncId: string;
+  batchIndex: number;
+  syncType: DeviceSyncType;
+  isLast: boolean;
+  activities: DeviceActivity[];
+  deletedSourceActivityIds: string[];
+};
+
+export const deviceSyncBatchAcceptedSchema = z.object({
+  syncId: z.string(),
+  batchId: z.string(),
+  accepted: z.number(),
+  rejected: z.array(z.object({ sourceActivityId: z.string(), code: z.string() })),
+});
+export type DeviceSyncBatchAccepted = z.infer<typeof deviceSyncBatchAcceptedSchema>;
+
+export const deviceSyncCountersSchema = z.object({
+  created: z.number(),
+  updated: z.number(),
+  merged: z.number(),
+  matchedPlanned: z.number(),
+  matchedManual: z.number(),
+  skipped: z.number(),
+  rejected: z.number(),
+  deleted: z.number(),
+  failed: z.number(),
+});
+export type DeviceSyncCounters = z.infer<typeof deviceSyncCountersSchema>;
+
+export const deviceSyncStatusSchema = integrationSyncStatusSchema.extend({
+  lastSyncId: z.string().nullable().optional(),
+  lastSyncType: z.string().nullable().optional(),
+  pendingBatches: z.number(),
+  counters: deviceSyncCountersSchema,
+});
+export type DeviceSyncStatus = z.infer<typeof deviceSyncStatusSchema>;
+
+export type DeviceProfileMetricsRequest = {
+  weight?: { valueKg: number; measuredAt: string; originAppId?: string };
+  restingHeartRate?: Array<{ date: string; bpm: number }>;
+};
+
+export const deviceProfileMetricsResultSchema = z.object({
+  applied: z.array(z.enum(["weightKg", "restingHeartRate"])),
+  skipped: z.array(z.object({ field: z.enum(["weightKg", "restingHeartRate"]), reason: z.string() })),
+});
+export type DeviceProfileMetricsResult = z.infer<typeof deviceProfileMetricsResultSchema>;
+
+export const workoutSourcesSchema = z.object({
+  items: z.array(
+    z.object({
+      provider: z.string(),
+      isPrimary: z.boolean(),
+      originDevice: z.string().nullable().optional(),
+      originAppId: z.string().nullable().optional(),
+      startedAt: z.string().or(z.date()),
+    }),
+  ),
+});
+export type WorkoutSources = z.infer<typeof workoutSourcesSchema>;
+
+// --- Consents ---
+
+export const consentTypeSchema = z.enum(["health_data"]);
+export type ConsentType = z.infer<typeof consentTypeSchema>;
+
+export const consentSchema = z.object({
+  type: consentTypeSchema,
+  version: z.string(),
+  acceptedAt: z.string().or(z.date()),
+  revokedAt: z.string().or(z.date()).nullable(),
+  isCurrent: z.boolean(),
+});
+export type Consent = z.infer<typeof consentSchema>;
+
+export const consentsListSchema = z.object({
+  items: z.array(consentSchema),
+  currentVersions: z.record(z.string(), z.string()),
+});
+export type ConsentsList = z.infer<typeof consentsListSchema>;
 
 // --- Admin: shared ---
 

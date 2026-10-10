@@ -5,6 +5,12 @@ import {
   prepareProxyBody,
   type ProxyPayload,
 } from "@/lib/server/proxy-payload";
+import {
+  BackendUnavailableError,
+  backendUnavailableResponse,
+  fetchBackend,
+  isSessionRejection,
+} from "@/lib/server/backend-availability";
 import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
 
 export const runtime = "nodejs";
@@ -81,7 +87,7 @@ async function forwardToBackend(
 ) {
   const { body, headers, duplex } = payloadToFetchInit(payload);
 
-  return fetch(
+  return fetchBackend(
     `${BACKEND_BASE_URL}${buildBackendPath(segments)}${buildQueryString(request)}`,
     {
       method,
@@ -127,21 +133,40 @@ async function refreshIfNeeded(request: NextRequest): Promise<AuthTokens | null>
   // more than once, or the backend reads the extra exchanges as a replayed
   // token and deletes the session outright.
   return runSingleFlightRefresh(refreshToken, async () => {
-    const response = await fetch(`${BACKEND_BASE_URL}/auth/refresh`, {
+    const response = await fetchBackend(`${BACKEND_BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
-      return null;
+      if (isSessionRejection(response.status)) {
+        return null;
+      }
+      throw new BackendUnavailableError(response.status);
     }
 
     return (await response.json()) as AuthTokens;
   });
 }
 
+/** A backend that does not answer is a 503 with the cookies left alone, never a "session expired". */
 async function handleRequest(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+  method: HttpMethod,
+): Promise<NextResponse> {
+  try {
+    return await proxyRequest(request, context, method);
+  } catch (error) {
+    if (error instanceof BackendUnavailableError) {
+      return backendUnavailableResponse();
+    }
+    throw error;
+  }
+}
+
+async function proxyRequest(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
   method: HttpMethod,

@@ -215,7 +215,14 @@ export function ProfileScreen({
               title={p.rows.body}
               description={athlete ? bodySummary(athlete, copy, userLanguage, format) : undefined}
               dot={missing.has("body")}
-              trailing={athlete?.fieldSources?.weightKg?.source === "strava" ? <SourceBadge theme={theme} /> : undefined}
+              trailing={
+                athlete?.fieldSources?.weightKg?.source === "strava" ? (
+                  <SourceBadge theme={theme} />
+                ) : athlete?.fieldSources?.weightKg?.source === "apple_health" ||
+                  athlete?.fieldSources?.weightKg?.source === "health_connect" ? (
+                  <SourceBadge theme={theme} label="H" />
+                ) : undefined
+              }
               onPress={() => open({ kind: "profile-body" })}
             />
             <ListRow

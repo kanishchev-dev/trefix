@@ -389,6 +389,7 @@ export function RecordsSection({
 export function sourceLabel(copy: MainCopy, provider: string | null, kind: string, source: string): string {
   const s = copy.progress.records.sources;
   if (provider === "strava") return s.strava;
+  if (provider === "apple_health" || provider === "health_connect") return s.health;
   if (source === "result") return kind === "race" ? s.race : kind === "test" ? s.test : s.manual;
   return kind === "race" ? s.race : s.workout;
 }

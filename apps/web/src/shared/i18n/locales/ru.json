@@ -628,6 +628,7 @@
       },
       "sources": {
         "strava": "Strava",
+        "health": "Здоровье",
         "manual_workouts": "Тренировки",
         "athlete_state": "Оценка",
         "profile": "Профиль"
@@ -951,6 +952,11 @@
       "500": "Не удалось выполнить операцию. Попробуйте позже"
     },
     "fallback": "Something went wrong"
+  },
+  "backendUnavailable": {
+    "title": "Сервер недоступен",
+    "description": "Не удаётся связаться с сервером. Повторим попытку автоматически через несколько секунд.",
+    "retry": "Повторить"
   },
   "accessDenied": {
     "title": "Доступ запрещён",

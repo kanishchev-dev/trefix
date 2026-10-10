@@ -64,6 +64,8 @@ type AuthContextValue = {
   changePassword: (input: ChangePasswordInput) => Promise<void>;
   setAvatarUrl: (avatarUrl: string) => void;
   refreshAuth: () => Promise<AuthUser | null>;
+  /** Repeats the session lookup after the backend was unavailable (`status === "error"`). */
+  retrySession: () => void;
   requestPasswordRecovery: (input: AuthForgotPasswordInput) => Promise<void>;
   confirmPasswordRecovery: (input: AuthResetPasswordInput) => Promise<void>;
   verifyEmailAddress: (input: AuthVerifyEmailInput) => Promise<void>;
@@ -108,6 +110,8 @@ export function AuthProvider({
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Bumped by `retrySession` to run the session lookup again. */
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
 
   /**
    * The translator changes identity whenever the locale settles, and that
@@ -144,16 +148,18 @@ export function AuthProvider({
           syncFromBackend();
           return;
         } catch (bootstrapError) {
-          const transient =
-            attempt < attempts && isTransientAuthError(bootstrapError);
+          const transient = isTransientAuthError(bootstrapError);
 
-          if (!transient) {
+          if (!transient || attempt === attempts) {
             if (!isMounted) {
               return;
             }
 
             setUser(null);
-            setStatus("unauthenticated");
+            // A backend that does not answer is not a verdict on the session:
+            // "unauthenticated" here sent the dashboard to /login, the
+            // middleware saw a valid cookie and sent it back — forever.
+            setStatus(transient ? "error" : "unauthenticated");
             setError(
               isApiClientError(bootstrapError)
                 ? getFriendlyAuthMessage(bootstrapError, tRef.current)
@@ -172,7 +178,7 @@ export function AuthProvider({
     return () => {
       isMounted = false;
     };
-  }, [syncFromBackend]);
+  }, [syncFromBackend, bootstrapAttempt]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -184,6 +190,10 @@ export function AuthProvider({
       permissions: user?.permissions ?? [],
       hasPermission: (permission: string) =>
         (user?.permissions ?? []).includes(permission),
+      retrySession() {
+        setStatus("loading");
+        setBootstrapAttempt((value) => value + 1);
+      },
       async signIn(input) {
         setStatus("loading");
 

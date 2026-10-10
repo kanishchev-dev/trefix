@@ -34,6 +34,7 @@ import {
   type PlanWorkoutEditMode,
 } from "../../../plans/components/plan-workout-edit-panel";
 import { useUnitFormat } from "../../../profile/hooks/use-unit-format";
+import { WorkoutSourceRow } from "../../../health-sync/components/workout-source-row";
 
 type Props = {
   workout: TrainingWorkout | null;
@@ -474,6 +475,8 @@ export function WorkoutDetailSheet({
                 </Text>
               </View>
             ) : null}
+
+            <WorkoutSourceRow workoutId={workout.id} copy={copy} theme={theme} />
 
             {actualData.rpe ? (
               <View style={styles.infoRow}>

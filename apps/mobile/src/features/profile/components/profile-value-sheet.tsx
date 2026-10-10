@@ -13,7 +13,7 @@ import { formatAgo, profileErrorMessage } from "../lib/profile-format";
 
 type Provenance = {
   /** Where the current value came from. */
-  source: "strava" | "manual" | null;
+  source: "strava" | "apple_health" | "health_connect" | "manual" | null;
   updatedAt?: string | null;
   /** The field can be handed back to Strava. */
   canReset: boolean;
@@ -198,10 +198,12 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
           </SheetBlock>
         ) : null}
 
-        {current.provenance?.source === "strava" ? (
+        {current.provenance?.source && current.provenance.source !== "manual" ? (
           <SheetBlock theme={theme}>
             <Text style={[styles.centered, muted]}>
-              {fillTemplate(sheetCopy.fromStrava, { ago: formatAgo(current.provenance.updatedAt, copy) })}
+              {fillTemplate(current.provenance.source === "strava" ? sheetCopy.fromStrava : sheetCopy.fromHealth, {
+                ago: formatAgo(current.provenance.updatedAt, copy),
+              })}
               {"\n"}
               {sheetCopy.afterSave}
             </Text>

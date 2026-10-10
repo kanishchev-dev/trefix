@@ -45,10 +45,16 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
   };
 
   const sourceOf = (field: SourcedField) => athlete?.fieldSources?.[field] ?? null;
-  const badge = (field: SourcedField) => (sourceOf(field)?.source === "strava" ? <SourceBadge theme={theme} /> : undefined);
+  const badge = (field: SourcedField) => {
+    const source = sourceOf(field)?.source;
+    if (source === "strava") return <SourceBadge theme={theme} />;
+    if (source === "apple_health" || source === "health_connect") return <SourceBadge theme={theme} label="H" />;
+    return undefined;
+  };
   const provenance = (field: SourcedField): ValueSheetConfig["provenance"] => {
-    if (!stravaConnected) return undefined;
     const source = sourceOf(field);
+    const fromHealth = source?.source === "apple_health" || source?.source === "health_connect";
+    if (!stravaConnected && !fromHealth) return undefined;
     return {
       source: source?.source ?? null,
       updatedAt: source?.updatedAt,

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  BackendUnavailableError,
+  fetchBackend,
+  isSessionRejection,
+} from "@/lib/server/backend-availability";
 import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
 
 // Node.js runtime so this module shares its single-flight map with the route
@@ -59,6 +64,8 @@ function clearAuthCookies(response: NextResponse): NextResponse {
 
 async function refreshSession(request: NextRequest): Promise<{
   ok: boolean;
+  /** The backend did not answer: the session may well be alive. */
+  unavailable?: boolean;
   tokens?: {
     accessToken: string;
     refreshToken: string;
@@ -77,26 +84,37 @@ async function refreshSession(request: NextRequest): Promise<{
   // with them: the middleware refreshes while the page it is guarding fires its
   // first authenticated requests, and both present the same token. The backend
   // rotates it on every use and deletes the session on the second presentation.
-  const tokens = await runSingleFlightRefresh(refreshToken, async () => {
-    const response = await fetch(`${BACKEND_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ refreshToken }),
+  let tokens: Awaited<ReturnType<typeof runSingleFlightRefresh>>;
+  try {
+    tokens = await runSingleFlightRefresh(refreshToken, async () => {
+      const response = await fetchBackend(`${BACKEND_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        if (isSessionRejection(response.status)) {
+          return null;
+        }
+        throw new BackendUnavailableError(response.status);
+      }
+
+      return (await response.json()) as {
+        accessToken: string;
+        refreshToken: string;
+        sessionId: string;
+        accessTokenExpiresIn: number;
+      };
     });
-
-    if (!response.ok) {
-      return null;
+  } catch (error) {
+    if (error instanceof BackendUnavailableError) {
+      return { ok: false, unavailable: true };
     }
-
-    return (await response.json()) as {
-      accessToken: string;
-      refreshToken: string;
-      sessionId: string;
-      accessTokenExpiresIn: number;
-    };
-  });
+    throw error;
+  }
 
   if (!tokens) {
     return { ok: false };
@@ -195,6 +213,12 @@ async function ensureActiveSession(
         allowed: true,
         response: writeAuthCookies(response, refreshed.tokens),
       };
+    }
+    if (refreshed?.unavailable) {
+      // Keep the cookies and let the page render its "backend unavailable"
+      // state: logging the user out because the backend restarted is wrong,
+      // and /login would bounce straight back here.
+      return { allowed: true };
     }
   }
 

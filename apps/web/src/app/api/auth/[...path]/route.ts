@@ -5,6 +5,12 @@ import {
   prepareProxyBody,
   type ProxyPayload,
 } from "@/lib/server/proxy-payload";
+import {
+  BackendUnavailableError,
+  backendUnavailableResponse,
+  fetchBackend,
+  isSessionRejection,
+} from "@/lib/server/backend-availability";
 import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
 
 export const runtime = "nodejs";
@@ -44,7 +50,7 @@ async function forwardToBackend(
 ) {
   const { body, headers, duplex } = payloadToFetchInit(payload);
 
-  return fetch(`${BACKEND_BASE_URL}${buildBackendPath(segments)}`, {
+  return fetchBackend(`${BACKEND_BASE_URL}${buildBackendPath(segments)}`, {
     method,
     headers: {
       ...headers,
@@ -132,7 +138,10 @@ async function refreshIfNeeded(
       body: JSON.stringify({ refreshToken }),
     });
     if (!response.ok) {
-      return null;
+      if (isSessionRejection(response.status)) {
+        return null;
+      }
+      throw new BackendUnavailableError(response.status);
     }
 
     return (await response.json()) as AuthTokens;
@@ -251,7 +260,26 @@ async function handleGenericPost(
   return responseFromBackend(response);
 }
 
+/** A backend that does not answer is a 503 with the cookies left alone, never a "session expired". */
+async function withBackendAvailability(handler: () => Promise<NextResponse>): Promise<NextResponse> {
+  try {
+    return await handler();
+  } catch (error) {
+    if (error instanceof BackendUnavailableError) {
+      return backendUnavailableResponse();
+    }
+    throw error;
+  }
+}
+
 export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+) {
+  return withBackendAvailability(() => handleGet(request, context));
+}
+
+async function handleGet(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) {
@@ -273,6 +301,13 @@ export async function GET(
 }
 
 export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+) {
+  return withBackendAvailability(() => handlePost(request, context));
+}
+
+async function handlePost(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) {

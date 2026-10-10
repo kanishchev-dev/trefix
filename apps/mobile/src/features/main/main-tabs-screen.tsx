@@ -11,6 +11,8 @@ import { PlanScreen } from "./screens/plan-screen";
 import { TodayScreen } from "./screens/today-screen";
 import { IntegrationsScreen } from "./screens/integrations-screen";
 import { StravaIntegrationScreen } from "./screens/strava-integration-screen";
+import { HealthIntegrationScreen } from "../health-sync/health-integration-screen";
+import { useHealthSyncTriggers } from "../health-sync/hooks";
 import { fillTemplate, type AppLanguage, type MainCopy } from "../../locales";
 import { trackEvent } from "../../lib/analytics";
 import { ToastProvider, useToast } from "../../shared/ui/toast";
@@ -67,6 +69,7 @@ type Props = {
 type SubScreen =
   | { kind: "integrations" }
   | { kind: "strava-integration" }
+  | { kind: "health-integration" }
   | { kind: "plans"; segment?: PlansSegment; highlightPlanId?: string | null }
   | { kind: "plan-details"; planId: string }
   | { kind: "progress-records" }
@@ -114,6 +117,7 @@ function MainTabsContent({
 
   usePlansRealtime();
   useProfileRealtime();
+  useHealthSyncTriggers();
   useProgressRealtime();
   const { preferences } = usePreferences();
   // With the coach off the chat is unavailable: lead to the setting that turns it back on.
@@ -235,7 +239,10 @@ function MainTabsContent({
                 userLanguage={userLanguage}
                 onBack={pop}
                 onOpenStrava={() => push({ kind: "strava-integration" })}
+                onOpenHealth={() => push({ kind: "health-integration" })}
               />
+            ) : subScreen?.kind === "health-integration" ? (
+              <HealthIntegrationScreen theme={theme} themeMode={themeMode} copy={copy} onBack={pop} />
             ) : subScreen?.kind === "strava-integration" ? (
               <StravaIntegrationScreen
                 theme={theme}

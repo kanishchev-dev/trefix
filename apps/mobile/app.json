@@ -11,7 +11,12 @@
       "supportsTablet": true,
       "userInterfaceStyle": "automatic",
       "usesAppleSignIn": true,
-      "bundleIdentifier": "Kanishchev.Trefix"
+      "bundleIdentifier": "Kanishchev.Trefix",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "x-apple-health"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +27,19 @@
       },
       "userInterfaceStyle": "automatic",
       "predictiveBackGestureEnabled": false,
-      "package": "Kanishchev.Trefix"
+      "package": "Kanishchev.Trefix",
+      "permissions": [
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_ELEVATION_GAINED",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_WEIGHT",
+        "android.permission.health.READ_RESTING_HEART_RATE",
+        "android.permission.health.READ_HEALTH_DATA_HISTORY",
+        "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,7 +67,29 @@
       ],
       "expo-video",
       "expo-secure-store",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Trefix reads your running workouts, heart rate, weight and resting heart rate to use them in your plan and workout analysis.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": true
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      "expo-background-task"
+    ],
+    "locales": {
+      "ru": "./locales/ru.json",
+      "en": "./locales/en.json"
+    }
   }
 }
