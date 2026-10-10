@@ -171,7 +171,7 @@ export function AddWorkoutSheet({
           leftIcon={<Activity color={theme.color.mutedForeground} size={18} />}
           label={locale.titleLabel || "Название (опционально)"}
           onChangeText={setTitle}
-          placeholder={locale.titlePlaceholder || "Например: Утренняя пробежка"}
+          placeholder={locale.titlePlaceholder || "Например: Утренняя тренировка"}
           theme={theme}
           value={title}
         />

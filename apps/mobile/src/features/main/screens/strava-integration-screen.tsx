@@ -102,18 +102,6 @@ export function StravaIntegrationScreen({
 
           <Text
             style={[
-              styles.heroTitle,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-            ]}
-          >
-            {copy.profile.integrations.strava.title}
-          </Text>
-
-          <Text
-            style={[
               styles.heroDesc,
               {
                 color: theme.color.mutedForeground,
@@ -349,11 +337,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     gap: 12,
-  },
-  heroTitle: {
-    fontSize: 20,
-    lineHeight: 26,
-    textAlign: "center",
   },
   heroDesc: {
     fontSize: 14,
