@@ -7,9 +7,8 @@ type Props = {
   themeMode: "light" | "dark";
 };
 
-export function ProgressSkeleton({ theme, themeMode }: Props) {
+export function ProgressSkeleton({ theme }: Props) {
   const opacityAnim = useRef(new Animated.Value(0.3)).current;
-  const isDark = themeMode === "dark";
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -31,9 +30,7 @@ export function ProgressSkeleton({ theme, themeMode }: Props) {
     return () => animation.stop();
   }, [opacityAnim]);
 
-  const skeletonBg = isDark
-    ? "rgba(255, 255, 255, 0.08)"
-    : "rgba(0, 0, 0, 0.06)";
+  const skeletonBg = theme.color.skeleton;
 
   return (
     <View style={styles.container}>

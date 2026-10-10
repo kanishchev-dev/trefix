@@ -130,7 +130,7 @@ export function StravaIntegrationScreen({
               ]}
             >
               <View style={styles.statusHeader}>
-                <CheckCircle2 color="#22c55e" size={24} strokeWidth={2} />
+                <CheckCircle2 color={theme.color.success} size={24} strokeWidth={2} />
                 <Text
                   style={[
                     styles.statusTitle,
@@ -252,12 +252,12 @@ export function StravaIntegrationScreen({
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Unplug color="#ff6b6b" size={18} />
+              <Unplug color={theme.color.danger} size={18} />
               <Text
                 style={[
                   styles.disconnectText,
                   {
-                    color: "#ff6b6b",
+                    color: theme.color.danger,
                     fontFamily: theme.typography.fontFamily.sans.medium,
                   },
                 ]}
@@ -278,7 +278,7 @@ export function StravaIntegrationScreen({
               ]}
             >
               <View style={styles.statusHeader}>
-                <AlertCircle color="#ef4444" size={24} strokeWidth={2} />
+                <AlertCircle color={theme.color.danger} size={24} strokeWidth={2} />
                 <Text
                   style={[
                     styles.statusTitle,

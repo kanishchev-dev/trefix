@@ -65,11 +65,11 @@ export const REALTIME_STATUS_META: Readonly<
 > = {
   connected: {
     labelKey: "realtime.status.connected",
-    dotClassName: "bg-emerald-500",
+    dotClassName: "bg-success",
   },
   connecting: {
     labelKey: "realtime.status.connecting",
-    dotClassName: "bg-amber-500",
+    dotClassName: "bg-warning",
   },
   disconnected: {
     labelKey: "realtime.status.disconnected",

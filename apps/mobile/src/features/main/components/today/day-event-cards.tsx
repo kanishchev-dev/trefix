@@ -33,7 +33,7 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
       case "missed":
         return <XCircle size={16} color={theme.color.mutedForeground} />;
       case "modified":
-        return <Sparkles size={16} color="#A37EFF" />;
+        return <Sparkles size={16} color={theme.color.ai} />;
       default:
         return <Activity size={16} color={theme.color.primary} />;
     }
@@ -72,7 +72,7 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
 
         <CardContent style={styles.cardBody}>
           {event.status === "modified" && (
-            <Text style={[styles.modifiedLabel, { color: "#A37EFF", fontFamily: theme.typography.fontFamily.sans.medium }]}>
+            <Text style={[styles.modifiedLabel, { color: theme.color.ai, fontFamily: theme.typography.fontFamily.sans.medium }]}>
               {statusLabels.modified}
             </Text>
           )}
@@ -124,7 +124,7 @@ export const WorkoutCard = React.memo(({ theme, themeMode, event, onPress, onAct
           )}
 
           {event.status === "modified" && (
-            <Text style={[styles.footerText, { color: "#A37EFF", fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+            <Text style={[styles.footerText, { color: theme.color.ai, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
               {actionLabels.why} →
             </Text>
           )}

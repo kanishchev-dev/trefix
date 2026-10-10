@@ -13,7 +13,7 @@ import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type MobileAuthChallenge } from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
+import { isDarkTheme, withAlpha, type ThemeTokens } from "@workspace/tokens";
 import { formatCountdown, type AuthCopy } from "../../locales";
 import { glassBorderColor } from "./components/glass-border";
 
@@ -166,7 +166,7 @@ export function AuthVerificationScreen({
           style={[
             styles.grid,
             {
-              opacity: theme.color.background === "#09090b" ? 0.12 : 0.08,
+              opacity: isDarkTheme(theme) ? 0.12 : 0.08,
             },
           ]}
         >
@@ -342,14 +342,14 @@ type CodeCellProps = {
 function CodeCell({ theme, value, isActive, highlightState }: CodeCellProps) {
   const borderColor =
     highlightState === "error"
-      ? "rgba(239, 68, 68, 0.6)"
+      ? theme.color.dangerBorder
       : glassBorderColor(theme, isActive || highlightState === "success");
 
   const overlayColor =
     highlightState === "error"
-      ? "rgba(239, 68, 68, 0.08)"
+      ? withAlpha(theme.color.danger, 0.08)
       : highlightState === "success"
-        ? "rgba(0, 0, 0, 0.05)" // placeholder for primary opacity
+        ? withAlpha(theme.color.foreground, 0.05)
         : "transparent";
 
   return (
@@ -373,7 +373,7 @@ function CodeCell({ theme, value, isActive, highlightState }: CodeCellProps) {
           style={[
             styles.codeDigit,
             {
-              color: highlightState === "error" ? "#ef4444" : theme.color.foreground,
+              color: highlightState === "error" ? theme.color.danger : theme.color.foreground,
               fontFamily: theme.typography.fontFamily.sans.bold,
             },
           ]}

@@ -5,8 +5,8 @@ import { type PlansSegment } from "./lib/plan-card-format";
 
 /**
  * Navigation between the plans screens, sheets and the creation flow. The
- * plans screens live inside the main tabs (shared header, tab bar and
- * creation overlay), so the host provides these actions.
+ * sheets and the creation overlay sit above the whole main stack, so
+ * `MainNavigator` provides these actions.
  */
 export type PlansNavigation = {
   openPlans: (options?: { segment?: PlansSegment; highlightPlanId?: string | null; source?: string }) => void;

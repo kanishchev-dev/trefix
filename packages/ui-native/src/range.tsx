@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { resolveTheme } from "./theme";
 import { Ruler } from "./ruler";
 
 export type RangeValue = {
@@ -37,10 +38,7 @@ export function Range({
   minLabel = "Minimum",
   maxLabel = "Maximum",
 }: RangeProps) {
-  const isDark =
-    themeMode === "dark" ||
-    theme?.color.background === "#09090b" ||
-    theme?.color.surface === "#111111";
+  const t = resolveTheme(theme, themeMode);
 
   const handleMinChange = (newMin: number) => {
     const clampedMin = Math.max(absoluteMin, Math.min(newMin, value.max));
@@ -52,8 +50,8 @@ export function Range({
     onChange({ min: value.min, max: clampedMax });
   };
 
-  const cardBg = isDark ? "#121214" : theme?.color.surface || "#ffffff";
-  const borderCol = isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "rgba(0, 0, 0, 0.08)";
+  const cardBg = t.color.sheet;
+  const borderCol = t.color.controlBorder;
 
   return (
     <View
@@ -71,7 +69,7 @@ export function Range({
           style={[
             styles.label,
             {
-              color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+              color: t.color.mutedForeground,
               fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
             },
           ]}
@@ -96,7 +94,7 @@ export function Range({
           style={[
             styles.label,
             {
-              color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+              color: t.color.mutedForeground,
               fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
             },
           ]}

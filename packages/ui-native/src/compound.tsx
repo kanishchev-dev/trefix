@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { resolveTheme } from "./theme";
 import { Wheel } from "./wheel";
 
 export type CompoundPart = {
@@ -31,13 +32,10 @@ export function Compound({
   themeMode,
   accessibilityLabel,
 }: CompoundProps) {
-  const isDark =
-    themeMode === "dark" ||
-    theme?.color.background === "#09090b" ||
-    theme?.color.surface === "#111111";
+  const t = resolveTheme(theme, themeMode);
 
-  const cardBg = isDark ? "#121214" : theme?.color.surface || "#ffffff";
-  const borderCol = isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "rgba(0, 0, 0, 0.08)";
+  const cardBg = t.color.sheet;
+  const borderCol = t.color.controlBorder;
 
   return (
     <View
@@ -57,7 +55,7 @@ export function Compound({
               <Text
                 style={[
                   styles.separator,
-                  { color: theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b") },
+                  { color: t.color.foreground },
                 ]}
               >
                 {separator}
@@ -68,7 +66,7 @@ export function Compound({
                 style={[
                   styles.partLabel,
                   {
-                    color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+                    color: t.color.mutedForeground,
                     fontFamily: theme?.typography.fontFamily.sans.bold || "System",
                   },
                 ]}
@@ -96,7 +94,7 @@ export function Compound({
           style={[
             styles.unitText,
             {
-              color: theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+              color: t.color.mutedForeground,
               fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
             },
           ]}

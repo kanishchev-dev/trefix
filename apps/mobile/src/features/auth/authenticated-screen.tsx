@@ -109,6 +109,7 @@ export function AuthenticatedScreen({
             onPress={onLogout}
             style={({ pressed }) => [
               styles.logoutButton,
+              { backgroundColor: theme.color.danger },
               pressed && styles.logoutButtonPressed,
             ]}
           >
@@ -194,7 +195,6 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f97316",
     marginTop: 8,
   },
   logoutButtonPressed: {

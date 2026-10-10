@@ -22,9 +22,7 @@ type OptionChipProps = {
   onPress: () => void;
 };
 
-export function OptionChip({ label, selected, theme, themeMode, onPress }: OptionChipProps) {
-  const isDark = themeMode === "dark" || theme.color.background === "#09090b";
-
+export function OptionChip({ label, selected, theme, onPress }: OptionChipProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -36,9 +34,7 @@ export function OptionChip({ label, selected, theme, themeMode, onPress }: Optio
           backgroundColor: selected
             ? theme.color.primary
             : theme.color.control,
-          borderColor: isDark
-            ? "rgba(255, 255, 255, 0.08)"
-            : theme.color.border,
+          borderColor: theme.color.controlBorder,
           borderWidth: StyleSheet.hairlineWidth,
         },
         pressed && styles.pressed,
@@ -227,7 +223,7 @@ export function FieldError({ message, theme }: { message: string; theme: ThemeTo
       accessibilityLiveRegion="polite"
       style={[
         styles.fieldError,
-        { fontFamily: theme.typography.fontFamily.sans.regular },
+        { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
       ]}
     >
       {message}
@@ -538,7 +534,7 @@ export function FormInputRow({
             styles.textInput,
             {
               backgroundColor: theme.color.surfaceElevated,
-              borderColor: error ? '#dc2626' : theme.color.border,
+              borderColor: error ? theme.color.danger : theme.color.border,
               color: theme.color.foreground,
               fontFamily: theme.typography.fontFamily.sans.semibold,
             },
@@ -600,7 +596,7 @@ export function MultilineInputRow({
           styles.multilineInput,
           {
             backgroundColor: theme.color.surfaceElevated,
-            borderColor: error ? '#dc2626' : theme.color.border,
+            borderColor: error ? theme.color.danger : theme.color.border,
             color: theme.color.foreground,
             fontFamily: theme.typography.fontFamily.sans.regular,
           },
@@ -765,7 +761,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   fieldError: {
-    color: "#dc2626",
     fontSize: 12,
     lineHeight: 16,
     marginLeft: 4,

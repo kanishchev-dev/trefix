@@ -320,14 +320,12 @@ export function TabBar({
           <GlassView
             colorScheme={isDark ? "dark" : "light"}
             glassEffectStyle="regular"
-            tintColor={isDark ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
+            tintColor={theme.color.chromeTint}
             style={[
               styles.shell,
               {
-                borderColor: isDark ? "transparent" : theme.color.glassBorder,
-                backgroundColor: isDark
-                  ? "rgba(0, 0, 0, 0.8)"
-                  : "rgba(255, 255, 255, 0.72)",
+                borderColor: theme.color.chromeGlassBorder,
+                backgroundColor: theme.color.tabBarFill,
               },
             ]}
           >
@@ -344,16 +342,12 @@ export function TabBar({
                   colorScheme={isDark ? "dark" : "light"}
                   glassEffectStyle="clear"
                   tintColor={
-                    isDark
-                      ? "rgba(255, 255, 255, 0.04)"
-                      : "rgba(255, 255, 255, 0.2)"
+                    theme.color.tabIndicatorTint
                   }
                   style={[
                     styles.indicator,
                     {
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.08)"
-                        : "rgba(0, 0, 0, 0.04)",
+                      borderColor: theme.color.tabIndicatorBorder,
                     },
                   ]}
                 />
@@ -362,12 +356,8 @@ export function TabBar({
                   style={[
                     styles.indicator,
                     {
-                      backgroundColor: isDark
-                        ? "rgba(255, 255, 255, 0.06)"
-                        : "rgba(0, 0, 0, 0.04)",
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.06)"
-                        : "rgba(0, 0, 0, 0.04)",
+                      backgroundColor: theme.color.tabIndicatorFill,
+                      borderColor: theme.color.tabIndicatorFill,
                     },
                   ]}
                 />
@@ -376,9 +366,7 @@ export function TabBar({
                 style={[
                   styles.indicatorHighlight,
                   {
-                    backgroundColor: isDark
-                      ? "rgba(255, 255, 255, 0.06)"
-                      : "rgba(255, 255, 255, 0.3)",
+                    backgroundColor: theme.color.tabIndicatorHighlight,
                   },
                   highlightStyle,
                 ]}
@@ -400,7 +388,7 @@ export function TabBar({
               >
                 <View style={styles.iconWrap}>
                   {tab.icon}
-                  {tab.badge && <View style={styles.badgeDot} />}
+                  {tab.badge && <View style={[styles.badgeDot, { backgroundColor: theme.color.danger }]} />}
                 </View>
               </View>
             ))}
@@ -559,7 +547,6 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#ff3b30",
   },
   iconFrame: {
     width: 20,

@@ -19,6 +19,7 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 import { Minus, Plus } from "lucide-react-native";
 import { type ThemeMode } from "@workspace/tokens";
+import { resolveTheme } from "./theme";
 import { type ValueControlProps } from "./value-control-types";
 
 export type RulerProps = ValueControlProps<number> & {
@@ -143,12 +144,9 @@ export function Ruler({
   tickSpacing = 12,
   momentum = 0.25,
 }: RulerProps) {
-  const isDark =
-    themeMode === "dark" ||
-    theme?.color.background === "#09090b" ||
-    theme?.color.surface === "#111111";
-  const foreground = theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b");
-  const muted = theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a");
+  const t = resolveTheme(theme, themeMode);
+  const foreground = t.color.foreground;
+  const muted = t.color.mutedForeground;
 
   const major = majorEvery ?? (step < 1 ? 1 : step * 5);
   const labelStep = labelEvery ?? major;

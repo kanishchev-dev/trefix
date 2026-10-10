@@ -1,0 +1,80 @@
+import { createContext, useContext } from "react";
+import { createNavigationContainerRef, StackActions } from "@react-navigation/native";
+
+import { type PlansSegment } from "../plans/lib/plan-card-format";
+import { type ProfileRoute } from "../profile/profile-routes";
+import { type MainTabKey } from "./main-types";
+
+/** Screens pushed over the tabs. `kind` is the route name, the other fields are its params. */
+export type SubScreen =
+  | { kind: "integrations" }
+  | { kind: "strava-integration" }
+  | { kind: "health-integration" }
+  | { kind: "plans"; segment?: PlansSegment; highlightPlanId?: string | null }
+  | { kind: "plan-details"; planId: string }
+  | { kind: "progress-records" }
+  | { kind: "progress-metric"; metric: "threshold_pace" | "vo2max" }
+  | ProfileRoute;
+
+type SubScreenParams = {
+  [K in SubScreen["kind"]]: Omit<Extract<SubScreen, { kind: K }>, "kind"> | undefined;
+};
+
+export type MainStackParamList = SubScreenParams & {
+  main: undefined;
+  trefix: undefined;
+  profileEdit: undefined;
+  notificationsSettings: undefined;
+  languageSettings: undefined;
+  themeSettings: undefined;
+};
+
+export const mainNavigationRef = createNavigationContainerRef<MainStackParamList>();
+
+/** Opens a sub-screen on top of the stack (the same screen may be open twice with other params). */
+export function pushSubScreen(screen: SubScreen): void {
+  if (!mainNavigationRef.isReady()) return;
+  const { kind, ...params } = screen;
+  mainNavigationRef.dispatch(StackActions.push(kind, Object.keys(params).length > 0 ? params : undefined));
+}
+
+export function goBack(): void {
+  if (mainNavigationRef.isReady() && mainNavigationRef.canGoBack()) {
+    mainNavigationRef.goBack();
+  }
+}
+
+/** Closes every pushed screen and shows the tabs. */
+export function popToTabs(): void {
+  if (mainNavigationRef.isReady() && mainNavigationRef.canGoBack()) {
+    mainNavigationRef.dispatch(StackActions.popToTop());
+  }
+}
+
+export function openStackScreen(
+  name: "trefix" | "profileEdit" | "notificationsSettings" | "languageSettings" | "themeSettings",
+): void {
+  if (mainNavigationRef.isReady()) {
+    mainNavigationRef.navigate(name);
+  }
+}
+
+/** State of the main area shared by the tabs and the pushed screens. */
+export type MainShell = {
+  activeTab: MainTabKey;
+  setActiveTab: (tab: MainTabKey) => void;
+  push: (screen: SubScreen) => void;
+  back: () => void;
+  /** The coach chat, or its setting when the coach is off. */
+  openTrefix: () => void;
+};
+
+const MainShellContext = createContext<MainShell | null>(null);
+
+export const MainShellProvider = MainShellContext.Provider;
+
+export function useMainShell(): MainShell {
+  const value = useContext(MainShellContext);
+  if (!value) throw new Error("useMainShell must be used inside MainNavigator");
+  return value;
+}

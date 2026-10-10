@@ -8,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { resolveTheme } from "./theme";
 
 export type SegmentItem<T> = {
   label: string;
@@ -33,10 +34,7 @@ export function Segmented<T>({
   theme,
   themeMode,
 }: SegmentedProps<T>) {
-  const isDark =
-    themeMode === "dark" ||
-    theme?.color.background === "#09090b" ||
-    theme?.color.surface === "#111111";
+  const t = resolveTheme(theme, themeMode);
 
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -84,17 +82,11 @@ export function Segmented<T>({
     };
   });
 
-  const bgContainer = isDark
-    ? "rgba(255, 255, 255, 0.05)"
-    : theme?.color.secondary || "#f4f4f5";
+  const bgContainer = t.color.segmentedTrack;
 
-  const activePillBg = isDark
-    ? "#27272a"
-    : theme?.color.surface || "#ffffff";
+  const activePillBg = t.color.segmentedThumb;
 
-  const activeBorder = isDark
-    ? "rgba(255, 255, 255, 0.12)"
-    : "rgba(0, 0, 0, 0.08)";
+  const activeBorder = t.color.selectionBorder;
 
   return (
     <View
@@ -105,7 +97,7 @@ export function Segmented<T>({
         styles.container,
         {
           backgroundColor: bgContainer,
-          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : theme?.color.border || "#e4e4e7",
+          borderColor: t.color.controlBorder,
         },
         disabled && { opacity: 0.5 },
       ]}
@@ -148,8 +140,8 @@ export function Segmented<T>({
                 styles.label,
                 {
                   color: isSelected
-                    ? theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b")
-                    : theme?.color.mutedForeground || (isDark ? "#a1a1aa" : "#71717a"),
+                    ? t.color.foreground
+                    : t.color.mutedForeground,
                   fontFamily: isSelected
                     ? theme?.typography.fontFamily.sans.bold || "System"
                     : theme?.typography.fontFamily.sans.medium || "System",

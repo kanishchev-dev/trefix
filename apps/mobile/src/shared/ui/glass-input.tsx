@@ -53,7 +53,7 @@ export function GlassInput({
           styles.inputWrapper,
           {
             borderColor: error
-              ? "#dc2626"
+              ? theme.color.danger
               : isFocused
               ? theme.color.foreground
               : theme.color.glassBorder,
@@ -95,7 +95,7 @@ export function GlassInput({
         <Text
           style={[
             styles.errorText,
-            { fontFamily: theme.typography.fontFamily.sans.regular },
+            { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
           ]}
         >
           {error}
@@ -139,7 +139,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   errorText: {
-    color: "#dc2626",
     fontSize: 12,
     marginLeft: 4,
   },

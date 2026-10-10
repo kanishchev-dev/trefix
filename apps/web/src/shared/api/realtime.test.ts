@@ -165,8 +165,8 @@ describe("REALTIME_STATUS_META", () => {
   });
 
   it("marks the live state apart from the others", () => {
-    expect(REALTIME_STATUS_META.connected.dotClassName).toContain("emerald");
-    expect(REALTIME_STATUS_META.disconnected.dotClassName).not.toContain("emerald");
+    expect(REALTIME_STATUS_META.connected.dotClassName).toContain("success");
+    expect(REALTIME_STATUS_META.disconnected.dotClassName).not.toContain("success");
   });
 });
 

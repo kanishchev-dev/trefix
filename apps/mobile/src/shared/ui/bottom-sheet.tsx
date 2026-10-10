@@ -29,7 +29,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { withAlpha, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -447,7 +447,7 @@ export function BottomSheet({
                 styles.card,
                 {
                   borderColor:
-                    themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                    theme.color.controlBorder,
                   backgroundColor: theme.color.sheet,
                 },
               ]}
@@ -482,16 +482,16 @@ export function BottomSheet({
                 {children}
                 <LinearGradient
                   colors={[
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
+                    withAlpha(theme.color.sheet, 0.95),
+                    withAlpha(theme.color.sheet, 0),
                   ]}
                   style={styles.topFade}
                   pointerEvents="none"
                 />
                 <LinearGradient
                   colors={[
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                    withAlpha(theme.color.sheet, 0),
+                    withAlpha(theme.color.sheet, 0.95),
                   ]}
                   style={styles.bottomFade}
                   pointerEvents="none"
@@ -662,7 +662,7 @@ function StackLayer({
             styles.stackCard,
             {
               borderColor:
-                themeMode === "dark" ? "rgba(255, 255, 255, 0.08)" : theme.color.border,
+                theme.color.controlBorder,
               backgroundColor: theme.color.sheet,
             },
           ]}
@@ -696,16 +696,16 @@ function StackLayer({
                 {children}
                 <LinearGradient
                   colors={[
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
+                    withAlpha(theme.color.sheet, 0.95),
+                    withAlpha(theme.color.sheet, 0),
                   ]}
                   style={styles.topFade}
                   pointerEvents="none"
                 />
                 <LinearGradient
                   colors={[
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0)" : "rgba(255, 255, 255, 0)",
-                    themeMode === "dark" ? "rgba(18, 18, 20, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                    withAlpha(theme.color.sheet, 0),
+                    withAlpha(theme.color.sheet, 0.95),
                   ]}
                   style={styles.bottomFade}
                   pointerEvents="none"
@@ -739,7 +739,6 @@ export function SheetButton({
   trailing?: ReactNode;
   style?: object;
 }) {
-  const isDark = themeMode === "dark";
 
   return (
     <Pressable

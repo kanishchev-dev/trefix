@@ -18,7 +18,6 @@ const KNOB_WIDTH = 26;
 const KNOB_HEIGHT = 20;
 const INSET = 2;
 const TRAVEL = TRACK_WIDTH - KNOB_WIDTH - INSET * 2;
-const OFF_TRACK = "rgba(120, 120, 128, 0.32)";
 
 /** Compact black-and-white switch: a capsule knob that springs across a 44×24 track. */
 export function Switch({ value, onValueChange, theme, disabled = false, accessibilityLabel }: Props) {
@@ -29,7 +28,7 @@ export function Switch({ value, onValueChange, theme, disabled = false, accessib
   }, [progress, value]);
 
   const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], [OFF_TRACK, theme.color.primary]),
+    backgroundColor: interpolateColor(progress.value, [0, 1], [theme.color.switchTrackOff, theme.color.primary]),
   }));
   const knobStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: progress.value * TRAVEL }],

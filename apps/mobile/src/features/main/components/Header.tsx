@@ -93,12 +93,12 @@ export function HeaderActionButton({
           colorScheme={isDark ? "dark" : "light"}
           glassEffectStyle="regular"
           isInteractive
-          tintColor={isDark ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
+          tintColor={theme.color.chromeTint}
           style={[
             styles.actionButtonGlass,
             {
-              borderColor: isDark ? "transparent" : theme.color.glassBorder,
-              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
+              borderColor: theme.color.chromeGlassBorder,
+              backgroundColor: theme.color.chromeFill,
             },
           ]}
         >
@@ -109,8 +109,8 @@ export function HeaderActionButton({
           style={[
             styles.actionButtonGlass,
             {
-              borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : theme.color.glassBorder,
-              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
+              borderColor: theme.color.chromeBorder,
+              backgroundColor: theme.color.chromeFill,
             },
           ]}
         >
@@ -153,12 +153,12 @@ export function HeaderTextButton({
           colorScheme={isDark ? "dark" : "light"}
           glassEffectStyle="regular"
           isInteractive
-          tintColor={isDark ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
+          tintColor={theme.color.chromeTint}
           style={[
             styles.textButtonGlass,
             {
-              borderColor: isDark ? "transparent" : theme.color.glassBorder,
-              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
+              borderColor: theme.color.chromeGlassBorder,
+              backgroundColor: theme.color.chromeFill,
             },
           ]}
         >
@@ -179,8 +179,8 @@ export function HeaderTextButton({
           style={[
             styles.textButtonGlass,
             {
-              borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : theme.color.glassBorder,
-              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
+              borderColor: theme.color.chromeBorder,
+              backgroundColor: theme.color.chromeFill,
             },
           ]}
         >
@@ -214,7 +214,6 @@ export function Header({
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const isCalendar = variant === "calendar";
-  const isDark = themeMode === "dark";
 
   return (
     <View
@@ -290,7 +289,7 @@ export function Header({
         <GlassView
           colorScheme={themeMode === "dark" ? "dark" : "light"}
           glassEffectStyle="regular"
-          tintColor={themeMode === "dark" ? "rgba(0, 0, 0, 0.4)" : theme.color.glassTint}
+          tintColor={theme.color.chromeTint}
           style={[
             StyleSheet.absoluteFill,
             {
@@ -304,8 +303,8 @@ export function Header({
               right: -StyleSheet.hairlineWidth,
               borderWidth: StyleSheet.hairlineWidth,
               borderTopWidth: 0,
-              borderColor: themeMode === "dark" ? "transparent" : theme.color.border,
-              backgroundColor: isDark ? theme.color.background : "rgba(255, 255, 255, 0.72)",
+              borderColor: theme.color.chromeGlassBorder,
+              backgroundColor: theme.color.chromeFill,
             },
           ]}
         />
@@ -524,14 +523,8 @@ export function HeaderTitlePill({
       style={[
         styles.titlePill,
         {
-          backgroundColor:
-            theme.color.background === "#09090b"
-              ? "rgba(28, 21, 34, 0.82)"
-              : "rgba(32, 28, 40, 0.8)",
-          borderColor:
-            theme.color.background === "#09090b"
-              ? "rgba(163, 126, 255, 0.2)"
-              : "rgba(129, 92, 214, 0.14)",
+          backgroundColor: theme.color.aiPill,
+          borderColor: theme.color.aiSurface,
         },
       ]}
     >
@@ -550,7 +543,7 @@ export function HeaderTitlePill({
         style={[
           styles.titlePillSubtitle,
           {
-            color: "#5b8cff",
+            color: theme.color.info,
             fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}
@@ -662,14 +655,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
-  },
-  actionButtonDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    borderColor: "rgba(255, 255, 255, 0.08)",
-  },
-  actionButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
-    borderColor: "rgba(9, 9, 11, 0.08)",
   },
   actionButtonPressed: {
     transform: [{ scale: 0.94 }],

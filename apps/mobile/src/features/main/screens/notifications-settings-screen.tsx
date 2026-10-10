@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
+import { Switch } from "../../../shared/ui/switch";
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
 import { type MainCopy } from "../../../locales";
@@ -63,7 +64,6 @@ export function NotificationsSettingsScreen({
     });
   };
 
-  const isDark = themeMode === "dark";
 
   return (
     <SectionLayout
@@ -121,11 +121,7 @@ export function NotificationsSettingsScreen({
             <Switch
               value={settings.workoutReminders}
               onValueChange={() => toggleSetting("workoutReminders")}
-              trackColor={{
-                false: isDark ? "#3f3f46" : "#e4e4e7",
-                true: theme.color.primary,
-              }}
-              thumbColor="#ffffff"
+              theme={theme}
             />
           </View>
 
@@ -161,11 +157,7 @@ export function NotificationsSettingsScreen({
             <Switch
               value={settings.weeklySummary}
               onValueChange={() => toggleSetting("weeklySummary")}
-              trackColor={{
-                false: isDark ? "#3f3f46" : "#e4e4e7",
-                true: theme.color.primary,
-              }}
-              thumbColor="#ffffff"
+              theme={theme}
             />
           </View>
 
@@ -201,11 +193,7 @@ export function NotificationsSettingsScreen({
             <Switch
               value={settings.aiUpdates}
               onValueChange={() => toggleSetting("aiUpdates")}
-              trackColor={{
-                false: isDark ? "#3f3f46" : "#e4e4e7",
-                true: theme.color.primary,
-              }}
-              thumbColor="#ffffff"
+              theme={theme}
             />
           </View>
         </View>

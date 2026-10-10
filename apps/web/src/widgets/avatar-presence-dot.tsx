@@ -31,7 +31,7 @@ export function AvatarPresenceDot({
       role="img"
       aria-label={label}
       title={label}
-      className={`absolute right-0 bottom-0 block rounded-full bg-emerald-500 ring-2 ring-background ${className}`}
+      className={`absolute right-0 bottom-0 block rounded-full bg-success ring-2 ring-background ${className}`}
     />
   );
 }

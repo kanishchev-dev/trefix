@@ -357,9 +357,9 @@ function AssistantMessage({ theme }: { theme: ThemeTokens }) {
                 { backgroundColor: theme.color.glassBackground },
               ]}
             >
-              <View style={styles.typingDot} />
-              <View style={styles.typingDot} />
-              <View style={styles.typingDot} />
+              <View style={[styles.typingDot, { backgroundColor: theme.color.mutedForeground }]} />
+              <View style={[styles.typingDot, { backgroundColor: theme.color.mutedForeground }]} />
+              <View style={[styles.typingDot, { backgroundColor: theme.color.mutedForeground }]} />
             </View>
           ) : null}
         </View>
@@ -467,10 +467,7 @@ function ComposerPanel({
         styles.composerGlass,
         {
           borderColor: theme.color.glassBorder,
-          backgroundColor:
-            themeMode === "dark"
-              ? "rgba(255,255,255,0.04)"
-              : "rgba(255,255,255,0.78)",
+          backgroundColor: theme.color.floating,
         },
       ]}
     >
@@ -591,7 +588,7 @@ function AttachmentPreview({
       {kind === "image" ? (
         <Image
           source={{ uri: attachment.uri }}
-          style={styles.attachmentImage}
+          style={[styles.attachmentImage, { backgroundColor: theme.color.iconSurface }]}
         />
       ) : (
         <View
@@ -846,7 +843,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 999,
-    backgroundColor: "#8f8f95",
   },
   composerDock: {
     position: "absolute",
@@ -876,7 +872,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.08)",
   },
   attachmentIcon: {
     width: 42,

@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { resolveTheme } from "./theme";
 
 const ITEM_HEIGHT = 40;
 const VISIBLE_ITEMS = 5;
@@ -307,12 +308,9 @@ export function DateWheel({
   theme,
   themeMode,
 }: DateWheelProps) {
-  const isDark =
-    themeMode === "dark" ||
-    theme?.color.background === "#09090b" ||
-    theme?.color.surface === "#111111";
-  const color = theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b");
-  const guideColor = theme?.color.border || (isDark ? "#3f3f46" : "#d4d4d8");
+  const t = resolveTheme(theme, themeMode);
+  const color = t.color.foreground;
+  const guideColor = t.color.border;
   const fontFamily = theme?.typography.fontFamily.sans.medium || "System";
 
   const min = useMemo(() => parseIsoDate(minDate), [minDate]);

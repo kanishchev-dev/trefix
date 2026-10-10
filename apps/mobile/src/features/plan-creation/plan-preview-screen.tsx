@@ -544,10 +544,10 @@ export function PlanPreviewScreen({
       <View style={styles.footer} pointerEvents="box-none">
         {submitError ? (
           <View style={styles.inlineErrorRow}>
-            <AlertCircle color="#dc2626" size={14} />
-            <Text style={[styles.inlineErrorText, { fontFamily: regular }]}>{submitError}</Text>
+            <AlertCircle color={theme.color.danger} size={14} />
+            <Text style={[styles.inlineErrorText, { color: theme.color.danger, fontFamily: regular }]}>{submitError}</Text>
             <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void handlePrimary()}>
-              <Text style={[styles.inlineErrorRetry, { fontFamily: semibold }]}>
+              <Text style={[styles.inlineErrorRetry, { color: theme.color.danger, fontFamily: semibold }]}>
                 {creationCopy.errors.tryAgain}
               </Text>
             </Pressable>
@@ -826,12 +826,10 @@ const styles = StyleSheet.create({
   },
   inlineErrorText: {
     flex: 1,
-    color: "#dc2626",
     fontSize: 12,
     lineHeight: 16,
   },
   inlineErrorRetry: {
-    color: "#dc2626",
     fontSize: 12,
     lineHeight: 16,
   },

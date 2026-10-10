@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { resolveTheme } from "./theme";
 import { type ValueControlProps } from "./value-control-types";
 
 export type WheelProps = ValueControlProps<number> & {
@@ -26,15 +27,13 @@ function WheelItem({
   itemHeight,
   formatValue,
   theme,
-  isDark,
 }: {
   item: number;
   index: number;
   translateY: SharedValue<number>;
   itemHeight: number;
   formatValue?: (v: number) => string;
-  theme?: ThemeTokens;
-  isDark: boolean;
+  theme: ThemeTokens;
 }) {
   const itemOffset = index * itemHeight;
 
@@ -77,8 +76,8 @@ function WheelItem({
         style={[
           styles.itemText,
           {
-            color: theme?.color.foreground || (isDark ? "#f8fafc" : "#09090b"),
-            fontFamily: theme?.typography.fontFamily.sans.bold || "System",
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.bold,
             fontSize: 18,
           },
         ]}
@@ -103,10 +102,7 @@ export function Wheel({
   itemHeight = 40,
   visibleItems = 3,
 }: WheelProps) {
-  const isDark =
-    themeMode === "dark" ||
-    theme?.color.background === "#09090b" ||
-    theme?.color.surface === "#111111";
+  const t = resolveTheme(theme, themeMode);
 
   const effectiveMin = min ?? 0;
   const effectiveMax = max ?? 100;
@@ -208,8 +204,8 @@ export function Wheel({
           {
             height: itemHeight,
             top: topOffset,
-            backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
-            borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
+            backgroundColor: t.color.selectionFill,
+            borderColor: t.color.selectionBorder,
           },
         ]}
         pointerEvents="none"
@@ -226,8 +222,7 @@ export function Wheel({
                 translateY={translateY}
                 itemHeight={itemHeight}
                 formatValue={formatValue}
-                theme={theme}
-                isDark={isDark}
+                theme={t}
               />
             ))}
           </Animated.View>

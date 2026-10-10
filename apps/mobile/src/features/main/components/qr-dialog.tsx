@@ -34,7 +34,7 @@ export function QrDialog({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onClose}>
+        <Pressable style={[styles.backdrop, { backgroundColor: theme.color.scrim }]} onPress={onClose}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
         </Pressable>
 
@@ -73,7 +73,7 @@ export function QrDialog({
             <View
               style={[
                 styles.qrContainer,
-                { backgroundColor: themeMode === 'dark' ? '#09090b' : '#ffffff' }
+                { backgroundColor: themeMode === 'dark' ? theme.color.background : theme.color.surface }
               ]}
             >
               <Image
@@ -145,7 +145,6 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
   container: {
     width: "100%",

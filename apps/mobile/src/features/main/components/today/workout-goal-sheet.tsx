@@ -152,8 +152,8 @@ export function WorkoutGoalSheet({
         </SheetBlock>
         {errorMessage ? (
           <SheetBlock theme={theme}>
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{errorMessage}</Text>
+            <View style={[styles.errorBanner, { backgroundColor: theme.color.dangerSurface }]}>
+              <Text style={[styles.errorText, { color: theme.color.danger }]}>{errorMessage}</Text>
             </View>
           </SheetBlock>
         ) : null}
@@ -212,9 +212,7 @@ export function WorkoutGoalSheet({
                       ? theme.color.primary
                       : theme.color.control,
                     borderColor:
-                      themeMode === "dark"
-                        ? "rgba(255, 255, 255, 0.08)"
-                        : theme.color.border,
+                      theme.color.controlBorder,
                   },
                 ]}
               >
@@ -278,13 +276,11 @@ const styles = StyleSheet.create({
     paddingBottom: 84,
   },
   errorBanner: {
-    backgroundColor: "rgba(220, 38, 38, 0.2)",
     padding: 12,
     borderRadius: 12,
     width: "100%",
   },
   errorText: {
-    color: "#dc2626",
     fontSize: 13,
     textAlign: "center",
   },

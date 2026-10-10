@@ -139,7 +139,7 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
               />
             )}
 
-            <View style={[styles.cameraBadge, { backgroundColor: theme.color.primary }]}>
+            <View style={[styles.cameraBadge, { backgroundColor: theme.color.primary, borderColor: theme.color.glassBorder }]}>
               {isUploading ? (
                 <ActivityIndicator size="small" color={theme.color.primaryForeground} />
               ) : (
@@ -260,7 +260,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.1)",
   },
   heroText: {
     fontSize: 14,

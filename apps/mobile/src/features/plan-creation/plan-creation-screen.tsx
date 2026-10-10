@@ -182,7 +182,7 @@ function PrefilledPlanFlow(props: Props & { launch: Exclude<PlanCreationLaunch, 
   if (!setup) {
     const failed = prefillQuery.isError || detailsQuery.isError;
     return (
-      <View style={[styles.root, styles.loadingOverlay]}>
+      <View style={[styles.root, styles.loadingOverlay, { backgroundColor: theme.color.scrim }]}>
         {failed ? (
           <Card size="sm" theme={theme} themeMode={props.themeMode} style={styles.loadingCard}>
             <Text style={[styles.stepQuestion, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
@@ -859,11 +859,11 @@ function PlanCreationStepLayer({
       {previewMutation.error && isActive ? (
         <SheetBlock theme={theme}>
           <View style={styles.inlineErrorRow}>
-            <AlertCircle color="#dc2626" size={14} />
+            <AlertCircle color={theme.color.danger} size={14} />
             <Text
               style={[
                 styles.inlineErrorText,
-                { fontFamily: theme.typography.fontFamily.sans.regular },
+                { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
               ]}
             >
               {previewMutation.error}
@@ -939,7 +939,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "rgba(0, 0, 0, 0.25)",
   },
   loadingCard: {
     alignSelf: "stretch",

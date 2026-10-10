@@ -150,9 +150,9 @@ export function AddWorkoutSheet({
         </SheetBlock>
         {errorMessage ? (
           <View
-            style={[styles.errorBanner, { backgroundColor: "rgba(220, 38, 38, 0.2)" }]}
+            style={[styles.errorBanner, { backgroundColor: theme.color.dangerSurface }]}
           >
-            <Text style={[styles.errorText, { color: "#dc2626" }]}>{errorMessage}</Text>
+            <Text style={[styles.errorText, { color: theme.color.danger }]}>{errorMessage}</Text>
           </View>
         ) : null}
 
@@ -201,9 +201,7 @@ export function AddWorkoutSheet({
                       ? theme.color.primary
                       : theme.color.control,
                     borderColor:
-                      themeMode === "dark"
-                        ? "rgba(255, 255, 255, 0.08)"
-                        : theme.color.border,
+                      theme.color.controlBorder,
                   },
                 ]}
               >

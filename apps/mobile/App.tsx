@@ -37,15 +37,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { AuthScreen } from "./src/features/auth/auth-screen";
 import { AuthVerificationScreen } from "./src/features/auth/auth-verification-screen";
-import { MainTabsScreen } from "./src/features/main/main-tabs-screen";
-import { TrefixScreen } from "./src/features/main/screens/trefix-screen";
-import { ProfileEditScreen } from "./src/features/main/screens/profile-edit-screen";
-import { NotificationsSettingsScreen } from "./src/features/main/screens/notifications-settings-screen";
-import { LanguageSettingsScreen } from "./src/features/main/screens/language-settings-screen";
-import {
-  ThemeSettingsScreen,
-  type ThemePreference,
-} from "./src/features/main/screens/theme-settings-screen";
+import { MainNavigator } from "./src/features/main/main-navigator";
+import { mainNavigationRef } from "./src/features/main/main-routes";
+import { type ThemePreference } from "./src/features/main/screens/theme-settings-screen";
 import {
   logout,
   requestEmailOtp,
@@ -79,17 +73,7 @@ type AuthStackParamList = {
   verification: undefined;
 };
 
-type MainStackParamList = {
-  main: undefined;
-  trefix: undefined;
-  profileEdit: undefined;
-  notificationsSettings: undefined;
-  languageSettings: undefined;
-  themeSettings: undefined;
-};
-
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const MainStack = createNativeStackNavigator<MainStackParamList>();
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -426,124 +410,19 @@ export default function App() {
             }}
           >
             <SafeAreaProvider>
-              <NavigationContainer>
-              <MainStack.Navigator
-                screenOptions={{
-                  headerShown: false,
-                }}
-              >
-                <MainStack.Screen
-                  name="main"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <MainTabsScreen
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy}
-                      userEmail={session.user.email}
-                      userLanguage={language}
-                      userTheme={userTheme}
-                      onOpenTrefix={() => {
-                        navigation.navigate("trefix");
-                      }}
-                      onLogout={handleLogout}
-                      onAccountDeleted={() => void handleAccountDeleted()}
-                      onEditProfile={() => {
-                        navigation.navigate("profileEdit");
-                      }}
-                      onOpenNotifications={() => {
-                        navigation.navigate("notificationsSettings");
-                      }}
-                      onOpenLanguage={() => {
-                        navigation.navigate("languageSettings");
-                      }}
-                      onOpenTheme={() => {
-                        navigation.navigate("themeSettings");
-                      }}
-                    />
-                  )}
-                </MainStack.Screen>
-                <MainStack.Screen
-                  name="profileEdit"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <ProfileEditScreen
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy}
-                      onBack={() => {
-                        navigation.goBack();
-                      }}
-                    />
-                  )}
-                </MainStack.Screen>
-                <MainStack.Screen
-                  name="notificationsSettings"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <NotificationsSettingsScreen
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy}
-                      onBack={() => {
-                        navigation.goBack();
-                      }}
-                    />
-                  )}
-                </MainStack.Screen>
-                <MainStack.Screen
-                  name="languageSettings"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <LanguageSettingsScreen
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy}
-                      selectedLanguage={language}
-                      onSelectLanguage={handleSelectLanguage}
-                      onBack={() => {
-                        navigation.goBack();
-                      }}
-                    />
-                  )}
-                </MainStack.Screen>
-                <MainStack.Screen
-                  name="themeSettings"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <ThemeSettingsScreen
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy}
-                      selectedTheme={userTheme}
-                      onSelectTheme={handleSelectTheme}
-                      onBack={() => {
-                        navigation.goBack();
-                      }}
-                    />
-                  )}
-                </MainStack.Screen>
-                <MainStack.Screen
-                  name="trefix"
-                  options={{ headerShown: false }}
-                >
-                  {({ navigation }) => (
-                    <TrefixScreen
-                      onBack={() => {
-                        navigation.goBack();
-                      }}
-                      theme={theme}
-                      themeMode={themeMode}
-                      copy={mainCopy.trefix}
-                    />
-                  )}
-                </MainStack.Screen>
-              </MainStack.Navigator>
+              <NavigationContainer ref={mainNavigationRef}>
+                <MainNavigator
+                  theme={theme}
+                  themeMode={themeMode}
+                  copy={mainCopy}
+                  userEmail={session.user.email}
+                  language={language}
+                  userTheme={userTheme}
+                  onLogout={handleLogout}
+                  onAccountDeleted={() => void handleAccountDeleted()}
+                  onSelectLanguage={handleSelectLanguage}
+                  onSelectTheme={handleSelectTheme}
+                />
               <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
             </NavigationContainer>
           </SafeAreaProvider>
