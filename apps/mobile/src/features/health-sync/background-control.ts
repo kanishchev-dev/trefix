@@ -1,14 +1,29 @@
+import { requireOptionalNativeModule } from "expo";
 import { Platform } from "react-native";
+
+import { getHealthSource } from "./sources";
 
 export const HEALTH_BACKGROUND_TASK = "trefix-health-sync";
 export const HEALTH_WORKOUT_TYPE = "HKWorkoutTypeIdentifier";
 const ANDROID_INTERVAL_MINUTES = 60;
 
 type HealthKitModule = typeof import("@kingstinct/react-native-healthkit");
-const healthKit = (): HealthKitModule => require("@kingstinct/react-native-healthkit") as HealthKitModule;
+
+/** HealthKit only when this build contains it (see `getHealthSource`); otherwise background stays off. */
+function healthKit(): HealthKitModule {
+  if (!getHealthSource()) throw new Error("HealthKit is not in this build");
+  return require("@kingstinct/react-native-healthkit") as HealthKitModule;
+}
 
 let iosSubscription: { remove: () => unknown } | null = null;
 let iosListener: (() => void) | null = null;
+
+/** Android background task modules are in this build (same reason as `getHealthSource`: probe before `require`). */
+export function hasBackgroundTaskModules(): boolean {
+  return (
+    requireOptionalNativeModule("ExpoTaskManager") != null && requireOptionalNativeModule("ExpoBackgroundTask") != null
+  );
+}
 
 /** The handler a HealthKit wake runs; set once by `registerHealthBackgroundHandlers`. */
 export function setIosWorkoutListener(listener: () => void): void {
@@ -35,6 +50,7 @@ export async function enableHealthBackground(): Promise<void> {
     return;
   }
   if (Platform.OS === "android") {
+    if (!getHealthSource() || !hasBackgroundTaskModules()) return;
     const BackgroundTask = require("expo-background-task") as typeof import("expo-background-task");
     await BackgroundTask.registerTaskAsync(HEALTH_BACKGROUND_TASK, { minimumInterval: ANDROID_INTERVAL_MINUTES });
   }
@@ -49,6 +65,7 @@ export async function disableHealthBackground(): Promise<void> {
       return;
     }
     if (Platform.OS === "android") {
+      if (!hasBackgroundTaskModules()) return;
       const BackgroundTask = require("expo-background-task") as typeof import("expo-background-task");
       const TaskManager = require("expo-task-manager") as typeof import("expo-task-manager");
       if (await TaskManager.isTaskRegisteredAsync(HEALTH_BACKGROUND_TASK)) {

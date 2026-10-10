@@ -1,6 +1,11 @@
 import { Platform } from "react-native";
 
-import { HEALTH_BACKGROUND_TASK, setIosWorkoutListener, subscribeToIosWorkouts } from "./background-control";
+import {
+  hasBackgroundTaskModules,
+  HEALTH_BACKGROUND_TASK,
+  setIosWorkoutListener,
+  subscribeToIosWorkouts,
+} from "./background-control";
 import { BACKGROUND_BUDGET_MS, syncHealthNow } from "./runner";
 import { getActiveHealthSync } from "./state";
 
@@ -11,6 +16,7 @@ import { getActiveHealthSync } from "./state";
  */
 export function registerHealthBackgroundHandlers(): void {
   if (Platform.OS === "android") {
+    if (!hasBackgroundTaskModules()) return;
     let TaskManager: typeof import("expo-task-manager");
     let BackgroundTask: typeof import("expo-background-task");
     try {

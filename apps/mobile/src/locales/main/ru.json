@@ -816,7 +816,7 @@
         "importingHistory": "Импорт истории тренировок..."
       },
       "health": {
-        "appleTitle": "Apple Здоровье",
+        "appleTitle": "Apple Health",
         "connectTitle": "Health Connect",
         "status": {
           "disconnected": "Не подключено",
@@ -850,7 +850,7 @@
         "profileSync": "Обновлять профиль",
         "profileSyncDescription": "Вес и пульс покоя",
         "access": "Доступ к данным",
-        "accessDescriptionIos": "Разрешения в приложении «Здоровье»",
+        "accessDescriptionIos": "Разрешения в Apple Health",
         "accessDescriptionAndroid": "Разрешения Health Connect",
         "disconnect": "Отключить",
         "disconnectTitle": "Отключить {{store}}?",
@@ -858,8 +858,8 @@
         "disconnectConfirm": "Отключить",
         "disconnected": "{{store}} отключено",
         "noWorkoutsTitle": "Тренировок не нашлось",
-        "noWorkoutsBody": "Проверьте, что Trefix разрешено читать «Тренировки» в приложении «Здоровье».",
-        "openHealth": "Открыть «Здоровье»",
+        "noWorkoutsBody": "Проверьте, что Trefix разрешено читать «Тренировки» в Apple Health.",
+        "openHealth": "Открыть Apple Health",
         "historyTitle": "Загружены только последние 30 дней",
         "historyBody": "Разрешите доступ к истории, чтобы загрузить тренировки за полгода.",
         "historyAction": "Разрешить доступ к истории",
@@ -873,7 +873,7 @@
         "updateBody": "Установленная версия Health Connect устарела.",
         "update": "Обновить",
         "unsupportedTitle": "Недоступно на этом устройстве",
-        "unsupportedBodyIos": "На этом устройстве нет приложения «Здоровье».",
+        "unsupportedBodyIos": "На этом устройстве нет Apple Health.",
         "unsupportedBodyAndroid": "Health Connect недоступен на этом устройстве.",
         "syncFailed": "Не удалось синхронизировать",
         "synced": "Синхронизировано",

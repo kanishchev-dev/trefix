@@ -7,6 +7,7 @@ import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import { type AppLanguage, type MainCopy } from "../../../locales";
+import { StravaCompatibleLogo, StravaConnectButton } from "../../../shared/ui/integration-logo";
 import {
   useConnectStrava,
   useDisconnectStrava,
@@ -97,9 +98,7 @@ export function StravaIntegrationScreen({
             },
           ]}
         >
-          <View style={[styles.brandBadge, { backgroundColor: "#FC4C02" }]}>
-            <Text style={styles.brandBadgeText}>STRAVA</Text>
-          </View>
+          <StravaCompatibleLogo themeMode={themeMode} />
 
           <Text
             style={[
@@ -318,52 +317,20 @@ export function StravaIntegrationScreen({
               </Text>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              disabled={connectMutation.isPending}
-              onPress={handleConnect}
-              style={({ pressed }) => [
-                styles.connectButton,
-                { backgroundColor: "#FC4C02" },
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.connectButtonText,
-                  { fontFamily: theme.typography.fontFamily.sans.medium },
-                ]}
-              >
-                {copy.profile.integrations.strava.reconnectBtn}
-              </Text>
-            </Pressable>
+            <StravaConnectButton
+              onPress={() => void handleConnect()}
+              pending={connectMutation.isPending}
+              accessibilityLabel={copy.profile.integrations.strava.reconnectBtn}
+            />
           </View>
         ) : (
           /* Disconnected State */
           <View style={styles.disconnectedStack}>
-            <Pressable
-              accessibilityRole="button"
-              disabled={connectMutation.isPending}
-              onPress={handleConnect}
-              style={({ pressed }) => [
-                styles.connectButton,
-                { backgroundColor: "#FC4C02" },
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              {connectMutation.isPending ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text
-                  style={[
-                    styles.connectButtonText,
-                    { fontFamily: theme.typography.fontFamily.sans.medium },
-                  ]}
-                >
-                  {copy.profile.integrations.strava.connectBtn}
-                </Text>
-              )}
-            </Pressable>
+            <StravaConnectButton
+              onPress={() => void handleConnect()}
+              pending={connectMutation.isPending}
+              accessibilityLabel={copy.profile.integrations.strava.connectBtn}
+            />
           </View>
         )}
       </View>
@@ -382,17 +349,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     gap: 12,
-  },
-  brandBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  brandBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1,
   },
   heroTitle: {
     fontSize: 20,
@@ -456,17 +412,6 @@ const styles = StyleSheet.create({
   errorDesc: {
     fontSize: 14,
     lineHeight: 20,
-  },
-  connectButton: {
-    minHeight: 52,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  connectButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
   },
   syncButton: {
     minHeight: 48,

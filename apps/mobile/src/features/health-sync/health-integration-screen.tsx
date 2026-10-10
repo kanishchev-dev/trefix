@@ -40,7 +40,8 @@ import {
   useRequestHealthHistory,
   useSetHealthProfileSync,
 } from "./hooks";
-import { getHealthSource } from "./sources";
+import { HealthLogo } from "./components/health-logo";
+import { getHealthSource, platformHealthProvider } from "./sources";
 
 type Props = {
   theme: ThemeTokens;
@@ -59,6 +60,7 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
   const h = copy.profile.integrations.health;
   const storeName = healthStoreName(copy);
   const source = getHealthSource();
+  const provider = platformHealthProvider();
   const isIos = Platform.OS === "ios";
   const { showToast } = useToast();
 
@@ -308,6 +310,14 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
 
   return (
     <ProfileSubScreen title={storeName} onBack={onBack} theme={theme} themeMode={themeMode}>
+      {provider ? (
+        <View style={styles.hero}>
+          <HealthLogo provider={provider} themeMode={themeMode} size={56} />
+          <Text style={[styles.heroTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+            {storeName}
+          </Text>
+        </View>
+      ) : null}
       {availability.isLoading || isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={theme.color.mutedForeground} />
@@ -355,6 +365,15 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    alignItems: "center",
+    gap: 6,
+    paddingTop: 4,
+  },
+  heroTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+  },
   loading: {
     paddingVertical: 48,
     alignItems: "center",

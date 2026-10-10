@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ChevronRight, HeartPulse, RefreshCw } from "lucide-react-native";
+import { ChevronRight, RefreshCw } from "lucide-react-native";
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
@@ -10,6 +10,8 @@ import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales"
 import { useHealthAvailability, useHealthProvider } from "../../health-sync/hooks";
 import { healthStoreName } from "../../health-sync/health-integration-screen";
 import { getHealthSource } from "../../health-sync/sources";
+import { HealthLogo } from "../../health-sync/components/health-logo";
+import { IntegrationLogo } from "../../../shared/ui/integration-logo";
 import { formatAgo } from "../../profile/lib/profile-format";
 import { useIntegrations } from "../hooks/use-integrations";
 
@@ -192,11 +194,7 @@ export function IntegrationsScreen({
                 theme={theme}
                 title={healthStoreName(copy)}
                 subtitle={healthAvailable ? healthSubtitle() : copy.profile.integrations.comingSoon}
-                icon={
-                  <View style={[styles.stravaIcon, { backgroundColor: theme.color.iconSurface }]}>
-                    <HeartPulse color={theme.color.foreground} size={18} strokeWidth={2.2} />
-                  </View>
-                }
+                icon={<HealthLogo provider={healthProvider} themeMode={themeMode} size={32} />}
                 onPress={healthAvailable ? onOpenHealth : undefined}
                 disabled={!healthAvailable}
               />
@@ -207,16 +205,7 @@ export function IntegrationsScreen({
             theme={theme}
             title="Strava"
             subtitle={getStravaSubtitle()}
-            icon={
-              <View
-                style={[
-                  styles.stravaIcon,
-                  { backgroundColor: "#FC4C02" },
-                ]}
-              >
-                <Text style={styles.stravaIconText}>S</Text>
-              </View>
-            }
+            icon={<IntegrationLogo provider="strava" themeMode={themeMode} size={32} />}
             onPress={onOpenStrava}
           />
           <View
@@ -226,6 +215,7 @@ export function IntegrationsScreen({
             theme={theme}
             title="Garmin Connect"
             subtitle={copy.profile.integrations.comingSoon}
+            icon={<IntegrationLogo provider="garmin" themeMode={themeMode} size={32} />}
             disabled
           />
         </View>
@@ -273,18 +263,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-  },
-  stravaIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stravaIconText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 18,
   },
   textWrap: {
     flex: 1,

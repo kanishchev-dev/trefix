@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Platform, TurboModuleRegistry } from "react-native";
 import type { DeviceProvider } from "@workspace/api-client";
 
 import type { DeviceHealthSource } from "../types";
@@ -6,14 +6,40 @@ import type { DeviceHealthSource } from "../types";
 let cached: DeviceHealthSource | null | undefined;
 
 /**
- * The health store of this platform; null where there is none or where the
- * native module is missing from the binary (a dev client or store build made
- * before the health libraries were added, Expo Go). Loading a Nitro module
- * that is not linked throws at import time, so the import is guarded here and
- * the rest of the app keeps working.
+ * Whether this binary contains the native side of the platform's health
+ * library. A build made before the libraries were added (or Expo Go) lacks it.
+ *
+ * This must be decided before `require`: in development Metro reports an
+ * error thrown while a module initializes as fatal (red screen) and does not
+ * rethrow it, so a try/catch around `require` cannot keep the app alive.
  */
+function hasNativeHealthModule(): boolean {
+  try {
+    if (Platform.OS === "android") {
+      return TurboModuleRegistry.get("HealthConnect") != null;
+    }
+    if (Platform.OS === "ios") {
+      if (TurboModuleRegistry.get("NitroModules") == null) return false;
+      // Nitro is linked, so loading it is safe; HealthKit registers its hybrid objects there.
+      const { NitroModules } = require("react-native-nitro-modules") as typeof import("react-native-nitro-modules");
+      return NitroModules.hasHybridObject("CoreModule") && NitroModules.hasHybridObject("WorkoutsModule");
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+/** The health store of this platform; null where there is none or where the native module is missing. */
 export function getHealthSource(): DeviceHealthSource | null {
   if (cached !== undefined) return cached;
+  if (!hasNativeHealthModule()) {
+    if (__DEV__) {
+      console.warn("[HealthSync] Native health module is not in this build; rebuild the app (expo run:ios / run:android).");
+    }
+    cached = null;
+    return cached;
+  }
   try {
     if (Platform.OS === "ios") {
       cached = (require("./apple-health-source") as typeof import("./apple-health-source")).appleHealthSource;
@@ -22,13 +48,10 @@ export function getHealthSource(): DeviceHealthSource | null {
     } else {
       cached = null;
     }
-  } catch (error) {
-    if (__DEV__) {
-      console.warn("[HealthSync] Native health module is unavailable; rebuild the app to enable it.", error);
-    }
+  } catch {
     cached = null;
   }
-  return cached;
+  return cached ?? null;
 }
 
 export function platformHealthProvider(): DeviceProvider | null {
