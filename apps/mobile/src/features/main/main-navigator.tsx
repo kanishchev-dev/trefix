@@ -44,12 +44,11 @@ import {
   mainNavigationRef,
   MainShellProvider,
   openStackScreen,
-  popToTabs,
+  openTab,
   pushSubScreen,
   type MainShell,
   type MainStackParamList,
 } from "./main-routes";
-import { type MainTabKey } from "./main-types";
 import { IntegrationsScreen } from "./screens/integrations-screen";
 import { LanguageSettingsScreen } from "./screens/language-settings-screen";
 import { NotificationsSettingsScreen } from "./screens/notifications-settings-screen";
@@ -96,7 +95,6 @@ function MainStackHost({
   onSelectLanguage,
   onSelectTheme,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<MainTabKey>("today");
   const [planCreationSheetVisible, setPlanCreationSheetVisible] = useState(false);
   const [creationLaunch, setCreationLaunch] = useState<PlanCreationLaunch | null>(null);
   const [draftEditPlanId, setDraftEditPlanId] = useState<string | null>(null);
@@ -123,10 +121,7 @@ function MainStackHost({
     }
   }, [preferences.coachEnabled]);
 
-  const openPlanTab = useCallback(() => {
-    popToTabs();
-    setActiveTab("plan");
-  }, []);
+  const openPlanTab = useCallback(() => openTab("plan"), []);
 
   const openPlans = useCallback<PlansNavigation["openPlans"]>((options) => {
     trackEvent("plans_opened", { source: options?.source ?? "unknown" });
@@ -171,8 +166,8 @@ function MainStackHost({
   );
 
   const shell = useMemo<MainShell>(
-    () => ({ activeTab, setActiveTab, push: pushSubScreen, back: goBack, openTrefix }),
-    [activeTab, openTrefix],
+    () => ({ push: pushSubScreen, back: goBack, openTrefix }),
+    [openTrefix],
   );
 
   const frame = (children: ReactNode) => (

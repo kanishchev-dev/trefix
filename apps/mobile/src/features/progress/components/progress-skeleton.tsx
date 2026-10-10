@@ -34,87 +34,40 @@ export function ProgressSkeleton({ theme }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Period Selector Skeleton */}
-      <View style={[styles.skeletonBar, { backgroundColor: theme.color.surface }]}>
-        <Animated.View
-          style={[
-            styles.skeletonBlock,
-            { backgroundColor: skeletonBg, opacity: opacityAnim, height: 32 },
-          ]}
-        />
-      </View>
-
-      {/* Form Overview Skeleton */}
-      <View style={[styles.skeletonCard, { backgroundColor: theme.color.surface }]}>
-        <Animated.View
-          style={[
-            styles.skeletonBlock,
-            { backgroundColor: skeletonBg, opacity: opacityAnim, width: 120, height: 12, marginBottom: 16 },
-          ]}
-        />
-        <View style={styles.row}>
-          <Animated.View
-            style={[
-              styles.skeletonBlock,
-              { backgroundColor: skeletonBg, opacity: opacityAnim, width: 100, height: 50 },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.skeletonBlock,
-              { backgroundColor: skeletonBg, opacity: opacityAnim, width: 120, height: 50 },
-            ]}
-          />
-        </View>
-      </View>
-
-      {/* Capabilities Section Skeleton */}
-      <View style={styles.grid}>
-        {[1, 2, 3, 4].map((i) => (
-          <View key={i} style={styles.gridCol}>
-            <View style={[styles.skeletonCard, { backgroundColor: theme.color.surface }]}>
-              <Animated.View
-                style={[
-                  styles.skeletonBlock,
-                  { backgroundColor: skeletonBg, opacity: opacityAnim, height: 40 },
-                ]}
-              />
-            </View>
+      {[0, 1, 2].map((section) => (
+        <View key={section} style={styles.section}>
+          <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, width: 140, height: 18 }]} />
+          <View style={styles.row}>
+            {[0, 1, 2].map((column) => (
+              <View key={column} style={styles.column}>
+                <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, width: "60%", height: 12 }]} />
+                <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, width: "80%", height: 22 }]} />
+              </View>
+            ))}
           </View>
-        ))}
-      </View>
+          <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, height: 56 }]} />
+        </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 32,
   },
-  skeletonBar: {
-    padding: 6,
-    borderRadius: 14,
+  section: {
+    gap: 14,
   },
-  skeletonCard: {
-    padding: 20,
-    borderRadius: 24,
-  },
-  skeletonBlock: {
-    borderRadius: 10,
+  block: {
+    borderRadius: 8,
   },
   row: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    gap: 8,
   },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -6,
-    rowGap: 12,
-  },
-  gridCol: {
-    width: "50%",
-    paddingHorizontal: 6,
+  column: {
+    flex: 1,
+    gap: 6,
   },
 });

@@ -6,7 +6,7 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import {
   HeaderLogo,
   HeaderPlusButton,
-  HeaderTemplateButton,
+  HeaderTextButton,
 } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
@@ -66,8 +66,9 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
   useHeaderOptions(
     {
       leftAction: (
-        <HeaderTemplateButton
+        <HeaderTextButton
           accessibilityLabel={copy.plans.tab.openPlans}
+          label={copy.plans.tab.plansButton}
           onPress={() => navigation.openPlans({ source: "plan_tab" })}
           theme={theme}
           themeMode={themeMode}
@@ -84,7 +85,7 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
       variant: "default",
       bottomContent: null,
     },
-    [logoSource, copy.plans.tab.openPlans, navigation],
+    [logoSource, copy.plans.tab.openPlans, copy.plans.tab.plansButton, navigation],
   );
 
   const dayNames = shortDayNamesFor(language);

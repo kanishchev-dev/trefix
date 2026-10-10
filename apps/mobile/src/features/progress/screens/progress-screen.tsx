@@ -109,14 +109,14 @@ export function ProgressScreen({
             <AchievementsSection {...common} overview={data} />
           </>
         ) : overview.isError ? (
-          <View style={[styles.errorCard, { backgroundColor: theme.color.card }]}>
+          <View style={styles.errorCard}>
             <Text style={[styles.errorText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
               {copy.progress.loadError}
             </Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => void overview.refetch()}
-              style={({ pressed }) => [styles.retry, { backgroundColor: theme.color.surface }, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.retry, { backgroundColor: theme.color.controlSecondary }, pressed && styles.pressed]}
             >
               <Text style={[styles.errorText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
                 {copy.progress.retry}
@@ -142,8 +142,8 @@ export function ProgressScreen({
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: 22, paddingTop: 4 },
-  errorCard: { borderRadius: 24, padding: 18, gap: 12, alignItems: "flex-start" },
+  stack: { gap: 32, paddingTop: 4 },
+  errorCard: { gap: 12, alignItems: "flex-start" },
   errorText: { fontSize: 15, lineHeight: 20 },
   retry: { height: 40, paddingHorizontal: 16, borderRadius: 20, justifyContent: "center" },
   pressed: { opacity: 0.82 },

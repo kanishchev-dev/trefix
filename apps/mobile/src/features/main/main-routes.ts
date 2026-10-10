@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { createNavigationContainerRef, StackActions } from "@react-navigation/native";
+import { createNavigationContainerRef, StackActions, type NavigatorScreenParams } from "@react-navigation/native";
 
 import { type PlansSegment } from "../plans/lib/plan-card-format";
 import { type ProfileRoute } from "../profile/profile-routes";
@@ -20,8 +20,10 @@ type SubScreenParams = {
   [K in SubScreen["kind"]]: Omit<Extract<SubScreen, { kind: K }>, "kind"> | undefined;
 };
 
+export type MainTabParamList = Record<MainTabKey, undefined>;
+
 export type MainStackParamList = SubScreenParams & {
-  main: undefined;
+  main: NavigatorScreenParams<MainTabParamList> | undefined;
   trefix: undefined;
   profileEdit: undefined;
   notificationsSettings: undefined;
@@ -51,6 +53,14 @@ export function popToTabs(): void {
   }
 }
 
+/** Closes every pushed screen and switches to the tab. */
+export function openTab(tab: MainTabKey): void {
+  popToTabs();
+  if (mainNavigationRef.isReady()) {
+    mainNavigationRef.navigate("main", { screen: tab });
+  }
+}
+
 export function openStackScreen(
   name: "trefix" | "profileEdit" | "notificationsSettings" | "languageSettings" | "themeSettings",
 ): void {
@@ -59,10 +69,8 @@ export function openStackScreen(
   }
 }
 
-/** State of the main area shared by the tabs and the pushed screens. */
+/** Actions shared by the tabs and the pushed screens. */
 export type MainShell = {
-  activeTab: MainTabKey;
-  setActiveTab: (tab: MainTabKey) => void;
   push: (screen: SubScreen) => void;
   back: () => void;
   /** The coach chat, or its setting when the coach is off. */

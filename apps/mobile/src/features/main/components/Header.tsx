@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   Bell,
   EllipsisVertical,
-  LayoutGrid,
   Menu,
   Plus,
   QrCode,
@@ -551,28 +550,6 @@ export function HeaderTitlePill({
         {subtitle}
       </Text>
     </View>
-  );
-}
-
-export function HeaderTemplateButton({
-  theme,
-  themeMode,
-  onPress,
-  accessibilityLabel = "Action",
-}: {
-  theme: ThemeTokens;
-  themeMode: ThemeMode;
-  onPress: () => void;
-  accessibilityLabel?: string;
-}) {
-  return (
-    <HeaderActionButton
-      accessibilityLabel={accessibilityLabel}
-      themeMode={themeMode}
-      theme={theme}
-      icon={<LayoutGrid color={theme.color.foreground} size={20} strokeWidth={2.2} />}
-      onPress={onPress}
-    />
   );
 }
 

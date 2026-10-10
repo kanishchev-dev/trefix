@@ -1,41 +1,61 @@
-import { Children, Fragment, isValidElement, type ReactNode } from "react";
+import { Children, createContext, Fragment, isValidElement, useContext, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 
-/** Group title above a card: sentence case, 12px medium, foreground at 70%. */
-export function SectionTitle({ text, theme }: { text: string; theme: ThemeTokens }) {
+/**
+ * Group title: above a card — sentence case, 12px medium, foreground at 70%;
+ * `large` — the heading of a section laid straight on the page.
+ */
+export function SectionTitle({ text, theme, large = false }: { text: string; theme: ThemeTokens; large?: boolean }) {
   return (
     <Text
       accessibilityRole="header"
-      style={[styles.sectionTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}
+      style={[
+        large ? styles.sectionTitleLarge : styles.sectionTitle,
+        { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium },
+      ]}
     >
       {text}
     </Text>
   );
 }
 
-/** Charcoal card of rows separated by hairlines. */
+/** Rows of a plain list sit flush with the page edge instead of the card padding. */
+const PlainListContext = createContext(false);
+
+/**
+ * Rows separated by hairlines: on a card, or `plain` — straight on the page,
+ * flush with the section title.
+ */
 export function ListCard({
   theme,
   children,
   style,
+  plain = false,
 }: {
   theme: ThemeTokens;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  plain?: boolean;
 }) {
   const rows = Children.toArray(children).filter(isValidElement);
   return (
-    <View style={[styles.card, { backgroundColor: theme.color.card }, style]}>
-      {rows.map((row, index) => (
-        <Fragment key={row.key ?? index}>
-          {index > 0 ? <View style={[styles.separator, { backgroundColor: theme.color.separator }]} /> : null}
-          {row}
-        </Fragment>
-      ))}
-    </View>
+    <PlainListContext.Provider value={plain}>
+      <View style={[plain ? null : [styles.card, { backgroundColor: theme.color.card }], style]}>
+        {rows.map((row, index) => (
+          <Fragment key={row.key ?? index}>
+            {index > 0 ? (
+              <View
+                style={[styles.separator, plain && styles.separatorPlain, { backgroundColor: theme.color.separator }]}
+              />
+            ) : null}
+            {row}
+          </Fragment>
+        ))}
+      </View>
+    </PlainListContext.Provider>
   );
 }
 
@@ -89,6 +109,7 @@ export function ListRow({
   onPress,
   accessibilityLabel,
 }: ListRowProps) {
+  const plain = useContext(PlainListContext);
   const showChevron = chevron ?? Boolean(onPress);
   const titleColor = destructive ? theme.color.danger : theme.color.foreground;
   const content = (
@@ -131,7 +152,7 @@ export function ListRow({
   );
 
   if (!onPress) {
-    return <View style={styles.row}>{content}</View>;
+    return <View style={[styles.row, plain && styles.rowPlain]}>{content}</View>;
   }
 
   return (
@@ -140,7 +161,7 @@ export function ListRow({
       accessibilityLabel={accessibilityLabel ?? [title, value, description].filter(Boolean).join(", ")}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed, disabled && styles.disabled]}
+      style={({ pressed }) => [styles.row, plain && styles.rowPlain, pressed && styles.pressed, disabled && styles.disabled]}
     >
       {content}
     </Pressable>
@@ -240,9 +261,19 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     paddingHorizontal: 8,
   },
+  sectionTitleLarge: {
+    fontSize: 17,
+    lineHeight: 22,
+  },
   card: {
     borderRadius: 24,
     overflow: "hidden",
+  },
+  separatorPlain: {
+    marginLeft: 0,
+  },
+  rowPlain: {
+    paddingHorizontal: 0,
   },
   separator: {
     height: StyleSheet.hairlineWidth,

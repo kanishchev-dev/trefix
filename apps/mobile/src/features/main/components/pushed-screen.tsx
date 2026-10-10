@@ -12,7 +12,7 @@ type Props = {
   children: ReactNode;
 };
 
-/** Frame of a screen pushed over the tabs: its own glass header, configured by the screen through `useHeaderOptions`. */
+/** Frame of a tab or a pushed screen: its own glass header, configured by the screen through `useHeaderOptions`. */
 export function PushedScreen({ theme, themeMode, children }: Props) {
   const [options, setOptions] = useState<HeaderOptions>({});
   const context = useMemo(() => ({ options, setOptions }), [options]);

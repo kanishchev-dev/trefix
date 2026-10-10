@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Calendar, Medal, Plus, Route, Target, Trophy } from "lucide-react-native";
+import { Calendar, ChevronRight, Medal, Plus, Route, Target, Trophy } from "lucide-react-native";
 
 import {
   type CapabilityType,
@@ -22,22 +22,23 @@ type Common = { copy: MainCopy; language: AppLanguage; theme: ThemeTokens; forma
 
 const fontOf = (theme: ThemeTokens, weight: "regular" | "medium" | "semibold") => theme.typography.fontFamily.sans[weight];
 
-/** Group title with an optional link on the right. */
+/** Section heading on the page with an optional link on the right. */
 export function SectionHeader({ title, link, onLink, theme }: { title: string; link?: string; onLink?: () => void; theme: ThemeTokens }) {
   return (
     <View style={styles.sectionHeader}>
-      <SectionTitle text={title} theme={theme} />
+      <SectionTitle text={title} theme={theme} large />
       {link && onLink ? (
         <Pressable accessibilityRole="link" hitSlop={8} onPress={onLink}>
-          <Text style={[styles.sectionLink, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>{link}</Text>
+          <Text style={[styles.sectionLink, { color: theme.color.mutedForeground, fontFamily: fontOf(theme, "medium") }]}>{link}</Text>
         </Pressable>
       ) : null}
     </View>
   );
 }
 
-function Card({ theme, children, gap = 14 }: { theme: ThemeTokens; children: ReactNode; gap?: number }) {
-  return <View style={[styles.card, { backgroundColor: theme.color.card, gap }]}>{children}</View>;
+/** Content of a section, laid straight on the page. */
+function Block({ children, gap = 14 }: { children: ReactNode; gap?: number }) {
+  return <View style={{ gap }}>{children}</View>;
 }
 
 function Muted({ theme, children, numberOfLines = 1 }: { theme: ThemeTokens; children: ReactNode; numberOfLines?: number }) {
@@ -85,7 +86,7 @@ export function GoalCard({ overview, onOpenPlan, ...common }: Common & { overvie
   return (
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.goal} link={copy.progress.sections.plan} onLink={onOpenPlan} theme={theme} />
-      <Card theme={theme}>
+      <Block>
         <View style={styles.rowBetween}>
           <View style={styles.flexText}>
             <Text numberOfLines={1} style={[styles.title, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>
@@ -129,7 +130,7 @@ export function GoalCard({ overview, onOpenPlan, ...common }: Common & { overvie
             {g.noDataHint}
           </Muted>
         )}
-      </Card>
+      </Block>
     </View>
   );
 }
@@ -140,7 +141,7 @@ export function ForecastCard({ overview, onSetGoal, ...common }: Common & { over
   return (
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.forecast} theme={theme} />
-      <Card theme={theme}>
+      <Block>
         {overview.predictions.length > 0 ? (
           <>
             <View style={styles.grid3}>
@@ -161,7 +162,7 @@ export function ForecastCard({ overview, onSetGoal, ...common }: Common & { over
         <Pressable
           accessibilityRole="button"
           onPress={onSetGoal}
-          style={({ pressed }) => [styles.innerAction, { backgroundColor: theme.color.surface }, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.innerAction, { borderTopColor: theme.color.separator }, pressed && styles.pressed]}
         >
           <IconCircle theme={theme} size={36}>
             <Target color={theme.color.foreground} size={18} />
@@ -170,8 +171,9 @@ export function ForecastCard({ overview, onSetGoal, ...common }: Common & { over
             <Text style={[styles.body, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>{f.setGoal}</Text>
             <Muted theme={theme}>{f.setGoalDescription}</Muted>
           </View>
+          <ChevronRight color={theme.color.mutedForeground} size={18} strokeWidth={2.2} />
         </Pressable>
-      </Card>
+      </Block>
     </View>
   );
 }
@@ -193,7 +195,7 @@ export function FormSection({
     return (
       <View style={styles.section}>
         <SectionHeader title={copy.progress.sections.formMetrics} theme={theme} />
-        <Card theme={theme} gap={12}>
+        <Block gap={12}>
           <Text style={[styles.body, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>
             {pluralize(f.locked, left, language)}
           </Text>
@@ -206,7 +208,7 @@ export function FormSection({
             ))}
           </View>
           <Muted theme={theme}>{f.lockedDescription}</Muted>
-        </Card>
+        </Block>
       </View>
     );
   }
@@ -219,7 +221,7 @@ export function FormSection({
   return (
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.formMetrics} theme={theme} />
-      <Card theme={theme}>
+      <Block>
         <View style={styles.rowBetween}>
           <Text style={[styles.title, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>{f.title}</Text>
           <Muted theme={theme}>
@@ -263,7 +265,7 @@ export function FormSection({
             onPress={onOpenHeart}
           />
         </View>
-      </Card>
+      </Block>
     </View>
   );
 }
@@ -274,7 +276,7 @@ function MetricTile({ theme, label, value, hint, onPress }: { theme: ThemeTokens
       accessibilityRole="button"
       accessibilityLabel={`${label} ${value} ${hint ?? ""}`}
       onPress={onPress}
-      style={({ pressed }) => [styles.tile, { backgroundColor: theme.color.surface }, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
     >
       <Muted theme={theme}>{label}</Muted>
       <Text style={{ color: theme.color.foreground, fontFamily: fontOf(theme, "semibold"), fontSize: 17, lineHeight: 22, fontVariant: ["tabular-nums"] }}>
@@ -294,7 +296,7 @@ export function CapabilitiesSection({ overview, ...common }: Common & { overview
   return (
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.capabilities} theme={theme} />
-      <View style={[styles.card, styles.capCard, { backgroundColor: theme.color.card }]}>
+      <View>
         {overview.capabilities.map((capability) => (
           <View
             key={capability.type}
@@ -337,7 +339,7 @@ export function RecordsSection({
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.records} link={hasAny ? copy.progress.sections.all : undefined} onLink={onOpenRecords} theme={theme} />
       {hasAny ? (
-        <ListCard theme={theme}>
+        <ListCard theme={theme} plain>
           {overview.records.map((record) =>
             record.best ? (
               <ListRow
@@ -369,18 +371,18 @@ export function RecordsSection({
           )}
         </ListCard>
       ) : (
-        <Card theme={theme} gap={10}>
+        <Block gap={10}>
           <Text style={[styles.body, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>{r.emptyTitle}</Text>
           <Muted theme={theme}>{r.emptyDescription}</Muted>
           <Pressable
             accessibilityRole="button"
             onPress={() => onAddResult("10k")}
-            style={({ pressed }) => [styles.pillButton, { backgroundColor: theme.color.surface }, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.pillButton, { backgroundColor: theme.color.controlSecondary }, pressed && styles.pressed]}
           >
             <Plus color={theme.color.foreground} size={16} />
             <Text style={[styles.body, { color: theme.color.foreground, fontFamily: fontOf(theme, "medium") }]}>{r.addResult}</Text>
           </Pressable>
-        </Card>
+        </Block>
       )}
     </View>
   );
@@ -423,7 +425,7 @@ export function DynamicsSection({ overview, onOpenSchedule, ...common }: Common 
   return (
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.dynamics} theme={theme} />
-      <Card theme={theme}>
+      <Block>
         <ChipScroller>
           {(["distance", "pace", "heartRate", "load"] as const).map((key) => (
             <Chip key={key} theme={theme} label={d.metrics[key]} selected={metric === key} onPress={() => setMetric(key)} />
@@ -467,7 +469,7 @@ export function DynamicsSection({ overview, onOpenSchedule, ...common }: Common 
             </Pressable>
           </View>
         ) : null}
-      </Card>
+      </Block>
     </View>
   );
 }
@@ -482,7 +484,7 @@ export function AchievementsSection({ overview, ...common }: Common & { overview
   return (
     <View style={styles.section}>
       <SectionHeader title={copy.progress.sections.achievements} theme={theme} />
-      <ListCard theme={theme}>
+      <ListCard theme={theme} plain>
         {overview.achievements.map((achievement, index) => {
           const date = achievement.date ? dayMonth(achievement.date, language) : null;
           switch (achievement.kind) {
@@ -528,11 +530,9 @@ export function AchievementsSection({ overview, ...common }: Common & { overview
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 8 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 8 },
-  sectionLink: { fontSize: 12, lineHeight: 16, opacity: 0.7 },
-  card: { borderRadius: 24, padding: 18 },
-  capCard: { paddingVertical: 6, paddingHorizontal: 0, gap: 0 },
+  section: { gap: 12 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionLink: { fontSize: 13, lineHeight: 18 },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   flexText: { flex: 1, minWidth: 0, gap: 2 },
   title: { fontSize: 17, lineHeight: 22 },
@@ -540,12 +540,12 @@ const styles = StyleSheet.create({
   muted: { fontSize: 13, lineHeight: 18 },
   grid2: { flexDirection: "row", gap: 8 },
   grid3: { flexDirection: "row", gap: 8 },
-  tile: { flex: 1, minWidth: 0, borderRadius: 16, padding: 12, gap: 2 },
-  innerAction: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 18 },
+  tile: { flex: 1, minWidth: 0, gap: 2 },
+  innerAction: { flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 14, borderTopWidth: StyleSheet.hairlineWidth },
   pressed: { opacity: 0.82 },
   segments: { flexDirection: "row", gap: 6 },
   segment: { flex: 1, height: 6, borderRadius: 3 },
-  capRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 16 },
+  capRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
   capName: { width: 120, fontSize: 14, lineHeight: 18 },
   capTrack: { flex: 1, height: 6, borderRadius: 3, overflow: "hidden" },
   capFill: { height: 6, borderRadius: 3 },

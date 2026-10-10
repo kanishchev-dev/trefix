@@ -1305,6 +1305,7 @@
     },
     "tab": {
       "openPlans": "My plans",
+      "plansButton": "Plans",
       "noActiveTitle": "No plan in progress",
       "noActiveDescription": "Start one of your drafts or create a new plan.",
       "historyTitle": "Getting ready for a new race?",

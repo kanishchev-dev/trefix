@@ -1305,6 +1305,7 @@
     },
     "tab": {
       "openPlans": "Мои планы",
+      "plansButton": "Планы",
       "noActiveTitle": "Нет плана в\u00a0работе",
       "noActiveDescription": "Начните один из\u00a0черновиков или создайте новый план.",
       "historyTitle": "Готовитесь к\u00a0новому старту?",
