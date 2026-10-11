@@ -18,9 +18,9 @@ import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
 
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { CreatePermissionGroupDto } from './dto/create-permission-group.dto';
+import { PermissionQueryDto } from './dto/permission-query.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { UpdatePermissionGroupDto } from './dto/update-permission-group.dto';
-import { PermissionQueryDto } from './dto/permission-query.dto';
 import { Permission } from './entities/permission.entity';
 import { PermissionGroup } from './entities/permission-group.entity';
 import { PermissionsService } from './permissions.service';
@@ -86,7 +86,9 @@ export class PermissionsController {
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({ status: 200, type: PaginatedResponseDto })
-  findAllGroups(@Query() query: PermissionQueryDto = new PermissionQueryDto()): Promise<PaginatedResponseDto<PermissionGroup>> {
+  findAllGroups(
+    @Query() query: PermissionQueryDto = new PermissionQueryDto(),
+  ): Promise<PaginatedResponseDto<PermissionGroup>> {
     return this.permissionsService.findAllGroups(query);
   }
 

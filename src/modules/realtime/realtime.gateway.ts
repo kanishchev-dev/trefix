@@ -228,7 +228,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
 
     const session = await this.authRedisService.getSession(decoded.sessionId);
     if (!session || session.userId !== userId) {
-      throw new RealtimeWsException('WS_AUTH_SESSION_REVOKED', 'The session this token belongs to is no longer active.');
+      throw new RealtimeWsException(
+        'WS_AUTH_SESSION_REVOKED',
+        'The session this token belongs to is no longer active.',
+      );
     }
 
     const user: RealtimeUserContext = {
@@ -253,9 +256,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     try {
       return await this.permissionsService.getEffectivePermissions(userId);
     } catch (error) {
-      this.logger.warn(
-        `Failed to resolve realtime permissions for user ${userId}: ${(error as Error).message}`,
-      );
+      this.logger.warn(`Failed to resolve realtime permissions for user ${userId}: ${(error as Error).message}`);
       return [];
     }
   }

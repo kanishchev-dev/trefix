@@ -3,17 +3,16 @@ import { getConnectionToken, getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import appConfig from '@/config/app.config';
+import {
+  SYSTEM_PERMISSION_CATALOG,
+  SYSTEM_PERMISSION_GROUPS,
+} from '@/modules/permissions/constants/system-access.constants';
 import { Permission } from '@/modules/permissions/entities/permission.entity';
 import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
 import { UserPermissionGroup } from '@/modules/permissions/entities/user-permission-group.entity';
 import { User } from '@/modules/users/entities/user.entity';
 
 import { SystemSeedService } from './system-seed.service';
-import {
-  SYSTEM_ADMIN_USER,
-  SYSTEM_PERMISSION_CATALOG,
-  SYSTEM_PERMISSION_GROUPS,
-} from '@/modules/permissions/constants/system-access.constants';
 
 describe('SystemSeedService', () => {
   const sequelize = {
@@ -112,12 +111,12 @@ describe('SystemSeedService', () => {
      * customised the system groups through the admin panel.
      */
     function stubBootstrappedDatabase(): void {
-      (permissionModel as { findAll: jest.Mock }).findAll = jest.fn().mockResolvedValue(
-        permissionNames.map((name) => ({ name })),
-      );
-      (permissionGroupModel as { findAll: jest.Mock }).findAll = jest.fn().mockResolvedValue(
-        groupKeys.map((systemKey, index) => ({ id: `group-${index}`, systemKey })),
-      );
+      (permissionModel as { findAll: jest.Mock }).findAll = jest
+        .fn()
+        .mockResolvedValue(permissionNames.map((name) => ({ name })));
+      (permissionGroupModel as { findAll: jest.Mock }).findAll = jest
+        .fn()
+        .mockResolvedValue(groupKeys.map((systemKey, index) => ({ id: `group-${index}`, systemKey })));
       (userModel as { findOne: jest.Mock }).findOne = jest.fn().mockResolvedValue({ id: 'admin-1' });
       (userPermissionGroupModel as { findOne: jest.Mock }).findOne = jest
         .fn()

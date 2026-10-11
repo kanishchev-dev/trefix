@@ -3,6 +3,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { DEFAULT_QUEUE_JOB_OPTIONS } from '@/common/constants/queue.constants';
+
 import { RealtimeModule } from '../realtime/realtime.module';
 import { StorageModule } from '../storage/storage.module';
 import { Athlete } from '../training/entities/athlete.entity';
@@ -32,6 +34,7 @@ import { StravaApiClient } from './providers/strava/strava-api.client';
 import { RecordedActivity } from './recordings/recorded-activity.entity';
 import { RecordingsController } from './recordings/recordings.controller';
 import { RecordingsService } from './recordings/recordings.service';
+import { OAuthStateStore } from './services/oauth-state.store';
 
 @Module({
   imports: [
@@ -48,6 +51,7 @@ import { RecordingsService } from './recordings/recordings.service';
     ]),
     BullModule.registerQueue({
       name: INTEGRATIONS_QUEUE_NAME,
+      defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS,
     }),
     TrainingModule,
     PreferencesModule,
@@ -69,6 +73,7 @@ import { RecordingsService } from './recordings/recordings.service';
     DeviceIntegrationsService,
     DeviceIntegrationsListener,
     RecordingsService,
+    OAuthStateStore,
   ],
   exports: [IntegrationsService],
 })

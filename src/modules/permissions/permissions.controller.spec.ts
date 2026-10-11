@@ -84,9 +84,7 @@ describe('PermissionsController routing', () => {
   });
 
   it('routes GET /permissions/groups/:id to the group detail', async () => {
-    await request(app.getHttpServer())
-      .get('/v1/permissions/groups/6c9b1f7e-0f5e-4f2e-9a2b-8f4a5d6c7e8f')
-      .expect(200);
+    await request(app.getHttpServer()).get('/v1/permissions/groups/6c9b1f7e-0f5e-4f2e-9a2b-8f4a5d6c7e8f').expect(200);
 
     expect(permissionsService.findGroup).toHaveBeenCalled();
   });

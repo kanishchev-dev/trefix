@@ -13,17 +13,14 @@ import { AvatarTooLargeException } from './exceptions/avatar-too-large.exception
 const API_BASE_URL = 'https://api.example.com';
 const USER_ID = '11111111-1111-4111-8111-111111111111';
 
-function buildService(overrides: {
-  avatarUrl?: string | null;
-  storageFileId?: string;
-} = {}): {
+function buildService(
+  overrides: {
+    avatarUrl?: string | null;
+    storageFileId?: string;
+  } = {},
+): {
   service: AvatarService;
-  storageService: jest.Mocked<
-    Pick<
-      StorageService,
-      'uploadFile' | 'deleteFileQuietly' | 'getFileForPublicAccess'
-    >
-  >;
+  storageService: jest.Mocked<Pick<StorageService, 'uploadFile' | 'deleteFileQuietly' | 'getFileForPublicAccess'>>;
   usersService: jest.Mocked<Pick<UsersService, 'findOne' | 'update'>>;
 } {
   const user = {
@@ -43,9 +40,7 @@ function buildService(overrides: {
       stream: Readable.from([Buffer.from('image')]),
       download: { stream: Readable.from([Buffer.from('image')]), contentLength: 2048 },
     }),
-  } as unknown as jest.Mocked<
-    Pick<StorageService, 'uploadFile' | 'deleteFileQuietly' | 'getFileForPublicAccess'>
-  >;
+  } as unknown as jest.Mocked<Pick<StorageService, 'uploadFile' | 'deleteFileQuietly' | 'getFileForPublicAccess'>>;
 
   const usersService = {
     findOne: jest.fn().mockResolvedValue(user),
@@ -56,9 +51,7 @@ function buildService(overrides: {
   } as unknown as jest.Mocked<Pick<UsersService, 'findOne' | 'update'>>;
 
   const configService = {
-    get: jest.fn((key: string) =>
-      key === 'app.apiBaseUrl' ? API_BASE_URL : undefined,
-    ),
+    get: jest.fn((key: string) => (key === 'app.apiBaseUrl' ? API_BASE_URL : undefined)),
   } as unknown as ConfigService;
 
   const appConfiguration = {
@@ -96,9 +89,7 @@ describe('AvatarService', () => {
     it('builds an absolute, versioned URL on the API', () => {
       const { service } = buildService();
 
-      expect(service.buildAvatarUrl(USER_ID, 'file-1')).toBe(
-        `${API_BASE_URL}/v1/avatars/${USER_ID}?v=file-1`,
-      );
+      expect(service.buildAvatarUrl(USER_ID, 'file-1')).toBe(`${API_BASE_URL}/v1/avatars/${USER_ID}?v=file-1`);
     });
   });
 
@@ -106,9 +97,7 @@ describe('AvatarService', () => {
     it('reads the file id out of a managed URL', () => {
       const { service } = buildService();
 
-      expect(
-        service.extractManagedFileId(`${API_BASE_URL}/v1/avatars/${USER_ID}?v=file-1`),
-      ).toBe('file-1');
+      expect(service.extractManagedFileId(`${API_BASE_URL}/v1/avatars/${USER_ID}?v=file-1`)).toBe('file-1');
     });
 
     it('ignores external URLs', () => {
@@ -167,27 +156,25 @@ describe('AvatarService', () => {
     it('rejects a request without a file at all', async () => {
       const { service, storageService } = buildService();
 
-      await expect(service.uploadAvatar(USER_ID, undefined)).rejects.toBeInstanceOf(
-        AvatarInvalidFileException,
-      );
+      await expect(service.uploadAvatar(USER_ID, undefined)).rejects.toBeInstanceOf(AvatarInvalidFileException);
       expect(storageService.uploadFile).not.toHaveBeenCalled();
     });
 
     it('rejects a non-image upload before touching storage', async () => {
       const { service, storageService } = buildService();
 
-      await expect(
-        service.uploadAvatar(USER_ID, buildFile({ mimetype: 'image/svg+xml' })),
-      ).rejects.toBeInstanceOf(AvatarInvalidFileException);
+      await expect(service.uploadAvatar(USER_ID, buildFile({ mimetype: 'image/svg+xml' }))).rejects.toBeInstanceOf(
+        AvatarInvalidFileException,
+      );
       expect(storageService.uploadFile).not.toHaveBeenCalled();
     });
 
     it('rejects an oversized upload', async () => {
       const { service, storageService } = buildService();
 
-      await expect(
-        service.uploadAvatar(USER_ID, buildFile({ size: 3 * 1024 * 1024 })),
-      ).rejects.toBeInstanceOf(AvatarTooLargeException);
+      await expect(service.uploadAvatar(USER_ID, buildFile({ size: 3 * 1024 * 1024 }))).rejects.toBeInstanceOf(
+        AvatarTooLargeException,
+      );
       expect(storageService.uploadFile).not.toHaveBeenCalled();
     });
   });
@@ -222,9 +209,7 @@ describe('AvatarService', () => {
     it('reports a missing avatar as not found', async () => {
       const { service } = buildService({ avatarUrl: null });
 
-      await expect(service.resolveAvatarSource(USER_ID)).rejects.toBeInstanceOf(
-        EntityNotFoundException,
-      );
+      await expect(service.resolveAvatarSource(USER_ID)).rejects.toBeInstanceOf(EntityNotFoundException);
     });
   });
 });

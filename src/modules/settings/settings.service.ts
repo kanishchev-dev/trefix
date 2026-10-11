@@ -154,9 +154,7 @@ export class SettingsService {
   }
 
   private asTheme(value: unknown): AppSettingsSnapshot['theme'] | null {
-    return SETTINGS_THEME_MODES.includes(value as SettingsThemeMode)
-      ? (value as SettingsThemeMode)
-      : null;
+    return SETTINGS_THEME_MODES.includes(value as SettingsThemeMode) ? (value as SettingsThemeMode) : null;
   }
 
   private asLocale(value: unknown): AppSettingsSnapshot['locale'] | null {

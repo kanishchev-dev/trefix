@@ -4,15 +4,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
+import { PermissionsGuard } from '@/common/guards/permissions.guard';
 import { MailerModule } from '@/modules/mailer/mailer.module';
 import { PermissionsModule } from '@/modules/permissions/permissions.module';
 import { UsersModule } from '@/modules/users/users.module';
 
-import { PermissionsGuard } from '@/common/guards/permissions.guard';
-
 import { AuthController } from './auth.controller';
-import { AuthRedisModule } from './auth-redis.module';
 import { AuthService } from './auth.service';
+import { AuthRedisModule } from './auth-redis.module';
 import authConfig from './config/auth.config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserDeletedListener } from './listeners/user-deleted.listener';

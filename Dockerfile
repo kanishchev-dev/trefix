@@ -2,7 +2,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps --ignore-scripts
 
 FROM node:22-alpine AS builder
 WORKDIR /app
@@ -17,11 +17,14 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps --ignore-scripts && npm cache clean --force
+RUN npm ci --omit=dev --legacy-peer-deps --ignore-scripts && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/i18n ./dist/i18n
 
+# The image ships no secrets and needs no privileges: run as the unprivileged user of the base image.
+USER node
+
 EXPOSE 3000
 
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/src/main.js"]

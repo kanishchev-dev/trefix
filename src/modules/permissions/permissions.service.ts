@@ -55,7 +55,9 @@ export class PermissionsService {
    * @param query - Pagination and search options
    * @returns Paginated list of permissions
    */
-  async findAllPermissions(query: PermissionQueryDto = new PermissionQueryDto()): Promise<PaginatedResponseDto<Permission>> {
+  async findAllPermissions(
+    query: PermissionQueryDto = new PermissionQueryDto(),
+  ): Promise<PaginatedResponseDto<Permission>> {
     const { page = 1, limit = 10, search } = query;
     const { rows, count } = await this.permissionModel.findAndCountAll({
       where: this.buildTextFilter(['name', 'description'], search),
@@ -144,7 +146,9 @@ export class PermissionsService {
    * @param query - Pagination and search options
    * @returns Paginated list of permission groups
    */
-  async findAllGroups(query: PermissionQueryDto = new PermissionQueryDto()): Promise<PaginatedResponseDto<PermissionGroup>> {
+  async findAllGroups(
+    query: PermissionQueryDto = new PermissionQueryDto(),
+  ): Promise<PaginatedResponseDto<PermissionGroup>> {
     const { page = 1, limit = 10, search } = query;
     const { rows, count } = await this.permissionGroupModel.findAndCountAll({
       where: this.buildTextFilter(['name', 'description'], search),
@@ -368,10 +372,7 @@ export class PermissionsService {
    * Builds a case-insensitive OR filter across the given columns.
    * Returns undefined when no search term is supplied so the query stays unfiltered.
    */
-  private buildTextFilter(
-    columns: readonly string[],
-    search?: string,
-  ): Record<string, unknown> | undefined {
+  private buildTextFilter(columns: readonly string[], search?: string): Record<string, unknown> | undefined {
     const term = search?.trim();
     if (!term) {
       return undefined;

@@ -8,12 +8,12 @@ import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.ex
 import { comparePassword, hashPassword } from '@/common/utils/password-hash.util';
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
-import { User } from '@/modules/users/entities/user.entity';
-import { UserActivatedEvent } from '@/modules/users/events/user-activated.event';
-import { UsersService } from '@/modules/users/users.service';
-import { UserInviteService } from '@/modules/users/services/user-invite.service';
 import { ActivateInviteDto } from '@/modules/users/dto/activate-invite.dto';
 import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
+import { User } from '@/modules/users/entities/user.entity';
+import { UserActivatedEvent } from '@/modules/users/events/user-activated.event';
+import { UserInviteService } from '@/modules/users/services/user-invite.service';
+import { UsersService } from '@/modules/users/users.service';
 
 import {
   AUTH_DEFAULT_DISPLAY_NAME,
@@ -52,9 +52,9 @@ import { AuthSessionCreatedEvent } from './events/auth-session-created.event';
 import { AuthSessionRevokedEvent } from './events/auth-session-revoked.event';
 import { AuthEmailAlreadyExistsException } from './exceptions/auth-email-already-exists.exception';
 import { AuthEmailNotVerifiedException } from './exceptions/auth-email-not-verified.exception';
+import { AuthInvalidCredentialsException } from './exceptions/auth-invalid-credentials.exception';
 import { AuthInviteAlreadyActivatedException } from './exceptions/auth-invite-already-activated.exception';
 import { AuthInviteCodeInvalidException } from './exceptions/auth-invite-code-invalid.exception';
-import { AuthInvalidCredentialsException } from './exceptions/auth-invalid-credentials.exception';
 import { AuthPasswordResetCodeInvalidException } from './exceptions/auth-password-reset-code-invalid.exception';
 import { AuthPasswordResetTokenExpiredException } from './exceptions/auth-password-reset-token-expired.exception';
 import { AuthRefreshTokenReuseException } from './exceptions/auth-refresh-token-reuse.exception';
@@ -475,9 +475,7 @@ export class AuthService {
     // Same response for unknown email and wrong code so the endpoint cannot
     // be used to enumerate accounts.
     const isValidInvite =
-      Boolean(user) &&
-      !user!.passwordHash &&
-      (await this.userInviteService.consumeInviteCode(user!.id, dto.code));
+      Boolean(user) && !user!.passwordHash && (await this.userInviteService.consumeInviteCode(user!.id, dto.code));
 
     if (!isValidInvite) {
       if (user?.passwordHash) {
@@ -494,7 +492,10 @@ export class AuthService {
       emailVerified: true,
     });
 
-    this.eventEmitter.emit('auth.password_changed', new AuthPasswordChangedEvent(activatedUser.id, activatedUser.email));
+    this.eventEmitter.emit(
+      'auth.password_changed',
+      new AuthPasswordChangedEvent(activatedUser.id, activatedUser.email),
+    );
     this.eventEmitter.emit('user.updated', new UserActivatedEvent(activatedUser.id, activatedUser.email));
 
     return this.createAuthenticatedSession(activatedUser, context);
@@ -520,11 +521,7 @@ export class AuthService {
     return this.toAuthUserResponse(updatedUser, permissions);
   }
 
-  async buildSocialStartUrl(
-    provider: AuthSocialProvider,
-    redirectUri: string,
-    callbackBaseUrl: string,
-  ): Promise<string> {
+  async buildSocialStartUrl(provider: AuthSocialProvider, redirectUri: string): Promise<string> {
     const normalizedProvider = this.normalizeSocialProvider(provider);
     const normalizedRedirectUri = this.normalizeRedirectUri(redirectUri);
     const state = randomUUID();
@@ -539,7 +536,7 @@ export class AuthService {
       this.getSocialTtlMilliseconds(),
     );
 
-    const callbackUri = this.buildSocialCallbackUri(callbackBaseUrl, normalizedProvider);
+    const callbackUri = this.buildSocialCallbackUri(this.getApiBaseUrl(), normalizedProvider);
     if (normalizedProvider === 'google') {
       return this.buildGoogleSocialStartUrl(state, callbackUri);
     }
@@ -547,21 +544,14 @@ export class AuthService {
     return this.buildAppleSocialStartUrl(state, callbackUri);
   }
 
-  async completeSocialCallback(
-    provider: AuthSocialProvider,
-    code: string,
-    state: string,
-    callbackBaseUrl: string,
-  ): Promise<string> {
-    const stateRecord = await this.authRedisService.getSocialState(state);
+  async completeSocialCallback(provider: AuthSocialProvider, code: string, state: string): Promise<string> {
+    const stateRecord = await this.authRedisService.consumeSocialState(state);
     if (!stateRecord || stateRecord.provider !== provider) {
       throw new AuthSocialFlowInvalidException();
     }
 
-    await this.authRedisService.clearSocialState(state);
-
     try {
-      const profile = await this.resolveSocialProfile(provider, code, callbackBaseUrl);
+      const profile = await this.resolveSocialProfile(provider, code, this.getApiBaseUrl());
       const authenticatedResult = await this.finalizeSocialSignIn(profile);
       const handoffCode = randomUUID();
 
@@ -583,12 +573,10 @@ export class AuthService {
   }
 
   async exchangeSocialCode(dto: SocialExchangeDto): Promise<AuthenticatedUserResult> {
-    const record = await this.authRedisService.getSocialResult(dto.code);
+    const record = await this.authRedisService.consumeSocialResult(dto.code);
     if (!record) {
       throw new AuthSocialFlowInvalidException();
     }
-
-    await this.authRedisService.clearSocialResult(dto.code);
 
     const user = await this.usersService.findOne(record.user.id);
 
@@ -922,6 +910,15 @@ export class AuthService {
     url.searchParams.set('state', state);
 
     return url.toString();
+  }
+
+  /**
+   * The provider redirect URI must match the one registered with Google/Apple,
+   * so it comes from configuration — never from the request's Host header,
+   * which the client controls and which a reverse proxy rewrites.
+   */
+  private getApiBaseUrl(): string {
+    return this.configService.getOrThrow<string>('app.apiBaseUrl');
   }
 
   private buildSocialCallbackUri(callbackBaseUrl: string, provider: AuthSocialProvider): string {

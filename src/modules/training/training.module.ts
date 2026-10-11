@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { DEFAULT_QUEUE_JOB_OPTIONS } from '@/common/constants/queue.constants';
 import { RealtimeModule } from '@/modules/realtime/realtime.module';
 import { PreferencesModule } from '@/modules/users/preferences/preferences.module';
 import { UsersModule } from '@/modules/users/users.module';
@@ -64,6 +65,7 @@ import { TrainingService } from './training.service';
     PreferencesModule,
     BullModule.registerQueue({
       name: PLAN_COMPLETION_QUEUE,
+      defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS,
     }),
   ],
   // PlansController goes first: its static routes (`plans/active`, `plans/counts`)

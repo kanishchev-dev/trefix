@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { dirname, join } from 'path';
 
 import { REALTIME_ROOM_PERMISSION_MAP } from './constants/realtime-permissions.constants';
@@ -56,7 +56,7 @@ function findFiles(root: string, suffix: string): string[] {
 function collectEmittedEvents(): Map<string, Set<string>> {
   const eventsByRoom = new Map<string, Set<string>>();
 
-  const record = (room: string, event: string) => {
+  const record = (room: string, event: string): void => {
     const events = eventsByRoom.get(room) ?? new Set<string>();
     events.add(event);
     eventsByRoom.set(room, events);
@@ -65,10 +65,7 @@ function collectEmittedEvents(): Map<string, Set<string>> {
   const literalCall = /emitToRoom\(\s*'([^']+)'\s*,\s*'([^']+)'/g;
   // Settings publish through constants rather than literals.
   const settingsCall = 'emitToRoom(SETTINGS_ROOM, SETTINGS_REALTIME_EVENT';
-  const settingsConstants = readFileSync(
-    join(SRC_ROOT, 'modules', 'settings', 'settings.constants.ts'),
-    'utf8',
-  );
+  const settingsConstants = readFileSync(join(SRC_ROOT, 'modules', 'settings', 'settings.constants.ts'), 'utf8');
   const settingsRoom = /SETTINGS_ROOM\s*=\s*'([^']+)'/.exec(settingsConstants)?.[1];
   const settingsEvent = /SETTINGS_REALTIME_EVENT\s*=\s*'([^']+)'/.exec(settingsConstants)?.[1];
 
@@ -98,13 +95,7 @@ function collectEmittedEvents(): Map<string, Set<string>> {
  * skipping the check would quietly remove one.
  */
 function recordPresenceEmission(record: (room: string, event: string) => void): void {
-  const servicePath = join(
-    SRC_ROOT,
-    'modules',
-    'realtime',
-    'services',
-    'realtime-presence.service.ts',
-  );
+  const servicePath = join(SRC_ROOT, 'modules', 'realtime', 'services', 'realtime-presence.service.ts');
 
   if (!existsSync(servicePath)) {
     return;
@@ -128,16 +119,7 @@ function recordPresenceEmission(record: (room: string, event: string) => void): 
 
 /** Event names the frontend reacts to, read from its invalidation map. */
 function collectHandledEvents(): Set<string> {
-  const path = join(
-    findRepoRoot(),
-    'frontend',
-    'apps',
-    'web',
-    'src',
-    'shared',
-    'api',
-    'realtime-events.ts',
-  );
+  const path = join(findRepoRoot(), 'frontend', 'apps', 'web', 'src', 'shared', 'api', 'realtime-events.ts');
   const source = readFileSync(path, 'utf8');
   const block = /REALTIME_EVENT_CACHE_KEYS[\s\S]*?=[\s\S]*?\{([\s\S]*?)\n\};/.exec(source)?.[1];
 
@@ -150,16 +132,7 @@ function collectHandledEvents(): Set<string> {
 
 /** Room names the frontend asks the gateway for. */
 function collectRequestedRooms(): Set<string> {
-  const path = join(
-    findRepoRoot(),
-    'frontend',
-    'apps',
-    'web',
-    'src',
-    'shared',
-    'api',
-    'realtime-events.ts',
-  );
+  const path = join(findRepoRoot(), 'frontend', 'apps', 'web', 'src', 'shared', 'api', 'realtime-events.ts');
   const source = readFileSync(path, 'utf8');
   const block = /REALTIME_ROOMS[\s\S]*?=[\s\S]*?\{([\s\S]*?)\n\};/.exec(source)?.[1];
 
@@ -172,16 +145,7 @@ function collectRequestedRooms(): Set<string> {
 
 /** Permissions the frontend requires per room. */
 function collectRequiredPermissions(): Map<string, string[]> {
-  const path = join(
-    findRepoRoot(),
-    'frontend',
-    'apps',
-    'web',
-    'src',
-    'shared',
-    'api',
-    'realtime-events.ts',
-  );
+  const path = join(findRepoRoot(), 'frontend', 'apps', 'web', 'src', 'shared', 'api', 'realtime-events.ts');
   const source = readFileSync(path, 'utf8');
   const block = /REALTIME_ROOMS[\s\S]*?=[\s\S]*?\{([\s\S]*?)\n\};/.exec(source)?.[1];
 
@@ -192,7 +156,10 @@ function collectRequiredPermissions(): Map<string, string[]> {
   const required = new Map<string, string[]>();
 
   for (const [, room, permissions] of block.matchAll(/^\s{2}(\w+):\s*\[([^\]]*)\]/gm)) {
-    required.set(room, [...permissions.matchAll(/"([^"]+)"/g)].map((match) => match[1]));
+    required.set(
+      room,
+      [...permissions.matchAll(/"([^"]+)"/g)].map((match) => match[1]),
+    );
   }
 
   return required;
@@ -220,9 +187,7 @@ describe('realtime event wiring', () => {
 
   it('does not react to events no admin room publishes', () => {
     const adminEvents = new Set(
-      [...emitted]
-        .filter(([room]) => ADMIN_ROOMS.has(room))
-        .flatMap(([, events]) => [...events]),
+      [...emitted].filter(([room]) => ADMIN_ROOMS.has(room)).flatMap(([, events]) => [...events]),
     );
 
     // Stale entries would keep the map honest instead of drifting into placeholders.

@@ -1,12 +1,29 @@
 import * as Joi from 'joi';
 
+/**
+ * A value that must be provided explicitly in production. Outside production a
+ * fixed development value keeps local setups and tests running without a full `.env`.
+ */
+const requiredInProduction = (developmentDefault: string, schema: Joi.StringSchema = Joi.string()): Joi.StringSchema =>
+  schema.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional().default(developmentDefault),
+  });
+
 export const validationSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test', 'provision').default('development'),
   PORT: Joi.number().default(3000),
   LOG_LEVEL: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
   CORS_ORIGINS: Joi.string().default('http://localhost:3000,http://localhost:3001,http://localhost:5173'),
+  SWAGGER_ENABLED: Joi.boolean().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.boolean().default(false),
+    otherwise: Joi.boolean().default(true),
+  }),
   WEB_APP_URL: Joi.string().uri().default('http://localhost:3001'),
-  API_BASE_URL: Joi.string().uri().default('http://localhost:3000'),
+  // Public URL of this API: OAuth redirect URIs and absolute links are built from it.
+  API_BASE_URL: requiredInProduction('http://localhost:3000', Joi.string().uri()),
   THROTTLE_LIMIT: Joi.number().default(300),
   THROTTLE_TTL: Joi.number().default(60000),
   TRAINING_PLANS_PER_ATHLETE_LIMIT: Joi.number().integer().positive().default(100),
@@ -60,10 +77,17 @@ export const validationSchema = Joi.object({
   AUTO_SEED_SYSTEM_DATA: Joi.boolean().default(true),
   ADMIN_EMAIL: Joi.string().email().optional(),
   ADMIN_PASSWORD: Joi.string().min(8).optional(),
-  STRAVA_CLIENT_ID: Joi.string().optional().default('12345'),
-  STRAVA_CLIENT_SECRET: Joi.string().optional().default('strava_client_secret_placeholder'),
-  STRAVA_REDIRECT_URI: Joi.string().optional().default('http://localhost:3000/integrations/strava/callback'),
-  STRAVA_WEBHOOK_VERIFY_TOKEN: Joi.string().optional().default('trefix_strava_webhook_secret'),
+  STRAVA_CLIENT_ID: requiredInProduction('12345'),
+  STRAVA_CLIENT_SECRET: requiredInProduction('strava_client_secret_placeholder'),
+  STRAVA_REDIRECT_URI: requiredInProduction('http://localhost:3000/integrations/strava/callback', Joi.string().uri()),
+  STRAVA_WEBHOOK_VERIFY_TOKEN: requiredInProduction('trefix_strava_webhook_secret'),
+  STRAVA_WEBHOOK_SUBSCRIPTION_ID: Joi.string().allow('').optional(),
+  STRAVA_API_BASE_URL: Joi.string().uri().default('https://www.strava.com/api/v3'),
+  STRAVA_OAUTH_BASE_URL: Joi.string().uri().default('https://www.strava.com/oauth'),
   HEALTH_INTEGRATIONS_ENABLED: Joi.string().valid('true', 'false').optional().default('false'),
-  INTEGRATIONS_ENCRYPTION_KEY: Joi.string().optional().default('default_integrations_master_encryption_key_32_chars!'),
+  // Encrypts provider OAuth tokens at rest; rotating it invalidates every stored token.
+  INTEGRATIONS_ENCRYPTION_KEY: requiredInProduction(
+    'default_integrations_master_encryption_key_32_chars!',
+    Joi.string().min(32),
+  ),
 });

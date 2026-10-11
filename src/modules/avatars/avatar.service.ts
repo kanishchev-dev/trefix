@@ -4,8 +4,8 @@ import { Readable } from 'stream';
 
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import appConfig from '@/config/app.config';
-import { StorageService } from '@/modules/storage/storage.service';
 import { StorageUploadedFile } from '@/modules/storage/interfaces/storage-uploaded-file.interface';
+import { StorageService } from '@/modules/storage/storage.service';
 import { UsersService } from '@/modules/users/users.service';
 
 import {

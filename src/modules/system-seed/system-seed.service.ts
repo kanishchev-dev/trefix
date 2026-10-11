@@ -4,6 +4,7 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { randomUUID } from 'crypto';
 import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 
+import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
 import { hashPassword } from '@/common/utils/password-hash.util';
 import appConfig from '@/config/app.config';
 import { Permission } from '@/modules/permissions/entities/permission.entity';
@@ -185,10 +186,7 @@ export class SystemSeedService implements OnApplicationBootstrap {
         // intent, and the admin panel renders it, so backfilling it is safe and
         // keeps permissions seeded by an older catalog readable.
         if (!existingPermission.description) {
-          await existingPermission.update(
-            { description: definition.description },
-            { transaction },
-          );
+          await existingPermission.update({ description: definition.description }, { transaction });
         }
 
         permissions.set(definition.key, existingPermission);
@@ -279,7 +277,9 @@ export class SystemSeedService implements OnApplicationBootstrap {
       .filter((permission): permission is Permission => permission !== undefined);
 
     if (resolvedPermissions.length !== permissionKeys.length) {
-      throw new Error(`Failed to resolve all permissions for system group ${group.systemKey || group.name}`);
+      throw new InvariantViolationException(
+        `Failed to resolve all permissions for system group ${group.systemKey || group.name}`,
+      );
     }
 
     // Additive only. `$set` would drop permissions that an admin granted to a

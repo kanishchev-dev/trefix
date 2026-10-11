@@ -127,10 +127,7 @@ describe('RealtimeGateway', () => {
     const client = createClient();
     client.handshake.auth = { token: 'access-token' } as never;
     mockJwtService.verifyAsync.mockResolvedValue(ACCESS_TOKEN_PAYLOAD);
-    mockPermissionsService.getEffectivePermissions.mockResolvedValue([
-      'permissions.read',
-      'permissions.manage',
-    ]);
+    mockPermissionsService.getEffectivePermissions.mockResolvedValue(['permissions.read', 'permissions.manage']);
 
     await gateway.handleConnection(client);
 
@@ -205,7 +202,7 @@ describe('RealtimeGateway', () => {
    * token's lifetime.
    */
   describe('session validation', () => {
-    const connectWith = async (payload: Record<string, unknown>) => {
+    const connectWith = async (payload: Record<string, unknown>): Promise<Socket> => {
       const client = createClient();
       client.handshake.auth = { token: 'access-token' } as never;
       mockJwtService.verifyAsync.mockResolvedValue(payload);
@@ -214,7 +211,7 @@ describe('RealtimeGateway', () => {
       return client;
     };
 
-    const expectRejection = (client: Socket, code: string) => {
+    const expectRejection = (client: Socket, code: string): void => {
       expect(client.emit).toHaveBeenCalledWith('realtime.error', expect.objectContaining({ code }));
       expect(client.disconnect).toHaveBeenCalledWith(true);
     };
@@ -307,7 +304,7 @@ describe('RealtimeGateway', () => {
       return middleware;
     };
 
-    const handshakeWith = (rooms?: string[]) => {
+    const handshakeWith = (rooms?: string[]): Socket => {
       const client = createClient();
       client.handshake.auth = { token: 'access-token', rooms } as never;
       mockJwtService.verifyAsync.mockResolvedValue(ACCESS_TOKEN_PAYLOAD);

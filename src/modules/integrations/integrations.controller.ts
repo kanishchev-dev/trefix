@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Logger, Post, Query, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -6,6 +6,8 @@ import { Response } from 'express';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+import { escapeHtml } from '@/common/utils/html.util';
+import { secureCompare } from '@/common/utils/secure-compare.util';
 
 import { AuthUserContext } from '../auth/interfaces/auth-user-context.interface';
 import {
@@ -18,9 +20,41 @@ import { StravaWebhookEventDto, StravaWebhookVerificationQueryDto } from './dto/
 import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
 import { IntegrationsService } from './integrations.service';
 
+interface CallbackPage {
+  title: string;
+  heading: string;
+  body: string;
+}
+
+const STRAVA_CALLBACK_SUCCESS_PAGE: CallbackPage = {
+  title: 'Strava Connected',
+  heading: 'Strava Connected Successfully!',
+  body: 'Your running history is now syncing in background. You can return to the Trefix app.',
+};
+
+const STRAVA_CALLBACK_FAILED_PAGE: CallbackPage = {
+  title: 'Strava Connection Failed',
+  heading: 'Failed to connect Strava',
+  body: 'Please return to the Trefix app and try again.',
+};
+
+/** Browser-facing page shown at the end of the OAuth redirect. */
+function renderCallbackPage(page: CallbackPage): string {
+  return `<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>${escapeHtml(page.title)}</title></head>
+  <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+    <h2>${escapeHtml(page.heading)}</h2>
+    <p>${escapeHtml(page.body)}</p>
+  </body>
+</html>`;
+}
+
 @ApiTags('Integrations')
 @Controller('integrations')
 export class IntegrationsController {
+  private readonly logger = new Logger(IntegrationsController.name);
+
   constructor(
     private readonly integrationsService: IntegrationsService,
     private readonly configService: ConfigService,
@@ -61,25 +95,20 @@ export class IntegrationsController {
     @Res() res: Response,
   ): Promise<void> {
     if (error || !code) {
-      res
-        .status(400)
-        .send(`<html><body><h2>Strava authorization denied or failed: ${error || 'Missing code'}</h2></body></html>`);
+      this.logger.warn(`Strava authorization was not granted: ${error || 'missing code'}`);
+      res.status(HttpStatus.BAD_REQUEST).send(renderCallbackPage(STRAVA_CALLBACK_FAILED_PAGE));
       return;
     }
 
     try {
       await this.integrationsService.handleStravaCallback(code, state, scope);
-      res.status(200).send(`
-        <html>
-          <head><title>Strava Connected</title></head>
-          <body style="font-family: sans-serif; text-align: center; padding: 40px;">
-            <h2>Strava Connected Successfully!</h2>
-            <p>Your running history is now syncing in background. You can return to the Trefix app.</p>
-          </body>
-        </html>
-      `);
-    } catch (err: any) {
-      res.status(400).send(`<html><body><h2>Failed to connect Strava: ${err.message}</h2></body></html>`);
+      res.status(HttpStatus.OK).send(renderCallbackPage(STRAVA_CALLBACK_SUCCESS_PAGE));
+    } catch (callbackError) {
+      // The page is public: provider and internal details stay in the log only.
+      this.logger.warn(
+        `Strava callback failed: ${callbackError instanceof Error ? callbackError.message : String(callbackError)}`,
+      );
+      res.status(HttpStatus.BAD_REQUEST).send(renderCallbackPage(STRAVA_CALLBACK_FAILED_PAGE));
     }
   }
 
@@ -135,14 +164,13 @@ export class IntegrationsController {
   @Get('strava/webhook')
   @ApiOperation({ summary: 'Strava Webhook Subscription Verification Callback' })
   verifyWebhook(@Query() query: StravaWebhookVerificationQueryDto, @Res() res: Response): void {
-    const expectedVerifyToken =
-      this.configService.get<string>('integrations.strava.webhookVerifyToken') || 'trefix_strava_webhook_secret';
+    const expectedVerifyToken = this.configService.getOrThrow<string>('integrations.strava.webhookVerifyToken');
 
     const mode = query['hub.mode'];
     const token = query['hub.verify_token'];
     const challenge = query['hub.challenge'];
 
-    if (mode === 'subscribe' && token === expectedVerifyToken) {
+    if (mode === 'subscribe' && typeof token === 'string' && secureCompare(token, expectedVerifyToken)) {
       res.status(HttpStatus.OK).json({ 'hub.challenge': challenge });
     } else {
       res.status(HttpStatus.FORBIDDEN).send('Verification failed');

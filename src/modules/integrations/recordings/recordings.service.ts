@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UniqueConstraintError } from 'sequelize';
 
 import { DomainException } from '@/common/exceptions/domain.exception';
+import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
 
 import { StorageUploadedFile } from '../../storage/interfaces/storage-uploaded-file.interface';
 import { StorageService } from '../../storage/storage.service';
@@ -122,7 +123,7 @@ export class RecordingsService {
       });
       const outcome = OUTCOME_BY_INGEST[result.outcome];
       if (!result.workoutId || !outcome) {
-        throw new Error(`Unexpected ingestion outcome ${result.outcome} for a tracker record`);
+        throw new InvariantViolationException(`Unexpected ingestion outcome ${result.outcome} for a tracker record`);
       }
       await this.applyRecordingDetails(userId, result.workoutId, outcome, dto);
       recording.workoutId = result.workoutId;

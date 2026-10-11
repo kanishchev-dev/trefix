@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
+
 import type { ImportedWorkoutFacts } from '../../training/interfaces/imported-workout.interface';
 import { ACTIVITY_DEDUP, ACTIVITY_SOURCE_PRIORITY } from '../constants/integrations.constants';
 import type { WorkoutSourceFacts } from '../entities/workout-source.entity';
@@ -87,7 +89,7 @@ export class ActivityDedupService {
    */
   merge(sources: SourceRecord[]): MergedSourceFacts {
     if (sources.length === 0) {
-      throw new Error('Cannot merge an empty source list');
+      throw new InvariantViolationException('Cannot merge an empty source list');
     }
     const ordered = this.orderByPriority(sources);
     const [primary] = ordered;

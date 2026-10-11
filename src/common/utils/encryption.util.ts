@@ -1,11 +1,30 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 
+/** Stored ciphertext is corrupted or was not produced by `encryptToken`. */
+export class InvalidCiphertextError extends Error {
+  constructor() {
+    super('Invalid ciphertext format');
+    this.name = 'InvalidCiphertextError';
+  }
+}
+
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
 const SALT = 'trefix-integrations-token-salt';
 
+/**
+ * scrypt is deliberately slow and synchronous here, so it runs once per secret
+ * instead of on every token read — the master key does not change at runtime.
+ */
+const derivedKeys = new Map<string, Buffer>();
+
 function deriveKey(secret: string): Buffer {
-  return scryptSync(secret, SALT, 32);
+  let key = derivedKeys.get(secret);
+  if (!key) {
+    key = scryptSync(secret, SALT, 32);
+    derivedKeys.set(secret, key);
+  }
+  return key;
 }
 
 /** Encrypts plaintext string using AES-256-GCM. */
@@ -27,7 +46,7 @@ export function decryptToken(cipherText: string, masterKey: string): string {
   if (!cipherText) return '';
   const parts = cipherText.split(':');
   if (parts.length !== 3) {
-    throw new Error('Invalid ciphertext format');
+    throw new InvalidCiphertextError();
   }
 
   const [ivHex, authTagHex, encryptedHex] = parts;

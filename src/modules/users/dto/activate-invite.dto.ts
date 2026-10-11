@@ -10,7 +10,10 @@ export class ActivateInviteDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ example: '12345678', description: `Activation code from the invite email (${USER_INVITE_CODE_LENGTH} digits)` })
+  @ApiProperty({
+    example: '12345678',
+    description: `Activation code from the invite email (${USER_INVITE_CODE_LENGTH} digits)`,
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(USER_INVITE_CODE_LENGTH)

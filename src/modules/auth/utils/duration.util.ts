@@ -1,3 +1,5 @@
+import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
+
 export function parseDurationToMilliseconds(value: string | number): number {
   if (typeof value === 'number') {
     return value;
@@ -10,7 +12,7 @@ export function parseDurationToMilliseconds(value: string | number): number {
 
   const match = trimmedValue.match(/^(\d+)(ms|s|m|h|d|w)$/i);
   if (!match) {
-    throw new Error(`Unsupported duration format: ${value}`);
+    throw new InvariantViolationException(`Unsupported duration format: ${value}`);
   }
 
   const amount = Number(match[1]);

@@ -46,9 +46,7 @@ class FakeRedis {
   async zrangebyscore(_key: string, min: number, max: string): Promise<string[]> {
     const upper = max === '+inf' ? Number.POSITIVE_INFINITY : Number(max);
 
-    return [...this.members.entries()]
-      .filter(([, score]) => score >= min && score <= upper)
-      .map(([member]) => member);
+    return [...this.members.entries()].filter(([, score]) => score >= min && score <= upper).map(([member]) => member);
   }
 
   async exec(): Promise<unknown[]> {

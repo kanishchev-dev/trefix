@@ -1,6 +1,6 @@
 import { RedisService } from '@liaoliaots/nestjs-redis';
 import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createHash, randomInt } from 'crypto';
 import Redis from 'ioredis';

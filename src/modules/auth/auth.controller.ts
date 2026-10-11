@@ -6,9 +6,11 @@ import { Request, Response } from 'express';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+import { ActivateInviteDto } from '@/modules/users/dto/activate-invite.dto';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
+import { User } from '@/modules/users/entities/user.entity';
 
 import { AuthService } from './auth.service';
-import { ActivateInviteDto } from '@/modules/users/dto/activate-invite.dto';
 import { AppleNativeExchangeDto } from './dto/apple-native-exchange.dto';
 import { AuthRegisterResponseDto } from './dto/auth-register-response.dto';
 import { AuthTokensResponseDto } from './dto/auth-tokens-response.dto';
@@ -27,11 +29,10 @@ import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { SocialExchangeDto } from './dto/social-exchange.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
+import { AuthSocialFlowInvalidException } from './exceptions/auth-social-flow-invalid.exception';
 import { AuthSocialProvider } from './interfaces/auth-social-provider.interface';
 import { AuthTokenResult } from './interfaces/auth-token-result.interface';
 import { AuthUserContext } from './interfaces/auth-user-context.interface';
-import { User } from '@/modules/users/entities/user.entity';
 
 @ApiTags('Auth')
 @Controller({
@@ -105,11 +106,9 @@ export class AuthController {
   async startSocialLogin(
     @Param('provider') provider: AuthSocialProvider,
     @Query('redirectUri') redirectUri: string,
-    @Req() request: Request,
     @Res() response: Response,
   ): Promise<void> {
-    const callbackBaseUrl = `${request.protocol}://${request.get('host')}`;
-    const startUrl = await this.authService.buildSocialStartUrl(provider, redirectUri, callbackBaseUrl);
+    const startUrl = await this.authService.buildSocialStartUrl(provider, redirectUri);
     response.redirect(302, startUrl);
   }
 
@@ -123,21 +122,15 @@ export class AuthController {
     @Query('code') queryCode: string | undefined,
     @Query('state') queryState: string | undefined,
     @Body() body: { code?: string; state?: string } | undefined,
-    @Req() request: Request,
     @Res() response: Response,
   ): Promise<void> {
     const code = queryCode ?? body?.code;
     const state = queryState ?? body?.state;
     if (!code || !state) {
-      response.status(HttpStatus.BAD_REQUEST).json({
-        message: 'Missing authorization data',
-        code: 'AUTH_SOCIAL_FLOW_INVALID',
-      });
-      return;
+      throw new AuthSocialFlowInvalidException('Missing authorization data');
     }
 
-    const callbackBaseUrl = `${request.protocol}://${request.get('host')}`;
-    const redirectUri = await this.authService.completeSocialCallback(provider, code, state, callbackBaseUrl);
+    const redirectUri = await this.authService.completeSocialCallback(provider, code, state);
     response.redirect(302, redirectUri);
   }
 
@@ -203,7 +196,11 @@ export class AuthController {
   @Post('invite/activate')
   @ApiOperation({ summary: 'Activate an invited account by setting a password' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
-  activateInvite(@Body() dto: ActivateInviteDto, @Req() request: Request, @Ip() ipAddress: string): Promise<AuthTokensResponseDto> {
+  activateInvite(
+    @Body() dto: ActivateInviteDto,
+    @Req() request: Request,
+    @Ip() ipAddress: string,
+  ): Promise<AuthTokensResponseDto> {
     const userAgentHeader = request.headers['user-agent'];
     const userAgent = Array.isArray(userAgentHeader) ? userAgentHeader[0] : userAgentHeader;
 

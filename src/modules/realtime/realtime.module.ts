@@ -5,10 +5,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthRedisModule } from '@/modules/auth/auth-redis.module';
 import { PermissionsModule } from '@/modules/permissions/permissions.module';
 
+import { SessionRevokedListener } from './listeners/session-revoked.listener';
 import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeService } from './realtime.service';
 import { RealtimePresenceService } from './services/realtime-presence.service';
-import { SessionRevokedListener } from './listeners/session-revoked.listener';
 
 @Module({
   imports: [

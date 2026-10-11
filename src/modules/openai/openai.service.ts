@@ -10,6 +10,9 @@ import {
   OpenAiTextFormatJsonSchema,
 } from './interfaces/openai-types.interface';
 
+/** Upper bound for a whole streamed answer, including generation time. */
+const OPENAI_STREAM_TIMEOUT_MS = 60_000;
+
 export interface OpenAiStreamDelta {
   type: string;
   delta?: string;
@@ -51,7 +54,7 @@ export class OpenAiService {
       const controller = new AbortController();
       let isAborted = false;
 
-      const run = async () => {
+      const run = async (): Promise<void> => {
         try {
           const response = await this.executeRequest(request, true, controller.signal);
           if (!response.body) {
@@ -93,8 +96,8 @@ export class OpenAiService {
                   this.logger.debug(`OpenAI Stream Completed: ${json.response.id}`);
                   subscriber.next({ type: 'completed', isDone: true });
                 }
-              } catch (e) {
-                // Ignore parse errors for incomplete chunks
+              } catch {
+                // A chunk boundary can split an SSE event; the rest arrives with the next chunk.
               }
             }
           }
@@ -128,7 +131,9 @@ export class OpenAiService {
 
     const baseUrl = this.configService.get<string>('openai.baseUrl') || 'https://api.openai.com/v1';
     const model = this.configService.get<string>('openai.model') || 'gpt-5';
-    const timeoutMs = stream ? 60000 : this.configService.get<number>('openai.timeoutMs') || 30000;
+    const timeoutMs = stream ? OPENAI_STREAM_TIMEOUT_MS : this.configService.getOrThrow<number>('openai.timeoutMs');
+    // Without a deadline a stalled upstream keeps the request (and the coach chat) hanging forever.
+    const timeoutSignal = AbortSignal.timeout(timeoutMs);
     const temperature = request.temperature ?? this.configService.get<number>('openai.temperature') ?? 0.2;
     const maxOutputTokens = request.maxOutputTokens ?? this.configService.get<number>('openai.maxOutputTokens') ?? 1200;
     const tracingEnabled = this.configService.get<boolean>('openai.tracingEnabled') ?? false;
@@ -142,7 +147,7 @@ export class OpenAiService {
 
     const response = await fetch(this.buildResponsesUrl(baseUrl), {
       method: 'POST',
-      signal,
+      signal: signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
@@ -163,7 +168,7 @@ export class OpenAiService {
     });
 
     if (!response.ok) {
-      const rawBody = (await response.json().catch(() => ({}))) as any;
+      const rawBody = (await response.json().catch(() => ({}))) as { error?: { message?: string } };
       const errorMessage = rawBody.error?.message || `OpenAI request failed with status ${response.status}`;
       throw new OpenAiApiException(errorMessage);
     }
@@ -191,9 +196,7 @@ export class OpenAiService {
     }
 
     // Usually, we want the assistant's message content
-    const assistantMessage = response.output.find(
-      (item) => item.type === 'message' && item.role === 'assistant',
-    );
+    const assistantMessage = response.output.find((item) => item.type === 'message' && item.role === 'assistant');
 
     if (!assistantMessage || !assistantMessage.content) {
       return undefined;

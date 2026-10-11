@@ -51,9 +51,7 @@ describe('AvatarsController', () => {
       size: 11,
     });
 
-    const response = await request(app.getHttpServer())
-      .get(`/v1/avatars/${USER_ID}`)
-      .expect(200);
+    const response = await request(app.getHttpServer()).get(`/v1/avatars/${USER_ID}`).expect(200);
 
     expect(response.headers['content-type']).toContain('image/webp');
     expect(response.headers['cache-control']).toBe('public, max-age=31536000, immutable');
@@ -74,9 +72,7 @@ describe('AvatarsController', () => {
       size: 11,
     });
 
-    const response = await request(app.getHttpServer())
-      .get(`/v1/avatars/${USER_ID}`)
-      .expect(200);
+    const response = await request(app.getHttpServer()).get(`/v1/avatars/${USER_ID}`).expect(200);
 
     expect(response.headers['cross-origin-resource-policy']).toBe('cross-origin');
   });
@@ -87,9 +83,7 @@ describe('AvatarsController', () => {
       url: 'https://cdn.example.com/me.png',
     });
 
-    const response = await request(app.getHttpServer())
-      .get(`/v1/avatars/${USER_ID}`)
-      .expect(302);
+    const response = await request(app.getHttpServer()).get(`/v1/avatars/${USER_ID}`).expect(302);
 
     expect(response.headers.location).toBe('https://cdn.example.com/me.png');
     expect(response.headers['cross-origin-resource-policy']).toBe('cross-origin');

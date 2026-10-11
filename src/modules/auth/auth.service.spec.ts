@@ -328,10 +328,7 @@ describe('AuthService', () => {
     const passwordHashFor = async (): Promise<string> => createPasswordHash('StrongPass123!');
 
     beforeEach(() => {
-      permissionsService.getEffectivePermissions.mockResolvedValue([
-        'users.read',
-        'users.update',
-      ]);
+      permissionsService.getEffectivePermissions.mockResolvedValue(['users.read', 'users.update']);
     });
 
     it('includes permissions when a session is created by login', async () => {

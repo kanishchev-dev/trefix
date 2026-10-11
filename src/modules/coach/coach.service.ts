@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
-import { map, Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { OpenAiInputMessage } from '@/modules/openai/interfaces/openai-types.interface';
 import { OpenAiService } from '@/modules/openai/openai.service';
 import { TrainingService } from '@/modules/training/training.service';
 import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
@@ -131,10 +132,9 @@ export class CoachService {
       let fullReply = '';
       let toolResults: CoachToolExecutionResult[] = [];
 
-      const runGeneration = async (input: any[], isDraft: boolean) => {
+      const runGeneration = async (input: OpenAiInputMessage[], isDraft: boolean): Promise<void> => {
         let jsonBuffer = '';
         let lastReplyLength = 0;
-        let foundReply = false;
 
         return new Promise<void>((resolve, reject) => {
           this.openAiService
@@ -153,7 +153,6 @@ export class CoachService {
                   // Robust extraction of 'reply' field from JSON stream
                   const replyMatch = jsonBuffer.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)/);
                   if (replyMatch && replyMatch[1]) {
-                    foundReply = true;
                     try {
                       // Attempting to parse the captured fragment as a JS string to unescape correctly
                       const currentReply = JSON.parse(`"${replyMatch[1]}"`);
@@ -163,7 +162,7 @@ export class CoachService {
                         this.logger.debug(`Coach Stream Delta: [${newText}]`);
                         subscriber.next({ delta: newText, isDone: false });
                       }
-                    } catch (e) {
+                    } catch {
                       // If JSON.parse fails (e.g. partial escape sequence like \n), try manual cleanup for immediate output
                       const rawReply = replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                       const newText = rawReply.slice(lastReplyLength);
@@ -231,7 +230,7 @@ export class CoachService {
         });
       };
 
-      const start = async () => {
+      const start = async (): Promise<void> => {
         try {
           const initialInput = this.buildPromptMessages(context, history, dto.message);
           await runGeneration(initialInput, true);
@@ -411,7 +410,7 @@ export class CoachService {
       if (message.role === 'tool') return;
 
       messages.push({
-        role: message.role as any,
+        role: message.role,
         content: [
           {
             type: message.role === 'assistant' ? 'output_text' : 'input_text',

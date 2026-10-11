@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  Res,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -106,10 +97,7 @@ export class AvatarsController {
   @Get(':userId')
   @Public()
   @ApiOperation({ summary: 'Get the avatar of a user' })
-  async getAvatar(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Res() response: Response,
-  ): Promise<void> {
+  async getAvatar(@Param('userId', ParseUUIDPipe) userId: string, @Res() response: Response): Promise<void> {
     const source = await this.avatarService.resolveAvatarSource(userId);
 
     if (source.kind === 'redirect') {

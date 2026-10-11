@@ -12,11 +12,7 @@ import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([AppSetting, Permission, PermissionGroup]),
-    RealtimeModule,
-    PermissionsModule,
-  ],
+  imports: [SequelizeModule.forFeature([AppSetting, Permission, PermissionGroup]), RealtimeModule, PermissionsModule],
   controllers: [SettingsController],
   providers: [SettingsService, SettingsListener],
   exports: [SettingsService],

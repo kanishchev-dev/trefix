@@ -14,7 +14,11 @@ import * as path from 'path';
 
 import { AvatarsModule } from '@/modules/avatars/avatars.module';
 
-import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import {
+  CorrelationIdMiddleware,
+  REQUEST_ID_HEADER,
+  resolveRequestId,
+} from './common/middleware/correlation-id.middleware';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import trainingConfig from './config/training.config';
@@ -37,6 +41,17 @@ import { AccountDeletionModule } from './modules/users/account-deletion/account-
 import { ConsentsModule } from './modules/users/consents/consents.module';
 import { PreferencesModule } from './modules/users/preferences/preferences.module';
 import { UsersModule } from './modules/users/users.module';
+
+/** Default lifetime of cache entries that do not set their own TTL. */
+const CACHE_DEFAULT_TTL_MS = 10 * 60 * 1000;
+
+/** Credentials and personal data that must never reach the logs. */
+const LOG_REDACTED_PATHS = [
+  'req.headers.authorization',
+  'req.headers.cookie',
+  'req.headers["x-api-key"]',
+  'res.headers["set-cookie"]',
+];
 
 @Module({
   imports: [
@@ -66,6 +81,9 @@ import { UsersModule } from './modules/users/users.module';
       useFactory: (configService: ConfigService) => ({
         pinoHttp: {
           level: configService.get<string>('app.logLevel'),
+          // Same id as the error response `traceId` and the `X-Request-Id` header.
+          genReqId: (request): string => resolveRequestId(request.headers[REQUEST_ID_HEADER]),
+          redact: { paths: LOG_REDACTED_PATHS, censor: '[REDACTED]' },
           transport:
             configService.get<string>('NODE_ENV') !== 'production'
               ? { target: 'pino-pretty', options: { colorize: true } }
@@ -115,7 +133,7 @@ import { UsersModule } from './modules/users/users.module';
             host: configService.get<string>('REDIS_HOST'),
             port: configService.get<number>('REDIS_PORT'),
           },
-          ttl: 600, // Default TTL 10 minutes
+          ttl: CACHE_DEFAULT_TTL_MS,
         }),
       }),
     }),
@@ -140,12 +158,15 @@ import { UsersModule } from './modules/users/users.module';
         },
       ],
     }),
-    I18nModule.forRoot({
-      fallbackLanguage: 'en',
-      loaderOptions: {
-        path: path.join(__dirname, process.env.NODE_ENV === 'development' ? '/../../i18n/' : '/../i18n/'),
-        watch: true,
-      },
+    I18nModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        fallbackLanguage: 'en',
+        loaderOptions: {
+          path: path.join(__dirname, configService.getOrThrow<string>('app.i18nPath')),
+          watch: configService.getOrThrow<boolean>('app.i18nWatch'),
+        },
+      }),
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
     }),
   ],

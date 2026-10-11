@@ -2,6 +2,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { DEFAULT_QUEUE_JOB_OPTIONS } from '@/common/constants/queue.constants';
+
 import mailerConfig from './config/mailer.config';
 import { MAILER_QUEUE_NAME, MAILER_TRANSPORT } from './mailer.constants';
 import { MailerService } from './mailer.service';
@@ -15,6 +17,7 @@ import { SmtpMailerTransport } from './transports/smtp-mailer.transport';
     ConfigModule.forFeature(mailerConfig),
     BullModule.registerQueue({
       name: MAILER_QUEUE_NAME,
+      defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS,
     }),
   ],
   providers: [

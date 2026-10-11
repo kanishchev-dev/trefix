@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { DEFAULT_QUEUE_JOB_OPTIONS } from '@/common/constants/queue.constants';
 import { StorageFile } from '@/modules/storage/entities/storage-file.entity';
 import { StorageModule } from '@/modules/storage/storage.module';
 
@@ -15,7 +16,7 @@ import { AccountDeletionService } from './account-deletion.service';
 @Module({
   imports: [
     SequelizeModule.forFeature([User, StorageFile]),
-    BullModule.registerQueue({ name: ACCOUNT_DELETION_QUEUE }),
+    BullModule.registerQueue({ name: ACCOUNT_DELETION_QUEUE, defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS }),
     UsersModule,
     StorageModule,
   ],

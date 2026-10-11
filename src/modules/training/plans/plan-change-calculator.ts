@@ -5,7 +5,13 @@ import { DomainException } from '@/common/exceptions/domain.exception';
 import type { TrainingPlan, TrainingPlanConfig } from '../entities/training-plan.entity';
 import type { Workout } from '../entities/workout.entity';
 import type { WorkoutView } from '../interfaces/training-views.interface';
-import { PLAN_RESIZE_ERROR, PlanDiff, RelativeWeek, RelativeWorkout, TrainingEngine } from '../training.engine';
+import {
+  PlanDiff,
+  PlanResizeNotPossibleError,
+  RelativeWeek,
+  RelativeWorkout,
+  TrainingEngine,
+} from '../training.engine';
 import { PlanStatsService } from './plan-stats.service';
 import { addDaysIso, mondayIndex, parseIsoDate, todayIsoInTz } from './plan-utils';
 
@@ -381,7 +387,7 @@ export class PlanChangeCalculator {
     try {
       resized = this.engine.resizeToTargetDate(resizeInput, keepWeeks + 1, newTotal);
     } catch (error) {
-      if (error instanceof Error && error.message === PLAN_RESIZE_ERROR) {
+      if (error instanceof PlanResizeNotPossibleError) {
         throw this.resizeImpossible();
       }
       throw error;

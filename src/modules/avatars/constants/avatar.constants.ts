@@ -12,11 +12,7 @@ export const AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024;
  * document, and serving it from the API origin would turn an avatar upload
  * into a stored XSS vector.
  */
-export const AVATAR_ALLOWED_MIME_TYPES = [
-  'image/webp',
-  'image/jpeg',
-  'image/png',
-] as const;
+export const AVATAR_ALLOWED_MIME_TYPES = ['image/webp', 'image/jpeg', 'image/png'] as const;
 
 export const AVATAR_SCOPE_TYPE = 'users';
 export const AVATAR_STORAGE_FOLDER = 'avatars';

@@ -247,13 +247,9 @@ export class AuthRedisService {
     await client.set(this.buildSocialStateKey(state), JSON.stringify(record), 'PX', ttlMilliseconds);
   }
 
-  async getSocialState(state: string): Promise<AuthSocialStateRecord | null> {
-    const record = await this.getJsonRecord<AuthSocialStateRecord>(this.buildSocialStateKey(state));
-    return record;
-  }
-
-  async clearSocialState(state: string): Promise<void> {
-    await this.deleteKeys(this.buildSocialStateKey(state));
+  /** Reads and removes the state in one command: a replayed callback finds nothing. */
+  async consumeSocialState(state: string): Promise<AuthSocialStateRecord | null> {
+    return this.consumeJsonRecord<AuthSocialStateRecord>(this.buildSocialStateKey(state));
   }
 
   async setSocialResult(code: string, record: AuthSocialResultRecord, ttlMilliseconds: number): Promise<void> {
@@ -261,12 +257,9 @@ export class AuthRedisService {
     await client.set(this.buildSocialResultKey(code), JSON.stringify(record), 'PX', ttlMilliseconds);
   }
 
-  async getSocialResult(code: string): Promise<AuthSocialResultRecord | null> {
-    return this.getJsonRecord<AuthSocialResultRecord>(this.buildSocialResultKey(code));
-  }
-
-  async clearSocialResult(code: string): Promise<void> {
-    await this.deleteKeys(this.buildSocialResultKey(code));
+  /** Single-use handoff: two parallel exchanges of one code cannot both get the tokens. */
+  async consumeSocialResult(code: string): Promise<AuthSocialResultRecord | null> {
+    return this.consumeJsonRecord<AuthSocialResultRecord>(this.buildSocialResultKey(code));
   }
 
   private async getSessions(sessionIds: string[]): Promise<Array<AuthSessionRecord | null>> {
@@ -289,30 +282,43 @@ export class AuthRedisService {
     return this.getJsonRecord<AuthCodeRecord>(key);
   }
 
+  /**
+   * Counts a failed guess in one Redis round trip.
+   *
+   * A read-modify-write from Node would let parallel wrong guesses all read the
+   * same counter and push the real number of attempts past `maxAttempts`.
+   * The record keeps its original TTL; reaching the limit burns the code.
+   */
   private async incrementCodeAttempts(key: string, maxAttempts: number): Promise<AuthCodeRecord | null> {
-    const client = this.getClient();
-    const record = await this.getCodeRecord(key);
-    if (!record) {
-      return null;
-    }
+    const raw = (await this.getClient().eval(
+      `
+        local raw = redis.call('GET', KEYS[1])
+        if not raw then
+          return nil
+        end
 
-    const nextRecord: AuthCodeRecord = {
-      ...record,
-      attempts: record.attempts + 1,
-    };
+        local record = cjson.decode(raw)
+        record.attempts = (tonumber(record.attempts) or 0) + 1
+        if record.attempts >= tonumber(ARGV[1]) then
+          redis.call('DEL', KEYS[1])
+          return nil
+        end
 
-    if (nextRecord.attempts >= maxAttempts) {
-      await client.del(key);
-      return null;
-    }
-
-    await client.set(
+        local ttl = redis.call('PTTL', KEYS[1])
+        local encoded = cjson.encode(record)
+        if ttl > 0 then
+          redis.call('SET', KEYS[1], encoded, 'PX', ttl)
+        else
+          redis.call('SET', KEYS[1], encoded)
+        end
+        return encoded
+      `,
+      1,
       key,
-      JSON.stringify(nextRecord),
-      'PX',
-      Math.max(1, this.expiresAtToRemainingTtl(nextRecord.expiresAt)),
-    );
-    return nextRecord;
+      maxAttempts,
+    )) as string | null;
+
+    return raw ? (JSON.parse(raw) as AuthCodeRecord) : null;
   }
 
   private async deleteKeys(...keys: string[]): Promise<void> {
@@ -330,9 +336,9 @@ export class AuthRedisService {
     return JSON.parse(rawRecord) as T;
   }
 
-  private expiresAtToRemainingTtl(expiresAt: string): number {
-    const expiresAtMs = new Date(expiresAt).getTime();
-    return Math.max(1, expiresAtMs - Date.now());
+  private async consumeJsonRecord<T>(key: string): Promise<T | null> {
+    const rawRecord = await this.getClient().getdel(key);
+    return rawRecord ? (JSON.parse(rawRecord) as T) : null;
   }
 
   private buildEmailOtpKey(email: string): string {

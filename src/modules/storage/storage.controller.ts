@@ -21,6 +21,7 @@ import { tmpdir } from 'os';
 import { extname } from 'path';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { StorageFileResponseDto } from './dto/storage-file-response.dto';
@@ -30,7 +31,6 @@ import { StorageUploadedFile } from './interfaces/storage-uploaded-file.interfac
 import { STORAGE_DEFAULT_MAX_UPLOAD_SIZE_BYTES } from './storage.constants';
 import { StorageService } from './storage.service';
 import { createContentDisposition } from './utils/storage-path.util';
-import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 function buildTempFilename(originalname: string): string {
   const extension = extname(originalname);

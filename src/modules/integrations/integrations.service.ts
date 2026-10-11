@@ -4,8 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Queue } from 'bullmq';
-import { randomBytes } from 'crypto';
-import { Op } from 'sequelize';
+import { Op, UniqueConstraintError } from 'sequelize';
 
 import { DomainException } from '@/common/exceptions/domain.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
@@ -25,6 +24,7 @@ import {
   JOB_STRAVA_INITIAL_SYNC,
   JOB_STRAVA_PROCESS_WEBHOOK,
   JOB_STRAVA_PROFILE_SYNC,
+  OAUTH_ACCESS_TOKEN_REFRESH_MARGIN_MS,
   STRAVA_PROFILE_SCOPE,
   SYNC_STATUSES,
   SYNC_TYPES,
@@ -41,17 +41,16 @@ import { StravaWebhookEvent } from './entities/strava-webhook-event.entity';
 import { WorkoutSource } from './entities/workout-source.entity';
 import { IntegrationConnectedEvent } from './events/integration-connected.event';
 import { IntegrationDisconnectedEvent } from './events/integration-disconnected.event';
+import { IntegrationOAuthStateInvalidException } from './exceptions/integration-oauth-state-invalid.exception';
+import { IntegrationReauthorizationRequiredException } from './exceptions/integration-reauthorization-required.exception';
 import { ActivityIngestionService } from './ingestion/activity-ingestion.service';
 import { toIntegrationItem } from './integration-item.mapper';
 import { StravaProvider } from './providers/strava/strava.provider';
+import { OAuthStateStore } from './services/oauth-state.store';
 
 @Injectable()
 export class IntegrationsService {
   private readonly logger = new Logger(IntegrationsService.name);
-  private readonly stateStore = new Map<
-    string,
-    { athleteId: string; expiresAt: number; purpose: 'connect' | 'profile' }
-  >();
 
   constructor(
     @InjectModel(Integration)
@@ -68,6 +67,7 @@ export class IntegrationsService {
     private readonly trainingService: TrainingService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly oauthStateStore: OAuthStateStore,
     private readonly athleteProfileService: AthleteProfileService,
     private readonly gearService: GearService,
     private readonly preferencesService: UserPreferencesService,
@@ -81,7 +81,7 @@ export class IntegrationsService {
   ) {}
 
   private get encryptionKey(): string {
-    return this.configService.get<string>('integrations.encryptionKey') || 'default_key_32_chars_placeholder!!';
+    return this.configService.getOrThrow<string>('integrations.encryptionKey');
   }
 
   /** Lists every provider with its connection status for the user. */
@@ -145,10 +145,7 @@ export class IntegrationsService {
   /** Initiates Strava OAuth connection flow. */
   async initiateStravaConnect(actorUserId: string): Promise<StravaConnectResponseDto> {
     const athlete = await this.trainingService.getOrCreateAthlete(actorUserId);
-    const state = randomBytes(16).toString('hex');
-    const expiresAt = Date.now() + 1000 * 60 * 15; // 15 mins TTL
-
-    this.stateStore.set(state, { athleteId: athlete.id, expiresAt, purpose: 'connect' });
+    const state = await this.oauthStateStore.issue({ athleteId: athlete.id, purpose: 'connect' });
     const authUrl = this.stravaProvider.generateAuthUrl(athlete.id, state);
 
     return { authUrl, state };
@@ -158,8 +155,7 @@ export class IntegrationsService {
   async requestStravaProfileAccess(actorUserId: string): Promise<{ authorizeUrl: string; state: string }> {
     const athlete = await this.trainingService.getOrCreateAthlete(actorUserId);
     await this.loadConnectedStravaOrThrow(athlete.id);
-    const state = randomBytes(16).toString('hex');
-    this.stateStore.set(state, { athleteId: athlete.id, expiresAt: Date.now() + 1000 * 60 * 15, purpose: 'profile' });
+    const state = await this.oauthStateStore.issue({ athleteId: athlete.id, purpose: 'profile' });
     return { authorizeUrl: this.stravaProvider.generateProfileAuthUrl(state), state };
   }
 
@@ -270,12 +266,10 @@ export class IntegrationsService {
     state: string,
     grantedScope?: string,
   ): Promise<{ success: boolean; message: string }> {
-    const stored = this.stateStore.get(state);
-    if (!stored || stored.expiresAt < Date.now()) {
-      this.stateStore.delete(state);
-      throw new Error('Invalid or expired OAuth state parameter');
+    const stored = await this.oauthStateStore.consume(state);
+    if (!stored) {
+      throw new IntegrationOAuthStateInvalidException();
     }
-    this.stateStore.delete(state);
 
     const grantedScopes = grantedScope
       ? grantedScope
@@ -558,6 +552,14 @@ export class IntegrationsService {
 
   /** Ingests incoming webhook event and enqueues job. */
   async handleWebhookIngestion(payload: StravaWebhookEventDto): Promise<{ status: string }> {
+    // Strava does not sign webhook calls; the subscription id is the only proof the
+    // event comes from our own subscription. Answer 200 anyway so nothing is retried.
+    const expectedSubscriptionId = this.configService.get<string>('integrations.strava.webhookSubscriptionId');
+    if (expectedSubscriptionId && String(payload.subscription_id) !== expectedSubscriptionId) {
+      this.logger.warn(`Ignoring webhook for foreign subscription ${payload.subscription_id}`);
+      return { status: 'ignored' };
+    }
+
     const fingerprint = `${payload.subscription_id}:${payload.object_type}:${payload.object_id}:${payload.aspect_type}:${payload.event_time}`;
 
     const existing = await this.webhookEventModel.findOne({ where: { fingerprint } });
@@ -566,24 +568,29 @@ export class IntegrationsService {
       return { status: 'already_received' };
     }
 
-    const webhookEvent = await this.webhookEventModel.create({
-      subscriptionId: String(payload.subscription_id),
-      objectType: payload.object_type,
-      objectId: String(payload.object_id),
-      aspectType: payload.aspect_type,
-      ownerId: String(payload.owner_id),
-      eventTime: payload.event_time,
-      updates: payload.updates || {},
-      fingerprint,
-      receivedAt: new Date(),
-      status: WEBHOOK_EVENT_STATUSES.PENDING,
-    });
+    let webhookEvent: StravaWebhookEvent;
+    try {
+      webhookEvent = await this.webhookEventModel.create({
+        subscriptionId: String(payload.subscription_id),
+        objectType: payload.object_type,
+        objectId: String(payload.object_id),
+        aspectType: payload.aspect_type,
+        ownerId: String(payload.owner_id),
+        eventTime: payload.event_time,
+        updates: payload.updates || {},
+        fingerprint,
+        receivedAt: new Date(),
+        status: WEBHOOK_EVENT_STATUSES.PENDING,
+      });
+    } catch (error) {
+      // Strava redelivers events; a parallel delivery may win the unique fingerprint.
+      if (error instanceof UniqueConstraintError) {
+        return { status: 'already_received' };
+      }
+      throw error;
+    }
 
-    await this.queue.add(
-      JOB_STRAVA_PROCESS_WEBHOOK,
-      { webhookEventId: webhookEvent.id },
-      { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
-    );
+    await this.queue.add(JOB_STRAVA_PROCESS_WEBHOOK, { webhookEventId: webhookEvent.id });
 
     return { status: 'queued' };
   }
@@ -670,15 +677,15 @@ export class IntegrationsService {
     const now = new Date();
     if (
       integration.accessTokenExpiresAt &&
-      integration.accessTokenExpiresAt.getTime() > now.getTime() + 5 * 60 * 1000
+      integration.accessTokenExpiresAt.getTime() > now.getTime() + OAUTH_ACCESS_TOKEN_REFRESH_MARGIN_MS
     ) {
-      return; // Still valid for at least 5 minutes
+      return;
     }
 
     if (!integration.refreshTokenEncrypted) {
       integration.status = INTEGRATION_STATUSES.REAUTHORIZATION_REQUIRED;
       await integration.save();
-      throw new Error('Refresh token is missing, reauthorization required.');
+      throw new IntegrationReauthorizationRequiredException();
     }
 
     const currentRefreshToken = decryptToken(integration.refreshTokenEncrypted, this.encryptionKey);

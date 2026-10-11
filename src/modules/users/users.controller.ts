@@ -20,10 +20,10 @@ import { RealtimePresenceService } from '@/modules/realtime/services/realtime-pr
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { AdminUserResponseDto } from './dto/admin-user-response.dto';
-import { UserQueryDto } from './dto/user-query.dto';
-import { User } from './entities/user.entity';
 import { UserPresenceQueryDto } from './dto/user-presence-query.dto';
 import { UserPresenceResponseDto } from './dto/user-presence-response.dto';
+import { UserQueryDto } from './dto/user-query.dto';
+import { User } from './entities/user.entity';
 import { AdminUsersService } from './services/admin-users.service';
 import { UsersService } from './users.service';
 

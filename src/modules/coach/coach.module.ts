@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { DEFAULT_QUEUE_JOB_OPTIONS } from '@/common/constants/queue.constants';
 import { RealtimeModule } from '@/modules/realtime/realtime.module';
 import { TrainingModule } from '@/modules/training/training.module';
 import { PreferencesModule } from '@/modules/users/preferences/preferences.module';
@@ -26,7 +27,7 @@ import { CoachProactiveService } from './proactive/coach-proactive.service';
     OpenAiModule,
     RealtimeModule,
     PreferencesModule,
-    BullModule.registerQueue({ name: COACH_PROACTIVE_QUEUE }),
+    BullModule.registerQueue({ name: COACH_PROACTIVE_QUEUE, defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS }),
   ],
   controllers: [CoachController],
   providers: [

@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { OpenAiService } from './openai.service';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { OpenAiResponseResult } from './interfaces/openai-types.interface';
+import { OpenAiService } from './openai.service';
 
 describe('OpenAiService', () => {
   let service: OpenAiService;
@@ -34,7 +35,9 @@ describe('OpenAiService', () => {
         output_text: 'Hello from SDK',
       };
       // Accessing private method for testing
-      expect((service as any).extractText(response)).toBe('Hello from SDK');
+      expect((service as unknown as { extractText(value: OpenAiResponseResult): string }).extractText(response)).toBe(
+        'Hello from SDK',
+      );
     });
 
     it('should extract text from output array in raw REST response', () => {
@@ -55,7 +58,9 @@ describe('OpenAiService', () => {
           },
         ],
       };
-      expect((service as any).extractText(response)).toBe('{"reply": "Hello from REST"}');
+      expect((service as unknown as { extractText(value: OpenAiResponseResult): string }).extractText(response)).toBe(
+        '{"reply": "Hello from REST"}',
+      );
     });
 
     it('should return undefined if no assistant message is found', () => {
@@ -70,7 +75,9 @@ describe('OpenAiService', () => {
           },
         ],
       };
-      expect((service as any).extractText(response)).toBeUndefined();
+      expect(
+        (service as unknown as { extractText(value: OpenAiResponseResult): string }).extractText(response),
+      ).toBeUndefined();
     });
 
     it('should aggregate multiple output_text parts', () => {
@@ -89,7 +96,9 @@ describe('OpenAiService', () => {
           },
         ],
       };
-      expect((service as any).extractText(response)).toBe('Part 1Part 2');
+      expect((service as unknown as { extractText(value: OpenAiResponseResult): string }).extractText(response)).toBe(
+        'Part 1Part 2',
+      );
     });
   });
 });

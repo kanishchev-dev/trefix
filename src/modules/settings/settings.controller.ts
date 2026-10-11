@@ -2,14 +2,14 @@ import { Body, Controller, ForbiddenException, Get, Patch } from '@nestjs/common
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
+import { PermissionsService } from '@/modules/permissions/permissions.service';
 
 import { SettingsResponseDto } from './dto/settings-response.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { AppSettingsSnapshot } from './settings.constants';
 import { SettingsService } from './settings.service';
-import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 
 @ApiTags('Settings')
 @ApiBearerAuth()

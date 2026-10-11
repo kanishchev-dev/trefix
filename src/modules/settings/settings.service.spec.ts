@@ -81,9 +81,7 @@ describe('SettingsService', () => {
     });
 
     it('should accept the system theme mode', async () => {
-      appSettingModel.findAll.mockResolvedValue([
-        { key: SETTINGS_KEY_THEME, value: 'system' },
-      ]);
+      appSettingModel.findAll.mockResolvedValue([{ key: SETTINGS_KEY_THEME, value: 'system' }]);
 
       const settings = await service.getSettings();
 

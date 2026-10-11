@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { decryptToken } from '../../../../common/utils/encryption.util';
 import { STRAVA_ACTIVITY_SCOPES, STRAVA_PROFILE_SCOPE } from '../../constants/integrations.constants';
 import { Integration } from '../../entities/integration.entity';
+import { IntegrationReauthorizationRequiredException } from '../../exceptions/integration-reauthorization-required.exception';
 import { IntegrationProvider, OAuthTokens } from '../../interfaces/integration-provider.interface';
 import { RunningActivity } from '../../interfaces/running-activity.interface';
 import { StravaMapper } from './strava.mapper';
@@ -20,7 +21,7 @@ export class StravaProvider implements IntegrationProvider {
   ) {}
 
   private get encryptionKey(): string {
-    return this.configService.get<string>('integrations.encryptionKey') || '';
+    return this.configService.getOrThrow<string>('integrations.encryptionKey');
   }
 
   generateAuthUrl(athleteId: string, state: string): string {
@@ -145,7 +146,7 @@ export class StravaProvider implements IntegrationProvider {
 
   private getAccessToken(integration: Integration): string {
     if (!integration.accessTokenEncrypted) {
-      throw new Error('Integration has no encrypted access token');
+      throw new IntegrationReauthorizationRequiredException();
     }
     return decryptToken(integration.accessTokenEncrypted, this.encryptionKey);
   }

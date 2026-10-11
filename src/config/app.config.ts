@@ -30,6 +30,15 @@ export default registerAs('app', () => ({
    * limiter counts by IP — a limit low enough to notice a second tab is a
    * limit that breaks a single one.
    */
+  /** Swagger UI at `/docs`; disabled by default in production (see validation schema). */
+  swaggerEnabled: process.env.SWAGGER_ENABLED === 'true',
+  /** Translations are hot-reloaded only while developing. */
+  i18nWatch: process.env.NODE_ENV === 'development',
+  /**
+   * `nest start` runs from `dist/src`, the production image from `dist` with
+   * translations copied next to it — hence two layouts.
+   */
+  i18nPath: process.env.NODE_ENV === 'development' ? '../../i18n/' : '../i18n/',
   throttleLimit: parseInt(process.env.THROTTLE_LIMIT || '300', 10),
   throttleTtl: parseInt(process.env.THROTTLE_TTL || '60000', 10),
 }));

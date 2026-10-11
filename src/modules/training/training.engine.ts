@@ -207,7 +207,13 @@ export interface ExtractableWorkout {
 }
 
 /** Error name used when a target-date resize is impossible. */
-export const PLAN_RESIZE_ERROR = 'PLAN_RESIZE_NOT_POSSIBLE';
+/** The requested plan length cannot hold the phases the goal needs. */
+export class PlanResizeNotPossibleError extends Error {
+  constructor() {
+    super('PLAN_RESIZE_NOT_POSSIBLE');
+    this.name = 'PlanResizeNotPossibleError';
+  }
+}
 
 /** Options of materializeWeeks. */
 export interface MaterializeOptions {
@@ -1445,7 +1451,7 @@ export class TrainingEngine {
       const insertCount = newTotalWeeks - currentTotal;
       const templateIndex = this.findExtensionTemplateIndex(weeks, passedWeeks);
       if (templateIndex === null) {
-        throw new Error(PLAN_RESIZE_ERROR);
+        throw new PlanResizeNotPossibleError();
       }
 
       const template = weeks[templateIndex];
@@ -1471,7 +1477,7 @@ export class TrainingEngine {
     );
     const remainingNonTaper = newTotalWeeks - protectedTail;
     if (removable.length < removableCount || remainingNonTaper < 2) {
-      throw new Error(PLAN_RESIZE_ERROR);
+      throw new PlanResizeNotPossibleError();
     }
 
     // Remove from the end of the base/build remainder first.

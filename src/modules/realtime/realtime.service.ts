@@ -5,7 +5,11 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { Redis } from 'ioredis';
 import { Server } from 'socket.io';
 
-import { REALTIME_ROOM_PREFIX, REALTIME_SESSION_ROOM_PREFIX, REALTIME_USER_ROOM_PREFIX } from './constants/realtime.constants';
+import {
+  REALTIME_ROOM_PREFIX,
+  REALTIME_SESSION_ROOM_PREFIX,
+  REALTIME_USER_ROOM_PREFIX,
+} from './constants/realtime.constants';
 import { RealtimeEvent } from './interfaces/realtime-event.interface';
 
 const DEFAULT_REALTIME_SOURCE = 'backend';
@@ -96,7 +100,13 @@ export class RealtimeService implements OnApplicationShutdown {
 
     this.warnWhenNobodyListens(event, socketRoom);
 
-    return this.emitToTargets((envelope) => this.server?.to(socketRoom).emit(event, envelope) ?? false, event, data, 'room', room);
+    return this.emitToTargets(
+      (envelope) => this.server?.to(socketRoom).emit(event, envelope) ?? false,
+      event,
+      data,
+      'room',
+      room,
+    );
   }
 
   /**
@@ -131,8 +141,7 @@ export class RealtimeService implements OnApplicationShutdown {
    */
   private adapterRooms(): Map<string, Set<unknown>> | undefined {
     const server = this.server as
-      | ({ adapter?: unknown; server?: { adapter?: unknown } } & Record<string, unknown>)
-      | undefined;
+      ({ adapter?: unknown; server?: { adapter?: unknown } } & Record<string, unknown>) | undefined;
 
     if (!server) {
       return undefined;

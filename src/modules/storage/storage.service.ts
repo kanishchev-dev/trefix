@@ -155,7 +155,8 @@ export class StorageService {
     }
   }
 
-  async deleteFile(id: string, context: StorageAccessContext = {}): Promise<void> {    const file = await this.findById(id);
+  async deleteFile(id: string, context: StorageAccessContext = {}): Promise<void> {
+    const file = await this.findById(id);
     this.assertCanDelete(file, context.requesterUserId);
 
     try {

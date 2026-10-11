@@ -120,11 +120,7 @@ export class RealtimePresenceService {
     const wanted = new Set(uniqueUserIds);
     const online = new Set<string>();
 
-    const members = await client.zrangebyscore(
-      REALTIME_PRESENCE_REDIS_KEY,
-      this.expiredBefore(),
-      '+inf',
-    );
+    const members = await client.zrangebyscore(REALTIME_PRESENCE_REDIS_KEY, this.expiredBefore(), '+inf');
 
     for (const member of members) {
       const userId = this.parseMemberUserId(member);

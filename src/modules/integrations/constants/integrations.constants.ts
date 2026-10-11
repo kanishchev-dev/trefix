@@ -190,3 +190,12 @@ export const RESTING_HR_MIN_DAYS = 3;
 export const RESTING_HR_MAX_SAMPLES = 14;
 /** Metrics measured longer ago than this are not applied to the profile. */
 export const PROFILE_METRIC_MAX_AGE_DAYS = 90;
+
+// ---------------------------------------------------------------- OAuth
+
+/** Redis namespace of pending OAuth `state` values; one key per authorization attempt. */
+export const OAUTH_STATE_REDIS_PREFIX = 'integrations:oauth-state:';
+/** How long the user has to finish the provider's consent screen. */
+export const OAUTH_STATE_TTL_MS = 15 * 60 * 1000;
+/** An access token this close to expiry is refreshed before use. */
+export const OAUTH_ACCESS_TOKEN_REFRESH_MARGIN_MS = 5 * 60 * 1000;

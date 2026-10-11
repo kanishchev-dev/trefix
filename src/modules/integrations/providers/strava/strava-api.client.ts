@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { STRAVA_ACTIVITY_SCOPES } from '../../constants/integrations.constants';
+import { IntegrationProviderRequestFailedException } from '../../exceptions/integration-provider-request-failed.exception';
 import {
   StravaActivitySummary,
   StravaDetailedAthlete,
@@ -16,23 +17,23 @@ export class StravaApiClient {
   constructor(private readonly configService: ConfigService) {}
 
   private get clientId(): string {
-    return this.configService.get<string>('integrations.strava.clientId') || '';
+    return this.configService.getOrThrow<string>('integrations.strava.clientId');
   }
 
   private get clientSecret(): string {
-    return this.configService.get<string>('integrations.strava.clientSecret') || '';
+    return this.configService.getOrThrow<string>('integrations.strava.clientSecret');
   }
 
   private get redirectUri(): string {
-    return this.configService.get<string>('integrations.strava.redirectUri') || '';
+    return this.configService.getOrThrow<string>('integrations.strava.redirectUri');
   }
 
   private get apiBaseUrl(): string {
-    return this.configService.get<string>('integrations.strava.apiBaseUrl') || 'https://www.strava.com/api/v3';
+    return this.configService.getOrThrow<string>('integrations.strava.apiBaseUrl');
   }
 
   private get oauthBaseUrl(): string {
-    return this.configService.get<string>('integrations.strava.oauthBaseUrl') || 'https://www.strava.com/oauth';
+    return this.configService.getOrThrow<string>('integrations.strava.oauthBaseUrl');
   }
 
   /** Generates Strava OAuth authorization URL. `force` shows the consent screen again to grant new scopes. */
@@ -65,7 +66,7 @@ export class StravaApiClient {
     if (!response.ok) {
       const errorText = await response.text();
       this.logger.error(`Strava token exchange failed: ${response.status} ${errorText}`);
-      throw new Error(`Strava token exchange failed with status ${response.status}`);
+      throw new IntegrationProviderRequestFailedException('Strava', 'token exchange', response.status);
     }
 
     return (await response.json()) as StravaTokenResponse;
@@ -87,7 +88,7 @@ export class StravaApiClient {
     if (!response.ok) {
       const errorText = await response.text();
       this.logger.error(`Strava token refresh failed: ${response.status} ${errorText}`);
-      throw new Error(`Strava token refresh failed with status ${response.status}`);
+      throw new IntegrationProviderRequestFailedException('Strava', 'token refresh', response.status);
     }
 
     return (await response.json()) as StravaTokenResponse;
@@ -116,7 +117,7 @@ export class StravaApiClient {
     if (!response.ok) {
       const errorText = await response.text();
       this.logger.error(`Strava fetch activities failed: ${response.status} ${errorText}`);
-      throw new Error(`Strava fetch activities failed with status ${response.status}`);
+      throw new IntegrationProviderRequestFailedException('Strava', 'fetch activities', response.status);
     }
 
     return (await response.json()) as StravaActivitySummary[];
@@ -136,7 +137,7 @@ export class StravaApiClient {
     if (!response.ok) {
       const errorText = await response.text();
       this.logger.error(`Strava fetch activity ${activityId} failed: ${response.status} ${errorText}`);
-      throw new Error(`Strava fetch activity failed with status ${response.status}`);
+      throw new IntegrationProviderRequestFailedException('Strava', 'fetch activity', response.status);
     }
 
     return (await response.json()) as StravaActivitySummary;
@@ -160,7 +161,7 @@ export class StravaApiClient {
     if (!response.ok) {
       const errorText = await response.text();
       this.logger.error(`Strava GET ${path} failed: ${response.status} ${errorText}`);
-      throw new Error(`Strava GET ${path} failed with status ${response.status}`);
+      throw new IntegrationProviderRequestFailedException('Strava', `GET ${path}`, response.status);
     }
     return (await response.json()) as T;
   }

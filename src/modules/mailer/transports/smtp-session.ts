@@ -2,6 +2,8 @@ import { once } from 'events';
 import * as net from 'net';
 import * as tls from 'tls';
 
+import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
+
 import { SmtpResponse } from '../interfaces/smtp-response.interface';
 
 interface PendingResponse {
@@ -33,7 +35,7 @@ export class SmtpSession {
     }
 
     if (this.pending) {
-      throw new Error('SMTP response is already pending');
+      throw new InvariantViolationException('SMTP response is already pending');
     }
 
     return new Promise<SmtpResponse>((resolve, reject) => {
