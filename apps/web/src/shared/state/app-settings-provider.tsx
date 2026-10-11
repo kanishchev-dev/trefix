@@ -163,9 +163,9 @@ function applyTheme(theme: ResolvedTheme): void {
  *
  * Exported for testing.
  */
-export function parseRealtimeSettings(payload: unknown):
-  | { theme?: ThemeMode; locale?: Locale }
-  | null {
+export function parseRealtimeSettings(
+  payload: unknown,
+): { theme?: ThemeMode; locale?: Locale } | null {
   if (!payload || typeof payload !== "object") {
     return null;
   }
@@ -184,7 +184,9 @@ export function parseRealtimeSettings(payload: unknown):
   const record = settings as { theme?: unknown; locale?: unknown };
   return {
     theme:
-      record.theme === "light" || record.theme === "dark" || record.theme === "system"
+      record.theme === "light" ||
+      record.theme === "dark" ||
+      record.theme === "system"
         ? record.theme
         : undefined,
     locale: isLocale(record.locale) ? record.locale : undefined,

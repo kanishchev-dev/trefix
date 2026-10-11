@@ -7,10 +7,12 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
-    "eslint": "9.35.0"
+    "eslint": "9.35.0",
+    "vitest": "3.2.4"
   }
 }

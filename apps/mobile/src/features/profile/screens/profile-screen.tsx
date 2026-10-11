@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import {
   Activity,
   Bell,
@@ -22,11 +29,26 @@ import {
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import appConfig from "../../../../app.json";
-import { fillTemplate, formatProfileJoinedDate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  formatProfileJoinedDate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { trackEvent } from "../../../lib/analytics";
 import { resolveBackendMediaUrl } from "../../../lib/backend-url";
-import { ListCard, ListRow, Pill, SectionTitle, SourceBadge } from "../../../shared/ui/list-card";
-import { HeaderLogo, HeaderQrButton, HeaderTextButton } from "../../main/components/header";
+import {
+  ListCard,
+  ListRow,
+  Pill,
+  SectionTitle,
+  SourceBadge,
+} from "../../../shared/ui/list-card";
+import {
+  HeaderLogo,
+  HeaderQrButton,
+  HeaderTextButton,
+} from "../../main/components/header";
 import { QrDialog } from "../../main/components/qr-dialog";
 import { SectionLayout } from "../../main/components/section-layout";
 import { useHeaderOptions } from "../../main/context/header-context";
@@ -97,7 +119,10 @@ export function ProfileScreen({
   const [deleteVisible, setDeleteVisible] = useState(false);
 
   const p = copy.profile;
-  const format = useMemo(() => createFormatter(copy, userLanguage, preferences), [copy, userLanguage, preferences]);
+  const format = useMemo(
+    () => createFormatter(copy, userLanguage, preferences),
+    [copy, userLanguage, preferences],
+  );
   const missing = missingGroups(athlete);
   const stravaConnected = Boolean(strava && strava.status !== "disconnected");
   const percent = athlete?.completeness?.percent ?? 100;
@@ -111,7 +136,13 @@ export function ProfileScreen({
 
   useHeaderOptions(
     {
-      leftAction: <HeaderQrButton theme={theme} themeMode={themeMode} onPress={() => setQrVisible(true)} />,
+      leftAction: (
+        <HeaderQrButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => setQrVisible(true)}
+        />
+      ),
       centerContent: <HeaderLogo source={logoSource} />,
       rightAction: (
         <HeaderTextButton
@@ -134,10 +165,18 @@ export function ProfileScreen({
   };
 
   const subtitle = heroSubtitle(athlete, copy);
-  const joined = formatProfileJoinedDate(user?.createdAt ? new Date(user.createdAt) : new Date(), userLanguage);
+  const joined = formatProfileJoinedDate(
+    user?.createdAt ? new Date(user.createdAt) : new Date(),
+    userLanguage,
+  );
 
   return (
-    <SectionLayout hasHeader={false} scrollable theme={theme} themeMode={themeMode}>
+    <SectionLayout
+      hasHeader={false}
+      scrollable
+      theme={theme}
+      themeMode={themeMode}
+    >
       <View style={styles.stack}>
         <View style={styles.hero}>
           <Pressable
@@ -147,17 +186,42 @@ export function ProfileScreen({
             style={[styles.avatar, { backgroundColor: theme.color.card }]}
           >
             {user?.avatarUrl ? (
-              <Image source={{ uri: resolveBackendMediaUrl(user.avatarUrl) ?? undefined }} style={styles.avatarImage} />
+              <Image
+                source={{
+                  uri: resolveBackendMediaUrl(user.avatarUrl) ?? undefined,
+                }}
+                style={styles.avatarImage}
+              />
             ) : (
-              <UserRound color={theme.color.foreground} size={34} strokeWidth={1.9} />
+              <UserRound
+                color={theme.color.foreground}
+                size={34}
+                strokeWidth={1.9}
+              />
             )}
           </Pressable>
-          <Text style={[styles.name, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
-            {isLoading ? "…" : `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()}
+          <Text
+            style={[
+              styles.name,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {isLoading
+              ? "…"
+              : `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()}
           </Text>
           <Text
             numberOfLines={1}
-            style={[styles.subtitle, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+            style={[
+              styles.subtitle,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
           >
             {subtitle ?? joined}
           </Text>
@@ -169,11 +233,19 @@ export function ProfileScreen({
               theme={theme}
               icon={<Sparkles color={iconColor} size={ICON} />}
               title={p.completeness.title}
-              description={fillTemplate(p.completeness.description, { percent })}
+              description={fillTemplate(p.completeness.description, {
+                percent,
+              })}
               trailing={<Pill theme={theme} text={p.completeness.action} />}
               chevron={false}
               onPress={() => {
-                const step = missing.has("body") ? 1 : missing.has("heart") ? 2 : missing.has("experience") ? 3 : 1;
+                const step = missing.has("body")
+                  ? 1
+                  : missing.has("heart")
+                    ? 2
+                    : missing.has("experience")
+                      ? 3
+                      : 1;
                 open({ kind: "profile-wizard", step });
               }}
             />
@@ -213,13 +285,19 @@ export function ProfileScreen({
               theme={theme}
               icon={<RulerIcon color={iconColor} size={ICON} />}
               title={p.rows.body}
-              description={athlete ? bodySummary(athlete, copy, userLanguage, format) : undefined}
+              description={
+                athlete
+                  ? bodySummary(athlete, copy, userLanguage, format)
+                  : undefined
+              }
               dot={missing.has("body")}
               trailing={
                 athlete?.fieldSources?.weightKg?.source === "strava" ? (
                   <SourceBadge theme={theme} />
-                ) : athlete?.fieldSources?.weightKg?.source === "apple_health" ||
-                  athlete?.fieldSources?.weightKg?.source === "health_connect" ? (
+                ) : athlete?.fieldSources?.weightKg?.source ===
+                    "apple_health" ||
+                  athlete?.fieldSources?.weightKg?.source ===
+                    "health_connect" ? (
                   <SourceBadge theme={theme} label="H" />
                 ) : undefined
               }
@@ -237,7 +315,9 @@ export function ProfileScreen({
               theme={theme}
               icon={<CalendarDays color={iconColor} size={ICON} />}
               title={p.rows.schedule}
-              description={athlete ? scheduleSummary(athlete, copy, format) : undefined}
+              description={
+                athlete ? scheduleSummary(athlete, copy, format) : undefined
+              }
               dot={missing.has("schedule")}
               onPress={() => open({ kind: "profile-schedule" })}
             />
@@ -246,16 +326,30 @@ export function ProfileScreen({
               icon={<Footprints color={iconColor} size={ICON} />}
               title={p.rows.gear}
               description={
-                worn ? `${gearName(worn)} · ${format.distance(worn.distanceKm, 0)} / ${format.distance(worn.limitKm, 0)}` : p.summary.gearEmpty
+                worn
+                  ? `${gearName(worn)} · ${format.distance(worn.distanceKm, 0)} / ${format.distance(worn.limitKm, 0)}`
+                  : p.summary.gearEmpty
               }
-              trailing={worn?.replaceSoon ? <Pill theme={theme} text={p.summary.replaceSoon} tone="warning" /> : undefined}
+              trailing={
+                worn?.replaceSoon ? (
+                  <Pill
+                    theme={theme}
+                    text={p.summary.replaceSoon}
+                    tone="warning"
+                  />
+                ) : undefined
+              }
               onPress={() => open({ kind: "profile-gear" })}
             />
             <ListRow
               theme={theme}
               icon={<Gauge color={iconColor} size={ICON} />}
               title={p.rows.experience}
-              description={athlete ? experienceSummary(athlete, copy, userLanguage) : undefined}
+              description={
+                athlete
+                  ? experienceSummary(athlete, copy, userLanguage)
+                  : undefined
+              }
               dot={missing.has("experience")}
               onPress={() => open({ kind: "profile-experience" })}
             />
@@ -269,8 +363,17 @@ export function ProfileScreen({
               theme={theme}
               icon={<Sparkles color={iconColor} size={ICON} />}
               title={p.rows.coach}
-              description={preferences.coachEnabled ? p.coach.modeLabel[preferences.coachAdaptationMode] : undefined}
-              trailing={<Pill theme={theme} text={preferences.coachEnabled ? p.summary.on : p.summary.off} />}
+              description={
+                preferences.coachEnabled
+                  ? p.coach.modeLabel[preferences.coachAdaptationMode]
+                  : undefined
+              }
+              trailing={
+                <Pill
+                  theme={theme}
+                  text={preferences.coachEnabled ? p.summary.on : p.summary.off}
+                />
+              }
               onPress={() => open({ kind: "settings-coach" })}
             />
           </ListCard>
@@ -284,12 +387,21 @@ export function ProfileScreen({
               icon={<RulerIcon color={iconColor} size={ICON} />}
               title={p.rows.units}
               description={[
-                preferences.units === "imperial" ? `${format.labels.mi} · ${format.labels.lb}` : `${format.labels.km} · ${format.labels.kg}`,
-                preferences.weekStart === "sun" ? p.unitsScreen.sun : p.unitsScreen.mon,
+                preferences.units === "imperial"
+                  ? `${format.labels.mi} · ${format.labels.lb}`
+                  : `${format.labels.km} · ${format.labels.kg}`,
+                preferences.weekStart === "sun"
+                  ? p.unitsScreen.sun
+                  : p.unitsScreen.mon,
               ].join(" · ")}
               onPress={() => open({ kind: "settings-units" })}
             />
-            <ListRow theme={theme} icon={<Bell color={iconColor} size={ICON} />} title={p.rows.notifications} onPress={onOpenNotifications} />
+            <ListRow
+              theme={theme}
+              icon={<Bell color={iconColor} size={ICON} />}
+              title={p.rows.notifications}
+              onPress={onOpenNotifications}
+            />
             <ListRow
               theme={theme}
               icon={<Languages color={iconColor} size={ICON} />}
@@ -310,7 +422,9 @@ export function ProfileScreen({
               title={p.rows.integrations}
               description={
                 stravaConnected
-                  ? fillTemplate(p.summary.synced, { ago: formatAgo(strava?.lastSyncedAt, copy) })
+                  ? fillTemplate(p.summary.synced, {
+                      ago: formatAgo(strava?.lastSyncedAt, copy),
+                    })
                   : p.summary.notConnected
               }
               onPress={onOpenIntegrations}
@@ -332,7 +446,12 @@ export function ProfileScreen({
               theme={theme}
               icon={<ShieldCheck color={iconColor} size={ICON} />}
               title={p.rows.privacy}
-              onPress={() => void Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy")}
+              onPress={() =>
+                void Linking.openURL(
+                  process.env.EXPO_PUBLIC_PRIVACY_URL ??
+                    "https://trefix.run/privacy",
+                )
+              }
             />
             <ListRow
               theme={theme}
@@ -353,14 +472,38 @@ export function ProfileScreen({
         </View>
 
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+          <Text
+            style={[
+              styles.footerText,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
+          >
             {p.version} {appVersion}
             {" · "}
-            <Text accessibilityRole="link" onPress={() => void Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? "https://trefix.run/terms")}>
+            <Text
+              accessibilityRole="link"
+              onPress={() =>
+                void Linking.openURL(
+                  process.env.EXPO_PUBLIC_TERMS_URL ??
+                    "https://trefix.run/terms",
+                )
+              }
+            >
               {p.legal.terms}
             </Text>
             {" · "}
-            <Text accessibilityRole="link" onPress={() => void Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy")}>
+            <Text
+              accessibilityRole="link"
+              onPress={() =>
+                void Linking.openURL(
+                  process.env.EXPO_PUBLIC_PRIVACY_URL ??
+                    "https://trefix.run/privacy",
+                )
+              }
+            >
               {p.legal.privacy}
             </Text>
           </Text>

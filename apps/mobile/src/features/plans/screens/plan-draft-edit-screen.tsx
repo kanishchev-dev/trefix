@@ -8,7 +8,11 @@ import { useToast } from "../../../shared/ui/toast";
 import { PlanPreviewScreen } from "../../plan-creation/plan-preview-screen";
 import { toDraftWeekOverrides } from "../../plan-creation/preview-edits";
 import { usePlanDetails, useUpdateDraftStructure } from "../hooks/use-plan";
-import { draftFromConfig, relativeWeeksOf, relativeWeeksToPreview } from "../lib/plan-draft";
+import {
+  draftFromConfig,
+  relativeWeeksOf,
+  relativeWeeksToPreview,
+} from "../lib/plan-draft";
 
 type Props = {
   planId: string;
@@ -20,7 +24,14 @@ type Props = {
 };
 
 /** Workouts of a stored draft in the plan preview editor; saved with the draft version. */
-export function PlanDraftEditScreen({ planId, onClose, theme, themeMode, copy, language }: Props) {
+export function PlanDraftEditScreen({
+  planId,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const detailsQuery = usePlanDetails(planId);
   const updateStructure = useUpdateDraftStructure();
   const { showToast } = useToast();
@@ -36,7 +47,9 @@ export function PlanDraftEditScreen({ planId, onClose, theme, themeMode, copy, l
 
   if (!details || !view) {
     return (
-      <View style={[styles.loading, { backgroundColor: theme.color.background }]}>
+      <View
+        style={[styles.loading, { backgroundColor: theme.color.background }]}
+      >
         <ActivityIndicator color={theme.color.foreground} />
       </View>
     );

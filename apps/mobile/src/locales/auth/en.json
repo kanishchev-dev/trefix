@@ -37,6 +37,9 @@
     "verificationFailedTitle": "Verification failed",
     "verificationFailed": "Could not verify the code. Please try again.",
     "socialFailedTitle": "Social sign-in failed",
-    "socialFailed": "Could not finish social sign-in. Please try again."
+    "socialFailed": "Could not finish social sign-in. Please try again.",
+    "network": "No connection. Check the internet and try again.",
+    "serverUnavailable": "The service is temporarily unavailable. Please try again later.",
+    "tooManyRequests": "Too many attempts. Please wait a moment."
   }
 }

@@ -131,7 +131,9 @@ export function RealtimeProvider({
   const value = useMemo<RealtimeContextValue>(() => ({ client }), [client]);
 
   return (
-    <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>
+    <RealtimeContext.Provider value={value}>
+      {children}
+    </RealtimeContext.Provider>
   );
 }
 

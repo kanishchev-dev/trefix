@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 
 import type { UnitSystem } from "../../../shared/lib/units";
-import { distanceMarkers, splitTrack, type DistanceMarker, type TrackLines, type TrackPoint } from "../engine/track";
+import {
+  distanceMarkers,
+  splitTrack,
+  type DistanceMarker,
+  type TrackLines,
+  type TrackPoint,
+} from "../engine/track";
 
 const METRES_PER_MILE = 1609.344;
 
@@ -17,7 +23,10 @@ export function useTrackLines(
   return useMemo(
     () => ({
       lines: splitTrack(points),
-      markers: distanceMarkers(points, units === "imperial" ? METRES_PER_MILE : 1000),
+      markers: distanceMarkers(
+        points,
+        units === "imperial" ? METRES_PER_MILE : 1000,
+      ),
     }),
     // `version` stands for the content of `points`.
     // eslint-disable-next-line react-hooks/exhaustive-deps

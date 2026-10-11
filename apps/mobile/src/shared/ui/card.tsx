@@ -1,6 +1,16 @@
 import * as React from "react";
-import { StyleSheet, Text, View, type ViewProps, type TextProps } from "react-native";
-import { mobileThemeTokens, type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import {
+  StyleSheet,
+  Text,
+  View,
+  type ViewProps,
+  type TextProps,
+} from "react-native";
+import {
+  mobileThemeTokens,
+  type ThemeTokens,
+  type ThemeMode,
+} from "@workspace/tokens";
 
 const fallbackTheme = mobileThemeTokens.light;
 
@@ -11,7 +21,13 @@ export type CardProps = ViewProps & {
   variant?: "default" | "glass";
 };
 
-export function Card({ style, size = "default", theme, children, ...props }: CardProps) {
+export function Card({
+  style,
+  size = "default",
+  theme,
+  children,
+  ...props
+}: CardProps) {
   const cardBg = (theme ?? fallbackTheme).color.card;
   const borderColor = (theme ?? fallbackTheme).color.cardBorder;
 

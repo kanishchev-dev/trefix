@@ -33,7 +33,8 @@ import {
 
 export const userKeys = {
   all: ["users"] as const,
-  list: (query: Partial<UserListQuery>) => [...userKeys.all, "list", query] as const,
+  list: (query: Partial<UserListQuery>) =>
+    [...userKeys.all, "list", query] as const,
   detail: (id: string) => [...userKeys.all, "detail", id] as const,
 };
 
@@ -127,8 +128,13 @@ export function useAssignPermissionToUser() {
   const invalidate = useInvalidateUsers();
 
   return useMutation({
-    mutationFn: ({ userId, permissionId }: { userId: string; permissionId: string }) =>
-      assignPermissionToUser(userId, permissionId),
+    mutationFn: ({
+      userId,
+      permissionId,
+    }: {
+      userId: string;
+      permissionId: string;
+    }) => assignPermissionToUser(userId, permissionId),
     onSuccess: () => {
       void invalidate();
     },
@@ -139,8 +145,13 @@ export function useRevokePermissionFromUser() {
   const invalidate = useInvalidateUsers();
 
   return useMutation({
-    mutationFn: ({ userId, permissionId }: { userId: string; permissionId: string }) =>
-      revokePermissionFromUser(userId, permissionId),
+    mutationFn: ({
+      userId,
+      permissionId,
+    }: {
+      userId: string;
+      permissionId: string;
+    }) => revokePermissionFromUser(userId, permissionId),
     onSuccess: () => {
       void invalidate();
     },

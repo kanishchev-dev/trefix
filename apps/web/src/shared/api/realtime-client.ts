@@ -1,6 +1,9 @@
 import { io, type Socket } from "socket.io-client";
 
-import { REALTIME_INBOUND, type RealtimeConnectionStatus } from "./realtime-events";
+import {
+  REALTIME_INBOUND,
+  type RealtimeConnectionStatus,
+} from "./realtime-events";
 
 const DEFAULT_BACKEND_PORT = "3000";
 const REALTIME_NAMESPACE = "/realtime";
@@ -56,7 +59,9 @@ export class RealtimeClient {
   /** Rooms the server has actually been told about; reset on every reconnect. */
   private subscribedRooms: string[] = [];
   private eventHandlers = new Map<string, Set<RealtimeEventHandler>>();
-  private statusListeners = new Set<(status: RealtimeConnectionStatus) => void>();
+  private statusListeners = new Set<
+    (status: RealtimeConnectionStatus) => void
+  >();
   private status: RealtimeConnectionStatus = "disconnected";
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private lastSeenAt = 0;
@@ -65,7 +70,9 @@ export class RealtimeClient {
     return this.status;
   }
 
-  onStatusChange(listener: (status: RealtimeConnectionStatus) => void): () => void {
+  onStatusChange(
+    listener: (status: RealtimeConnectionStatus) => void,
+  ): () => void {
     this.statusListeners.add(listener);
     listener(this.status);
     return () => {
@@ -201,17 +208,16 @@ export class RealtimeClient {
       return;
     }
 
-    socket.timeout(REALTIME_PING_TIMEOUT_MS).emit(
-      REALTIME_INBOUND.ping,
-      (error: Error | null) => {
+    socket
+      .timeout(REALTIME_PING_TIMEOUT_MS)
+      .emit(REALTIME_INBOUND.ping, (error: Error | null) => {
         if (error) {
           this.recover();
           return;
         }
 
         this.markAlive();
-      },
-    );
+      });
   }
 
   /**
@@ -261,25 +267,30 @@ export class RealtimeClient {
     // subscription is retried on the next connect instead of being assumed.
     this.subscribedRooms = [...this.rooms];
 
-    socket.timeout(REALTIME_SUBSCRIBE_TIMEOUT_MS).emit(
-      REALTIME_INBOUND.subscribe,
-      { rooms: this.rooms },
-      (error: Error | null, ack?: { rooms?: string[] }) => {
-        if (error) {
-          console.warn("Realtime: room subscription was not acknowledged.", error.message);
-          this.subscribedRooms = [];
-          return;
-        }
+    socket
+      .timeout(REALTIME_SUBSCRIBE_TIMEOUT_MS)
+      .emit(
+        REALTIME_INBOUND.subscribe,
+        { rooms: this.rooms },
+        (error: Error | null, ack?: { rooms?: string[] }) => {
+          if (error) {
+            console.warn(
+              "Realtime: room subscription was not acknowledged.",
+              error.message,
+            );
+            this.subscribedRooms = [];
+            return;
+          }
 
-        const granted = ack?.rooms ?? [];
-        const missing = this.rooms.filter((room) => !granted.includes(room));
+          const granted = ack?.rooms ?? [];
+          const missing = this.rooms.filter((room) => !granted.includes(room));
 
-        if (missing.length > 0) {
-          console.warn(`Realtime: rooms not granted: ${missing.join(", ")}`);
-          this.subscribedRooms = [];
-        }
-      },
-    );
+          if (missing.length > 0) {
+            console.warn(`Realtime: rooms not granted: ${missing.join(", ")}`);
+            this.subscribedRooms = [];
+          }
+        },
+      );
   }
 
   disconnect(): void {

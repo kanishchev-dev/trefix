@@ -3,7 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loadAuthSession } from "../../lib/auth-session";
 import { getHealthSource } from "../health-sync/sources";
 import { getActiveHealthSync } from "../health-sync/state";
-import type { DeviceHealthSource, RecordedRunExport } from "../health-sync/types";
+import type {
+  DeviceHealthSource,
+  RecordedRunExport,
+} from "../health-sync/types";
 import type { EngineState, LocationSample } from "./engine/types";
 
 const EXPORT_KEY = "trefix_tracker_health_export";
@@ -12,14 +15,27 @@ const KCAL_PER_KG_KM = 1.0;
 
 /** The health store this device syncs with, when it can take our runs. */
 export async function healthExportTarget(): Promise<DeviceHealthSource | null> {
-  const [session, active] = await Promise.all([loadAuthSession(), getActiveHealthSync()]);
+  const [session, active] = await Promise.all([
+    loadAuthSession(),
+    getActiveHealthSync(),
+  ]);
   const userId = session?.user.id;
   const source = getHealthSource();
-  if (!userId || !active || active.userId !== userId || !source || source.provider !== active.provider) return null;
+  if (
+    !userId ||
+    !active ||
+    active.userId !== userId ||
+    !source ||
+    source.provider !== active.provider
+  )
+    return null;
   return source.saveRecordedRun ? source : null;
 }
 
-export function estimateKcal(distanceM: number, weightKg: number | null | undefined): number | null {
+export function estimateKcal(
+  distanceM: number,
+  weightKg: number | null | undefined,
+): number | null {
   if (!weightKg || weightKg <= 0 || distanceM <= 0) return null;
   return Math.round(weightKg * (distanceM / 1000) * KCAL_PER_KG_KM);
 }
@@ -38,19 +54,33 @@ export function buildRunExport(
     distanceM: Math.round(distanceM),
     indoor: state.config.environment === "treadmill",
     energyKcal: estimateKcal(distanceM, weightKg),
-    elevationGainM: points.length > 0 || state.elevation.source === "baro" ? Math.round(state.elevation.gainM) : null,
-    route: points.map(({ t, lat, lng, alt, acc, speed }) => ({ t, lat, lng, alt, acc, speed })),
+    elevationGainM:
+      points.length > 0 || state.elevation.source === "baro"
+        ? Math.round(state.elevation.gainM)
+        : null,
+    route: points.map(({ t, lat, lng, alt, acc, speed }) => ({
+      t,
+      lat,
+      lng,
+      alt,
+      acc,
+      speed,
+    })),
   };
 }
 
 export type ExportOutcome = "saved" | "denied" | "failed";
 
 /** Asks for write access the first time, then writes the run. */
-export async function exportRun(source: DeviceHealthSource, run: RecordedRunExport): Promise<ExportOutcome> {
+export async function exportRun(
+  source: DeviceHealthSource,
+  run: RecordedRunExport,
+): Promise<ExportOutcome> {
   try {
     const access = (await source.getWriteAccess?.()) ?? "not_asked";
     if (access === "denied") return "denied";
-    if (access === "not_asked" && !(await source.requestWriteAccess?.())) return "denied";
+    if (access === "not_asked" && !(await source.requestWriteAccess?.()))
+      return "denied";
     await source.saveRecordedRun?.(run);
     return "saved";
   } catch {

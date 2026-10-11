@@ -1,4 +1,10 @@
-import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { type ThemeMode } from "@workspace/tokens";
 
@@ -13,13 +19,22 @@ import { type ThemeMode } from "@workspace/tokens";
  *   the "Compatible with Strava" logo and the "Connect with Strava" button.
  */
 const LOGOS = {
-  apple_health: { light: require("../../../assets/integrations/apple-health.png"), dark: null },
+  apple_health: {
+    light: require("../../../assets/integrations/apple-health.png"),
+    dark: null,
+  },
   health_connect: {
     light: require("../../../assets/integrations/health-connect.png"),
     dark: require("../../../assets/integrations/health-connect-white.png"),
   },
-  garmin: { light: require("../../../assets/integrations/garmin-connect.png"), dark: null },
-  strava: { light: require("../../../assets/integrations/strava.png"), dark: null },
+  garmin: {
+    light: require("../../../assets/integrations/garmin-connect.png"),
+    dark: null,
+  },
+  strava: {
+    light: require("../../../assets/integrations/strava.png"),
+    dark: null,
+  },
 } as const;
 
 /** Square full-bleed artwork gets the same corner rounding as the tiles next to it. */
@@ -60,10 +75,18 @@ export function IntegrationLogo({
 }
 
 /** "Compatible with Strava" (218×18.5 pt at its native size). */
-export function StravaCompatibleLogo({ themeMode, width = 218 }: { themeMode: ThemeMode; width?: number }) {
+export function StravaCompatibleLogo({
+  themeMode,
+  width = 218,
+}: {
+  themeMode: ThemeMode;
+  width?: number;
+}) {
   return (
     <Image
-      source={themeMode === "dark" ? STRAVA_COMPATIBLE.dark : STRAVA_COMPATIBLE.light}
+      source={
+        themeMode === "dark" ? STRAVA_COMPATIBLE.dark : STRAVA_COMPATIBLE.light
+      }
       style={{ width, height: (width * 37) / 437 }}
       resizeMode="contain"
       accessibilityLabel="Compatible with Strava"
@@ -92,7 +115,12 @@ export function StravaConnectButton({
       onPress={onPress}
       style={({ pressed }) => [styles.stravaButton, pressed && styles.pressed]}
     >
-      <Image source={STRAVA_CONNECT} style={styles.stravaButtonImage} resizeMode="contain" accessibilityIgnoresInvertColors />
+      <Image
+        source={STRAVA_CONNECT}
+        style={styles.stravaButtonImage}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+      />
       {pending ? (
         <View style={styles.pending}>
           <ActivityIndicator color="#FFFFFF" size="small" />

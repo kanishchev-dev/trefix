@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import {
   CalendarClock,
   Check,
@@ -19,12 +25,21 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { trackEvent } from "../../lib/analytics";
 import { fillTemplate, type MainCopy } from "../../locales";
 import { SheetButton } from "../../shared/ui/bottom-sheet";
-import { IconCircle, ListCard, ListRow, SectionTitle } from "../../shared/ui/list-card";
+import {
+  IconCircle,
+  ListCard,
+  ListRow,
+  SectionTitle,
+} from "../../shared/ui/list-card";
 import { Switch } from "../../shared/ui/switch";
 import { useToast } from "../../shared/ui/toast";
 import { useIntegrations } from "../main/hooks/use-integrations";
 import { ConfirmSheet } from "../plans/components/confirm-sheet";
-import { Footnote, ProfileSection, ProfileSubScreen } from "../profile/components/profile-sub-screen";
+import {
+  Footnote,
+  ProfileSection,
+  ProfileSubScreen,
+} from "../profile/components/profile-sub-screen";
 import { formatAgo, profileErrorMessage } from "../profile/lib/profile-format";
 import { HealthConsentSheet } from "./components/health-consent-sheet";
 import { HealthHintCard } from "./components/health-hint-card";
@@ -56,7 +71,12 @@ export function healthStoreName(copy: MainCopy): string {
 }
 
 /** H1 — Apple Health (iOS) / Health Connect (Android): connect, status, settings, disconnect. */
-export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Props) {
+export function HealthIntegrationScreen({
+  theme,
+  themeMode,
+  copy,
+  onBack,
+}: Props) {
   const h = copy.profile.integrations.health;
   const storeName = healthStoreName(copy);
   const source = getHealthSource();
@@ -90,11 +110,19 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
     (entry) => entry.provider === "strava" && entry.status !== "disconnected",
   );
   const scopes = item?.scopes ?? [];
-  const pending = (status.data?.pendingBatches ?? item?.pendingBatches ?? 0) > 0 || syncNow.isPending;
+  const pending =
+    (status.data?.pendingBatches ?? item?.pendingBatches ?? 0) > 0 ||
+    syncNow.isPending;
   const neverSynced = !item?.lastSyncedAt;
-  const noWorkouts = isIos && connected && !pending && !neverSynced && (item?.importedActivitiesCount ?? 0) === 0;
+  const noWorkouts =
+    isIos &&
+    connected &&
+    !pending &&
+    !neverSynced &&
+    (item?.importedActivitiesCount ?? 0) === 0;
   const noHistory = !isIos && connected && !scopes.includes("history");
-  const noWorkoutAccess = !isIos && connected && scopes.length > 0 && !scopes.includes("workouts");
+  const noWorkoutAccess =
+    !isIos && connected && scopes.length > 0 && !scopes.includes("workouts");
 
   const startConnect = async () => {
     setDenied(false);
@@ -127,7 +155,10 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
   };
 
   const openSettings = () => void source?.openSystemSettings();
-  const muted = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const muted = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
 
   const renderUnavailable = () => {
     const state = availability.data;
@@ -159,25 +190,58 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
   const renderDisconnected = () => (
     <>
       <View style={[styles.card, { backgroundColor: theme.color.card }]}>
-        <Text style={[styles.intro, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+        <Text
+          style={[
+            styles.intro,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
+          ]}
+        >
           {h.intro}
         </Text>
-        <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+        <Text
+          style={[
+            styles.cardTitle,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.medium,
+            },
+          ]}
+        >
           {h.whatTitle}
         </Text>
         {h.what.map((line) => (
           <View key={line} style={styles.item}>
             <IconCircle theme={theme} size={28}>
-              <Check color={theme.color.foreground} size={14} strokeWidth={2.4} />
+              <Check
+                color={theme.color.foreground}
+                size={14}
+                strokeWidth={2.4}
+              />
             </IconCircle>
-            <Text style={[styles.itemText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+            <Text
+              style={[
+                styles.itemText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
               {line}
             </Text>
           </View>
         ))}
       </View>
       <Footnote text={h.privacy} theme={theme} />
-      {stravaConnected ? <Footnote text={fillTemplate(h.stravaNote, { store: storeName })} theme={theme} /> : null}
+      {stravaConnected ? (
+        <Footnote
+          text={fillTemplate(h.stravaNote, { store: storeName })}
+          theme={theme}
+        />
+      ) : null}
       {denied ? (
         <HealthHintCard
           title={h.deniedTitle}
@@ -208,8 +272,21 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
             theme={theme}
             icon={<CalendarClock color={theme.color.foreground} size={20} />}
             title={h.lastSync}
-            value={pending ? h.inProgress : item?.lastSyncedAt ? formatAgo(item.lastSyncedAt, copy) : h.never}
-            trailing={pending ? <ActivityIndicator size="small" color={theme.color.mutedForeground} /> : undefined}
+            value={
+              pending
+                ? h.inProgress
+                : item?.lastSyncedAt
+                  ? formatAgo(item.lastSyncedAt, copy)
+                  : h.never
+            }
+            trailing={
+              pending ? (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.color.mutedForeground}
+                />
+              ) : undefined
+            }
           />
           <ListRow
             theme={theme}
@@ -260,7 +337,11 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
         variant="secondary"
         onPress={() => void onSyncNow()}
         pending={syncNow.isPending}
-        trailing={syncNow.isPending ? undefined : <RefreshCw color={theme.color.foreground} size={16} />}
+        trailing={
+          syncNow.isPending ? undefined : (
+            <RefreshCw color={theme.color.foreground} size={16} />
+          )
+        }
         theme={theme}
         themeMode={themeMode}
       />
@@ -287,7 +368,9 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
             theme={theme}
             icon={<Settings2 color={theme.color.foreground} size={20} />}
             title={h.access}
-            description={isIos ? h.accessDescriptionIos : h.accessDescriptionAndroid}
+            description={
+              isIos ? h.accessDescriptionIos : h.accessDescriptionAndroid
+            }
             onPress={openSettings}
           />
         </ListCard>
@@ -309,11 +392,24 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
   const available = availability.data === "available";
 
   return (
-    <ProfileSubScreen title={storeName} onBack={onBack} theme={theme} themeMode={themeMode}>
+    <ProfileSubScreen
+      title={storeName}
+      onBack={onBack}
+      theme={theme}
+      themeMode={themeMode}
+    >
       {provider ? (
         <View style={styles.hero}>
           <HealthLogo provider={provider} themeMode={themeMode} size={56} />
-          <Text style={[styles.heroTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            style={[
+              styles.heroTitle,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {storeName}
           </Text>
         </View>
@@ -330,7 +426,9 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
         renderDisconnected()
       )}
 
-      {item?.status === "error" && !pending ? <Text style={[styles.error, muted]}>{h.syncFailed}</Text> : null}
+      {item?.status === "error" && !pending ? (
+        <Text style={[styles.error, muted]}>{h.syncFailed}</Text>
+      ) : null}
 
       <HealthConsentSheet
         visible={consentVisible}
@@ -354,7 +452,8 @@ export function HealthIntegrationScreen({ theme, themeMode, copy, onBack }: Prop
         }}
         onClose={(confirmed) => {
           setDisconnectVisible(false);
-          if (confirmed) showToast(fillTemplate(h.disconnected, { store: storeName }));
+          if (confirmed)
+            showToast(fillTemplate(h.disconnected, { store: storeName }));
         }}
         errorMessage={(error) => profileErrorMessage(error, copy)}
         theme={theme}

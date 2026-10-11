@@ -26,12 +26,23 @@ type Props = {
 };
 
 /** `⋯` menu of the plan in progress on the Plan tab. */
-export function PlanActionsMenu({ visible, onClose, overview, theme, themeMode, copy, language }: Props) {
+export function PlanActionsMenu({
+  visible,
+  onClose,
+  overview,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const menuCopy = copy.plans.menu;
   const navigation = usePlansNavigation();
   const { showToast } = useToast();
   const activeQuery = useActivePlan();
-  const [openSheet, setOpenSheet] = useState<Exclude<ActionKey, "allPlans"> | null>(null);
+  const [openSheet, setOpenSheet] = useState<Exclude<
+    ActionKey,
+    "allPlans"
+  > | null>(null);
   const planId = overview.plan.id;
 
   const actions: SheetAction<ActionKey>[] = [
@@ -43,7 +54,8 @@ export function PlanActionsMenu({ visible, onClose, overview, theme, themeMode, 
   ];
 
   const closeSheet = () => setOpenSheet(null);
-  const activePlan = activeQuery.data?.plan?.id === planId ? activeQuery.data.plan : null;
+  const activePlan =
+    activeQuery.data?.plan?.id === planId ? activeQuery.data.plan : null;
 
   return (
     <>

@@ -55,8 +55,8 @@ export function GlassInput({
             borderColor: error
               ? theme.color.danger
               : isFocused
-              ? theme.color.foreground
-              : theme.color.glassBorder,
+                ? theme.color.foreground
+                : theme.color.glassBorder,
             backgroundColor: theme.color.glassBackground,
           },
         ]}
@@ -70,8 +70,10 @@ export function GlassInput({
               color: theme.color.foreground,
               fontFamily: theme.typography.fontFamily.sans.medium,
               // If text is centered, we need symmetric padding to keep it in the middle
-              paddingLeft: props.textAlign === "center" ? 44 : (leftIcon ? 44 : 16),
-              paddingRight: props.textAlign === "center" ? 44 : (rightIcon ? 44 : 16),
+              paddingLeft:
+                props.textAlign === "center" ? 44 : leftIcon ? 44 : 16,
+              paddingRight:
+                props.textAlign === "center" ? 44 : rightIcon ? 44 : 16,
               height: 56, // Ensure explicit height for alignment
             },
             style,
@@ -95,7 +97,10 @@ export function GlassInput({
         <Text
           style={[
             styles.errorText,
-            { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
+            {
+              color: theme.color.danger,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
           ]}
         >
           {error}

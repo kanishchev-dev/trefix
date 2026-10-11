@@ -13,12 +13,8 @@
       "usesAppleSignIn": true,
       "bundleIdentifier": "Kanishchev.Trefix",
       "infoPlist": {
-        "LSApplicationQueriesSchemes": [
-          "x-apple-health"
-        ],
-        "UIBackgroundModes": [
-          "audio"
-        ]
+        "LSApplicationQueriesSchemes": ["x-apple-health"],
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {

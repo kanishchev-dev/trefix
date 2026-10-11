@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import {
   type ActivePlanSummary,
@@ -17,19 +17,40 @@ import {
   type MainCopy,
 } from "../../../locales";
 import { trackEvent } from "../../../lib/analytics";
-import { BottomSheet, SheetBlock, SheetButton, SheetSectionLabel } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+  SheetSectionLabel,
+} from "../../../shared/ui/bottom-sheet";
 import { useActivePlan } from "../hooks/use-active-plan";
 import { useStartOptions } from "../hooks/use-start-plan";
-import { activePlanFromError, hasErrorCode, planErrorMessage } from "../lib/plan-errors";
-import { addDaysIso, clampIso, getDeviceTimezone, planEndDate } from "../lib/plan-dates";
+import {
+  activePlanFromError,
+  hasErrorCode,
+  planErrorMessage,
+} from "../lib/plan-errors";
+import {
+  addDaysIso,
+  clampIso,
+  getDeviceTimezone,
+  planEndDate,
+} from "../lib/plan-dates";
 import {
   buildStartBlock,
-  initialStartChoice,
+  reconcileStartChoice,
   isOptionSelectable,
   type StartChoice,
 } from "../lib/start-plan";
 import { ActivePlanWarning } from "./active-plan-warning";
-import { InlineError, Notice, plansUiStyles, SheetActionsColumn } from "./plans-ui";
+import {
+  InlineError,
+  Notice,
+  plansUiStyles,
+  SheetActionsColumn,
+} from "./plans-ui";
+import { styles } from "./start-plan-sheet.styles";
+import { RadioRow } from "./radio-row";
 
 export type StartSheetResult = "started" | "draft";
 
@@ -80,9 +101,12 @@ export function StartPlanSheet({
 }: Props) {
   const startCopy = copy.plans.start;
   const [open, setOpen] = useState(false);
-  const [goalTargetDate, setGoalTargetDate] = useState<string | undefined>(undefined);
+  const [goalTargetDate, setGoalTargetDate] = useState<string | undefined>(
+    undefined,
+  );
   const [choice, setChoice] = useState<StartChoice | null>(null);
-  const [conflictActive, setConflictActive] = useState<ActivePlanSummary | null>(null);
+  const [conflictActive, setConflictActive] =
+    useState<ActivePlanSummary | null>(null);
   const [pending, setPending] = useState<"start" | "draft" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [raceDateEditor, setRaceDateEditor] = useState<string | null>(null);
@@ -92,15 +116,30 @@ export function StartPlanSheet({
   const openedTracked = useRef(false);
 
   const isDraft = mode === "draft";
-  const optionsQuery = useStartOptions(planId, goalTargetDate, visible && isDraft);
+  const optionsQuery = useStartOptions(
+    planId,
+    goalTargetDate,
+    visible && isDraft,
+  );
   const activeQuery = useActivePlan({ enabled: visible, fresh: true });
-  const options = isDraft ? optionsQuery.data ?? null : creationOptions ?? null;
+  const options = isDraft
+    ? (optionsQuery.data ?? null)
+    : (creationOptions ?? null);
 
   const activePlan = useMemo(() => {
     const candidate =
-      conflictActive ?? (activeQuery.isSuccess ? activeQuery.data.plan : options?.activePlan ?? null);
+      conflictActive ??
+      (activeQuery.isSuccess
+        ? activeQuery.data.plan
+        : (options?.activePlan ?? null));
     return candidate && candidate.id !== planId ? candidate : null;
-  }, [activeQuery.data, activeQuery.isSuccess, conflictActive, options?.activePlan, planId]);
+  }, [
+    activeQuery.data,
+    activeQuery.isSuccess,
+    conflictActive,
+    options?.activePlan,
+    planId,
+  ]);
 
   useEffect(() => {
     if (!visible) return;
@@ -120,14 +159,7 @@ export function StartPlanSheet({
   // Keep the selection valid when options arrive or change (another race date).
   useEffect(() => {
     if (!options) return;
-    setChoice((current) => {
-      if (current?.kind === "custom") return current;
-      const stillThere = current && options.options.find((option) => option.kind === current.kind);
-      if (stillThere && isOptionSelectable(stillThere)) {
-        return { kind: stillThere.kind, startDate: stillThere.startDate, goalTargetDate: stillThere.goalTargetDate };
-      }
-      return initialStartChoice(options);
-    });
+    setChoice((current) => reconcileStartChoice(current, options));
   }, [options]);
 
   useEffect(() => {
@@ -135,12 +167,15 @@ export function StartPlanSheet({
   }, [activePlan]);
 
   useEffect(() => {
-    if (!visible || !options || openedTracked.current || !activeQuery.isSuccess) return;
+    if (!visible || !options || openedTracked.current || !activeQuery.isSuccess)
+      return;
     openedTracked.current = true;
     trackEvent("plan_start_sheet_opened", {
       entry,
       hasActivePlan: Boolean(activePlan),
-      hasRaceOption: options.options.some((option) => option.kind === "race_aligned"),
+      hasRaceOption: options.options.some(
+        (option) => option.kind === "race_aligned",
+      ),
       metricsStale: options.metricsStale,
     });
   }, [activePlan, activeQuery.isSuccess, entry, options, visible]);
@@ -206,15 +241,19 @@ export function StartPlanSheet({
   const optionLabel = (option: PlanStartOption): string => {
     const date = formatDayMonth(option.startDate, language);
     if (option.kind === "today") return fillTemplate(startCopy.today, { date });
-    if (option.kind === "next_monday") return fillTemplate(startCopy.nextMonday, { date });
+    if (option.kind === "next_monday")
+      return fillTemplate(startCopy.nextMonday, { date });
     return fillTemplate(startCopy.raceAligned, {
-      race: option.goalTargetDate ? formatDayMonth(option.goalTargetDate, language) : "—",
+      race: option.goalTargetDate
+        ? formatDayMonth(option.goalTargetDate, language)
+        : "—",
       date,
     });
   };
 
   const raceReason = (option: PlanStartOption): string | null => {
-    if (option.kind !== "race_aligned" || isOptionSelectable(option)) return null;
+    if (option.kind !== "race_aligned" || isOptionSelectable(option))
+      return null;
     if (option.reason === "target_date_passed") return startCopy.raceDatePassed;
     return fillTemplate(startCopy.raceNotFits, {
       available: option.weeksAvailable ?? 0,
@@ -236,7 +275,8 @@ export function StartPlanSheet({
         const then = afterClose.current;
         result.current = null;
         afterClose.current = null;
-        if (!next && activePlan && !then) trackEvent("plan_start_replace_declined");
+        if (!next && activePlan && !then)
+          trackEvent("plan_start_replace_declined");
         onClose(next);
         then?.();
       }}
@@ -251,7 +291,12 @@ export function StartPlanSheet({
       >
         {activePlan ? (
           <SheetBlock theme={theme}>
-            <ActivePlanWarning activePlan={activePlan} copy={copy} language={language} theme={theme} />
+            <ActivePlanWarning
+              activePlan={activePlan}
+              copy={copy}
+              language={language}
+              theme={theme}
+            />
           </SheetBlock>
         ) : null}
 
@@ -259,14 +304,25 @@ export function StartPlanSheet({
           <View style={styles.options}>
             <SheetSectionLabel text={startCopy.when} theme={theme} />
             {loading ? (
-              <Text style={[styles.muted, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+              <Text
+                style={[
+                  styles.muted,
+                  {
+                    color: theme.color.mutedForeground,
+                    fontFamily: theme.typography.fontFamily.sans.regular,
+                  },
+                ]}
+              >
                 …
               </Text>
             ) : null}
             {loadFailed ? (
               <Notice
                 theme={theme}
-                action={{ label: copy.plans.errors.retry, onPress: () => void optionsQuery.refetch() }}
+                action={{
+                  label: copy.plans.errors.retry,
+                  onPress: () => void optionsQuery.refetch(),
+                }}
               >
                 {startCopy.loadFailed}
               </Notice>
@@ -276,25 +332,39 @@ export function StartPlanSheet({
               const selectable = isOptionSelectable(option);
               const selected = choice?.kind === option.kind;
               const reason = raceReason(option);
-              const recommended = option.kind === options.recommended && selectable;
+              const recommended =
+                option.kind === options.recommended && selectable;
               return (
                 <View key={option.kind} style={styles.optionBlock}>
                   <RadioRow
                     label={optionLabel(option)}
-                    meta={fillTemplate(startCopy.until, { date: formatDayMonth(option.endDate, language) })}
+                    meta={fillTemplate(startCopy.until, {
+                      date: formatDayMonth(option.endDate, language),
+                    })}
                     badge={recommended ? startCopy.recommended : undefined}
                     selected={selected}
                     disabled={!selectable}
                     accessibilityHint={reason ?? undefined}
                     onPress={() =>
-                      setChoice({ kind: option.kind, startDate: option.startDate, goalTargetDate: option.goalTargetDate })
+                      setChoice({
+                        kind: option.kind,
+                        startDate: option.startDate,
+                        goalTargetDate: option.goalTargetDate,
+                      })
                     }
                     theme={theme}
                   />
                   {reason ? (
                     <View style={styles.reason}>
                       <Text
-                        style={[styles.muted, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+                        style={[
+                          styles.muted,
+                          {
+                            color: theme.color.mutedForeground,
+                            fontFamily:
+                              theme.typography.fontFamily.sans.regular,
+                          },
+                        ]}
                       >
                         {reason}
                       </Text>
@@ -303,10 +373,25 @@ export function StartPlanSheet({
                           accessibilityRole="button"
                           hitSlop={8}
                           onPress={() =>
-                            setRaceDateEditor(option.goalTargetDate ?? addDaysIso(options.today, options.totalWeeks * 7))
+                            setRaceDateEditor(
+                              option.goalTargetDate ??
+                                addDaysIso(
+                                  options.today,
+                                  options.totalWeeks * 7,
+                                ),
+                            )
                           }
                         >
-                          <Text style={[styles.link, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+                          <Text
+                            style={[
+                              styles.link,
+                              {
+                                color: theme.color.foreground,
+                                fontFamily:
+                                  theme.typography.fontFamily.sans.semibold,
+                              },
+                            ]}
+                          >
                             {startCopy.changeDate}
                           </Text>
                         </Pressable>
@@ -347,20 +432,38 @@ export function StartPlanSheet({
                   label={startCopy.custom}
                   meta={
                     customDate
-                      ? `${formatDayMonth(customDate, language)} · ${fillTemplate(startCopy.until, {
-                          date: formatDayMonth(planEndDate(customDate, options.totalWeeks), language),
-                        })}`
+                      ? `${formatDayMonth(customDate, language)} · ${fillTemplate(
+                          startCopy.until,
+                          {
+                            date: formatDayMonth(
+                              planEndDate(customDate, options.totalWeeks),
+                              language,
+                            ),
+                          },
+                        )}`
                       : undefined
                   }
                   selected={choice?.kind === "custom"}
-                  onPress={() => setChoice({ kind: "custom", startDate: customDate ?? today })}
+                  onPress={() =>
+                    setChoice({
+                      kind: "custom",
+                      startDate: customDate ?? today,
+                    })
+                  }
                   theme={theme}
                 />
                 {choice?.kind === "custom" ? (
                   <DateWheel
                     value={choice.startDate}
                     onChange={(next) =>
-                      setChoice({ kind: "custom", startDate: clampIso(next, today, addDaysIso(today, CUSTOM_RANGE_DAYS)) })
+                      setChoice({
+                        kind: "custom",
+                        startDate: clampIso(
+                          next,
+                          today,
+                          addDaysIso(today, CUSTOM_RANGE_DAYS),
+                        ),
+                      })
                     }
                     minDate={today}
                     monthNames={copy.plan.creation.datePicker.months}
@@ -435,117 +538,3 @@ export function StartPlanSheet({
     </BottomSheet>
   );
 }
-
-function RadioRow({
-  label,
-  meta,
-  badge,
-  selected,
-  disabled = false,
-  accessibilityHint,
-  onPress,
-  theme,
-}: {
-  label: string;
-  meta?: string;
-  badge?: string;
-  selected: boolean;
-  disabled?: boolean;
-  accessibilityHint?: string;
-  onPress: () => void;
-  theme: ThemeTokens;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected, disabled }}
-      accessibilityLabel={[label, meta, badge].filter(Boolean).join(", ")}
-      accessibilityHint={accessibilityHint}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.radioRow,
-        { backgroundColor: theme.color.control, opacity: disabled ? 0.5 : 1 },
-        pressed && plansUiStyles.pressed,
-      ]}
-    >
-      <View style={[styles.radioOuter, { borderColor: selected ? theme.color.primary : theme.color.border }]}>
-        {selected ? <View style={[styles.radioInner, { backgroundColor: theme.color.primary }]} /> : null}
-      </View>
-      <View style={styles.radioText}>
-        <Text style={[styles.radioLabel, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
-          {label}
-        </Text>
-        {meta ? (
-          <Text style={[styles.muted, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
-            {meta}
-          </Text>
-        ) : null}
-      </View>
-      {badge ? (
-        <Text style={[styles.badge, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
-          {badge}
-        </Text>
-      ) : null}
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
-  options: {
-    gap: 10,
-  },
-  optionBlock: {
-    gap: 8,
-  },
-  reason: {
-    gap: 4,
-    paddingHorizontal: 16,
-  },
-  wheelBlock: {
-    gap: 12,
-  },
-  radioRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    minHeight: 56,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  radioText: {
-    flex: 1,
-    gap: 2,
-  },
-  radioLabel: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  badge: {
-    fontSize: 11,
-    lineHeight: 14,
-    textTransform: "uppercase",
-  },
-  muted: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  link: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-});

@@ -19,9 +19,15 @@ export type TrackLines = {
 
 export type DistanceMarker = { n: number; coordinate: LngLat };
 
-const toLngLat = (point: { lat: number; lng: number }): LngLat => [point.lng, point.lat];
+const toLngLat = (point: { lat: number; lng: number }): LngLat => [
+  point.lng,
+  point.lat,
+];
 
-export function splitTrack(points: TrackPoint[], gapMs = TRACK_GAP_MS): TrackLines {
+export function splitTrack(
+  points: TrackPoint[],
+  gapMs = TRACK_GAP_MS,
+): TrackLines {
   const solid: LngLat[][] = [];
   const gaps: LngLat[][] = [];
   let current: LngLat[] = [];
@@ -40,7 +46,10 @@ export function splitTrack(points: TrackPoint[], gapMs = TRACK_GAP_MS): TrackLin
 }
 
 /** Where each whole kilometre (or mile, with `unitM`) was passed, along the drawn line. */
-export function distanceMarkers(points: Array<{ lat: number; lng: number }>, unitM = 1000): DistanceMarker[] {
+export function distanceMarkers(
+  points: Array<{ lat: number; lng: number }>,
+  unitM = 1000,
+): DistanceMarker[] {
   const markers: DistanceMarker[] = [];
   let covered = 0;
   for (let i = 1; i < points.length; i += 1) {
@@ -50,7 +59,10 @@ export function distanceMarkers(points: Array<{ lat: number; lng: number }>, uni
     if (d <= 0) continue;
     while (covered + d >= (markers.length + 1) * unitM) {
       const k = ((markers.length + 1) * unitM - covered) / d;
-      markers.push({ n: markers.length + 1, coordinate: [a.lng + (b.lng - a.lng) * k, a.lat + (b.lat - a.lat) * k] });
+      markers.push({
+        n: markers.length + 1,
+        coordinate: [a.lng + (b.lng - a.lng) * k, a.lat + (b.lat - a.lat) * k],
+      });
     }
     covered += d;
   }

@@ -3,12 +3,27 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactElement } from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Switch } from "@workspace/ui/components/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@workspace/ui/components/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -94,7 +109,9 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pendingGroupId, setPendingGroupId] = useState<string | null>(null);
-  const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(null);
+  const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(
+    null,
+  );
 
   const displayName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
@@ -144,7 +161,9 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
       params.set("tab", tab);
     }
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
   };
 
   const toggleGroup = (group: AdminUserGroup, assigned: boolean) => {
@@ -209,7 +228,10 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
         <div className="flex items-center gap-4">
           <span className="relative shrink-0">
             <Avatar className="size-14">
-              <AvatarImage src={user.avatarUrl ?? undefined} alt={displayName} />
+              <AvatarImage
+                src={user.avatarUrl ?? undefined}
+                alt={displayName}
+              />
               <AvatarFallback>{fallbackInitials}</AvatarFallback>
             </Avatar>
             <AvatarPresenceDot
@@ -250,7 +272,10 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
                 inviteUser.mutate(user.id, {
                   onSuccess: () => notifySuccess(t("users.toasts.invited")),
                   onError: (error) =>
-                    notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+                    notifyError(
+                      t("common.states.error"),
+                      getFriendlyApiMessage(error, t),
+                    ),
                 })
               }
             >
@@ -283,9 +308,13 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
           <TabsTrigger value="profile">{t("users.tabs.profile")}</TabsTrigger>
           <TabsTrigger value="access">{t("users.tabs.access")}</TabsTrigger>
           {canReadCalendar ? (
-            <TabsTrigger value="training">{t("users.tabs.training")}</TabsTrigger>
+            <TabsTrigger value="training">
+              {t("users.tabs.training")}
+            </TabsTrigger>
           ) : null}
-          {canReadPlans ? <TabsTrigger value="plans">{t("users.tabs.plans")}</TabsTrigger> : null}
+          {canReadPlans ? (
+            <TabsTrigger value="plans">{t("users.tabs.plans")}</TabsTrigger>
+          ) : null}
         </TabsList>
 
         <TabsContent value="profile" className="mt-4">
@@ -343,8 +372,13 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
                 label={t("users.fields.id")}
                 value={
                   <span className="flex items-center gap-1">
-                    <span className="font-mono text-xs break-all">{user.id}</span>
-                    <CopyButton value={user.id} label={t("users.actions.copyId")} />
+                    <span className="font-mono text-xs break-all">
+                      {user.id}
+                    </span>
+                    <CopyButton
+                      value={user.id}
+                      label={t("users.actions.copyId")}
+                    />
                   </span>
                 }
               />
@@ -393,13 +427,18 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
                         key={group.id}
                         className="flex items-center justify-between gap-4 py-3"
                       >
-                        <label htmlFor={switchId} className="flex flex-col gap-0.5 cursor-pointer">
+                        <label
+                          htmlFor={switchId}
+                          className="flex flex-col gap-0.5 cursor-pointer"
+                        >
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium hover:underline">
                               {group.name}
                             </span>
                             {group.isSystem ? (
-                              <Badge variant="outline">{t("common.system")}</Badge>
+                              <Badge variant="outline">
+                                {t("common.system")}
+                              </Badge>
                             ) : null}
                           </div>
                           {group.description ? (
@@ -427,7 +466,9 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
           <Card>
             <CardHeader>
               <CardTitle>{t("users.access.permissionsTitle")}</CardTitle>
-              <CardDescription>{t("users.access.permissionsHint")}</CardDescription>
+              <CardDescription>
+                {t("users.access.permissionsHint")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <PermissionCatalogTable
@@ -458,7 +499,9 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title={t("users.confirmDelete.title")}
-        description={t("users.confirmDelete.description", { name: displayName })}
+        description={t("users.confirmDelete.description", {
+          name: displayName,
+        })}
         confirmLabel={t("common.actions.delete")}
         isPending={deleteUser.isPending}
         onConfirm={() =>
@@ -469,7 +512,10 @@ export function UserDetail({ user }: { user: AdminUserDetail }): ReactElement {
               router.push("/users/list");
             },
             onError: (error) =>
-              notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+              notifyError(
+                t("common.states.error"),
+                getFriendlyApiMessage(error, t),
+              ),
           })
         }
       />

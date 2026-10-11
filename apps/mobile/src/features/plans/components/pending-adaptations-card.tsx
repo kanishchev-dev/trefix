@@ -1,16 +1,17 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Sparkles } from "lucide-react-native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { type PendingAdaptation } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { useRealtimeEvent } from "../../../lib/realtime";
-import { listPendingAdaptations, resolveAdaptation } from "../../../lib/training-api";
 import { pluralize, type AppLanguage, type MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
 import { IconCircle } from "../../../shared/ui/list-card";
 import { useToast } from "../../../shared/ui/toast";
+import {
+  usePendingAdaptations,
+  useResolveAdaptation,
+} from "../hooks/use-pending-adaptations";
 
 type Props = {
   copy: MainCopy;
@@ -19,26 +20,26 @@ type Props = {
   themeMode: ThemeMode;
 };
 
-const QUERY_KEY = ["plans", "active", "adaptations"] as const;
-
 /** Plan changes the coach proposed ("with confirmation") or only advised ("advice only"). */
-export function PendingAdaptationsCard({ copy, language, theme, themeMode }: Props) {
-  const queryClient = useQueryClient();
+export function PendingAdaptationsCard({
+  copy,
+  language,
+  theme,
+  themeMode,
+}: Props) {
   const { showToast } = useToast();
-  const { data = [] } = useQuery({ queryKey: QUERY_KEY, queryFn: listPendingAdaptations });
-  const resolve = useMutation({
-    mutationFn: ({ id, action }: { id: string; action: "apply" | "dismiss" }) => resolveAdaptation(id, action),
-    onSuccess: (_result, { action }) => {
-      if (action === "apply") showToast(copy.plans.pendingAdaptations.applied);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["plans"] });
-      void queryClient.invalidateQueries({ queryKey: ["plan"] });
-    },
-  });
-  useRealtimeEvent("plan.adaptation.proposed", () => {
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-  });
+  const { data = [] } = usePendingAdaptations();
+  const resolveMutation = useResolveAdaptation();
+  const resolve = {
+    isPending: resolveMutation.isPending,
+    mutate: (variables: { id: string; action: "apply" | "dismiss" }) =>
+      resolveMutation.mutate(variables, {
+        onSuccess: () => {
+          if (variables.action === "apply")
+            showToast(copy.plans.pendingAdaptations.applied);
+        },
+      }),
+  };
 
   if (data.length === 0) return null;
   const t = copy.plans.pendingAdaptations;
@@ -49,13 +50,26 @@ export function PendingAdaptationsCard({ copy, language, theme, themeMode }: Pro
         <AdaptationItem
           key={adaptation.id}
           adaptation={adaptation}
-          title={adaptation.status === "suggested" ? t.suggestedTitle : t.proposedTitle}
-          action={(t.actions as Record<string, string>)[adaptation.type] ?? t.actions.default}
+          title={
+            adaptation.status === "suggested"
+              ? t.suggestedTitle
+              : t.proposedTitle
+          }
+          action={
+            (t.actions as Record<string, string>)[adaptation.type] ??
+            t.actions.default
+          }
           count={changesCount(adaptation)}
           countLabel={(count) => pluralize(t.workouts, count, language)}
           pending={resolve.isPending}
-          onApply={adaptation.status === "proposed" ? () => resolve.mutate({ id: adaptation.id, action: "apply" }) : undefined}
-          onDismiss={() => resolve.mutate({ id: adaptation.id, action: "dismiss" })}
+          onApply={
+            adaptation.status === "proposed"
+              ? () => resolve.mutate({ id: adaptation.id, action: "apply" })
+              : undefined
+          }
+          onDismiss={() =>
+            resolve.mutate({ id: adaptation.id, action: "dismiss" })
+          }
           dismissLabel={adaptation.status === "suggested" ? t.ok : t.dismiss}
           applyLabel={t.apply}
           theme={theme}
@@ -104,17 +118,42 @@ function AdaptationItem({
           <Sparkles color={theme.color.foreground} size={20} />
         </IconCircle>
         <View style={styles.texts}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.title,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {title}
           </Text>
-          <Text numberOfLines={1} style={[styles.description, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.description,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
+          >
             {count > 0 ? `${action} · ${countLabel(count)}` : action}
           </Text>
         </View>
       </View>
       <View style={styles.actions}>
         {onApply ? (
-          <SheetButton label={applyLabel} onPress={onApply} disabled={pending} theme={theme} themeMode={themeMode} style={styles.button} />
+          <SheetButton
+            label={applyLabel}
+            onPress={onApply}
+            disabled={pending}
+            theme={theme}
+            themeMode={themeMode}
+            style={styles.button}
+          />
         ) : null}
         <SheetButton
           label={dismissLabel}

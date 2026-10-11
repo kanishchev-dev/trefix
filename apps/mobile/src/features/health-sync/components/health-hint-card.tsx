@@ -18,18 +18,43 @@ type Props = {
 };
 
 /** Explanation with an optional action: missing access, no history, Health Connect not installed. */
-export function HealthHintCard({ title, body, icon, actionLabel, onAction, actionPending, theme, themeMode }: Props) {
+export function HealthHintCard({
+  title,
+  body,
+  icon,
+  actionLabel,
+  onAction,
+  actionPending,
+  theme,
+  themeMode,
+}: Props) {
   return (
     <View style={[styles.card, { backgroundColor: theme.color.card }]}>
       <View style={styles.header}>
         <IconCircle theme={theme} size={36}>
           {icon}
         </IconCircle>
-        <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+        <Text
+          style={[
+            styles.title,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.medium,
+            },
+          ]}
+        >
           {title}
         </Text>
       </View>
-      <Text style={[styles.body, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+      <Text
+        style={[
+          styles.body,
+          {
+            color: theme.color.mutedForeground,
+            fontFamily: theme.typography.fontFamily.sans.regular,
+          },
+        ]}
+      >
         {body}
       </Text>
       {actionLabel && onAction ? (

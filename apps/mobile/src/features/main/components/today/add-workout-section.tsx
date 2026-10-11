@@ -25,23 +25,8 @@ const WORKOUT_TYPES: Array<{
 
 export const AddWorkoutSection = React.memo(
   ({ theme, copy, onSelectType }: Props) => {
-    const typesCopy = copy?.today?.types || {};
-    const title = copy?.today?.addSectionTitle || "Добавить тренировку";
-
-    const getDefaultLabel = (key: ManualWorkoutType) => {
-      switch (key) {
-        case "easy":
-          return "Легкий бег";
-        case "tempo":
-          return "Темповая";
-        case "interval":
-          return "Интервалы";
-        case "hill":
-          return "Горки";
-        case "race":
-          return "Гонка";
-      }
-    };
+    const typesCopy = copy.today.types;
+    const title = copy.today.addSectionTitle;
 
     return (
       <View style={styles.container}>
@@ -64,7 +49,7 @@ export const AddWorkoutSection = React.memo(
           contentContainerStyle={styles.sliderContent}
         >
           {WORKOUT_TYPES.map(({ key, icon: Icon }) => {
-            const label = typesCopy[key] || getDefaultLabel(key);
+            const label = typesCopy[key];
 
             return (
               <Pressable

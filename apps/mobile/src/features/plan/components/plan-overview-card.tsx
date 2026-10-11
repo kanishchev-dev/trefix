@@ -16,7 +16,13 @@ type Props = {
   onOpenActions?: () => void;
 };
 
-export function PlanOverviewCard({ overview, theme, themeMode, copy, onOpenActions }: Props) {
+export function PlanOverviewCard({
+  overview,
+  theme,
+  themeMode,
+  copy,
+  onOpenActions,
+}: Props) {
   const { plan } = overview;
   const planCopy = copy.plan;
 
@@ -39,17 +45,15 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy, onOpenActio
       )
     : null;
 
-  const phaseLabel =
-    planCopy.phases[plan.currentPhase] || plan.currentPhase;
+  const phaseLabel = planCopy.phases[plan.currentPhase] || plan.currentPhase;
 
-  const progressPercent = Math.min(100, Math.max(0, Math.round(plan.progress * 100)));
+  const progressPercent = Math.min(
+    100,
+    Math.max(0, Math.round(plan.progress * 100)),
+  );
 
   return (
-    <Card
-      variant="glass"
-      theme={theme}
-      style={styles.card}
-    >
+    <Card variant="glass" theme={theme} style={styles.card}>
       {/* Top Header: Goal Title & Badges */}
       <View style={styles.headerRow}>
         <View style={styles.goalSection}>
@@ -140,7 +144,10 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy, onOpenActio
             accessibilityLabel={copy.plans.card.moreActions}
             hitSlop={10}
             onPress={onOpenActions}
-            style={({ pressed }) => [styles.moreButton, pressed && { opacity: 0.6 }]}
+            style={({ pressed }) => [
+              styles.moreButton,
+              pressed && { opacity: 0.6 },
+            ]}
           >
             <MoreHorizontal color={theme.color.mutedForeground} size={20} />
           </Pressable>
@@ -172,7 +179,11 @@ export function PlanOverviewCard({ overview, theme, themeMode, copy, onOpenActio
                 },
               ]}
             >
-              · {planCopy.overview.daysToRace.replace("{{days}}", String(daysToRace))}
+              ·{" "}
+              {planCopy.overview.daysToRace.replace(
+                "{{days}}",
+                String(daysToRace),
+              )}
             </Text>
           ) : null}
         </View>

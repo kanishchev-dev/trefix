@@ -11,7 +11,9 @@ export function pressureToAltitudeM(pressureHpa: number): number {
 }
 
 /** Smoothed altitude from the barometer; null when the phone has none. */
-export async function watchAltitude(onAltitude: (altM: number) => void): Promise<{ remove: () => void } | null> {
+export async function watchAltitude(
+  onAltitude: (altM: number) => void,
+): Promise<{ remove: () => void } | null> {
   const available = await Barometer.isAvailableAsync().catch(() => false);
   if (!available) return null;
   const window: number[] = [];
@@ -20,6 +22,7 @@ export async function watchAltitude(onAltitude: (altM: number) => void): Promise
     if (!Number.isFinite(pressure) || pressure <= 0) return;
     window.push(pressureToAltitudeM(pressure));
     if (window.length > SMOOTHING_WINDOW) window.shift();
-    if (window.length === SMOOTHING_WINDOW) onAltitude(window.reduce((sum, value) => sum + value, 0) / window.length);
+    if (window.length === SMOOTHING_WINDOW)
+      onAltitude(window.reduce((sum, value) => sum + value, 0) / window.length);
   });
 }

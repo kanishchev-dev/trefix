@@ -6,7 +6,11 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Compound } from "@workspace/ui-native";
 
 import { type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { SectionTitle } from "../../../shared/ui/list-card";
 import { SheetActionsColumn } from "../../plans/components/plans-ui";
 
@@ -28,7 +32,15 @@ const parse = (time: string): [number, number] => {
 };
 
 /** Start and end of quiet hours as two "h : min" wheels. */
-export function QuietHoursSheet({ visible, value, onSave, onClose, copy, theme, themeMode }: Props) {
+export function QuietHoursSheet({
+  visible,
+  value,
+  onSave,
+  onClose,
+  copy,
+  theme,
+  themeMode,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<QuietHours>(value ?? DEFAULT);
   const c = copy.profile.coach;
@@ -48,8 +60,21 @@ export function QuietHoursSheet({ visible, value, onSave, onClose, copy, theme, 
         <SectionTitle text={title} theme={theme} />
         <Compound
           parts={[
-            { label: labels.h, value: hours, min: 0, max: 23, formatValue: pad },
-            { label: labels.min, value: minutes, min: 0, max: 55, step: 5, formatValue: pad },
+            {
+              label: labels.h,
+              value: hours,
+              min: 0,
+              max: 23,
+              formatValue: pad,
+            },
+            {
+              label: labels.min,
+              value: minutes,
+              min: 0,
+              max: 55,
+              step: 5,
+              formatValue: pad,
+            },
           ]}
           separator=":"
           onChangePart={(index, next) => {
@@ -77,7 +102,11 @@ export function QuietHoursSheet({ visible, value, onSave, onClose, copy, theme, 
       theme={theme}
       themeMode={themeMode}
     >
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <SheetBlock theme={theme}>
           <View style={styles.pickers}>
             {picker("from", c.quietHoursFrom)}

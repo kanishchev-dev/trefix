@@ -34,6 +34,15 @@ export const authTokensSchema = z.object({
   user: authUserSchema,
 });
 
+/**
+ * A session as the web app's browser code sees it: the BFF keeps both tokens
+ * in httpOnly cookies and strips them from the body.
+ */
+export const browserSessionSchema = authTokensSchema.omit({
+  accessToken: true,
+  refreshToken: true,
+});
+
 export const authLoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
@@ -126,6 +135,7 @@ export const googleNativeExchangeSchema = z.object({
 
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type AuthTokens = z.infer<typeof authTokensSchema>;
+export type BrowserSession = z.infer<typeof browserSessionSchema>;
 export type AuthLoginInput = z.infer<typeof authLoginSchema>;
 export type AuthForgotPasswordInput = z.infer<typeof authForgotPasswordSchema>;
 export type AuthResetPasswordInput = z.infer<typeof authResetPasswordSchema>;

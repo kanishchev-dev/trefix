@@ -35,7 +35,9 @@ function multipartRequest(): Request {
 
 describe("isPassthroughContentType", () => {
   it("detects multipart and binary payloads", () => {
-    expect(isPassthroughContentType("multipart/form-data; boundary=x")).toBe(true);
+    expect(isPassthroughContentType("multipart/form-data; boundary=x")).toBe(
+      true,
+    );
     expect(isPassthroughContentType("application/octet-stream")).toBe(true);
     expect(isPassthroughContentType("application/json")).toBe(false);
   });
@@ -47,13 +49,18 @@ describe("isPassthroughContentType", () => {
 
 describe("prepareProxyBody", () => {
   it("has nothing to forward for GET", async () => {
-    await expect(prepareProxyBody(new Request("http://localhost/x"), "GET")).resolves.toEqual({
+    await expect(
+      prepareProxyBody(new Request("http://localhost/x"), "GET"),
+    ).resolves.toEqual({
       kind: "empty",
     });
   });
 
   it("re-encodes a JSON body", async () => {
-    const payload = await prepareProxyBody(jsonRequest({ firstName: "Ann" }), "POST");
+    const payload = await prepareProxyBody(
+      jsonRequest({ firstName: "Ann" }),
+      "POST",
+    );
 
     expect(payload).toEqual({ kind: "json", body: '{"firstName":"Ann"}' });
   });
@@ -80,22 +87,29 @@ describe("prepareProxyBody", () => {
       body: "hello",
     });
 
-    await expect(prepareProxyBody(request, "POST")).resolves.toEqual({ kind: "empty" });
+    await expect(prepareProxyBody(request, "POST")).resolves.toEqual({
+      kind: "empty",
+    });
   });
 });
 
 describe("payloadToFetchInit", () => {
   it("sends JSON with an explicit content type", () => {
-    expect(
-      payloadToFetchInit({ kind: "json", body: "{}" }),
-    ).toEqual({ body: "{}", headers: { "content-type": "application/json" } });
+    expect(payloadToFetchInit({ kind: "json", body: "{}" })).toEqual({
+      body: "{}",
+      headers: { "content-type": "application/json" },
+    });
   });
 
   it("requests half duplex for a streamed body", () => {
     const body = new ReadableStream<Uint8Array>();
 
     expect(
-      payloadToFetchInit({ kind: "stream", body, contentType: "multipart/form-data" }),
+      payloadToFetchInit({
+        kind: "stream",
+        body,
+        contentType: "multipart/form-data",
+      }),
     ).toEqual({
       body,
       headers: { "content-type": "multipart/form-data" },

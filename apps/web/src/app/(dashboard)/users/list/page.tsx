@@ -13,10 +13,7 @@ export default function UsersListPage(): ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t("users.listTitle")}
-        actions={<CreateUserButton />}
-      />
+      <PageHeader title={t("users.listTitle")} actions={<CreateUserButton />} />
       <Suspense fallback={<TableSkeleton rows={6} columns={4} />}>
         <UsersTable />
       </Suspense>

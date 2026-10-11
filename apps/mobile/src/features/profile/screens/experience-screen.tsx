@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, TextInput } from "react-native";
 
-import { type AthleteProfileUpdate, type ExperienceLevel } from "@workspace/api-client";
+import {
+  type AthleteProfileUpdate,
+  type ExperienceLevel,
+} from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Segmented } from "@workspace/ui-native";
 
@@ -11,9 +14,18 @@ import { SheetButton } from "../../../shared/ui/bottom-sheet";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
 import { Switch } from "../../../shared/ui/switch";
 import { useToast } from "../../../shared/ui/toast";
-import { ProfileSection, ProfileSubScreen } from "../components/profile-sub-screen";
-import { ProfileValueSheet, type ValueSheetConfig } from "../components/profile-value-sheet";
-import { useAthleteProfile, useUpdateAthleteProfile } from "../hooks/use-athlete-profile";
+import {
+  ProfileSection,
+  ProfileSubScreen,
+} from "../components/profile-sub-screen";
+import {
+  ProfileValueSheet,
+  type ValueSheetConfig,
+} from "../components/profile-value-sheet";
+import {
+  useAthleteProfile,
+  useUpdateAthleteProfile,
+} from "../hooks/use-athlete-profile";
 import { profileErrorMessage } from "../lib/profile-format";
 
 type Props = {
@@ -41,7 +53,10 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
   const save = async (patch: AthleteProfileUpdate) => {
     try {
       await update.mutateAsync(patch);
-      trackEvent("profile_field_updated", { field: Object.keys(patch).join(","), source: "manual" });
+      trackEvent("profile_field_updated", {
+        field: Object.keys(patch).join(","),
+        source: "manual",
+      });
     } catch (error) {
       showToast(profileErrorMessage(error, copy));
       throw error;
@@ -49,24 +64,44 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
   };
 
   if (!athlete) {
-    return <ProfileSubScreen title={e.title} onBack={onBack} theme={theme} themeMode={themeMode}>{null}</ProfileSubScreen>;
+    return (
+      <ProfileSubScreen
+        title={e.title}
+        onBack={onBack}
+        theme={theme}
+        themeMode={themeMode}
+      >
+        {null}
+      </ProfileSubScreen>
+    );
   }
 
   const year = new Date().getFullYear();
   const noLimitations = athlete.limitations === "";
-  const dirty = text.trim() !== (athlete.limitations ?? "").trim() && text.trim().length > 0;
+  const dirty =
+    text.trim() !== (athlete.limitations ?? "").trim() &&
+    text.trim().length > 0;
 
   return (
-    <ProfileSubScreen title={e.title} onBack={onBack} theme={theme} themeMode={themeMode}>
+    <ProfileSubScreen
+      title={e.title}
+      onBack={onBack}
+      theme={theme}
+      themeMode={themeMode}
+    >
       <ProfileSection>
         <SectionTitle text={e.level} theme={theme} />
         <Segmented
-          segments={(["beginner", "intermediate", "advanced"] as const).map((value) => ({
-            value,
-            label: copy.profile.levels[value],
-          }))}
+          segments={(["beginner", "intermediate", "advanced"] as const).map(
+            (value) => ({
+              value,
+              label: copy.profile.levels[value],
+            }),
+          )}
           value={athlete.experienceLevel as ExperienceLevel}
-          onChange={(value) => void save({ experienceLevel: value }).catch(() => undefined)}
+          onChange={(value) =>
+            void save({ experienceLevel: value }).catch(() => undefined)
+          }
           theme={theme}
           themeMode={themeMode}
         />
@@ -76,7 +111,11 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
         <ListRow
           theme={theme}
           title={e.since}
-          value={athlete.runningSinceYear ? String(athlete.runningSinceYear) : copy.profile.summary.notSet}
+          value={
+            athlete.runningSinceYear
+              ? String(athlete.runningSinceYear)
+              : copy.profile.summary.notSet
+          }
           onPress={() =>
             setSheet({
               kind: "number",
@@ -106,7 +145,11 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
                 theme={theme}
                 value={noLimitations}
                 accessibilityLabel={e.none}
-                onValueChange={(value) => void save({ limitations: value ? "" : null }).catch(() => undefined)}
+                onValueChange={(value) =>
+                  void save({ limitations: value ? "" : null }).catch(
+                    () => undefined,
+                  )
+                }
               />
             }
           />
@@ -133,7 +176,9 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
               label={e.save}
               disabled={!dirty}
               pending={update.isPending}
-              onPress={() => void save({ limitations: text.trim() }).catch(() => undefined)}
+              onPress={() =>
+                void save({ limitations: text.trim() }).catch(() => undefined)
+              }
               theme={theme}
               themeMode={themeMode}
             />
@@ -141,7 +186,13 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
         ) : null}
       </ProfileSection>
 
-      <ProfileValueSheet config={sheet} onClose={() => setSheet(null)} copy={copy} theme={theme} themeMode={themeMode} />
+      <ProfileValueSheet
+        config={sheet}
+        onClose={() => setSheet(null)}
+        copy={copy}
+        theme={theme}
+        themeMode={themeMode}
+      />
     </ProfileSubScreen>
   );
 }

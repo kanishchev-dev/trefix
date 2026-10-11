@@ -36,7 +36,10 @@ function stubCanvasFactory(canvases: StubCanvas[]) {
   }) as typeof document.createElement);
 }
 
-function stubImage(naturalWidth: number, naturalHeight: number): HTMLImageElement {
+function stubImage(
+  naturalWidth: number,
+  naturalHeight: number,
+): HTMLImageElement {
   return { naturalWidth, naturalHeight } as HTMLImageElement;
 }
 
@@ -53,19 +56,28 @@ describe("clampCropArea", () => {
 
   it("pulls a negative origin back to zero", () => {
     expect(
-      clampCropArea({ x: -50, y: -20, width: 100, height: 100 }, { width: 4000, height: 3000 }),
+      clampCropArea(
+        { x: -50, y: -20, width: 100, height: 100 },
+        { width: 4000, height: 3000 },
+      ),
     ).toEqual({ x: 0, y: 0, width: 100, height: 100 });
   });
 
   it("shrinks a crop that runs past the right and bottom edges", () => {
     expect(
-      clampCropArea({ x: 3900, y: 2900, width: 500, height: 500 }, { width: 4000, height: 3000 }),
+      clampCropArea(
+        { x: 3900, y: 2900, width: 500, height: 500 },
+        { width: 4000, height: 3000 },
+      ),
     ).toEqual({ x: 3900, y: 2900, width: 100, height: 100 });
   });
 
   it("collapses a crop that starts outside the image instead of drawing nothing", () => {
     expect(
-      clampCropArea({ x: 5000, y: 5000, width: 100, height: 100 }, { width: 4000, height: 3000 }),
+      clampCropArea(
+        { x: 5000, y: 5000, width: 100, height: 100 },
+        { width: 4000, height: 3000 },
+      ),
     ).toEqual({ x: 4000, y: 3000, width: 0, height: 0 });
   });
 });

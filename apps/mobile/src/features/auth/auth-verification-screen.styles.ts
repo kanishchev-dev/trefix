@@ -1,0 +1,145 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    overflow: "hidden",
+  },
+  orbTop: {
+    position: "absolute",
+    top: -72,
+    right: -36,
+    width: 220,
+    height: 220,
+    borderRadius: 220,
+  },
+  orbBottom: {
+    position: "absolute",
+    left: -72,
+    bottom: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 280,
+  },
+  grid: {
+    position: "absolute",
+    left: -12,
+    right: -12,
+    bottom: 0,
+    height: 160,
+    justifyContent: "flex-end",
+    alignItems: "stretch",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    gap: 10,
+  },
+  gridLine: {
+    height: 1,
+    borderRadius: 999,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  centerStack: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    gap: 18,
+    paddingTop: 10,
+    paddingBottom: 24,
+  },
+  title: {
+    fontSize: 26,
+    lineHeight: 30,
+    letterSpacing: -0.4,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    maxWidth: 320,
+  },
+  subtitleStrong: {
+    fontWeight: "700",
+  },
+  codeArea: {
+    alignItems: "center",
+    gap: 12,
+    width: "100%",
+  },
+  codeRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    width: "100%",
+  },
+  codeCell: {
+    flex: 1,
+    maxWidth: 56,
+    aspectRatio: 1,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  codeDigit: {
+    fontSize: 26,
+    lineHeight: 30,
+    includeFontPadding: false,
+  },
+  cursor: {
+    width: 2,
+    height: 26,
+    borderRadius: 999,
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    marginTop: 12,
+  },
+  hiddenInput: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+  resendBlock: {
+    alignItems: "center",
+    gap: 4,
+    paddingTop: 8,
+  },
+  resendCaption: {
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center",
+  },
+  resendTimer: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  resendButton: {
+    width: "100%",
+    height: 56,
+    borderRadius: 9999,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  resendButtonBusy: {
+    opacity: 0.72,
+  },
+  resendLabel: {
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  pressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.88,
+  },
+});

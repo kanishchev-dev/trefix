@@ -5,7 +5,10 @@ import { type PlanAdaptation } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
-import { BottomSheet, SheetSectionLabel } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetSectionLabel,
+} from "../../../shared/ui/bottom-sheet";
 
 type Props = {
   adaptation: PlanAdaptation | null;
@@ -30,7 +33,12 @@ export function PlanAdaptationDetailsSheet({
 }: Props) {
   if (!adaptation) {
     return (
-      <BottomSheet visible={false} onClose={onClose} theme={theme} themeMode={themeMode} />
+      <BottomSheet
+        visible={false}
+        onClose={onClose}
+        theme={theme}
+        themeMode={themeMode}
+      />
     );
   }
 

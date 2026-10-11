@@ -1,5 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { ChevronLeft } from "lucide-react-native";
 import Animated, {
   Extrapolation,
@@ -16,7 +22,12 @@ import { Ruler } from "@workspace/ui-native";
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
 import { PLAN_WORKOUT_TYPE_KEYS } from "../plan-creation-types";
-import { DayPicker, FieldError, OptionChip, SectionBlock } from "./plan-creation-ui";
+import {
+  DayPicker,
+  FieldError,
+  OptionChip,
+  SectionBlock,
+} from "./plan-creation-ui";
 
 export type WorkoutChanges = {
   type?: string;
@@ -32,7 +43,9 @@ export const roundKm = (value: number) => Math.round(value * 10) / 10;
 export function validateWorkoutChanges(changes: WorkoutChanges): string | null {
   if (
     changes.distanceKm !== undefined &&
-    (!Number.isFinite(changes.distanceKm) || changes.distanceKm <= 0 || changes.distanceKm > 100)
+    (!Number.isFinite(changes.distanceKm) ||
+      changes.distanceKm <= 0 ||
+      changes.distanceKm > 100)
   ) {
     return "invalidDistance";
   }
@@ -47,8 +60,24 @@ export function validateWorkoutChanges(changes: WorkoutChanges): string | null {
   return null;
 }
 
-export const SHORT_DAY_NAMES_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-export const SHORT_DAY_NAMES_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] as const;
+export const SHORT_DAY_NAMES_EN = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun",
+] as const;
+export const SHORT_DAY_NAMES_RU = [
+  "Пн",
+  "Вт",
+  "Ср",
+  "Чт",
+  "Пт",
+  "Сб",
+  "Вс",
+] as const;
 
 /** Monday-based short weekday names. */
 export function shortDayNamesFor(language: AppLanguage): readonly string[] {
@@ -108,7 +137,8 @@ export function WorkoutEditForm({
 }: WorkoutEditFormProps) {
   const creationCopy = copy.plan.creation;
   const editorCopy = creationCopy.workoutEditor;
-  const shortDayNames = language === "ru" ? SHORT_DAY_NAMES_RU : SHORT_DAY_NAMES_EN;
+  const shortDayNames =
+    language === "ru" ? SHORT_DAY_NAMES_RU : SHORT_DAY_NAMES_EN;
 
   const initial = {
     type: workout?.type ?? "easy",
@@ -119,17 +149,28 @@ export function WorkoutEditForm({
   const [type, setType] = useState(initial.type);
   const [dayOfWeek, setDayOfWeek] = useState(initial.dayOfWeek);
   const [distanceKm, setDistanceKm] = useState(initial.distanceKm);
-  const [durationMinutes, setDurationMinutes] = useState(initial.durationMinutes);
+  const [durationMinutes, setDurationMinutes] = useState(
+    initial.durationMinutes,
+  );
 
   const changes: WorkoutChanges = workout
     ? {
         type: type !== initial.type ? type : undefined,
         dayOfWeek: dayOfWeek !== initial.dayOfWeek ? dayOfWeek : undefined,
-        distanceKm: Math.abs(distanceKm - initial.distanceKm) > 1e-6 ? distanceKm : undefined,
-        durationMinutes: durationMinutes !== initial.durationMinutes ? durationMinutes : undefined,
+        distanceKm:
+          Math.abs(distanceKm - initial.distanceKm) > 1e-6
+            ? distanceKm
+            : undefined,
+        durationMinutes:
+          durationMinutes !== initial.durationMinutes
+            ? durationMinutes
+            : undefined,
       }
     : { type, dayOfWeek, distanceKm, durationMinutes };
-  const hasChanges = !workout || forceDirty || Object.values(changes).some((value) => value !== undefined);
+  const hasChanges =
+    !workout ||
+    forceDirty ||
+    Object.values(changes).some((value) => value !== undefined);
 
   return (
     <>
@@ -156,7 +197,11 @@ export function WorkoutEditForm({
             {PLAN_WORKOUT_TYPE_KEYS.map((typeKey) => (
               <OptionChip
                 key={typeKey}
-                label={creationCopy.workoutTypes[typeKey as keyof typeof creationCopy.workoutTypes] ?? typeKey}
+                label={
+                  creationCopy.workoutTypes[
+                    typeKey as keyof typeof creationCopy.workoutTypes
+                  ] ?? typeKey
+                }
                 selected={type === typeKey}
                 theme={theme}
                 themeMode={themeMode}
@@ -214,7 +259,11 @@ export function WorkoutEditForm({
         {error ? (
           <SheetBlock theme={theme}>
             <FieldError
-              message={creationCopy.errors[error as keyof typeof creationCopy.errors] ?? error}
+              message={
+                creationCopy.errors[
+                  error as keyof typeof creationCopy.errors
+                ] ?? error
+              }
               theme={theme}
             />
           </SheetBlock>
@@ -224,36 +273,39 @@ export function WorkoutEditForm({
       {/* Actions: same layout and offsets as the creation-step sheets. */}
       <SheetBlock theme={theme}>
         <View style={styles.editActions}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={creationCopy.common.back}
-          onPress={onClose}
-          style={({ pressed }) => [
-            styles.editIconButton,
-            { backgroundColor: theme.color.controlSecondary },
-            pressed && styles.rowPressed,
-          ]}
-        >
-          <ChevronLeft color={theme.color.foreground} size={22} />
-        </Pressable>
-        {workout && onRemove ? (
-          <SplitActions
-            showSecond={hasChanges}
-            first={{ label: editorCopy.removeButton, onPress: onRemove }}
-            second={{ label: editorCopy.save, onPress: () => onSave(changes) }}
-            pending={pending}
-            theme={theme}
-            themeMode={themeMode}
-          />
-        ) : (
-          <SheetButton
-            label={editorCopy.addShort}
-            onPress={() => onSave(changes)}
-            pending={pending}
-            theme={theme}
-            themeMode={themeMode}
-          />
-        )}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={creationCopy.common.back}
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.editIconButton,
+              { backgroundColor: theme.color.controlSecondary },
+              pressed && styles.rowPressed,
+            ]}
+          >
+            <ChevronLeft color={theme.color.foreground} size={22} />
+          </Pressable>
+          {workout && onRemove ? (
+            <SplitActions
+              showSecond={hasChanges}
+              first={{ label: editorCopy.removeButton, onPress: onRemove }}
+              second={{
+                label: editorCopy.save,
+                onPress: () => onSave(changes),
+              }}
+              pending={pending}
+              theme={theme}
+              themeMode={themeMode}
+            />
+          ) : (
+            <SheetButton
+              label={editorCopy.addShort}
+              onPress={() => onSave(changes)}
+              pending={pending}
+              theme={theme}
+              themeMode={themeMode}
+            />
+          )}
         </View>
       </SheetBlock>
     </>
@@ -297,18 +349,45 @@ function SplitActions({
       flexGrow: p,
       marginLeft: Math.min(1, p) * SPLIT_GAP,
       // a round droplet first, then a pill
-      transform: [{ scaleY: interpolate(p, [0, 0.25, 1], [0.55, 0.9, 1], Extrapolation.CLAMP) }],
+      transform: [
+        {
+          scaleY: interpolate(
+            p,
+            [0, 0.25, 1],
+            [0.55, 0.9, 1],
+            Extrapolation.CLAMP,
+          ),
+        },
+      ],
       backgroundColor: interpolateColor(
         Math.min(1, p),
         [0, 0.55, 1],
-        [theme.color.dangerSurface, theme.color.dangerSurface, theme.color.primary],
+        [
+          theme.color.dangerSurface,
+          theme.color.dangerSurface,
+          theme.color.primary,
+        ],
       ),
     };
   });
 
   const secondLabelStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0.55, 1], [0, 1], Extrapolation.CLAMP),
-    transform: [{ scale: interpolate(progress.value, [0.55, 1], [0.9, 1], Extrapolation.CLAMP) }],
+    opacity: interpolate(
+      progress.value,
+      [0.55, 1],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+    transform: [
+      {
+        scale: interpolate(
+          progress.value,
+          [0.55, 1],
+          [0.9, 1],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
   }));
 
   return (
@@ -328,24 +407,32 @@ function SplitActions({
         <Pressable
           accessibilityRole="button"
           accessibilityElementsHidden={!showSecond}
-          importantForAccessibility={showSecond ? "auto" : "no-hide-descendants"}
+          importantForAccessibility={
+            showSecond ? "auto" : "no-hide-descendants"
+          }
           disabled={pending}
           onPress={second.onPress}
-          style={({ pressed }) => [styles.splitPressable, pressed && styles.rowPressed]}
+          style={({ pressed }) => [
+            styles.splitPressable,
+            pressed && styles.rowPressed,
+          ]}
         >
           {pending ? (
             <ActivityIndicator color={theme.color.primaryForeground} />
           ) : (
-          <Animated.Text
-            numberOfLines={1}
-            style={[
-              styles.splitLabel,
-              { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.semibold },
-              secondLabelStyle,
-            ]}
-          >
-            {second.label}
-          </Animated.Text>
+            <Animated.Text
+              numberOfLines={1}
+              style={[
+                styles.splitLabel,
+                {
+                  color: theme.color.primaryForeground,
+                  fontFamily: theme.typography.fontFamily.sans.semibold,
+                },
+                secondLabelStyle,
+              ]}
+            >
+              {second.label}
+            </Animated.Text>
           )}
         </Pressable>
       </Animated.View>

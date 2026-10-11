@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { type AthleteProfile, type AthleteProfileUpdate, type HrZone, type HrZonesMethod } from "@workspace/api-client";
+import {
+  type AthleteProfile,
+  type AthleteProfileUpdate,
+  type HrZone,
+  type HrZonesMethod,
+} from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Segmented } from "@workspace/ui-native";
 
@@ -10,10 +15,19 @@ import { fillTemplate, type MainCopy } from "../../../locales";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
 import { useToast } from "../../../shared/ui/toast";
 import { Notice, NoticeText } from "../../plans/components/plans-ui";
-import { ProfileSection, ProfileSubScreen } from "../components/profile-sub-screen";
-import { ProfileValueSheet, type ValueSheetConfig } from "../components/profile-value-sheet";
+import {
+  ProfileSection,
+  ProfileSubScreen,
+} from "../components/profile-sub-screen";
+import {
+  ProfileValueSheet,
+  type ValueSheetConfig,
+} from "../components/profile-value-sheet";
 import { useActivePlan } from "../../plans/hooks/use-active-plan";
-import { useAthleteProfile, useUpdateAthleteProfile } from "../hooks/use-athlete-profile";
+import {
+  useAthleteProfile,
+  useUpdateAthleteProfile,
+} from "../hooks/use-athlete-profile";
 import { usePreferences } from "../hooks/use-preferences";
 import { profileErrorMessage } from "../lib/profile-format";
 
@@ -26,7 +40,10 @@ type Props = {
 
 type HeartField = "restingHeartRate" | "maxHeartRate" | "thresholdHeartRate";
 
-const RANGES: Record<HeartField, { min: number; max: number; fallback: number }> = {
+const RANGES: Record<
+  HeartField,
+  { min: number; max: number; fallback: number }
+> = {
   restingHeartRate: { min: 30, max: 100, fallback: 55 },
   maxHeartRate: { min: 120, max: 230, fallback: 185 },
   thresholdHeartRate: { min: 100, max: 220, fallback: 165 },
@@ -48,16 +65,28 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
 
   const save = async (patch: AthleteProfileUpdate) => {
     await update.mutateAsync(patch);
-    trackEvent("profile_field_updated", { field: Object.keys(patch).join(","), source: "manual" });
+    trackEvent("profile_field_updated", {
+      field: Object.keys(patch).join(","),
+      source: "manual",
+    });
     // Zones drive heart-rate targets of the active plan; in "confirm" mode the coach proposes the update.
-    if (activePlan.data?.plan && preferences.coachEnabled && preferences.coachAdaptationMode === "confirm") {
+    if (
+      activePlan.data?.plan &&
+      preferences.coachEnabled &&
+      preferences.coachAdaptationMode === "confirm"
+    ) {
       showToast(h.planNote);
     }
   };
 
-  const openValue = (field: HeartField, title: string, profile: AthleteProfile) => {
+  const openValue = (
+    field: HeartField,
+    title: string,
+    profile: AthleteProfile,
+  ) => {
     const range = RANGES[field];
-    const estimate = field === "maxHeartRate" ? profile.maxHeartRateEstimate : null;
+    const estimate =
+      field === "maxHeartRate" ? profile.maxHeartRateEstimate : null;
     setSheet({
       kind: "number",
       title,
@@ -74,7 +103,10 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
   };
 
   const openCustomBound = (index: number, profile: AthleteProfile) => {
-    const bounds = profile.hrZonesCustom ?? currentUpperBounds(profile.hrZones) ?? FALLBACK_CUSTOM;
+    const bounds =
+      profile.hrZonesCustom ??
+      currentUpperBounds(profile.hrZones) ??
+      FALLBACK_CUSTOM;
     setSheet({
       kind: "number",
       title: fillTemplate(h.zoneUpper, { zone: index + 1 }),
@@ -94,10 +126,16 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
     });
   };
 
-  const changeMethod = async (method: HrZonesMethod, profile: AthleteProfile) => {
+  const changeMethod = async (
+    method: HrZonesMethod,
+    profile: AthleteProfile,
+  ) => {
     try {
       if (method === "custom") {
-        const bounds = profile.hrZonesCustom ?? currentUpperBounds(profile.hrZones) ?? FALLBACK_CUSTOM;
+        const bounds =
+          profile.hrZonesCustom ??
+          currentUpperBounds(profile.hrZones) ??
+          FALLBACK_CUSTOM;
         await save({ hrZonesMethod: "custom", hrZonesCustom: bounds });
       } else {
         await save({ hrZonesMethod: method });
@@ -108,23 +146,41 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
   };
 
   if (!athlete) {
-    return <ProfileSubScreen title={h.title} onBack={onBack} theme={theme} themeMode={themeMode}>{null}</ProfileSubScreen>;
+    return (
+      <ProfileSubScreen
+        title={h.title}
+        onBack={onBack}
+        theme={theme}
+        themeMode={themeMode}
+      >
+        {null}
+      </ProfileSubScreen>
+    );
   }
 
   const method = athlete.hrZonesMethod ?? "max_hr";
   const zones = athlete.hrZones ?? null;
   const reason = athlete.hrZonesUnavailableReason ?? null;
-  const valueOf = (field: HeartField) => (athlete[field] ? `${athlete[field]} ${bpm}` : h.notSet);
-  const colorOf = (field: HeartField) => (athlete[field] ? undefined : theme.color.warning);
+  const valueOf = (field: HeartField) =>
+    athlete[field] ? `${athlete[field]} ${bpm}` : h.notSet;
+  const colorOf = (field: HeartField) =>
+    athlete[field] ? undefined : theme.color.warning;
 
   const fixReason = () => {
-    if (reason === "threshold_missing") openValue("thresholdHeartRate", h.threshold, athlete);
-    else if (reason === "max_missing") openValue("maxHeartRate", h.max, athlete);
+    if (reason === "threshold_missing")
+      openValue("thresholdHeartRate", h.threshold, athlete);
+    else if (reason === "max_missing")
+      openValue("maxHeartRate", h.max, athlete);
     else openCustomBound(0, athlete);
   };
 
   return (
-    <ProfileSubScreen title={h.title} onBack={onBack} theme={theme} themeMode={themeMode}>
+    <ProfileSubScreen
+      title={h.title}
+      onBack={onBack}
+      theme={theme}
+      themeMode={themeMode}
+    >
       <ProfileSection>
         <SectionTitle text={h.values} theme={theme} />
         <ListCard theme={theme}>
@@ -140,7 +196,9 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
             title={h.max}
             description={
               !athlete.maxHeartRate && athlete.maxHeartRateEstimate
-                ? fillTemplate(h.estimate, { value: athlete.maxHeartRateEstimate })
+                ? fillTemplate(h.estimate, {
+                    value: athlete.maxHeartRateEstimate,
+                  })
                 : undefined
             }
             value={valueOf("maxHeartRate")}
@@ -152,7 +210,9 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
             title={h.threshold}
             value={valueOf("thresholdHeartRate")}
             valueColor={colorOf("thresholdHeartRate")}
-            onPress={() => openValue("thresholdHeartRate", h.threshold, athlete)}
+            onPress={() =>
+              openValue("thresholdHeartRate", h.threshold, athlete)
+            }
           />
         </ListCard>
         {!athlete.thresholdHeartRate ? (
@@ -165,7 +225,9 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
       <ProfileSection>
         <SectionTitle text={h.zones} theme={theme} />
         <Segmented
-          segments={(["threshold", "max_hr", "custom"] as const).map((value) => ({ value, label: h.methods[value] }))}
+          segments={(["threshold", "max_hr", "custom"] as const).map(
+            (value) => ({ value, label: h.methods[value] }),
+          )}
           value={method}
           onChange={(next) => void changeMethod(next, athlete)}
           theme={theme}
@@ -180,7 +242,11 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
                 name={h.zoneNames[zone.zone - 1] ?? `Z${zone.zone}`}
                 bpm={bpm}
                 theme={theme}
-                onPress={method === "custom" && zone.zone < 5 ? () => openCustomBound(zone.zone - 1, athlete) : undefined}
+                onPress={
+                  method === "custom" && zone.zone < 5
+                    ? () => openCustomBound(zone.zone - 1, athlete)
+                    : undefined
+                }
               />
             ))}
           </ListCard>
@@ -196,15 +262,25 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
         )}
       </ProfileSection>
 
-      <ProfileValueSheet config={sheet} onClose={() => setSheet(null)} copy={copy} theme={theme} themeMode={themeMode} />
+      <ProfileValueSheet
+        config={sheet}
+        onClose={() => setSheet(null)}
+        copy={copy}
+        theme={theme}
+        themeMode={themeMode}
+      />
     </ProfileSubScreen>
   );
 }
 
-function currentUpperBounds(zones: HrZone[] | null | undefined): number[] | null {
+function currentUpperBounds(
+  zones: HrZone[] | null | undefined,
+): number[] | null {
   if (!zones || zones.length < 4) return null;
   const bounds = zones.slice(0, 4).map((zone) => zone.max);
-  return bounds.every((value): value is number => typeof value === "number") ? bounds : null;
+  return bounds.every((value): value is number => typeof value === "number")
+    ? bounds
+    : null;
 }
 
 function ZoneRow({
@@ -221,7 +297,11 @@ function ZoneRow({
   onPress?: () => void;
 }) {
   const range =
-    zone.min === null ? `< ${zone.max}` : zone.max === null ? `> ${zone.min}` : `${zone.min}–${zone.max}`;
+    zone.min === null
+      ? `< ${zone.max}`
+      : zone.max === null
+        ? `> ${zone.min}`
+        : `${zone.min}–${zone.max}`;
   return (
     <Pressable
       accessibilityRole={onPress ? "button" : undefined}
@@ -230,17 +310,47 @@ function ZoneRow({
       onPress={onPress}
       style={({ pressed }) => [styles.zoneRow, pressed && styles.pressed]}
     >
-      <View style={[styles.zoneBar, { backgroundColor: theme.color.foreground, opacity: 0.2 + zone.zone * 0.16 }]} />
-      <Text style={[styles.zoneLabel, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+      <View
+        style={[
+          styles.zoneBar,
+          {
+            backgroundColor: theme.color.foreground,
+            opacity: 0.2 + zone.zone * 0.16,
+          },
+        ]}
+      />
+      <Text
+        style={[
+          styles.zoneLabel,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.semibold,
+          },
+        ]}
+      >
         Z{zone.zone}
       </Text>
       <Text
         numberOfLines={1}
-        style={[styles.zoneName, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+        style={[
+          styles.zoneName,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.regular,
+          },
+        ]}
       >
         {name}
       </Text>
-      <Text style={[styles.zoneRange, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+      <Text
+        style={[
+          styles.zoneRange,
+          {
+            color: theme.color.mutedForeground,
+            fontFamily: theme.typography.fontFamily.sans.medium,
+          },
+        ]}
+      >
         {range} {bpm}
       </Text>
     </Pressable>

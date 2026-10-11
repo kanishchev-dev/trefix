@@ -1,5 +1,8 @@
 /** Offset of `timeZone`'s wall clock from UTC at `instant`, minutes east of UTC. */
-export function zoneOffsetMinutes(instant: Date, timeZone: string): number | undefined {
+export function zoneOffsetMinutes(
+  instant: Date,
+  timeZone: string,
+): number | undefined {
   try {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone,
@@ -21,7 +24,9 @@ export function zoneOffsetMinutes(instant: Date, timeZone: string): number | und
       value("minute"),
       value("second"),
     );
-    const offset = Math.round((wallClockAsUtc - Math.floor(instant.getTime() / 1000) * 1000) / 60000);
+    const offset = Math.round(
+      (wallClockAsUtc - Math.floor(instant.getTime() / 1000) * 1000) / 60000,
+    );
     return Number.isFinite(offset) ? offset : undefined;
   } catch {
     return undefined;

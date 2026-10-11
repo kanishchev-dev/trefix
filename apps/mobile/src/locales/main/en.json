@@ -1,4 +1,7 @@
 {
+  "meta": {
+    "language": "en"
+  },
   "tabs": {
     "today": "Today",
     "plan": "Plan",
@@ -521,7 +524,12 @@
       "Show my progress",
       "Build a plan for the week"
     ],
-    "composerPlaceholder": "Write a message..."
+    "composerPlaceholder": "Write a message...",
+    "errors": {
+      "athleteMissing": "Create an athlete profile to talk to the coach.",
+      "unavailable": "The coach is unavailable right now. Please try again.",
+      "network": "No connection. Check the internet and try again."
+    }
   },
   "progress": {
     "periods": {
@@ -997,13 +1005,7 @@
         "custom_missing": "Set the zone bounds"
       },
       "specify": "Set",
-      "zoneNames": [
-        "Recovery",
-        "Aerobic",
-        "Tempo",
-        "Threshold",
-        "Maximum"
-      ],
+      "zoneNames": ["Recovery", "Aerobic", "Tempo", "Threshold", "Maximum"],
       "editZones": "Edit bounds",
       "customTitle": "Zone bounds",
       "zoneUpper": "Top of Z{{zone}}",
@@ -1162,15 +1164,7 @@
       "race": "Race"
     },
     "weekdays": {
-      "short": [
-        "Mo",
-        "Tu",
-        "We",
-        "Th",
-        "Fr",
-        "Sa",
-        "Su"
-      ],
+      "short": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
       "full": [
         "Monday",
         "Tuesday",
@@ -1672,13 +1666,7 @@
     "distanceTreadmill": "What did the treadmill show?",
     "distanceTime": "Distance, if you know it exactly",
     "feeling": "How you felt",
-    "feelings": [
-      "Bad",
-      "So-so",
-      "Okay",
-      "Good",
-      "Great"
-    ],
+    "feelings": ["Bad", "So-so", "Okay", "Good", "Great"],
     "rpe": "Effort, RPE",
     "notes": "Note",
     "notesPlaceholder": "How did it go",
@@ -1762,5 +1750,18 @@
     "healthExportHint": "The workout and its route will appear in {{store}}. Write access is asked once.",
     "healthDenied": "No write access to {{store}}. Allow it in {{store}} settings.",
     "healthFailed": "Couldn't save the workout to {{store}}"
+  },
+  "errors": {
+    "title": "Error",
+    "fallback": "Something went wrong. Please try again.",
+    "network": "No connection. Check the internet and try again.",
+    "serverUnavailable": "The service is temporarily unavailable. Please try again later.",
+    "tooManyRequests": "Too many attempts. Please wait a moment.",
+    "uploadFailedTitle": "Upload failed",
+    "uploadFailed": "Could not upload the image.",
+    "saveWorkoutFailed": "Could not save the workout.",
+    "completeWorkoutFailed": "Could not complete the workout.",
+    "photoPermissionTitle": "No access to photos",
+    "photoPermission": "Allow access to photos to change your avatar."
   }
 }

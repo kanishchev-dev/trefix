@@ -1,248 +1,45 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest, type NextResponse } from "next/server";
 
+import { prepareProxyBody } from "@/lib/server/proxy-payload";
 import {
-  payloadToFetchInit,
-  prepareProxyBody,
-  type ProxyPayload,
-} from "@/lib/server/proxy-payload";
-import {
-  BackendUnavailableError,
-  backendUnavailableResponse,
-  fetchBackend,
-  isSessionRejection,
-} from "@/lib/server/backend-availability";
-import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
+  forwardWithSession,
+  type HttpMethod,
+  withBackendAvailability,
+} from "@/lib/server/session";
 
 export const runtime = "nodejs";
 
-const BACKEND_BASE_URL =
-  process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
-const ACCESS_COOKIE = "trefix_access_token";
-const REFRESH_COOKIE = "trefix_refresh_token";
-const SESSION_COOKIE = "trefix_session_id";
+type RouteContext = { params: Promise<{ path: string[] }> };
 
-type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-
-type AuthTokens = {
-  accessToken: string;
-  refreshToken: string;
-  sessionId: string;
-  accessTokenExpiresIn: number;
-};
-
-function isProduction() {
-  return process.env.NODE_ENV === "production";
-}
-
-function setAuthCookies(
-  response: NextResponse,
-  tokens: AuthTokens,
-): NextResponse {
-  const common = {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: isProduction(),
-    path: "/",
-  };
-  const refreshMaxAge = 60 * 60 * 24 * 30;
-
-  response.cookies.set(ACCESS_COOKIE, tokens.accessToken, {
-    ...common,
-    maxAge: tokens.accessTokenExpiresIn,
-  });
-  response.cookies.set(REFRESH_COOKIE, tokens.refreshToken, {
-    ...common,
-    maxAge: refreshMaxAge,
-  });
-  response.cookies.set(SESSION_COOKIE, tokens.sessionId, {
-    ...common,
-    maxAge: refreshMaxAge,
-  });
-
-  return response;
-}
-
-function clearAuthCookies(response: NextResponse): NextResponse {
-  response.cookies.delete(ACCESS_COOKIE);
-  response.cookies.delete(REFRESH_COOKIE);
-  response.cookies.delete(SESSION_COOKIE);
-  return response;
-}
-
-function buildBackendPath(segments: string[] | undefined): string {
-  return `/${(segments ?? []).join("/")}`;
-}
-
-function buildQueryString(request: NextRequest): string {
-  const search = request.nextUrl.search;
-  return search.length > 0 ? search : "";
-}
-
-async function forwardToBackend(
+/** Authenticated pass-through to the backend API for the admin screens. */
+async function proxy(
   request: NextRequest,
-  segments: string[] | undefined,
-  method: HttpMethod,
-  payload: ProxyPayload,
-  accessToken?: string | null,
-) {
-  const { body, headers, duplex } = payloadToFetchInit(payload);
-
-  return fetchBackend(
-    `${BACKEND_BASE_URL}${buildBackendPath(segments)}${buildQueryString(request)}`,
-    {
-      method,
-      headers: {
-        ...headers,
-        ...(request.headers.get("accept-language")
-          ? { "accept-language": request.headers.get("accept-language") ?? "en" }
-          : {}),
-        ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
-      },
-      body,
-      ...(duplex ? { duplex } : {}),
-      cache: "no-store",
-    } as RequestInit,
-  );
-}
-
-async function responseFromBackend(response: Response): Promise<NextResponse> {
-  if (response.status === 204) {
-    return new NextResponse(null, { status: 204 });
-  }
-
-  const contentType = response.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
-    const json = await response.json().catch(() => null);
-    return NextResponse.json(json, { status: response.status });
-  }
-
-  const text = await response.text().catch(() => "");
-  return new NextResponse(text, {
-    status: response.status,
-    headers: contentType ? { "content-type": contentType } : undefined,
-  });
-}
-
-async function refreshIfNeeded(request: NextRequest): Promise<AuthTokens | null> {
-  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
-  if (!refreshToken) {
-    return null;
-  }
-
-  // Single-flight: a burst of parallel 401s must not spend the refresh token
-  // more than once, or the backend reads the extra exchanges as a replayed
-  // token and deletes the session outright.
-  return runSingleFlightRefresh(refreshToken, async () => {
-    const response = await fetchBackend(`${BACKEND_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      if (isSessionRejection(response.status)) {
-        return null;
-      }
-      throw new BackendUnavailableError(response.status);
-    }
-
-    return (await response.json()) as AuthTokens;
-  });
-}
-
-/** A backend that does not answer is a 503 with the cookies left alone, never a "session expired". */
-async function handleRequest(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
+  context: RouteContext,
   method: HttpMethod,
 ): Promise<NextResponse> {
-  try {
-    return await proxyRequest(request, context, method);
-  } catch (error) {
-    if (error instanceof BackendUnavailableError) {
-      return backendUnavailableResponse();
-    }
-    throw error;
-  }
+  return withBackendAvailability(async () => {
+    const { path } = await context.params;
+    const payload = await prepareProxyBody(request, method);
+    return forwardWithSession(request, `/${path.join("/")}`, method, payload);
+  });
 }
 
-async function proxyRequest(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
-  method: HttpMethod,
-): Promise<NextResponse> {
-  const { path } = await context.params;
-  const payload = await prepareProxyBody(request, method);
-  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value ?? null;
-
-  let response = await forwardToBackend(
-    request,
-    path,
-    method,
-    payload,
-    accessToken,
-  );
-
-  if (response.status === 401) {
-    const refreshedTokens = await refreshIfNeeded(request);
-    if (!refreshedTokens) {
-      return clearAuthCookies(
-        NextResponse.json(
-          {
-            statusCode: 401,
-            message: "Session expired",
-            code: "AUTH_TOKEN_INVALID",
-          },
-          { status: 401 },
-        ),
-      );
-    }
-
-    response = await forwardToBackend(
-      request,
-      path,
-      method,
-      payload,
-      refreshedTokens.accessToken,
-    );
-    const nextResponse = await responseFromBackend(response);
-    return setAuthCookies(nextResponse, refreshedTokens);
-  }
-
-  return responseFromBackend(response);
+export function GET(request: NextRequest, context: RouteContext) {
+  return proxy(request, context, "GET");
 }
 
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
-) {
-  return handleRequest(request, context, "GET");
+export function POST(request: NextRequest, context: RouteContext) {
+  return proxy(request, context, "POST");
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
-) {
-  return handleRequest(request, context, "POST");
+export function PUT(request: NextRequest, context: RouteContext) {
+  return proxy(request, context, "PUT");
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
-) {
-  return handleRequest(request, context, "PUT");
+export function PATCH(request: NextRequest, context: RouteContext) {
+  return proxy(request, context, "PATCH");
 }
 
-export async function PATCH(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
-) {
-  return handleRequest(request, context, "PATCH");
-}
-
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> },
-) {
-  return handleRequest(request, context, "DELETE");
+export function DELETE(request: NextRequest, context: RouteContext) {
+  return proxy(request, context, "DELETE");
 }

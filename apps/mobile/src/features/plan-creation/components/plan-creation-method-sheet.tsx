@@ -3,7 +3,11 @@ import { Sparkles } from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { type MainCopy } from "../../../locales";
 
 type Props = {
@@ -35,8 +39,7 @@ export function PlanCreationMethodSheet({
   const methodCardStyle = ({ pressed }: { pressed: boolean }) => [
     styles.methodCard,
     {
-      backgroundColor:
-        theme.color.control,
+      backgroundColor: theme.color.control,
       borderWidth: 0,
     },
     pressed && styles.pressed,
@@ -69,8 +72,7 @@ export function PlanCreationMethodSheet({
                 style={[
                   styles.methodIcon,
                   {
-                    backgroundColor:
-                      theme.color.iconSurface,
+                    backgroundColor: theme.color.iconSurface,
                   },
                 ]}
               >
@@ -112,12 +114,13 @@ export function PlanCreationMethodSheet({
                 style={[
                   styles.methodIcon,
                   {
-                    backgroundColor:
-                      theme.color.iconSurface,
+                    backgroundColor: theme.color.iconSurface,
                   },
                 ]}
               >
-                <Text style={[styles.methodPlusIcon, { color: theme.color.accent }]}>
+                <Text
+                  style={[styles.methodPlusIcon, { color: theme.color.accent }]}
+                >
                   +
                 </Text>
               </View>

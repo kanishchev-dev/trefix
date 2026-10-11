@@ -1,7 +1,10 @@
 import { mobileThemeTokens, type ThemeMode } from "./index";
 
 /** Admin-only colours with no counterpart in the app (shadcn zinc). */
-const WEB_ONLY: Record<ThemeMode, { ring: string; sidebar: string; sidebarPrimary: string; chart: string[] }> = {
+const WEB_ONLY: Record<
+  ThemeMode,
+  { ring: string; sidebar: string; sidebarPrimary: string; chart: string[] }
+> = {
   light: {
     ring: "#9f9fa9",
     sidebar: "#fafafa",
@@ -53,7 +56,8 @@ export function webThemeVariables(mode: ThemeMode): Record<string, string> {
     sidebar: web.sidebar,
     "sidebar-foreground": c.foreground,
     "sidebar-primary": web.sidebarPrimary,
-    "sidebar-primary-foreground": mode === "light" ? c.primaryForeground : c.foreground,
+    "sidebar-primary-foreground":
+      mode === "light" ? c.primaryForeground : c.foreground,
     "sidebar-accent": c.iconSurface,
     "sidebar-accent-foreground": onSubtle,
     "sidebar-border": c.border,
@@ -66,8 +70,14 @@ export function webThemeVariables(mode: ThemeMode): Record<string, string> {
 }
 /** Contents of `packages/ui/src/styles/theme.css`. */
 export function renderWebThemeCss(): string {
-  const block = (selector: string, mode: ThemeMode, extra: string[] = []): string => {
-    const lines = Object.entries(webThemeVariables(mode)).map(([name, value]) => `  --${name}: ${value};`);
+  const block = (
+    selector: string,
+    mode: ThemeMode,
+    extra: string[] = [],
+  ): string => {
+    const lines = Object.entries(webThemeVariables(mode)).map(
+      ([name, value]) => `  --${name}: ${value};`,
+    );
     return `${selector} {\n${[...extra, ...lines].join("\n")}\n}\n`;
   };
   return [

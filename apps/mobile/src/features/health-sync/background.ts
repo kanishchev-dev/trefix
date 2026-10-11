@@ -20,8 +20,10 @@ export function registerHealthBackgroundHandlers(): void {
     let TaskManager: typeof import("expo-task-manager");
     let BackgroundTask: typeof import("expo-background-task");
     try {
-      TaskManager = require("expo-task-manager") as typeof import("expo-task-manager");
-      BackgroundTask = require("expo-background-task") as typeof import("expo-background-task");
+      TaskManager =
+        require("expo-task-manager") as typeof import("expo-task-manager");
+      BackgroundTask =
+        require("expo-background-task") as typeof import("expo-background-task");
     } catch {
       // Build without the background modules: foreground sync still works.
       return;
@@ -38,7 +40,9 @@ export function registerHealthBackgroundHandlers(): void {
   }
   if (Platform.OS === "ios") {
     setIosWorkoutListener(() => {
-      void syncHealthNow("background", BACKGROUND_BUDGET_MS.ios).catch(() => undefined);
+      void syncHealthNow("background", BACKGROUND_BUDGET_MS.ios).catch(
+        () => undefined,
+      );
     });
     void getActiveHealthSync().then((active) => {
       if (active?.provider === "apple_health") subscribeToIosWorkouts();

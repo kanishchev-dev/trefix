@@ -4,7 +4,13 @@ import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { type ThemeTokens } from "@workspace/tokens";
 
 /** Single-row horizontal list of chips running to the screen edge; never wraps into rows. */
-export function ChipScroller({ children, inset = 16 }: { children: ReactNode; inset?: number }) {
+export function ChipScroller({
+  children,
+  inset = 16,
+}: {
+  children: ReactNode;
+  inset?: number;
+}) {
   return (
     <ScrollView
       horizontal
@@ -37,7 +43,9 @@ export function Chip({
       onPress={onPress}
       style={({ pressed }) => [
         styles.chip,
-        { backgroundColor: selected ? theme.color.primary : theme.color.control },
+        {
+          backgroundColor: selected ? theme.color.primary : theme.color.control,
+        },
         pressed && styles.pressed,
       ]}
     >
@@ -47,7 +55,9 @@ export function Chip({
         style={[
           styles.label,
           {
-            color: selected ? theme.color.primaryForeground : theme.color.foreground,
+            color: selected
+              ? theme.color.primaryForeground
+              : theme.color.foreground,
             fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}

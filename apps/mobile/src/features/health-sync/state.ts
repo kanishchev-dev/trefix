@@ -34,11 +34,15 @@ export async function getActiveHealthSync(): Promise<ActiveHealthSync | null> {
   return readJson<ActiveHealthSync>(ACTIVE_KEY);
 }
 
-export async function setActiveHealthSync(value: ActiveHealthSync): Promise<void> {
+export async function setActiveHealthSync(
+  value: ActiveHealthSync,
+): Promise<void> {
   await AsyncStorage.setItem(ACTIVE_KEY, JSON.stringify(value));
 }
 
-export async function updateActiveHealthSync(patch: Partial<ActiveHealthSync>): Promise<void> {
+export async function updateActiveHealthSync(
+  patch: Partial<ActiveHealthSync>,
+): Promise<void> {
   const current = await getActiveHealthSync();
   if (current) await setActiveHealthSync({ ...current, ...patch });
 }
@@ -50,7 +54,9 @@ export async function clearHealthSyncState(userId?: string): Promise<void> {
     const doomed = keys.filter(
       (key) =>
         key === ACTIVE_KEY ||
-        (key.startsWith(PREFIX) && key !== DEVICE_ID_KEY && (!userId || key.startsWith(`${PREFIX}${userId}:`))),
+        (key.startsWith(PREFIX) &&
+          key !== DEVICE_ID_KEY &&
+          (!userId || key.startsWith(`${PREFIX}${userId}:`))),
     );
     if (doomed.length) await AsyncStorage.multiRemove(doomed);
   } catch {
@@ -67,8 +73,10 @@ export async function getDeviceId(): Promise<string> {
   return created;
 }
 
-const cursorKey = (userId: string, provider: DeviceProvider): string => `${PREFIX}${userId}:${provider}:cursor`;
-const profileKey = (userId: string, provider: DeviceProvider): string => `${PREFIX}${userId}:${provider}:profile-at`;
+const cursorKey = (userId: string, provider: DeviceProvider): string =>
+  `${PREFIX}${userId}:${provider}:cursor`;
+const profileKey = (userId: string, provider: DeviceProvider): string =>
+  `${PREFIX}${userId}:${provider}:profile-at`;
 
 /** Cursors are not secrets: losing one only re-reads history, which the backend deduplicates. */
 export const asyncStorageSyncStore: SyncStateStore = {
@@ -83,7 +91,9 @@ export const asyncStorageSyncStore: SyncStateStore = {
     }
   },
   async getLastProfileSyncAt(userId, provider): Promise<number | null> {
-    const raw = await AsyncStorage.getItem(profileKey(userId, provider)).catch(() => null);
+    const raw = await AsyncStorage.getItem(profileKey(userId, provider)).catch(
+      () => null,
+    );
     return raw ? Number(raw) : null;
   },
   async setLastProfileSyncAt(userId, provider, at): Promise<void> {

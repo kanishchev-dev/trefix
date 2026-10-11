@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -43,11 +47,7 @@ import { notifyError, notifySuccess } from "@/lib/notifications";
 import { toInitials } from "@/entities/avatar/lib/initials";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
-import {
-  EmptyState,
-  ErrorState,
-  TableSkeleton,
-} from "@/widgets/data-state";
+import { EmptyState, ErrorState, TableSkeleton } from "@/widgets/data-state";
 import { useDeleteUser, useUsers } from "@/features/users/hooks/use-users";
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
 import { formatDate, useI18n } from "@/shared/i18n";
@@ -63,7 +63,8 @@ export function UsersTable(): ReactElement {
 
   const page = Number(searchParams.get("page") ?? "1") || 1;
   const search = searchParams.get("search") ?? "";
-  const sortBy = (searchParams.get("sortBy") as SortField | null) ?? "createdAt";
+  const sortBy =
+    (searchParams.get("sortBy") as SortField | null) ?? "createdAt";
   const sortOrder = searchParams.get("sortOrder") === "ASC" ? "ASC" : "DESC";
 
   const usersQuery = useUsers({
@@ -262,9 +263,7 @@ export function UsersTable(): ReactElement {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          render={
-                            <Button variant="ghost" size="icon-sm" />
-                          }
+                          render={<Button variant="ghost" size="icon-sm" />}
                         >
                           <MoreHorizontalIcon />
                         </DropdownMenuTrigger>
@@ -277,7 +276,9 @@ export function UsersTable(): ReactElement {
                           </DropdownMenuItem>
                           {hasPermission("users.update") ? (
                             <DropdownMenuItem
-                              onClick={() => router.push(`/users/${user.id}/edit`)}
+                              onClick={() =>
+                                router.push(`/users/${user.id}/edit`)
+                              }
                             >
                               <PencilIcon />
                               {t("common.actions.edit")}
@@ -366,7 +367,10 @@ export function UsersTable(): ReactElement {
               notifySuccess(t("users.toasts.deleted"));
             },
             onError: (error) =>
-              notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+              notifyError(
+                t("common.states.error"),
+                getFriendlyApiMessage(error, t),
+              ),
           });
         }}
       />

@@ -26,7 +26,9 @@ type ConfigInput = {
 };
 
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
 
 const asNumber = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -35,14 +37,20 @@ const asString = (value: unknown): string | undefined =>
   typeof value === "string" && value.length > 0 ? value : undefined;
 
 function isGoalType(value: unknown): value is AthleteGoalType {
-  return typeof value === "string" && (ATHLETE_GOAL_TYPES as readonly string[]).includes(value);
+  return (
+    typeof value === "string" &&
+    (ATHLETE_GOAL_TYPES as readonly string[]).includes(value)
+  );
 }
 
 /**
  * Creation-flow draft from stored plan parameters (prefill of rebuild and of
  * draft parameter editing). Missing values fall back to the defaults of a new plan.
  */
-export function draftFromConfig(config: ConfigInput, overrides: { targetDate?: string | null } = {}): PlanCreationDraft {
+export function draftFromConfig(
+  config: ConfigInput,
+  overrides: { targetDate?: string | null } = {},
+): PlanCreationDraft {
   const base = INITIAL_PLAN_CREATION_DRAFT;
   const goal = config.goal ?? {};
   const schedule = config.schedule ?? {};
@@ -50,19 +58,33 @@ export function draftFromConfig(config: ConfigInput, overrides: { targetDate?: s
 
   const goalType = isGoalType(goal.type) ? goal.type : base.goal.type;
   const targetDate =
-    overrides.targetDate !== undefined ? overrides.targetDate ?? undefined : asString(goal.targetDate);
-  const raceDistance = asString(goal.raceDistance) as PlanCreationDraft["goal"]["raceDistance"];
+    overrides.targetDate !== undefined
+      ? (overrides.targetDate ?? undefined)
+      : asString(goal.targetDate);
+  const raceDistance = asString(
+    goal.raceDistance,
+  ) as PlanCreationDraft["goal"]["raceDistance"];
 
-  const trainingDays = (schedule.trainingDays ?? []).filter((day) => day >= 0 && day <= 6);
-  const days = trainingDays.length > 0 ? [...trainingDays].sort((a, b) => a - b) : base.schedule.trainingDays;
+  const trainingDays = (schedule.trainingDays ?? []).filter(
+    (day) => day >= 0 && day <= 6,
+  );
+  const days =
+    trainingDays.length > 0
+      ? [...trainingDays].sort((a, b) => a - b)
+      : base.schedule.trainingDays;
   const longRunDay = asNumber(schedule.preferredLongRunDay);
 
-  const sessionsPerWeek = Math.min(asNumber(structure.sessionsPerWeek) ?? base.structure.sessionsPerWeek, days.length);
+  const sessionsPerWeek = Math.min(
+    asNumber(structure.sessionsPerWeek) ?? base.structure.sessionsPerWeek,
+    days.length,
+  );
 
   return {
     goal: {
       type: goalType,
-      target: asRecord(goal.target) ?? (goalType === base.goal.type ? base.goal.target : undefined),
+      target:
+        asRecord(goal.target) ??
+        (goalType === base.goal.type ? base.goal.target : undefined),
       current: asRecord(goal.current),
       description: asString(goal.description),
       targetDate,
@@ -72,8 +94,13 @@ export function draftFromConfig(config: ConfigInput, overrides: { targetDate?: s
     },
     schedule: {
       trainingDays: days,
-      preferredLongRunDay: longRunDay !== undefined && days.includes(longRunDay) ? longRunDay : undefined,
-      workoutDurationMinutes: asNumber(schedule.workoutDurationMinutes) ?? base.schedule.workoutDurationMinutes,
+      preferredLongRunDay:
+        longRunDay !== undefined && days.includes(longRunDay)
+          ? longRunDay
+          : undefined,
+      workoutDurationMinutes:
+        asNumber(schedule.workoutDurationMinutes) ??
+        base.schedule.workoutDurationMinutes,
     },
     structure: {
       totalWeeks: asNumber(structure.totalWeeks) ?? base.structure.totalWeeks,
@@ -84,8 +111,12 @@ export function draftFromConfig(config: ConfigInput, overrides: { targetDate?: s
 }
 
 /** Structure fields whose change makes the server rebuild the plan from scratch. */
-export function structureChanged(initial: PlanCreationDraft, current: PlanCreationDraft): boolean {
-  const focus = (value: PlanCreationDraft) => [...(value.structure.focus ?? [])].sort().join(",");
+export function structureChanged(
+  initial: PlanCreationDraft,
+  current: PlanCreationDraft,
+): boolean {
+  const focus = (value: PlanCreationDraft) =>
+    [...(value.structure.focus ?? [])].sort().join(",");
   return (
     initial.structure.totalWeeks !== current.structure.totalWeeks ||
     initial.structure.sessionsPerWeek !== current.structure.sessionsPerWeek ||
@@ -165,20 +196,28 @@ export function metricsFormFromCurrent(current: CurrentMetrics | undefined): {
 /** Payload of the metrics step: only filled values; the threshold comes from one source. */
 export function metricsPayload(form: MetricsForm): AthleteMetrics {
   const payload: AthleteMetrics = {};
-  if (form.thresholdMode === "pace" && form.thresholdPaceSecondsPerKm !== null) {
+  if (
+    form.thresholdMode === "pace" &&
+    form.thresholdPaceSecondsPerKm !== null
+  ) {
     payload.thresholdPaceSecondsPerKm = form.thresholdPaceSecondsPerKm;
   }
   if (form.thresholdMode === "result" && form.recentResult) {
     payload.recentResult = form.recentResult;
   }
-  if (form.weeklyMileageKm !== null) payload.weeklyMileageKm = form.weeklyMileageKm;
+  if (form.weeklyMileageKm !== null)
+    payload.weeklyMileageKm = form.weeklyMileageKm;
   if (form.longestRunKm !== null) payload.longestRunKm = form.longestRunKm;
-  if (form.maxHeartRate !== null) payload.maxHeartRate = Math.round(form.maxHeartRate);
-  if (form.restingHeartRate !== null) payload.restingHeartRate = Math.round(form.restingHeartRate);
+  if (form.maxHeartRate !== null)
+    payload.maxHeartRate = Math.round(form.maxHeartRate);
+  if (form.restingHeartRate !== null)
+    payload.restingHeartRate = Math.round(form.restingHeartRate);
   return payload;
 }
 
-export type MetricsErrors = Partial<Record<MetricsField, "required" | "outOfRange">>;
+export type MetricsErrors = Partial<
+  Record<MetricsField, "required" | "outOfRange">
+>;
 
 const RANGE_FIELDS = [
   "thresholdPaceSecondsPerKm",
@@ -192,11 +231,15 @@ const RANGE_FIELDS = [
  * Client-side check of the metrics step. Volume and the longest run are the
  * scaling baseline, so they are required when `requireVolume` is set.
  */
-export function validateMetricsForm(form: MetricsForm, options: { requireVolume: boolean }): MetricsErrors {
+export function validateMetricsForm(
+  form: MetricsForm,
+  options: { requireVolume: boolean },
+): MetricsErrors {
   const errors: MetricsErrors = {};
   for (const field of RANGE_FIELDS) {
     const value = form[field];
-    if (field === "thresholdPaceSecondsPerKm" && form.thresholdMode !== "pace") continue;
+    if (field === "thresholdPaceSecondsPerKm" && form.thresholdMode !== "pace")
+      continue;
     if (value === null) continue;
     const range = PLAN_METRIC_RANGES[field];
     if (value < range.min || value > range.max) errors[field] = "outOfRange";
@@ -209,7 +252,10 @@ export function validateMetricsForm(form: MetricsForm, options: { requireVolume:
 }
 
 /** "Last time" value of a metric from the source plan snapshot. */
-export function previousMetricValue(snapshot: MetricsSnapshot | null | undefined, field: MetricsField) {
+export function previousMetricValue(
+  snapshot: MetricsSnapshot | null | undefined,
+  field: MetricsField,
+) {
   if (!snapshot) return null;
   return snapshot[field] ?? null;
 }
@@ -220,10 +266,17 @@ export function previousMetricValue(snapshot: MetricsSnapshot | null | undefined
  * Draft weeks in the preview format, so the existing preview editor can edit
  * a stored draft. Workout ids are the relative keys; there are no dates yet.
  */
-export function relativeWeeksToPreview(weeks: RelativeWeek[], details: Pick<PlanDetails, "totalWeeks" | "sessionsPerWeek">): ManualPlanPreview {
+export function relativeWeeksToPreview(
+  weeks: RelativeWeek[],
+  details: Pick<PlanDetails, "totalWeeks" | "sessionsPerWeek">,
+): ManualPlanPreview {
   const previewWeeks: ManualPlanPreviewWeek[] = weeks.map((week) => {
     const workouts = [...week.workouts]
-      .sort((left, right) => left.dayOfWeek - right.dayOfWeek || left.orderInWeek - right.orderInWeek)
+      .sort(
+        (left, right) =>
+          left.dayOfWeek - right.dayOfWeek ||
+          left.orderInWeek - right.orderInWeek,
+      )
       .map((workout) => ({
         id: workout.key,
         type: workout.type,
@@ -242,7 +295,10 @@ export function relativeWeeksToPreview(weeks: RelativeWeek[], details: Pick<Plan
       phase: week.phase,
       title: week.title ?? "",
       plannedWorkoutsCount: workouts.length,
-      plannedDistance: workouts.reduce((sum, workout) => sum + workout.distanceKm, 0),
+      plannedDistance: workouts.reduce(
+        (sum, workout) => sum + workout.distanceKm,
+        0,
+      ),
       plannedLoad: week.weeklyLoadTarget ?? 0,
       workouts,
     };
@@ -251,7 +307,9 @@ export function relativeWeeksToPreview(weeks: RelativeWeek[], details: Pick<Plan
     startDate: "",
     endDate: "",
     totalWeeks: details.totalWeeks || weeks.length,
-    trainingFrequency: details.sessionsPerWeek ?? Math.max(0, ...previewWeeks.map((week) => week.workouts.length)),
+    trainingFrequency:
+      details.sessionsPerWeek ??
+      Math.max(0, ...previewWeeks.map((week) => week.workouts.length)),
     weeklyTargetKm: 0,
     weeks: previewWeeks,
   };

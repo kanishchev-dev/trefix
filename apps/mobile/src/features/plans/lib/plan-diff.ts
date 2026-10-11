@@ -27,7 +27,9 @@ export type DiffWeekView = {
 };
 
 /** Describes a workout addressed by a diff key (workout id or relative key). */
-export type WorkoutDescriber = (key: string) => { type?: string; dayLabel?: string } | undefined;
+export type WorkoutDescriber = (
+  key: string,
+) => { type?: string; dayLabel?: string } | undefined;
 
 type DiffContext = {
   copy: MainCopy;
@@ -36,16 +38,27 @@ type DiffContext = {
 
 const round = (value: number) => Math.round(value * 10) / 10;
 
-function spoken(copy: MainCopy, label: string, before: string, after: string): string {
+function spoken(
+  copy: MainCopy,
+  label: string,
+  before: string,
+  after: string,
+): string {
   return `${label}: ${fillTemplate(copy.plans.diff.wasNow, { before, after })}`;
 }
 
-function changedNumber(pair: { before: number | null; after: number | null }): boolean {
+function changedNumber(pair: {
+  before: number | null;
+  after: number | null;
+}): boolean {
   return pair.before !== pair.after && pair.after !== null;
 }
 
 /** Localized adjustment; unknown codes fall back to the generic safety message. */
-export function adjustmentText(adjustment: PlanDiffAdjustment, copy: MainCopy): string {
+export function adjustmentText(
+  adjustment: PlanDiffAdjustment,
+  copy: MainCopy,
+): string {
   const texts = copy.plans.diff.adjustment as Record<string, string>;
   const template = texts[adjustment.code] ?? texts.generic;
   const params: Record<string, string | number> = {};
@@ -70,18 +83,30 @@ export function reasonText(code: string, copy: MainCopy): string {
 export function buildDiffSummary(
   diff: PlanDiff,
   { copy, language }: DiffContext,
-  options: { resultingEndDate?: string | null; metricsVolume?: { before?: number | null; after?: number | null } } = {},
+  options: {
+    resultingEndDate?: string | null;
+    metricsVolume?: { before?: number | null; after?: number | null };
+  } = {},
 ): DiffLine[] {
   const diffCopy = copy.plans.diff;
   const { summary } = diff;
   const lines: DiffLine[] = [];
 
-  if (changedNumber(summary.thresholdPace) && summary.thresholdPace.before !== null && summary.thresholdPace.after !== null) {
+  if (
+    changedNumber(summary.thresholdPace) &&
+    summary.thresholdPace.before !== null &&
+    summary.thresholdPace.after !== null
+  ) {
     const before = formatPace(summary.thresholdPace.before);
     const after = formatPace(summary.thresholdPace.after);
     lines.push({
       text: `${fillTemplate(diffCopy.threshold, { before, after })} · ${diffCopy.pacesRecalculated}`,
-      accessibilityLabel: spoken(copy, copy.plans.metrics.threshold, before, after),
+      accessibilityLabel: spoken(
+        copy,
+        copy.plans.metrics.threshold,
+        before,
+        after,
+      ),
     });
   }
 
@@ -90,7 +115,11 @@ export function buildDiffSummary(
       const scale = adjustment.params?.k;
       const { before, after } = options.metricsVolume;
       if (typeof scale === "number" && before && after) {
-        const text = fillTemplate(diffCopy.volumeScale, { scale: round(scale), before: round(before), after: round(after) });
+        const text = fillTemplate(diffCopy.volumeScale, {
+          scale: round(scale),
+          before: round(before),
+          after: round(after),
+        });
         lines.push({ text, accessibilityLabel: text });
         continue;
       }
@@ -104,7 +133,12 @@ export function buildDiffSummary(
     const after = String(round(summary.peakWeekKm.after ?? 0));
     lines.push({
       text: fillTemplate(diffCopy.peakVolume, { before, after }),
-      accessibilityLabel: spoken(copy, diffCopy.peakVolume.split(":")[0], `${before} km`, `${after} km`),
+      accessibilityLabel: spoken(
+        copy,
+        diffCopy.peakVolume.split(":")[0],
+        `${before} km`,
+        `${after} km`,
+      ),
     });
   }
 
@@ -113,7 +147,12 @@ export function buildDiffSummary(
     const after = String(round(summary.longestRunKm.after ?? 0));
     lines.push({
       text: fillTemplate(diffCopy.longestRun, { before, after }),
-      accessibilityLabel: spoken(copy, diffCopy.longestRun.split(":")[0], `${before} km`, `${after} km`),
+      accessibilityLabel: spoken(
+        copy,
+        diffCopy.longestRun.split(":")[0],
+        `${before} km`,
+        `${after} km`,
+      ),
     });
   }
 
@@ -132,25 +171,42 @@ export function buildDiffSummary(
   return lines;
 }
 
-function workoutLabel(workout: PlanDiffWorkout, describe: WorkoutDescriber | undefined, copy: MainCopy): string {
+function workoutLabel(
+  workout: PlanDiffWorkout,
+  describe: WorkoutDescriber | undefined,
+  copy: MainCopy,
+): string {
   const info = describe?.(workout.key);
   const typeLabels = copy.plan.creation.workoutTypes as Record<string, string>;
   const fieldType = workout.fields?.type?.[1];
-  const type = info?.type ?? (typeof fieldType === "string" ? fieldType : undefined);
-  const typeLabel = type ? typeLabels[type] ?? type : "";
+  const type =
+    info?.type ?? (typeof fieldType === "string" ? fieldType : undefined);
+  const typeLabel = type ? (typeLabels[type] ?? type) : "";
   return [info?.dayLabel, typeLabel].filter(Boolean).join(" ") || typeLabel;
 }
 
-function formatFieldValue(field: string, value: unknown, copy: MainCopy, dayNames: readonly string[]): string {
+function formatFieldValue(
+  field: string,
+  value: unknown,
+  copy: MainCopy,
+  dayNames: readonly string[],
+): string {
   const units = copy.plan.creation.units;
   if (value === null || value === undefined) return "—";
-  if (field === "distanceKm" && typeof value === "number") return `${round(value)} ${units.km}`;
-  if (field === "durationMinutes" && typeof value === "number") return `${value} ${units.min}`;
-  if (field === "dayOfWeek" && typeof value === "number") return dayNames[value] ?? String(value);
+  if (field === "distanceKm" && typeof value === "number")
+    return `${round(value)} ${units.km}`;
+  if (field === "durationMinutes" && typeof value === "number")
+    return `${value} ${units.min}`;
+  if (field === "dayOfWeek" && typeof value === "number")
+    return dayNames[value] ?? String(value);
   if (field === "type" && typeof value === "string") {
-    return (copy.plan.creation.workoutTypes as Record<string, string>)[value] ?? value;
+    return (
+      (copy.plan.creation.workoutTypes as Record<string, string>)[value] ??
+      value
+    );
   }
-  if (field.startsWith("target.pace") && typeof value === "number") return formatPace(value);
+  if (field.startsWith("target.pace") && typeof value === "number")
+    return formatPace(value);
   return String(value);
 }
 
@@ -171,21 +227,32 @@ export function buildDiffWeeks(
       title: fillTemplate(diffCopy.week, { number: week.weekNumber }),
       lines: week.workouts.map((workout): DiffLine => {
         const label = workoutLabel(workout, describe, copy);
-        const reason = workout.reason ? ` (${reasonText(workout.reason, copy)})` : "";
+        const reason = workout.reason
+          ? ` (${reasonText(workout.reason, copy)})`
+          : "";
         if (workout.change === "added") {
           const text = fillTemplate(diffCopy.added, { label });
-          return { text, accessibilityLabel: `${diffCopy.addedBadge}: ${label}`, tone: "added" };
+          return {
+            text,
+            accessibilityLabel: `${diffCopy.addedBadge}: ${label}`,
+            tone: "added",
+          };
         }
         if (workout.change === "removed") {
           const text = `${fillTemplate(diffCopy.removed, { label })}${reason}`;
-          return { text, accessibilityLabel: `${diffCopy.removedBadge}: ${label}${reason}`, tone: "removed" };
+          return {
+            text,
+            accessibilityLabel: `${diffCopy.removedBadge}: ${label}${reason}`,
+            tone: "removed",
+          };
         }
         const entries = Object.entries(workout.fields ?? {}).filter(
           ([field]) => field !== "weekNumber" && !field.startsWith("target."),
         );
         const changes = entries
-          .map(([field, [before, after]]) =>
-            `${formatFieldValue(field, before, copy, dayNames)} → ${formatFieldValue(field, after, copy, dayNames)}`,
+          .map(
+            ([field, [before, after]]) =>
+              `${formatFieldValue(field, before, copy, dayNames)} → ${formatFieldValue(field, after, copy, dayNames)}`,
           )
           .join(", ");
         const spokenChanges = entries
@@ -198,8 +265,11 @@ export function buildDiffWeeks(
             ),
           )
           .join("; ");
-        const hasPaceChange = Object.keys(workout.fields ?? {}).some((field) => field.startsWith("target."));
-        const suffix = !changes && hasPaceChange ? diffCopy.pacesRecalculated : changes;
+        const hasPaceChange = Object.keys(workout.fields ?? {}).some((field) =>
+          field.startsWith("target."),
+        );
+        const suffix =
+          !changes && hasPaceChange ? diffCopy.pacesRecalculated : changes;
         return {
           text: `${fillTemplate(diffCopy.modified, { label, changes: suffix })}${reason}`,
           accessibilityLabel: `${label}: ${spokenChanges || suffix}${reason}`,
@@ -221,7 +291,8 @@ export function isRequestedChangeOnly(
   const { diff, warnings } = preview;
   if (warnings.length > 0) return false;
   if (diff.summary.adjustments.length > 0) return false;
-  if (diff.summary.totalWeeks.before !== diff.summary.totalWeeks.after) return false;
+  if (diff.summary.totalWeeks.before !== diff.summary.totalWeeks.after)
+    return false;
 
   const requested = new Set(request.workoutIds);
   let added = 0;

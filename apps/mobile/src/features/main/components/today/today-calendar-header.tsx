@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -31,7 +38,12 @@ const SHUTTER_RANGE = MONTH_HEIGHT - WEEK_HEIGHT;
 
 /** Shutter spring: quick and without bounce, but it carries the flick's velocity. */
 const SHUTTER_SPRING = { damping: 26, stiffness: 300, mass: 0.8 };
-const PAGE_SPRING = { damping: 30, stiffness: 280, mass: 0.8, overshootClamping: true };
+const PAGE_SPRING = {
+  damping: 30,
+  stiffness: 280,
+  mass: 0.8,
+  overshootClamping: true,
+};
 const RETURN_SPRING = { damping: 22, stiffness: 240 };
 /** A flick faster than this decides the direction regardless of how far it went. */
 const FLICK_VELOCITY = 450;
@@ -140,24 +152,32 @@ export function TodayCalendarHeader({
             const ax = Math.abs(translationX);
             const ay = Math.abs(translationY);
             // Pages turn only while the shutter rests fully open or closed.
-            const settled = startProgress.value < 0.01 || startProgress.value > 0.99;
+            const settled =
+              startProgress.value < 0.01 || startProgress.value > 0.99;
             if (ax > AXIS_LOCK_DISTANCE && ax > ay && settled) axis.value = 1;
             else if (ay > AXIS_LOCK_DISTANCE && ay >= ax) axis.value = 2;
           }
           if (axis.value === 1) {
             translateX.value = translationX;
           } else if (axis.value === 2) {
-            progress.value = Math.min(1, Math.max(0, startProgress.value + translationY / SHUTTER_RANGE));
+            progress.value = Math.min(
+              1,
+              Math.max(0, startProgress.value + translationY / SHUTTER_RANGE),
+            );
           }
         })
         .onEnd((event) => {
           if (axis.value === 2) {
             const velocity = event.velocityY / SHUTTER_RANGE;
             let target: number;
-            if (Math.abs(event.velocityY) > FLICK_VELOCITY) target = event.velocityY > 0 ? 1 : 0;
+            if (Math.abs(event.velocityY) > FLICK_VELOCITY)
+              target = event.velocityY > 0 ? 1 : 0;
             else target = progress.value + velocity * 0.15 > 0.5 ? 1 : 0;
             settlingTo.value = target;
-            progress.value = withSpring(target, { ...SHUTTER_SPRING, velocity });
+            progress.value = withSpring(target, {
+              ...SHUTTER_SPRING,
+              velocity,
+            });
             if (target !== modeValue.value) runOnJS(commitMode)(target);
           } else if (axis.value === 1) {
             const { translationX, velocityX } = event;
@@ -172,11 +192,18 @@ export function TodayCalendarHeader({
                   ? -1
                   : 0;
             if (direction === 0) {
-              translateX.value = withSpring(0, { ...RETURN_SPRING, velocity: velocityX });
-            } else {
-              translateX.value = withSpring(-direction * PAGE_WIDTH, { ...PAGE_SPRING, velocity: velocityX }, (finished) => {
-                if (finished) runOnJS(shiftPage)(direction);
+              translateX.value = withSpring(0, {
+                ...RETURN_SPRING,
+                velocity: velocityX,
               });
+            } else {
+              translateX.value = withSpring(
+                -direction * PAGE_WIDTH,
+                { ...PAGE_SPRING, velocity: velocityX },
+                (finished) => {
+                  if (finished) runOnJS(shiftPage)(direction);
+                },
+              );
             }
           }
         })
@@ -187,17 +214,42 @@ export function TodayCalendarHeader({
           }
           axis.value = 0;
         }),
-    [axis, startProgress, progress, translateX, settlingTo, modeValue, commitMode, shiftPage],
+    [
+      axis,
+      startProgress,
+      progress,
+      translateX,
+      settlingTo,
+      modeValue,
+      commitMode,
+      shiftPage,
+    ],
   );
 
   // ------------------------------------------------------------------ styles
 
   const shutterStyle = useAnimatedStyle(() => ({
-    height: interpolate(progress.value, [0, 1], [WEEK_HEIGHT, MONTH_HEIGHT], Extrapolation.CLAMP),
+    height: interpolate(
+      progress.value,
+      [0, 1],
+      [WEEK_HEIGHT, MONTH_HEIGHT],
+      Extrapolation.CLAMP,
+    ),
   }));
-  const carouselStyle = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }] }));
+  const carouselStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
   const handleStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: interpolate(progress.value, [0, 1], [1, 0.75], Extrapolation.CLAMP) }],
+    transform: [
+      {
+        scaleX: interpolate(
+          progress.value,
+          [0, 1],
+          [1, 0.75],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
   }));
 
   const prevDate = useMemo(() => {
@@ -214,7 +266,14 @@ export function TodayCalendarHeader({
     return d;
   }, [viewDate, isMonth]);
 
-  const pageProps = { theme, progress, eventSet, todayIso, selectedIso, onSelectDate };
+  const pageProps = {
+    theme,
+    progress,
+    eventSet,
+    todayIso,
+    selectedIso,
+    onSelectDate,
+  };
 
   return (
     <View style={styles.root}>
@@ -226,7 +285,10 @@ export function TodayCalendarHeader({
                 <Text
                   style={[
                     styles.dayOfWeekText,
-                    { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
                   ]}
                 >
                   {getShortDayName(d, language)}
@@ -251,12 +313,16 @@ export function TodayCalendarHeader({
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={isMonth ? "Collapse calendar" : "Expand calendar"}
+            accessibilityLabel={
+              isMonth ? "Collapse calendar" : "Expand calendar"
+            }
             hitSlop={{ top: 6, bottom: 6, left: 40, right: 40 }}
             onPress={toggle}
           >
             <Animated.View style={[styles.footer, handleStyle]}>
-              <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+              <View
+                style={[styles.handle, { backgroundColor: theme.color.border }]}
+              />
             </Animated.View>
           </Pressable>
         </View>
@@ -285,7 +351,11 @@ function monthGrid(date: Date): GridDay[] {
   const padding = (new Date(year, month, 1).getDay() + 6) % 7;
   return Array.from({ length: 42 }, (_, index) => {
     const day = new Date(year, month, 1 - padding + index);
-    return { date: day, iso: toIsoDate(day), inMonth: day.getMonth() === month };
+    return {
+      date: day,
+      iso: toIsoDate(day),
+      inMonth: day.getMonth() === month,
+    };
   });
 }
 
@@ -294,19 +364,46 @@ function monthGrid(date: Date): GridDay[] {
  * `date` sits exactly where the week row is: while the shutter moves, that row stays
  * put and the rest of the month unfolds around it.
  */
-function CalendarPage({ date, theme, progress, eventSet, todayIso, selectedIso, onSelectDate }: PageProps) {
+function CalendarPage({
+  date,
+  theme,
+  progress,
+  eventSet,
+  todayIso,
+  selectedIso,
+  onSelectDate,
+}: PageProps) {
   const grid = useMemo(() => monthGrid(date), [date]);
-  const rowIndex = Math.floor(grid.findIndex((day) => day.iso === toIsoDate(date)) / 7);
+  const rowIndex = Math.floor(
+    grid.findIndex((day) => day.iso === toIsoDate(date)) / 7,
+  );
   const week = grid.slice(rowIndex * 7, rowIndex * 7 + 7);
 
   const weekStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.12], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(
+      progress.value,
+      [0, 0.12],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
     pointerEvents: progress.value > 0.5 ? "none" : "auto",
   }));
   const monthStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.12], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(
+      progress.value,
+      [0, 0.12],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
     transform: [
-      { translateY: interpolate(progress.value, [0, 1], [-rowIndex * DAY_HEIGHT, 0], Extrapolation.CLAMP) },
+      {
+        translateY: interpolate(
+          progress.value,
+          [0, 1],
+          [-rowIndex * DAY_HEIGHT, 0],
+          Extrapolation.CLAMP,
+        ),
+      },
     ],
     pointerEvents: progress.value > 0.5 ? "auto" : "none",
   }));
@@ -315,24 +412,46 @@ function CalendarPage({ date, theme, progress, eventSet, todayIso, selectedIso, 
     const selected = day.iso === selectedIso;
     const isToday = day.iso === todayIso;
     return (
-      <Pressable key={day.iso} onPress={() => onSelectDate(day.date)} style={styles.dayItem}>
-        <View style={[styles.circle, selected && { backgroundColor: theme.color.primary }]}>
+      <Pressable
+        key={day.iso}
+        onPress={() => onSelectDate(day.date)}
+        style={styles.dayItem}
+      >
+        <View
+          style={[
+            styles.circle,
+            selected && { backgroundColor: theme.color.primary },
+          ]}
+        >
           <Text
             style={[
               styles.dayText,
               {
-                color: muted ? theme.color.mutedForeground : theme.color.foreground,
+                color: muted
+                  ? theme.color.mutedForeground
+                  : theme.color.foreground,
                 fontFamily: theme.typography.fontFamily.sans.medium,
               },
-              isToday && !selected && { color: theme.color.primary, fontFamily: theme.typography.fontFamily.sans.bold },
-              selected && { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.bold },
+              isToday &&
+                !selected && {
+                  color: theme.color.primary,
+                  fontFamily: theme.typography.fontFamily.sans.bold,
+                },
+              selected && {
+                color: theme.color.primaryForeground,
+                fontFamily: theme.typography.fontFamily.sans.bold,
+              },
             ]}
           >
             {day.date.getDate()}
           </Text>
         </View>
         <View style={styles.markerContainer}>
-          {eventSet.has(day.iso) ? <View style={[styles.marker, { backgroundColor: theme.color.primary }]} /> : null}
+          {eventSet.has(day.iso) ? (
+            <View
+              style={[styles.marker, { backgroundColor: theme.color.primary }]}
+            />
+          ) : null}
         </View>
       </Pressable>
     );
@@ -341,10 +460,14 @@ function CalendarPage({ date, theme, progress, eventSet, todayIso, selectedIso, 
   return (
     <View style={styles.page}>
       <Animated.View style={[styles.layer, monthStyle]}>
-        <View style={styles.grid}>{grid.map((day) => cell(day, !day.inMonth))}</View>
+        <View style={styles.grid}>
+          {grid.map((day) => cell(day, !day.inMonth))}
+        </View>
       </Animated.View>
       <Animated.View style={[styles.layer, weekStyle]}>
-        <View style={styles.grid}>{week.map((day) => cell(day, !day.inMonth))}</View>
+        <View style={styles.grid}>
+          {week.map((day) => cell(day, !day.inMonth))}
+        </View>
       </Animated.View>
     </View>
   );

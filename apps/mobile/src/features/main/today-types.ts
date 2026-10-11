@@ -1,10 +1,6 @@
 export type DayEventType = "workout" | "recovery" | "race" | "note" | "insight";
 
-export type DayEventStatus =
-  | "planned"
-  | "completed"
-  | "missed"
-  | "modified";
+export type DayEventStatus = "planned" | "completed" | "missed" | "modified";
 
 export type DayEvent = {
   id: string;

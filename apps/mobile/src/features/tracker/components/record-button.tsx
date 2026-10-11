@@ -39,17 +39,41 @@ export function RecordButton({ theme, copy, language }: Props) {
         accessibilityLabel={label}
         onPress={() =>
           pushSubScreen({
-            kind: !live ? "tracker-setup" : snapshot.view.status === "finished" ? "tracker-summary" : "tracker-recording",
+            kind: !live
+              ? "tracker-setup"
+              : snapshot.view.status === "finished"
+                ? "tracker-summary"
+                : "tracker-recording",
           })
         }
-        style={({ pressed }) => [styles.button, { backgroundColor: theme.color.primary }, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.button,
+          { backgroundColor: theme.color.primary },
+          pressed && styles.pressed,
+        ]}
       >
         {live ? (
-          <Circle color={theme.color.danger} fill={theme.color.danger} size={10} />
+          <Circle
+            color={theme.color.danger}
+            fill={theme.color.danger}
+            size={10}
+          />
         ) : (
-          <Play color={theme.color.primaryForeground} size={18} fill={theme.color.primaryForeground} />
+          <Play
+            color={theme.color.primaryForeground}
+            size={18}
+            fill={theme.color.primaryForeground}
+          />
         )}
-        <Text style={[styles.label, { color: theme.color.primaryForeground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+        <Text
+          style={[
+            styles.label,
+            {
+              color: theme.color.primaryForeground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
+          ]}
+        >
           {label}
         </Text>
       </Pressable>

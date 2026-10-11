@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { runSingleFlightRefresh, type RefreshedAuthTokens } from "./refresh-single-flight";
+import {
+  runSingleFlightRefresh,
+  type RefreshedAuthTokens,
+} from "./refresh-single-flight";
 
 function tokens(refreshToken: string): RefreshedAuthTokens {
   return {

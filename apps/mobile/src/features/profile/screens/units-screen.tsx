@@ -8,7 +8,10 @@ import { trackEvent } from "../../../lib/analytics";
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { formatPace } from "../../../shared/lib/units";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
-import { ProfileSection, ProfileSubScreen } from "../components/profile-sub-screen";
+import {
+  ProfileSection,
+  ProfileSubScreen,
+} from "../components/profile-sub-screen";
 import { usePreferences, useUpdatePreferences } from "../hooks/use-preferences";
 import { createFormatter } from "../lib/profile-format";
 
@@ -23,7 +26,13 @@ type Props = {
 const COMPACT_SEGMENT_WIDTH = 168;
 
 /** D1 — metric/imperial with a live preview, week start and time format. */
-export function UnitsScreen({ theme, themeMode, copy, language, onBack }: Props) {
+export function UnitsScreen({
+  theme,
+  themeMode,
+  copy,
+  language,
+  onBack,
+}: Props) {
   const { preferences } = usePreferences();
   const update = useUpdatePreferences();
   const u = copy.profile.unitsScreen;
@@ -35,7 +44,12 @@ export function UnitsScreen({ theme, themeMode, copy, language, onBack }: Props)
   };
 
   return (
-    <ProfileSubScreen title={u.title} onBack={onBack} theme={theme} themeMode={themeMode}>
+    <ProfileSubScreen
+      title={u.title}
+      onBack={onBack}
+      theme={theme}
+      themeMode={themeMode}
+    >
       <ProfileSection>
         <SectionTitle text={u.system} theme={theme} />
         <Segmented
@@ -53,8 +67,16 @@ export function UnitsScreen({ theme, themeMode, copy, language, onBack }: Props)
       <ProfileSection>
         <SectionTitle text={u.preview} theme={theme} />
         <ListCard theme={theme}>
-          <ListRow theme={theme} title={u.distance} value={format.distance(10)} />
-          <ListRow theme={theme} title={u.pace} value={formatPace(330, preferences.units, format.labels)} />
+          <ListRow
+            theme={theme}
+            title={u.distance}
+            value={format.distance(10)}
+          />
+          <ListRow
+            theme={theme}
+            title={u.pace}
+            value={formatPace(330, preferences.units, format.labels)}
+          />
           <ListRow theme={theme} title={u.weight} value={format.weight(72.4)} />
           <ListRow theme={theme} title={u.height} value={format.height(181)} />
         </ListCard>

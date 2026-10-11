@@ -60,7 +60,11 @@ export function SectionLayout({
         </View>
       ) : null}
 
-      <BlurTargetView ref={blurTargetRef} collapsable={false} style={styles.blurTarget}>
+      <BlurTargetView
+        ref={blurTargetRef}
+        collapsable={false}
+        style={styles.blurTarget}
+      >
         {scrollable ? (
           <ScrollView
             contentInsetAdjustmentBehavior="never"

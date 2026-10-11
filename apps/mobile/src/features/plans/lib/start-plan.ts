@@ -24,9 +24,12 @@ export function isOptionSelectable(option: PlanStartOption): boolean {
 }
 
 /** The server recommendation when it is usable, otherwise the first usable option. */
-export function initialStartChoice(options: PlanStartOptions): StartChoice | null {
+export function initialStartChoice(
+  options: PlanStartOptions,
+): StartChoice | null {
   const usable = options.options.filter(isOptionSelectable);
-  const recommended = usable.find((option) => option.kind === options.recommended) ?? usable[0];
+  const recommended =
+    usable.find((option) => option.kind === options.recommended) ?? usable[0];
   if (!recommended) return null;
   return {
     kind: recommended.kind,
@@ -35,8 +38,33 @@ export function initialStartChoice(options: PlanStartOptions): StartChoice | nul
   };
 }
 
+/**
+ * Keeps the selection valid when the options change (another race date): a
+ * custom date stays, a still selectable option stays with its new dates,
+ * anything else falls back to the default choice.
+ */
+export function reconcileStartChoice(
+  current: StartChoice | null,
+  options: PlanStartOptions,
+): StartChoice | null {
+  if (current?.kind === "custom") return current;
+  const stillThere =
+    current && options.options.find((option) => option.kind === current.kind);
+  if (stillThere && isOptionSelectable(stillThere)) {
+    return {
+      kind: stillThere.kind,
+      startDate: stillThere.startDate,
+      goalTargetDate: stillThere.goalTargetDate,
+    };
+  }
+  return initialStartChoice(options);
+}
+
 /** End date shown next to a start option; a custom date is computed for display only. */
-export function choiceEndDate(choice: StartChoice, options: PlanStartOptions): string {
+export function choiceEndDate(
+  choice: StartChoice,
+  options: PlanStartOptions,
+): string {
   const option = options.options.find((item) => item.kind === choice.kind);
   if (option && choice.kind !== "custom") return option.endDate;
   return planEndDate(choice.startDate, options.totalWeeks);
@@ -58,7 +86,9 @@ export function buildStartBlock(
   };
 }
 
-export type CreationDecision = { kind: "start"; start: PlanStartBlock } | { kind: "draft" };
+export type CreationDecision =
+  | { kind: "start"; start: PlanStartBlock }
+  | { kind: "draft" };
 
 /** Save fields of a creation request: either a draft or create-and-start. */
 export function saveFieldsFor(
@@ -72,5 +102,7 @@ export function saveFieldsFor(
     name: name ? name : undefined,
     notes: notes ? notes : undefined,
   };
-  return decision.kind === "draft" ? { ...base, saveAsDraft: true } : { ...base, start: decision.start };
+  return decision.kind === "draft"
+    ? { ...base, saveAsDraft: true }
+    : { ...base, start: decision.start };
 }

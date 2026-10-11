@@ -37,7 +37,10 @@ import { useAuth } from "@/components/auth-provider";
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useI18n } from "@/shared/i18n";
-import { useDeleteGroup, useGroups } from "@/features/permissions/hooks/use-permissions";
+import {
+  useDeleteGroup,
+  useGroups,
+} from "@/features/permissions/hooks/use-permissions";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 import { EmptyState, ErrorState, TableSkeleton } from "@/widgets/data-state";
 
@@ -54,7 +57,9 @@ export function GroupsTable(): ReactElement {
   const deleteGroup = useDeleteGroup();
 
   const [searchDraft, setSearchDraft] = useState(search);
-  const [groupToDelete, setGroupToDelete] = useState<PermissionGroup | null>(null);
+  const [groupToDelete, setGroupToDelete] = useState<PermissionGroup | null>(
+    null,
+  );
 
   const navigateWithParams = useCallback(
     (updates: Record<string, string | undefined>) => {
@@ -100,7 +105,9 @@ export function GroupsTable(): ReactElement {
         <ErrorState onRetry={() => groupsQuery.refetch()} />
       ) : groupsQuery.data && groupsQuery.data.data.length === 0 ? (
         <EmptyState
-          title={search ? t("common.states.noSearchResults") : t("groups.empty")}
+          title={
+            search ? t("common.states.noSearchResults") : t("groups.empty")
+          }
           description={
             search ? t("common.states.noSearchResultsDescription") : undefined
           }
@@ -147,14 +154,18 @@ export function GroupsTable(): ReactElement {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.push(`/users/groups/${group.id}`)}
+                          onClick={() =>
+                            router.push(`/users/groups/${group.id}`)
+                          }
                         >
                           <EyeIcon />
                           {t("common.actions.viewDetails")}
                         </DropdownMenuItem>
                         {canManage ? (
                           <DropdownMenuItem
-                            onClick={() => router.push(`/users/groups/${group.id}/edit`)}
+                            onClick={() =>
+                              router.push(`/users/groups/${group.id}/edit`)
+                            }
                             disabled={group.isSystem}
                           >
                             <PencilIcon />
@@ -239,7 +250,10 @@ export function GroupsTable(): ReactElement {
               notifySuccess(t("groups.toasts.deleted"));
             },
             onError: (error) =>
-              notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+              notifyError(
+                t("common.states.error"),
+                getFriendlyApiMessage(error, t),
+              ),
           });
         }}
       />

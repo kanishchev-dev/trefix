@@ -37,16 +37,31 @@ export function PlanEmptyState({
 }: Props) {
   const emptyCopy = copy.plan.emptyState;
   const tabCopy = copy.plans.tab;
-  const variant = counts && counts.draft > 0 ? "drafts" : counts && counts.history > 0 ? "history" : "empty";
+  const variant =
+    counts && counts.draft > 0
+      ? "drafts"
+      : counts && counts.history > 0
+        ? "history"
+        : "empty";
 
-  const title = variant === "drafts" ? tabCopy.noActiveTitle : variant === "history" ? tabCopy.historyTitle : emptyCopy.title;
+  const title =
+    variant === "drafts"
+      ? tabCopy.noActiveTitle
+      : variant === "history"
+        ? tabCopy.historyTitle
+        : emptyCopy.title;
   const description =
     variant === "drafts"
       ? tabCopy.noActiveDescription
       : variant === "history"
         ? tabCopy.historyDescription
         : emptyCopy.description;
-  const Icon = variant === "drafts" ? ListChecks : variant === "history" ? History : Target;
+  const Icon =
+    variant === "drafts"
+      ? ListChecks
+      : variant === "history"
+        ? History
+        : Target;
 
   const primary =
     variant === "drafts"

@@ -2,20 +2,33 @@ import * as Crypto from "expo-crypto";
 import { ApiClientError, type DeviceSyncType } from "@workspace/api-client";
 
 import { loadAuthSession } from "../../lib/auth-session";
-import { postDeviceProfileMetrics, postDeviceSyncBatch } from "../../lib/integrations-api";
+import {
+  postDeviceProfileMetrics,
+  postDeviceSyncBatch,
+} from "../../lib/integrations-api";
 import { disableHealthBackground } from "./background-control";
 import { getHealthSource } from "./sources";
-import { asyncStorageSyncStore, clearHealthSyncState, getActiveHealthSync } from "./state";
+import {
+  asyncStorageSyncStore,
+  clearHealthSyncState,
+  getActiveHealthSync,
+} from "./state";
 import { runSyncOnce, type SyncResult } from "./sync-engine";
 
 /** Time a background wake may spend; iOS gives roughly half a minute. */
-export const BACKGROUND_BUDGET_MS: Record<"ios" | "android", number> = { ios: 20_000, android: 60_000 };
+export const BACKGROUND_BUDGET_MS: Record<"ios" | "android", number> = {
+  ios: 20_000,
+  android: 60_000,
+};
 
 /**
  * Syncs the connection stored on this device. Returns null when there is
  * nothing to sync (not connected, logged out or another user's connection).
  */
-export async function syncHealthNow(syncType: DeviceSyncType, budgetMs?: number): Promise<SyncResult | null> {
+export async function syncHealthNow(
+  syncType: DeviceSyncType,
+  budgetMs?: number,
+): Promise<SyncResult | null> {
   // Nothing is connected on most devices: decide that before touching any native module.
   const active = await getActiveHealthSync();
   if (!active) return null;
@@ -30,7 +43,10 @@ export async function syncHealthNow(syncType: DeviceSyncType, budgetMs?: number)
   const result = await runSyncOnce(
     {
       source,
-      api: { postBatch: postDeviceSyncBatch, postProfileMetrics: postDeviceProfileMetrics },
+      api: {
+        postBatch: postDeviceSyncBatch,
+        postProfileMetrics: postDeviceProfileMetrics,
+      },
       store: asyncStorageSyncStore,
       now: () => Date.now(),
       uuid: () => Crypto.randomUUID(),
@@ -47,7 +63,8 @@ export async function syncHealthNow(syncType: DeviceSyncType, budgetMs?: number)
   if (
     result.status === "failed" &&
     result.error instanceof ApiClientError &&
-    (result.error.code === "INTEGRATION_NOT_CONNECTED" || result.error.code === "PROVIDER_NOT_SUPPORTED")
+    (result.error.code === "INTEGRATION_NOT_CONNECTED" ||
+      result.error.code === "PROVIDER_NOT_SUPPORTED")
   ) {
     await disableHealthBackground();
     await clearHealthSyncState(active.userId);

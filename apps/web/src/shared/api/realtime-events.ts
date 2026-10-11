@@ -95,13 +95,29 @@ export const REALTIME_EVENT_CACHE_KEYS: Readonly<
   // Presence is not user data, so it invalidates only the online-id set; a
   // refetch of the whole list here would be wasted work on every join/leave.
   "user.presence.updated": [["user-presence"]],
-  "user-permissions.updated": [["users"], ["permissions"], ["permission-groups"]],
+  "user-permissions.updated": [
+    ["users"],
+    ["permissions"],
+    ["permission-groups"],
+  ],
   "permission.created": [["permissions"], ["permission-groups"]],
   "permission.updated": [["permissions"], ["permission-groups"]],
   "permission.deleted": [["permissions"], ["permission-groups"]],
-  "permission-group.created": [["permissions"], ["permission-groups"], ["settings"]],
-  "permission-group.updated": [["permissions"], ["permission-groups"], ["settings"]],
-  "permission-group.deleted": [["permissions"], ["permission-groups"], ["settings"]],
+  "permission-group.created": [
+    ["permissions"],
+    ["permission-groups"],
+    ["settings"],
+  ],
+  "permission-group.updated": [
+    ["permissions"],
+    ["permission-groups"],
+    ["settings"],
+  ],
+  "permission-group.deleted": [
+    ["permissions"],
+    ["permission-groups"],
+    ["settings"],
+  ],
   "settings.updated": [["settings"]],
 };
 /**
@@ -161,16 +177,27 @@ export function realtimeEventPresence(payload: unknown): {
     return null;
   }
 
-  const envelope = payload as { data?: unknown; userId?: unknown; online?: unknown };
+  const envelope = payload as {
+    data?: unknown;
+    userId?: unknown;
+    online?: unknown;
+  };
 
   for (const candidate of [envelope.data, envelope]) {
     if (typeof candidate !== "object" || candidate === null) {
       continue;
     }
 
-    const { userId, online } = candidate as { userId?: unknown; online?: unknown };
+    const { userId, online } = candidate as {
+      userId?: unknown;
+      online?: unknown;
+    };
 
-    if (typeof userId === "string" && userId.length > 0 && typeof online === "boolean") {
+    if (
+      typeof userId === "string" &&
+      userId.length > 0 &&
+      typeof online === "boolean"
+    ) {
       return { userId, online };
     }
   }

@@ -1,9 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import {
   ATHLETE_GOAL_CATEGORIES,
@@ -40,9 +36,9 @@ export function GoalTypeStep({
   const categoriesCopy = creationCopy.categories;
   const goalTypesCopy = creationCopy.goalTypes;
 
-  const [activeCategory, setActiveCategory] = useState<AthleteGoalCategory | "all">(
-    GOAL_TYPE_CATEGORY[selectedType] || "all",
-  );
+  const [activeCategory, setActiveCategory] = useState<
+    AthleteGoalCategory | "all"
+  >(GOAL_TYPE_CATEGORY[selectedType] || "all");
 
   const filteredTypes = useMemo(() => {
     if (activeCategory === "all") {

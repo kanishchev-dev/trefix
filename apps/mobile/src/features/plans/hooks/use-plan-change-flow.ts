@@ -1,5 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import { type PlanChangePreview, type PlanChangeRequest } from "@workspace/api-client";
+import {
+  type PlanChangePreview,
+  type PlanChangeRequest,
+} from "@workspace/api-client";
 
 import { trackEvent } from "../../../lib/analytics";
 import { type MainCopy } from "../../../locales";
@@ -24,20 +27,29 @@ type Options = {
  * exactly what was requested and triggers no rule is applied at once;
  * anything else is shown to the user first.
  */
-export function usePlanChangeFlow(planId: string | null | undefined, { copy, onApplied, inlineErrorFor }: Options) {
-  const { preview: previewMutation, apply: applyMutation } = usePlanChanges(planId);
+export function usePlanChangeFlow(
+  planId: string | null | undefined,
+  { copy, onApplied, inlineErrorFor }: Options,
+) {
+  const { preview: previewMutation, apply: applyMutation } =
+    usePlanChanges(planId);
   const [stage, setStage] = useState<Stage>("idle");
   const [preview, setPreview] = useState<PlanChangePreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
-  const lastDraft = useRef<{ draft: PlanChangeDraft; requested: RequestedChange | null } | null>(null);
+  const lastDraft = useRef<{
+    draft: PlanChangeDraft;
+    requested: RequestedChange | null;
+  } | null>(null);
   const request = useRef<PlanChangeRequest | null>(null);
 
   const fail = useCallback(
     (failure: unknown) => {
       if (hasErrorCode(failure, "PLAN_VERSION_CONFLICT")) {
         setConflict(true);
-        trackEvent("plan_change_conflict", { kind: lastDraft.current?.draft.kind ?? "unknown" });
+        trackEvent("plan_change_conflict", {
+          kind: lastDraft.current?.draft.kind ?? "unknown",
+        });
         return;
       }
       setError(inlineErrorFor?.(failure) ?? planErrorMessage(failure, copy));
@@ -53,7 +65,8 @@ export function usePlanChangeFlow(planId: string | null | undefined, { copy, onA
         await applyMutation.mutateAsync(next);
         trackEvent("plan_change_applied", {
           kind: next.kind,
-          operationsCount: next.kind === "workouts" ? next.operations.length : 0,
+          operationsCount:
+            next.kind === "workouts" ? next.operations.length : 0,
           hadDiffSheet,
         });
         setStage("idle");
@@ -68,7 +81,11 @@ export function usePlanChangeFlow(planId: string | null | undefined, { copy, onA
   );
 
   const submit = useCallback(
-    async (draft: PlanChangeDraft, requested: RequestedChange | null, forceFresh = false) => {
+    async (
+      draft: PlanChangeDraft,
+      requested: RequestedChange | null,
+      forceFresh = false,
+    ) => {
       lastDraft.current = { draft, requested };
       setStage("previewing");
       setError(null);

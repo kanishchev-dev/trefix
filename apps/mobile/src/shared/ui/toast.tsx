@@ -1,6 +1,19 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { AccessibilityInfo, StyleSheet, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type ThemeTokens } from "@workspace/tokens";
@@ -14,7 +27,13 @@ const ToastContext = createContext<ToastApi>({ showToast: () => undefined });
 const VISIBLE_MS = 2600;
 
 /** Lightweight top toast for confirmations ("Plan started", "Draft saved"). */
-export function ToastProvider({ theme, children }: { theme: ThemeTokens; children: ReactNode }) {
+export function ToastProvider({
+  theme,
+  children,
+}: {
+  theme: ThemeTokens;
+  children: ReactNode;
+}) {
   const insets = useSafeAreaInsets();
   const [message, setMessage] = useState<string | null>(null);
   const opacity = useSharedValue(0);
@@ -53,7 +72,10 @@ export function ToastProvider({ theme, children }: { theme: ThemeTokens; childre
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <View pointerEvents="none" style={[styles.host, { top: insets.top + 64 }]}>
+      <View
+        pointerEvents="none"
+        style={[styles.host, { top: insets.top + 64 }]}
+      >
         <Animated.View
           style={[
             styles.toast,

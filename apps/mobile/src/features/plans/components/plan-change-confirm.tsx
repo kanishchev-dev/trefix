@@ -7,7 +7,12 @@ import { type AppLanguage, type MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
 import { type WorkoutDescriber } from "../lib/plan-diff";
 import { PlanDiffView } from "./plan-diff-view";
-import { InlineError, Notice, plansUiStyles, SheetActionsColumn } from "./plans-ui";
+import {
+  InlineError,
+  Notice,
+  plansUiStyles,
+  SheetActionsColumn,
+} from "./plans-ui";
 
 type Props = {
   preview: PlanChangePreview;
@@ -43,13 +48,25 @@ export function PlanChangeConfirm({
   const editCopy = copy.plans.edit;
   return (
     <View style={styles.root}>
-      <PlanDiffView preview={preview} describeWorkout={describeWorkout} copy={copy} language={language} theme={theme} />
+      <PlanDiffView
+        preview={preview}
+        describeWorkout={describeWorkout}
+        copy={copy}
+        language={language}
+        theme={theme}
+      />
       {conflict ? (
-        <Notice tone="warning" theme={theme} action={{ label: editCopy.refresh, onPress: onRefresh }}>
+        <Notice
+          tone="warning"
+          theme={theme}
+          action={{ label: editCopy.refresh, onPress: onRefresh }}
+        >
           {editCopy.conflict}
         </Notice>
       ) : null}
-      {error && !conflict ? <InlineError message={error} theme={theme} /> : null}
+      {error && !conflict ? (
+        <InlineError message={error} theme={theme} />
+      ) : null}
       <SheetActionsColumn>
         <SheetButton
           label={editCopy.apply}

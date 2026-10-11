@@ -1,18 +1,28 @@
 import { useState } from "react";
 
-import { type AthleteProfile, type AthleteProfileUpdate } from "@workspace/api-client";
+import {
+  type AthleteProfile,
+  type AthleteProfileUpdate,
+} from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { syncStravaProfile } from "../../../lib/integrations-api";
 import { trackEvent } from "../../../lib/analytics";
-import { formatShortDate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  formatShortDate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { displayToKg, kgToDisplay } from "../../../shared/lib/units";
 import { ListCard, ListRow, SourceBadge } from "../../../shared/ui/list-card";
 import { useStravaIntegration } from "../../main/hooks/use-integrations";
 import { useUpdateAthleteProfile } from "../hooks/use-athlete-profile";
 import { usePreferences } from "../hooks/use-preferences";
 import { createFormatter } from "../lib/profile-format";
-import { ProfileValueSheet, type ValueSheetConfig } from "./profile-value-sheet";
+import {
+  ProfileValueSheet,
+  type ValueSheetConfig,
+} from "./profile-value-sheet";
 
 type Props = {
   athlete: AthleteProfile;
@@ -27,7 +37,13 @@ type SourcedField = "birthDate" | "sex" | "heightCm" | "weightKg";
 const CM_PER_INCH = 2.54;
 
 /** Date of birth, sex, height and weight with their sources; used by the body screen and the wizard. */
-export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Props) {
+export function BodyFieldsCard({
+  athlete,
+  copy,
+  language,
+  theme,
+  themeMode,
+}: Props) {
   const update = useUpdateAthleteProfile();
   const { preferences } = usePreferences();
   const { data: strava } = useStravaIntegration();
@@ -41,24 +57,33 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
 
   const save = async (patch: AthleteProfileUpdate) => {
     await update.mutateAsync(patch);
-    trackEvent("profile_field_updated", { field: Object.keys(patch).join(","), source: "manual" });
+    trackEvent("profile_field_updated", {
+      field: Object.keys(patch).join(","),
+      source: "manual",
+    });
   };
 
-  const sourceOf = (field: SourcedField) => athlete?.fieldSources?.[field] ?? null;
+  const sourceOf = (field: SourcedField) =>
+    athlete?.fieldSources?.[field] ?? null;
   const badge = (field: SourcedField) => {
     const source = sourceOf(field)?.source;
     if (source === "strava") return <SourceBadge theme={theme} />;
-    if (source === "apple_health" || source === "health_connect") return <SourceBadge theme={theme} label="H" />;
+    if (source === "apple_health" || source === "health_connect")
+      return <SourceBadge theme={theme} label="H" />;
     return undefined;
   };
   const provenance = (field: SourcedField): ValueSheetConfig["provenance"] => {
     const source = sourceOf(field);
-    const fromHealth = source?.source === "apple_health" || source?.source === "health_connect";
+    const fromHealth =
+      source?.source === "apple_health" || source?.source === "health_connect";
     if (!stravaConnected && !fromHealth) return undefined;
     return {
       source: source?.source ?? null,
       updatedAt: source?.updatedAt,
-      canReset: profileAccess && source?.source === "manual" && (field === "weightKg" || field === "sex"),
+      canReset:
+        profileAccess &&
+        source?.source === "manual" &&
+        (field === "weightKg" || field === "sex"),
       onReset: async () => {
         await save({ resetSources: [field] });
         await syncStravaProfile();
@@ -82,7 +107,9 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
       kind: "options",
       title: b.sex,
       value: profile.sex,
-      options: (["female", "male", "other", "prefer_not_to_say"] as const).map((value) => ({ value, label: b.sexes[value] })),
+      options: (["female", "male", "other", "prefer_not_to_say"] as const).map(
+        (value) => ({ value, label: b.sexes[value] }),
+      ),
       provenance: provenance("sex"),
       onSave: (value) => save({ sex: value as AthleteProfileUpdate["sex"] }),
     });
@@ -93,7 +120,9 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
         ? {
             kind: "number",
             title: b.height,
-            value: profile.heightCm ? Math.round(profile.heightCm / CM_PER_INCH) : null,
+            value: profile.heightCm
+              ? Math.round(profile.heightCm / CM_PER_INCH)
+              : null,
             fallback: 69,
             min: 48,
             max: 90,
@@ -101,7 +130,11 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
             labelEvery: 12,
             formatValue: (inches) => format.height(inches * CM_PER_INCH),
             provenance: provenance("heightCm"),
-            onSave: (inches) => save({ heightCm: inches === null ? null : Math.round(inches * CM_PER_INCH) }),
+            onSave: (inches) =>
+              save({
+                heightCm:
+                  inches === null ? null : Math.round(inches * CM_PER_INCH),
+              }),
           }
         : {
             kind: "number",
@@ -122,7 +155,9 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
     setSheet({
       kind: "number",
       title: b.weight,
-      value: profile.weightKg ? Math.round(kgToDisplay(profile.weightKg, preferences.units) * 10) / 10 : null,
+      value: profile.weightKg
+        ? Math.round(kgToDisplay(profile.weightKg, preferences.units) * 10) / 10
+        : null,
       fallback: imperial ? 160 : 70,
       min: imperial ? 66 : 30,
       max: imperial ? 550 : 250,
@@ -132,7 +167,12 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
       unit: imperial ? format.labels.lb : format.labels.kg,
       provenance: provenance("weightKg"),
       onSave: (value) =>
-        save({ weightKg: value === null ? null : Math.round(displayToKg(value, preferences.units) * 10) / 10 }),
+        save({
+          weightKg:
+            value === null
+              ? null
+              : Math.round(displayToKg(value, preferences.units) * 10) / 10,
+        }),
     });
 
   const notSet = copy.profile.summary.notSet;
@@ -143,14 +183,20 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
         <ListRow
           theme={theme}
           title={b.birthDate}
-          value={athlete.birthDate ? formatShortDate(athlete.birthDate, language) : notSet}
+          value={
+            athlete.birthDate
+              ? formatShortDate(athlete.birthDate, language)
+              : notSet
+          }
           trailing={badge("birthDate")}
           onPress={() => openBirthDate(athlete)}
         />
         <ListRow
           theme={theme}
           title={b.sex}
-          value={athlete.sex ? b.sexes[athlete.sex as keyof typeof b.sexes] : notSet}
+          value={
+            athlete.sex ? b.sexes[athlete.sex as keyof typeof b.sexes] : notSet
+          }
           trailing={badge("sex")}
           onPress={() => openSex(athlete)}
         />
@@ -169,7 +215,13 @@ export function BodyFieldsCard({ athlete, copy, language, theme, themeMode }: Pr
           onPress={() => openWeight(athlete)}
         />
       </ListCard>
-      <ProfileValueSheet config={sheet} onClose={() => setSheet(null)} copy={copy} theme={theme} themeMode={themeMode} />
+      <ProfileValueSheet
+        config={sheet}
+        onClose={() => setSheet(null)}
+        copy={copy}
+        theme={theme}
+        themeMode={themeMode}
+      />
     </>
   );
 }

@@ -4,7 +4,11 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { DateWheel } from "@workspace/ui-native";
 
-import { formatDayMonth, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  formatDayMonth,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
 import { useToast } from "../../../shared/ui/toast";
 import { SectionBlock } from "../../plan-creation/components/plan-creation-ui";
@@ -15,10 +19,20 @@ import {
 } from "../../plan-creation/components/workout-edit-form";
 import { usePlanDetails } from "../hooks/use-plan";
 import { usePlanChangeFlow } from "../hooks/use-plan-change-flow";
-import { clampIso, mondayBasedWeekday, todayIso, workoutLocalDate } from "../lib/plan-dates";
+import {
+  clampIso,
+  mondayBasedWeekday,
+  todayIso,
+  workoutLocalDate,
+} from "../lib/plan-dates";
 import { type WorkoutDescriber } from "../lib/plan-diff";
 import { PlanChangeConfirm } from "./plan-change-confirm";
-import { InlineError, Notice, plansUiStyles, SheetActionsColumn } from "./plans-ui";
+import {
+  InlineError,
+  Notice,
+  plansUiStyles,
+  SheetActionsColumn,
+} from "./plans-ui";
 
 export type PlanWorkoutEditMode = "edit" | "move" | "remove" | "add";
 
@@ -72,7 +86,11 @@ export function PlanWorkoutEditPanel({
   const dayNames = shortDayNamesFor(language);
 
   const [date, setDate] = useState(() =>
-    clampIso(workout ? workoutLocalDate(workout.scheduledAt) : defaultDate ?? today, today, planEnd),
+    clampIso(
+      workout ? workoutLocalDate(workout.scheduledAt) : (defaultDate ?? today),
+      today,
+      planEnd,
+    ),
   );
   const [formError, setFormError] = useState<string | null>(null);
   // Delete from the edit form asks for confirmation first.
@@ -91,7 +109,10 @@ export function PlanWorkoutEditPanel({
     return (key) => {
       const item = workouts.find((candidate) => candidate.id === key);
       if (!item) return undefined;
-      return { type: item.type, dayLabel: formatDayMonth(workoutLocalDate(item.scheduledAt), language) };
+      return {
+        type: item.type,
+        dayLabel: formatDayMonth(workoutLocalDate(item.scheduledAt), language),
+      };
     };
   }, [detailsQuery.data?.workouts, language]);
 
@@ -111,7 +132,10 @@ export function PlanWorkoutEditPanel({
 
   if (flow.showDiff && flow.preview) {
     return (
-      <ScrollView style={plansUiStyles.sheetScroll} contentContainerStyle={plansUiStyles.sheetContent}>
+      <ScrollView
+        style={plansUiStyles.sheetScroll}
+        contentContainerStyle={plansUiStyles.sheetContent}
+      >
         <SheetBlock theme={theme}>
           <PlanChangeConfirm
             preview={flow.preview}
@@ -139,7 +163,11 @@ export function PlanWorkoutEditPanel({
     <>
       {flow.conflict ? (
         <SheetBlock theme={theme}>
-          <Notice tone="warning" theme={theme} action={{ label: editCopy.refresh, onPress: flow.refresh }}>
+          <Notice
+            tone="warning"
+            theme={theme}
+            action={{ label: editCopy.refresh, onPress: flow.refresh }}
+          >
             {editCopy.conflict}
           </Notice>
         </SheetBlock>
@@ -157,7 +185,12 @@ export function PlanWorkoutEditPanel({
       <View style={styles.fill}>
         {status}
         <WorkoutEditForm
-          workout={{ ...workout, dayOfWeek: mondayBasedWeekday(workoutLocalDate(workout.scheduledAt)) }}
+          workout={{
+            ...workout,
+            dayOfWeek: mondayBasedWeekday(
+              workoutLocalDate(workout.scheduledAt),
+            ),
+          }}
           showDay={false}
           pending={flow.busy}
           theme={theme}
@@ -168,7 +201,11 @@ export function PlanWorkoutEditPanel({
           onSave={(changes) => {
             const validation = validateWorkoutChanges(changes);
             if (validation) {
-              setFormError((copy.plan.creation.errors as Record<string, string>)[validation] ?? editCopy.invalid);
+              setFormError(
+                (copy.plan.creation.errors as Record<string, string>)[
+                  validation
+                ] ?? editCopy.invalid,
+              );
               return;
             }
             setFormError(null);
@@ -213,7 +250,11 @@ export function PlanWorkoutEditPanel({
           onSave={(changes) => {
             const validation = validateWorkoutChanges(changes);
             if (validation) {
-              setFormError((copy.plan.creation.errors as Record<string, string>)[validation] ?? editCopy.invalid);
+              setFormError(
+                (copy.plan.creation.errors as Record<string, string>)[
+                  validation
+                ] ?? editCopy.invalid,
+              );
               return;
             }
             setFormError(null);
@@ -241,7 +282,9 @@ export function PlanWorkoutEditPanel({
 
   const isMove = activeMode === "move";
   const typeLabel = workout
-    ? (copy.plan.creation.workoutTypes as Record<string, string>)[workout.type] ?? workout.type
+    ? ((copy.plan.creation.workoutTypes as Record<string, string>)[
+        workout.type
+      ] ?? workout.type)
     : "";
 
   return (
@@ -252,14 +295,30 @@ export function PlanWorkoutEditPanel({
     >
       {workout ? (
         <SheetBlock theme={theme}>
-          <Text style={[plansUiStyles.bodyText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            style={[
+              plansUiStyles.bodyText,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {`${dayNames[mondayBasedWeekday(workoutLocalDate(workout.scheduledAt))]} ${formatDayMonth(
               workoutLocalDate(workout.scheduledAt),
               language,
             )} · ${typeLabel}`}
           </Text>
           {!isMove ? (
-            <Text style={[plansUiStyles.bodyText, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+            <Text
+              style={[
+                plansUiStyles.bodyText,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
               {editCopy.removeBody}
             </Text>
           ) : null}
@@ -273,13 +332,22 @@ export function PlanWorkoutEditPanel({
             label={isMove ? editCopy.save : editCopy.remove}
             variant={isMove ? "primary" : "destructive"}
             pending={flow.busy}
-            disabled={!workout || (isMove && date === workoutLocalDate(workout.scheduledAt))}
+            disabled={
+              !workout ||
+              (isMove && date === workoutLocalDate(workout.scheduledAt))
+            }
             onPress={() => {
               if (!workout) return;
               void flow.submit(
                 isMove
-                  ? { kind: "workouts", operations: [{ op: "move", workoutId: workout.id, date }] }
-                  : { kind: "workouts", operations: [{ op: "remove", workoutId: workout.id }] },
+                  ? {
+                      kind: "workouts",
+                      operations: [{ op: "move", workoutId: workout.id, date }],
+                    }
+                  : {
+                      kind: "workouts",
+                      operations: [{ op: "remove", workoutId: workout.id }],
+                    },
                 { workoutIds: [workout.id], addedCount: 0 },
               );
             }}

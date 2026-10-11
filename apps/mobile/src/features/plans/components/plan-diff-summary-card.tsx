@@ -22,7 +22,16 @@ type Props = {
 };
 
 /** "What changed vs the previous plan" at the top of a rebuild preview. */
-export function PlanDiffSummaryCard({ diff, mode, warnings, metricsVolume, theme, themeMode, copy, language }: Props) {
+export function PlanDiffSummaryCard({
+  diff,
+  mode,
+  warnings,
+  metricsVolume,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const lines = useMemo(
     () => buildDiffSummary(diff, { copy, language }, { metricsVolume }),
     [copy, diff, language, metricsVolume],
@@ -30,9 +39,16 @@ export function PlanDiffSummaryCard({ diff, mode, warnings, metricsVolume, theme
 
   return (
     <View style={styles.root}>
-      {mode === "regenerated" ? <Notice theme={theme}>{copy.plans.diff.regenerated}</Notice> : null}
+      {mode === "regenerated" ? (
+        <Notice theme={theme}>{copy.plans.diff.regenerated}</Notice>
+      ) : null}
       {warnings
-        .filter((code) => !(mode === "regenerated" && code === "STRUCTURE_CHANGED_REGENERATED"))
+        .filter(
+          (code) =>
+            !(
+              mode === "regenerated" && code === "STRUCTURE_CHANGED_REGENERATED"
+            ),
+        )
         .map((code) => (
           <Notice key={code} tone="warning" theme={theme}>
             {warningText(code, copy)}
@@ -40,7 +56,15 @@ export function PlanDiffSummaryCard({ diff, mode, warnings, metricsVolume, theme
         ))}
       {lines.length > 0 ? (
         <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
-          <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {copy.plans.diff.rebuildTitle}
           </Text>
           {lines.map((line) => (

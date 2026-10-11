@@ -9,11 +9,19 @@ import { trackEvent } from "../../../lib/analytics";
 import { clearCoachHistory } from "../../../lib/coach-api";
 import { type MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
-import { IconCircle, ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
+import {
+  IconCircle,
+  ListCard,
+  ListRow,
+  SectionTitle,
+} from "../../../shared/ui/list-card";
 import { Switch } from "../../../shared/ui/switch";
 import { useToast } from "../../../shared/ui/toast";
 import { ConfirmSheet } from "../../plans/components/confirm-sheet";
-import { ProfileSection, ProfileSubScreen } from "../components/profile-sub-screen";
+import {
+  ProfileSection,
+  ProfileSubScreen,
+} from "../components/profile-sub-screen";
 import { QuietHoursSheet } from "../components/quiet-hours-sheet";
 import { usePreferences, useUpdatePreferences } from "../hooks/use-preferences";
 import { profileErrorMessage } from "../lib/profile-format";
@@ -45,14 +53,26 @@ export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {
   const quiet = preferences.coachQuietHours;
 
   return (
-    <ProfileSubScreen title={c.title} onBack={onBack} theme={theme} themeMode={themeMode}>
+    <ProfileSubScreen
+      title={c.title}
+      onBack={onBack}
+      theme={theme}
+      themeMode={themeMode}
+    >
       <ListCard theme={theme}>
         <ListRow
           theme={theme}
           icon={<Sparkles color={theme.color.foreground} size={20} />}
           title={c.name}
           description={enabled ? c.statusOn : c.statusOff}
-          trailing={<Switch theme={theme} value={enabled} onValueChange={toggle} accessibilityLabel={c.title} />}
+          trailing={
+            <Switch
+              theme={theme}
+              value={enabled}
+              onValueChange={toggle}
+              accessibilityLabel={c.title}
+            />
+          }
         />
       </ListCard>
 
@@ -70,7 +90,11 @@ export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {
                   chevron={false}
                   trailing={
                     preferences.coachAdaptationMode === mode ? (
-                      <Check color={theme.color.foreground} size={18} strokeWidth={2.4} />
+                      <Check
+                        color={theme.color.foreground}
+                        size={18}
+                        strokeWidth={2.4}
+                      />
                     ) : undefined
                   }
                   onPress={() => {
@@ -90,7 +114,11 @@ export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {
                 icon={<Moon color={theme.color.foreground} size={20} />}
                 title={c.quietHours}
                 description={c.quietHoursDescription}
-                value={quiet ? `${quiet.from} – ${quiet.to}` : copy.profile.summary.off}
+                value={
+                  quiet
+                    ? `${quiet.from} – ${quiet.to}`
+                    : copy.profile.summary.off
+                }
                 onPress={() => setQuietVisible(true)}
               />
             </ListCard>
@@ -113,7 +141,15 @@ export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {
       ) : (
         <>
           <View style={[styles.offCard, { backgroundColor: theme.color.card }]}>
-            <Text style={[styles.offTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+            <Text
+              style={[
+                styles.offTitle,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
               {c.offTitle}
             </Text>
             {c.off.map((line, index) => {
@@ -121,16 +157,33 @@ export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {
               return (
                 <View key={line} style={styles.offItem}>
                   <IconCircle theme={theme} size={28}>
-                    <Icon color={theme.color.mutedForeground} size={14} strokeWidth={2.4} />
+                    <Icon
+                      color={theme.color.mutedForeground}
+                      size={14}
+                      strokeWidth={2.4}
+                    />
                   </IconCircle>
-                  <Text style={[styles.offText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+                  <Text
+                    style={[
+                      styles.offText,
+                      {
+                        color: theme.color.foreground,
+                        fontFamily: theme.typography.fontFamily.sans.regular,
+                      },
+                    ]}
+                  >
                     {line}
                   </Text>
                 </View>
               );
             })}
           </View>
-          <SheetButton label={c.enable} onPress={() => toggle(true)} theme={theme} themeMode={themeMode} />
+          <SheetButton
+            label={c.enable}
+            onPress={() => toggle(true)}
+            theme={theme}
+            themeMode={themeMode}
+          />
         </>
       )}
 

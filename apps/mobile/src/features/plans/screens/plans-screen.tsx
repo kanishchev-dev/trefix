@@ -1,19 +1,37 @@
 import { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type PlanListItem } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Segmented } from "@workspace/ui-native";
 
-import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
-import { HeaderBackButton, HeaderPlusButton, HeaderTitle } from "../../main/components/header";
+import {
+  HeaderBackButton,
+  HeaderPlusButton,
+  HeaderTitle,
+} from "../../main/components/header";
 import { useHeaderOptions } from "../../main/context/header-context";
 import { PlanErrorState } from "../../plan/components/plan-error-state";
 import { PlanSkeleton } from "../../plan/components/plan-skeleton";
 import { PlanCard } from "../components/plan-card";
-import { PlanCardActionsSheet, type PlanCardTarget } from "../components/plan-card-actions-sheet";
+import {
+  PlanCardActionsSheet,
+  type PlanCardTarget,
+} from "../components/plan-card-actions-sheet";
 import { plansUiStyles, SectionCaption } from "../components/plans-ui";
 import { usePlanCounts, usePlansList } from "../hooks/use-plans";
 import { defaultSegment, type PlansSegment } from "../lib/plan-card-format";
@@ -32,22 +50,48 @@ type Props = {
 let rememberedSegment: PlansSegment | null = null;
 
 /** "My plans": the plan in progress, then drafts and history. */
-export function PlansScreen({ theme, themeMode, copy, language, initialSegment, highlightPlanId }: Props) {
+export function PlansScreen({
+  theme,
+  themeMode,
+  copy,
+  language,
+  initialSegment,
+  highlightPlanId,
+}: Props) {
   const plansCopy = copy.plans;
   const navigation = usePlansNavigation();
   const insets = useSafeAreaInsets();
   const countsQuery = usePlanCounts();
   const activeQuery = usePlansList("active");
-  const [chosenSegment, setChosenSegment] = useState<PlansSegment | null>(initialSegment ?? rememberedSegment);
+  const [chosenSegment, setChosenSegment] = useState<PlansSegment | null>(
+    initialSegment ?? rememberedSegment,
+  );
   const segment = chosenSegment ?? defaultSegment(countsQuery.data);
-  const listQuery = usePlansList(segment, countsQuery.isSuccess || chosenSegment !== null);
-  const [actionsTarget, setActionsTarget] = useState<PlanCardTarget | null>(null);
+  const listQuery = usePlansList(
+    segment,
+    countsQuery.isSuccess || chosenSegment !== null,
+  );
+  const [actionsTarget, setActionsTarget] = useState<PlanCardTarget | null>(
+    null,
+  );
 
   useHeaderOptions(
     {
-      leftAction: <HeaderBackButton theme={theme} themeMode={themeMode} onPress={navigation.back} />,
+      leftAction: (
+        <HeaderBackButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={navigation.back}
+        />
+      ),
       centerContent: <HeaderTitle theme={theme}>{plansCopy.title}</HeaderTitle>,
-      rightAction: <HeaderPlusButton theme={theme} themeMode={themeMode} onPress={navigation.openCreationMethod} />,
+      rightAction: (
+        <HeaderPlusButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={navigation.openCreationMethod}
+        />
+      ),
       variant: "default",
       bottomContent: null,
     },
@@ -55,10 +99,15 @@ export function PlansScreen({ theme, themeMode, copy, language, initialSegment, 
   );
 
   const activePlan = activeQuery.data?.pages[0]?.items[0] ?? null;
-  const items = useMemo(() => listQuery.data?.pages.flatMap((page) => page.items) ?? [], [listQuery.data]);
+  const items = useMemo(
+    () => listQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [listQuery.data],
+  );
   const counts = countsQuery.data;
 
-  const refreshing = (countsQuery.isRefetching || listQuery.isRefetching) && !listQuery.isFetchingNextPage;
+  const refreshing =
+    (countsQuery.isRefetching || listQuery.isRefetching) &&
+    !listQuery.isFetchingNextPage;
   const refresh = () => {
     void countsQuery.refetch();
     void activeQuery.refetch();
@@ -70,7 +119,8 @@ export function PlansScreen({ theme, themeMode, copy, language, initialSegment, 
     setChosenSegment(next);
   };
 
-  const isInitialLoading = countsQuery.isLoading || (listQuery.isLoading && items.length === 0);
+  const isInitialLoading =
+    countsQuery.isLoading || (listQuery.isLoading && items.length === 0);
   const isError = countsQuery.isError || listQuery.isError;
 
   const renderCard = ({ item }: { item: PlanListItem }) => (
@@ -78,7 +128,9 @@ export function PlansScreen({ theme, themeMode, copy, language, initialSegment, 
       plan={item}
       highlighted={item.id === highlightPlanId}
       onPress={() => navigation.openPlanDetails(item.id)}
-      onOpenActions={() => setActionsTarget({ id: item.id, name: item.name, status: item.status })}
+      onOpenActions={() =>
+        setActionsTarget({ id: item.id, name: item.name, status: item.status })
+      }
       theme={theme}
       themeMode={themeMode}
       copy={copy}
@@ -103,8 +155,18 @@ export function PlansScreen({ theme, themeMode, copy, language, initialSegment, 
       ) : null}
       <Segmented<PlansSegment>
         segments={[
-          { label: fillTemplate(plansCopy.segment.drafts, { count: counts?.draft ?? 0 }), value: "draft" },
-          { label: fillTemplate(plansCopy.segment.history, { count: counts?.history ?? 0 }), value: "history" },
+          {
+            label: fillTemplate(plansCopy.segment.drafts, {
+              count: counts?.draft ?? 0,
+            }),
+            value: "draft",
+          },
+          {
+            label: fillTemplate(plansCopy.segment.history, {
+              count: counts?.history ?? 0,
+            }),
+            value: "history",
+          },
         ]}
         value={segment}
         onChange={selectSegment}
@@ -118,10 +180,24 @@ export function PlansScreen({ theme, themeMode, copy, language, initialSegment, 
   const empty = isInitialLoading ? (
     <PlanSkeleton theme={theme} themeMode={themeMode} />
   ) : isError ? (
-    <PlanErrorState copy={copy} onRetry={refresh} theme={theme} themeMode={themeMode} />
+    <PlanErrorState
+      copy={copy}
+      onRetry={refresh}
+      theme={theme}
+      themeMode={themeMode}
+    />
   ) : (
     <View style={styles.empty}>
-      <Text style={[plansUiStyles.bodyText, styles.emptyText, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+      <Text
+        style={[
+          plansUiStyles.bodyText,
+          styles.emptyText,
+          {
+            color: theme.color.mutedForeground,
+            fontFamily: theme.typography.fontFamily.sans.regular,
+          },
+        ]}
+      >
         {segment === "draft" ? plansCopy.empty.drafts : plansCopy.empty.history}
       </Text>
       {segment === "draft" ? (
@@ -145,12 +221,18 @@ export function PlansScreen({ theme, themeMode, copy, language, initialSegment, 
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
         ListFooterComponent={
-          listQuery.isFetchingNextPage ? <ActivityIndicator color={theme.color.mutedForeground} style={styles.footer} /> : null
+          listQuery.isFetchingNextPage ? (
+            <ActivityIndicator
+              color={theme.color.mutedForeground}
+              style={styles.footer}
+            />
+          ) : null
         }
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         onEndReachedThreshold={0.4}
         onEndReached={() => {
-          if (listQuery.hasNextPage && !listQuery.isFetchingNextPage) void listQuery.fetchNextPage();
+          if (listQuery.hasNextPage && !listQuery.isFetchingNextPage)
+            void listQuery.fetchNextPage();
         }}
         contentContainerStyle={[
           styles.content,

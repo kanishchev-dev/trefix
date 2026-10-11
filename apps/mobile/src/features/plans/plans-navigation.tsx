@@ -9,7 +9,11 @@ import { type PlansSegment } from "./lib/plan-card-format";
  * `MainNavigator` provides these actions.
  */
 export type PlansNavigation = {
-  openPlans: (options?: { segment?: PlansSegment; highlightPlanId?: string | null; source?: string }) => void;
+  openPlans: (options?: {
+    segment?: PlansSegment;
+    highlightPlanId?: string | null;
+    source?: string;
+  }) => void;
   openPlanDetails: (planId: string) => void;
   /** Back to the Plan tab with the plan in progress. */
   openPlanTab: () => void;

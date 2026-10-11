@@ -1,7 +1,14 @@
 import type { ExecutionStep } from "@workspace/api-client";
 
 import { haversineM } from "./geo";
-import { advancePlan, closePlan, paceStatus, skipStep, startPlan, stepProgress } from "./plan-progress";
+import {
+  advancePlan,
+  closePlan,
+  paceStatus,
+  skipStep,
+  startPlan,
+  stepProgress,
+} from "./plan-progress";
 import type {
   EngineConfig,
   EngineState,
@@ -41,8 +48,13 @@ export const ENGINE_RULES = {
 export class RecordingEngine {
   private constructor(public state: EngineState) {}
 
-  static start(config: EngineConfig, t: number, planSteps: ExecutionStep[] | null = null): RecordingEngine {
-    const usesGps = config.distanceMode === "gps" && config.environment !== "treadmill";
+  static start(
+    config: EngineConfig,
+    t: number,
+    planSteps: ExecutionStep[] | null = null,
+  ): RecordingEngine {
+    const usesGps =
+      config.distanceMode === "gps" && config.environment !== "treadmill";
     return new RecordingEngine({
       version: 1,
       config,
@@ -69,12 +81,18 @@ export class RecordingEngine {
       timeline: [[0, 0, 0]],
       calibration: { steps: 0, meters: 0 },
       resumedAt: t,
-      plan: planSteps && planSteps.length > 0 ? startPlan(planSteps, 0, 0) : null,
+      plan:
+        planSteps && planSteps.length > 0 ? startPlan(planSteps, 0, 0) : null,
     });
   }
 
   static restore(state: EngineState): RecordingEngine {
-    return new RecordingEngine({ ...state, plan: state.plan ?? null, lastStepTotal: null, stepWindow: [] });
+    return new RecordingEngine({
+      ...state,
+      plan: state.plan ?? null,
+      lastStepTotal: null,
+      stepWindow: [],
+    });
   }
 
   /** The runner ends the running step early. */
@@ -101,7 +119,8 @@ export class RecordingEngine {
   /** Altitude from the barometer, metres; only its changes matter. */
   onAltitude(altM: number): void {
     const s = this.state;
-    if (s.status !== "recording" || s.autoPaused || !Number.isFinite(altM)) return;
+    if (s.status !== "recording" || s.autoPaused || !Number.isFinite(altM))
+      return;
     if (s.elevation.source !== "baro") {
       // A new reference: barometric and GPS altitudes have different zeros.
       s.elevation.source = "baro";
@@ -117,10 +136,12 @@ export class RecordingEngine {
     this.advance(sample.t);
     s.lastLocationAt = sample.t;
 
-    const good = sample.acc !== null && sample.acc <= ENGINE_RULES.goodAccuracyM;
+    const good =
+      sample.acc !== null && sample.acc <= ENGINE_RULES.goodAccuracyM;
     if (!good) {
       s.badSince ??= sample.t;
-      if (sample.t - s.badSince >= ENGINE_RULES.lostAfterMs && s.gps === "good") s.gps = "lost";
+      if (sample.t - s.badSince >= ENGINE_RULES.lostAfterMs && s.gps === "good")
+        s.gps = "lost";
       return false;
     }
     s.badSince = null;
@@ -140,7 +161,8 @@ export class RecordingEngine {
     const computedSpeed = d / dt;
     if (computedSpeed > ENGINE_RULES.maxSpeedMps) return false;
 
-    const speed = sample.speed !== null && sample.speed >= 0 ? sample.speed : computedSpeed;
+    const speed =
+      sample.speed !== null && sample.speed >= 0 ? sample.speed : computedSpeed;
     this.autoPauseBySpeed(speed, sample.t);
     if (d < ENGINE_RULES.minMoveM) return false;
 
@@ -169,9 +191,12 @@ export class RecordingEngine {
     s.steps += delta;
     s.lastStepAt = t;
     s.stepWindow.push([t, delta]);
-    s.stepWindow = s.stepWindow.filter(([at]) => t - at <= ENGINE_RULES.cadenceWindowMs);
+    s.stepWindow = s.stepWindow.filter(
+      ([at]) => t - at <= ENGINE_RULES.cadenceWindowMs,
+    );
 
-    if (this.onPedometer && s.autoPaused && s.config.autoPause) this.autoResume(t);
+    if (this.onPedometer && s.autoPaused && s.config.autoPause)
+      this.autoResume(t);
     if (!this.moving) return;
     if (this.onPedometer) {
       this.addDistance(delta * s.config.strideM, "pedometer");
@@ -185,12 +210,17 @@ export class RecordingEngine {
     const s = this.state;
     if (s.status === "finished") return;
     this.advance(t);
-    if (s.gps === "good" && s.lastLocationAt !== null && t - s.lastLocationAt >= ENGINE_RULES.lostAfterMs) {
+    if (
+      s.gps === "good" &&
+      s.lastLocationAt !== null &&
+      t - s.lastLocationAt >= ENGINE_RULES.lostAfterMs
+    ) {
       s.gps = "lost";
     }
     if (this.onPedometer && s.config.autoPause && this.moving) {
       const since = Math.max(s.lastStepAt ?? s.resumedAt, s.resumedAt);
-      if (t - since >= ENGINE_RULES.autoPause.stepsPauseAfterMs) this.autoPause(since, t);
+      if (t - since >= ENGINE_RULES.autoPause.stepsPauseAfterMs)
+        this.autoPause(since, t);
     }
   }
 
@@ -243,7 +273,7 @@ export class RecordingEngine {
       movingMs,
       distanceM: s.distanceM,
       currentPaceSecPerKm: currentPace,
-      avgPaceSecPerKm: s.distanceM >= 50 ? (movingMs / s.distanceM) : null,
+      avgPaceSecPerKm: s.distanceM >= 50 ? movingMs / s.distanceM : null,
       gps: s.gps,
       onPedometer: this.onPedometer,
       elevationGainM: s.elevation.gainM,
@@ -251,7 +281,10 @@ export class RecordingEngine {
       km: Math.floor(s.distanceM / 1000),
       step,
       planDone: s.plan !== null && s.plan.current >= s.plan.steps.length,
-      paceStatus: step && !s.autoPaused && s.status === "recording" ? paceStatus(step.step, currentPace) : null,
+      paceStatus:
+        step && !s.autoPaused && s.status === "recording"
+          ? paceStatus(step.step, currentPace)
+          : null,
     };
   }
 
@@ -294,14 +327,18 @@ export class RecordingEngine {
       sample[1] - last[1] >= ENGINE_RULES.timelineEveryM ||
       sample[0] - last[0] >= ENGINE_RULES.timelineEveryMs
     ) {
-      if (sample[0] !== last[0] || sample[1] !== last[1]) s.timeline.push(sample);
+      if (sample[0] !== last[0] || sample[1] !== last[1])
+        s.timeline.push(sample);
     }
   }
 
   private autoPauseBySpeed(speed: number, t: number): void {
     const s = this.state;
     if (!s.config.autoPause || s.status !== "recording") return;
-    const rules = s.config.environment === "trail" ? ENGINE_RULES.autoPause.trail : ENGINE_RULES.autoPause.outdoor;
+    const rules =
+      s.config.environment === "trail"
+        ? ENGINE_RULES.autoPause.trail
+        : ENGINE_RULES.autoPause.outdoor;
     if (s.autoPaused) {
       if (speed > rules.resumeAboveMps) this.autoResume(t);
       return;
@@ -363,14 +400,16 @@ export class RecordingEngine {
       const dt = last[0] - sample[0];
       if (dt >= ENGINE_RULES.paceWindowMs) {
         const dd = last[1] - sample[1];
-        return dd >= 10 ? (dt / dd) : null;
+        return dd >= 10 ? dt / dd : null;
       }
     }
     return null;
   }
 
   private cadence(now: number): number | null {
-    const recent = this.state.stepWindow.filter(([at]) => now - at <= ENGINE_RULES.cadenceWindowMs);
+    const recent = this.state.stepWindow.filter(
+      ([at]) => now - at <= ENGINE_RULES.cadenceWindowMs,
+    );
     if (recent.length < 2) return null;
     const steps = recent.slice(1).reduce((sum, [, delta]) => sum + delta, 0);
     const spanMs = recent[recent.length - 1]![0] - recent[0]![0];

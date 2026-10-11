@@ -11,7 +11,9 @@ export async function getPreferences(): Promise<UserPreferences> {
   return userPreferencesSchema.parse(response);
 }
 
-export async function updatePreferences(patch: UserPreferencesUpdate): Promise<UserPreferences> {
+export async function updatePreferences(
+  patch: UserPreferencesUpdate,
+): Promise<UserPreferences> {
   const response = await request<unknown>("/me/preferences", {
     method: "PATCH",
     body: userPreferencesUpdateSchema.parse(patch),

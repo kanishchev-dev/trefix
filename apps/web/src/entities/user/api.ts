@@ -57,7 +57,9 @@ export async function fetchUser(id: string): Promise<AdminUserDetail> {
  * presence store: an indicator that silently shows everyone offline is better
  * than a page that fails to render over a decoration.
  */
-export async function fetchUserPresence(userIds: readonly string[]): Promise<Set<string>> {
+export async function fetchUserPresence(
+  userIds: readonly string[],
+): Promise<Set<string>> {
   if (userIds.length === 0) {
     return new Set();
   }
@@ -69,7 +71,9 @@ export async function fetchUserPresence(userIds: readonly string[]): Promise<Set
   return new Set(userPresenceSchema.parse(response).onlineUserIds);
 }
 
-export async function createUser(input: AdminCreateUserInput): Promise<AdminUserDetail> {
+export async function createUser(
+  input: AdminCreateUserInput,
+): Promise<AdminUserDetail> {
   const payload = adminCreateUserSchema.parse(input);
   const response = await apiRequest<unknown>(userPaths.list, {
     method: "POST",

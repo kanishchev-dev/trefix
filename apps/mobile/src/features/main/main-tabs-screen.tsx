@@ -9,7 +9,11 @@ import { ProgressScreen } from "../progress/screens/progress-screen";
 import { PushedScreen } from "./components/pushed-screen";
 import { TabBar } from "./components/tab-bar";
 import { RecordButton } from "../tracker/components/record-button";
-import { openStackScreen, useMainShell, type MainTabParamList } from "./main-routes";
+import {
+  openStackScreen,
+  useMainShell,
+  type MainTabParamList,
+} from "./main-routes";
 import { type MainTabKey } from "./main-types";
 import { PlanScreen } from "./screens/plan-screen";
 import { type ThemePreference } from "./screens/theme-settings-screen";
@@ -83,7 +87,12 @@ export function MainTabsScreen({
       <Tabs.Screen name="plan">
         {() => (
           <PushedScreen theme={theme} themeMode={themeMode}>
-            <PlanScreen copy={copy} language={userLanguage} theme={theme} themeMode={themeMode} />
+            <PlanScreen
+              copy={copy}
+              language={userLanguage}
+              theme={theme}
+              themeMode={themeMode}
+            />
           </PushedScreen>
         )}
       </Tabs.Screen>
@@ -98,7 +107,9 @@ export function MainTabsScreen({
               coachEnabled={preferences.coachEnabled}
               onOpenTrefix={openTrefix}
               onOpenRecords={() => push({ kind: "progress-records" })}
-              onOpenMetric={(metric) => push({ kind: "progress-metric", metric })}
+              onOpenMetric={(metric) =>
+                push({ kind: "progress-metric", metric })
+              }
               onOpenHeart={() => push({ kind: "profile-heart" })}
               onOpenSchedule={() => push({ kind: "profile-schedule" })}
             />

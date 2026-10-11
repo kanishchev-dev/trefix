@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { useKeepAwake } from "expo-keep-awake";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Gauge, Lock, Map as MapIcon, Pause, Play, SkipForward } from "lucide-react-native";
+import {
+  Gauge,
+  Lock,
+  Map as MapIcon,
+  Pause,
+  Play,
+  SkipForward,
+} from "lucide-react-native";
 
 import { withAlpha, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
@@ -33,27 +40,45 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
   const format = useUnitFormat(copy, language);
   const [locked, setLocked] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const { lines, markers } = useTrackLines(recorder.getTrack(), format.units, snapshot?.trackSize ?? 0);
+  const { lines, markers } = useTrackLines(
+    recorder.getTrack(),
+    format.units,
+    snapshot?.trackSize ?? 0,
+  );
 
   // The recording is left only through "Finish": the system back gesture must not drop it.
   useEffect(() => {
-    const subscription = BackHandler.addEventListener("hardwareBackPress", () => true);
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
     return () => subscription.remove();
   }, []);
 
   useEffect(() => {
-    if (snapshot?.view.status === "finished") replaceSubScreen({ kind: "tracker-summary" });
+    if (snapshot?.view.status === "finished")
+      replaceSubScreen({ kind: "tracker-summary" });
   }, [snapshot?.view.status]);
 
-  if (!snapshot) return <View style={[styles.root, { backgroundColor: theme.color.background }]} />;
+  if (!snapshot)
+    return (
+      <View
+        style={[styles.root, { backgroundColor: theme.color.background }]}
+      />
+    );
 
   const { view, config, meta } = snapshot;
   const withPlan = view.step !== null || view.planDone;
-  const canMap = mapsEnabled && config.environment !== "treadmill" && config.distanceMode === "gps";
+  const canMap =
+    mapsEnabled &&
+    config.environment !== "treadmill" &&
+    config.distanceMode === "gps";
   const mapShown = canMap && showMap;
   const paused = view.status === "paused";
-  const distanceUnit = format.units === "imperial" ? format.labels.mi : format.labels.km;
-  const paceUnit = format.units === "imperial" ? format.labels.perMi : format.labels.perKm;
+  const distanceUnit =
+    format.units === "imperial" ? format.labels.mi : format.labels.km;
+  const paceUnit =
+    format.units === "imperial" ? format.labels.perMi : format.labels.perKm;
   const statusText = paused
     ? t.paused
     : view.autoPaused
@@ -76,22 +101,53 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
 
   const medium = theme.typography.fontFamily.sans.medium;
   const semibold = theme.typography.fontFamily.sans.semibold;
-  const label = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const label = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
   const value = { color: theme.color.foreground, fontFamily: semibold };
 
   const secondary =
     config.environment === "trail"
-      ? { label: t.metrics.elevation, value: `${Math.round(view.elevationGainM)}`, unit: t.metrics.metres }
+      ? {
+          label: t.metrics.elevation,
+          value: `${Math.round(view.elevationGainM)}`,
+          unit: t.metrics.metres,
+        }
       : view.gps === "off"
-        ? { label: t.metrics.cadence, value: view.cadence ? String(view.cadence) : "–", unit: t.metrics.spm }
-        : { label: t.metrics.avgPace, value: formatPaceValue(view.avgPaceSecPerKm, format.units), unit: paceUnit };
+        ? {
+            label: t.metrics.cadence,
+            value: view.cadence ? String(view.cadence) : "–",
+            unit: t.metrics.spm,
+          }
+        : {
+            label: t.metrics.avgPace,
+            value: formatPaceValue(view.avgPaceSecPerKm, format.units),
+            unit: paceUnit,
+          };
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
+    <View
+      style={[
+        styles.root,
+        {
+          backgroundColor: theme.color.background,
+          paddingTop: insets.top + 12,
+          paddingBottom: insets.bottom + 16,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.statusRow}>
           <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.status, { color: theme.color.foreground, fontFamily: medium }]}>{statusText}</Text>
+          <Text
+            style={[
+              styles.status,
+              { color: theme.color.foreground, fontFamily: medium },
+            ]}
+          >
+            {statusText}
+          </Text>
         </View>
         {canMap ? (
           <Pressable
@@ -99,9 +155,17 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
             accessibilityLabel={mapShown ? t.showMetrics : t.showMap}
             onPress={() => setShowMap(!mapShown)}
             hitSlop={8}
-            style={({ pressed }) => [styles.headerButton, { backgroundColor: theme.color.controlSecondary }, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: theme.color.controlSecondary },
+              pressed && styles.pressed,
+            ]}
           >
-            {mapShown ? <Gauge color={theme.color.foreground} size={18} /> : <MapIcon color={theme.color.foreground} size={18} />}
+            {mapShown ? (
+              <Gauge color={theme.color.foreground} size={18} />
+            ) : (
+              <MapIcon color={theme.color.foreground} size={18} />
+            )}
           </Pressable>
         ) : null}
       </View>
@@ -125,58 +189,106 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
 
       {mapShown ? (
         <>
-          <TrackMap theme={theme} lines={lines} markers={markers} mode="follow" centerLabel={t.centerMap} style={styles.map} />
+          <TrackMap
+            theme={theme}
+            lines={lines}
+            markers={markers}
+            mode="follow"
+            centerLabel={t.centerMap}
+            style={styles.map}
+          />
           <View style={styles.compactRow}>
             {[
-              { key: "time", label: t.metrics.time, value: formatClock(view.movingMs), unit: null },
+              {
+                key: "time",
+                label: t.metrics.time,
+                value: formatClock(view.movingMs),
+                unit: null,
+              },
               {
                 key: "distance",
                 label: t.metrics.distance,
-                value: formatDistanceValue(view.distanceM, format.units, format.locale),
+                value: formatDistanceValue(
+                  view.distanceM,
+                  format.units,
+                  format.locale,
+                ),
                 unit: distanceUnit,
               },
-              { key: "pace", label: t.metrics.pace, value: formatPaceValue(view.currentPaceSecPerKm, format.units), unit: paceUnit },
+              {
+                key: "pace",
+                label: t.metrics.pace,
+                value: formatPaceValue(view.currentPaceSecPerKm, format.units),
+                unit: paceUnit,
+              },
             ].map((item) => (
               <View key={item.key} style={styles.cell}>
                 <Text style={[styles.metricLabel, label]}>{item.label}</Text>
                 <View style={styles.valueRow}>
                   <Text style={[styles.compactValue, value]}>{item.value}</Text>
-                  {item.unit ? <Text style={[styles.compactUnit, label]}>{item.unit}</Text> : null}
+                  {item.unit ? (
+                    <Text style={[styles.compactUnit, label]}>{item.unit}</Text>
+                  ) : null}
                 </View>
               </View>
             ))}
           </View>
         </>
       ) : (
-      <View style={styles.center}>
-        <Text style={[styles.metricLabel, label]}>{t.metrics.time}</Text>
-        <Text style={[withPlan ? styles.clockCompact : styles.clock, value]} accessibilityLabel={`${t.metrics.time} ${formatClock(view.movingMs)}`}>
-          {formatClock(view.movingMs)}
-        </Text>
+        <View style={styles.center}>
+          <Text style={[styles.metricLabel, label]}>{t.metrics.time}</Text>
+          <Text
+            style={[withPlan ? styles.clockCompact : styles.clock, value]}
+            accessibilityLabel={`${t.metrics.time} ${formatClock(view.movingMs)}`}
+          >
+            {formatClock(view.movingMs)}
+          </Text>
 
-        <Text style={[styles.metricLabel, label, withPlan ? styles.gapTopCompact : styles.gapTop]}>{t.metrics.distance}</Text>
-        <View style={styles.valueRow}>
-          <Text style={[withPlan ? styles.distanceCompact : styles.distance, value]}>{formatDistanceValue(view.distanceM, format.units, format.locale)}</Text>
-          <Text style={[styles.unit, label]}>{distanceUnit}</Text>
-        </View>
+          <Text
+            style={[
+              styles.metricLabel,
+              label,
+              withPlan ? styles.gapTopCompact : styles.gapTop,
+            ]}
+          >
+            {t.metrics.distance}
+          </Text>
+          <View style={styles.valueRow}>
+            <Text
+              style={[
+                withPlan ? styles.distanceCompact : styles.distance,
+                value,
+              ]}
+            >
+              {formatDistanceValue(view.distanceM, format.units, format.locale)}
+            </Text>
+            <Text style={[styles.unit, label]}>{distanceUnit}</Text>
+          </View>
 
-        <View style={[styles.grid, withPlan ? styles.gapTopCompact : styles.gapTop]}>
-          <View style={styles.cell}>
-            <Text style={[styles.metricLabel, label]}>{t.metrics.pace}</Text>
-            <View style={styles.valueRow}>
-              <Text style={[styles.small, value]}>{formatPaceValue(view.currentPaceSecPerKm, format.units)}</Text>
-              <Text style={[styles.unit, label]}>{paceUnit}</Text>
+          <View
+            style={[
+              styles.grid,
+              withPlan ? styles.gapTopCompact : styles.gapTop,
+            ]}
+          >
+            <View style={styles.cell}>
+              <Text style={[styles.metricLabel, label]}>{t.metrics.pace}</Text>
+              <View style={styles.valueRow}>
+                <Text style={[styles.small, value]}>
+                  {formatPaceValue(view.currentPaceSecPerKm, format.units)}
+                </Text>
+                <Text style={[styles.unit, label]}>{paceUnit}</Text>
+              </View>
+            </View>
+            <View style={styles.cell}>
+              <Text style={[styles.metricLabel, label]}>{secondary.label}</Text>
+              <View style={styles.valueRow}>
+                <Text style={[styles.small, value]}>{secondary.value}</Text>
+                <Text style={[styles.unit, label]}>{secondary.unit}</Text>
+              </View>
             </View>
           </View>
-          <View style={styles.cell}>
-            <Text style={[styles.metricLabel, label]}>{secondary.label}</Text>
-            <View style={styles.valueRow}>
-              <Text style={[styles.small, value]}>{secondary.value}</Text>
-              <Text style={[styles.unit, label]}>{secondary.unit}</Text>
-            </View>
-          </View>
         </View>
-      </View>
       )}
 
       {locked ? (
@@ -184,10 +296,20 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
           accessibilityLabel={t.unlockHint}
           onHold={() => setLocked(false)}
           fillColor={withAlpha(theme.color.foreground, 0.15)}
-          style={[styles.wide, { backgroundColor: theme.color.controlSecondary }]}
+          style={[
+            styles.wide,
+            { backgroundColor: theme.color.controlSecondary },
+          ]}
         >
           <Lock color={theme.color.foreground} size={20} />
-          <Text style={[styles.buttonLabel, { color: theme.color.foreground, fontFamily: semibold }]}>{t.unlockHint}</Text>
+          <Text
+            style={[
+              styles.buttonLabel,
+              { color: theme.color.foreground, fontFamily: semibold },
+            ]}
+          >
+            {t.unlockHint}
+          </Text>
         </HoldButton>
       ) : (
         <View style={styles.controls}>
@@ -195,7 +317,11 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
             accessibilityRole="button"
             accessibilityLabel={t.lock}
             onPress={() => setLocked(true)}
-            style={({ pressed }) => [styles.round, { backgroundColor: theme.color.controlSecondary }, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.round,
+              { backgroundColor: theme.color.controlSecondary },
+              pressed && styles.pressed,
+            ]}
           >
             <Lock color={theme.color.foreground} size={22} />
           </Pressable>
@@ -207,7 +333,17 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
               fillColor={withAlpha(theme.color.primaryForeground, 0.25)}
               style={[styles.main, { backgroundColor: theme.color.danger }]}
             >
-              <Text style={[styles.buttonLabel, { color: theme.color.primaryForeground, fontFamily: semibold }]}>{t.finish}</Text>
+              <Text
+                style={[
+                  styles.buttonLabel,
+                  {
+                    color: theme.color.primaryForeground,
+                    fontFamily: semibold,
+                  },
+                ]}
+              >
+                {t.finish}
+              </Text>
             </HoldButton>
           ) : null}
 
@@ -215,16 +351,31 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
             accessibilityRole="button"
             accessibilityLabel={paused ? t.resume : t.pause}
             onPress={() => (paused ? recorder.resume() : recorder.pause())}
-            style={({ pressed }) => [styles.main, { backgroundColor: theme.color.primary }, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.main,
+              { backgroundColor: theme.color.primary },
+              pressed && styles.pressed,
+            ]}
           >
-            {paused ? <Play color={theme.color.primaryForeground} size={22} /> : <Pause color={theme.color.primaryForeground} size={22} />}
-            <Text style={[styles.buttonLabel, { color: theme.color.primaryForeground, fontFamily: semibold }]}>
+            {paused ? (
+              <Play color={theme.color.primaryForeground} size={22} />
+            ) : (
+              <Pause color={theme.color.primaryForeground} size={22} />
+            )}
+            <Text
+              style={[
+                styles.buttonLabel,
+                { color: theme.color.primaryForeground, fontFamily: semibold },
+              ]}
+            >
               {paused ? t.resume : t.pause}
             </Text>
           </Pressable>
         </View>
       )}
-      {paused && !locked ? <Text style={[styles.hint, label]}>{t.holdToFinish}</Text> : null}
+      {paused && !locked ? (
+        <Text style={[styles.hint, label]}>{t.holdToFinish}</Text>
+      ) : null}
     </View>
   );
 }
@@ -232,7 +383,12 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 20 },
   header: { minHeight: 36, justifyContent: "center" },
-  statusRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
   headerButton: {
     position: "absolute",
     right: 0,
@@ -250,12 +406,37 @@ const styles = StyleSheet.create({
   status: { fontSize: 14, lineHeight: 18 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   metricLabel: { fontSize: 13, lineHeight: 18 },
-  clock: { fontSize: 72, lineHeight: 80, letterSpacing: -2, fontVariant: ["tabular-nums"] },
-  distance: { fontSize: 56, lineHeight: 64, letterSpacing: -1.5, fontVariant: ["tabular-nums"] },
-  clockCompact: { fontSize: 56, lineHeight: 64, letterSpacing: -1.5, fontVariant: ["tabular-nums"] },
-  distanceCompact: { fontSize: 40, lineHeight: 48, letterSpacing: -1, fontVariant: ["tabular-nums"] },
+  clock: {
+    fontSize: 72,
+    lineHeight: 80,
+    letterSpacing: -2,
+    fontVariant: ["tabular-nums"],
+  },
+  distance: {
+    fontSize: 56,
+    lineHeight: 64,
+    letterSpacing: -1.5,
+    fontVariant: ["tabular-nums"],
+  },
+  clockCompact: {
+    fontSize: 56,
+    lineHeight: 64,
+    letterSpacing: -1.5,
+    fontVariant: ["tabular-nums"],
+  },
+  distanceCompact: {
+    fontSize: 40,
+    lineHeight: 48,
+    letterSpacing: -1,
+    fontVariant: ["tabular-nums"],
+  },
   gapTopCompact: { marginTop: 14 },
-  planTitle: { fontSize: 13, lineHeight: 18, textAlign: "center", marginTop: 4 },
+  planTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 4,
+  },
   small: { fontSize: 30, lineHeight: 36, fontVariant: ["tabular-nums"] },
   unit: { fontSize: 15, lineHeight: 20, marginLeft: 6, marginBottom: 6 },
   valueRow: { flexDirection: "row", alignItems: "flex-end" },
@@ -263,7 +444,13 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", alignSelf: "stretch" },
   cell: { flex: 1, alignItems: "center" },
   controls: { flexDirection: "row", alignItems: "center", gap: 12 },
-  round: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  round: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   main: {
     flex: 1,
     height: 64,

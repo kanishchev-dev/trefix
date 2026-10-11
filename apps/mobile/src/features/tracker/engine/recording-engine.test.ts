@@ -5,14 +5,37 @@ import { RecordingEngine } from "./recording-engine";
 import type { EngineConfig, LocationSample } from "./types";
 
 const T0 = Date.parse("2026-10-11T06:00:00Z");
-const outdoor: EngineConfig = { environment: "outdoor", distanceMode: "gps", strideM: 1, autoPause: true };
+const outdoor: EngineConfig = {
+  environment: "outdoor",
+  distanceMode: "gps",
+  strideM: 1,
+  autoPause: true,
+};
 
 /** Northward run at `speed` m/s, one fix a second; ~1.11e-5 deg ≈ 1.235 m of latitude. */
-function fix(second: number, metres: number, overrides: Partial<LocationSample> = {}): LocationSample {
-  return { t: T0 + second * 1000, lat: 55.75 + metres / 111_195, lng: 37.62, alt: 150, acc: 5, speed: null, ...overrides };
+function fix(
+  second: number,
+  metres: number,
+  overrides: Partial<LocationSample> = {},
+): LocationSample {
+  return {
+    t: T0 + second * 1000,
+    lat: 55.75 + metres / 111_195,
+    lng: 37.62,
+    alt: 150,
+    acc: 5,
+    speed: null,
+    ...overrides,
+  };
 }
 
-function runStraight(engine: RecordingEngine, fromSec: number, toSec: number, speed: number, startM = 0): number {
+function runStraight(
+  engine: RecordingEngine,
+  fromSec: number,
+  toSec: number,
+  speed: number,
+  startM = 0,
+): number {
   let metres = startM;
   for (let second = fromSec; second <= toSec; second += 1) {
     engine.onLocation(fix(second, metres));
@@ -48,7 +71,8 @@ describe("RecordingEngine", () => {
   it("auto-pauses when the runner stops and takes the standing time back", () => {
     const engine = RecordingEngine.start(outdoor, T0);
     const at = runStraight(engine, 0, 60, 3);
-    for (let second = 61; second <= 90; second += 1) engine.onLocation(fix(second, at, { speed: 0 }));
+    for (let second = 61; second <= 90; second += 1)
+      engine.onLocation(fix(second, at, { speed: 0 }));
     expect(engine.state.autoPaused).toBe(true);
     runStraight(engine, 91, 120, 3, at + 3);
 
@@ -57,7 +81,9 @@ describe("RecordingEngine", () => {
     // 60 s before the stop + about 30 s after it; the 30 s of standing are not moving time.
     expect(view.movingMs).toBeGreaterThan(85_000);
     expect(view.movingMs).toBeLessThan(95_000);
-    expect(engine.state.pauses).toEqual([expect.objectContaining({ auto: true, startedAt: T0 + 61_000 })]);
+    expect(engine.state.pauses).toEqual([
+      expect.objectContaining({ auto: true, startedAt: T0 + 61_000 }),
+    ]);
   });
 
   it("counts steps while GPS is lost and resumes the track afterwards", () => {
@@ -82,11 +108,21 @@ describe("RecordingEngine", () => {
   });
 
   it("measures a treadmill run by steps and pauses when the steps stop", () => {
-    const engine = RecordingEngine.start({ environment: "treadmill", distanceMode: "time", strideM: 1.1, autoPause: true }, T0);
+    const engine = RecordingEngine.start(
+      {
+        environment: "treadmill",
+        distanceMode: "time",
+        strideM: 1.1,
+        autoPause: true,
+      },
+      T0,
+    );
     expect(engine.state.gps).toBe("off");
     engine.onSteps(0, T0);
-    for (let second = 1; second <= 60; second += 1) engine.onSteps(second * 3, T0 + second * 1000);
-    for (let second = 61; second <= 75; second += 1) engine.tick(T0 + second * 1000);
+    for (let second = 1; second <= 60; second += 1)
+      engine.onSteps(second * 3, T0 + second * 1000);
+    for (let second = 61; second <= 75; second += 1)
+      engine.tick(T0 + second * 1000);
     expect(engine.state.autoPaused).toBe(true);
     expect(engine.view(T0 + 75_000).movingMs).toBe(60_000);
     expect(engine.state.distanceM).toBeCloseTo(198, 0);
@@ -109,7 +145,9 @@ describe("RecordingEngine", () => {
     expect(view.distanceM).toBeCloseTo(93, 0);
     expect(view.elapsedMs).toBe(92_000);
     expect(view.movingMs).toBe(33_000);
-    expect(engine.state.pauses).toEqual([{ startedAt: T0 + 31_000, endedAt: T0 + 90_000, auto: false }]);
+    expect(engine.state.pauses).toEqual([
+      { startedAt: T0 + 31_000, endedAt: T0 + 90_000, auto: false },
+    ]);
   });
 
   it("learns the stride from GPS running with steps", () => {
@@ -127,7 +165,9 @@ describe("RecordingEngine", () => {
   it("restores from a snapshot and keeps going", () => {
     const engine = RecordingEngine.start(outdoor, T0);
     runStraight(engine, 0, 60, 3);
-    const restored = RecordingEngine.restore(JSON.parse(JSON.stringify(engine.state)));
+    const restored = RecordingEngine.restore(
+      JSON.parse(JSON.stringify(engine.state)),
+    );
     runStraight(restored, 61, 120, 3, 183);
     expect(restored.view(T0 + 120_000).distanceM).toBeCloseTo(360, -1);
   });
@@ -139,13 +179,25 @@ describe("RecordingEngine", () => {
 
 describe("barometer", () => {
   it("takes over the elevation from GPS with its own reference", () => {
-    const engine = RecordingEngine.start({ environment: "trail", distanceMode: "time", strideM: 1, autoPause: false }, 0);
+    const engine = RecordingEngine.start(
+      {
+        environment: "trail",
+        distanceMode: "time",
+        strideM: 1,
+        autoPause: false,
+      },
+      0,
+    );
     engine.onAltitude(150);
     engine.onAltitude(151.5);
     expect(engine.state.elevation.gainM).toBe(0);
     engine.onAltitude(154);
     engine.onAltitude(149);
-    expect(engine.state.elevation).toMatchObject({ gainM: 4, lossM: 5, source: "baro" });
+    expect(engine.state.elevation).toMatchObject({
+      gainM: 4,
+      lossM: 5,
+      source: "baro",
+    });
     engine.pause(1000);
     engine.onAltitude(170);
     expect(engine.state.elevation.gainM).toBe(4);

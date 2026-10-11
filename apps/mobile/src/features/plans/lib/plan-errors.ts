@@ -1,4 +1,8 @@
-import { ApiClientError, activePlanSummarySchema, type ActivePlanSummary } from "@workspace/api-client";
+import {
+  ApiClientError,
+  activePlanSummarySchema,
+  type ActivePlanSummary,
+} from "@workspace/api-client";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 
@@ -44,17 +48,25 @@ function errorDetails(error: unknown): Record<string, unknown> | null {
   if (!(error instanceof ApiClientError)) return null;
   const body = error.details as { details?: unknown } | null | undefined;
   const details = body?.details;
-  return details && typeof details === "object" ? (details as Record<string, unknown>) : null;
+  return details && typeof details === "object"
+    ? (details as Record<string, unknown>)
+    : null;
 }
 
 /** Summary of the plan in progress attached to `409 ACTIVE_PLAN_EXISTS`. */
 export function activePlanFromError(error: unknown): ActivePlanSummary | null {
-  const parsed = activePlanSummarySchema.safeParse(errorDetails(error)?.activePlan);
+  const parsed = activePlanSummarySchema.safeParse(
+    errorDetails(error)?.activePlan,
+  );
   return parsed.success ? parsed.data : null;
 }
 
 /** User-facing message for an error of any plans flow; never the raw server text. */
-export function planErrorMessage(error: unknown, copy: MainCopy, fallback?: string): string {
+export function planErrorMessage(
+  error: unknown,
+  copy: MainCopy,
+  fallback?: string,
+): string {
   const plansCopy = copy.plans;
   if (isNetworkError(error)) return plansCopy.errors.network;
   switch (getErrorCode(error)) {

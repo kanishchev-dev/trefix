@@ -1,22 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { type RecordAttempt, type RecordDistance } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { trackEvent } from "../../../lib/analytics";
-import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
 import { useToast } from "../../../shared/ui/toast";
 import { HeaderPlusButton } from "../../main/components/header";
 import { SheetActionsColumn } from "../../plans/components/plans-ui";
-import { Footnote, ProfileSection, ProfileSubScreen } from "../../profile/components/profile-sub-screen";
+import {
+  Footnote,
+  ProfileSection,
+  ProfileSubScreen,
+} from "../../profile/components/profile-sub-screen";
 import { AddResultSheet } from "../components/add-result-sheet";
 import { LineChart } from "../components/line-chart";
 import { sourceLabel } from "../components/progress-sections";
-import { useProgressMutation, useRecordHistory, useRecords } from "../hooks/use-progress-v2";
-import { dayMonth, distanceLabel, formatDuration } from "../lib/progress-format";
+import {
+  useProgressMutation,
+  useRecordHistory,
+  useRecords,
+} from "../hooks/use-progress-v2";
+import {
+  dayMonth,
+  distanceLabel,
+  formatDuration,
+} from "../lib/progress-format";
 
 type Props = {
   theme: ThemeTokens;
@@ -27,7 +47,13 @@ type Props = {
 };
 
 /** All-time bests per distance with forecasts and the attempt history of the selected one. */
-export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Props) {
+export function RecordsScreen({
+  theme,
+  themeMode,
+  copy,
+  language,
+  onBack,
+}: Props) {
   const r = copy.progress.recordsScreen;
   const records = useRecords();
   const [selected, setSelected] = useState<RecordDistance | null>(null);
@@ -37,7 +63,7 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
   const mutation = useProgressMutation();
   const { showToast } = useToast();
 
-  const items = records.data ?? [];
+  const items = useMemo(() => records.data ?? [], [records.data]);
 
   useEffect(() => {
     if (selected === null && items.length > 0) {
@@ -47,10 +73,18 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
 
   const attempts = history.data?.attempts ?? [];
   const sorted = [...attempts].sort((a, b) => a.date.localeCompare(b.date));
-  const first = sorted.length > 0 ? new Date(`${sorted[0].date}T00:00:00Z`).getTime() : 0;
-  const last = sorted.length > 0 ? new Date(`${sorted[sorted.length - 1].date}T00:00:00Z`).getTime() : 0;
+  const first =
+    sorted.length > 0 ? new Date(`${sorted[0].date}T00:00:00Z`).getTime() : 0;
+  const last =
+    sorted.length > 0
+      ? new Date(`${sorted[sorted.length - 1].date}T00:00:00Z`).getTime()
+      : 0;
   const points = sorted.map((attempt) => ({
-    x: last > first ? (new Date(`${attempt.date}T00:00:00Z`).getTime() - first) / (last - first) : 0.5,
+    x:
+      last > first
+        ? (new Date(`${attempt.date}T00:00:00Z`).getTime() - first) /
+          (last - first)
+        : 0.5,
     y: attempt.seconds,
   }));
 
@@ -60,10 +94,17 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
     setActionTarget(null);
     try {
       if (target.source === "result" && target.resultId) {
-        await mutation.mutateAsync({ kind: "delete", resultId: target.resultId });
+        await mutation.mutateAsync({
+          kind: "delete",
+          resultId: target.resultId,
+        });
         trackEvent("progress_result_deleted", { distance: selected ?? "" });
       } else if (target.workoutId) {
-        await mutation.mutateAsync({ kind: "exclude", workoutId: target.workoutId, excluded: true });
+        await mutation.mutateAsync({
+          kind: "exclude",
+          workoutId: target.workoutId,
+          excluded: true,
+        });
         trackEvent("progress_record_excluded", { distance: selected ?? "" });
       }
     } catch {
@@ -75,22 +116,37 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
     color: theme.color.foreground,
     fontFamily: theme.typography.fontFamily.sans[weight],
   });
-  const muted = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const muted = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
 
   return (
     <ProfileSubScreen
       title={r.title}
       onBack={onBack}
-      rightAction={<HeaderPlusButton theme={theme} themeMode={themeMode} onPress={() => setAddOpen(true)} />}
+      rightAction={
+        <HeaderPlusButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => setAddOpen(true)}
+        />
+      }
       theme={theme}
       themeMode={themeMode}
     >
       <ProfileSection>
         <View style={[styles.table, { backgroundColor: theme.color.card }]}>
           <View style={styles.tableRow}>
-            <Text style={[styles.colName, styles.headCell, muted]}>{r.distance}</Text>
-            <Text style={[styles.colValue, styles.headCell, muted]}>{r.best}</Text>
-            <Text style={[styles.colValue, styles.headCell, muted]}>{r.prediction}</Text>
+            <Text style={[styles.colName, styles.headCell, muted]}>
+              {r.distance}
+            </Text>
+            <Text style={[styles.colValue, styles.headCell, muted]}>
+              {r.best}
+            </Text>
+            <Text style={[styles.colValue, styles.headCell, muted]}>
+              {r.prediction}
+            </Text>
           </View>
           {items.map((item) => {
             const active = item.distance === selected;
@@ -108,14 +164,25 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
                   pressed && styles.pressed,
                 ]}
               >
-                <Text numberOfLines={1} style={[styles.colName, styles.cell, text("medium")]}>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.colName, styles.cell, text("medium")]}
+                >
                   {distanceLabel(copy, item.distance)}
                 </Text>
-                <Text style={[styles.colValue, styles.cell, item.best ? text("semibold") : muted]}>
+                <Text
+                  style={[
+                    styles.colValue,
+                    styles.cell,
+                    item.best ? text("semibold") : muted,
+                  ]}
+                >
                   {item.best ? formatDuration(item.best.seconds) : "—"}
                 </Text>
                 <Text style={[styles.colValue, styles.cell, muted]}>
-                  {item.predictionSeconds ? `~${formatDuration(item.predictionSeconds)}` : "—"}
+                  {item.predictionSeconds
+                    ? `~${formatDuration(item.predictionSeconds)}`
+                    : "—"}
                 </Text>
               </Pressable>
             );
@@ -126,21 +193,37 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
 
       {selected ? (
         <ProfileSection>
-          <SectionTitle text={fillTemplate(r.history, { distance: distanceLabel(copy, selected) })} theme={theme} />
+          <SectionTitle
+            text={fillTemplate(r.history, {
+              distance: distanceLabel(copy, selected),
+            })}
+            theme={theme}
+          />
           {attempts.length > 0 ? (
             <>
               {points.length > 1 ? (
-                <View style={[styles.chartCard, { backgroundColor: theme.color.card }]}>
+                <View
+                  style={[
+                    styles.chartCard,
+                    { backgroundColor: theme.color.card },
+                  ]}
+                >
                   <LineChart
                     points={points}
                     invert
                     height={96}
                     theme={theme}
-                    accessibilityLabel={fillTemplate(r.history, { distance: distanceLabel(copy, selected) })}
+                    accessibilityLabel={fillTemplate(r.history, {
+                      distance: distanceLabel(copy, selected),
+                    })}
                   />
                   <View style={styles.chartLabels}>
-                    <Text style={[styles.small, muted]}>{dayMonth(sorted[0].date, language, true)}</Text>
-                    <Text style={[styles.small, muted]}>{dayMonth(sorted[sorted.length - 1].date, language, true)}</Text>
+                    <Text style={[styles.small, muted]}>
+                      {dayMonth(sorted[0].date, language, true)}
+                    </Text>
+                    <Text style={[styles.small, muted]}>
+                      {dayMonth(sorted[sorted.length - 1].date, language, true)}
+                    </Text>
                   </View>
                 </View>
               ) : null}
@@ -155,8 +238,26 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
                   >
                     <ListRow
                       theme={theme}
-                      title={attempt.name ?? sourceLabel(copy, attempt.provider, attempt.kind, attempt.source)}
-                      description={[dayMonth(attempt.date, language, true), attempt.name ? sourceLabel(copy, attempt.provider, attempt.kind, attempt.source) : null]
+                      title={
+                        attempt.name ??
+                        sourceLabel(
+                          copy,
+                          attempt.provider,
+                          attempt.kind,
+                          attempt.source,
+                        )
+                      }
+                      description={[
+                        dayMonth(attempt.date, language, true),
+                        attempt.name
+                          ? sourceLabel(
+                              copy,
+                              attempt.provider,
+                              attempt.kind,
+                              attempt.source,
+                            )
+                          : null,
+                      ]
                         .filter(Boolean)
                         .join(" · ")}
                       value={formatDuration(attempt.seconds)}
@@ -175,7 +276,12 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
         </ProfileSection>
       ) : null}
 
-      <BottomSheet visible={actionTarget !== null} onClose={() => setActionTarget(null)} theme={theme} themeMode={themeMode}>
+      <BottomSheet
+        visible={actionTarget !== null}
+        onClose={() => setActionTarget(null)}
+        theme={theme}
+        themeMode={themeMode}
+      >
         <View style={styles.sheetContent}>
           <SheetBlock theme={theme}>
             <SheetActionsColumn>
@@ -186,7 +292,13 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
                 theme={theme}
                 themeMode={themeMode}
               />
-              <SheetButton label={r.cancel} variant="secondary" onPress={() => setActionTarget(null)} theme={theme} themeMode={themeMode} />
+              <SheetButton
+                label={r.cancel}
+                variant="secondary"
+                onPress={() => setActionTarget(null)}
+                theme={theme}
+                themeMode={themeMode}
+              />
             </SheetActionsColumn>
           </SheetBlock>
         </View>
@@ -207,7 +319,12 @@ export function RecordsScreen({ theme, themeMode, copy, language, onBack }: Prop
 
 const styles = StyleSheet.create({
   table: { borderRadius: 24, overflow: "hidden", paddingVertical: 4 },
-  tableRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 18, gap: 8 },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    gap: 8,
+  },
   bodyRow: { minHeight: 52, borderTopWidth: StyleSheet.hairlineWidth },
   headCell: { fontSize: 12, lineHeight: 16, paddingVertical: 10 },
   cell: { fontSize: 15, lineHeight: 20, fontVariant: ["tabular-nums"] },

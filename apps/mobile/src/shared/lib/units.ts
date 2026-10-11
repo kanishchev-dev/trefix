@@ -1,9 +1,22 @@
-/** Display conversion of metric values. The API always stores metric; `units` only affects what the user sees. */
-export type UnitSystem = "metric" | "imperial";
+import {
+  CM_PER_INCH,
+  formatMinutesSeconds,
+  formatNumber,
+  kgToDisplay,
+  kmToDisplay,
+  paceToDisplay,
+  type UnitSystem,
+} from "@workspace/utils";
 
-const KM_PER_MILE = 1.609344;
-const KG_PER_LB = 0.45359237;
-const CM_PER_INCH = 2.54;
+/** Display conversion of metric values: conversions live in `@workspace/utils`, labels in the app copy. */
+export {
+  displayToKg,
+  displayToKm,
+  formatNumber,
+  kgToDisplay,
+  kmToDisplay,
+  type UnitSystem,
+} from "@workspace/utils";
 
 type Labels = {
   km: string;
@@ -22,36 +35,30 @@ const round = (value: number, digits = 0): number => {
   return Math.round(value * factor) / factor;
 };
 
-/** Locale-aware number with a fixed number of decimals ("72,4" in ru). */
-export function formatNumber(value: number, digits: number, locale: string): string {
-  return new Intl.NumberFormat(locale, { minimumFractionDigits: 0, maximumFractionDigits: digits }).format(value);
-}
-
-export function kmToDisplay(km: number, units: UnitSystem): number {
-  return units === "imperial" ? km / KM_PER_MILE : km;
-}
-
-export function displayToKm(value: number, units: UnitSystem): number {
-  return units === "imperial" ? value * KM_PER_MILE : value;
-}
-
-export function kgToDisplay(kg: number, units: UnitSystem): number {
-  return units === "imperial" ? kg / KG_PER_LB : kg;
-}
-
-export function displayToKg(value: number, units: UnitSystem): number {
-  return units === "imperial" ? value * KG_PER_LB : value;
-}
-
-export function formatDistance(km: number, units: UnitSystem, labels: Labels, locale: string, digits = 1): string {
+export function formatDistance(
+  km: number,
+  units: UnitSystem,
+  labels: Labels,
+  locale: string,
+  digits = 1,
+): string {
   return `${formatNumber(round(kmToDisplay(km, units), digits), digits, locale)} ${units === "imperial" ? labels.mi : labels.km}`;
 }
 
-export function formatWeight(kg: number, units: UnitSystem, labels: Labels, locale: string): string {
+export function formatWeight(
+  kg: number,
+  units: UnitSystem,
+  labels: Labels,
+  locale: string,
+): string {
   return `${formatNumber(round(kgToDisplay(kg, units), 1), 1, locale)} ${units === "imperial" ? labels.lb : labels.kg}`;
 }
 
-export function formatHeight(cm: number, units: UnitSystem, labels: Labels): string {
+export function formatHeight(
+  cm: number,
+  units: UnitSystem,
+  labels: Labels,
+): string {
   if (units === "imperial") {
     const totalInches = Math.round(cm / CM_PER_INCH);
     return `${Math.floor(totalInches / 12)} ${labels.ft} ${totalInches % 12} ${labels.in}`;
@@ -60,11 +67,12 @@ export function formatHeight(cm: number, units: UnitSystem, labels: Labels): str
 }
 
 /** Pace from seconds per km, as m:ss per km or per mile. */
-export function formatPace(secondsPerKm: number, units: UnitSystem, labels: Labels): string {
-  const seconds = Math.round(units === "imperial" ? secondsPerKm * KM_PER_MILE : secondsPerKm);
-  const minutes = Math.floor(seconds / 60);
-  const rest = String(seconds % 60).padStart(2, "0");
-  return `${minutes}:${rest} ${units === "imperial" ? labels.perMi : labels.perKm}`;
+export function formatPace(
+  secondsPerKm: number,
+  units: UnitSystem,
+  labels: Labels,
+): string {
+  return `${formatMinutesSeconds(paceToDisplay(secondsPerKm, units))} ${units === "imperial" ? labels.perMi : labels.perKm}`;
 }
 
 export type UnitLabels = Labels;

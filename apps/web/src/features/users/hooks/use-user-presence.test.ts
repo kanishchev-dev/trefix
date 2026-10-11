@@ -19,7 +19,9 @@ describe("userPresenceKeys", () => {
   });
 
   it("is stable regardless of the order the ids arrived in", () => {
-    expect(userPresenceKeys.list(["b", "a"])).toEqual(userPresenceKeys.list(["a", "b"]));
+    expect(userPresenceKeys.list(["b", "a"])).toEqual(
+      userPresenceKeys.list(["a", "b"]),
+    );
   });
 });
 
@@ -31,7 +33,10 @@ describe("realtimeEventPresence", () => {
       meta: { emittedAt: "2024-01-01T00:00:00.000Z" },
     };
 
-    expect(realtimeEventPresence(payload)).toEqual({ userId: "user-1", online: true });
+    expect(realtimeEventPresence(payload)).toEqual({
+      userId: "user-1",
+      online: true,
+    });
   });
 
   it("tolerates a bare payload", () => {
@@ -62,7 +67,10 @@ describe("realtimeEventPresence", () => {
 describe("presence cache patching", () => {
   it("keeps a cached online set consistent with an event", () => {
     const queryClient = new QueryClient();
-    queryClient.setQueryData(userPresenceKeys.list(["user-1"]), new Set(["user-1"]));
+    queryClient.setQueryData(
+      userPresenceKeys.list(["user-1"]),
+      new Set(["user-1"]),
+    );
 
     const patch = (online: boolean) => {
       queryClient.setQueriesData<Set<string>>(
@@ -78,9 +86,17 @@ describe("presence cache patching", () => {
     };
 
     patch(true);
-    expect(queryClient.getQueryData<Set<string>>(userPresenceKeys.list(["user-1"]))?.has("user-2")).toBe(true);
+    expect(
+      queryClient
+        .getQueryData<Set<string>>(userPresenceKeys.list(["user-1"]))
+        ?.has("user-2"),
+    ).toBe(true);
 
     patch(false);
-    expect(queryClient.getQueryData<Set<string>>(userPresenceKeys.list(["user-1"]))?.has("user-2")).toBe(false);
+    expect(
+      queryClient
+        .getQueryData<Set<string>>(userPresenceKeys.list(["user-1"]))
+        ?.has("user-2"),
+    ).toBe(false);
   });
 });

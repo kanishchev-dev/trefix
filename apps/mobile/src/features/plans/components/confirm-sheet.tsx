@@ -3,7 +3,11 @@ import { ScrollView, Text } from "react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { InlineError, plansUiStyles, SheetActionsColumn } from "./plans-ui";
 
 type Props = {
@@ -87,7 +91,10 @@ export function ConfirmSheet({
             <Text
               style={[
                 plansUiStyles.bodyText,
-                { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular },
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
               ]}
             >
               {body}

@@ -89,10 +89,9 @@ describe("groupPermissionsByModule", () => {
     ]);
 
     expect(modules).toHaveLength(1);
-    expect(modules[0].resources[0].permissions.map((item) => item.name)).toEqual([
-      "users.delete",
-      "users.create",
-    ]);
+    expect(
+      modules[0].resources[0].permissions.map((item) => item.name),
+    ).toEqual(["users.delete", "users.create"]);
   });
 
   it("files permissions without a module into the ungrouped bucket", () => {
@@ -119,6 +118,9 @@ describe("groupPermissionsByModule", () => {
 
     groupPermissionsByModule(input);
 
-    expect(input.map((item) => item.name)).toEqual(["users.read", "users.create"]);
+    expect(input.map((item) => item.name)).toEqual([
+      "users.read",
+      "users.create",
+    ]);
   });
 });

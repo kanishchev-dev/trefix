@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
 import { type ThemeTokens } from "@workspace/tokens";
 
@@ -20,19 +25,37 @@ const INSET = 2;
 const TRAVEL = TRACK_WIDTH - KNOB_WIDTH - INSET * 2;
 
 /** Compact black-and-white switch: a capsule knob that springs across a 44×24 track. */
-export function Switch({ value, onValueChange, theme, disabled = false, accessibilityLabel }: Props) {
+export function Switch({
+  value,
+  onValueChange,
+  theme,
+  disabled = false,
+  accessibilityLabel,
+}: Props) {
   const progress = useSharedValue(value ? 1 : 0);
 
   useEffect(() => {
-    progress.value = withSpring(value ? 1 : 0, { damping: 18, stiffness: 260, mass: 0.7 });
+    progress.value = withSpring(value ? 1 : 0, {
+      damping: 18,
+      stiffness: 260,
+      mass: 0.7,
+    });
   }, [progress, value]);
 
   const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], [theme.color.switchTrackOff, theme.color.primary]),
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [theme.color.switchTrackOff, theme.color.primary],
+    ),
   }));
   const knobStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: progress.value * TRAVEL }],
-    backgroundColor: interpolateColor(progress.value, [0, 1], [theme.color.primary, theme.color.primaryForeground]),
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [theme.color.primary, theme.color.primaryForeground],
+    ),
   }));
 
   return (

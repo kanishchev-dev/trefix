@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { PLAN_NAME_MAX_LENGTH, PLAN_NOTES_MAX_LENGTH } from "@workspace/api-client";
+import {
+  PLAN_NAME_MAX_LENGTH,
+  PLAN_NOTES_MAX_LENGTH,
+} from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { GlassInput } from "../../../shared/ui/glass-input";
 import { planErrorMessage } from "../lib/plan-errors";
 import { InlineError, plansUiStyles } from "./plans-ui";
@@ -15,7 +22,10 @@ type Props = {
   initialName: string;
   initialNotes: string | null | undefined;
   /** Persists the values; rejects to keep the sheet open with an error. */
-  onSubmit: (values: { name: string; notes: string | null }) => Promise<void> | void;
+  onSubmit: (values: {
+    name: string;
+    notes: string | null;
+  }) => Promise<void> | void;
   onClose: () => void;
   theme: ThemeTokens;
   themeMode: ThemeMode;
@@ -113,9 +123,18 @@ export function PlanMetaSheet({
               style={styles.notesInput}
             />
             <Text
-              style={[styles.counter, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+              style={[
+                styles.counter,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
             >
-              {fillTemplate(metaCopy.counter, { count: notes.length, max: PLAN_NOTES_MAX_LENGTH })}
+              {fillTemplate(metaCopy.counter, {
+                count: notes.length,
+                max: PLAN_NOTES_MAX_LENGTH,
+              })}
             </Text>
           </View>
         </SheetBlock>

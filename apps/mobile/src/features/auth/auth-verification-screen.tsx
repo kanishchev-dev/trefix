@@ -3,19 +3,19 @@ import {
   Alert,
   Keyboard,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { type MobileAuthChallenge } from "@workspace/api-client";
-import { isDarkTheme, withAlpha, type ThemeTokens } from "@workspace/tokens";
+import { isDarkTheme, type ThemeTokens } from "@workspace/tokens";
 import { formatCountdown, type AuthCopy } from "../../locales";
-import { glassBorderColor } from "./components/glass-border";
+import { getErrorMessage } from "../../shared/lib/error-message";
+import { styles } from "./auth-verification-screen.styles";
+import { CodeCell, type HighlightState } from "./code-cell";
 
 type Props = {
   theme: ThemeTokens;
@@ -30,8 +30,6 @@ type Props = {
 const CODE_LENGTH = 4;
 /** A wrong code stays red this long, then the cells clear for the next try. */
 const ERROR_CLEAR_MS = 700;
-
-type HighlightState = "normal" | "error" | "success";
 
 export function AuthVerificationScreen({
   theme,
@@ -53,7 +51,8 @@ export function AuthVerificationScreen({
     challenge.resendAfterSeconds,
   );
   const [isResending, setIsResending] = useState(false);
-  const [highlightState, setHighlightState] = useState<HighlightState>("normal");
+  const [highlightState, setHighlightState] =
+    useState<HighlightState>("normal");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const normalizedCode = useMemo(
@@ -88,7 +87,9 @@ export function AuthVerificationScreen({
           setHighlightState("success");
         } catch (error) {
           setHighlightState("error");
-          setErrorMessage(error instanceof Error && error.message ? error.message : copy.errors.verificationFailed);
+          setErrorMessage(
+            getErrorMessage(error, copy.errors, copy.errors.verificationFailed),
+          );
           // Keep the keyboard up: clear the wrong code and let the user type again.
           if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
           errorTimeoutRef.current = setTimeout(() => {
@@ -100,7 +101,7 @@ export function AuthVerificationScreen({
       }
     }
     void triggerSubmit();
-  }, [normalizedCode, isSubmitting, onSubmitCode, copy.errors.verificationFailed]);
+  }, [normalizedCode, isSubmitting, onSubmitCode, copy.errors]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -167,9 +168,7 @@ export function AuthVerificationScreen({
       .catch((error) => {
         Alert.alert(
           copy.errors.verificationFailedTitle,
-          error instanceof Error
-            ? error.message
-            : copy.verification.resendFailed,
+          getErrorMessage(error, copy.errors, copy.verification.resendFailed),
         );
       })
       .finally(() => {
@@ -295,7 +294,10 @@ export function AuthVerificationScreen({
                 accessibilityLiveRegion="polite"
                 style={[
                   styles.errorText,
-                  { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
+                  {
+                    color: theme.color.danger,
+                    fontFamily: theme.typography.fontFamily.sans.regular,
+                  },
                 ]}
               >
                 {errorMessage}
@@ -364,209 +366,3 @@ export function AuthVerificationScreen({
     </TouchableWithoutFeedback>
   );
 }
-
-type CodeCellProps = {
-  theme: ThemeTokens;
-  value: string;
-  isActive: boolean;
-  highlightState: HighlightState;
-};
-
-function CodeCell({ theme, value, isActive, highlightState }: CodeCellProps) {
-  const borderColor =
-    highlightState === "error"
-      ? theme.color.dangerBorder
-      : glassBorderColor(theme, isActive || highlightState === "success");
-
-  const overlayColor =
-    highlightState === "error"
-      ? withAlpha(theme.color.danger, 0.08)
-      : highlightState === "success"
-        ? withAlpha(theme.color.foreground, 0.05)
-        : "transparent";
-
-  return (
-    <GlassView
-      glassEffectStyle="regular"
-      tintColor={theme.color.glassTint}
-      style={[
-        styles.codeCell,
-        {
-          borderColor,
-          backgroundColor:
-            overlayColor !== "transparent"
-              ? overlayColor
-              : theme.color.glassBackground,
-        },
-        highlightState === "success" && { transform: [{ scale: 1.02 }] },
-      ]}
-    >
-      {value ? (
-        <Text
-          style={[
-            styles.codeDigit,
-            {
-              color: highlightState === "error" ? theme.color.danger : theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.bold,
-            },
-          ]}
-        >
-          {value}
-        </Text>
-      ) : isActive && highlightState === "normal" ? (
-        <View
-          style={[
-            styles.cursor,
-            {
-              backgroundColor: theme.color.foreground,
-            },
-          ]}
-        />
-      ) : null}
-    </GlassView>
-  );
-}
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  orbTop: {
-    position: "absolute",
-    top: -72,
-    right: -36,
-    width: 220,
-    height: 220,
-    borderRadius: 220,
-  },
-  orbBottom: {
-    position: "absolute",
-    left: -72,
-    bottom: -80,
-    width: 280,
-    height: 280,
-    borderRadius: 280,
-  },
-  grid: {
-    position: "absolute",
-    left: -12,
-    right: -12,
-    bottom: 0,
-    height: 160,
-    justifyContent: "flex-end",
-    alignItems: "stretch",
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    gap: 10,
-  },
-  gridLine: {
-    height: 1,
-    borderRadius: 999,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  centerStack: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    gap: 18,
-    paddingTop: 10,
-    paddingBottom: 24,
-  },
-  title: {
-    fontSize: 26,
-    lineHeight: 30,
-    letterSpacing: -0.4,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    maxWidth: 320,
-  },
-  subtitleStrong: {
-    fontWeight: "700",
-  },
-  codeArea: {
-    alignItems: "center",
-    gap: 12,
-    width: "100%",
-  },
-  codeRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
-    width: "100%",
-  },
-  codeCell: {
-    flex: 1,
-    maxWidth: 56,
-    aspectRatio: 1,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  codeDigit: {
-    fontSize: 26,
-    lineHeight: 30,
-    includeFontPadding: false,
-  },
-  cursor: {
-    width: 2,
-    height: 26,
-    borderRadius: 999,
-  },
-  errorText: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  hiddenInput: {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    opacity: 0,
-  },
-  resendBlock: {
-    alignItems: "center",
-    gap: 4,
-    paddingTop: 8,
-  },
-  resendCaption: {
-    fontSize: 12,
-    lineHeight: 16,
-    textAlign: "center",
-  },
-  resendTimer: {
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: "center",
-  },
-  resendButton: {
-    width: "100%",
-    height: 56,
-    borderRadius: 9999,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  resendButtonBusy: {
-    opacity: 0.72,
-  },
-  resendLabel: {
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.88,
-  },
-});

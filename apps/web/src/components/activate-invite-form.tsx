@@ -101,9 +101,7 @@ export function ActivateInviteForm(): ReactElement {
           <CardTitle className="text-2xl">
             {t("auth.activationTitle")}
           </CardTitle>
-          <CardDescription>
-            {t("auth.activationDescription")}
-          </CardDescription>
+          <CardDescription>{t("auth.activationDescription")}</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -184,9 +182,7 @@ export function ActivateInviteForm(): ReactElement {
 
             <Field>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting
-                  ? t("auth.activating")
-                  : t("auth.activateAction")}
+                {isSubmitting ? t("auth.activating") : t("auth.activateAction")}
               </Button>
               <FieldDescription className="text-center text-muted-foreground">
                 {t("auth.backToLogin")}{" "}

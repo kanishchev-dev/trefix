@@ -12,7 +12,8 @@ export function usePlansList(group: PlanListGroup, enabled = true) {
     queryKey: planKeys.list(group),
     queryFn: ({ pageParam }) => listPlans(group, pageParam, PAGE_SIZE),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => (lastPage.meta.hasNext ? lastPage.meta.page + 1 : undefined),
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.hasNext ? lastPage.meta.page + 1 : undefined,
     enabled,
   });
 }

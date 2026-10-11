@@ -49,7 +49,9 @@ describe("avatar upload", () => {
    * `account.update`, the addressable one takes `users.update`.
    */
   it("posts the own avatar to the self-service route", async () => {
-    const fetchMock = mockFetch(jsonResponse({ avatarUrl: "https://api/me.png" }));
+    const fetchMock = mockFetch(
+      jsonResponse({ avatarUrl: "https://api/me.png" }),
+    );
 
     await expect(uploadOwnAvatar(blob())).resolves.toEqual({
       avatarUrl: "https://api/me.png",
@@ -63,7 +65,9 @@ describe("avatar upload", () => {
   });
 
   it("never sets a content-type, which would corrupt the multipart boundary", async () => {
-    const fetchMock = mockFetch(jsonResponse({ avatarUrl: "https://api/me.png" }));
+    const fetchMock = mockFetch(
+      jsonResponse({ avatarUrl: "https://api/me.png" }),
+    );
 
     await uploadOwnAvatar(blob());
 
@@ -87,7 +91,10 @@ describe("avatar upload", () => {
 
   it("reports the backend error code and message", async () => {
     mockFetch(
-      jsonResponse({ code: "AVATAR_INVALID_FILE", message: "Unsupported type" }, 400),
+      jsonResponse(
+        { code: "AVATAR_INVALID_FILE", message: "Unsupported type" },
+        400,
+      ),
     );
 
     await expect(uploadOwnAvatar(blob())).rejects.toMatchObject({

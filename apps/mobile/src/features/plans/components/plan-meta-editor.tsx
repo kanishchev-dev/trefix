@@ -14,7 +14,14 @@ type Props = {
 };
 
 /** Name and notes of a stored plan; the full notes and the version come from the plan details. */
-export function PlanMetaEditor({ planId, visible, onClose, theme, themeMode, copy }: Props) {
+export function PlanMetaEditor({
+  planId,
+  visible,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+}: Props) {
   const detailsQuery = usePlanDetails(planId);
   const updateMeta = useUpdatePlanMeta();
   const details = detailsQuery.data;

@@ -44,10 +44,7 @@ export function PlanTimeline({
       <View style={styles.timelineWrapper}>
         {/* Continuous Vertical Connecting Line */}
         <View
-          style={[
-            styles.timelineLine,
-            { backgroundColor: theme.color.border },
-          ]}
+          style={[styles.timelineLine, { backgroundColor: theme.color.border }]}
         />
 
         <View style={styles.weeksList}>
@@ -56,8 +53,7 @@ export function PlanTimeline({
             const isPhaseTransition =
               previousWeek && previousWeek.phase !== week.phase;
 
-            const phaseLabel =
-              planCopy.phases[week.phase] || week.phase;
+            const phaseLabel = planCopy.phases[week.phase] || week.phase;
 
             return (
               <View key={week.id} style={styles.weekItemWrapper}>

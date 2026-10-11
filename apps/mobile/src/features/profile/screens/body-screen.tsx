@@ -11,7 +11,11 @@ import { Switch } from "../../../shared/ui/switch";
 import { useToast } from "../../../shared/ui/toast";
 import { useStravaIntegration } from "../../main/hooks/use-integrations";
 import { BodyFieldsCard } from "../components/body-fields-card";
-import { Footnote, ProfileSection, ProfileSubScreen } from "../components/profile-sub-screen";
+import {
+  Footnote,
+  ProfileSection,
+  ProfileSubScreen,
+} from "../components/profile-sub-screen";
 import { useAthleteProfile } from "../hooks/use-athlete-profile";
 import { usePreferences, useUpdatePreferences } from "../hooks/use-preferences";
 import { profileErrorMessage } from "../lib/profile-format";
@@ -25,7 +29,13 @@ type Props = {
 };
 
 /** P2 — body: date of birth, sex, height, weight, and whether Strava keeps them updated. */
-export function BodyScreen({ theme, themeMode, copy, language, onBack }: Props) {
+export function BodyScreen({
+  theme,
+  themeMode,
+  copy,
+  language,
+  onBack,
+}: Props) {
   const { data: athlete } = useAthleteProfile();
   const { preferences } = usePreferences();
   const updatePreferences = useUpdatePreferences();
@@ -46,9 +56,20 @@ export function BodyScreen({ theme, themeMode, copy, language, onBack }: Props) 
   };
 
   return (
-    <ProfileSubScreen title={b.title} onBack={onBack} theme={theme} themeMode={themeMode}>
+    <ProfileSubScreen
+      title={b.title}
+      onBack={onBack}
+      theme={theme}
+      themeMode={themeMode}
+    >
       {athlete ? (
-        <BodyFieldsCard athlete={athlete} copy={copy} language={language} theme={theme} themeMode={themeMode} />
+        <BodyFieldsCard
+          athlete={athlete}
+          copy={copy}
+          language={language}
+          theme={theme}
+          themeMode={themeMode}
+        />
       ) : null}
       {stravaConnected ? (
         <ProfileSection>
@@ -65,7 +86,9 @@ export function BodyScreen({ theme, themeMode, copy, language, onBack }: Props) 
                     theme={theme}
                     value={preferences.stravaProfileSync}
                     accessibilityLabel={b.stravaSync}
-                    onValueChange={(value) => updatePreferences.mutate({ stravaProfileSync: value })}
+                    onValueChange={(value) =>
+                      updatePreferences.mutate({ stravaProfileSync: value })
+                    }
                   />
                 }
               />
@@ -82,7 +105,6 @@ export function BodyScreen({ theme, themeMode, copy, language, onBack }: Props) 
           <Footnote text={b.footnote} theme={theme} />
         </ProfileSection>
       ) : null}
-
     </ProfileSubScreen>
   );
 }

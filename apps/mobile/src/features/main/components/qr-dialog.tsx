@@ -24,7 +24,7 @@ export function QrDialog({
 }: QrDialogProps) {
   const insets = useSafeAreaInsets();
   // Generate QR code using public API for the referral link
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=workspace-auth://referral/${referralCode}&bgcolor=${themeMode === 'dark' ? '09090b' : 'ffffff'}&color=${themeMode === 'dark' ? 'ffffff' : '09090b'}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=workspace-auth://referral/${referralCode}&bgcolor=${themeMode === "dark" ? "09090b" : "ffffff"}&color=${themeMode === "dark" ? "ffffff" : "09090b"}`;
 
   return (
     <Modal
@@ -34,8 +34,15 @@ export function QrDialog({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <Pressable style={[styles.backdrop, { backgroundColor: theme.color.scrim }]} onPress={onClose}>
-          <BlurView intensity={20} style={StyleSheet.absoluteFill} tint={themeMode} />
+        <Pressable
+          style={[styles.backdrop, { backgroundColor: theme.color.scrim }]}
+          onPress={onClose}
+        >
+          <BlurView
+            intensity={20}
+            style={StyleSheet.absoluteFill}
+            tint={themeMode}
+          />
         </Pressable>
 
         <View style={styles.container}>
@@ -50,7 +57,9 @@ export function QrDialog({
             ]}
           >
             <View style={styles.handleContainer}>
-              <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+              <View
+                style={[styles.handle, { backgroundColor: theme.color.border }]}
+              />
             </View>
 
             <View style={styles.header}>
@@ -65,7 +74,11 @@ export function QrDialog({
               >
                 {copy.profile.qr.title}
               </Text>
-              <Pressable hitSlop={12} onPress={onClose} style={styles.closeButton}>
+              <Pressable
+                hitSlop={12}
+                onPress={onClose}
+                style={styles.closeButton}
+              >
                 <X color={theme.color.mutedForeground} size={20} />
               </Pressable>
             </View>
@@ -73,7 +86,12 @@ export function QrDialog({
             <View
               style={[
                 styles.qrContainer,
-                { backgroundColor: themeMode === 'dark' ? theme.color.background : theme.color.surface }
+                {
+                  backgroundColor:
+                    themeMode === "dark"
+                      ? theme.color.background
+                      : theme.color.surface,
+                },
               ]}
             >
               <Image

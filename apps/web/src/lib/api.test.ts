@@ -31,13 +31,17 @@ describe("request", () => {
   it("parses a JSON body", async () => {
     mockFetch(jsonResponse({ id: "1" }));
 
-    await expect(request<{ id: string }>("/api/admin/users")).resolves.toEqual({ id: "1" });
+    await expect(request<{ id: string }>("/api/admin/users")).resolves.toEqual({
+      id: "1",
+    });
   });
 
   it("returns undefined for 204 No Content", async () => {
     mockFetch(new Response(null, { status: 204 }));
 
-    await expect(request<void>("/api/admin/users/1", { method: "DELETE" })).resolves.toBeUndefined();
+    await expect(
+      request<void>("/api/admin/users/1", { method: "DELETE" }),
+    ).resolves.toBeUndefined();
   });
 
   /**
@@ -45,23 +49,32 @@ describe("request", () => {
    * those as JSON threw "Unexpected end of JSON input" right after a request
    * that had actually succeeded.
    */
-  it.each([200, 201])("treats an empty %i response as no data", async (status) => {
-    mockFetch(new Response("", { status }));
+  it.each([200, 201])(
+    "treats an empty %i response as no data",
+    async (status) => {
+      mockFetch(new Response("", { status }));
 
-    await expect(request<void>("/api/admin/users/1/permissions/2", { method: "POST" })).resolves.toBeUndefined();
-  });
+      await expect(
+        request<void>("/api/admin/users/1/permissions/2", { method: "POST" }),
+      ).resolves.toBeUndefined();
+    },
+  );
 
   it("throws an ApiClientError with the backend code on failure", async () => {
     mockFetch(
       jsonResponse({ message: "Not found", code: "PERMISSION_NOT_FOUND" }, 404),
     );
 
-    await expect(request("/api/admin/users/1")).rejects.toBeInstanceOf(ApiClientError);
+    await expect(request("/api/admin/users/1")).rejects.toBeInstanceOf(
+      ApiClientError,
+    );
   });
 
   it("survives an error response without a JSON body", async () => {
     mockFetch(new Response("upstream is down", { status: 502 }));
 
-    await expect(request("/api/admin/users")).rejects.toThrow(/Request failed with status 502/);
+    await expect(request("/api/admin/users")).rejects.toThrow(
+      /Request failed with status 502/,
+    );
   });
 });

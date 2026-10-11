@@ -18,7 +18,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { StatusBar } from "expo-status-bar";
 
-import { getMobileThemeTokens, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import {
+  getMobileThemeTokens,
+  type ThemeMode,
+  type ThemeTokens,
+} from "@workspace/tokens";
 import { AuthSocialButtons } from "./components/auth-social-buttons";
 import { AuthDivider } from "./components/auth-divider";
 import { AuthEmailField } from "./components/auth-email-field";

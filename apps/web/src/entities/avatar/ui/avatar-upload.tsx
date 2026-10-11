@@ -9,7 +9,11 @@ import {
 } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -83,7 +87,9 @@ function AvatarCropper({
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
+  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(
+    null,
+  );
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [zoom, setZoom] = useState(MIN_ZOOM);
@@ -130,7 +136,9 @@ function AvatarCropper({
       return;
     }
 
-    if (!(AVATAR_ACCEPTED_INPUT_TYPES as readonly string[]).includes(file.type)) {
+    if (
+      !(AVATAR_ACCEPTED_INPUT_TYPES as readonly string[]).includes(file.type)
+    ) {
       notifyError(t("avatar.invalidType"));
       return;
     }
@@ -214,7 +222,9 @@ function AvatarCropper({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("avatar.dialogTitle")}</DialogTitle>
-            <DialogDescription>{t("avatar.dialogDescription")}</DialogDescription>
+            <DialogDescription>
+              {t("avatar.dialogDescription")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
@@ -229,7 +239,9 @@ function AvatarCropper({
                   showGrid={false}
                   restrictPosition
                   onCropChange={setCrop}
-                  onCropComplete={(_area, areaPixels) => setCroppedArea(areaPixels)}
+                  onCropComplete={(_area, areaPixels) =>
+                    setCroppedArea(areaPixels)
+                  }
                   onZoomChange={setZoom}
                   objectFit="contain"
                 />

@@ -13,9 +13,17 @@ import {
   saveWorkoutSample,
   WorkoutActivityType,
 } from "@kingstinct/react-native-healthkit";
-import type { DeviceActivity, DeviceProfileMetricsRequest, DeviceScope } from "@workspace/api-client";
+import type {
+  DeviceActivity,
+  DeviceProfileMetricsRequest,
+  DeviceScope,
+} from "@workspace/api-client";
 
-import { mapAppleWorkout, type AppleWorkoutInput, type AppleWorkoutStats } from "../mapping/apple-health-mapper";
+import {
+  mapAppleWorkout,
+  type AppleWorkoutInput,
+  type AppleWorkoutStats,
+} from "../mapping/apple-health-mapper";
 import { localDateKey } from "../mapping/time";
 import { toKilograms } from "../mapping/units";
 import type {
@@ -57,7 +65,11 @@ const WRITE_TYPES = [
 const DEFAULT_ACCURACY_M = 10;
 
 /** HealthKit BiologicalSex: 0 notSet, 1 female, 2 male, 3 other. */
-const SEX_BY_HEALTHKIT: Record<number, DeviceProfileMetricsRequest["sex"]> = { 1: "female", 2: "male", 3: "other" };
+const SEX_BY_HEALTHKIT: Record<number, DeviceProfileMetricsRequest["sex"]> = {
+  1: "female",
+  2: "male",
+  3: "other",
+};
 
 /** iOS never tells whether read access was granted: these are the scopes that were requested. */
 const REQUESTED_SCOPES: DeviceScope[] = [
@@ -90,11 +102,21 @@ type WorkoutProxyLike = {
   getStatistic(
     type: string,
     unit?: string,
-  ): Promise<{ averageQuantity?: { quantity: number }; maximumQuantity?: { quantity: number }; sumQuantity?: { quantity: number } } | undefined>;
+  ): Promise<
+    | {
+        averageQuantity?: { quantity: number };
+        maximumQuantity?: { quantity: number };
+        sumQuantity?: { quantity: number };
+      }
+    | undefined
+  >;
 };
 
-async function statisticsOf(workout: WorkoutProxyLike, needDistance: boolean): Promise<AppleWorkoutStats> {
-  const safe = async <T,>(work: () => Promise<T>): Promise<T | undefined> => {
+async function statisticsOf(
+  workout: WorkoutProxyLike,
+  needDistance: boolean,
+): Promise<AppleWorkoutStats> {
+  const safe = async <T>(work: () => Promise<T>): Promise<T | undefined> => {
     try {
       return await work();
     } catch {
@@ -102,9 +124,20 @@ async function statisticsOf(workout: WorkoutProxyLike, needDistance: boolean): P
     }
   };
   const [heartRate, steps, distance] = await Promise.all([
-    safe(() => workout.getStatistic("HKQuantityTypeIdentifierHeartRate", "count/min")),
-    safe(() => workout.getStatistic("HKQuantityTypeIdentifierStepCount", "count")),
-    needDistance ? safe(() => workout.getStatistic("HKQuantityTypeIdentifierDistanceWalkingRunning", "m")) : undefined,
+    safe(() =>
+      workout.getStatistic("HKQuantityTypeIdentifierHeartRate", "count/min"),
+    ),
+    safe(() =>
+      workout.getStatistic("HKQuantityTypeIdentifierStepCount", "count"),
+    ),
+    needDistance
+      ? safe(() =>
+          workout.getStatistic(
+            "HKQuantityTypeIdentifierDistanceWalkingRunning",
+            "m",
+          ),
+        )
+      : undefined,
   ]);
   return {
     averageHeartRate: heartRate?.averageQuantity?.quantity,
@@ -140,7 +173,10 @@ export const appleHealthSource: DeviceHealthSource = {
   },
 
   async readWorkoutChanges(cursor, since): Promise<WorkoutChangesPage> {
-    const state = parseCursor(cursor) ?? { anchor: "", since: since.toISOString() };
+    const state = parseCursor(cursor) ?? {
+      anchor: "",
+      since: since.toISOString(),
+    };
     const response = await queryWorkoutSamplesWithAnchor({
       limit: PAGE_SIZE,
       anchor: state.anchor || undefined,
@@ -162,8 +198,13 @@ export const appleHealthSource: DeviceHealthSource = {
 
     return {
       activities,
-      deletedSourceActivityIds: response.deletedSamples.map((sample) => sample.uuid),
-      nextCursor: JSON.stringify({ anchor: response.newAnchor, since: state.since } satisfies AppleCursor),
+      deletedSourceActivityIds: response.deletedSamples.map(
+        (sample) => sample.uuid,
+      ),
+      nextCursor: JSON.stringify({
+        anchor: response.newAnchor,
+        since: state.since,
+      } satisfies AppleCursor),
       hasMore: response.workouts.length >= PAGE_SIZE,
     };
   },
@@ -171,8 +212,13 @@ export const appleHealthSource: DeviceHealthSource = {
   async readProfileMetrics(now): Promise<DeviceProfileMetricsRequest> {
     const metrics: DeviceProfileMetricsRequest = {};
     try {
-      const weight = await getMostRecentQuantitySample("HKQuantityTypeIdentifierBodyMass", "kg");
-      const valueKg = weight ? toKilograms({ quantity: weight.quantity, unit: weight.unit }) : undefined;
+      const weight = await getMostRecentQuantitySample(
+        "HKQuantityTypeIdentifierBodyMass",
+        "kg",
+      );
+      const valueKg = weight
+        ? toKilograms({ quantity: weight.quantity, unit: weight.unit })
+        : undefined;
       if (weight && valueKg) {
         metrics.weight = {
           valueKg: Math.round(valueKg * 10) / 10,
@@ -184,7 +230,10 @@ export const appleHealthSource: DeviceHealthSource = {
       // No access or no data: the profile keeps its value.
     }
     try {
-      const height = await getMostRecentQuantitySample("HKQuantityTypeIdentifierHeight", "cm");
+      const height = await getMostRecentQuantitySample(
+        "HKQuantityTypeIdentifierHeight",
+        "cm",
+      );
       if (height && height.quantity > 0) {
         metrics.height = {
           valueCm: Math.round(height.quantity),
@@ -209,19 +258,28 @@ export const appleHealthSource: DeviceHealthSource = {
       // Same as above.
     }
     try {
-      const samples = await queryQuantitySamples("HKQuantityTypeIdentifierRestingHeartRate", {
-        limit: RESTING_HR_DAYS * 2,
-        ascending: false,
-        unit: "count/min",
-        filter: { date: { startDate: new Date(now.getTime() - RESTING_HR_DAYS * DAY_MS) } },
-      });
+      const samples = await queryQuantitySamples(
+        "HKQuantityTypeIdentifierRestingHeartRate",
+        {
+          limit: RESTING_HR_DAYS * 2,
+          ascending: false,
+          unit: "count/min",
+          filter: {
+            date: {
+              startDate: new Date(now.getTime() - RESTING_HR_DAYS * DAY_MS),
+            },
+          },
+        },
+      );
       const byDay = new Map<string, number>();
       for (const sample of samples) {
         const day = localDateKey(new Date(sample.startDate));
         if (!byDay.has(day)) byDay.set(day, Math.round(sample.quantity));
       }
       if (byDay.size > 0) {
-        metrics.restingHeartRate = [...byDay.entries()].map(([date, bpm]) => ({ date, bpm })).slice(0, RESTING_HR_DAYS);
+        metrics.restingHeartRate = [...byDay.entries()]
+          .map(([date, bpm]) => ({ date, bpm }))
+          .slice(0, RESTING_HR_DAYS);
       }
     } catch {
       // Same as above.
@@ -243,7 +301,10 @@ export const appleHealthSource: DeviceHealthSource = {
 
   async requestWriteAccess(): Promise<boolean> {
     await requestAuthorization({ toShare: [...WRITE_TYPES] });
-    return authorizationStatusFor("HKWorkoutTypeIdentifier") === AuthorizationStatus.sharingAuthorized;
+    return (
+      authorizationStatusFor("HKWorkoutTypeIdentifier") ===
+      AuthorizationStatus.sharingAuthorized
+    );
   },
 
   async saveRecordedRun(run: RecordedRunExport): Promise<void> {
@@ -258,7 +319,8 @@ export const appleHealthSource: DeviceHealthSource = {
       ...(run.energyKcal
         ? [
             {
-              quantityType: "HKQuantityTypeIdentifierActiveEnergyBurned" as const,
+              quantityType:
+                "HKQuantityTypeIdentifierActiveEnergyBurned" as const,
               quantity: run.energyKcal,
               unit: "kcal",
               startDate: run.startedAt,
@@ -293,10 +355,14 @@ export const appleHealthSource: DeviceHealthSource = {
   },
 
   async readHeartRate(from: Date, to: Date): Promise<HeartRateSummary | null> {
-    const stats = await queryStatisticsForQuantity("HKQuantityTypeIdentifierHeartRate", ["discreteAverage", "discreteMax"], {
-      filter: { date: { startDate: from, endDate: to } },
-      unit: "count/min",
-    });
+    const stats = await queryStatisticsForQuantity(
+      "HKQuantityTypeIdentifierHeartRate",
+      ["discreteAverage", "discreteMax"],
+      {
+        filter: { date: { startDate: from, endDate: to } },
+        unit: "count/min",
+      },
+    );
     const avg = stats.averageQuantity?.quantity;
     const max = stats.maximumQuantity?.quantity;
     return avg && max ? { avg: Math.round(avg), max: Math.round(max) } : null;
@@ -311,4 +377,3 @@ export const appleHealthSource: DeviceHealthSource = {
     await Linking.openSettings();
   },
 };
-

@@ -27,20 +27,40 @@ export type StepProgress = {
   next: ExecutionStep | null;
 };
 
-export function startPlan(steps: ExecutionStep[], movingMs: number, distanceM: number): PlanState {
-  return { steps, current: 0, stepStartMs: movingMs, stepStartM: distanceM, laps: [] };
+export function startPlan(
+  steps: ExecutionStep[],
+  movingMs: number,
+  distanceM: number,
+): PlanState {
+  return {
+    steps,
+    current: 0,
+    stepStartMs: movingMs,
+    stepStartM: distanceM,
+    laps: [],
+  };
 }
 
-function stepDone(step: ExecutionStep, elapsedMs: number, coveredM: number): boolean {
+function stepDone(
+  step: ExecutionStep,
+  elapsedMs: number,
+  coveredM: number,
+): boolean {
   if (step.durationSec !== null) return elapsedMs >= step.durationSec * 1000;
   if (step.distanceM !== null) return coveredM >= step.distanceM;
   return false;
 }
 
-function lapOf(plan: PlanState, step: ExecutionStep, endMs: number, endM: number): RecordedLap {
+function lapOf(
+  plan: PlanState,
+  step: ExecutionStep,
+  endMs: number,
+  endM: number,
+): RecordedLap {
   const actualSec = Math.round((endMs - plan.stepStartMs) / 1000);
   const actualM = Math.round(endM - plan.stepStartM);
-  const avgPace = actualM >= 50 ? Math.round((actualSec / actualM) * 1000) : null;
+  const avgPace =
+    actualM >= 50 ? Math.round((actualSec / actualM) * 1000) : null;
   const target = step.targetPace;
   return {
     index: step.index,
@@ -52,7 +72,8 @@ function lapOf(plan: PlanState, step: ExecutionStep, endMs: number, endM: number
     avgPaceSecPerKm: avgPace,
     inTarget:
       target && avgPace !== null
-        ? avgPace >= target.minSecPerKm - PACE_TOLERANCE_SEC && avgPace <= target.maxSecPerKm + PACE_TOLERANCE_SEC
+        ? avgPace >= target.minSecPerKm - PACE_TOLERANCE_SEC &&
+          avgPace <= target.maxSecPerKm + PACE_TOLERANCE_SEC
         : null,
   };
 }
@@ -62,14 +83,27 @@ function lapOf(plan: PlanState, step: ExecutionStep, endMs: number, endM: number
  * exactly at its duration; the overshoot of that tick goes to the next step.
  * Returns the indexes of the steps that started.
  */
-export function advancePlan(plan: PlanState, movingMs: number, distanceM: number): number[] {
+export function advancePlan(
+  plan: PlanState,
+  movingMs: number,
+  distanceM: number,
+): number[] {
   const started: number[] = [];
   while (plan.current < plan.steps.length) {
     const step = plan.steps[plan.current]!;
-    if (!stepDone(step, movingMs - plan.stepStartMs, distanceM - plan.stepStartM)) break;
-    const endMs = step.durationSec !== null ? plan.stepStartMs + step.durationSec * 1000 : movingMs;
-    const endM = step.distanceM !== null ? plan.stepStartM + step.distanceM : distanceM;
-    plan.laps.push(lapOf(plan, step, Math.min(endMs, movingMs), Math.min(endM, distanceM)));
+    if (
+      !stepDone(step, movingMs - plan.stepStartMs, distanceM - plan.stepStartM)
+    )
+      break;
+    const endMs =
+      step.durationSec !== null
+        ? plan.stepStartMs + step.durationSec * 1000
+        : movingMs;
+    const endM =
+      step.distanceM !== null ? plan.stepStartM + step.distanceM : distanceM;
+    plan.laps.push(
+      lapOf(plan, step, Math.min(endMs, movingMs), Math.min(endM, distanceM)),
+    );
     plan.current += 1;
     plan.stepStartMs = Math.min(endMs, movingMs);
     plan.stepStartM = Math.min(endM, distanceM);
@@ -79,7 +113,11 @@ export function advancePlan(plan: PlanState, movingMs: number, distanceM: number
 }
 
 /** The runner ends the running step early ("next step"). */
-export function skipStep(plan: PlanState, movingMs: number, distanceM: number): number | null {
+export function skipStep(
+  plan: PlanState,
+  movingMs: number,
+  distanceM: number,
+): number | null {
   if (plan.current >= plan.steps.length) return null;
   plan.laps.push(lapOf(plan, plan.steps[plan.current]!, movingMs, distanceM));
   plan.current += 1;
@@ -89,7 +127,11 @@ export function skipStep(plan: PlanState, movingMs: number, distanceM: number): 
 }
 
 /** Closes the unfinished step at the end of the run, when something was run in it. */
-export function closePlan(plan: PlanState, movingMs: number, distanceM: number): void {
+export function closePlan(
+  plan: PlanState,
+  movingMs: number,
+  distanceM: number,
+): void {
   if (plan.current >= plan.steps.length) return;
   if (movingMs - plan.stepStartMs >= 1000) {
     plan.laps.push(lapOf(plan, plan.steps[plan.current]!, movingMs, distanceM));
@@ -97,13 +139,23 @@ export function closePlan(plan: PlanState, movingMs: number, distanceM: number):
   plan.current = plan.steps.length;
 }
 
-export function stepProgress(plan: PlanState, movingMs: number, distanceM: number): StepProgress | null {
+export function stepProgress(
+  plan: PlanState,
+  movingMs: number,
+  distanceM: number,
+): StepProgress | null {
   const step = plan.steps[plan.current];
   if (!step) return null;
   const elapsedMs = movingMs - plan.stepStartMs;
   const coveredM = distanceM - plan.stepStartM;
-  const remainingSec = step.durationSec !== null ? Math.max(0, Math.ceil(step.durationSec - elapsedMs / 1000)) : null;
-  const remainingM = step.distanceM !== null ? Math.max(0, Math.round(step.distanceM - coveredM)) : null;
+  const remainingSec =
+    step.durationSec !== null
+      ? Math.max(0, Math.ceil(step.durationSec - elapsedMs / 1000))
+      : null;
+  const remainingM =
+    step.distanceM !== null
+      ? Math.max(0, Math.round(step.distanceM - coveredM))
+      : null;
   const fraction =
     step.durationSec !== null
       ? Math.min(1, elapsedMs / (step.durationSec * 1000))
@@ -121,7 +173,10 @@ export function stepProgress(plan: PlanState, movingMs: number, distanceM: numbe
   };
 }
 
-export function paceStatus(step: ExecutionStep, paceSecPerKm: number | null): PaceStatus | null {
+export function paceStatus(
+  step: ExecutionStep,
+  paceSecPerKm: number | null,
+): PaceStatus | null {
   const target = step.targetPace;
   if (!target || paceSecPerKm === null) return null;
   if (paceSecPerKm < target.minSecPerKm - PACE_TOLERANCE_SEC) return "fast";

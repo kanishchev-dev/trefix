@@ -4,7 +4,11 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { type PlanChangePreview } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
 
-import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-form";
 import {
   buildDiffSummary,
@@ -26,16 +30,31 @@ type Props = {
 };
 
 /** "What changes" of a plan: summary, warnings and the changed weeks. */
-export function PlanDiffView({ preview, describeWorkout, copy, language, theme }: Props) {
+export function PlanDiffView({
+  preview,
+  describeWorkout,
+  copy,
+  language,
+  theme,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const context = { copy, language };
   const summary = useMemo(
-    () => buildDiffSummary(preview.diff, context, { resultingEndDate: preview.resultingEndDate }),
+    () =>
+      buildDiffSummary(preview.diff, context, {
+        resultingEndDate: preview.resultingEndDate,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [preview, copy, language],
   );
   const weeks = useMemo(
-    () => buildDiffWeeks(preview.diff, context, shortDayNamesFor(language), describeWorkout),
+    () =>
+      buildDiffWeeks(
+        preview.diff,
+        context,
+        shortDayNamesFor(language),
+        describeWorkout,
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [preview, copy, language, describeWorkout],
   );
@@ -50,7 +69,15 @@ export function PlanDiffView({ preview, describeWorkout, copy, language, theme }
         </Notice>
       ))}
 
-      {empty ? <DiffText line={{ text: copy.plans.diff.noChanges, accessibilityLabel: copy.plans.diff.noChanges }} theme={theme} /> : null}
+      {empty ? (
+        <DiffText
+          line={{
+            text: copy.plans.diff.noChanges,
+            accessibilityLabel: copy.plans.diff.noChanges,
+          }}
+          theme={theme}
+        />
+      ) : null}
 
       {summary.map((line) => (
         <DiffText key={line.text} line={line} theme={theme} bullet />
@@ -58,18 +85,42 @@ export function PlanDiffView({ preview, describeWorkout, copy, language, theme }
 
       {visibleWeeks.map((week) => (
         <View key={week.weekNumber} style={styles.week}>
-          <Text style={[styles.weekTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            style={[
+              styles.weekTitle,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {week.title}
           </Text>
           {week.lines.map((line, index) => (
-            <DiffText key={`${week.weekNumber}-${index}`} line={line} theme={theme} />
+            <DiffText
+              key={`${week.weekNumber}-${index}`}
+              line={line}
+              theme={theme}
+            />
           ))}
         </View>
       ))}
 
       {!expanded && weeks.length > COLLAPSED_WEEKS ? (
-        <Pressable accessibilityRole="button" hitSlop={8} onPress={() => setExpanded(true)}>
-          <Text style={[styles.more, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => setExpanded(true)}
+        >
+          <Text
+            style={[
+              styles.more,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.semibold,
+              },
+            ]}
+          >
             {fillTemplate(copy.plans.diff.showAll, { count: weeks.length })}
           </Text>
         </Pressable>
@@ -78,13 +129,31 @@ export function PlanDiffView({ preview, describeWorkout, copy, language, theme }
   );
 }
 
-export function DiffText({ line, theme, bullet = false }: { line: DiffLine; theme: ThemeTokens; bullet?: boolean }) {
+export function DiffText({
+  line,
+  theme,
+  bullet = false,
+}: {
+  line: DiffLine;
+  theme: ThemeTokens;
+  bullet?: boolean;
+}) {
   const color =
-    line.tone === "removed" ? theme.color.danger : line.tone === "added" ? theme.color.foreground : theme.color.mutedForeground;
+    line.tone === "removed"
+      ? theme.color.danger
+      : line.tone === "added"
+        ? theme.color.foreground
+        : theme.color.mutedForeground;
   return (
     <Text
       accessibilityLabel={line.accessibilityLabel}
-      style={[styles.line, { color: bullet ? theme.color.foreground : color, fontFamily: theme.typography.fontFamily.sans.regular }]}
+      style={[
+        styles.line,
+        {
+          color: bullet ? theme.color.foreground : color,
+          fontFamily: theme.typography.fontFamily.sans.regular,
+        },
+      ]}
     >
       {bullet ? `• ${line.text}` : line.text}
     </Text>

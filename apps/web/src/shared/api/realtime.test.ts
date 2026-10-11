@@ -124,9 +124,9 @@ describe("REALTIME_EVENT_CACHE_KEYS", () => {
   });
 
   it("refreshes permissions and groups together", () => {
-    expect(
-      REALTIME_EVENT_CACHE_KEYS["permission-group.updated"],
-    ).toEqual(expect.arrayContaining([["permissions"], ["permission-groups"]]));
+    expect(REALTIME_EVENT_CACHE_KEYS["permission-group.updated"]).toEqual(
+      expect.arrayContaining([["permissions"], ["permission-groups"]]),
+    );
   });
 
   it("never targets a cache root the app does not own", () => {
@@ -153,12 +153,18 @@ describe("REALTIME_STATUS_META", () => {
   ];
 
   it("covers every connection state", () => {
-    expect(Object.keys(REALTIME_STATUS_META).sort()).toEqual([...STATUSES].sort());
+    expect(Object.keys(REALTIME_STATUS_META).sort()).toEqual(
+      [...STATUSES].sort(),
+    );
   });
 
   it("never shows the same state twice", () => {
-    const labels = STATUSES.map((status) => REALTIME_STATUS_META[status].labelKey);
-    const dots = STATUSES.map((status) => REALTIME_STATUS_META[status].dotClassName);
+    const labels = STATUSES.map(
+      (status) => REALTIME_STATUS_META[status].labelKey,
+    );
+    const dots = STATUSES.map(
+      (status) => REALTIME_STATUS_META[status].dotClassName,
+    );
 
     expect(new Set(labels).size).toBe(STATUSES.length);
     expect(new Set(dots).size).toBe(STATUSES.length);
@@ -166,7 +172,9 @@ describe("REALTIME_STATUS_META", () => {
 
   it("marks the live state apart from the others", () => {
     expect(REALTIME_STATUS_META.connected.dotClassName).toContain("success");
-    expect(REALTIME_STATUS_META.disconnected.dotClassName).not.toContain("success");
+    expect(REALTIME_STATUS_META.disconnected.dotClassName).not.toContain(
+      "success",
+    );
   });
 });
 
@@ -174,7 +182,11 @@ describe("realtimeEventUserId", () => {
   const USER_ID = "11111111-1111-4111-8111-111111111111";
 
   /** Shape the backend actually sends: the domain event inside an envelope. */
-  const envelope = (data: unknown) => ({ event: "user.updated", data, meta: {} });
+  const envelope = (data: unknown) => ({
+    event: "user.updated",
+    data,
+    meta: {},
+  });
 
   it("reads the user out of the envelope", () => {
     expect(realtimeEventUserId(envelope({ userId: USER_ID }))).toBe(USER_ID);

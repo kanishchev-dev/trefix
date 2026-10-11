@@ -5,7 +5,11 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { DateWheel } from "@workspace/ui-native";
 
 import { pluralize, type AppLanguage, type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { useToast } from "../../../shared/ui/toast";
 import { SectionBlock } from "../../plan-creation/components/plan-creation-ui";
 import { usePlanChangeFlow } from "../hooks/use-plan-change-flow";
@@ -30,20 +34,34 @@ type Props = {
 };
 
 /** Moves the goal date; the server stretches or shortens the plan and shows the diff. */
-export function GoalDateChangeSheet({ visible, planId, goalTargetDate, onClose, theme, themeMode, copy, language }: Props) {
+export function GoalDateChangeSheet({
+  visible,
+  planId,
+  goalTargetDate,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const goalCopy = copy.plans.goalDate;
   const { showToast } = useToast();
   const minDate = addDaysIso(todayIso(), MIN_DAYS_AHEAD);
   const initialDate = () => {
     const current = goalTargetDate?.slice(0, 10);
-    return current && current >= minDate ? current : addDaysIso(todayIso(), DEFAULT_DAYS_AHEAD);
+    return current && current >= minDate
+      ? current
+      : addDaysIso(todayIso(), DEFAULT_DAYS_AHEAD);
   };
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(initialDate);
 
   const flow = usePlanChangeFlow(planId, {
     copy,
-    inlineErrorFor: (error) => (hasErrorCode(error, "PLAN_RESIZE_NOT_POSSIBLE") ? goalCopy.tooShort : null),
+    inlineErrorFor: (error) =>
+      hasErrorCode(error, "PLAN_RESIZE_NOT_POSSIBLE")
+        ? goalCopy.tooShort
+        : null,
     onApplied: () => {
       showToast(copy.plans.edit.applied);
       setOpen(false);
@@ -84,7 +102,11 @@ export function GoalDateChangeSheet({ visible, planId, goalTargetDate, onClose, 
         contentContainerStyle={plansUiStyles.sheetContent}
         showsVerticalScrollIndicator={false}
       >
-        <SectionBlock title={goalCopy.title} description={goalCopy.minHint} theme={theme}>
+        <SectionBlock
+          title={goalCopy.title}
+          description={goalCopy.minHint}
+          theme={theme}
+        >
           <DateWheel
             value={date}
             onChange={(next) => {
@@ -102,7 +124,14 @@ export function GoalDateChangeSheet({ visible, planId, goalTargetDate, onClose, 
         {lengthHint && flow.showDiff ? (
           <SheetBlock theme={theme}>
             <Text
-              style={[plansUiStyles.bodyText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium, textAlign: "center" }]}
+              style={[
+                plansUiStyles.bodyText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                  textAlign: "center",
+                },
+              ]}
             >
               {lengthHint}
             </Text>
@@ -129,7 +158,14 @@ export function GoalDateChangeSheet({ visible, planId, goalTargetDate, onClose, 
           <>
             {flow.conflict ? (
               <SheetBlock theme={theme}>
-                <Notice tone="warning" theme={theme} action={{ label: copy.plans.edit.refresh, onPress: flow.refresh }}>
+                <Notice
+                  tone="warning"
+                  theme={theme}
+                  action={{
+                    label: copy.plans.edit.refresh,
+                    onPress: flow.refresh,
+                  }}
+                >
                   {copy.plans.edit.conflict}
                 </Notice>
               </SheetBlock>
@@ -142,7 +178,12 @@ export function GoalDateChangeSheet({ visible, planId, goalTargetDate, onClose, 
             <SheetBlock theme={theme}>
               <SheetButton
                 label={copy.plans.edit.showChanges}
-                onPress={() => void flow.submit({ kind: "goal_date", goalTargetDate: date }, null)}
+                onPress={() =>
+                  void flow.submit(
+                    { kind: "goal_date", goalTargetDate: date },
+                    null,
+                  )
+                }
                 disabled={!planId}
                 pending={flow.busy}
                 theme={theme}

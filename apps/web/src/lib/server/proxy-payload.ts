@@ -13,7 +13,10 @@ export type ProxyPayload =
   | { kind: "empty" };
 
 /** Content types that must not be parsed or re-encoded. */
-const PASSTHROUGH_CONTENT_TYPES = ["multipart/form-data", "application/octet-stream"];
+const PASSTHROUGH_CONTENT_TYPES = [
+  "multipart/form-data",
+  "application/octet-stream",
+];
 
 export function isPassthroughContentType(contentType: string): boolean {
   const normalized = contentType.toLowerCase();
@@ -68,7 +71,10 @@ export function payloadToFetchInit(payload: ProxyPayload): {
   duplex?: "half";
 } {
   if (payload.kind === "json") {
-    return { body: payload.body, headers: { "content-type": "application/json" } };
+    return {
+      body: payload.body,
+      headers: { "content-type": "application/json" },
+    };
   }
 
   if (payload.kind === "stream") {

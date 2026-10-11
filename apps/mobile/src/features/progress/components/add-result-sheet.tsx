@@ -1,18 +1,41 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { type RecordDistance } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Compound, DateWheel, Ruler, Segmented } from "@workspace/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
-import { fillTemplate, formatShortDate, type AppLanguage, type MainCopy } from "../../../locales";
-import { displayToKm, formatPace, kmToDisplay } from "../../../shared/lib/units";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  fillTemplate,
+  formatShortDate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
+import {
+  displayToKm,
+  formatPace,
+  kmToDisplay,
+} from "../../../shared/lib/units";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { Chip, ChipScroller } from "../../../shared/ui/chip-scroller";
 import { SectionTitle } from "../../../shared/ui/list-card";
 import { useToast } from "../../../shared/ui/toast";
-import { InlineError, SheetActionsColumn } from "../../plans/components/plans-ui";
+import {
+  InlineError,
+  SheetActionsColumn,
+} from "../../plans/components/plans-ui";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 import { useProgressMutation } from "../hooks/use-progress-v2";
 import { RECORD_DISTANCE_METERS } from "../lib/progress-format";
@@ -30,7 +53,13 @@ type Props = {
 type DistanceChoice = RecordDistance | "other";
 type Kind = "race" | "workout" | "test";
 
-const DISTANCES: RecordDistance[] = ["1k", "5k", "10k", "half_marathon", "marathon"];
+const DISTANCES: RecordDistance[] = [
+  "1k",
+  "5k",
+  "10k",
+  "half_marathon",
+  "marathon",
+];
 const DEFAULT_TIME: Record<DistanceChoice, number> = {
   "1k": 300,
   "5k": 1500,
@@ -46,7 +75,15 @@ const todayIso = () => {
 };
 
 /** G3 — a race, test or workout result entered by hand. */
-export function AddResultSheet({ visible, initialDistance, onClose, copy, language, theme, themeMode }: Props) {
+export function AddResultSheet({
+  visible,
+  initialDistance,
+  onClose,
+  copy,
+  language,
+  theme,
+  themeMode,
+}: Props) {
   const mutation = useProgressMutation();
   const format = useUnitFormat(copy, language);
   const { showToast } = useToast();
@@ -74,7 +111,10 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
     setError(null);
   }, [visible, initialDistance]);
 
-  const distanceM = distance === "other" ? Math.round(otherKm * 1000) : RECORD_DISTANCE_METERS[distance];
+  const distanceM =
+    distance === "other"
+      ? Math.round(otherKm * 1000)
+      : RECORD_DISTANCE_METERS[distance];
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
@@ -90,19 +130,35 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
     try {
       await mutation.mutateAsync({
         kind: "add",
-        input: { distanceM: Math.round(distanceM), timeSeconds: seconds, date, kind, name: name.trim() || undefined },
+        input: {
+          distanceM: Math.round(distanceM),
+          timeSeconds: seconds,
+          date,
+          kind,
+          name: name.trim() || undefined,
+        },
       });
       trackEvent("progress_result_added", { distance, kind });
       showToast(a.saved);
       setOpen(false);
     } catch (saveError) {
       const code = (saveError as { code?: string } | null)?.code;
-      setError(code === "RESULT_INVALID" ? copy.progress.errors.RESULT_INVALID : copy.progress.errors.generic);
+      setError(
+        code === "RESULT_INVALID"
+          ? copy.progress.errors.RESULT_INVALID
+          : copy.progress.errors.generic,
+      );
     }
   };
 
-  const text = { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular };
-  const muted = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const text = {
+    color: theme.color.foreground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
+  const muted = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
 
   return (
     <BottomSheet
@@ -130,7 +186,11 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
                 <Chip
                   key={choice}
                   theme={theme}
-                  label={choice === "other" ? a.other : copy.progress.records.distances[choice]}
+                  label={
+                    choice === "other"
+                      ? a.other
+                      : copy.progress.records.distances[choice]
+                  }
                   selected={distance === choice}
                   onPress={() => {
                     setDistance(choice);
@@ -146,7 +206,14 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
           <SheetBlock theme={theme} edgeToEdge>
             <Ruler
               value={Math.round(kmToDisplay(otherKm, format.units) * 10) / 10}
-              onChange={(value) => setOtherKm(Math.max(0.4, Math.round(displayToKm(value, format.units) * 100) / 100))}
+              onChange={(value) =>
+                setOtherKm(
+                  Math.max(
+                    0.4,
+                    Math.round(displayToKm(value, format.units) * 100) / 100,
+                  ),
+                )
+              }
               min={imperial ? 0.3 : 0.4}
               max={imperial ? 62 : 100}
               step={0.1}
@@ -166,21 +233,37 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
             <Compound
               parts={[
                 { label: a.hours, value: hours, min: 0, max: 23 },
-                { label: a.minutes, value: minutes, min: 0, max: 59, formatValue: pad },
-                { label: a.seconds, value: secs, min: 0, max: 59, formatValue: pad },
+                {
+                  label: a.minutes,
+                  value: minutes,
+                  min: 0,
+                  max: 59,
+                  formatValue: pad,
+                },
+                {
+                  label: a.seconds,
+                  value: secs,
+                  min: 0,
+                  max: 59,
+                  formatValue: pad,
+                },
               ]}
               separator=":"
               onChangePart={(index, value) => {
                 const next = [hours, minutes, secs];
                 next[index] = value;
-                setSeconds(Math.max(60, next[0] * 3600 + next[1] * 60 + next[2]));
+                setSeconds(
+                  Math.max(60, next[0] * 3600 + next[1] * 60 + next[2]),
+                );
               }}
               accessibilityLabel={a.time}
               theme={theme}
               themeMode={themeMode}
             />
             <Text style={[styles.centered, muted]}>
-              {fillTemplate(a.pace, { pace: formatPace(pace, format.units, format.labels) })}
+              {fillTemplate(a.pace, {
+                pace: formatPace(pace, format.units, format.labels),
+              })}
             </Text>
           </View>
         </SheetBlock>
@@ -189,13 +272,18 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
           <View style={styles.field}>
             <SectionTitle text={a.where} theme={theme} />
             <Segmented
-              segments={(["race", "workout", "test"] as const).map((value) => ({ value, label: a.kinds[value] }))}
+              segments={(["race", "workout", "test"] as const).map((value) => ({
+                value,
+                label: a.kinds[value],
+              }))}
               value={kind}
               onChange={setKind}
               theme={theme}
               themeMode={themeMode}
             />
-            <View style={[styles.input, { backgroundColor: theme.color.control }]}>
+            <View
+              style={[styles.input, { backgroundColor: theme.color.control }]}
+            >
               <Text style={[styles.inputLabel, muted]}>{a.name}</Text>
               <TextInput
                 value={name}
@@ -212,7 +300,9 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
               style={[styles.input, { backgroundColor: theme.color.control }]}
             >
               <Text style={[styles.inputLabel, muted]}>{a.date}</Text>
-              <Text style={[styles.inputValue, text]}>{formatShortDate(date, language)}</Text>
+              <Text style={[styles.inputValue, text]}>
+                {formatShortDate(date, language)}
+              </Text>
             </Pressable>
             {dateOpen ? (
               <DateWheel
@@ -240,8 +330,20 @@ export function AddResultSheet({ visible, initialDistance, onClose, copy, langua
 
         <SheetBlock theme={theme}>
           <SheetActionsColumn>
-            <SheetButton label={a.save} pending={mutation.isPending} onPress={() => void save()} theme={theme} themeMode={themeMode} />
-            <SheetButton label={a.cancel} variant="secondary" onPress={() => setOpen(false)} theme={theme} themeMode={themeMode} />
+            <SheetButton
+              label={a.save}
+              pending={mutation.isPending}
+              onPress={() => void save()}
+              theme={theme}
+              themeMode={themeMode}
+            />
+            <SheetButton
+              label={a.cancel}
+              variant="secondary"
+              onPress={() => setOpen(false)}
+              theme={theme}
+              themeMode={themeMode}
+            />
           </SheetActionsColumn>
         </SheetBlock>
       </ScrollView>

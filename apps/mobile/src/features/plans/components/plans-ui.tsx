@@ -113,7 +113,11 @@ export function ActionRow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionRow,
-        { backgroundColor: destructive ? theme.color.dangerSurface : theme.color.control },
+        {
+          backgroundColor: destructive
+            ? theme.color.dangerSurface
+            : theme.color.control,
+        },
         pressed && styles.pressed,
       ]}
     >
@@ -134,14 +138,19 @@ export function ActionRow({
           <Text
             style={[
               styles.actionDescription,
-              { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
             ]}
           >
             {description}
           </Text>
         ) : null}
       </View>
-      {!destructive ? <ChevronRight color={theme.color.mutedForeground} size={18} /> : null}
+      {!destructive ? (
+        <ChevronRight color={theme.color.mutedForeground} size={18} />
+      ) : null}
     </Pressable>
   );
 }
@@ -168,29 +177,48 @@ export function Notice({
       style={[
         styles.notice,
         {
-          backgroundColor: isWarning ? theme.color.dangerSurface : theme.color.control,
+          backgroundColor: isWarning
+            ? theme.color.dangerSurface
+            : theme.color.control,
         },
       ]}
     >
-      <Icon color={isWarning ? theme.color.danger : theme.color.mutedForeground} size={18} />
+      <Icon
+        color={isWarning ? theme.color.danger : theme.color.mutedForeground}
+        size={18}
+      />
       <View style={styles.noticeBody}>
         {title ? (
           <Text
             style={[
               styles.noticeTitle,
-              { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium },
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
             ]}
           >
             {title}
           </Text>
         ) : null}
-        {typeof children === "string" ? <NoticeText theme={theme}>{children}</NoticeText> : children}
+        {typeof children === "string" ? (
+          <NoticeText theme={theme}>{children}</NoticeText>
+        ) : (
+          children
+        )}
         {action ? (
-          <Pressable accessibilityRole="button" hitSlop={8} onPress={action.onPress}>
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={action.onPress}
+          >
             <Text
               style={[
                 styles.noticeAction,
-                { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.semibold,
+                },
               ]}
             >
               {action.label}
@@ -202,12 +230,21 @@ export function Notice({
   );
 }
 
-export function NoticeText({ theme, children }: { theme: ThemeTokens; children: ReactNode }) {
+export function NoticeText({
+  theme,
+  children,
+}: {
+  theme: ThemeTokens;
+  children: ReactNode;
+}) {
   return (
     <Text
       style={[
         styles.noticeText,
-        { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+        {
+          color: theme.color.mutedForeground,
+          fontFamily: theme.typography.fontFamily.sans.regular,
+        },
       ]}
     >
       {children}
@@ -215,11 +252,23 @@ export function NoticeText({ theme, children }: { theme: ThemeTokens; children: 
   );
 }
 
-export function InlineError({ message, theme }: { message: string; theme: ThemeTokens }) {
+export function InlineError({
+  message,
+  theme,
+}: {
+  message: string;
+  theme: ThemeTokens;
+}) {
   return (
     <Text
       accessibilityRole="alert"
-      style={[styles.inlineError, { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular }]}
+      style={[
+        styles.inlineError,
+        {
+          color: theme.color.danger,
+          fontFamily: theme.typography.fontFamily.sans.regular,
+        },
+      ]}
     >
       {message}
     </Text>
@@ -245,19 +294,33 @@ export function ProgressBar({
       accessibilityValue={{ min: 0, max: 100, now: percent }}
       style={[styles.progressTrack, { backgroundColor: theme.color.secondary }]}
     >
-      <View style={[styles.progressFill, { width: `${percent}%`, backgroundColor: theme.color.primary }]} />
+      <View
+        style={[
+          styles.progressFill,
+          { width: `${percent}%`, backgroundColor: theme.color.primary },
+        ]}
+      />
     </View>
   );
 }
 
 /** Caption above a block: sentence case, medium weight, like the admin sidebar group labels. */
-export function SectionCaption({ text, theme }: { text: string; theme: ThemeTokens }) {
+export function SectionCaption({
+  text,
+  theme,
+}: {
+  text: string;
+  theme: ThemeTokens;
+}) {
   return (
     <Text
       accessibilityRole="header"
       style={[
         styles.sectionCaption,
-        { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium },
+        {
+          color: theme.color.foreground,
+          fontFamily: theme.typography.fontFamily.sans.medium,
+        },
       ]}
     >
       {text}

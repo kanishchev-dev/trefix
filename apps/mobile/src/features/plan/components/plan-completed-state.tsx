@@ -116,7 +116,10 @@ export function PlanCompletedState({
               <Text
                 style={[
                   styles.buttonText,
-                  { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+                  {
+                    color: theme.color.foreground,
+                    fontFamily: theme.typography.fontFamily.sans.semibold,
+                  },
                 ]}
               >
                 {action.label}

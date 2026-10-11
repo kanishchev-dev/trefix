@@ -1,5 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
-import type { AdminUser, AdminUserDetail, PaginatedResponse } from "@workspace/api-client";
+import type {
+  AdminUser,
+  AdminUserDetail,
+  PaginatedResponse,
+} from "@workspace/api-client";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -47,7 +51,11 @@ function envelope(data: unknown): unknown {
   return {
     event: "user.updated",
     data,
-    meta: { emittedAt: "2024-01-01T00:00:00.000Z", audience: "room", target: "users" },
+    meta: {
+      emittedAt: "2024-01-01T00:00:00.000Z",
+      audience: "room",
+      target: "users",
+    },
   };
 }
 
@@ -100,9 +108,15 @@ describe("mergeUpdatedUser", () => {
     const queryClient = new QueryClient();
     const other = makeUser({ id: "user-2", firstName: "Other" });
 
-    queryClient.setQueryData(["users", "list", { page: 1 }], makeList([makeUser(), other]));
+    queryClient.setQueryData(
+      ["users", "list", { page: 1 }],
+      makeList([makeUser(), other]),
+    );
 
-    mergeUpdatedUser(queryClient, envelope({ userId: USER_ID, firstName: "Renamed" }));
+    mergeUpdatedUser(
+      queryClient,
+      envelope({ userId: USER_ID, firstName: "Renamed" }),
+    );
 
     const cached = queryClient.getQueryData<PaginatedResponse<AdminUser>>([
       "users",
@@ -110,7 +124,10 @@ describe("mergeUpdatedUser", () => {
       { page: 1 },
     ]);
 
-    expect(cached?.data.map((user) => user.firstName)).toEqual(["Renamed", "Other"]);
+    expect(cached?.data.map((user) => user.firstName)).toEqual([
+      "Renamed",
+      "Other",
+    ]);
   });
 
   it("never invents a field the event did not carry", () => {
@@ -122,7 +139,10 @@ describe("mergeUpdatedUser", () => {
       effectivePermissions: [],
     } satisfies AdminUserDetail);
 
-    mergeUpdatedUser(queryClient, envelope({ userId: USER_ID, firstName: "Renamed" }));
+    mergeUpdatedUser(
+      queryClient,
+      envelope({ userId: USER_ID, firstName: "Renamed" }),
+    );
 
     const detail = queryClient.getQueryData<AdminUserDetail>([
       "users",
@@ -142,7 +162,10 @@ describe("mergeUpdatedUser", () => {
       effectivePermissions: [],
     } satisfies AdminUserDetail);
 
-    mergeUpdatedUser(queryClient, envelope({ userId: USER_ID, avatarUrl: null }));
+    mergeUpdatedUser(
+      queryClient,
+      envelope({ userId: USER_ID, avatarUrl: null }),
+    );
 
     expect(
       queryClient.getQueryData<AdminUserDetail>(["users", "detail", USER_ID])
@@ -152,9 +175,17 @@ describe("mergeUpdatedUser", () => {
 
   it("reports no merge when the user is not on screen", () => {
     const queryClient = new QueryClient();
-    queryClient.setQueryData(["users", "list", { page: 1 }], makeList([makeUser({ id: "user-2" })]));
+    queryClient.setQueryData(
+      ["users", "list", { page: 1 }],
+      makeList([makeUser({ id: "user-2" })]),
+    );
 
-    expect(mergeUpdatedUser(queryClient, envelope({ userId: USER_ID, firstName: "Renamed" }))).toBe(false);
+    expect(
+      mergeUpdatedUser(
+        queryClient,
+        envelope({ userId: USER_ID, firstName: "Renamed" }),
+      ),
+    ).toBe(false);
   });
 
   it("ignores a payload without a user id instead of guessing", () => {
@@ -166,7 +197,9 @@ describe("mergeUpdatedUser", () => {
       effectivePermissions: [],
     } satisfies AdminUserDetail);
 
-    expect(mergeUpdatedUser(queryClient, envelope({ firstName: "Renamed" }))).toBe(false);
+    expect(
+      mergeUpdatedUser(queryClient, envelope({ firstName: "Renamed" })),
+    ).toBe(false);
     expect(
       queryClient.getQueryData<AdminUserDetail>(["users", "detail", USER_ID])
         ?.firstName,
@@ -197,7 +230,11 @@ describe("applyRealtimeEventToCache", () => {
     const queryClient = new QueryClient();
 
     expect(
-      applyRealtimeEventToCache(queryClient, "user.created", envelope({ userId: USER_ID })),
+      applyRealtimeEventToCache(
+        queryClient,
+        "user.created",
+        envelope({ userId: USER_ID }),
+      ),
     ).toBe(false);
   });
 });

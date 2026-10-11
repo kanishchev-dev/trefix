@@ -11,19 +11,31 @@ describe("shouldSyncSettingsForAuthStatus", () => {
   // bootstrap 401s on the login page and used to be the only attempt. Theme
   // and locale then stayed at whatever localStorage held until a reload.
   it("asks the backend once a session appears", () => {
-    expect(shouldSyncSettingsForAuthStatus("unauthenticated", "authenticated")).toBe(true);
-    expect(shouldSyncSettingsForAuthStatus("loading", "authenticated")).toBe(true);
+    expect(
+      shouldSyncSettingsForAuthStatus("unauthenticated", "authenticated"),
+    ).toBe(true);
+    expect(shouldSyncSettingsForAuthStatus("loading", "authenticated")).toBe(
+      true,
+    );
     expect(shouldSyncSettingsForAuthStatus(null, "authenticated")).toBe(true);
   });
 
   it("does not ask again while the session stays", () => {
-    expect(shouldSyncSettingsForAuthStatus("authenticated", "authenticated")).toBe(false);
+    expect(
+      shouldSyncSettingsForAuthStatus("authenticated", "authenticated"),
+    ).toBe(false);
   });
 
   it("does not ask without a session", () => {
-    expect(shouldSyncSettingsForAuthStatus("loading", "unauthenticated")).toBe(false);
-    expect(shouldSyncSettingsForAuthStatus("authenticated", "unauthenticated")).toBe(false);
-    expect(shouldSyncSettingsForAuthStatus("unauthenticated", "error")).toBe(false);
+    expect(shouldSyncSettingsForAuthStatus("loading", "unauthenticated")).toBe(
+      false,
+    );
+    expect(
+      shouldSyncSettingsForAuthStatus("authenticated", "unauthenticated"),
+    ).toBe(false);
+    expect(shouldSyncSettingsForAuthStatus("unauthenticated", "error")).toBe(
+      false,
+    );
   });
 });
 
@@ -43,7 +55,10 @@ describe("parseRealtimeSettings", () => {
       meta: { audience: "room", target: "settings" },
     };
 
-    expect(parseRealtimeSettings(payload)).toEqual({ theme: "dark", locale: "ru" });
+    expect(parseRealtimeSettings(payload)).toEqual({
+      theme: "dark",
+      locale: "ru",
+    });
   });
 
   it("accepts a flat payload without the envelope", () => {
@@ -54,7 +69,9 @@ describe("parseRealtimeSettings", () => {
 
   it("ignores unsupported theme and locale values", () => {
     expect(
-      parseRealtimeSettings({ data: { settings: { theme: "sepia", locale: "fr" } } }),
+      parseRealtimeSettings({
+        data: { settings: { theme: "sepia", locale: "fr" } },
+      }),
     ).toEqual({ theme: undefined, locale: undefined });
   });
 
@@ -69,7 +86,9 @@ describe("parseRealtimeSettings", () => {
     const nothing = { theme: undefined, locale: undefined };
     expect(parseRealtimeSettings({})).toEqual(nothing);
     expect(parseRealtimeSettings({ data: {} })).toEqual(nothing);
-    expect(parseRealtimeSettings({ data: { settings: null } })).toEqual(nothing);
+    expect(parseRealtimeSettings({ data: { settings: null } })).toEqual(
+      nothing,
+    );
   });
 
   it("accepts the system theme mode", () => {

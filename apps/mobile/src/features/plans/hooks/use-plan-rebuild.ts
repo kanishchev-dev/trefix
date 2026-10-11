@@ -1,7 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type PlanDetails, type RebuildInput, type RebuildPreview, type RebuildPreviewInput } from "@workspace/api-client";
+import {
+  type PlanDetails,
+  type RebuildInput,
+  type RebuildPreview,
+  type RebuildPreviewInput,
+} from "@workspace/api-client";
 
-import { getCurrentMetrics, getRebuildPrefill, previewRebuild, rebuildPlan } from "../../../lib/training-api";
+import {
+  getCurrentMetrics,
+  getRebuildPrefill,
+  previewRebuild,
+  rebuildPlan,
+} from "../../../lib/training-api";
 import { getDeviceTimezone } from "../lib/plan-dates";
 import { invalidatePlanQueries, planKeys } from "./plan-query-keys";
 
@@ -26,15 +36,27 @@ export function useCurrentMetrics(enabled = true) {
 }
 
 export function useRebuildPreview() {
-  return useMutation<RebuildPreview, Error, { planId: string } & RebuildPreviewInput>({
-    mutationFn: ({ planId, ...dto }) => previewRebuild(planId, { ...dto, timezone: dto.timezone ?? getDeviceTimezone() }),
+  return useMutation<
+    RebuildPreview,
+    Error,
+    { planId: string } & RebuildPreviewInput
+  >({
+    mutationFn: ({ planId, ...dto }) =>
+      previewRebuild(planId, {
+        ...dto,
+        timezone: dto.timezone ?? getDeviceTimezone(),
+      }),
   });
 }
 
 export function useRebuildPlan() {
   const queryClient = useQueryClient();
   return useMutation<PlanDetails, Error, { planId: string } & RebuildInput>({
-    mutationFn: ({ planId, ...dto }) => rebuildPlan(planId, { ...dto, timezone: dto.timezone ?? getDeviceTimezone() }),
+    mutationFn: ({ planId, ...dto }) =>
+      rebuildPlan(planId, {
+        ...dto,
+        timezone: dto.timezone ?? getDeviceTimezone(),
+      }),
     onSuccess: (details, { planId, start }) => {
       if (start) {
         invalidatePlanQueries(queryClient, "lifecycle");

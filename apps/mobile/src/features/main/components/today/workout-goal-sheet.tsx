@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ruler } from "@workspace/ui-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
@@ -17,6 +11,7 @@ import {
 } from "../../../../shared/ui/bottom-sheet";
 import { useCreateWorkout } from "../../hooks/use-workouts";
 import { type MainCopy } from "../../../../locales";
+import { getErrorMessage } from "../../../../shared/lib/error-message";
 
 export type ManualWorkoutType = "easy" | "tempo" | "interval" | "hill" | "race";
 export type WorkoutGoalMode = "duration" | "distance";
@@ -49,7 +44,7 @@ export function WorkoutGoalSheet({
   copy,
 }: Props) {
   const createWorkoutMutation = useCreateWorkout();
-  const goalSheetCopy = copy?.today?.goalSheet || {};
+  const goalSheetCopy = copy.today.goalSheet;
 
   const [mode, setMode] = useState<WorkoutGoalMode>("distance");
   const [distanceVal, setDistanceVal] = useState("10");
@@ -79,30 +74,32 @@ export function WorkoutGoalSheet({
     return isNaN(val) ? 0 : val;
   }, [mode, distanceVal, durationVal]);
 
-  const isValid = parsedValue > 0 && isFutureOrToday && !createWorkoutMutation.isPending;
+  const isValid =
+    parsedValue > 0 && isFutureOrToday && !createWorkoutMutation.isPending;
 
   const handleSubmit = async () => {
     setErrorMessage("");
 
     if (!isFutureOrToday) {
-      setErrorMessage(
-        goalSheetCopy.futureDateOnly ||
-          "Плановую тренировку можно добавить только на сегодняшнюю или будущую дату.",
-      );
+      setErrorMessage(goalSheetCopy.futureDateOnly);
       return;
     }
 
     if (parsedValue <= 0) {
-      setErrorMessage(goalSheetCopy.invalidValue || "Укажите значение больше 0");
+      setErrorMessage(goalSheetCopy.invalidValue);
       return;
     }
 
     const scheduledAt = new Date(`${date}T09:00:00.000Z`).toISOString();
 
     const distanceKm =
-      mode === "distance" ? parsedValue : Math.max(1, Math.round(parsedValue / 6));
+      mode === "distance"
+        ? parsedValue
+        : Math.max(1, Math.round(parsedValue / 6));
     const durationMinutes =
-      mode === "duration" ? parsedValue : Math.max(5, Math.round(parsedValue * 6));
+      mode === "duration"
+        ? parsedValue
+        : Math.max(5, Math.round(parsedValue * 6));
 
     try {
       await createWorkoutMutation.mutateAsync({
@@ -115,18 +112,15 @@ export function WorkoutGoalSheet({
 
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
       setErrorMessage(
-        message ||
-          goalSheetCopy.errorDefault ||
-          "Не удалось добавить тренировку. Попробуйте ещё раз.",
+        getErrorMessage(err, copy.errors, goalSheetCopy.errorDefault),
       );
     }
   };
 
   return (
     <BottomSheet
-      title={goalSheetCopy.title || "Укажите цель"}
+      title={goalSheetCopy.title}
       visible={visible}
       onClose={onClose}
       theme={theme}
@@ -145,15 +139,28 @@ export function WorkoutGoalSheet({
             onChange={setMode}
             theme={theme}
             tabs={[
-              { key: "distance" as WorkoutGoalMode, label: goalSheetCopy.tabs?.distance || "Дистанция" },
-              { key: "duration" as WorkoutGoalMode, label: goalSheetCopy.tabs?.duration || "Время" },
+              {
+                key: "distance" as WorkoutGoalMode,
+                label: goalSheetCopy.tabs.distance,
+              },
+              {
+                key: "duration" as WorkoutGoalMode,
+                label: goalSheetCopy.tabs.duration,
+              },
             ]}
           />
         </SheetBlock>
         {errorMessage ? (
           <SheetBlock theme={theme}>
-            <View style={[styles.errorBanner, { backgroundColor: theme.color.dangerSurface }]}>
-              <Text style={[styles.errorText, { color: theme.color.danger }]}>{errorMessage}</Text>
+            <View
+              style={[
+                styles.errorBanner,
+                { backgroundColor: theme.color.dangerSurface },
+              ]}
+            >
+              <Text style={[styles.errorText, { color: theme.color.danger }]}>
+                {errorMessage}
+              </Text>
             </View>
           </SheetBlock>
         ) : null}
@@ -161,7 +168,11 @@ export function WorkoutGoalSheet({
         {/* Goal value: − value + with draggable ruler */}
         <SheetBlock theme={theme}>
           <Ruler
-            value={mode === "distance" ? parseFloat(distanceVal) || 1 : parseInt(durationVal, 10) || 10}
+            value={
+              mode === "distance"
+                ? parseFloat(distanceVal) || 1
+                : parseInt(durationVal, 10) || 10
+            }
             onChange={(val) => {
               if (mode === "distance") {
                 setDistanceVal(val.toString());
@@ -174,8 +185,16 @@ export function WorkoutGoalSheet({
             step={mode === "distance" ? 0.5 : 1}
             majorEvery={mode === "distance" ? 1 : 5}
             labelEvery={mode === "distance" ? 1 : 10}
-            unit={mode === "distance" ? goalSheetCopy.distanceUnit || "км" : goalSheetCopy.durationUnit || "мин"}
-            accessibilityLabel={mode === "distance" ? goalSheetCopy.tabs?.distance : goalSheetCopy.tabs?.duration}
+            unit={
+              mode === "distance"
+                ? goalSheetCopy.distanceUnit
+                : goalSheetCopy.durationUnit
+            }
+            accessibilityLabel={
+              mode === "distance"
+                ? goalSheetCopy.tabs.distance
+                : goalSheetCopy.tabs.duration
+            }
             theme={theme}
             themeMode={themeMode}
           />
@@ -189,54 +208,55 @@ export function WorkoutGoalSheet({
             contentContainerStyle={styles.presetsScrollContent}
             style={styles.presetsScrollView}
           >
-          {(mode === "distance" ? DISTANCE_PRESETS : DURATION_PRESETS).map((preset) => {
-            const isSelected =
-              mode === "distance"
-                ? parseFloat(distanceVal.replace(",", ".")) === preset
-                : parseInt(durationVal, 10) === preset;
+            {(mode === "distance" ? DISTANCE_PRESETS : DURATION_PRESETS).map(
+              (preset) => {
+                const isSelected =
+                  mode === "distance"
+                    ? parseFloat(distanceVal.replace(",", ".")) === preset
+                    : parseInt(durationVal, 10) === preset;
 
-            return (
-              <Pressable
-                key={preset}
-                onPress={() => {
-                  if (mode === "distance") {
-                    setDistanceVal(preset.toString());
-                  } else {
-                    setDurationVal(preset.toString());
-                  }
-                }}
-                style={[
-                  styles.presetChip,
-                  {
-                    backgroundColor: isSelected
-                      ? theme.color.primary
-                      : theme.color.control,
-                    borderColor:
-                      theme.color.controlBorder,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.presetChipText,
-                    {
-                      color: isSelected
-                        ? theme.color.primaryForeground
-                        : theme.color.foreground,
-                      fontFamily: isSelected
-                        ? theme.typography.fontFamily.sans.bold
-                        : theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {preset}{" "}
-                  {mode === "distance"
-                    ? goalSheetCopy.distanceUnit || "км"
-                    : goalSheetCopy.durationUnit || "мин"}
-                </Text>
-              </Pressable>
-            );
-          })}
+                return (
+                  <Pressable
+                    key={preset}
+                    onPress={() => {
+                      if (mode === "distance") {
+                        setDistanceVal(preset.toString());
+                      } else {
+                        setDurationVal(preset.toString());
+                      }
+                    }}
+                    style={[
+                      styles.presetChip,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.color.primary
+                          : theme.color.control,
+                        borderColor: theme.color.controlBorder,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipText,
+                        {
+                          color: isSelected
+                            ? theme.color.primaryForeground
+                            : theme.color.foreground,
+                          fontFamily: isSelected
+                            ? theme.typography.fontFamily.sans.bold
+                            : theme.typography.fontFamily.sans.medium,
+                        },
+                      ]}
+                    >
+                      {preset}{" "}
+                      {mode === "distance"
+                        ? goalSheetCopy.distanceUnit
+                        : goalSheetCopy.durationUnit}
+                    </Text>
+                  </Pressable>
+                );
+              },
+            )}
           </ScrollView>
         </SheetBlock>
       </ScrollView>
@@ -245,7 +265,7 @@ export function WorkoutGoalSheet({
       <SheetBlock theme={theme}>
         <View style={styles.actionsRow}>
           <SheetButton
-            label={goalSheetCopy.cancel || "Отменить"}
+            label={goalSheetCopy.cancel}
             onPress={onClose}
             variant="secondary"
             theme={theme}
@@ -253,7 +273,7 @@ export function WorkoutGoalSheet({
           />
 
           <SheetButton
-            label={goalSheetCopy.submit || "Добавить"}
+            label={goalSheetCopy.submit}
             onPress={handleSubmit}
             disabled={!isValid}
             pending={createWorkoutMutation.isPending}

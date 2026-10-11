@@ -6,9 +6,16 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { DateWheel, Ruler } from "@workspace/ui-native";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { ActionCard } from "../../../shared/ui/list-card";
-import { InlineError, SheetActionsColumn } from "../../plans/components/plans-ui";
+import {
+  InlineError,
+  SheetActionsColumn,
+} from "../../plans/components/plans-ui";
 import { formatAgo, profileErrorMessage } from "../lib/profile-format";
 
 type Provenance = {
@@ -53,7 +60,12 @@ export type ValueSheetConfig =
   | (Common & {
       kind: "options";
       value: string | null;
-      options: Array<{ value: string; label: string; description?: string; icon?: ReactNode }>;
+      options: Array<{
+        value: string;
+        label: string;
+        description?: string;
+        icon?: ReactNode;
+      }>;
       onSave: (value: string) => Promise<void>;
     });
 
@@ -69,7 +81,13 @@ type Props = {
  * One sheet for every profile value: the right system control, the value's
  * source (Strava or manual) and Save / Cancel. Errors stay inline.
  */
-export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: Props) {
+export function ProfileValueSheet({
+  config,
+  onClose,
+  copy,
+  theme,
+  themeMode,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<number | string | null>(null);
   const [pending, setPending] = useState(false);
@@ -106,8 +124,14 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
   if (!current) return null;
 
   const save = () => {
-    if (current.kind === "number") return run(() => current.onSave(typeof draft === "number" ? draft : null));
-    if (current.kind === "date") return run(() => current.onSave(typeof draft === "string" ? draft : null));
+    if (current.kind === "number")
+      return run(() =>
+        current.onSave(typeof draft === "number" ? draft : null),
+      );
+    if (current.kind === "date")
+      return run(() =>
+        current.onSave(typeof draft === "string" ? draft : null),
+      );
     return undefined;
   };
   const clear = () => {
@@ -116,7 +140,10 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
     return undefined;
   };
 
-  const muted = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const muted = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
 
   return (
     <BottomSheet
@@ -182,7 +209,11 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
                   disabled={pending}
                   trailing={
                     option.value === current.value ? (
-                      <Check color={theme.color.foreground} size={18} strokeWidth={2.4} />
+                      <Check
+                        color={theme.color.foreground}
+                        size={18}
+                        strokeWidth={2.4}
+                      />
                     ) : undefined
                   }
                   onPress={() => void run(() => current.onSave(option.value))}
@@ -198,12 +229,18 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
           </SheetBlock>
         ) : null}
 
-        {current.provenance?.source && current.provenance.source !== "manual" ? (
+        {current.provenance?.source &&
+        current.provenance.source !== "manual" ? (
           <SheetBlock theme={theme}>
             <Text style={[styles.centered, muted]}>
-              {fillTemplate(current.provenance.source === "strava" ? sheetCopy.fromStrava : sheetCopy.fromHealth, {
-                ago: formatAgo(current.provenance.updatedAt, copy),
-              })}
+              {fillTemplate(
+                current.provenance.source === "strava"
+                  ? sheetCopy.fromStrava
+                  : sheetCopy.fromHealth,
+                {
+                  ago: formatAgo(current.provenance.updatedAt, copy),
+                },
+              )}
               {"\n"}
               {sheetCopy.afterSave}
             </Text>
@@ -227,7 +264,8 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
                 themeMode={themeMode}
               />
             ) : null}
-            {current.provenance?.source === "manual" && current.provenance.canReset ? (
+            {current.provenance?.source === "manual" &&
+            current.provenance.canReset ? (
               <SheetButton
                 label={sheetCopy.resetToStrava}
                 variant="secondary"
@@ -237,7 +275,9 @@ export function ProfileValueSheet({ config, onClose, copy, theme, themeMode }: P
                 themeMode={themeMode}
               />
             ) : null}
-            {current.kind !== "options" && current.clearable && current.value !== null ? (
+            {current.kind !== "options" &&
+            current.clearable &&
+            current.value !== null ? (
               <SheetButton
                 label={sheetCopy.clear}
                 variant="secondary"

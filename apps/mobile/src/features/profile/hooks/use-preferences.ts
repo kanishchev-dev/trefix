@@ -1,10 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { type UserPreferences, type UserPreferencesUpdate } from "@workspace/api-client";
+import {
+  type UserPreferences,
+  type UserPreferencesUpdate,
+} from "@workspace/api-client";
 
-import { getPreferences, updatePreferences } from "../../../lib/preferences-api";
+import {
+  getPreferences,
+  updatePreferences,
+} from "../../../lib/preferences-api";
+import { queryKeys } from "../../../shared/lib/query-keys";
 
-export const preferencesQueryKey = ["preferences"] as const;
+export const preferencesQueryKey = queryKeys.preferences.all;
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   units: "metric",
@@ -36,8 +43,12 @@ export function useUpdatePreferences() {
     },
     onMutate: async (patch) => {
       await queryClient.cancelQueries({ queryKey: preferencesQueryKey });
-      const previous = queryClient.getQueryData<UserPreferences>(preferencesQueryKey);
-      queryClient.setQueryData<UserPreferences>(preferencesQueryKey, { ...(previous ?? DEFAULT_PREFERENCES), ...patch });
+      const previous =
+        queryClient.getQueryData<UserPreferences>(preferencesQueryKey);
+      queryClient.setQueryData<UserPreferences>(preferencesQueryKey, {
+        ...(previous ?? DEFAULT_PREFERENCES),
+        ...patch,
+      });
       return { previous };
     },
     onError: (_error, _patch, context) => {
@@ -46,7 +57,7 @@ export function useUpdatePreferences() {
     onSuccess: (preferences, patch) => {
       queryClient.setQueryData(preferencesQueryKey, preferences);
       if ("coachEnabled" in patch) {
-        void queryClient.invalidateQueries({ queryKey: ["coach"] });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.coach.all });
       }
     },
   });

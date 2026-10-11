@@ -4,7 +4,11 @@ import { useCallback } from "react";
 
 import { useI18n } from "@/shared/i18n";
 
-import { UNGROUPED_MODULE, UNGROUPED_RESOURCE, splitPermissionName } from "../lib/permission-domains";
+import {
+  UNGROUPED_MODULE,
+  UNGROUPED_RESOURCE,
+  splitPermissionName,
+} from "../lib/permission-domains";
 
 type TranslatablePermission = {
   name: string;
@@ -63,14 +67,19 @@ export function usePermissionLabels(): PermissionLabels {
   );
 
   const actionLabel = useCallback(
-    (action: string): string => translate(`permissions.actions.${action}`, action),
+    (action: string): string =>
+      translate(`permissions.actions.${action}`, action),
     [translate],
   );
 
   const title = useCallback(
     (permission: TranslatablePermission): string => {
       const { module, resource, action } = splitPermissionName(permission.name);
-      const parts = [moduleLabel(module), resourceLabel(module, resource), actionLabel(action)];
+      const parts = [
+        moduleLabel(module),
+        resourceLabel(module, resource),
+        actionLabel(action),
+      ];
 
       return parts.filter(Boolean).join(" / ");
     },
@@ -79,7 +88,10 @@ export function usePermissionLabels(): PermissionLabels {
 
   const description = useCallback(
     (permission: TranslatablePermission): string | undefined => {
-      const translated = translate(`permissions.descriptions.${permission.name}`, "");
+      const translated = translate(
+        `permissions.descriptions.${permission.name}`,
+        "",
+      );
       const fallback = permission.description?.trim();
 
       return translated || fallback || undefined;

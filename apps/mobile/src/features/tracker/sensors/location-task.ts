@@ -10,8 +10,11 @@ import { recorder, TRACKER_LOCATION_TASK } from "../recorder";
  */
 export function registerTrackerLocationTask(): void {
   if (TaskManager.isTaskDefined(TRACKER_LOCATION_TASK)) return;
-  TaskManager.defineTask<{ locations: LocationObject[] }>(TRACKER_LOCATION_TASK, async ({ data, error }) => {
-    if (error || !data?.locations?.length) return;
-    await recorder.handleLocations(data.locations);
-  });
+  TaskManager.defineTask<{ locations: LocationObject[] }>(
+    TRACKER_LOCATION_TASK,
+    async ({ data, error }) => {
+      if (error || !data?.locations?.length) return;
+      await recorder.handleLocations(data.locations);
+    },
+  );
 }

@@ -5,10 +5,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type PlanDetails, type PlanWeek } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { fillTemplate, formatDayMonth, formatShortDate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  formatDayMonth,
+  formatShortDate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
 import { Card } from "../../../shared/ui/card";
-import { HeaderBackButton, HeaderOptionsButton, HeaderTitle } from "../../main/components/header";
+import {
+  HeaderBackButton,
+  HeaderOptionsButton,
+  HeaderTitle,
+} from "../../main/components/header";
 import { SectionLayout } from "../../main/components/section-layout";
 import { useHeaderOptions } from "../../main/context/header-context";
 import { PlanErrorState } from "../../plan/components/plan-error-state";
@@ -21,12 +31,21 @@ import { MetricsSnapshotCard } from "../components/metrics-snapshot-card";
 import { PlanCardActionsSheet } from "../components/plan-card-actions-sheet";
 import { PlanMetaEditor } from "../components/plan-meta-editor";
 import { PlanWorkoutSheet } from "../components/plan-workout-sheet";
-import { Notice, plansUiStyles, ProgressBar, SectionCaption } from "../components/plans-ui";
+import {
+  Notice,
+  plansUiStyles,
+  ProgressBar,
+  SectionCaption,
+} from "../components/plans-ui";
 import { usePlanDetails } from "../hooks/use-plan";
 import { completionPercent } from "../lib/plan-card-format";
 import { mondayBasedWeekday, workoutLocalDate } from "../lib/plan-dates";
 import { isNotFound } from "../lib/plan-errors";
-import { planWeeksForTimeline, weekWorkoutRows, type PlanTimelineMode } from "../lib/plan-weeks";
+import {
+  planWeeksForTimeline,
+  weekWorkoutRows,
+  type PlanTimelineMode,
+} from "../lib/plan-weeks";
 import { usePlansNavigation } from "../plans-navigation";
 
 type Props = {
@@ -38,7 +57,13 @@ type Props = {
 };
 
 /** Details of a draft or a history plan; the plan in progress lives on the Plan tab. */
-export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: Props) {
+export function PlanDetailsScreen({
+  planId,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const plansCopy = copy.plans;
   const navigation = usePlansNavigation();
   const insets = useSafeAreaInsets();
@@ -59,10 +84,24 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
 
   useHeaderOptions(
     {
-      leftAction: <HeaderBackButton theme={theme} themeMode={themeMode} onPress={navigation.back} />,
-      centerContent: <HeaderTitle theme={theme}>{details?.name ?? plansCopy.title}</HeaderTitle>,
+      leftAction: (
+        <HeaderBackButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={navigation.back}
+        />
+      ),
+      centerContent: (
+        <HeaderTitle theme={theme}>
+          {details?.name ?? plansCopy.title}
+        </HeaderTitle>
+      ),
       rightAction: details ? (
-        <HeaderOptionsButton theme={theme} themeMode={themeMode} onPress={() => setActionsOpen(true)} />
+        <HeaderOptionsButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={() => setActionsOpen(true)}
+        />
       ) : null,
       variant: "default",
       bottomContent: null,
@@ -70,19 +109,32 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
     [details?.name, details?.id, theme, themeMode],
   );
 
-  const weeks = useMemo(() => (details ? planWeeksForTimeline(details, copy, mode) : []), [copy, details, mode]);
+  const weeks = useMemo(
+    () => (details ? planWeeksForTimeline(details, copy, mode) : []),
+    [copy, details, mode],
+  );
 
   const weekRows = useMemo(() => {
     if (!details || !selectedWeek) return undefined;
-    return weekWorkoutRows(details, selectedWeek.weekNumber, dayNames, (iso) => {
-      const date = workoutLocalDate(iso);
-      return `${dayNames[mondayBasedWeekday(date)]} ${formatDayMonth(date, language)}`;
-    });
+    return weekWorkoutRows(
+      details,
+      selectedWeek.weekNumber,
+      dayNames,
+      (iso) => {
+        const date = workoutLocalDate(iso);
+        return `${dayNames[mondayBasedWeekday(date)]} ${formatDayMonth(date, language)}`;
+      },
+    );
   }, [dayNames, details, language, selectedWeek]);
 
   if (detailsQuery.isLoading) {
     return (
-      <SectionLayout hasHeader={false} scrollable theme={theme} themeMode={themeMode}>
+      <SectionLayout
+        hasHeader={false}
+        scrollable
+        theme={theme}
+        themeMode={themeMode}
+      >
         <PlanSkeleton theme={theme} themeMode={themeMode} />
       </SectionLayout>
     );
@@ -90,10 +142,23 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
 
   if (!details) {
     return (
-      <SectionLayout hasHeader={false} scrollable theme={theme} themeMode={themeMode}>
+      <SectionLayout
+        hasHeader={false}
+        scrollable
+        theme={theme}
+        themeMode={themeMode}
+      >
         {isNotFound(detailsQuery.error) ? (
           <View style={styles.notFound}>
-            <Text style={[plansUiStyles.bodyText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+            <Text
+              style={[
+                plansUiStyles.bodyText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.semibold,
+                },
+              ]}
+            >
               {plansCopy.errors.notFound}
             </Text>
             <SheetButton
@@ -106,14 +171,25 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
             />
           </View>
         ) : (
-          <PlanErrorState copy={copy} onRetry={() => void detailsQuery.refetch()} theme={theme} themeMode={themeMode} />
+          <PlanErrorState
+            copy={copy}
+            onRetry={() => void detailsQuery.refetch()}
+            theme={theme}
+            themeMode={themeMode}
+          />
         )}
       </SectionLayout>
     );
   }
 
-  const bodyStyle = { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular };
-  const mutedStyle = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const bodyStyle = {
+    color: theme.color.foreground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
+  const mutedStyle = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
 
   return (
     <View style={styles.root}>
@@ -126,24 +202,50 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
         themeMode={themeMode}
         contentStyle={styles.content}
       >
-        {!isDraft ? <ResultCard details={details} theme={theme} themeMode={themeMode} copy={copy} language={language} /> : null}
+        {!isDraft ? (
+          <ResultCard
+            details={details}
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            language={language}
+          />
+        ) : null}
 
         <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
           <SectionCaption text={plansCopy.details.goal} theme={theme} />
-          <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
-            {[details.goal.title, raceResult(details, copy)].filter(Boolean).join(" · ") || details.name}
+          <Text
+            style={[
+              styles.cardTitle,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {[details.goal.title, raceResult(details, copy)]
+              .filter(Boolean)
+              .join(" · ") || details.name}
           </Text>
           {details.goal.targetDate ? (
             <Text style={[styles.cardText, mutedStyle]}>
-              {fillTemplate(plansCopy.details.raceOn, { date: formatShortDate(details.goal.targetDate, language) })}
+              {fillTemplate(plansCopy.details.raceOn, {
+                date: formatShortDate(details.goal.targetDate, language),
+              })}
             </Text>
           ) : null}
-          <Text style={[styles.cardText, mutedStyle]}>{structureLine(details, copy, dayNames)}</Text>
+          <Text style={[styles.cardText, mutedStyle]}>
+            {structureLine(details, copy, dayNames)}
+          </Text>
         </Card>
 
         <MetricsSnapshotCard
           snapshot={details.metricsSnapshot}
-          title={isDraft ? plansCopy.details.metrics : plansCopy.details.metricsAtStart}
+          title={
+            isDraft
+              ? plansCopy.details.metrics
+              : plansCopy.details.metricsAtStart
+          }
           theme={theme}
           themeMode={themeMode}
           copy={copy}
@@ -156,37 +258,76 @@ export function PlanDetailsScreen({ planId, theme, themeMode, copy, language }: 
             theme={theme}
             action={{
               label: plansCopy.details.staleBanner,
-              onPress: () => navigation.openCreation({ mode: "draft-params", planId: details.id, initialStep: "metrics" }),
+              onPress: () =>
+                navigation.openCreation({
+                  mode: "draft-params",
+                  planId: details.id,
+                  initialStep: "metrics",
+                }),
             }}
           >
             {plansCopy.start.staleMetrics}
           </Notice>
         ) : null}
 
-        <PlanTimeline copy={copy} mode={mode} onSelectWeek={setSelectedWeek} theme={theme} themeMode={themeMode} weeks={weeks} />
+        <PlanTimeline
+          copy={copy}
+          mode={mode}
+          onSelectWeek={setSelectedWeek}
+          theme={theme}
+          themeMode={themeMode}
+          weeks={weeks}
+        />
 
         <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
           <View style={styles.notesHeader}>
             <SectionCaption text={plansCopy.details.notes} theme={theme} />
-            <Pressable accessibilityRole="button" hitSlop={8} onPress={() => setMetaOpen(true)}>
-              <Text style={[styles.cardText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => setMetaOpen(true)}
+            >
+              <Text
+                style={[
+                  styles.cardText,
+                  {
+                    color: theme.color.foreground,
+                    fontFamily: theme.typography.fontFamily.sans.semibold,
+                  },
+                ]}
+              >
                 {plansCopy.details.editNotes}
               </Text>
             </Pressable>
           </View>
-          <Text style={[styles.cardText, details.notes ? bodyStyle : mutedStyle]}>
+          <Text
+            style={[styles.cardText, details.notes ? bodyStyle : mutedStyle]}
+          >
             {details.notes || plansCopy.details.notesEmpty}
           </Text>
         </Card>
       </SectionLayout>
 
-      <View style={[styles.sticky, { bottom: insets.bottom + 92 }]} pointerEvents="box-none">
+      <View
+        style={[styles.sticky, { bottom: insets.bottom + 92 }]}
+        pointerEvents="box-none"
+      >
         <SheetButton
-          label={isDraft ? plansCopy.details.startButton : plansCopy.details.prepareAgainButton}
+          label={
+            isDraft
+              ? plansCopy.details.startButton
+              : plansCopy.details.prepareAgainButton
+          }
           onPress={() =>
             isDraft
-              ? navigation.startDraft({ id: details.id, name: details.name }, "plan_details")
-              : navigation.openCreation({ mode: "rebuild", sourcePlanId: details.id })
+              ? navigation.startDraft(
+                  { id: details.id, name: details.name },
+                  "plan_details",
+                )
+              : navigation.openCreation({
+                  mode: "rebuild",
+                  sourcePlanId: details.id,
+                })
           }
           theme={theme}
           themeMode={themeMode}
@@ -253,7 +394,9 @@ function ResultCard({
   const detailsCopy = copy.plans.details;
   const completed = details.status === "completed";
   const stats = details.stats;
-  const end = completed ? details.endDate : details.cancelledAt ?? details.endDate;
+  const end = completed
+    ? details.endDate
+    : (details.cancelledAt ?? details.endDate);
   const range =
     details.startDate && end
       ? `${formatShortDate(details.startDate, language)}–${formatShortDate(end.slice(0, 10), language)}`
@@ -261,20 +404,39 @@ function ResultCard({
   const parts = [
     completed ? detailsCopy.resultCompleted : detailsCopy.resultCancelled,
     range,
-    stats ? fillTemplate(detailsCopy.workoutsDone, { done: stats.completedWorkouts, total: stats.plannedWorkouts }) : null,
-    stats ? fillTemplate(detailsCopy.totalKm, { km: Math.round(stats.totalDistanceKm) }) : null,
+    stats
+      ? fillTemplate(detailsCopy.workoutsDone, {
+          done: stats.completedWorkouts,
+          total: stats.plannedWorkouts,
+        })
+      : null,
+    stats
+      ? fillTemplate(detailsCopy.totalKm, {
+          km: Math.round(stats.totalDistanceKm),
+        })
+      : null,
   ].filter(Boolean);
   const percent = completionPercent(stats?.completionRate);
 
   return (
     <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
-      <Text style={[styles.cardTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+      <Text
+        style={[
+          styles.cardTitle,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.medium,
+          },
+        ]}
+      >
         {parts.join(" · ")}
       </Text>
       {stats ? (
         <ProgressBar
           value={percent / 100}
-          accessibilityLabel={fillTemplate(copy.plans.card.progressA11y, { percent })}
+          accessibilityLabel={fillTemplate(copy.plans.card.progressA11y, {
+            percent,
+          })}
           theme={theme}
         />
       ) : null}
@@ -284,13 +446,24 @@ function ResultCard({
 
 /** Finish time of the completed race workout, when there is one. */
 function raceResult(details: PlanDetails, copy: MainCopy): string | null {
-  const race = details.workouts.find((workout) => workout.type === "race" && workout.status === "completed");
-  const minutes = Number((race?.actual as Record<string, unknown> | null)?.actualDurationMinutes ?? 0);
+  const race = details.workouts.find(
+    (workout) => workout.type === "race" && workout.status === "completed",
+  );
+  const minutes = Number(
+    (race?.actual as Record<string, unknown> | null)?.actualDurationMinutes ??
+      0,
+  );
   if (!minutes) return null;
-  return fillTemplate(copy.plans.details.raceResult, { time: formatTargetTime(Math.round(minutes * 60)) });
+  return fillTemplate(copy.plans.details.raceResult, {
+    time: formatTargetTime(Math.round(minutes * 60)),
+  });
 }
 
-function structureLine(details: PlanDetails, copy: MainCopy, dayNames: readonly string[]): string {
+function structureLine(
+  details: PlanDetails,
+  copy: MainCopy,
+  dayNames: readonly string[],
+): string {
   const schedule = details.config.schedule;
   const parts = [
     fillTemplate(copy.plans.details.structure, {
@@ -298,9 +471,17 @@ function structureLine(details: PlanDetails, copy: MainCopy, dayNames: readonly 
       sessions: details.sessionsPerWeek ?? schedule.trainingDays?.length ?? 0,
     }),
   ];
-  if (schedule.trainingDays?.length) parts.push(schedule.trainingDays.map((day) => dayNames[day]).join(" "));
-  if (schedule.preferredLongRunDay !== null && schedule.preferredLongRunDay !== undefined) {
-    parts.push(fillTemplate(copy.plans.details.longRun, { day: dayNames[schedule.preferredLongRunDay] ?? "" }));
+  if (schedule.trainingDays?.length)
+    parts.push(schedule.trainingDays.map((day) => dayNames[day]).join(" "));
+  if (
+    schedule.preferredLongRunDay !== null &&
+    schedule.preferredLongRunDay !== undefined
+  ) {
+    parts.push(
+      fillTemplate(copy.plans.details.longRun, {
+        day: dayNames[schedule.preferredLongRunDay] ?? "",
+      }),
+    );
   }
   return parts.join(" · ");
 }

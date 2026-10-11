@@ -1,20 +1,38 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
-import { HeartPulse, PenLine, ShieldCheck, CircleHelp } from "lucide-react-native";
+import {
+  HeartPulse,
+  PenLine,
+  ShieldCheck,
+  CircleHelp,
+} from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { trackEvent } from "../../../lib/analytics";
-import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
 import { ActionCard } from "../../../shared/ui/list-card";
 import { useToast } from "../../../shared/ui/toast";
-import { HeaderBackButton, HeaderTextButton } from "../../main/components/header";
+import {
+  HeaderBackButton,
+  HeaderTextButton,
+} from "../../main/components/header";
 import { SectionLayout } from "../../main/components/section-layout";
 import { useHeaderOptions } from "../../main/context/header-context";
 import { BodyFieldsCard } from "../components/body-fields-card";
-import { ProfileValueSheet, type ValueSheetConfig } from "../components/profile-value-sheet";
-import { useAthleteProfile, useUpdateAthleteProfile } from "../hooks/use-athlete-profile";
+import {
+  ProfileValueSheet,
+  type ValueSheetConfig,
+} from "../components/profile-value-sheet";
+import {
+  useAthleteProfile,
+  useUpdateAthleteProfile,
+} from "../hooks/use-athlete-profile";
 import { profileErrorMessage } from "../lib/profile-format";
 
 type Step = 1 | 2 | 3;
@@ -29,7 +47,14 @@ type Props = {
 };
 
 /** E2 — three short steps: body, threshold heart rate, limitations. Every answer is saved right away. */
-export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, language, onClose }: Props) {
+export function ProfileWizardScreen({
+  initialStep = 1,
+  theme,
+  themeMode,
+  copy,
+  language,
+  onClose,
+}: Props) {
   const { data: athlete } = useAthleteProfile();
   const update = useUpdateAthleteProfile();
   const { showToast } = useToast();
@@ -53,7 +78,9 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
 
   useHeaderOptions(
     {
-      leftAction: <HeaderBackButton theme={theme} themeMode={themeMode} onPress={back} />,
+      leftAction: (
+        <HeaderBackButton theme={theme} themeMode={themeMode} onPress={back} />
+      ),
       centerContent: null,
       rightAction: (
         <HeaderTextButton
@@ -82,10 +109,17 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
     }
   };
 
-  const icon = (Icon: typeof HeartPulse) => <Icon color={theme.color.foreground} size={20} />;
+  const icon = (Icon: typeof HeartPulse) => (
+    <Icon color={theme.color.foreground} size={20} />
+  );
 
   return (
-    <SectionLayout hasHeader={false} scrollable theme={theme} themeMode={themeMode}>
+    <SectionLayout
+      hasHeader={false}
+      scrollable
+      theme={theme}
+      themeMode={themeMode}
+    >
       <View style={styles.stack}>
         <View style={styles.dots}>
           {[1, 2, 3].map((index) => (
@@ -93,25 +127,61 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
               key={index}
               style={[
                 styles.dot,
-                { backgroundColor: index <= step ? theme.color.foreground : theme.color.iconSurface },
+                {
+                  backgroundColor:
+                    index <= step
+                      ? theme.color.foreground
+                      : theme.color.iconSurface,
+                },
               ]}
             />
           ))}
         </View>
         <View style={styles.titles}>
-          <Text style={[styles.stepLabel, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            style={[
+              styles.stepLabel,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {fillTemplate(w.step, { n: step })}
           </Text>
-          <Text style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {stepCopy.title}
           </Text>
-          <Text numberOfLines={1} style={[styles.subtitle, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.subtitle,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
+          >
             {stepCopy.subtitle}
           </Text>
         </View>
 
         {step === 1 && athlete ? (
-          <BodyFieldsCard athlete={athlete} copy={copy} language={language} theme={theme} themeMode={themeMode} />
+          <BodyFieldsCard
+            athlete={athlete}
+            copy={copy}
+            language={language}
+            theme={theme}
+            themeMode={themeMode}
+          />
         ) : null}
 
         {step === 2 && athlete ? (
@@ -119,7 +189,11 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
             <ActionCard
               theme={theme}
               icon={icon(HeartPulse)}
-              title={athlete.thresholdHeartRate ? `${w.know} · ${athlete.thresholdHeartRate}` : w.know}
+              title={
+                athlete.thresholdHeartRate
+                  ? `${w.know} · ${athlete.thresholdHeartRate}`
+                  : w.know
+              }
               description={w.knowDescription}
               onPress={() =>
                 setSheet({
@@ -133,7 +207,10 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
                   majorEvery: 10,
                   labelEvery: 10,
                   onSave: async (value) => {
-                    await update.mutateAsync({ thresholdHeartRate: value, hrZonesMethod: "threshold" });
+                    await update.mutateAsync({
+                      thresholdHeartRate: value,
+                      hrZonesMethod: "threshold",
+                    });
                     setTimeout(next, 320);
                   },
                 })
@@ -176,7 +253,11 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
                 placeholderTextColor={theme.color.mutedForeground}
                 style={[
                   styles.input,
-                  { backgroundColor: theme.color.card, color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular },
+                  {
+                    backgroundColor: theme.color.card,
+                    color: theme.color.foreground,
+                    fontFamily: theme.typography.fontFamily.sans.regular,
+                  },
                 ]}
               />
             ) : null}
@@ -187,12 +268,20 @@ export function ProfileWizardScreen({ initialStep = 1, theme, themeMode, copy, l
           label={step === 3 ? w.done : w.next}
           pending={update.isPending}
           disabled={step === 3 && writing && text.trim().length === 0}
-          onPress={() => (step === 3 && writing ? void saveLimitations(text.trim()) : next())}
+          onPress={() =>
+            step === 3 && writing ? void saveLimitations(text.trim()) : next()
+          }
           theme={theme}
           themeMode={themeMode}
         />
       </View>
-      <ProfileValueSheet config={sheet} onClose={() => setSheet(null)} copy={copy} theme={theme} themeMode={themeMode} />
+      <ProfileValueSheet
+        config={sheet}
+        onClose={() => setSheet(null)}
+        copy={copy}
+        theme={theme}
+        themeMode={themeMode}
+      />
     </SectionLayout>
   );
 }

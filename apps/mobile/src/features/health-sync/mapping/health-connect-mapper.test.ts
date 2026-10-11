@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { mapHealthConnectSession, type HealthConnectSessionInput } from "./health-connect-mapper";
+import {
+  mapHealthConnectSession,
+  type HealthConnectSessionInput,
+} from "./health-connect-mapper";
 
-const session = (overrides: Partial<HealthConnectSessionInput> = {}): HealthConnectSessionInput => ({
+const session = (
+  overrides: Partial<HealthConnectSessionInput> = {},
+): HealthConnectSessionInput => ({
   startTime: "2026-10-08T04:00:00.000Z",
   endTime: "2026-10-08T05:00:00.000Z",
   exerciseType: 56,
@@ -49,9 +54,21 @@ describe("mapHealthConnectSession", () => {
     const mapped = mapHealthConnectSession(
       session({
         segments: [
-          { startTime: "2026-10-08T04:20:00.000Z", endTime: "2026-10-08T04:25:00.000Z", segmentType: 39 },
-          { startTime: "2026-10-08T04:55:00.000Z", endTime: "2026-10-08T05:10:00.000Z", segmentType: 44 },
-          { startTime: "2026-10-08T04:30:00.000Z", endTime: "2026-10-08T04:40:00.000Z", segmentType: 46 },
+          {
+            startTime: "2026-10-08T04:20:00.000Z",
+            endTime: "2026-10-08T04:25:00.000Z",
+            segmentType: 39,
+          },
+          {
+            startTime: "2026-10-08T04:55:00.000Z",
+            endTime: "2026-10-08T05:10:00.000Z",
+            segmentType: 44,
+          },
+          {
+            startTime: "2026-10-08T04:30:00.000Z",
+            endTime: "2026-10-08T04:40:00.000Z",
+            segmentType: 46,
+          },
         ],
       }),
       { distanceMeters: 9000 },
@@ -60,12 +77,24 @@ describe("mapHealthConnectSession", () => {
   });
 
   it("marks treadmill sessions", () => {
-    expect(mapHealthConnectSession(session({ exerciseType: 57 }), { distanceMeters: 5000 })?.type).toBe("treadmill");
+    expect(
+      mapHealthConnectSession(session({ exerciseType: 57 }), {
+        distanceMeters: 5000,
+      })?.type,
+    ).toBe("treadmill");
   });
 
   it("skips non-running sessions, sessions without an id and sessions without distance", () => {
-    expect(mapHealthConnectSession(session({ exerciseType: 8 }), { distanceMeters: 5000 })).toBeNull();
-    expect(mapHealthConnectSession(session({ metadata: {} }), { distanceMeters: 5000 })).toBeNull();
+    expect(
+      mapHealthConnectSession(session({ exerciseType: 8 }), {
+        distanceMeters: 5000,
+      }),
+    ).toBeNull();
+    expect(
+      mapHealthConnectSession(session({ metadata: {} }), {
+        distanceMeters: 5000,
+      }),
+    ).toBeNull();
     expect(mapHealthConnectSession(session(), {})).toBeNull();
   });
 });

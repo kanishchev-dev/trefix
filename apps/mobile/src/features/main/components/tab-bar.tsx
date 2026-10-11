@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -18,19 +12,22 @@ import Animated, {
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import {
-  Activity,
-  ClipboardList,
-  Sparkles,
-  Sunrise,
-  type LucideIcon,
-} from "lucide-react-native";
+import { Activity, ClipboardList, Sunrise } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 import { resolveBackendMediaUrl } from "../../../lib/backend-url";
 import { BottomFade } from "../../../shared/ui/bottom-fade";
 import { useProfile } from "../hooks/use-profile";
 import { type MainTabKey } from "../main-types";
+import {
+  BAR_PADDING,
+  SHELL_HEIGHT,
+  INDICATOR_HEIGHT,
+  HORIZONTAL_MARGIN,
+  FADE_EXTRA,
+  styles,
+} from "./tab-bar.styles";
+import { TabIcon, TrefixIcon, ProfileIcon } from "./tab-bar-icons";
 
 type Props = {
   theme: ThemeTokens;
@@ -49,12 +46,6 @@ type TabItem = {
   badge?: boolean;
 };
 
-const BAR_PADDING = 6;
-const SHELL_HEIGHT = 64;
-const INDICATOR_HEIGHT = 46;
-const HORIZONTAL_MARGIN = 16;
-/** How far above the bar the bottom blur fades out. */
-const FADE_EXTRA = 40;
 /** Hold this long before the glass follows the finger across sections. */
 const LONG_PRESS_MS = 220;
 const SNAP_SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
@@ -311,7 +302,11 @@ export function TabBar({
 
   return (
     <>
-      <BottomFade height={bottomPadding + SHELL_HEIGHT + FADE_EXTRA} theme={theme} themeMode={themeMode} />
+      <BottomFade
+        height={bottomPadding + SHELL_HEIGHT + FADE_EXTRA}
+        theme={theme}
+        themeMode={themeMode}
+      />
       <View
         pointerEvents="box-none"
         style={[styles.outer, { paddingBottom: bottomPadding }]}
@@ -341,9 +336,7 @@ export function TabBar({
                 <GlassView
                   colorScheme={isDark ? "dark" : "light"}
                   glassEffectStyle="clear"
-                  tintColor={
-                    theme.color.tabIndicatorTint
-                  }
+                  tintColor={theme.color.tabIndicatorTint}
                   style={[
                     styles.indicator,
                     {
@@ -388,7 +381,14 @@ export function TabBar({
               >
                 <View style={styles.iconWrap}>
                   {tab.icon}
-                  {tab.badge && <View style={[styles.badgeDot, { backgroundColor: theme.color.danger }]} />}
+                  {tab.badge && (
+                    <View
+                      style={[
+                        styles.badgeDot,
+                        { backgroundColor: theme.color.danger },
+                      ]}
+                    />
+                  )}
                 </View>
               </View>
             ))}
@@ -400,235 +400,3 @@ export function TabBar({
 }
 
 /* ---- Icons ---- */
-
-const ICON_SIZE = 22;
-
-/** Line icon that crossfades from the muted to the active colour. */
-function TabIcon({
-  icon: Icon,
-  active,
-  theme,
-}: {
-  icon: LucideIcon;
-  active: boolean;
-  theme: ThemeTokens;
-}) {
-  const shown = useSharedValue(active ? 1 : 0);
-  useEffect(() => {
-    shown.value = withTiming(active ? 1 : 0, { duration: active ? 220 : 120 });
-  }, [active, shown]);
-  const activeStyle = useAnimatedStyle(() => ({ opacity: shown.value }));
-  const inactiveStyle = useAnimatedStyle(() => ({ opacity: 1 - shown.value }));
-
-  return (
-    <View style={styles.tabIcon}>
-      <Animated.View style={inactiveStyle}>
-        <Icon
-          size={ICON_SIZE}
-          color={theme.color.mutedForeground}
-          strokeWidth={1.9}
-        />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, activeStyle]}>
-        <Icon
-          size={ICON_SIZE}
-          color={theme.color.foreground}
-          strokeWidth={2.1}
-        />
-      </Animated.View>
-    </View>
-  );
-}
-
-/** The coach opens a chat rather than a tab, so it stands out as an action: sparkles on a contrasting disc. */
-function TrefixIcon({ theme }: { theme: ThemeTokens }) {
-  return (
-    <View
-      style={[styles.trefixDisc, { backgroundColor: theme.color.foreground }]}
-    >
-      <Sparkles size={16} color={theme.color.background} strokeWidth={2.1} />
-    </View>
-  );
-}
-
-function ProfileIcon({
-  theme,
-  fallback,
-  avatarUri,
-  active,
-}: {
-  theme: ThemeTokens;
-  fallback: string;
-  avatarUri: string | null;
-  active: boolean;
-}) {
-  return (
-    <View
-      style={[
-        avatarUri ? styles.profileAvatarBadge : styles.profileBadge,
-        avatarUri
-          ? { opacity: active ? 1 : 0.7 }
-          : {
-              borderColor: theme.color.foreground,
-              borderWidth: active ? 1.6 : 1,
-              opacity: active ? 1 : 0.7,
-            },
-      ]}
-    >
-      {avatarUri ? (
-        <Image source={{ uri: avatarUri }} style={styles.profileAvatar} />
-      ) : (
-        <Text
-          style={[
-            styles.profileFallback,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.extrabold,
-            },
-          ]}
-        >
-          {fallback}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  outer: {
-    position: "absolute",
-    left: HORIZONTAL_MARGIN,
-    right: HORIZONTAL_MARGIN,
-    bottom: 0,
-  },
-  shell: {
-    minHeight: SHELL_HEIGHT,
-    borderRadius: SHELL_HEIGHT / 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: BAR_PADDING,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    overflow: "hidden",
-  },
-  indicatorSlot: {
-    position: "absolute",
-    top: (SHELL_HEIGHT - INDICATOR_HEIGHT) / 2 - 1,
-    height: INDICATOR_HEIGHT,
-  },
-  indicator: {
-    flex: 1,
-    borderRadius: INDICATOR_HEIGHT / 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: "hidden",
-  },
-  indicatorHighlight: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    borderRadius: INDICATOR_HEIGHT / 2,
-  },
-  tabButton: {
-    flex: 1,
-    height: SHELL_HEIGHT - BAR_PADDING * 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeDot: {
-    position: "absolute",
-    top: -2,
-    right: -4,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  iconFrame: {
-    width: 20,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  house: {
-    width: 16,
-    height: 14,
-    borderWidth: 1.5,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
-  },
-  houseRoof: {
-    position: "absolute",
-    top: -2,
-    width: 10,
-    height: 8,
-    transform: [{ rotate: "45deg" }],
-    borderRadius: 2,
-  },
-  planFrame: {
-    width: 16,
-    height: 16,
-    borderWidth: 1.5,
-    borderRadius: 5,
-    paddingHorizontal: 2.5,
-    paddingVertical: 3,
-    justifyContent: "space-between",
-  },
-  planLine: {
-    width: 8.5,
-    height: 1.35,
-    borderRadius: 999,
-  },
-  progressWrap: {
-    width: 16,
-    height: 16,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  progressBar: {
-    width: 2.8,
-    borderRadius: 999,
-  },
-  profileBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  // Same visual size as the 22px line icons next to it.
-  trefixDisc: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabIcon: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-  },
-  // Same size as the coach disc, so the two round items match.
-  profileAvatarBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    overflow: "hidden",
-  },
-  profileAvatar: {
-    width: "100%",
-    height: "100%",
-  },
-  profileFallback: {
-    fontSize: 10,
-    lineHeight: 11,
-  },
-});

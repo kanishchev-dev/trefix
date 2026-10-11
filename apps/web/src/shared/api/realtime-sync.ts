@@ -39,7 +39,9 @@ const USER_LIST_KEY: readonly unknown[] = ["users", "list"];
  * Tolerates a bare payload so a shape change on one side degrades into "nothing
  * merged, refetch only" instead of throwing inside a socket listener.
  */
-export function realtimeEventData(payload: unknown): Record<string, unknown> | null {
+export function realtimeEventData(
+  payload: unknown,
+): Record<string, unknown> | null {
   if (typeof payload !== "object" || payload === null) {
     return null;
   }
@@ -52,7 +54,10 @@ export function realtimeEventData(payload: unknown): Record<string, unknown> | n
 }
 
 /** Copies the event's fields onto a cached record, skipping absent ones. */
-function mergeUserRecord<T extends AdminUser>(cached: T, payload: UserEventPayload): T {
+function mergeUserRecord<T extends AdminUser>(
+  cached: T,
+  payload: UserEventPayload,
+): T {
   const patch: Partial<T> = {};
 
   for (const field of USER_EVENT_FIELDS) {
@@ -82,14 +87,17 @@ export function mergeUpdatedUser(
 
   let merged = false;
 
-  queryClient.setQueryData<AdminUserDetail>(["users", "detail", data.userId], (cached) => {
-    if (!cached) {
-      return cached;
-    }
+  queryClient.setQueryData<AdminUserDetail>(
+    ["users", "detail", data.userId],
+    (cached) => {
+      if (!cached) {
+        return cached;
+      }
 
-    merged = true;
-    return mergeUserRecord(cached, data);
-  });
+      merged = true;
+      return mergeUserRecord(cached, data);
+    },
+  );
 
   for (const [queryKey, cached] of queryClient.getQueriesData<
     PaginatedResponse<AdminUser>
@@ -114,7 +122,10 @@ export function mergeUpdatedUser(
   return merged;
 }
 
-type RealtimeCacheMerge = (queryClient: QueryClient, payload: unknown) => boolean;
+type RealtimeCacheMerge = (
+  queryClient: QueryClient,
+  payload: unknown,
+) => boolean;
 
 const CACHE_MERGES: Readonly<Record<string, RealtimeCacheMerge>> = {
   "user.updated": mergeUpdatedUser,

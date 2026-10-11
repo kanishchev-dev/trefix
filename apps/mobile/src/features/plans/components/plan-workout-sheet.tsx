@@ -14,9 +14,16 @@ type Props = {
 };
 
 /** Workout sheet opened from a plan week: details, manual completion and edits. */
-export function PlanWorkoutSheet({ workoutId, onClose, theme, themeMode, copy, language }: Props) {
+export function PlanWorkoutSheet({
+  workoutId,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const workoutQuery = useWorkout(workoutId);
-  const workout = workoutId ? workoutQuery.data ?? null : null;
+  const workout = workoutId ? (workoutQuery.data ?? null) : null;
 
   return (
     <WorkoutDetailSheet

@@ -298,9 +298,4 @@ export function formatDayMonth(
 }
 
 /** Pace in seconds per km as m:ss. */
-export function formatPace(secondsPerKm: number): string {
-  const total = Math.round(secondsPerKm);
-  const minutes = Math.floor(total / 60);
-  const seconds = total % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
+export { formatMinutesSeconds as formatPace } from "@workspace/utils";

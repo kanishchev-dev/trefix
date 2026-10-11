@@ -1,6 +1,20 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import Mapbox, { Camera, CircleLayer, LineLayer, LocationPuck, MapView, ShapeSource, SymbolLayer } from "@rnmapbox/maps";
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
+import Mapbox, {
+  Camera,
+  CircleLayer,
+  LineLayer,
+  LocationPuck,
+  MapView,
+  ShapeSource,
+  SymbolLayer,
+} from "@rnmapbox/maps";
 import { LocateFixed } from "lucide-react-native";
 
 import { isDarkTheme, type ThemeTokens } from "@workspace/tokens";
@@ -45,12 +59,24 @@ const multiLine = (kind: string, lines: LngLat[][]): Feature => ({
 });
 
 /** The route on a Mapbox map: GPS stretches solid, pedometer stretches dashed, a mark at every kilometre. */
-export function TrackMap({ theme, lines, markers, mode, points = [], interactive = mode === "follow", centerLabel, style }: Props) {
+export function TrackMap({
+  theme,
+  lines,
+  markers,
+  mode,
+  points = [],
+  interactive = mode === "follow",
+  centerLabel,
+  style,
+}: Props) {
   const [following, setFollowing] = useState(true);
   const dark = isDarkTheme(theme);
 
   const routeShape = useMemo<GeoJSON.FeatureCollection>(
-    () => ({ type: "FeatureCollection", features: [multiLine("solid", lines.solid), multiLine("gap", lines.gaps)] }),
+    () => ({
+      type: "FeatureCollection",
+      features: [multiLine("solid", lines.solid), multiLine("gap", lines.gaps)],
+    }),
     [lines],
   );
 
@@ -59,9 +85,18 @@ export function TrackMap({ theme, lines, markers, mode, points = [], interactive
     const lastLine = lines.solid[lines.solid.length - 1];
     const last = lastLine?.[lastLine.length - 1];
     const features: Feature[] = [];
-    if (first) features.push({ type: "Feature", properties: { kind: "start" }, geometry: { type: "Point", coordinates: first } });
+    if (first)
+      features.push({
+        type: "Feature",
+        properties: { kind: "start" },
+        geometry: { type: "Point", coordinates: first },
+      });
     if (last && mode === "fit") {
-      features.push({ type: "Feature", properties: { kind: "finish" }, geometry: { type: "Point", coordinates: last } });
+      features.push({
+        type: "Feature",
+        properties: { kind: "finish" },
+        geometry: { type: "Point", coordinates: last },
+      });
     }
     return { type: "FeatureCollection", features };
   }, [lines, mode]);
@@ -80,14 +115,25 @@ export function TrackMap({ theme, lines, markers, mode, points = [], interactive
 
   const bounds = useMemo(() => {
     const box = mode === "fit" ? boundsOf(points) : null;
-    return box ? { ne: [box.maxLng, box.maxLat] as LngLat, sw: [box.minLng, box.minLat] as LngLat } : undefined;
+    return box
+      ? {
+          ne: [box.maxLng, box.maxLat] as LngLat,
+          sw: [box.minLng, box.minLat] as LngLat,
+        }
+      : undefined;
   }, [mode, points]);
 
   if (!mapsEnabled) return null;
 
   const primary = theme.color.primary;
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.segmentedTrack }, style]}>
+    <View
+      style={[
+        styles.root,
+        { backgroundColor: theme.color.segmentedTrack },
+        style,
+      ]}
+    >
       <MapView
         style={StyleSheet.absoluteFill}
         styleURL={dark ? STYLE_DARK : STYLE_LIGHT}
@@ -104,34 +150,63 @@ export function TrackMap({ theme, lines, markers, mode, points = [], interactive
           <Camera
             followUserLocation={following}
             followZoomLevel={FOLLOW_ZOOM}
-            onUserTrackingModeChange={(event) => setFollowing(event.nativeEvent.payload.followUserLocation)}
+            onUserTrackingModeChange={(event) =>
+              setFollowing(event.nativeEvent.payload.followUserLocation)
+            }
           />
         ) : (
           <Camera
             bounds={bounds}
-            padding={{ paddingTop: FIT_PADDING, paddingBottom: FIT_PADDING, paddingLeft: FIT_PADDING, paddingRight: FIT_PADDING }}
+            padding={{
+              paddingTop: FIT_PADDING,
+              paddingBottom: FIT_PADDING,
+              paddingLeft: FIT_PADDING,
+              paddingRight: FIT_PADDING,
+            }}
             animationDuration={0}
           />
         )}
-        {mode === "follow" ? <LocationPuck puckBearingEnabled puckBearing="course" pulsing={{ isEnabled: false }} /> : null}
+        {mode === "follow" ? (
+          <LocationPuck
+            puckBearingEnabled
+            puckBearing="course"
+            pulsing={{ isEnabled: false }}
+          />
+        ) : null}
 
         <ShapeSource id="trefix-route" shape={routeShape}>
           <LineLayer
             id="trefix-route-gap"
             filter={["==", ["get", "kind"], "gap"]}
-            style={{ lineColor: primary, lineWidth: 3, lineOpacity: 0.6, lineDasharray: [1, 2], lineCap: "round" }}
+            style={{
+              lineColor: primary,
+              lineWidth: 3,
+              lineOpacity: 0.6,
+              lineDasharray: [1, 2],
+              lineCap: "round",
+            }}
           />
           <LineLayer
             id="trefix-route-solid"
             filter={["==", ["get", "kind"], "solid"]}
-            style={{ lineColor: primary, lineWidth: 4, lineCap: "round", lineJoin: "round" }}
+            style={{
+              lineColor: primary,
+              lineWidth: 4,
+              lineCap: "round",
+              lineJoin: "round",
+            }}
           />
         </ShapeSource>
 
         <ShapeSource id="trefix-markers" shape={markerShape}>
           <CircleLayer
             id="trefix-marker-circle"
-            style={{ circleRadius: 9, circleColor: theme.color.background, circleStrokeColor: primary, circleStrokeWidth: 2 }}
+            style={{
+              circleRadius: 9,
+              circleColor: theme.color.background,
+              circleStrokeColor: primary,
+              circleStrokeWidth: 2,
+            }}
           />
           <SymbolLayer
             id="trefix-marker-label"
@@ -151,7 +226,13 @@ export function TrackMap({ theme, lines, markers, mode, points = [], interactive
             id="trefix-ends-circle"
             style={{
               circleRadius: 6,
-              circleColor: ["match", ["get", "kind"], "start", theme.color.success, theme.color.danger],
+              circleColor: [
+                "match",
+                ["get", "kind"],
+                "start",
+                theme.color.success,
+                theme.color.danger,
+              ],
               circleStrokeColor: theme.color.background,
               circleStrokeWidth: 2,
             }}
@@ -166,7 +247,10 @@ export function TrackMap({ theme, lines, markers, mode, points = [], interactive
           onPress={() => setFollowing(true)}
           style={({ pressed }) => [
             styles.center,
-            { backgroundColor: theme.color.floating, borderColor: theme.color.border },
+            {
+              backgroundColor: theme.color.floating,
+              borderColor: theme.color.border,
+            },
             pressed && styles.pressed,
           ]}
         >

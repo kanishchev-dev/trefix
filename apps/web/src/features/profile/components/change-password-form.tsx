@@ -98,9 +98,7 @@ export function ChangePasswordForm(): ReactElement {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="new-password">
-                {t("profile.password.new")}
-              </Label>
+              <Label htmlFor="new-password">{t("profile.password.new")}</Label>
               <Input
                 id="new-password"
                 type="password"

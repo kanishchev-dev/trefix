@@ -4,7 +4,13 @@ import { useState, type ReactElement } from "react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Switch } from "@workspace/ui/components/switch";
 import { InfoIcon } from "lucide-react";
 
@@ -38,7 +44,9 @@ export function AuthenticationSettings(): ReactElement {
     : "settings-loading";
 
   const isLoading =
-    settingsQuery.isLoading || groupsQuery.isLoading || permissionsQuery.isLoading;
+    settingsQuery.isLoading ||
+    groupsQuery.isLoading ||
+    permissionsQuery.isLoading;
   const settings = settingsQuery.data;
 
   return (
@@ -96,11 +104,17 @@ function EditorFields({
 
   function handleSave(): void {
     updateSettings.mutate(
-      { defaultGroups: selectedGroups, defaultPermissions: selectedPermissions },
+      {
+        defaultGroups: selectedGroups,
+        defaultPermissions: selectedPermissions,
+      },
       {
         onSuccess: () => notifySuccess(t("settings.toasts.saved")),
         onError: (error) =>
-          notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+          notifyError(
+            t("common.states.error"),
+            getFriendlyApiMessage(error, t),
+          ),
       },
     );
   }
@@ -132,7 +146,10 @@ function EditorFields({
                     key={group.id}
                     className="flex items-center justify-between gap-4 py-3"
                   >
-                    <label htmlFor={switchId} className="flex flex-col gap-0.5 cursor-pointer">
+                    <label
+                      htmlFor={switchId}
+                      className="flex flex-col gap-0.5 cursor-pointer"
+                    >
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium hover:underline">
                           {group.name}
@@ -165,7 +182,9 @@ function EditorFields({
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("settings.authentication.defaultPermissions")}</CardTitle>
+          <CardTitle>
+            {t("settings.authentication.defaultPermissions")}
+          </CardTitle>
           <CardDescription>
             {t("settings.authentication.defaultPermissionsHint")}
           </CardDescription>
@@ -182,7 +201,10 @@ function EditorFields({
 
       <div className="flex items-center gap-4">
         {canManage ? (
-          <Button onClick={handleSave} disabled={updateSettings.isPending || isLoading}>
+          <Button
+            onClick={handleSave}
+            disabled={updateSettings.isPending || isLoading}
+          >
             {updateSettings.isPending
               ? t("common.actions.loading")
               : t("common.actions.save")}

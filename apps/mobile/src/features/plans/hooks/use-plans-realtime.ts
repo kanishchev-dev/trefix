@@ -29,7 +29,8 @@ export function usePlansRealtime(): void {
       case "structure":
       case "rebuild":
         invalidatePlanQueries(queryClient, "library");
-        if (planId) invalidatePlanQueries(queryClient, "draftStructure", planId);
+        if (planId)
+          invalidatePlanQueries(queryClient, "draftStructure", planId);
         return;
       case "workouts":
       case "schedule":

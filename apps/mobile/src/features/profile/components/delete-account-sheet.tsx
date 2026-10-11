@@ -7,8 +7,15 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { trackEvent } from "../../../lib/analytics";
 import { deleteAccount } from "../../../lib/auth-api";
 import { type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
-import { InlineError, SheetActionsColumn } from "../../plans/components/plans-ui";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
+import {
+  InlineError,
+  SheetActionsColumn,
+} from "../../plans/components/plans-ui";
 import { profileErrorMessage } from "../lib/profile-format";
 
 type Props = {
@@ -21,7 +28,13 @@ type Props = {
 };
 
 /** Permanent account deletion, required to be reachable in-app by the App Store. */
-export function DeleteAccountSheet({ visible, onClose, copy, theme, themeMode }: Props) {
+export function DeleteAccountSheet({
+  visible,
+  onClose,
+  copy,
+  theme,
+  themeMode,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,12 +77,19 @@ export function DeleteAccountSheet({ visible, onClose, copy, theme, themeMode }:
       theme={theme}
       themeMode={themeMode}
     >
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <SheetBlock theme={theme}>
           <Text
             style={[
               styles.body,
-              { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
             ]}
           >
             {sheetCopy.body}
@@ -82,7 +102,13 @@ export function DeleteAccountSheet({ visible, onClose, copy, theme, themeMode }:
                 <X color={theme.color.danger} size={16} strokeWidth={2.4} />
                 <Text
                   numberOfLines={1}
-                  style={[styles.itemText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+                  style={[
+                    styles.itemText,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.regular,
+                    },
+                  ]}
                 >
                   {item}
                 </Text>

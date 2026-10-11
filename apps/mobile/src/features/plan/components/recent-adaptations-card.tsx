@@ -63,16 +63,11 @@ export function RecentAdaptationsCard({
     );
   }
 
-  // Format created at (e.g., 2 days ago or raw text)
   const formatTimeAgo = (createdAt: string) => {
-    if (
-      createdAt.includes(" ago") ||
-      createdAt.includes("назад") ||
-      createdAt.includes("d ago")
-    ) {
-      return createdAt;
-    }
     const createdDate = new Date(createdAt);
+    if (Number.isNaN(createdDate.getTime())) {
+      return "";
+    }
     const now = new Date();
     const diffHours = Math.floor(
       (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60),

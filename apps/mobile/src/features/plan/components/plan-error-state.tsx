@@ -12,11 +12,7 @@ type Props = {
   onRetry: () => void;
 };
 
-export function PlanErrorState({
-  theme,
-  copy,
-  onRetry,
-}: Props) {
+export function PlanErrorState({ theme, copy, onRetry }: Props) {
   const errorCopy = copy.plan.errorState;
 
   return (

@@ -34,11 +34,18 @@ describe("permission locales", () => {
 
   it("has no empty translation", () => {
     for (const locale of [en, ru]) {
-      for (const section of ["domains", "resources", "actions", "descriptions"]) {
+      for (const section of [
+        "domains",
+        "resources",
+        "actions",
+        "descriptions",
+      ]) {
         for (const [key, value] of Object.entries(
           locale.permissions[section as keyof typeof locale.permissions],
         )) {
-          expect(`${section}.${key}: ${JSON.stringify(value)}`).not.toContain(": \"\"");
+          expect(`${section}.${key}: ${JSON.stringify(value)}`).not.toContain(
+            ': ""',
+          );
         }
       }
     }

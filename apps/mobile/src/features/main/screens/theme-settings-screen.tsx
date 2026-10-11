@@ -18,7 +18,10 @@ type Props = {
   onBack: () => void;
 };
 
-const THEME_OPTIONS: { id: ThemePreference; labelKey: "system" | "dark" | "light" }[] = [
+const THEME_OPTIONS: {
+  id: ThemePreference;
+  labelKey: "system" | "dark" | "light";
+}[] = [
   { id: "system", labelKey: "system" },
   { id: "dark", labelKey: "dark" },
   { id: "light", labelKey: "light" },

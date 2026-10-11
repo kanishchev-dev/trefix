@@ -1,7 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { DeviceActivity, DeviceProvider, DeviceSyncBatchRequest } from "@workspace/api-client";
+import type {
+  DeviceActivity,
+  DeviceProvider,
+  DeviceSyncBatchRequest,
+} from "@workspace/api-client";
 
-import { PROFILE_METRICS_INTERVAL_MS, runSync, runSyncOnce, type SyncDeps, type SyncStateStore } from "./sync-engine";
+import {
+  PROFILE_METRICS_INTERVAL_MS,
+  runSync,
+  runSyncOnce,
+  type SyncDeps,
+  type SyncStateStore,
+} from "./sync-engine";
 import type { DeviceHealthSource, WorkoutChangesPage } from "./types";
 
 const NOW = Date.parse("2026-10-09T12:00:00Z");
@@ -15,21 +25,31 @@ const activity = (id: string): DeviceActivity => ({
   distanceMeters: 10000,
 });
 
-function memoryStore(): SyncStateStore & { cursors: Map<string, string | null>; profileAt: Map<string, number> } {
+function memoryStore(): SyncStateStore & {
+  cursors: Map<string, string | null>;
+  profileAt: Map<string, number>;
+} {
   const cursors = new Map<string, string | null>();
   const profileAt = new Map<string, number>();
-  const key = (userId: string, provider: DeviceProvider) => `${userId}:${provider}`;
+  const key = (userId: string, provider: DeviceProvider) =>
+    `${userId}:${provider}`;
   return {
     cursors,
     profileAt,
-    getCursor: async (userId, provider) => cursors.get(key(userId, provider)) ?? null,
-    setCursor: async (userId, provider, cursor) => void cursors.set(key(userId, provider), cursor),
-    getLastProfileSyncAt: async (userId, provider) => profileAt.get(key(userId, provider)) ?? null,
-    setLastProfileSyncAt: async (userId, provider, at) => void profileAt.set(key(userId, provider), at),
+    getCursor: async (userId, provider) =>
+      cursors.get(key(userId, provider)) ?? null,
+    setCursor: async (userId, provider, cursor) =>
+      void cursors.set(key(userId, provider), cursor),
+    getLastProfileSyncAt: async (userId, provider) =>
+      profileAt.get(key(userId, provider)) ?? null,
+    setLastProfileSyncAt: async (userId, provider, at) =>
+      void profileAt.set(key(userId, provider), at),
   };
 }
 
-function sourceWith(pages: WorkoutChangesPage[]): DeviceHealthSource & { calls: Array<string | null> } {
+function sourceWith(
+  pages: WorkoutChangesPage[],
+): DeviceHealthSource & { calls: Array<string | null> } {
   const calls: Array<string | null> = [];
   let index = 0;
   return {
@@ -42,7 +62,9 @@ function sourceWith(pages: WorkoutChangesPage[]): DeviceHealthSource & { calls: 
       calls.push(cursor);
       return pages[Math.min(index++, pages.length - 1)];
     },
-    readProfileMetrics: async () => ({ weight: { valueKg: 70, measuredAt: "2026-10-09T06:00:00.000Z" } }),
+    readProfileMetrics: async () => ({
+      weight: { valueKg: 70, measuredAt: "2026-10-09T06:00:00.000Z" },
+    }),
     openSystemSettings: async () => undefined,
   };
 }
@@ -51,7 +73,12 @@ describe("runSync", () => {
   let store: ReturnType<typeof memoryStore>;
   let batches: DeviceSyncBatchRequest[];
   let deps: SyncDeps;
-  const request = { userId: "user-1", syncType: "initial" as const, historyDepthDays: 180, profileSync: false };
+  const request = {
+    userId: "user-1",
+    syncType: "initial" as const,
+    historyDepthDays: 180,
+    profileSync: false,
+  };
 
   beforeEach(() => {
     store = memoryStore();
@@ -72,38 +99,82 @@ describe("runSync", () => {
   });
 
   it("splits pages into batches of 50 and marks only the very last one", async () => {
-    const many = Array.from({ length: 60 }, (_, index) => activity(`a${index}`));
+    const many = Array.from({ length: 60 }, (_, index) =>
+      activity(`a${index}`),
+    );
     deps.source = sourceWith([
-      { activities: many, deletedSourceActivityIds: [], nextCursor: "c1", hasMore: true },
-      { activities: [activity("b1")], deletedSourceActivityIds: ["gone"], nextCursor: "c2", hasMore: false },
+      {
+        activities: many,
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: true,
+      },
+      {
+        activities: [activity("b1")],
+        deletedSourceActivityIds: ["gone"],
+        nextCursor: "c2",
+        hasMore: false,
+      },
     ]);
 
     const result = await runSync(deps, request);
 
-    expect(result).toMatchObject({ status: "completed", batches: 3, sentActivities: 61, sentDeletions: 1 });
-    expect(batches.map((batch) => [batch.batchIndex, batch.activities.length, batch.isLast])).toEqual([
+    expect(result).toMatchObject({
+      status: "completed",
+      batches: 3,
+      sentActivities: 61,
+      sentDeletions: 1,
+    });
+    expect(
+      batches.map((batch) => [
+        batch.batchIndex,
+        batch.activities.length,
+        batch.isLast,
+      ]),
+    ).toEqual([
       [0, 50, false],
       [1, 10, false],
       [2, 1, true],
     ]);
     expect(batches[2].deletedSourceActivityIds).toEqual(["gone"]);
-    expect(new Set(batches.map((batch) => batch.syncId))).toEqual(new Set(["sync-1"]));
+    expect(new Set(batches.map((batch) => batch.syncId))).toEqual(
+      new Set(["sync-1"]),
+    );
     expect(store.cursors.get("user-1:apple_health")).toBe("c2");
   });
 
   it("closes a session with an empty last batch only when something was sent", async () => {
     deps.source = sourceWith([
-      { activities: [activity("a")], deletedSourceActivityIds: [], nextCursor: "c1", hasMore: true },
-      { activities: [], deletedSourceActivityIds: [], nextCursor: "c2", hasMore: false },
+      {
+        activities: [activity("a")],
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: true,
+      },
+      {
+        activities: [],
+        deletedSourceActivityIds: [],
+        nextCursor: "c2",
+        hasMore: false,
+      },
     ]);
     await runSync(deps, request);
-    expect(batches.map((batch) => [batch.activities.length, batch.isLast])).toEqual([
+    expect(
+      batches.map((batch) => [batch.activities.length, batch.isLast]),
+    ).toEqual([
       [1, false],
       [0, true],
     ]);
 
     batches = [];
-    deps.source = sourceWith([{ activities: [], deletedSourceActivityIds: [], nextCursor: "c3", hasMore: false }]);
+    deps.source = sourceWith([
+      {
+        activities: [],
+        deletedSourceActivityIds: [],
+        nextCursor: "c3",
+        hasMore: false,
+      },
+    ]);
     await runSync(deps, request);
     expect(batches).toEqual([]);
     expect(store.cursors.get("user-1:apple_health")).toBe("c3");
@@ -111,7 +182,14 @@ describe("runSync", () => {
 
   it("keeps the cursor when the server does not accept a batch", async () => {
     await store.setCursor("user-1", "apple_health", "c0");
-    deps.source = sourceWith([{ activities: [activity("a")], deletedSourceActivityIds: [], nextCursor: "c1", hasMore: false }]);
+    deps.source = sourceWith([
+      {
+        activities: [activity("a")],
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: false,
+      },
+    ]);
     deps.api.postBatch = vi.fn(async () => {
       throw new Error("offline");
     });
@@ -125,7 +203,12 @@ describe("runSync", () => {
   it("starts from the stored cursor and drops duplicates inside a page", async () => {
     await store.setCursor("user-1", "apple_health", "c0");
     const source = sourceWith([
-      { activities: [activity("a"), activity("a")], deletedSourceActivityIds: ["a", "x", "x"], nextCursor: "c1", hasMore: false },
+      {
+        activities: [activity("a"), activity("a")],
+        deletedSourceActivityIds: ["a", "x", "x"],
+        nextCursor: "c1",
+        hasMore: false,
+      },
     ]);
     deps.source = source;
 
@@ -140,7 +223,12 @@ describe("runSync", () => {
     let clock = NOW;
     deps.now = () => clock;
     deps.source = sourceWith([
-      { activities: [activity("a")], deletedSourceActivityIds: [], nextCursor: "c1", hasMore: true },
+      {
+        activities: [activity("a")],
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: true,
+      },
     ]);
     deps.api.postBatch = vi.fn(async () => {
       clock += 30_000;
@@ -155,19 +243,37 @@ describe("runSync", () => {
   });
 
   it("pushes profile metrics at most every 12 hours", async () => {
-    deps.source = sourceWith([{ activities: [], deletedSourceActivityIds: [], nextCursor: "c1", hasMore: false }]);
+    deps.source = sourceWith([
+      {
+        activities: [],
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: false,
+      },
+    ]);
 
     const first = await runSync(deps, { ...request, profileSync: true });
     const second = await runSync(deps, { ...request, profileSync: true });
     deps.now = () => NOW + PROFILE_METRICS_INTERVAL_MS + 1;
     const third = await runSync(deps, { ...request, profileSync: true });
 
-    expect([first.profileSynced, second.profileSynced, third.profileSynced]).toEqual([true, false, true]);
+    expect([
+      first.profileSynced,
+      second.profileSynced,
+      third.profileSynced,
+    ]).toEqual([true, false, true]);
     expect(deps.api.postProfileMetrics).toHaveBeenCalledTimes(2);
   });
 
   it("does not push profile metrics when the setting is off", async () => {
-    deps.source = sourceWith([{ activities: [], deletedSourceActivityIds: [], nextCursor: "c1", hasMore: false }]);
+    deps.source = sourceWith([
+      {
+        activities: [],
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: false,
+      },
+    ]);
     await runSync(deps, request);
     expect(deps.api.postProfileMetrics).not.toHaveBeenCalled();
   });
@@ -179,7 +285,14 @@ describe("runSyncOnce", () => {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const source = sourceWith([{ activities: [activity("a")], deletedSourceActivityIds: [], nextCursor: "c1", hasMore: false }]);
+    const source = sourceWith([
+      {
+        activities: [activity("a")],
+        deletedSourceActivityIds: [],
+        nextCursor: "c1",
+        hasMore: false,
+      },
+    ]);
     const postBatch = vi.fn(async () => {
       await gate;
       return { rejected: [] };
@@ -191,7 +304,12 @@ describe("runSyncOnce", () => {
       now: () => NOW,
       uuid: () => "sync-1",
     };
-    const request = { userId: "user-1", syncType: "foreground" as const, historyDepthDays: 180, profileSync: false };
+    const request = {
+      userId: "user-1",
+      syncType: "foreground" as const,
+      historyDepthDays: 180,
+      profileSync: false,
+    };
 
     const first = runSyncOnce(deps, request);
     const second = runSyncOnce(deps, request);

@@ -32,7 +32,9 @@ export function addDaysIso(iso: string, days: number): string {
 
 /** Whole days from `from` to `to` (both "YYYY-MM-DD"). */
 export function daysBetween(from: string, to: string): number {
-  return Math.round((parseIsoDate(to).getTime() - parseIsoDate(from).getTime()) / DAY_MS);
+  return Math.round(
+    (parseIsoDate(to).getTime() - parseIsoDate(from).getTime()) / DAY_MS,
+  );
 }
 
 /** Display-only end date of a plan started on `startDate`. */
@@ -42,7 +44,8 @@ export function planEndDate(startDate: string, totalWeeks: number): string {
 
 /** Calendar date of a workout timestamp in the device timezone. */
 export function workoutLocalDate(scheduledAt: string | Date): string {
-  const value = typeof scheduledAt === "string" ? scheduledAt : scheduledAt.toISOString();
+  const value =
+    typeof scheduledAt === "string" ? scheduledAt : scheduledAt.toISOString();
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   return toIsoDate(new Date(value));
 }
@@ -52,7 +55,11 @@ export function mondayBasedWeekday(iso: string): number {
   return (parseIsoDate(iso).getDay() + 6) % 7;
 }
 
-export function clampIso(iso: string, min: string, max?: string | null): string {
+export function clampIso(
+  iso: string,
+  min: string,
+  max?: string | null,
+): string {
   if (iso < min) return min;
   if (max && iso > max) return max;
   return iso;

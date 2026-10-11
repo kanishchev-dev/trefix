@@ -15,7 +15,13 @@ export type PlanCardTarget = {
   status: string;
 };
 
-type ActionKey = "start" | "prepareAgain" | "editWorkouts" | "editParams" | "meta" | "delete";
+type ActionKey =
+  | "start"
+  | "prepareAgain"
+  | "editWorkouts"
+  | "editParams"
+  | "meta"
+  | "delete";
 
 type Props = {
   plan: PlanCardTarget | null;
@@ -29,7 +35,15 @@ type Props = {
 };
 
 /** Status-dependent actions of a draft or history plan (the plan in progress has its own menu). */
-export function PlanCardActionsSheet({ plan, visible, onClose, onDeleted, theme, themeMode, copy }: Props) {
+export function PlanCardActionsSheet({
+  plan,
+  visible,
+  onClose,
+  onDeleted,
+  theme,
+  themeMode,
+  copy,
+}: Props) {
   const actionsCopy = copy.plans.actions;
   const navigation = usePlansNavigation();
   const { showToast } = useToast();

@@ -1,4 +1,10 @@
-import { consentSchema, consentsListSchema, type Consent, type ConsentsList, type ConsentType } from "@workspace/api-client";
+import {
+  consentSchema,
+  consentsListSchema,
+  type Consent,
+  type ConsentsList,
+  type ConsentType,
+} from "@workspace/api-client";
 
 import { request } from "./api-client";
 
@@ -24,5 +30,8 @@ export async function giveConsent(
 }
 
 export async function revokeConsent(type: ConsentType): Promise<void> {
-  await request<unknown>(`/me/consents/${type}`, { method: "DELETE", useAuth: true });
+  await request<unknown>(`/me/consents/${type}`, {
+    method: "DELETE",
+    useAuth: true,
+  });
 }

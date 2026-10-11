@@ -12,7 +12,8 @@ export const planKeys = {
     goalTargetDate
       ? (["plans", "start-options", planId, goalTargetDate] as const)
       : (["plans", "start-options", planId] as const),
-  rebuildPrefill: (planId: string) => ["plans", "rebuild-prefill", planId] as const,
+  rebuildPrefill: (planId: string) =>
+    ["plans", "rebuild-prefill", planId] as const,
   currentMetrics: () => ["athlete", "current-metrics"] as const,
   overview: () => ["plan", "overview", "current"] as const,
 };
@@ -25,7 +26,11 @@ export type PlanMutationKind =
   | "draftStructure"
   | "activeChange";
 
-export function invalidatePlanQueries(queryClient: QueryClient, kind: PlanMutationKind, planId?: string): void {
+export function invalidatePlanQueries(
+  queryClient: QueryClient,
+  kind: PlanMutationKind,
+  planId?: string,
+): void {
   const invalidate = (queryKey: readonly unknown[]) => {
     void queryClient.invalidateQueries({ queryKey });
   };

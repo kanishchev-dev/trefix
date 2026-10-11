@@ -29,10 +29,19 @@ import { PlanWorkoutAddSheet } from "../../plans/components/plan-workout-add-she
 import { PlanWorkoutSheet } from "../../plans/components/plan-workout-sheet";
 import { usePlanDetails } from "../../plans/hooks/use-plan";
 import { usePlanCounts, usePlansList } from "../../plans/hooks/use-plans";
-import { addDaysIso, mondayBasedWeekday, todayIso, workoutLocalDate } from "../../plans/lib/plan-dates";
+import {
+  addDaysIso,
+  mondayBasedWeekday,
+  todayIso,
+  workoutLocalDate,
+} from "../../plans/lib/plan-dates";
 import { weekWorkoutRows } from "../../plans/lib/plan-weeks";
 import { usePlansNavigation } from "../../plans/plans-navigation";
-import { formatDayMonth, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  formatDayMonth,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;
@@ -46,7 +55,10 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
   const { displayState, data, refresh, isRefreshing } = usePlanOverview();
   const isEmpty = displayState === "empty";
   const countsQuery = usePlanCounts();
-  const draftsQuery = usePlansList("draft", isEmpty && (countsQuery.data?.draft ?? 0) > 0);
+  const draftsQuery = usePlansList(
+    "draft",
+    isEmpty && (countsQuery.data?.draft ?? 0) > 0,
+  );
   const planId = data && !isEmpty ? data.plan.id : null;
   const detailsQuery = usePlanDetails(planId);
   const details = detailsQuery.data;
@@ -56,7 +68,10 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
     useState<PlanAdaptation | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
-  const [addTarget, setAddTarget] = useState<{ planId: string; date: string } | null>(null);
+  const [addTarget, setAddTarget] = useState<{
+    planId: string;
+    date: string;
+  } | null>(null);
 
   const logoSource =
     themeMode === "dark"
@@ -85,24 +100,43 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
       variant: "default",
       bottomContent: null,
     },
-    [logoSource, copy.plans.tab.openPlans, copy.plans.tab.plansButton, navigation],
+    [
+      logoSource,
+      copy.plans.tab.openPlans,
+      copy.plans.tab.plansButton,
+      navigation,
+    ],
   );
 
   const dayNames = shortDayNamesFor(language);
   const weekRows = useMemo(() => {
     if (!details || !selectedWeek) return undefined;
-    return weekWorkoutRows(details, selectedWeek.weekNumber, dayNames, (iso) => {
-      const date = workoutLocalDate(iso);
-      return `${dayNames[mondayBasedWeekday(date)]} ${formatDayMonth(date, language)}`;
-    });
+    return weekWorkoutRows(
+      details,
+      selectedWeek.weekNumber,
+      dayNames,
+      (iso) => {
+        const date = workoutLocalDate(iso);
+        return `${dayNames[mondayBasedWeekday(date)]} ${formatDayMonth(date, language)}`;
+      },
+    );
   }, [dayNames, details, language, selectedWeek]);
 
   // Workouts can be added to the current and future weeks of the plan in progress.
   const addWorkoutTo = (week: PlanWeek): (() => void) | undefined => {
-    if (displayState !== "active" || !details?.startDate || week.status === "completed") return undefined;
+    if (
+      displayState !== "active" ||
+      !details?.startDate ||
+      week.status === "completed"
+    )
+      return undefined;
     const weekStart = addDaysIso(details.startDate, (week.weekNumber - 1) * 7);
     const today = todayIso();
-    return () => setAddTarget({ planId: details.id, date: weekStart > today ? weekStart : today });
+    return () =>
+      setAddTarget({
+        planId: details.id,
+        date: weekStart > today ? weekStart : today,
+      });
   };
 
   const handleRefresh = () => {
@@ -136,8 +170,15 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
           counts={countsQuery.data}
           drafts={draftsQuery.data?.pages[0]?.items}
           onCreatePlan={navigation.openCreationMethod}
-          onOpenPlans={() => navigation.openPlans({ segment: "draft", source: "plan_tab_empty" })}
-          onOpenHistory={() => navigation.openPlans({ segment: "history", source: "plan_tab_empty" })}
+          onOpenPlans={() =>
+            navigation.openPlans({ segment: "draft", source: "plan_tab_empty" })
+          }
+          onOpenHistory={() =>
+            navigation.openPlans({
+              segment: "history",
+              source: "plan_tab_empty",
+            })
+          }
           onStartDraft={(plan) => navigation.startDraft(plan, "plan_tab_empty")}
           theme={theme}
           themeMode={themeMode}
@@ -154,8 +195,18 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
         <PlanCompletedState
           copy={copy}
           onNewGoal={navigation.openCreationMethod}
-          onPrepareAgain={() => navigation.openCreation({ mode: "rebuild", sourcePlanId: data.plan.id })}
-          onOpenPlans={() => navigation.openPlans({ segment: "history", source: "plan_completed" })}
+          onPrepareAgain={() =>
+            navigation.openCreation({
+              mode: "rebuild",
+              sourcePlanId: data.plan.id,
+            })
+          }
+          onOpenPlans={() =>
+            navigation.openPlans({
+              segment: "history",
+              source: "plan_completed",
+            })
+          }
           onSelectWeek={setSelectedWeek}
           overview={data}
           theme={theme}
@@ -173,7 +224,12 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
             themeMode={themeMode}
           />
 
-          <PendingAdaptationsCard copy={copy} language={language} theme={theme} themeMode={themeMode} />
+          <PendingAdaptationsCard
+            copy={copy}
+            language={language}
+            theme={theme}
+            themeMode={themeMode}
+          />
 
           {/* Training Plan Timeline */}
           <PlanTimeline

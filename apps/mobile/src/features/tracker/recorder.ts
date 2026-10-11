@@ -7,7 +7,12 @@ import type { ExecutionStep } from "@workspace/api-client";
 
 import { RecordingEngine } from "./engine/recording-engine";
 import { buildRecording, type SummaryEdits } from "./engine/summary";
-import type { EngineConfig, EngineState, EngineView, LocationSample } from "./engine/types";
+import type {
+  EngineConfig,
+  EngineState,
+  EngineView,
+  LocationSample,
+} from "./engine/types";
 import { watchAltitude } from "./sensors/barometer";
 import { learnStride } from "./sensors/stride";
 import {
@@ -35,7 +40,9 @@ const TICK_MS = 1_000;
 const METRES_PER_MILE = 1609.344;
 
 export class TrackerPermissionError extends Error {
-  constructor(readonly permission: "location" | "location_services" | "motion") {
+  constructor(
+    readonly permission: "location" | "location_services" | "motion",
+  ) {
     super(`Tracker permission missing: ${permission}`);
   }
 }
@@ -68,8 +75,13 @@ class Recorder {
   private engine: RecordingEngine | null = null;
   private sessionId: string | null = null;
   private userId: string | null = null;
-  private meta: SessionMeta = { plannedWorkoutId: null, plannedTitle: null, workoutType: null };
-  private stepSubscription: ReturnType<typeof Pedometer.watchStepCount> | null = null;
+  private meta: SessionMeta = {
+    plannedWorkoutId: null,
+    plannedTitle: null,
+    workoutType: null,
+  };
+  private stepSubscription: ReturnType<typeof Pedometer.watchStepCount> | null =
+    null;
   private altitudeSubscription: { remove: () => void } | null = null;
   private track: LocationSample[] = [];
   private appStateSubscription: NativeEventSubscription | null = null;
@@ -109,10 +121,12 @@ class Recorder {
     planSteps: ExecutionStep[] | null = null,
   ): Promise<string> {
     if (this.active) throw new Error("A recording is already running");
-    const usesGps = config.distanceMode === "gps" && config.environment !== "treadmill";
+    const usesGps =
+      config.distanceMode === "gps" && config.environment !== "treadmill";
     if (usesGps) await ensureLocationPermission();
     const pedometer = await preparePedometer(!usesGps);
-    const keepAlive = !usesGps && Boolean(meta.voice?.enabled) && (await allowLocation(true));
+    const keepAlive =
+      !usesGps && Boolean(meta.voice?.enabled) && (await allowLocation(true));
 
     const sessionId = Crypto.randomUUID();
     const engine = RecordingEngine.start(config, Date.now(), planSteps);
@@ -123,7 +137,11 @@ class Recorder {
     this.meta = meta;
     this.track = [];
     this.cues = createCueState();
-    await this.attachSensors(usesGps ? "track" : keepAlive ? "keepAlive" : "none", pedometer, notification);
+    await this.attachSensors(
+      usesGps ? "track" : keepAlive ? "keepAlive" : "none",
+      pedometer,
+      notification,
+    );
     this.publish();
     return sessionId;
   }
@@ -133,7 +151,10 @@ class Recorder {
    * delivering fixes (Android service) the run simply continues; after a long
    * silence the gap becomes a pause the user ends with "Resume".
    */
-  restore(userId: string | undefined, notification: NotificationCopy | null): Promise<void> {
+  restore(
+    userId: string | undefined,
+    notification: NotificationCopy | null,
+  ): Promise<void> {
     this.restoring ??= (async () => {
       if (this.engine) {
         // Woken earlier by a background fix: the UI is here now, attach the rest.
@@ -148,14 +169,22 @@ class Recorder {
       this.userId = stored.userId;
       this.meta = stored.meta;
       this.track = await loadPoints(stored.id).catch(() => []);
-      if (stored.status === "recording" && Date.now() - engine.state.clock > RESTORE_GAP_AS_PAUSE_MS) {
+      if (
+        stored.status === "recording" &&
+        Date.now() - engine.state.clock > RESTORE_GAP_AS_PAUSE_MS
+      ) {
         engine.pause(engine.state.clock);
         await this.persist(true);
       }
       // Carry on talking from where the run is, without repeating the start.
-      this.cues = createCueState(engine.view(Date.now()), stored.meta.voice ?? undefined, this.unitM);
+      this.cues = createCueState(
+        engine.view(Date.now()),
+        stored.meta.voice ?? undefined,
+        this.unitM,
+      );
       this.publish();
-      if (stored.status !== "finished" && notification) await this.reattach(notification);
+      if (stored.status !== "finished" && notification)
+        await this.reattach(notification);
     })().finally(() => {
       this.restoring = null;
     });
@@ -208,19 +237,28 @@ class Recorder {
   }
 
   /** Builds the request and queues it; the session stays on the phone until the server accepts it. */
-  async save(edits: SummaryEdits, device: { appVersion?: string; model?: string }): Promise<string> {
+  async save(
+    edits: SummaryEdits,
+    device: { appVersion?: string; model?: string },
+  ): Promise<string> {
     const engine = this.engine;
     const sessionId = this.sessionId;
     const userId = this.userId;
     if (!engine || !sessionId || !userId) throw new Error("Nothing to save");
     if (engine.state.status !== "finished") await this.finish();
     const points = await loadPoints(sessionId);
-    const { summary, track } = buildRecording(sessionId, engine.state, points, edits, {
-      platform: Platform.OS === "ios" ? "ios" : "android",
-      osVersion: String(Platform.Version),
-      appVersion: device.appVersion,
-      model: device.model,
-    });
+    const { summary, track } = buildRecording(
+      sessionId,
+      engine.state,
+      points,
+      edits,
+      {
+        platform: Platform.OS === "ios" ? "ios" : "android",
+        osVersion: String(Platform.Version),
+        appVersion: device.appVersion,
+        model: device.model,
+      },
+    );
     const stride = engine.calibratedStride();
     if (stride) await learnStride(stride);
     await enqueueUpload(sessionId, userId, summary, track);
@@ -246,19 +284,33 @@ class Recorder {
 
   private async reattach(notification: NotificationCopy): Promise<void> {
     const usesGps = this.engine?.state.gps !== "off";
-    const keepAlive = !usesGps && Boolean(this.meta.voice?.enabled) && (await allowLocation(false));
+    const keepAlive =
+      !usesGps &&
+      Boolean(this.meta.voice?.enabled) &&
+      (await allowLocation(false));
     const pedometer = await preparePedometer(false).catch(() => false);
-    await this.attachSensors(usesGps ? "track" : keepAlive ? "keepAlive" : "none", pedometer, notification).catch(
-      () => undefined,
-    );
+    await this.attachSensors(
+      usesGps ? "track" : keepAlive ? "keepAlive" : "none",
+      pedometer,
+      notification,
+    ).catch(() => undefined);
   }
 
-  private async attachSensors(location: LocationUse, pedometer: boolean, notification: NotificationCopy): Promise<void> {
-    if (location !== "none" && !(await Location.hasStartedLocationUpdatesAsync(TRACKER_LOCATION_TASK))) {
+  private async attachSensors(
+    location: LocationUse,
+    pedometer: boolean,
+    notification: NotificationCopy,
+  ): Promise<void> {
+    if (
+      location !== "none" &&
+      !(await Location.hasStartedLocationUpdatesAsync(TRACKER_LOCATION_TASK))
+    ) {
       const track = location === "track";
       await Location.startLocationUpdatesAsync(TRACKER_LOCATION_TASK, {
         // Cell-level accuracy is enough to stay awake and costs almost no battery.
-        accuracy: track ? Location.Accuracy.BestForNavigation : Location.Accuracy.Lowest,
+        accuracy: track
+          ? Location.Accuracy.BestForNavigation
+          : Location.Accuracy.Lowest,
         timeInterval: track ? 1000 : 30_000,
         distanceInterval: 0,
         activityType: Location.ActivityType.Fitness,
@@ -277,13 +329,21 @@ class Recorder {
         this.publish();
       });
     }
-    if (this.engine?.state.config.environment !== "treadmill" && !this.altitudeSubscription) {
-      this.altitudeSubscription = await watchAltitude((altM) => this.engine?.onAltitude(altM)).catch(() => null);
+    if (
+      this.engine?.state.config.environment !== "treadmill" &&
+      !this.altitudeSubscription
+    ) {
+      this.altitudeSubscription = await watchAltitude((altM) =>
+        this.engine?.onAltitude(altM),
+      ).catch(() => null);
     }
     this.tickTimer ??= setInterval(() => this.tick(), TICK_MS);
-    this.appStateSubscription ??= AppState.addEventListener("change", (state) => {
-      if (state === "active") this.tick();
-    });
+    this.appStateSubscription ??= AppState.addEventListener(
+      "change",
+      (state) => {
+        if (state === "active") this.tick();
+      },
+    );
   }
 
   private async detachSensors(): Promise<void> {
@@ -296,7 +356,9 @@ class Recorder {
     this.appStateSubscription?.remove();
     this.appStateSubscription = null;
     try {
-      if (await Location.hasStartedLocationUpdatesAsync(TRACKER_LOCATION_TASK)) {
+      if (
+        await Location.hasStartedLocationUpdatesAsync(TRACKER_LOCATION_TASK)
+      ) {
         await Location.stopLocationUpdatesAsync(TRACKER_LOCATION_TASK);
       }
     } catch {
@@ -311,7 +373,11 @@ class Recorder {
     const now = Date.now();
     if (!force && now - this.lastPersistAt < PERSIST_EVERY_MS) return;
     this.lastPersistAt = now;
-    await saveSessionState(sessionId, engine.state.status as SessionStatus, engine.state);
+    await saveSessionState(
+      sessionId,
+      engine.state.status as SessionStatus,
+      engine.state,
+    );
   }
 
   private publish(): void {
@@ -336,7 +402,13 @@ class Recorder {
   private say(view: EngineView): void {
     const voice = this.meta.voice;
     if (!voice?.enabled || !this.cues) return;
-    for (const cue of nextCues(this.cues, view, Date.now(), voice, this.unitM)) {
+    for (const cue of nextCues(
+      this.cues,
+      view,
+      Date.now(),
+      voice,
+      this.unitM,
+    )) {
       speak(renderCue(cue, voice.language, voice.units), voice.language);
     }
   }
@@ -344,7 +416,11 @@ class Recorder {
   private reset(): void {
     this.engine = null;
     this.sessionId = null;
-    this.meta = { plannedWorkoutId: null, plannedTitle: null, workoutType: null };
+    this.meta = {
+      plannedWorkoutId: null,
+      plannedTitle: null,
+      workoutType: null,
+    };
     this.cues = null;
     this.track = [];
     this.publish();
@@ -354,9 +430,13 @@ class Recorder {
 export const recorder = new Recorder();
 
 async function ensureLocationPermission(): Promise<void> {
-  if (!(await Location.hasServicesEnabledAsync())) throw new TrackerPermissionError("location_services");
+  if (!(await Location.hasServicesEnabledAsync()))
+    throw new TrackerPermissionError("location_services");
   const current = await Location.getForegroundPermissionsAsync();
-  const granted = current.granted || (current.canAskAgain && (await Location.requestForegroundPermissionsAsync()).granted);
+  const granted =
+    current.granted ||
+    (current.canAskAgain &&
+      (await Location.requestForegroundPermissionsAsync()).granted);
   if (!granted) throw new TrackerPermissionError("location");
 }
 
@@ -369,7 +449,11 @@ async function allowLocation(ask: boolean): Promise<boolean> {
     if (!(await Location.hasServicesEnabledAsync())) return false;
     const current = await Location.getForegroundPermissionsAsync();
     if (current.granted) return true;
-    return ask && current.canAskAgain && (await Location.requestForegroundPermissionsAsync()).granted;
+    return (
+      ask &&
+      current.canAskAgain &&
+      (await Location.requestForegroundPermissionsAsync()).granted
+    );
   } catch {
     return false;
   }
@@ -383,7 +467,10 @@ async function preparePedometer(required: boolean): Promise<boolean> {
     return false;
   }
   const current = await Pedometer.getPermissionsAsync();
-  const granted = current.granted || (current.canAskAgain && (await Pedometer.requestPermissionsAsync()).granted);
+  const granted =
+    current.granted ||
+    (current.canAskAgain &&
+      (await Pedometer.requestPermissionsAsync()).granted);
   if (!granted && required) throw new TrackerPermissionError("motion");
   return granted;
 }

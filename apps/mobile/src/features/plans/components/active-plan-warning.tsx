@@ -3,7 +3,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { type ActivePlanSummary } from "@workspace/api-client";
 import { type ThemeTokens } from "@workspace/tokens";
 
-import { fillTemplate, pluralize, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  pluralize,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { Notice } from "./plans-ui";
 
 type Props = {
@@ -14,11 +19,24 @@ type Props = {
 };
 
 /** Consequences of replacing the plan in progress, shown before a destructive start. */
-export function ActivePlanWarning({ activePlan, copy, language, theme }: Props) {
+export function ActivePlanWarning({
+  activePlan,
+  copy,
+  language,
+  theme,
+}: Props) {
   const warningCopy = copy.plans.warning;
   const bullets = [
-    pluralize(warningCopy.completedKept, activePlan.completedWorkouts, language),
-    pluralize(warningCopy.plannedRemoved, activePlan.futurePlannedWorkouts, language),
+    pluralize(
+      warningCopy.completedKept,
+      activePlan.completedWorkouts,
+      language,
+    ),
+    pluralize(
+      warningCopy.plannedRemoved,
+      activePlan.futurePlannedWorkouts,
+      language,
+    ),
   ];
 
   return (
@@ -32,13 +50,27 @@ export function ActivePlanWarning({ activePlan, copy, language, theme }: Props) 
       })}
     >
       <View style={styles.body}>
-        <Text style={[styles.text, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+        <Text
+          style={[
+            styles.text,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
+          ]}
+        >
           {warningCopy.body}
         </Text>
         {bullets.map((bullet) => (
           <Text
             key={bullet}
-            style={[styles.text, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}
+            style={[
+              styles.text,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
           >
             {`• ${bullet}`}
           </Text>

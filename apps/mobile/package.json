@@ -30,6 +30,7 @@
     "@workspace/config": "workspace:*",
     "@workspace/tokens": "workspace:*",
     "@workspace/ui-native": "workspace:*",
+    "@workspace/utils": "workspace:*",
     "expo": "57.0.23",
     "expo-apple-authentication": "57.0.2",
     "expo-background-task": "57.0.21",

@@ -10,10 +10,11 @@ import {
   retireGear,
   updateGear,
 } from "../../../lib/training-api";
+import { queryKeys } from "../../../shared/lib/query-keys";
 
 export function useGear(status: GearStatus = "active") {
   return useQuery({
-    queryKey: ["gear", status],
+    queryKey: queryKeys.gear.list(status),
     queryFn: () => listGear(status),
     staleTime: 1000 * 60 * 5,
   });
@@ -45,8 +46,8 @@ export function useGearMutation() {
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["gear"] });
-      void queryClient.invalidateQueries({ queryKey: ["workouts"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gear.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all });
     },
   });
 }

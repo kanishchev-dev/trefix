@@ -24,9 +24,21 @@ const DASH = 5;
 const GAP = 4;
 
 /** Minimal line chart made of rotated views: no SVG dependency. */
-export function LineChart({ points, dashed = [], reference, invert = false, height = 80, theme, accessibilityLabel }: Props) {
+export function LineChart({
+  points,
+  dashed = [],
+  reference,
+  invert = false,
+  height = 80,
+  theme,
+  accessibilityLabel,
+}: Props) {
   const [width, setWidth] = useState(0);
-  const all = [...points, ...dashed, ...(reference ? [{ x: 0, y: reference.y }] : [])];
+  const all = [
+    ...points,
+    ...dashed,
+    ...(reference ? [{ x: 0, y: reference.y }] : []),
+  ];
   if (all.length === 0) return <View style={{ height }} />;
 
   const ys = all.map((point) => point.y);
@@ -36,11 +48,19 @@ export function LineChart({ points, dashed = [], reference, invert = false, heig
   const pad = 8;
   const toPx = (point: ChartPoint) => {
     const ratio = (point.y - min) / span;
-    const y = invert ? pad + ratio * (height - pad * 2) : height - pad - ratio * (height - pad * 2);
+    const y = invert
+      ? pad + ratio * (height - pad * 2)
+      : height - pad - ratio * (height - pad * 2);
     return { left: point.x * Math.max(0, width - 8) + 4, top: y };
   };
 
-  const segment = (from: ChartPoint, to: ChartPoint, color: string, key: string, thickness: number) => {
+  const segment = (
+    from: ChartPoint,
+    to: ChartPoint,
+    color: string,
+    key: string,
+    thickness: number,
+  ) => {
     const a = toPx(from);
     const b = toPx(to);
     const length = Math.hypot(b.left - a.left, b.top - a.top);
@@ -72,7 +92,10 @@ export function LineChart({ points, dashed = [], reference, invert = false, heig
       return Array.from({ length: steps }, (_, step) => {
         const t0 = (step * (DASH + GAP)) / length;
         const t1 = Math.min(1, (step * (DASH + GAP) + DASH) / length);
-        const lerp = (t: number): ChartPoint => ({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t });
+        const lerp = (t: number): ChartPoint => ({
+          x: from.x + (to.x - from.x) * t,
+          y: from.y + (to.y - from.y) * t,
+        });
         return segment(lerp(t0), lerp(t1), color, `d-${index}-${step}`, 2);
       });
     });
@@ -86,7 +109,9 @@ export function LineChart({ points, dashed = [], reference, invert = false, heig
       accessible
       accessibilityRole="image"
       accessibilityLabel={accessibilityLabel}
-      onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}
+      onLayout={(event: LayoutChangeEvent) =>
+        setWidth(event.nativeEvent.layout.width)
+      }
       style={{ height }}
     >
       {width > 0 ? (
@@ -114,13 +139,29 @@ export function LineChart({ points, dashed = [], reference, invert = false, heig
               </Text>
             </>
           ) : null}
-          {points.slice(1).map((to, index) => segment(points[index], to, theme.color.foreground, `s-${index}`, STROKE))}
-          {dashed.length > 1 ? dashedSegments(dashed, theme.color.mutedForeground) : null}
+          {points
+            .slice(1)
+            .map((to, index) =>
+              segment(
+                points[index],
+                to,
+                theme.color.foreground,
+                `s-${index}`,
+                STROKE,
+              ),
+            )}
+          {dashed.length > 1
+            ? dashedSegments(dashed, theme.color.mutedForeground)
+            : null}
           {lastPx ? (
             <View
               style={[
                 styles.dot,
-                { left: lastPx.left - 4, top: lastPx.top - 4, backgroundColor: theme.color.foreground },
+                {
+                  left: lastPx.left - 4,
+                  top: lastPx.top - 4,
+                  backgroundColor: theme.color.foreground,
+                },
               ]}
             />
           ) : null}

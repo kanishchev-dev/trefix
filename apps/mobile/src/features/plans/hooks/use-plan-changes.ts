@@ -1,15 +1,35 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type PlanChangePreview, type PlanChangeRequest, type PlanDetails } from "@workspace/api-client";
+import {
+  type PlanChangePreview,
+  type PlanChangeRequest,
+  type PlanDetails,
+} from "@workspace/api-client";
 
-import { applyPlanChange, getPlan, previewPlanChange } from "../../../lib/training-api";
+import {
+  applyPlanChange,
+  getPlan,
+  previewPlanChange,
+} from "../../../lib/training-api";
 import { getDeviceTimezone } from "../lib/plan-dates";
 import { invalidatePlanQueries, planKeys } from "./plan-query-keys";
 
 /** Change request without the fields this hook fills in (version, timezone). */
 export type PlanChangeDraft =
-  | { kind: "workouts"; operations: Extract<PlanChangeRequest, { kind: "workouts" }>["operations"] }
-  | Omit<Extract<PlanChangeRequest, { kind: "schedule" }>, "expectedVersion" | "timezone">
-  | Omit<Extract<PlanChangeRequest, { kind: "goal_date" }>, "expectedVersion" | "timezone">;
+  | {
+      kind: "workouts";
+      operations: Extract<
+        PlanChangeRequest,
+        { kind: "workouts" }
+      >["operations"];
+    }
+  | Omit<
+      Extract<PlanChangeRequest, { kind: "schedule" }>,
+      "expectedVersion" | "timezone"
+    >
+  | Omit<
+      Extract<PlanChangeRequest, { kind: "goal_date" }>,
+      "expectedVersion" | "timezone"
+    >;
 
 /**
  * Preview → apply protocol for the plan in progress. The preview pins the
@@ -29,8 +49,15 @@ export function usePlanChanges(planId: string | null | undefined) {
     return details.version;
   };
 
-  const toRequest = (draft: PlanChangeDraft, expectedVersion: number): PlanChangeRequest =>
-    ({ ...draft, expectedVersion, timezone: getDeviceTimezone() }) as PlanChangeRequest;
+  const toRequest = (
+    draft: PlanChangeDraft,
+    expectedVersion: number,
+  ): PlanChangeRequest =>
+    ({
+      ...draft,
+      expectedVersion,
+      timezone: getDeviceTimezone(),
+    }) as PlanChangeRequest;
 
   const preview = useMutation<
     { preview: PlanChangePreview; request: PlanChangeRequest },
@@ -41,7 +68,13 @@ export function usePlanChanges(planId: string | null | undefined) {
       const version = await loadVersion(Boolean(forceFresh));
       const request = toRequest(draft, version);
       const result = await previewPlanChange(planId as string, request);
-      return { preview: result, request: { ...request, expectedVersion: result.version } as PlanChangeRequest };
+      return {
+        preview: result,
+        request: {
+          ...request,
+          expectedVersion: result.version,
+        } as PlanChangeRequest,
+      };
     },
   });
 

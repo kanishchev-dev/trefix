@@ -70,7 +70,8 @@ export function Range({
             styles.label,
             {
               color: t.color.mutedForeground,
-              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+              fontFamily:
+                theme?.typography.fontFamily.sans.semibold || "System",
             },
           ]}
         >
@@ -95,7 +96,8 @@ export function Range({
             styles.label,
             {
               color: t.color.mutedForeground,
-              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+              fontFamily:
+                theme?.typography.fontFamily.sans.semibold || "System",
             },
           ]}
         >

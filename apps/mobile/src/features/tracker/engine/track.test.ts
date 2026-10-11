@@ -3,9 +3,17 @@ import { describe, expect, it } from "vitest";
 import { distanceMarkers, splitTrack, type TrackPoint } from "./track";
 
 /** Points going north from (55, 37), `stepM` metres apart, one per second. */
-function line(count: number, stepM: number, start = { t: 0, lat: 55 }): TrackPoint[] {
+function line(
+  count: number,
+  stepM: number,
+  start = { t: 0, lat: 55 },
+): TrackPoint[] {
   const dLat = stepM / 111_195;
-  return Array.from({ length: count }, (_, i) => ({ t: start.t + i * 1000, lat: start.lat + i * dLat, lng: 37 }));
+  return Array.from({ length: count }, (_, i) => ({
+    t: start.t + i * 1000,
+    lat: start.lat + i * dLat,
+    lng: 37,
+  }));
 }
 
 describe("track lines", () => {
@@ -16,7 +24,12 @@ describe("track lines", () => {
     const { solid, gaps } = splitTrack([...before, ...after]);
     expect(solid).toHaveLength(2);
     expect(solid[0]).toHaveLength(10);
-    expect(gaps).toEqual([[[37, last.lat], [37, after[0]!.lat]]]);
+    expect(gaps).toEqual([
+      [
+        [37, last.lat],
+        [37, after[0]!.lat],
+      ],
+    ]);
   });
 
   it("drops a lone point left between two holes", () => {
@@ -36,6 +49,8 @@ describe("track lines", () => {
     const markers = distanceMarkers(line(251, 10));
     expect(markers.map((marker) => marker.n)).toEqual([1, 2]);
     expect(markers[0]!.coordinate[1]).toBeCloseTo(55 + 1000 / 111_195, 4);
-    expect(distanceMarkers(line(251, 10), 1609.344).map((marker) => marker.n)).toEqual([1]);
+    expect(
+      distanceMarkers(line(251, 10), 1609.344).map((marker) => marker.n),
+    ).toEqual([1]);
   });
 });

@@ -28,12 +28,22 @@ export type SummaryEdits = {
 
 export type TrackFile = {
   version: 1;
-  points: { t: number[]; lat: number[]; lng: number[]; alt: Array<number | null>; acc: Array<number | null> };
+  points: {
+    t: number[];
+    lat: number[];
+    lng: number[];
+    alt: Array<number | null>;
+    acc: Array<number | null>;
+  };
   steps: { total: number };
 };
 
 /** Moving time at which the scaled distance reaches `targetM`, by linear interpolation. */
-function movingAt(timeline: TimelineSample[], targetM: number, scale: number): { ms: number; gain: number } | null {
+function movingAt(
+  timeline: TimelineSample[],
+  targetM: number,
+  scale: number,
+): { ms: number; gain: number } | null {
   for (let i = 1; i < timeline.length; i += 1) {
     const [t1, d1, g1] = timeline[i - 1]!;
     const [t2, d2, g2] = timeline[i]!;
@@ -52,7 +62,11 @@ function movingAt(timeline: TimelineSample[], targetM: number, scale: number): {
  * measured one when the user corrected it (treadmill): every sample is scaled,
  * so splits follow the corrected distance.
  */
-export function buildSplits(timeline: TimelineSample[], measuredM: number, finalDistanceM: number): RecordedSplit[] {
+export function buildSplits(
+  timeline: TimelineSample[],
+  measuredM: number,
+  finalDistanceM: number,
+): RecordedSplit[] {
   if (timeline.length < 2 || measuredM <= 0 || finalDistanceM <= 0) return [];
   const scale = finalDistanceM / measuredM;
   const splits: RecordedSplit[] = [];
@@ -86,9 +100,16 @@ export function buildSplits(timeline: TimelineSample[], measuredM: number, final
   return splits;
 }
 
-export function resolveDistanceSource(state: EngineState, edited: boolean): DistanceSource {
+export function resolveDistanceSource(
+  state: EngineState,
+  edited: boolean,
+): DistanceSource {
   if (edited) return "manual";
-  if (state.config.distanceMode === "time" || state.config.environment === "treadmill") return "pedometer";
+  if (
+    state.config.distanceMode === "time" ||
+    state.config.environment === "treadmill"
+  )
+    return "pedometer";
   if (state.gpsDistanceM <= 0) return "pedometer";
   return state.pedometerDistanceM > 0 ? "mixed" : "gps";
 }
@@ -105,10 +126,14 @@ export function buildRecording(
 ): { summary: RecordedActivityRequest; track: TrackFile | null } {
   const endedAt = state.endedAt ?? state.clock;
   const measuredM = round(state.distanceM);
-  const edited = edits.distanceM != null && round(edits.distanceM) !== measuredM;
+  const edited =
+    edits.distanceM != null && round(edits.distanceM) !== measuredM;
   const distanceM = edited ? round(edits.distanceM!) : measuredM;
   const movingSec = Math.max(1, round(state.movingMs / 1000));
-  const elapsedSec = Math.max(movingSec, round((endedAt - state.startedAt) / 1000));
+  const elapsedSec = Math.max(
+    movingSec,
+    round((endedAt - state.startedAt) / 1000),
+  );
   const splits = buildSplits(state.timeline, state.distanceM, distanceM);
   const fullSplits = splits.filter((split) => !split.partial);
 
@@ -132,11 +157,18 @@ export function buildRecording(
     measuredDistanceM: measuredM,
     elevationGainM: hasElevation ? round(state.elevation.gainM) : null,
     elevationLossM: hasElevation ? round(state.elevation.lossM) : null,
-    avgPaceSecPerKm: distanceM > 0 ? round((movingSec / distanceM) * 1000) : null,
-    bestPaceSecPerKm: fullSplits.length > 0 ? Math.min(...fullSplits.map((split) => split.paceSecPerKm)) : null,
+    avgPaceSecPerKm:
+      distanceM > 0 ? round((movingSec / distanceM) * 1000) : null,
+    bestPaceSecPerKm:
+      fullSplits.length > 0
+        ? Math.min(...fullSplits.map((split) => split.paceSecPerKm))
+        : null,
     avgHeartRate: edits.heartRate?.avg ?? null,
     maxHeartRate: edits.heartRate?.max ?? null,
-    avgCadence: state.steps > 0 && movingMinutes >= 1 ? round(state.steps / movingMinutes) : null,
+    avgCadence:
+      state.steps > 0 && movingMinutes >= 1
+        ? round(state.steps / movingMinutes)
+        : null,
     splits,
     laps: state.plan?.laps ?? [],
     pauses: state.pauses.map((pause) => ({
@@ -162,8 +194,12 @@ export function buildRecording(
             t: points.map((point) => round((point.t - state.startedAt) / 1000)),
             lat: points.map((point) => point.lat),
             lng: points.map((point) => point.lng),
-            alt: points.map((point) => (point.alt === null ? null : Math.round(point.alt * 10) / 10)),
-            acc: points.map((point) => (point.acc === null ? null : Math.round(point.acc))),
+            alt: points.map((point) =>
+              point.alt === null ? null : Math.round(point.alt * 10) / 10,
+            ),
+            acc: points.map((point) =>
+              point.acc === null ? null : Math.round(point.acc),
+            ),
           },
           steps: { total: state.steps },
         }

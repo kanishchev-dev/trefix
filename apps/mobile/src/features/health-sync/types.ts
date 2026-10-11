@@ -5,7 +5,11 @@ import type {
   DeviceScope,
 } from "@workspace/api-client";
 
-export type HealthAvailability = "available" | "not_installed" | "update_required" | "unsupported";
+export type HealthAvailability =
+  | "available"
+  | "not_installed"
+  | "update_required"
+  | "unsupported";
 
 /** Opaque sync position of a source: HealthKit anchor or Health Connect changes token, serialized. */
 export type SyncCursor = string;
@@ -39,7 +43,14 @@ export type RecordedRunExport = {
   energyKcal: number | null;
   elevationGainM: number | null;
   /** Route fixes, epoch ms; empty without GPS. */
-  route: Array<{ t: number; lat: number; lng: number; alt: number | null; acc: number | null; speed: number | null }>;
+  route: Array<{
+    t: number;
+    lat: number;
+    lng: number;
+    alt: number | null;
+    acc: number | null;
+    speed: number | null;
+  }>;
 };
 
 export type HeartRateSummary = { avg: number; max: number };
@@ -52,7 +63,10 @@ export interface DeviceHealthSource {
   requestPermissions(request: PermissionRequest): Promise<DeviceScope[]>;
   getGrantedScopes(): Promise<DeviceScope[]>;
   /** `since` bounds the first read; later reads continue from the cursor. */
-  readWorkoutChanges(cursor: SyncCursor | null, since: Date): Promise<WorkoutChangesPage>;
+  readWorkoutChanges(
+    cursor: SyncCursor | null,
+    since: Date,
+  ): Promise<WorkoutChangesPage>;
   readProfileMetrics(now: Date): Promise<DeviceProfileMetricsRequest>;
   /**
    * Foreground only: asks for read types added after the connection was made

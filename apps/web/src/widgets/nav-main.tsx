@@ -145,9 +145,7 @@ function NavMainItemRow({ item }: { item: NavMainItem }): ReactElement {
       {hasChildren ? (
         <>
           <CollapsibleTrigger
-            render={
-              <SidebarMenuAction className="aria-expanded:rotate-90" />
-            }
+            render={<SidebarMenuAction className="aria-expanded:rotate-90" />}
           >
             <ChevronRightIcon />
             <span className="sr-only">Toggle</span>

@@ -23,7 +23,7 @@ export function ProgressSkeleton({ theme }: Props) {
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     animation.start();
 
@@ -36,16 +36,51 @@ export function ProgressSkeleton({ theme }: Props) {
     <View style={styles.container}>
       {[0, 1, 2].map((section) => (
         <View key={section} style={styles.section}>
-          <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, width: 140, height: 18 }]} />
+          <Animated.View
+            style={[
+              styles.block,
+              {
+                backgroundColor: skeletonBg,
+                opacity: opacityAnim,
+                width: 140,
+                height: 18,
+              },
+            ]}
+          />
           <View style={styles.row}>
             {[0, 1, 2].map((column) => (
               <View key={column} style={styles.column}>
-                <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, width: "60%", height: 12 }]} />
-                <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, width: "80%", height: 22 }]} />
+                <Animated.View
+                  style={[
+                    styles.block,
+                    {
+                      backgroundColor: skeletonBg,
+                      opacity: opacityAnim,
+                      width: "60%",
+                      height: 12,
+                    },
+                  ]}
+                />
+                <Animated.View
+                  style={[
+                    styles.block,
+                    {
+                      backgroundColor: skeletonBg,
+                      opacity: opacityAnim,
+                      width: "80%",
+                      height: 22,
+                    },
+                  ]}
+                />
               </View>
             ))}
           </View>
-          <Animated.View style={[styles.block, { backgroundColor: skeletonBg, opacity: opacityAnim, height: 56 }]} />
+          <Animated.View
+            style={[
+              styles.block,
+              { backgroundColor: skeletonBg, opacity: opacityAnim, height: 56 },
+            ]}
+          />
         </View>
       ))}
     </View>

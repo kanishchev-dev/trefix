@@ -16,15 +16,35 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Where the sync position and the last profile push are kept between runs. */
 export interface SyncStateStore {
-  getCursor(userId: string, provider: DeviceProvider): Promise<SyncCursor | null>;
-  setCursor(userId: string, provider: DeviceProvider, cursor: SyncCursor | null): Promise<void>;
-  getLastProfileSyncAt(userId: string, provider: DeviceProvider): Promise<number | null>;
-  setLastProfileSyncAt(userId: string, provider: DeviceProvider, at: number): Promise<void>;
+  getCursor(
+    userId: string,
+    provider: DeviceProvider,
+  ): Promise<SyncCursor | null>;
+  setCursor(
+    userId: string,
+    provider: DeviceProvider,
+    cursor: SyncCursor | null,
+  ): Promise<void>;
+  getLastProfileSyncAt(
+    userId: string,
+    provider: DeviceProvider,
+  ): Promise<number | null>;
+  setLastProfileSyncAt(
+    userId: string,
+    provider: DeviceProvider,
+    at: number,
+  ): Promise<void>;
 }
 
 export interface SyncApi {
-  postBatch(provider: DeviceProvider, batch: DeviceSyncBatchRequest): Promise<{ rejected: unknown[] }>;
-  postProfileMetrics(provider: DeviceProvider, payload: DeviceProfileMetricsRequest): Promise<unknown>;
+  postBatch(
+    provider: DeviceProvider,
+    batch: DeviceSyncBatchRequest,
+  ): Promise<{ rejected: unknown[] }>;
+  postProfileMetrics(
+    provider: DeviceProvider,
+    payload: DeviceProfileMetricsRequest,
+  ): Promise<unknown>;
 }
 
 export type SyncDeps = {
@@ -54,7 +74,9 @@ export type SyncResult = {
   error?: unknown;
 };
 
-type Item = { kind: "activity"; activity: DeviceActivity } | { kind: "deleted"; id: string };
+type Item =
+  | { kind: "activity"; activity: DeviceActivity }
+  | { kind: "deleted"; id: string };
 
 function toChunks(activities: DeviceActivity[], deleted: string[]): Item[][] {
   const items: Item[] = [
@@ -73,7 +95,10 @@ function toChunks(activities: DeviceActivity[], deleted: string[]): Item[][] {
  * only after every batch of a page is accepted, so a failure never loses
  * records; the backend is idempotent, so resending is safe.
  */
-export async function runSync(deps: SyncDeps, request: SyncRequest): Promise<SyncResult> {
+export async function runSync(
+  deps: SyncDeps,
+  request: SyncRequest,
+): Promise<SyncResult> {
   const { source, api, store, now } = deps;
   const provider = source.provider;
   const startedAt = now();
@@ -98,7 +123,9 @@ export async function runSync(deps: SyncDeps, request: SyncRequest): Promise<Syn
         seen.add(activity.sourceActivityId);
         return true;
       });
-      const deleted = [...new Set(page.deletedSourceActivityIds)].filter((id) => !seen.has(id));
+      const deleted = [...new Set(page.deletedSourceActivityIds)].filter(
+        (id) => !seen.has(id),
+      );
       const chunks = toChunks(activities, deleted);
       // The closing batch of a session is sent even when empty, but only if the session sent something.
       if (chunks.length === 0 && !page.hasMore && result.batches > 0) {
@@ -113,20 +140,31 @@ export async function runSync(deps: SyncDeps, request: SyncRequest): Promise<Syn
           batchIndex: result.batches,
           syncType: request.syncType,
           isLast,
-          activities: chunk.flatMap((item) => (item.kind === "activity" ? [item.activity] : [])),
-          deletedSourceActivityIds: chunk.flatMap((item) => (item.kind === "deleted" ? [item.id] : [])),
+          activities: chunk.flatMap((item) =>
+            item.kind === "activity" ? [item.activity] : [],
+          ),
+          deletedSourceActivityIds: chunk.flatMap((item) =>
+            item.kind === "deleted" ? [item.id] : [],
+          ),
         });
         result.batches += 1;
         result.rejected += response.rejected.length;
-        result.sentActivities += chunk.filter((item) => item.kind === "activity").length;
-        result.sentDeletions += chunk.filter((item) => item.kind === "deleted").length;
+        result.sentActivities += chunk.filter(
+          (item) => item.kind === "activity",
+        ).length;
+        result.sentDeletions += chunk.filter(
+          (item) => item.kind === "deleted",
+        ).length;
       }
 
       cursor = page.nextCursor;
       await store.setCursor(request.userId, provider, cursor);
 
       if (!page.hasMore) break;
-      if (request.budgetMs !== undefined && now() - startedAt >= request.budgetMs) {
+      if (
+        request.budgetMs !== undefined &&
+        now() - startedAt >= request.budgetMs
+      ) {
         result.status = "partial";
         break;
       }
@@ -135,15 +173,26 @@ export async function runSync(deps: SyncDeps, request: SyncRequest): Promise<Syn
     return { ...result, status: "failed", error };
   }
 
-  if (request.profileSync && (request.budgetMs === undefined || now() - startedAt < request.budgetMs)) {
+  if (
+    request.profileSync &&
+    (request.budgetMs === undefined || now() - startedAt < request.budgetMs)
+  ) {
     // A manual sync always re-reads the profile; automatic runs are throttled.
-    result.profileSynced = await pushProfileMetrics(deps, request.userId, request.syncType === "manual");
+    result.profileSynced = await pushProfileMetrics(
+      deps,
+      request.userId,
+      request.syncType === "manual",
+    );
   }
   return result;
 }
 
 /** Weight, height and resting HR, at most every 12 hours unless forced. Failures are not fatal for the run. */
-async function pushProfileMetrics(deps: SyncDeps, userId: string, force: boolean): Promise<boolean> {
+async function pushProfileMetrics(
+  deps: SyncDeps,
+  userId: string,
+  force: boolean,
+): Promise<boolean> {
   const { source, api, store, now } = deps;
   const last = await store.getLastProfileSyncAt(userId, source.provider);
   if (!force && last !== null && now() - last < PROFILE_METRICS_INTERVAL_MS) {
@@ -151,7 +200,11 @@ async function pushProfileMetrics(deps: SyncDeps, userId: string, force: boolean
   }
   try {
     const metrics = await source.readProfileMetrics(new Date(now()));
-    if (!metrics.weight && !metrics.height && !metrics.restingHeartRate?.length) {
+    if (
+      !metrics.weight &&
+      !metrics.height &&
+      !metrics.restingHeartRate?.length
+    ) {
       await store.setLastProfileSyncAt(userId, source.provider, now());
       return false;
     }
@@ -166,7 +219,10 @@ async function pushProfileMetrics(deps: SyncDeps, userId: string, force: boolean
 const running = new Map<string, Promise<SyncResult>>();
 
 /** Single-flight per provider: a trigger that fires during a run joins it. */
-export function runSyncOnce(deps: SyncDeps, request: SyncRequest): Promise<SyncResult> {
+export function runSyncOnce(
+  deps: SyncDeps,
+  request: SyncRequest,
+): Promise<SyncResult> {
   const key = `${request.userId}:${deps.source.provider}`;
   const current = running.get(key);
   if (current) return current;

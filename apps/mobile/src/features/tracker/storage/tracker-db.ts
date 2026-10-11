@@ -1,5 +1,8 @@
 import * as SQLite from "expo-sqlite";
-import type { RecordedActivityRequest, WorkoutType } from "@workspace/api-client";
+import type {
+  RecordedActivityRequest,
+  WorkoutType,
+} from "@workspace/api-client";
 
 import type { EngineState, LocationSample } from "../engine/types";
 import type { TrackFile } from "../engine/summary";
@@ -56,7 +59,10 @@ export type SessionMeta = {
   voice?: SessionVoice | null;
 };
 
-export type SessionVoice = VoiceSettings & { language: VoiceLanguage; units: VoiceUnits };
+export type SessionVoice = VoiceSettings & {
+  language: VoiceLanguage;
+  units: VoiceUnits;
+};
 
 export type StoredSession = {
   id: string;
@@ -106,9 +112,16 @@ const toSession = (row: SessionRow): StoredSession => ({
   createdAt: row.created_at,
 });
 
-export async function createSession(id: string, userId: string, state: EngineState, meta: SessionMeta): Promise<void> {
+export async function createSession(
+  id: string,
+  userId: string,
+  state: EngineState,
+  meta: SessionMeta,
+): Promise<void> {
   const now = Date.now();
-  await (await db()).runAsync(
+  await (
+    await db()
+  ).runAsync(
     "INSERT INTO sessions (id, user_id, status, state, meta, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
     id,
     userId,
@@ -120,8 +133,14 @@ export async function createSession(id: string, userId: string, state: EngineSta
   );
 }
 
-export async function saveSessionState(id: string, status: SessionStatus, state: EngineState): Promise<void> {
-  await (await db()).runAsync(
+export async function saveSessionState(
+  id: string,
+  status: SessionStatus,
+  state: EngineState,
+): Promise<void> {
+  await (
+    await db()
+  ).runAsync(
     "UPDATE sessions SET status = ?, state = ?, updated_at = ? WHERE id = ?",
     status,
     JSON.stringify(state),
@@ -134,7 +153,9 @@ export async function saveSessionState(id: string, status: SessionStatus, state:
  * The session being recorded or waiting for the finish screen, if any.
  * Without a user — any user's: the OS can wake the app for a fix before anyone is signed in to the UI.
  */
-export async function loadOpenSession(userId?: string): Promise<StoredSession | null> {
+export async function loadOpenSession(
+  userId?: string,
+): Promise<StoredSession | null> {
   const database = await db();
   const row = userId
     ? await database.getFirstAsync<SessionRow>(
@@ -148,11 +169,16 @@ export async function loadOpenSession(userId?: string): Promise<StoredSession | 
 }
 
 export async function loadSession(id: string): Promise<StoredSession | null> {
-  const row = await (await db()).getFirstAsync<SessionRow>("SELECT * FROM sessions WHERE id = ?", id);
+  const row = await (
+    await db()
+  ).getFirstAsync<SessionRow>("SELECT * FROM sessions WHERE id = ?", id);
   return row ? toSession(row) : null;
 }
 
-export async function appendPoints(sessionId: string, samples: LocationSample[]): Promise<void> {
+export async function appendPoints(
+  sessionId: string,
+  samples: LocationSample[],
+): Promise<void> {
   if (samples.length === 0) return;
   const database = await db();
   await database.withTransactionAsync(async () => {
@@ -181,8 +207,14 @@ export async function loadPoints(sessionId: string): Promise<LocationSample[]> {
 export async function deleteSession(sessionId: string): Promise<void> {
   const database = await db();
   await database.withTransactionAsync(async () => {
-    await database.runAsync("DELETE FROM points WHERE session_id = ?", sessionId);
-    await database.runAsync("DELETE FROM uploads WHERE session_id = ?", sessionId);
+    await database.runAsync(
+      "DELETE FROM points WHERE session_id = ?",
+      sessionId,
+    );
+    await database.runAsync(
+      "DELETE FROM uploads WHERE session_id = ?",
+      sessionId,
+    );
     await database.runAsync("DELETE FROM sessions WHERE id = ?", sessionId);
   });
 }
@@ -203,7 +235,11 @@ export async function enqueueUpload(
       track ? JSON.stringify(track) : null,
       Date.now(),
     );
-    await database.runAsync("UPDATE sessions SET status = 'saving', updated_at = ? WHERE id = ?", Date.now(), sessionId);
+    await database.runAsync(
+      "UPDATE sessions SET status = 'saving', updated_at = ? WHERE id = ?",
+      Date.now(),
+      sessionId,
+    );
   });
 }
 
@@ -217,7 +253,9 @@ type UploadRow = {
 };
 
 export async function listUploads(userId: string): Promise<StoredUpload[]> {
-  const rows = await (await db()).getAllAsync<UploadRow>(
+  const rows = await (
+    await db()
+  ).getAllAsync<UploadRow>(
     "SELECT * FROM uploads WHERE user_id = ? ORDER BY created_at",
     userId,
   );
@@ -231,8 +269,13 @@ export async function listUploads(userId: string): Promise<StoredUpload[]> {
   }));
 }
 
-export async function markUploadFailed(sessionId: string, error: string): Promise<void> {
-  await (await db()).runAsync(
+export async function markUploadFailed(
+  sessionId: string,
+  error: string,
+): Promise<void> {
+  await (
+    await db()
+  ).runAsync(
     "UPDATE uploads SET attempts = attempts + 1, last_error = ? WHERE session_id = ?",
     error.slice(0, 500),
     sessionId,

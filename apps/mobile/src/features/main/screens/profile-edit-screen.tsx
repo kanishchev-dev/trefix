@@ -9,24 +9,24 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { Camera, UserRound } from "lucide-react-native";
 
-import {
-  updateUserSchema,
-  type UpdateUserInput,
-} from "@workspace/api-client";
+import { updateUserSchema, type UpdateUserInput } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
-import { updateMe, uploadAvatar } from "../../../lib/auth-api";
 import { resolveBackendMediaUrl } from "../../../lib/backend-url";
-import { useProfile } from "../hooks/use-profile";
 import { type MainCopy } from "../../../locales";
 import { GlassInput } from "../../../shared/ui/glass-input";
 import { useState } from "react";
+import { getErrorMessage } from "../../../shared/lib/error-message";
+import {
+  useProfile,
+  useUpdateProfile,
+  useUploadAvatar,
+} from "../hooks/use-profile";
 
 type Props = {
   theme: ThemeTokens;
@@ -36,7 +36,8 @@ type Props = {
 };
 
 export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
-  const queryClient = useQueryClient();
+  const mutation = useUpdateProfile();
+  const avatarUpload = useUploadAvatar();
   const { data: user } = useProfile();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -57,26 +58,18 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
 
   const avatarUrl = watch("avatarUrl");
 
-  const mutation = useMutation({
-    mutationFn: updateMe,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["profile"] });
-      onBack();
-    },
-    onError: (error) => {
-      Alert.alert("Error", error.message);
-    },
-  });
-
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission denied", "We need camera roll permissions to change your avatar.");
+      Alert.alert(
+        copy.errors.photoPermissionTitle,
+        copy.errors.photoPermission,
+      );
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -85,12 +78,15 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
     if (!result.canceled && result.assets[0]) {
       try {
         setIsUploading(true);
-        const uploadedUrl = await uploadAvatar(result.assets[0].uri);
+        const uploadedUrl = await avatarUpload.mutateAsync(
+          result.assets[0].uri,
+        );
         setValue("avatarUrl", uploadedUrl, { shouldDirty: true });
-        // The server has already saved the new avatar on the user.
-        void queryClient.invalidateQueries({ queryKey: ["profile"] });
       } catch (error) {
-        Alert.alert("Upload Failed", error instanceof Error ? error.message : "Could not upload image");
+        Alert.alert(
+          copy.errors.uploadFailedTitle,
+          getErrorMessage(error, copy.errors, copy.errors.uploadFailed),
+        );
       } finally {
         setIsUploading(false);
       }
@@ -98,7 +94,15 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
   };
 
   const onSubmit = (data: UpdateUserInput) => {
-    mutation.mutate(data);
+    mutation.mutate(data, {
+      onSuccess: onBack,
+      onError: (error) => {
+        Alert.alert(
+          copy.errors.title,
+          getErrorMessage(error, copy.errors, copy.errors.fallback),
+        );
+      },
+    });
   };
 
   return (
@@ -110,7 +114,9 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
           onPress={onBack}
         />
       }
-      headerCenter={<HeaderTitle theme={theme}>{copy.profile.hero.edit}</HeaderTitle>}
+      headerCenter={
+        <HeaderTitle theme={theme}>{copy.profile.hero.edit}</HeaderTitle>
+      }
       scrollable
       theme={theme}
       themeMode={themeMode}
@@ -130,7 +136,10 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
             ]}
           >
             {avatarUrl ? (
-              <Image source={{ uri: resolveBackendMediaUrl(avatarUrl) ?? undefined }} style={styles.avatarImage} />
+              <Image
+                source={{ uri: resolveBackendMediaUrl(avatarUrl) ?? undefined }}
+                style={styles.avatarImage}
+              />
             ) : (
               <UserRound
                 color={theme.color.foreground}
@@ -139,11 +148,26 @@ export function ProfileEditScreen({ theme, themeMode, copy, onBack }: Props) {
               />
             )}
 
-            <View style={[styles.cameraBadge, { backgroundColor: theme.color.primary, borderColor: theme.color.glassBorder }]}>
+            <View
+              style={[
+                styles.cameraBadge,
+                {
+                  backgroundColor: theme.color.primary,
+                  borderColor: theme.color.glassBorder,
+                },
+              ]}
+            >
               {isUploading ? (
-                <ActivityIndicator size="small" color={theme.color.primaryForeground} />
+                <ActivityIndicator
+                  size="small"
+                  color={theme.color.primaryForeground}
+                />
               ) : (
-                <Camera color={theme.color.primaryForeground} size={14} strokeWidth={2.5} />
+                <Camera
+                  color={theme.color.primaryForeground}
+                  size={14}
+                  strokeWidth={2.5}
+                />
               )}
             </View>
           </Pressable>

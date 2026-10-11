@@ -13,7 +13,14 @@ type Props = {
 };
 
 /** Compact − value + control on a sunken surface. */
-export function Stepper({ value, min, max, onChange, theme, accessibilityLabel }: Props) {
+export function Stepper({
+  value,
+  min,
+  max,
+  onChange,
+  theme,
+  accessibilityLabel,
+}: Props) {
   const button = (direction: -1 | 1) => {
     const disabled = direction < 0 ? value <= min : value >= max;
     const Icon = direction < 0 ? Minus : Plus;
@@ -24,7 +31,10 @@ export function Stepper({ value, min, max, onChange, theme, accessibilityLabel }
         disabled={disabled}
         hitSlop={6}
         onPress={() => onChange(value + direction)}
-        style={({ pressed }) => [styles.button, (pressed || disabled) && { opacity: disabled ? 0.35 : 0.7 }]}
+        style={({ pressed }) => [
+          styles.button,
+          (pressed || disabled) && { opacity: disabled ? 0.35 : 0.7 },
+        ]}
       >
         <Icon color={theme.color.foreground} size={16} strokeWidth={2.4} />
       </Pressable>
@@ -38,7 +48,15 @@ export function Stepper({ value, min, max, onChange, theme, accessibilityLabel }
       style={[styles.root, { backgroundColor: theme.color.surface }]}
     >
       {button(-1)}
-      <Text style={[styles.value, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+      <Text
+        style={[
+          styles.value,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.semibold,
+          },
+        ]}
+      >
         {value}
       </Text>
       {button(1)}

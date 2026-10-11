@@ -17,7 +17,9 @@ describe("shouldAutoOpenSection", () => {
    * up — the menu looked permanently incomplete until a reload.
    */
   it("opens a section that just gained children", () => {
-    expect(shouldAutoOpenSection({ ...BASE, justGainedChildren: true })).toBe(true);
+    expect(shouldAutoOpenSection({ ...BASE, justGainedChildren: true })).toBe(
+      true,
+    );
   });
 
   it("opens the section the user is currently on", () => {
@@ -54,6 +56,8 @@ describe("shouldAutoOpenSection", () => {
   });
 
   it("does not re-open a section that is already open", () => {
-    expect(shouldAutoOpenSection({ ...BASE, open: true, isActive: true })).toBe(false);
+    expect(shouldAutoOpenSection({ ...BASE, open: true, isActive: true })).toBe(
+      false,
+    );
   });
 });

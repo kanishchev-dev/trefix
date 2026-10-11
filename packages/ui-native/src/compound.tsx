@@ -52,12 +52,7 @@ export function Compound({
         {parts.map((part, index) => (
           <React.Fragment key={index}>
             {index > 0 ? (
-              <Text
-                style={[
-                  styles.separator,
-                  { color: t.color.foreground },
-                ]}
-              >
+              <Text style={[styles.separator, { color: t.color.foreground }]}>
                 {separator}
               </Text>
             ) : null}
@@ -67,7 +62,8 @@ export function Compound({
                   styles.partLabel,
                   {
                     color: t.color.mutedForeground,
-                    fontFamily: theme?.typography.fontFamily.sans.bold || "System",
+                    fontFamily:
+                      theme?.typography.fontFamily.sans.bold || "System",
                   },
                 ]}
               >
@@ -95,7 +91,8 @@ export function Compound({
             styles.unitText,
             {
               color: t.color.mutedForeground,
-              fontFamily: theme?.typography.fontFamily.sans.semibold || "System",
+              fontFamily:
+                theme?.typography.fontFamily.sans.semibold || "System",
             },
           ]}
         >

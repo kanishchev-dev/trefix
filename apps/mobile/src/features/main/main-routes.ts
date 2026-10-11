@@ -1,5 +1,9 @@
 import { createContext, useContext } from "react";
-import { createNavigationContainerRef, StackActions, type NavigatorScreenParams } from "@react-navigation/native";
+import {
+  createNavigationContainerRef,
+  StackActions,
+  type NavigatorScreenParams,
+} from "@react-navigation/native";
 
 import { type PlansSegment } from "../plans/lib/plan-card-format";
 import { type ProfileRoute } from "../profile/profile-routes";
@@ -20,7 +24,9 @@ export type SubScreen =
   | ProfileRoute;
 
 type SubScreenParams = {
-  [K in SubScreen["kind"]]: Omit<Extract<SubScreen, { kind: K }>, "kind"> | undefined;
+  [K in SubScreen["kind"]]:
+    | Omit<Extract<SubScreen, { kind: K }>, "kind">
+    | undefined;
 };
 
 export type MainTabParamList = Record<MainTabKey, undefined>;
@@ -34,20 +40,31 @@ export type MainStackParamList = SubScreenParams & {
   themeSettings: undefined;
 };
 
-export const mainNavigationRef = createNavigationContainerRef<MainStackParamList>();
+export const mainNavigationRef =
+  createNavigationContainerRef<MainStackParamList>();
 
 /** Opens a sub-screen on top of the stack (the same screen may be open twice with other params). */
 export function pushSubScreen(screen: SubScreen): void {
   if (!mainNavigationRef.isReady()) return;
   const { kind, ...params } = screen;
-  mainNavigationRef.dispatch(StackActions.push(kind, Object.keys(params).length > 0 ? params : undefined));
+  mainNavigationRef.dispatch(
+    StackActions.push(
+      kind,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+  );
 }
 
 /** Swaps the top screen, e.g. setup → recording: going back must not return to the setup. */
 export function replaceSubScreen(screen: SubScreen): void {
   if (!mainNavigationRef.isReady()) return;
   const { kind, ...params } = screen;
-  mainNavigationRef.dispatch(StackActions.replace(kind, Object.keys(params).length > 0 ? params : undefined));
+  mainNavigationRef.dispatch(
+    StackActions.replace(
+      kind,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+  );
 }
 
 export function goBack(): void {
@@ -72,7 +89,12 @@ export function openTab(tab: MainTabKey): void {
 }
 
 export function openStackScreen(
-  name: "trefix" | "profileEdit" | "notificationsSettings" | "languageSettings" | "themeSettings",
+  name:
+    | "trefix"
+    | "profileEdit"
+    | "notificationsSettings"
+    | "languageSettings"
+    | "themeSettings",
 ): void {
   if (mainNavigationRef.isReady()) {
     mainNavigationRef.navigate(name);

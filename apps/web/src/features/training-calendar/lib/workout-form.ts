@@ -39,11 +39,11 @@ export const workoutFormSchema = z.object({
   type: z.enum(WORKOUT_TYPES),
   status: z.enum(ADMIN_WORKOUT_EDITABLE_STATUSES),
   durationMinutes: z
-    .number({ invalid_type_error: ERROR_KEYS.duration })
+    .number({ error: ERROR_KEYS.duration })
     .min(ADMIN_WORKOUT_LIMITS.durationMinutes.min, ERROR_KEYS.duration)
     .max(ADMIN_WORKOUT_LIMITS.durationMinutes.max, ERROR_KEYS.duration),
   distanceKm: z
-    .number({ invalid_type_error: ERROR_KEYS.distance })
+    .number({ error: ERROR_KEYS.distance })
     .min(ADMIN_WORKOUT_LIMITS.distanceKm.min, ERROR_KEYS.distance)
     .max(ADMIN_WORKOUT_LIMITS.distanceKm.max, ERROR_KEYS.distance),
   title: z

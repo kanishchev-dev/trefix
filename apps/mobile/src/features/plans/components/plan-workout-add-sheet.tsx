@@ -18,7 +18,16 @@ type Props = {
 };
 
 /** Adds a workout to a future week of the plan in progress. */
-export function PlanWorkoutAddSheet({ visible, planId, defaultDate, onClose, theme, themeMode, copy, language }: Props) {
+export function PlanWorkoutAddSheet({
+  visible,
+  planId,
+  defaultDate,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

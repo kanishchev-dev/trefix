@@ -30,7 +30,13 @@ export function ProfileSubScreen({
 }: Props) {
   useHeaderOptions(
     {
-      leftAction: <HeaderBackButton theme={theme} themeMode={themeMode} onPress={onBack} />,
+      leftAction: (
+        <HeaderBackButton
+          theme={theme}
+          themeMode={themeMode}
+          onPress={onBack}
+        />
+      ),
       centerContent: <HeaderTitle theme={theme}>{title}</HeaderTitle>,
       rightAction,
       variant: "default",
@@ -40,7 +46,12 @@ export function ProfileSubScreen({
   );
 
   return (
-    <SectionLayout hasHeader={false} scrollable theme={theme} themeMode={themeMode}>
+    <SectionLayout
+      hasHeader={false}
+      scrollable
+      theme={theme}
+      themeMode={themeMode}
+    >
       <View style={styles.stack}>{children}</View>
     </SectionLayout>
   );
@@ -51,9 +62,23 @@ export function ProfileSection({ children }: { children: ReactNode }) {
 }
 
 /** Small explanatory text under a card. */
-export function Footnote({ text, theme }: { text: string; theme: ThemeTokens }) {
+export function Footnote({
+  text,
+  theme,
+}: {
+  text: string;
+  theme: ThemeTokens;
+}) {
   return (
-    <Text style={[styles.footnote, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+    <Text
+      style={[
+        styles.footnote,
+        {
+          color: theme.color.mutedForeground,
+          fontFamily: theme.typography.fontFamily.sans.regular,
+        },
+      ]}
+    >
       {text}
     </Text>
   );

@@ -11,7 +11,10 @@ export type VoiceSettings = {
   interval: VoiceInterval;
 };
 
-export const DEFAULT_VOICE_SETTINGS: VoiceSettings = { enabled: true, interval: "1u" };
+export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
+  enabled: true,
+  interval: "1u",
+};
 
 /** Rules of the voice; tuned on real runs. */
 export const CUE_RULES = {
@@ -30,9 +33,20 @@ export const CUE_RULES = {
 
 export type Cue =
   | { type: "started" }
-  | { type: "interval"; distanceM: number; movingMs: number; avgPaceSecPerKm: number | null; segmentPaceSecPerKm: number | null }
+  | {
+      type: "interval";
+      distanceM: number;
+      movingMs: number;
+      avgPaceSecPerKm: number | null;
+      segmentPaceSecPerKm: number | null;
+    }
   | { type: "step"; step: ExecutionStep; index: number; total: number }
-  | { type: "stepEnding"; remainingSec: number | null; remainingM: number | null; next: ExecutionStep | null }
+  | {
+      type: "stepEnding";
+      remainingSec: number | null;
+      remainingM: number | null;
+      next: ExecutionStep | null;
+    }
   | { type: "pace"; status: Exclude<PaceStatus, "in">; targetSecPerKm: number }
   | { type: "paused" }
   | { type: "resumed" }
@@ -40,7 +54,12 @@ export type Cue =
   | { type: "planDone" }
   | { type: "gpsLost" }
   | { type: "gpsBack" }
-  | { type: "finished"; distanceM: number; movingMs: number; avgPaceSecPerKm: number | null };
+  | {
+      type: "finished";
+      distanceM: number;
+      movingMs: number;
+      avgPaceSecPerKm: number | null;
+    };
 
 /** What the voice remembers between views; plain object, rebuilt on restore. */
 export type CueState = {
@@ -58,7 +77,11 @@ export type CueState = {
  * With a `view` the recording continues after an app restart: no start
  * announcement, interval marks pick up from the current numbers.
  */
-export function createCueState(view: EngineView | null = null, settings?: VoiceSettings, unitM = 1000): CueState {
+export function createCueState(
+  view: EngineView | null = null,
+  settings?: VoiceSettings,
+  unitM = 1000,
+): CueState {
   return {
     prev: view,
     mark: view && settings ? markOf(view, settings, unitM) : 0,
@@ -66,18 +89,24 @@ export function createCueState(view: EngineView | null = null, settings?: VoiceS
     offTarget: null,
     lastPaceCueAt: null,
     // Already inside the ending window: the countdown would be late.
-    countdownFor: view?.step && inEndingWindow(view.step) ? view.step.index : null,
+    countdownFor:
+      view?.step && inEndingWindow(view.step) ? view.step.index : null,
   };
 }
 
 function inEndingWindow(step: NonNullable<EngineView["step"]>): boolean {
   return (
-    (step.remainingSec !== null && step.remainingSec <= CUE_RULES.countdownSec) ||
+    (step.remainingSec !== null &&
+      step.remainingSec <= CUE_RULES.countdownSec) ||
     (step.remainingM !== null && step.remainingM <= CUE_RULES.countdownM)
   );
 }
 
-function markOf(view: EngineView, settings: VoiceSettings, unitM: number): number {
+function markOf(
+  view: EngineView,
+  settings: VoiceSettings,
+  unitM: number,
+): number {
   switch (settings.interval) {
     case "1u":
       return Math.floor(view.distanceM / unitM);
@@ -90,13 +119,20 @@ function markOf(view: EngineView, settings: VoiceSettings, unitM: number): numbe
   }
 }
 
-const paceOf = (ms: number, metres: number): number | null => (metres >= 50 ? Math.round(ms / metres) : null);
+const paceOf = (ms: number, metres: number): number | null =>
+  metres >= 50 ? Math.round(ms / metres) : null;
 
 /**
  * Compares the new view with the previous one and returns what to say.
  * Pure: `state` is updated in place, nothing is spoken here.
  */
-export function nextCues(state: CueState, view: EngineView, now: number, settings: VoiceSettings, unitM = 1000): Cue[] {
+export function nextCues(
+  state: CueState,
+  view: EngineView,
+  now: number,
+  settings: VoiceSettings,
+  unitM = 1000,
+): Cue[] {
   const prev = state.prev;
   state.prev = view;
   const cues: Cue[] = [];
@@ -104,30 +140,51 @@ export function nextCues(state: CueState, view: EngineView, now: number, setting
   if (!prev) {
     cues.push({ type: "started" });
     if (view.step) {
-      cues.push({ type: "step", step: view.step.step, index: view.step.index, total: view.step.total });
+      cues.push({
+        type: "step",
+        step: view.step.step,
+        index: view.step.index,
+        total: view.step.total,
+      });
     }
     return cues;
   }
 
   if (view.status === "finished") {
     if (prev.status !== "finished") {
-      cues.push({ type: "finished", distanceM: view.distanceM, movingMs: view.movingMs, avgPaceSecPerKm: view.avgPaceSecPerKm });
+      cues.push({
+        type: "finished",
+        distanceM: view.distanceM,
+        movingMs: view.movingMs,
+        avgPaceSecPerKm: view.avgPaceSecPerKm,
+      });
     }
     return cues;
   }
 
-  if (prev.status === "recording" && view.status === "paused") cues.push({ type: "paused" });
-  else if (prev.status === "paused" && view.status === "recording") cues.push({ type: "resumed" });
-  else if (!prev.autoPaused && view.autoPaused) cues.push({ type: "autoPaused" });
-  else if (prev.autoPaused && !view.autoPaused && view.status === "recording") cues.push({ type: "resumed" });
+  if (prev.status === "recording" && view.status === "paused")
+    cues.push({ type: "paused" });
+  else if (prev.status === "paused" && view.status === "recording")
+    cues.push({ type: "resumed" });
+  else if (!prev.autoPaused && view.autoPaused)
+    cues.push({ type: "autoPaused" });
+  else if (prev.autoPaused && !view.autoPaused && view.status === "recording")
+    cues.push({ type: "resumed" });
 
-  if (prev.gps === "good" && view.gps === "lost") cues.push({ type: "gpsLost" });
-  else if (prev.gps === "lost" && view.gps === "good") cues.push({ type: "gpsBack" });
+  if (prev.gps === "good" && view.gps === "lost")
+    cues.push({ type: "gpsLost" });
+  else if (prev.gps === "lost" && view.gps === "good")
+    cues.push({ type: "gpsBack" });
 
   // Plan: a new step, its end approaching, the plan done.
   const step = view.step;
   if (step && step.index !== prev.step?.index) {
-    cues.push({ type: "step", step: step.step, index: step.index, total: step.total });
+    cues.push({
+      type: "step",
+      step: step.step,
+      index: step.index,
+      total: step.total,
+    });
     state.offTarget = null;
   } else if (step && state.countdownFor !== step.index) {
     const { durationSec, distanceM } = step.step;
@@ -159,15 +216,19 @@ export function nextCues(state: CueState, view: EngineView, now: number, setting
   const status = view.paceStatus;
   const target = step?.step.targetPace;
   if (status && status !== "in" && target) {
-    if (state.offTarget?.status !== status) state.offTarget = { status, since: now };
+    if (state.offTarget?.status !== status)
+      state.offTarget = { status, since: now };
     const longEnough = now - state.offTarget.since >= CUE_RULES.offTargetMs;
-    const quiet = state.lastPaceCueAt === null || now - state.lastPaceCueAt >= CUE_RULES.paceRepeatMs;
+    const quiet =
+      state.lastPaceCueAt === null ||
+      now - state.lastPaceCueAt >= CUE_RULES.paceRepeatMs;
     if (longEnough && quiet) {
       state.lastPaceCueAt = now;
       cues.push({
         type: "pace",
         status,
-        targetSecPerKm: status === "fast" ? target.minSecPerKm : target.maxSecPerKm,
+        targetSecPerKm:
+          status === "fast" ? target.minSecPerKm : target.maxSecPerKm,
       });
     }
   } else {
@@ -182,7 +243,10 @@ export function nextCues(state: CueState, view: EngineView, now: number, setting
       distanceM: view.distanceM,
       movingMs: view.movingMs,
       avgPaceSecPerKm: view.avgPaceSecPerKm,
-      segmentPaceSecPerKm: paceOf(view.movingMs - state.markAt.movingMs, view.distanceM - state.markAt.distanceM),
+      segmentPaceSecPerKm: paceOf(
+        view.movingMs - state.markAt.movingMs,
+        view.distanceM - state.markAt.distanceM,
+      ),
     });
     state.mark = mark;
     state.markAt = { movingMs: view.movingMs, distanceM: view.distanceM };

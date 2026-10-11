@@ -183,7 +183,9 @@ export function ResetPasswordForm(): ReactElement {
             </Field>
             <Field>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? t("common.actions.loading") : t("auth.passwordRecoveryTitle")}
+                {isSubmitting
+                  ? t("common.actions.loading")
+                  : t("auth.passwordRecoveryTitle")}
               </Button>
               <FieldDescription className="text-center text-muted-foreground">
                 {t("auth.backToLogin")}{" "}

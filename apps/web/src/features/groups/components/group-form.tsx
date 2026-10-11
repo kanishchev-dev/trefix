@@ -64,7 +64,10 @@ export function GroupForm({
             router.push(`/users/groups/${group.id}`);
           },
           onError: (error) =>
-            notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+            notifyError(
+              t("common.states.error"),
+              getFriendlyApiMessage(error, t),
+            ),
         },
       );
       return;
@@ -95,7 +98,12 @@ export function GroupForm({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="description">{t("groups.fields.description")}</Label>
-        <Textarea id="description" rows={3} disabled={isSystem} {...form.register("description")} />
+        <Textarea
+          id="description"
+          rows={3}
+          disabled={isSystem}
+          {...form.register("description")}
+        />
       </div>
 
       <div className="flex items-center gap-2">

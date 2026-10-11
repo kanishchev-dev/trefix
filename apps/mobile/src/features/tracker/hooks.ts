@@ -10,7 +10,11 @@ import { recorder, type RecorderSnapshot } from "./recorder";
 import { processUploadQueue, type UploadOutcome } from "./storage/uploader";
 
 export function useRecorder(): RecorderSnapshot | null {
-  return useSyncExternalStore(recorder.subscribe, recorder.getSnapshot, recorder.getSnapshot);
+  return useSyncExternalStore(
+    recorder.subscribe,
+    recorder.getSnapshot,
+    recorder.getSnapshot,
+  );
 }
 
 export async function currentUserId(): Promise<string | null> {
@@ -31,7 +35,10 @@ export function useUploadQueue(copy: MainCopy): () => Promise<UploadOutcome[]> {
     }
     for (const outcome of outcomes) {
       if (outcome.status === "rejected") {
-        const message = outcome.error instanceof Error ? outcome.error.message : String(outcome.error);
+        const message =
+          outcome.error instanceof Error
+            ? outcome.error.message
+            : String(outcome.error);
         showToast(fillTemplate(copy.tracker.uploadRejected, { message }));
       }
     }
@@ -53,10 +60,17 @@ export function useTrackerBootstrap(copy: MainCopy): void {
     void (async () => {
       const userId = await currentUserId();
       if (!userId) return;
-      await recorder.restore(userId, copy.tracker.notification).catch(() => undefined);
+      await recorder
+        .restore(userId, copy.tracker.notification)
+        .catch(() => undefined);
       const snapshot = recorder.getSnapshot();
       if (snapshot) {
-        pushSubScreen({ kind: snapshot.view.status === "finished" ? "tracker-summary" : "tracker-recording" });
+        pushSubScreen({
+          kind:
+            snapshot.view.status === "finished"
+              ? "tracker-summary"
+              : "tracker-recording",
+        });
       }
       await upload().catch(() => undefined);
     })();

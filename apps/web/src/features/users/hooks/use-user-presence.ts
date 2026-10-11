@@ -24,7 +24,10 @@ export function useUserPresence(userIds: readonly string[]) {
   // Derived from the values rather than the array identity: callers pass a
   // freshly built array on every render, and keying off that identity would
   // refetch on every render of the whole table.
-  const idsKey = useMemo(() => [...new Set(userIds)].sort().join(","), [userIds]);
+  const idsKey = useMemo(
+    () => [...new Set(userIds)].sort().join(","),
+    [userIds],
+  );
   const uniqueUserIds = useMemo(
     () => (idsKey ? idsKey.split(",") : []),
     [idsKey],
@@ -41,7 +44,10 @@ export function useUserPresence(userIds: readonly string[]) {
     refetchInterval: 60_000,
   });
 
-  const onlineUserIds = useMemo(() => query.data ?? new Set<string>(), [query.data]);
+  const onlineUserIds = useMemo(
+    () => query.data ?? new Set<string>(),
+    [query.data],
+  );
 
   // The backend only announces transitions, so the cached set is patched in
   // place instead of refetching: the event already carries the new state, and

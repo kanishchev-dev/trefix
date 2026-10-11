@@ -61,9 +61,9 @@ describe("admin user contract schemas", () => {
     });
 
     it("rejects an empty first name", () => {
-      expect(
-        adminUpdateUserSchema.safeParse({ firstName: "" }).success,
-      ).toBe(false);
+      expect(adminUpdateUserSchema.safeParse({ firstName: "" }).success).toBe(
+        false,
+      );
     });
 
     it("rejects a non-boolean emailVerified", () => {

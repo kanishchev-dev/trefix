@@ -21,7 +21,8 @@ let iosListener: (() => void) | null = null;
 /** Android background task modules are in this build (same reason as `getHealthSource`: probe before `require`). */
 export function hasBackgroundTaskModules(): boolean {
   return (
-    requireOptionalNativeModule("ExpoTaskManager") != null && requireOptionalNativeModule("ExpoBackgroundTask") != null
+    requireOptionalNativeModule("ExpoTaskManager") != null &&
+    requireOptionalNativeModule("ExpoBackgroundTask") != null
   );
 }
 
@@ -35,7 +36,9 @@ export function subscribeToIosWorkouts(): void {
   if (iosSubscription || !iosListener) return;
   const listener = iosListener;
   try {
-    iosSubscription = healthKit().subscribeToChanges(HEALTH_WORKOUT_TYPE, () => listener());
+    iosSubscription = healthKit().subscribeToChanges(HEALTH_WORKOUT_TYPE, () =>
+      listener(),
+    );
   } catch {
     // Native module missing from this build: background delivery stays off.
   }
@@ -45,14 +48,20 @@ export function subscribeToIosWorkouts(): void {
 export async function enableHealthBackground(): Promise<void> {
   if (Platform.OS === "ios") {
     const HealthKit = healthKit();
-    await HealthKit.configureBackgroundTypes([HEALTH_WORKOUT_TYPE], HealthKit.UpdateFrequency.immediate);
+    await HealthKit.configureBackgroundTypes(
+      [HEALTH_WORKOUT_TYPE],
+      HealthKit.UpdateFrequency.immediate,
+    );
     subscribeToIosWorkouts();
     return;
   }
   if (Platform.OS === "android") {
     if (!getHealthSource() || !hasBackgroundTaskModules()) return;
-    const BackgroundTask = require("expo-background-task") as typeof import("expo-background-task");
-    await BackgroundTask.registerTaskAsync(HEALTH_BACKGROUND_TASK, { minimumInterval: ANDROID_INTERVAL_MINUTES });
+    const BackgroundTask =
+      require("expo-background-task") as typeof import("expo-background-task");
+    await BackgroundTask.registerTaskAsync(HEALTH_BACKGROUND_TASK, {
+      minimumInterval: ANDROID_INTERVAL_MINUTES,
+    });
   }
 }
 
@@ -66,8 +75,10 @@ export async function disableHealthBackground(): Promise<void> {
     }
     if (Platform.OS === "android") {
       if (!hasBackgroundTaskModules()) return;
-      const BackgroundTask = require("expo-background-task") as typeof import("expo-background-task");
-      const TaskManager = require("expo-task-manager") as typeof import("expo-task-manager");
+      const BackgroundTask =
+        require("expo-background-task") as typeof import("expo-background-task");
+      const TaskManager =
+        require("expo-task-manager") as typeof import("expo-task-manager");
       if (await TaskManager.isTaskRegisteredAsync(HEALTH_BACKGROUND_TASK)) {
         await BackgroundTask.unregisterTaskAsync(HEALTH_BACKGROUND_TASK);
       }

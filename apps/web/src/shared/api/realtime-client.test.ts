@@ -16,10 +16,7 @@ class FakeSocket {
   /** Timeouts requested for `realtime.ping`, in order. */
   pingTimeouts: number[] = [];
   /** Subscribe acks, so a test can confirm or reject a subscription. */
-  subscribeAcks: ((
-    error: Error | null,
-    response?: unknown,
-  ) => void)[] = [];
+  subscribeAcks: ((error: Error | null, response?: unknown) => void)[] = [];
   on = vi.fn((event: string, handler: (...args: unknown[]) => void) => {
     this.handlers[event] = handler;
     return this;

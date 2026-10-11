@@ -1,12 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Check } from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
-import { InlineError, SheetActionsColumn } from "../../plans/components/plans-ui";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
+import {
+  InlineError,
+  SheetActionsColumn,
+} from "../../plans/components/plans-ui";
 import { profileErrorMessage } from "../../profile/lib/profile-format";
 import { useGiveHealthConsent } from "../hooks";
 
@@ -20,10 +34,18 @@ type Props = {
   themeMode: ThemeMode;
 };
 
-const PRIVACY_URL = process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy";
+const PRIVACY_URL =
+  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy";
 
 /** H2 — consent to process health data (special category of personal data). Shown once per text version. */
-export function HealthConsentSheet({ visible, storeName, onClose, copy, theme, themeMode }: Props) {
+export function HealthConsentSheet({
+  visible,
+  storeName,
+  onClose,
+  copy,
+  theme,
+  themeMode,
+}: Props) {
   const c = copy.profile.integrations.health.consent;
   const give = useGiveHealthConsent();
   const [open, setOpen] = useState(false);
@@ -51,7 +73,10 @@ export function HealthConsentSheet({ visible, storeName, onClose, copy, theme, t
     }
   };
 
-  const muted = { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular };
+  const muted = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
+  };
 
   return (
     <BottomSheet
@@ -65,13 +90,25 @@ export function HealthConsentSheet({ visible, storeName, onClose, copy, theme, t
       theme={theme}
       themeMode={themeMode}
     >
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <SheetBlock theme={theme}>
-          <Text style={[styles.body, muted]}>{fillTemplate(c.body, { store: storeName })}</Text>
+          <Text style={[styles.body, muted]}>
+            {fillTemplate(c.body, { store: storeName })}
+          </Text>
           <Text
             accessibilityRole="link"
             onPress={() => void Linking.openURL(PRIVACY_URL)}
-            style={[styles.link, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}
+            style={[
+              styles.link,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
           >
             {c.policy}
           </Text>
@@ -83,20 +120,42 @@ export function HealthConsentSheet({ visible, storeName, onClose, copy, theme, t
             accessibilityState={{ checked }}
             accessibilityLabel={c.checkbox}
             onPress={() => setChecked((value) => !value)}
-            style={({ pressed }) => [styles.checkRow, { backgroundColor: theme.color.control }, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.checkRow,
+              { backgroundColor: theme.color.control },
+              pressed && styles.pressed,
+            ]}
           >
             <View
               style={[
                 styles.box,
                 {
-                  borderColor: checked ? theme.color.foreground : theme.color.mutedForeground,
-                  backgroundColor: checked ? theme.color.foreground : "transparent",
+                  borderColor: checked
+                    ? theme.color.foreground
+                    : theme.color.mutedForeground,
+                  backgroundColor: checked
+                    ? theme.color.foreground
+                    : "transparent",
                 },
               ]}
             >
-              {checked ? <Check color={theme.color.background} size={14} strokeWidth={3} /> : null}
+              {checked ? (
+                <Check
+                  color={theme.color.background}
+                  size={14}
+                  strokeWidth={3}
+                />
+              ) : null}
             </View>
-            <Text style={[styles.checkText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
+            <Text
+              style={[
+                styles.checkText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
               {c.checkbox}
             </Text>
           </Pressable>
@@ -118,7 +177,13 @@ export function HealthConsentSheet({ visible, storeName, onClose, copy, theme, t
               theme={theme}
               themeMode={themeMode}
             />
-            <SheetButton label={c.cancel} variant="secondary" onPress={() => setOpen(false)} theme={theme} themeMode={themeMode} />
+            <SheetButton
+              label={c.cancel}
+              variant="secondary"
+              onPress={() => setOpen(false)}
+              theme={theme}
+              themeMode={themeMode}
+            />
           </SheetActionsColumn>
         </SheetBlock>
       </ScrollView>

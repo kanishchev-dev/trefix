@@ -81,9 +81,6 @@ export function useInvalidateAccessControl(): () => Promise<void> {
     });
 }
 
-
-
-
 export function useCreateGroup() {
   const invalidate = useInvalidateAccessControl();
 
@@ -126,8 +123,13 @@ export function useAssignPermissionToGroup() {
   const invalidate = useInvalidateAccessControl();
 
   return useMutation({
-    mutationFn: ({ groupId, permissionId }: { groupId: string; permissionId: string }) =>
-      assignPermissionToGroup(groupId, permissionId),
+    mutationFn: ({
+      groupId,
+      permissionId,
+    }: {
+      groupId: string;
+      permissionId: string;
+    }) => assignPermissionToGroup(groupId, permissionId),
     onSuccess: () => {
       void invalidate();
     },
@@ -138,8 +140,13 @@ export function useRevokePermissionFromGroup() {
   const invalidate = useInvalidateAccessControl();
 
   return useMutation({
-    mutationFn: ({ groupId, permissionId }: { groupId: string; permissionId: string }) =>
-      revokePermissionFromGroup(groupId, permissionId),
+    mutationFn: ({
+      groupId,
+      permissionId,
+    }: {
+      groupId: string;
+      permissionId: string;
+    }) => revokePermissionFromGroup(groupId, permissionId),
     onSuccess: () => {
       void invalidate();
     },

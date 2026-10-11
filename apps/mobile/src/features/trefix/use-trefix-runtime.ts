@@ -5,6 +5,8 @@ import {
   type ThreadMessageLike,
 } from "@assistant-ui/react-native";
 import { createCoachSession, streamCoachMessage } from "../../lib/coach-api";
+import { resolveApiErrorMessage } from "@workspace/utils";
+
 import { logger } from "../../lib/logger";
 
 type RuntimeMessage = {
@@ -32,6 +34,7 @@ export function useTrefixRuntime(
   athleteId: string | undefined,
   sessionId: string | null,
   initialMessages: ThreadMessageLike[],
+  texts: { athleteMissing: string; unavailable: string; network: string },
 ) {
   const sessionIdRef = useRef<string | null>(sessionId);
 
@@ -44,7 +47,7 @@ export function useTrefixRuntime(
       async *run({ messages, abortSignal }) {
         if (!athleteId) {
           yield {
-            content: [{ type: "text", text: "Athlete profile not found." }],
+            content: [{ type: "text", text: texts.athleteMissing }],
           };
           return;
         }
@@ -82,14 +85,20 @@ export function useTrefixRuntime(
             content: [
               {
                 type: "text",
-                text: "Error connecting to AI. Please try again.",
+                // Backend messages (coach off, session gone) are already localized.
+                text: resolveApiErrorMessage(error, {
+                  byStatus: (status) =>
+                    status >= 500 ? texts.unavailable : undefined,
+                  network: texts.network,
+                  fallback: texts.unavailable,
+                }),
               },
             ],
           };
         }
       },
     }),
-    [athleteId],
+    [athleteId, texts],
   );
 
   return useLocalRuntime(chatModel, {

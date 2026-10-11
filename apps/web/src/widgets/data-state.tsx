@@ -4,14 +4,25 @@ import type { ReactElement, ReactNode } from "react";
 
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Table, TableBody, TableCell, TableRow } from "@workspace/ui/components/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "@workspace/ui/components/table";
 import { RefreshCcwIcon } from "lucide-react";
 
 import { Button } from "@workspace/ui/components/button";
 
 import { useI18n } from "@/shared/i18n";
 
-export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }): ReactElement {
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+}: {
+  rows?: number;
+  columns?: number;
+}): ReactElement {
   return (
     <Table>
       <TableBody>
@@ -81,7 +92,11 @@ export function ErrorState({
   );
 }
 
-export function InlineCard({ children }: { children: ReactNode }): ReactElement {
+export function InlineCard({
+  children,
+}: {
+  children: ReactNode;
+}): ReactElement {
   return (
     <Card>
       <CardContent>{children}</CardContent>

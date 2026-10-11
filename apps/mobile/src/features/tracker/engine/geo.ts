@@ -8,11 +8,15 @@ const toRad = (deg: number): number => (deg * Math.PI) / 180;
 export function haversineM(a: LatLng, b: LatLng): number {
   const dLat = toRad(b.lat - a.lat);
   const dLng = toRad(b.lng - a.lng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-export function boundsOf(points: LatLng[]): { minLat: number; minLng: number; maxLat: number; maxLng: number } | null {
+export function boundsOf(
+  points: LatLng[],
+): { minLat: number; minLng: number; maxLat: number; maxLng: number } | null {
   if (points.length === 0) return null;
   let minLat = Infinity;
   let minLng = Infinity;
@@ -38,14 +42,20 @@ function segmentDistanceM(p: LatLng, a: LatLng, b: LatLng): number {
   const px = (p.lng - a.lng) * kx;
   const py = (p.lat - a.lat) * ky;
   const len2 = bx * bx + by * by;
-  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * bx + (py - ay) * by) / len2));
+  const t =
+    len2 === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((px - ax) * bx + (py - ay) * by) / len2));
   const dx = px - t * bx;
   const dy = py - t * by;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
 /** Douglas–Peucker with the given tolerance, metres. Keeps the first and last point. */
-export function simplify<T extends LatLng>(points: T[], toleranceM: number): T[] {
+export function simplify<T extends LatLng>(
+  points: T[],
+  toleranceM: number,
+): T[] {
   if (points.length <= 2) return points.slice();
   const keep = new Uint8Array(points.length);
   keep[0] = 1;
@@ -56,7 +66,11 @@ export function simplify<T extends LatLng>(points: T[], toleranceM: number): T[]
     let maxDistance = 0;
     let index = -1;
     for (let i = first + 1; i < last; i += 1) {
-      const distance = segmentDistanceM(points[i]!, points[first]!, points[last]!);
+      const distance = segmentDistanceM(
+        points[i]!,
+        points[first]!,
+        points[last]!,
+      );
       if (distance > maxDistance) {
         maxDistance = distance;
         index = i;
@@ -71,7 +85,10 @@ export function simplify<T extends LatLng>(points: T[], toleranceM: number): T[]
 }
 
 /** Simplifies with a growing tolerance until at most `maxPoints` remain. */
-export function simplifyTo<T extends LatLng>(points: T[], maxPoints: number): T[] {
+export function simplifyTo<T extends LatLng>(
+  points: T[],
+  maxPoints: number,
+): T[] {
   let tolerance = 2;
   let result = simplify(points, tolerance);
   while (result.length > maxPoints && tolerance < 1000) {

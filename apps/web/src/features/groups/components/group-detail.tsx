@@ -6,8 +6,19 @@ import { useState, type ReactElement } from "react";
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@workspace/ui/components/tabs";
 import { InfoIcon, PencilIcon, Trash2Icon } from "lucide-react";
 
 import type { Permission, PermissionGroup } from "@workspace/api-client";
@@ -24,7 +35,11 @@ import {
 } from "@/features/permissions/hooks/use-permissions";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
 
-export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement {
+export function GroupDetail({
+  group,
+}: {
+  group: PermissionGroup;
+}): ReactElement {
   const { t, locale } = useI18n();
   const router = useRouter();
   const { hasPermission } = useAuth();
@@ -34,7 +49,9 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
   const deleteGroup = useDeleteGroup();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(null);
+  const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(
+    null,
+  );
 
   const groupPermissionIds = new Set(
     (group.permissions ?? []).map((permission) => permission.id),
@@ -75,7 +92,9 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{group.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {group.name}
+            </h1>
             {group.isSystem ? (
               <Badge variant="outline">{t("common.system")}</Badge>
             ) : null}
@@ -157,7 +176,10 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
               ) : (
                 <ul className="flex flex-col divide-y">
                   {group.users.map((member) => (
-                    <li key={member.id} className="flex items-center justify-between py-2">
+                    <li
+                      key={member.id}
+                      className="flex items-center justify-between py-2"
+                    >
                       <Link
                         href={`/users/${member.id}`}
                         className="text-sm font-medium hover:underline"
@@ -187,7 +209,9 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
                 <span className="text-sm text-muted-foreground">
                   {t("groups.fields.systemKey")}
                 </span>
-                <span className="text-sm font-medium">{group.systemKey ?? "—"}</span>
+                <span className="text-sm font-medium">
+                  {group.systemKey ?? "—"}
+                </span>
               </div>
               <div className="flex flex-col gap-1 py-2">
                 <span className="text-sm text-muted-foreground">
@@ -214,7 +238,9 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title={t("groups.confirmDelete.title")}
-        description={t("groups.confirmDelete.description", { name: group.name })}
+        description={t("groups.confirmDelete.description", {
+          name: group.name,
+        })}
         confirmLabel={t("common.actions.delete")}
         isPending={deleteGroup.isPending}
         onConfirm={() =>
@@ -225,7 +251,10 @@ export function GroupDetail({ group }: { group: PermissionGroup }): ReactElement
               router.push("/users/groups");
             },
             onError: (error) =>
-              notifyError(t("common.states.error"), getFriendlyApiMessage(error, t)),
+              notifyError(
+                t("common.states.error"),
+                getFriendlyApiMessage(error, t),
+              ),
           })
         }
       />

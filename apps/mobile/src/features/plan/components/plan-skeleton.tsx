@@ -30,7 +30,12 @@ export function PlanSkeleton({ theme }: Props) {
           <View
             style={[
               styles.skeletonBlock,
-              { width: 70, height: 24, borderRadius: 12, backgroundColor: theme.color.surface },
+              {
+                width: 70,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: theme.color.surface,
+              },
             ]}
           />
         </View>
@@ -46,7 +51,12 @@ export function PlanSkeleton({ theme }: Props) {
           <View
             style={[
               styles.skeletonBlock,
-              { width: "100%", height: 8, borderRadius: 4, backgroundColor: theme.color.surface },
+              {
+                width: "100%",
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: theme.color.surface,
+              },
             ]}
           />
         </View>
@@ -56,7 +66,12 @@ export function PlanSkeleton({ theme }: Props) {
       <View
         style={[
           styles.skeletonBlock,
-          { width: 110, height: 14, marginBottom: 12, backgroundColor: theme.color.surfaceElevated },
+          {
+            width: 110,
+            height: 14,
+            marginBottom: 12,
+            backgroundColor: theme.color.surfaceElevated,
+          },
         ]}
       />
 
@@ -67,20 +82,33 @@ export function PlanSkeleton({ theme }: Props) {
             <View
               style={[
                 styles.skeletonBlock,
-                { width: 20, height: 20, borderRadius: 10, backgroundColor: theme.color.surfaceElevated },
+                {
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: theme.color.surfaceElevated,
+                },
               ]}
             />
             <View style={{ flex: 1, gap: 6 }}>
               <View
                 style={[
                   styles.skeletonBlock,
-                  { width: "40%", height: 14, backgroundColor: theme.color.surfaceElevated },
+                  {
+                    width: "40%",
+                    height: 14,
+                    backgroundColor: theme.color.surfaceElevated,
+                  },
                 ]}
               />
               <View
                 style={[
                   styles.skeletonBlock,
-                  { width: "70%", height: 18, backgroundColor: theme.color.surfaceElevated },
+                  {
+                    width: "70%",
+                    height: 18,
+                    backgroundColor: theme.color.surfaceElevated,
+                  },
                 ]}
               />
             </View>

@@ -27,7 +27,11 @@ export type LocationSample = {
   speed: number | null;
 };
 
-export type PauseRecord = { startedAt: number; endedAt: number | null; auto: boolean };
+export type PauseRecord = {
+  startedAt: number;
+  endedAt: number | null;
+  auto: boolean;
+};
 
 /** [moving ms, distance m, elevation gain m] — enough to rebuild splits for any final distance. */
 export type TimelineSample = [number, number, number];
@@ -58,7 +62,12 @@ export type EngineState = {
   stepWindow: Array<[number, number]>;
   pauses: PauseRecord[];
   /** `source` is absent until the barometer reports (GPS altitude meanwhile). */
-  elevation: { gainM: number; lossM: number; refM: number | null; source?: "gps" | "baro" };
+  elevation: {
+    gainM: number;
+    lossM: number;
+    refM: number | null;
+    source?: "gps" | "baro";
+  };
   timeline: TimelineSample[];
   /** Steps and GPS metres over the same stretches, to learn the stride. */
   calibration: { steps: number; meters: number };

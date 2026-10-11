@@ -24,7 +24,11 @@ export function WeekdayPicker({ days, selected, onToggle, theme }: Props) {
             onPress={() => onToggle(day.value)}
             style={({ pressed }) => [
               styles.day,
-              { backgroundColor: active ? theme.color.primary : theme.color.card },
+              {
+                backgroundColor: active
+                  ? theme.color.primary
+                  : theme.color.card,
+              },
               pressed && styles.pressed,
             ]}
           >
@@ -32,7 +36,9 @@ export function WeekdayPicker({ days, selected, onToggle, theme }: Props) {
               style={[
                 styles.label,
                 {
-                  color: active ? theme.color.primaryForeground : theme.color.foreground,
+                  color: active
+                    ? theme.color.primaryForeground
+                    : theme.color.foreground,
                   fontFamily: theme.typography.fontFamily.sans.medium,
                 },
               ]}

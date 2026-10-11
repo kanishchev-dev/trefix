@@ -15,7 +15,14 @@ type Props = {
 };
 
 /** Deletes a draft or a history plan; workouts already done stay in the calendar. */
-export function DeletePlanSheet({ visible, plan, onClose, theme, themeMode, copy }: Props) {
+export function DeletePlanSheet({
+  visible,
+  plan,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+}: Props) {
   const deleteCopy = copy.plans.delete;
   const deleteMutation = useDeletePlan();
 
@@ -28,7 +35,10 @@ export function DeletePlanSheet({ visible, plan, onClose, theme, themeMode, copy
       cancelLabel={deleteCopy.keep}
       onConfirm={async () => {
         if (!plan) return;
-        await deleteMutation.mutateAsync({ planId: plan.id, status: plan.status });
+        await deleteMutation.mutateAsync({
+          planId: plan.id,
+          status: plan.status,
+        });
       }}
       onClose={onClose}
       errorMessage={(error) => planErrorMessage(error, copy, deleteCopy.failed)}

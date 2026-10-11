@@ -43,7 +43,10 @@ export function isLocale(value: unknown): value is Locale {
   return value === "ru" || value === "en";
 }
 
-type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+type TranslateFn = (
+  key: string,
+  params?: Record<string, string | number>,
+) => string;
 
 type I18nContextValue = {
   locale: Locale;
@@ -59,7 +62,11 @@ function lookup(locale: Locale, key: string): string | undefined {
   let current: unknown = dictionary;
 
   for (const segment of segments) {
-    if (current && typeof current === "object" && segment in (current as Record<string, unknown>)) {
+    if (
+      current &&
+      typeof current === "object" &&
+      segment in (current as Record<string, unknown>)
+    ) {
       current = (current as Record<string, unknown>)[segment];
     } else {
       return undefined;
@@ -69,7 +76,10 @@ function lookup(locale: Locale, key: string): string | undefined {
   return typeof current === "string" ? current : undefined;
 }
 
-function interpolate(template: string, params?: Record<string, string | number>): string {
+function interpolate(
+  template: string,
+  params?: Record<string, string | number>,
+): string {
   if (!params) {
     return template;
   }
@@ -139,7 +149,10 @@ export function useTranslate(locale: Locale): TranslateFn {
   );
 }
 
-export function formatDate(value: string | Date | null | undefined, locale: Locale): string {
+export function formatDate(
+  value: string | Date | null | undefined,
+  locale: Locale,
+): string {
   if (!value) {
     return "—";
   }

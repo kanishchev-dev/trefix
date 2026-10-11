@@ -12,7 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { ArrowRightIcon, KeyRoundIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  KeyRoundIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+} from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
 import {
@@ -49,7 +54,11 @@ export default function DashboardPage(): ReactElement {
           </CardHeader>
           <CardAction>
             {hasPermission("users.read") ? (
-              <Button variant="ghost" size="sm" render={<Link href="/users/list" />}>
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/users/list" />}
+              >
                 <ArrowRightIcon />
                 {t("dashboard.goToUsers")}
               </Button>
@@ -80,9 +89,7 @@ export default function DashboardPage(): ReactElement {
               </Button>
             ) : null}
           </CardAction>
-          <CardContent className="sr-only">
-            {t("dashboard.groups")}
-          </CardContent>
+          <CardContent className="sr-only">{t("dashboard.groups")}</CardContent>
         </Card>
 
         <Card>

@@ -1,15 +1,41 @@
-import { Children, createContext, Fragment, isValidElement, useContext, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  Children,
+  createContext,
+  Fragment,
+  isValidElement,
+  useContext,
+  type ReactNode,
+} from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
 import { type ThemeTokens } from "@workspace/tokens";
 
 /** Group title above a card: sentence case, 12px medium, foreground at 70%. */
-export function SectionTitle({ text, theme }: { text: string; theme: ThemeTokens }) {
+export function SectionTitle({
+  text,
+  theme,
+}: {
+  text: string;
+  theme: ThemeTokens;
+}) {
   return (
     <Text
       accessibilityRole="header"
-      style={[styles.sectionTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}
+      style={[
+        styles.sectionTitle,
+        {
+          color: theme.color.foreground,
+          fontFamily: theme.typography.fontFamily.sans.medium,
+        },
+      ]}
     >
       {text}
     </Text>
@@ -37,12 +63,21 @@ export function ListCard({
   const rows = Children.toArray(children).filter(isValidElement);
   return (
     <PlainListContext.Provider value={plain}>
-      <View style={[plain ? null : [styles.card, { backgroundColor: theme.color.card }], style]}>
+      <View
+        style={[
+          plain ? null : [styles.card, { backgroundColor: theme.color.card }],
+          style,
+        ]}
+      >
         {rows.map((row, index) => (
           <Fragment key={row.key ?? index}>
             {index > 0 ? (
               <View
-                style={[styles.separator, plain && styles.separatorPlain, { backgroundColor: theme.color.separator }]}
+                style={[
+                  styles.separator,
+                  plain && styles.separatorPlain,
+                  { backgroundColor: theme.color.separator },
+                ]}
               />
             ) : null}
             {row}
@@ -54,12 +89,25 @@ export function ListCard({
 }
 
 /** Icon in a soft circle, used by rows and tiles. */
-export function IconCircle({ theme, children, size = 42 }: { theme: ThemeTokens; children: ReactNode; size?: number }) {
+export function IconCircle({
+  theme,
+  children,
+  size = 42,
+}: {
+  theme: ThemeTokens;
+  children: ReactNode;
+  size?: number;
+}) {
   return (
     <View
       style={[
         styles.iconCircle,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: theme.color.iconSurface },
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: theme.color.iconSurface,
+        },
       ]}
     >
       {children}
@@ -112,7 +160,13 @@ export function ListRow({
       <View style={styles.rowText}>
         <Text
           numberOfLines={1}
-          style={[styles.rowTitle, { color: titleColor, fontFamily: theme.typography.fontFamily.sans.medium }]}
+          style={[
+            styles.rowTitle,
+            {
+              color: titleColor,
+              fontFamily: theme.typography.fontFamily.sans.medium,
+            },
+          ]}
         >
           {title}
         </Text>
@@ -121,7 +175,10 @@ export function ListRow({
             numberOfLines={1}
             style={[
               styles.rowDescription,
-              { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
             ]}
           >
             {description}
@@ -133,29 +190,50 @@ export function ListRow({
           numberOfLines={1}
           style={[
             styles.rowValue,
-            { color: valueColor ?? theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+            {
+              color: valueColor ?? theme.color.mutedForeground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
           ]}
         >
           {value}
         </Text>
       ) : null}
-      {dot ? <View style={[styles.dot, { backgroundColor: theme.color.warning }]} /> : null}
+      {dot ? (
+        <View style={[styles.dot, { backgroundColor: theme.color.warning }]} />
+      ) : null}
       {trailing}
-      {showChevron ? <ChevronRight color={theme.color.mutedForeground} size={18} strokeWidth={2.2} /> : null}
+      {showChevron ? (
+        <ChevronRight
+          color={theme.color.mutedForeground}
+          size={18}
+          strokeWidth={2.2}
+        />
+      ) : null}
     </View>
   );
 
   if (!onPress) {
-    return <View style={[styles.row, plain && styles.rowPlain]}>{content}</View>;
+    return (
+      <View style={[styles.row, plain && styles.rowPlain]}>{content}</View>
+    );
   }
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? [title, value, description].filter(Boolean).join(", ")}
+      accessibilityLabel={
+        accessibilityLabel ??
+        [title, value, description].filter(Boolean).join(", ")
+      }
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, plain && styles.rowPlain, pressed && styles.pressed, disabled && styles.disabled]}
+      style={({ pressed }) => [
+        styles.row,
+        plain && styles.rowPlain,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
+      ]}
     >
       {content}
     </Pressable>
@@ -192,11 +270,21 @@ export function ActionCard({
         disabled && styles.disabled,
       ]}
     >
-      {icon ? <IconCircle theme={theme} size={44}>{icon}</IconCircle> : null}
+      {icon ? (
+        <IconCircle theme={theme} size={44}>
+          {icon}
+        </IconCircle>
+      ) : null}
       <View style={styles.rowText}>
         <Text
           numberOfLines={1}
-          style={[styles.rowTitle, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}
+          style={[
+            styles.rowTitle,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.medium,
+            },
+          ]}
         >
           {title}
         </Text>
@@ -205,7 +293,10 @@ export function ActionCard({
             numberOfLines={1}
             style={[
               styles.rowDescription,
-              { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
             ]}
           >
             {description}
@@ -218,10 +309,24 @@ export function ActionCard({
 }
 
 /** Round mark next to a value that came from an external source: "S" — Strava, "H" — Apple Health / Health Connect. */
-export function SourceBadge({ theme, label = "S" }: { theme: ThemeTokens; label?: string }) {
+export function SourceBadge({
+  theme,
+  label = "S",
+}: {
+  theme: ThemeTokens;
+  label?: string;
+}) {
   return (
     <View style={[styles.badge, { backgroundColor: theme.color.iconSurface }]}>
-      <Text style={[styles.badgeText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+      <Text
+        style={[
+          styles.badgeText,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.semibold,
+          },
+        ]}
+      >
         {label}
       </Text>
     </View>
@@ -229,7 +334,15 @@ export function SourceBadge({ theme, label = "S" }: { theme: ThemeTokens; label?
 }
 
 /** Small pill for statuses ("Вкл.", "Скоро замена"). */
-export function Pill({ theme, text, tone = "neutral" }: { theme: ThemeTokens; text: string; tone?: "neutral" | "warning" }) {
+export function Pill({
+  theme,
+  text,
+  tone = "neutral",
+}: {
+  theme: ThemeTokens;
+  text: string;
+  tone?: "neutral" | "warning";
+}) {
   return (
     <View style={[styles.pill, { backgroundColor: theme.color.iconSurface }]}>
       <Text
@@ -237,7 +350,8 @@ export function Pill({ theme, text, tone = "neutral" }: { theme: ThemeTokens; te
         style={[
           styles.pillText,
           {
-            color: tone === "warning" ? theme.color.warning : theme.color.foreground,
+            color:
+              tone === "warning" ? theme.color.warning : theme.color.foreground,
             fontFamily: theme.typography.fontFamily.sans.medium,
           },
         ]}

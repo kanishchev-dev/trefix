@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 
-import { type ManualPlanScheduleInput, type PlanConfig } from "@workspace/api-client";
+import {
+  type ManualPlanScheduleInput,
+  type PlanConfig,
+} from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Segmented } from "@workspace/ui-native";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
-import { BottomSheet, SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";
+import {
+  BottomSheet,
+  SheetBlock,
+  SheetButton,
+} from "../../../shared/ui/bottom-sheet";
 import { useToast } from "../../../shared/ui/toast";
 import { SectionBlock } from "../../plan-creation/components/plan-creation-ui";
-import { ScheduleStepFields, toggleTrainingDay } from "../../plan-creation/components/schedule-step-fields";
+import {
+  ScheduleStepFields,
+  toggleTrainingDay,
+} from "../../plan-creation/components/schedule-step-fields";
 import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-form";
 import { usePlanChangeFlow } from "../hooks/use-plan-change-flow";
 import { draftFromConfig } from "../lib/plan-draft";
@@ -30,13 +40,26 @@ type Props = {
 };
 
 /** New training days for the remaining weeks of the plan in progress, applied after a diff. */
-export function ScheduleChangeSheet({ visible, planId, schedule, onClose, theme, themeMode, copy, language }: Props) {
+export function ScheduleChangeSheet({
+  visible,
+  planId,
+  schedule,
+  onClose,
+  theme,
+  themeMode,
+  copy,
+  language,
+}: Props) {
   const scheduleCopy = copy.plans.schedule;
   const { showToast } = useToast();
-  const initial = useMemo<ManualPlanScheduleInput>(() => draftFromConfig({ schedule }).schedule, [schedule]);
+  const initial = useMemo<ManualPlanScheduleInput>(
+    () => draftFromConfig({ schedule }).schedule,
+    [schedule],
+  );
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<ManualPlanScheduleInput>(initial);
-  const [effectiveFrom, setEffectiveFrom] = useState<EffectiveFrom>("next_week");
+  const [effectiveFrom, setEffectiveFrom] =
+    useState<EffectiveFrom>("next_week");
 
   const flow = usePlanChangeFlow(planId, {
     copy,
@@ -92,7 +115,9 @@ export function ScheduleChangeSheet({ visible, planId, schedule, onClose, theme,
           <>
             <ScheduleStepFields
               schedule={value}
-              onToggleDay={(day) => setValue((current) => toggleTrainingDay(current, day))}
+              onToggleDay={(day) =>
+                setValue((current) => toggleTrainingDay(current, day))
+              }
               onChange={(updater) => setValue(updater)}
               shortDayNames={shortDayNamesFor(language)}
               theme={theme}
@@ -114,7 +139,14 @@ export function ScheduleChangeSheet({ visible, planId, schedule, onClose, theme,
             </SectionBlock>
             {flow.conflict ? (
               <SheetBlock theme={theme}>
-                <Notice tone="warning" theme={theme} action={{ label: copy.plans.edit.refresh, onPress: flow.refresh }}>
+                <Notice
+                  tone="warning"
+                  theme={theme}
+                  action={{
+                    label: copy.plans.edit.refresh,
+                    onPress: flow.refresh,
+                  }}
+                >
                   {copy.plans.edit.conflict}
                 </Notice>
               </SheetBlock>

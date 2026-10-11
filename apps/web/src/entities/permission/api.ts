@@ -18,7 +18,8 @@ export const permissionPaths = {
     `/api/admin/permissions/users/${userId}/groups/${groupId}`,
   userPermission: (userId: string, permissionId: string) =>
     `/api/admin/permissions/users/${userId}/permissions/${permissionId}`,
-  userEffective: (userId: string) => `/api/admin/permissions/users/${userId}/effective`,
+  userEffective: (userId: string) =>
+    `/api/admin/permissions/users/${userId}/effective`,
 } as const;
 
 /**
@@ -84,27 +85,39 @@ export async function assignPermissionToGroup(
   groupId: string,
   permissionId: string,
 ): Promise<void> {
-  await apiRequest<void>(permissionPaths.groupPermission(groupId, permissionId), {
-    method: "POST",
-  });
+  await apiRequest<void>(
+    permissionPaths.groupPermission(groupId, permissionId),
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function revokePermissionFromGroup(
   groupId: string,
   permissionId: string,
 ): Promise<void> {
-  await apiRequest<void>(permissionPaths.groupPermission(groupId, permissionId), {
-    method: "DELETE",
-  });
+  await apiRequest<void>(
+    permissionPaths.groupPermission(groupId, permissionId),
+    {
+      method: "DELETE",
+    },
+  );
 }
 
-export async function assignGroupToUser(userId: string, groupId: string): Promise<void> {
+export async function assignGroupToUser(
+  userId: string,
+  groupId: string,
+): Promise<void> {
   await apiRequest<void>(permissionPaths.userGroup(userId, groupId), {
     method: "POST",
   });
 }
 
-export async function revokeGroupFromUser(userId: string, groupId: string): Promise<void> {
+export async function revokeGroupFromUser(
+  userId: string,
+  groupId: string,
+): Promise<void> {
   await apiRequest<void>(permissionPaths.userGroup(userId, groupId), {
     method: "DELETE",
   });

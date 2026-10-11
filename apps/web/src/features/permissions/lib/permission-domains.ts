@@ -53,7 +53,10 @@ export function splitPermissionName(name: string): PermissionNameParts {
 
   return {
     module: segments[0],
-    resource: segments.length > 2 ? segments.slice(1, -1).join(".") : UNGROUPED_RESOURCE,
+    resource:
+      segments.length > 2
+        ? segments.slice(1, -1).join(".")
+        : UNGROUPED_RESOURCE,
     action: segments[segments.length - 1],
   };
 }

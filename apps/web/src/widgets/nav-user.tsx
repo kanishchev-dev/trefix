@@ -4,7 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +41,10 @@ import {
 import { useAuth } from "@/components/auth-provider";
 import { RealtimeAvatarIndicator } from "@/shared/api/realtime-status";
 import { useI18n, type Locale } from "@/shared/i18n";
-import { useAppSettings, type ThemeMode } from "@/shared/state/app-settings-provider";
+import {
+  useAppSettings,
+  type ThemeMode,
+} from "@/shared/state/app-settings-provider";
 
 const THEME_OPTIONS: { value: ThemeMode; icon: ReactElement }[] = [
   { value: "system", icon: <MonitorIcon /> },
@@ -51,7 +58,9 @@ export function NavUser(): ReactElement {
   const { theme, setTheme } = useAppSettings();
   const { locale, setLocale, t } = useI18n();
   const router = useRouter();
-  const activeThemeOption = THEME_OPTIONS.find((option) => option.value === theme);
+  const activeThemeOption = THEME_OPTIONS.find(
+    (option) => option.value === theme,
+  );
 
   const displayName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
@@ -71,10 +80,7 @@ export function NavUser(): ReactElement {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <SidebarMenuButton
-                size="lg"
-                className="aria-expanded:bg-muted"
-              />
+              <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
             }
           >
             <span className="relative shrink-0">
@@ -134,7 +140,9 @@ export function NavUser(): ReactElement {
                           option.value === theme ? "opacity-100" : "opacity-0"
                         }
                       />
-                      {t(`sidebar.theme${option.value[0].toUpperCase()}${option.value.slice(1)}`)}
+                      {t(
+                        `sidebar.theme${option.value[0].toUpperCase()}${option.value.slice(1)}`,
+                      )}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -147,13 +155,15 @@ export function NavUser(): ReactElement {
                   {t("sidebar.language")}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {( ["ru", "en"] as Locale[] ).map((option) => (
+                  {(["ru", "en"] as Locale[]).map((option) => (
                     <DropdownMenuItem
                       key={option}
                       onClick={() => setLocale(option)}
                     >
                       <CheckIcon
-                        className={option === locale ? "opacity-100" : "opacity-0"}
+                        className={
+                          option === locale ? "opacity-100" : "opacity-0"
+                        }
                       />
                       {option === "ru"
                         ? t("sidebar.languageRussian")

@@ -19,7 +19,10 @@ import {
 import { StartPlanSheet } from "../plans/components/start-plan-sheet";
 import { useStartPlan } from "../plans/hooks/use-start-plan";
 import { usePlansRealtime } from "../plans/hooks/use-plans-realtime";
-import { PlansNavigationProvider, type PlansNavigation } from "../plans/plans-navigation";
+import {
+  PlansNavigationProvider,
+  type PlansNavigation,
+} from "../plans/plans-navigation";
 import { PlanDetailsScreen } from "../plans/screens/plan-details-screen";
 import { PlanDraftEditScreen } from "../plans/screens/plan-draft-edit-screen";
 import { PlansScreen } from "../plans/screens/plans-screen";
@@ -58,7 +61,10 @@ import { LanguageSettingsScreen } from "./screens/language-settings-screen";
 import { NotificationsSettingsScreen } from "./screens/notifications-settings-screen";
 import { ProfileEditScreen } from "./screens/profile-edit-screen";
 import { StravaIntegrationScreen } from "./screens/strava-integration-screen";
-import { ThemeSettingsScreen, type ThemePreference } from "./screens/theme-settings-screen";
+import {
+  ThemeSettingsScreen,
+  type ThemePreference,
+} from "./screens/theme-settings-screen";
 import { TrefixScreen } from "./screens/trefix-screen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -99,14 +105,18 @@ function MainStackHost({
   onSelectLanguage,
   onSelectTheme,
 }: Props) {
-  const [planCreationSheetVisible, setPlanCreationSheetVisible] = useState(false);
-  const [creationLaunch, setCreationLaunch] = useState<PlanCreationLaunch | null>(null);
+  const [planCreationSheetVisible, setPlanCreationSheetVisible] =
+    useState(false);
+  const [creationLaunch, setCreationLaunch] =
+    useState<PlanCreationLaunch | null>(null);
   const [draftEditPlanId, setDraftEditPlanId] = useState<string | null>(null);
   const [startTarget, setStartTarget] = useState<StartTarget | null>(null);
   // What the user picked in the method sheet; consumed when its close
   // animation finishes, so the creation screen opens only after the method
   // sheet has fully slid away.
-  const [pendingCreation, setPendingCreation] = useState<"manual" | "trefix" | null>(null);
+  const [pendingCreation, setPendingCreation] = useState<
+    "manual" | "trefix" | null
+  >(null);
   const { showToast } = useToast();
   const startPlanMutation = useStartPlan();
 
@@ -130,8 +140,13 @@ function MainStackHost({
 
   const openPlans = useCallback<PlansNavigation["openPlans"]>((options) => {
     trackEvent("plans_opened", { source: options?.source ?? "unknown" });
-    const params = { segment: options?.segment, highlightPlanId: options?.highlightPlanId ?? null };
-    const routes = mainNavigationRef.isReady() ? mainNavigationRef.getRootState()?.routes ?? [] : [];
+    const params = {
+      segment: options?.segment,
+      highlightPlanId: options?.highlightPlanId ?? null,
+    };
+    const routes = mainNavigationRef.isReady()
+      ? (mainNavigationRef.getRootState()?.routes ?? [])
+      : [];
     // Re-entering the library returns to it instead of stacking copies.
     if (routes.some((route) => route.name === "plans")) {
       mainNavigationRef.dispatch(StackActions.popTo("plans", params));
@@ -144,21 +159,35 @@ function MainStackHost({
     (outcome: PlanCreationOutcome) => {
       if (outcome.kind === "started") {
         openPlanTab();
-        showToast(fillTemplate(copy.plans.start.started, { name: outcome.name }));
+        showToast(
+          fillTemplate(copy.plans.start.started, { name: outcome.name }),
+        );
       } else if (outcome.kind === "draft") {
-        openPlans({ segment: "draft", highlightPlanId: outcome.planId, source: "creation" });
+        openPlans({
+          segment: "draft",
+          highlightPlanId: outcome.planId,
+          source: "creation",
+        });
         showToast(copy.plans.start.draftSaved);
       } else {
         showToast(copy.plans.rebuild.updated);
       }
     },
-    [copy.plans.rebuild.updated, copy.plans.start.draftSaved, copy.plans.start.started, openPlanTab, openPlans, showToast],
+    [
+      copy.plans.rebuild.updated,
+      copy.plans.start.draftSaved,
+      copy.plans.start.started,
+      openPlanTab,
+      openPlans,
+      showToast,
+    ],
   );
 
   const plansNavigation = useMemo<PlansNavigation>(
     () => ({
       openPlans,
-      openPlanDetails: (planId) => pushSubScreen({ kind: "plan-details", planId }),
+      openPlanDetails: (planId) =>
+        pushSubScreen({ kind: "plan-details", planId }),
       openPlanTab,
       openCreationMethod: () => setPlanCreationSheetVisible(true),
       openCreation: (launch) => setCreationLaunch(launch),
@@ -203,10 +232,24 @@ function MainStackHost({
 
             {/* Account */}
             <Stack.Screen name="profileEdit">
-              {() => <ProfileEditScreen theme={theme} themeMode={themeMode} copy={copy} onBack={goBack} />}
+              {() => (
+                <ProfileEditScreen
+                  theme={theme}
+                  themeMode={themeMode}
+                  copy={copy}
+                  onBack={goBack}
+                />
+              )}
             </Stack.Screen>
             <Stack.Screen name="notificationsSettings">
-              {() => <NotificationsSettingsScreen theme={theme} themeMode={themeMode} copy={copy} onBack={goBack} />}
+              {() => (
+                <NotificationsSettingsScreen
+                  theme={theme}
+                  themeMode={themeMode}
+                  copy={copy}
+                  onBack={goBack}
+                />
+              )}
             </Stack.Screen>
             <Stack.Screen name="languageSettings">
               {() => (
@@ -233,7 +276,14 @@ function MainStackHost({
               )}
             </Stack.Screen>
             <Stack.Screen name="trefix">
-              {() => <TrefixScreen onBack={goBack} theme={theme} themeMode={themeMode} copy={copy.trefix} />}
+              {() => (
+                <TrefixScreen
+                  onBack={goBack}
+                  theme={theme}
+                  themeMode={themeMode}
+                  copy={copy.trefix}
+                />
+              )}
             </Stack.Screen>
 
             {/* Integrations */}
@@ -246,14 +296,27 @@ function MainStackHost({
                     copy={copy}
                     userLanguage={language}
                     onBack={goBack}
-                    onOpenStrava={() => pushSubScreen({ kind: "strava-integration" })}
-                    onOpenHealth={() => pushSubScreen({ kind: "health-integration" })}
+                    onOpenStrava={() =>
+                      pushSubScreen({ kind: "strava-integration" })
+                    }
+                    onOpenHealth={() =>
+                      pushSubScreen({ kind: "health-integration" })
+                    }
                   />,
                 )
               }
             </Stack.Screen>
             <Stack.Screen name="health-integration">
-              {() => frame(<HealthIntegrationScreen theme={theme} themeMode={themeMode} copy={copy} onBack={goBack} />)}
+              {() =>
+                frame(
+                  <HealthIntegrationScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="strava-integration">
               {() =>
@@ -303,7 +366,13 @@ function MainStackHost({
             <Stack.Screen name="progress-records">
               {() =>
                 frame(
-                  <RecordsScreen theme={theme} themeMode={themeMode} copy={copy} language={language} onBack={goBack} />,
+                  <RecordsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                  />,
                 )
               }
             </Stack.Screen>
@@ -327,21 +396,53 @@ function MainStackHost({
             {/* Profile */}
             <Stack.Screen name="profile-body">
               {() =>
-                frame(<BodyScreen theme={theme} themeMode={themeMode} copy={copy} language={language} onBack={goBack} />)
+                frame(
+                  <BodyScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                  />,
+                )
               }
             </Stack.Screen>
             <Stack.Screen name="profile-heart">
-              {() => frame(<HeartScreen theme={theme} themeMode={themeMode} copy={copy} onBack={goBack} />)}
+              {() =>
+                frame(
+                  <HeartScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="profile-schedule">
               {() =>
                 frame(
-                  <ScheduleScreen theme={theme} themeMode={themeMode} copy={copy} language={language} onBack={goBack} />,
+                  <ScheduleScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                  />,
                 )
               }
             </Stack.Screen>
             <Stack.Screen name="profile-experience">
-              {() => frame(<ExperienceScreen theme={theme} themeMode={themeMode} copy={copy} onBack={goBack} />)}
+              {() =>
+                frame(
+                  <ExperienceScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="profile-gear">
               {() =>
@@ -374,11 +475,28 @@ function MainStackHost({
             </Stack.Screen>
             <Stack.Screen name="settings-units">
               {() =>
-                frame(<UnitsScreen theme={theme} themeMode={themeMode} copy={copy} language={language} onBack={goBack} />)
+                frame(
+                  <UnitsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                  />,
+                )
               }
             </Stack.Screen>
             <Stack.Screen name="settings-coach">
-              {() => frame(<CoachSettingsScreen theme={theme} themeMode={themeMode} copy={copy} onBack={goBack} />)}
+              {() =>
+                frame(
+                  <CoachSettingsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="profile-wizard">
               {({ route }) =>
@@ -410,11 +528,33 @@ function MainStackHost({
                 )
               }
             </Stack.Screen>
-            <Stack.Screen name="tracker-recording" options={{ gestureEnabled: false, animation: "fade" }}>
-              {() => <TrackerRecordingScreen theme={theme} themeMode={themeMode} copy={copy} language={language} />}
+            <Stack.Screen
+              name="tracker-recording"
+              options={{ gestureEnabled: false, animation: "fade" }}
+            >
+              {() => (
+                <TrackerRecordingScreen
+                  theme={theme}
+                  themeMode={themeMode}
+                  copy={copy}
+                  language={language}
+                />
+              )}
             </Stack.Screen>
-            <Stack.Screen name="tracker-summary" options={{ gestureEnabled: false }}>
-              {() => frame(<TrackerSummaryScreen theme={theme} themeMode={themeMode} copy={copy} language={language} />)}
+            <Stack.Screen
+              name="tracker-summary"
+              options={{ gestureEnabled: false }}
+            >
+              {() =>
+                frame(
+                  <TrackerSummaryScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                  />,
+                )
+              }
             </Stack.Screen>
           </Stack.Navigator>
 
@@ -450,11 +590,18 @@ function MainStackHost({
             entry={startTarget?.entry ?? "unknown"}
             onStart={async (block) => {
               if (!startTarget) return;
-              await startPlanMutation.mutateAsync({ planId: startTarget.id, ...block });
+              await startPlanMutation.mutateAsync({
+                planId: startTarget.id,
+                ...block,
+              });
             }}
             onUpdateMetrics={() => {
               if (startTarget) {
-                setCreationLaunch({ mode: "draft-params", planId: startTarget.id, initialStep: "metrics" });
+                setCreationLaunch({
+                  mode: "draft-params",
+                  planId: startTarget.id,
+                  initialStep: "metrics",
+                });
               }
             }}
             onClose={(result) => {
@@ -462,7 +609,9 @@ function MainStackHost({
               setStartTarget(null);
               if (result === "started" && target) {
                 openPlanTab();
-                showToast(fillTemplate(copy.plans.start.started, { name: target.name }));
+                showToast(
+                  fillTemplate(copy.plans.start.started, { name: target.name }),
+                );
               }
             }}
             theme={theme}

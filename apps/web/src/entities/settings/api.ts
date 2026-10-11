@@ -16,7 +16,9 @@ export async function fetchSettings(): Promise<AppSettings> {
   return appSettingsSchema.parse(response);
 }
 
-export async function patchSettings(input: UpdateSettingsInput): Promise<AppSettings> {
+export async function patchSettings(
+  input: UpdateSettingsInput,
+): Promise<AppSettings> {
   const payload = updateSettingsSchema.parse(input);
   const response = await apiRequest<unknown>(settingsPaths.root, {
     method: "PATCH",

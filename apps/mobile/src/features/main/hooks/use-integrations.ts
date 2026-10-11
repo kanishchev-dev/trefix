@@ -7,29 +7,33 @@ import {
   initiateStravaConnect,
   triggerStravaSync,
 } from "../../../lib/integrations-api";
+import { queryKeys } from "../../../shared/lib/query-keys";
 
 export function useIntegrations() {
   return useQuery({
-    queryKey: ["integrations"],
+    queryKey: queryKeys.integrations.all,
     queryFn: getIntegrations,
   });
 }
 
 export function useStravaIntegration() {
   return useQuery({
-    queryKey: ["integrations", "strava"],
+    queryKey: queryKeys.integrations.strava(),
     queryFn: getStravaIntegration,
   });
 }
 
 export function useStravaSyncStatus(enabled = true) {
   return useQuery({
-    queryKey: ["integrations", "strava", "sync"],
+    queryKey: queryKeys.integrations.sync("strava"),
     queryFn: getStravaSyncStatus,
     enabled,
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (data && (data.status === "syncing" || data.status === "in_progress")) {
+      if (
+        data &&
+        (data.status === "syncing" || data.status === "in_progress")
+      ) {
         return 2000; // poll every 2 seconds while syncing
       }
       return false;
@@ -48,7 +52,7 @@ export function useDisconnectStrava() {
   return useMutation({
     mutationFn: disconnectStrava,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.integrations.all });
     },
   });
 }
@@ -58,7 +62,9 @@ export function useTriggerStravaSync() {
   return useMutation({
     mutationFn: triggerStravaSync,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations", "strava", "sync"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.integrations.sync("strava"),
+      });
     },
   });
 }

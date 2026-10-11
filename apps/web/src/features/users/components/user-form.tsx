@@ -21,15 +21,14 @@ import { useAuth } from "@/components/auth-provider";
 import { UserAvatarUpload } from "@/entities/avatar/ui/avatar-upload";
 import { useCreateUser, useUpdateUser } from "@/features/users/hooks/use-users";
 
-const userFormSchema = z
-  .object({
-    firstName: z.string().min(1),
-    lastName: z.string().min(1),
-    email: z.string().email(),
-    referralCode: z.string().optional(),
-    emailVerified: z.boolean(),
-    password: z.string().min(8).optional().or(z.literal("")),
-  });
+const userFormSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  referralCode: z.string().optional(),
+  emailVerified: z.boolean(),
+  password: z.string().min(8).optional().or(z.literal("")),
+});
 
 type UserFormValues = z.infer<typeof userFormSchema>;
 
@@ -90,7 +89,10 @@ export function UserForm({
             router.push(`/users/${user?.id}`);
           },
           onError: (error) => {
-            notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
+            notifyError(
+              t("common.states.error"),
+              getFriendlyApiMessage(error, t),
+            );
           },
         },
       );
@@ -115,7 +117,10 @@ export function UserForm({
           router.push(`/users/${created.id}`);
         },
         onError: (error) => {
-          notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
+          notifyError(
+            t("common.states.error"),
+            getFriendlyApiMessage(error, t),
+          );
         },
       },
     );
@@ -149,7 +154,11 @@ export function UserForm({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label htmlFor="firstName">{t("users.fields.firstName")}</Label>
-          <Input id="firstName" disabled={isSystem} {...form.register("firstName")} />
+          <Input
+            id="firstName"
+            disabled={isSystem}
+            {...form.register("firstName")}
+          />
           {form.formState.errors.firstName ? (
             <p className="text-sm text-destructive">
               {t("errors.VALIDATION_ERROR")}
@@ -158,7 +167,11 @@ export function UserForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="lastName">{t("users.fields.lastName")}</Label>
-          <Input id="lastName" disabled={isSystem} {...form.register("lastName")} />
+          <Input
+            id="lastName"
+            disabled={isSystem}
+            {...form.register("lastName")}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">{t("users.fields.email")}</Label>
@@ -171,10 +184,16 @@ export function UserForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="referralCode">{t("users.fields.referralCode")}</Label>
-          <Input id="referralCode" disabled={isSystem} {...form.register("referralCode")} />
+          <Input
+            id="referralCode"
+            disabled={isSystem}
+            {...form.register("referralCode")}
+          />
         </div>
         <div className="flex items-center justify-between rounded-xl border p-3">
-          <Label htmlFor="emailVerified">{t("users.fields.emailVerified")}</Label>
+          <Label htmlFor="emailVerified">
+            {t("users.fields.emailVerified")}
+          </Label>
           <Switch
             id="emailVerified"
             checked={emailVerifiedChecked}

@@ -4,7 +4,7 @@ import {
   authLoginSchema,
   authResetPasswordSchema,
   authRequestEmailVerificationSchema,
-  authTokensSchema,
+  browserSessionSchema,
   authUserSchema,
   authVerifyEmailSchema,
   changePasswordSchema,
@@ -14,7 +14,7 @@ import {
   type AuthLoginInput,
   type AuthResetPasswordInput,
   type AuthRequestEmailVerificationInput,
-  type AuthTokens,
+  type BrowserSession,
   type AuthUser,
   type AuthVerifyEmailInput,
   type ChangePasswordInput,
@@ -96,13 +96,13 @@ async function request<TResponse>(
   return (body ? JSON.parse(body) : undefined) as TResponse;
 }
 
-export async function login(input: AuthLoginInput): Promise<AuthTokens> {
+export async function login(input: AuthLoginInput): Promise<BrowserSession> {
   const payload = authLoginSchema.parse(input);
   const response = await request<unknown>(authPaths.login, {
     method: "POST",
     body: payload,
   });
-  return authTokensSchema.parse(response);
+  return browserSessionSchema.parse(response);
 }
 
 export async function getCurrentUser(): Promise<AuthUser> {
@@ -110,11 +110,11 @@ export async function getCurrentUser(): Promise<AuthUser> {
   return authUserSchema.parse(response);
 }
 
-export async function refreshSession(): Promise<AuthTokens> {
+export async function refreshSession(): Promise<BrowserSession> {
   const response = await request<unknown>(authPaths.refresh, {
     method: "POST",
   });
-  return authTokensSchema.parse(response);
+  return browserSessionSchema.parse(response);
 }
 
 export async function logout(): Promise<void> {
@@ -149,12 +149,14 @@ export async function confirmPasswordReset(
  * Completes the admin invite flow: the invited user sets their own password
  * and is signed in immediately on success.
  */
-export async function activateInvite(input: AuthActivateInviteInput): Promise<AuthTokens> {
+export async function activateInvite(
+  input: AuthActivateInviteInput,
+): Promise<BrowserSession> {
   const response = await request<unknown>(authPaths.inviteActivate, {
     method: "POST",
     body: input,
   });
-  return authTokensSchema.parse(response);
+  return browserSessionSchema.parse(response);
 }
 
 export async function verifyEmail(input: AuthVerifyEmailInput): Promise<void> {
@@ -173,9 +175,7 @@ export async function resendVerification(
  * Updates the own profile. The backend answers with the fresh user, so the
  * caller can replace its cached copy without a second round trip.
  */
-export async function updateProfile(
-  input: UpdateUserInput,
-): Promise<AuthUser> {
+export async function updateProfile(input: UpdateUserInput): Promise<AuthUser> {
   const payload = updateUserSchema.parse(input);
   const response = await request<unknown>(authPaths.me, {
     method: "PATCH",
@@ -191,14 +191,14 @@ export async function updateProfile(
  */
 export async function changePassword(
   input: ChangePasswordInput,
-): Promise<AuthTokens> {
+): Promise<BrowserSession> {
   const payload = changePasswordSchema.parse(input);
   const response = await request<unknown>(authPaths.passwordChange, {
     method: "POST",
     body: payload,
   });
 
-  return authTokensSchema.parse(response);
+  return browserSessionSchema.parse(response);
 }
 
 export { request as apiRequest };

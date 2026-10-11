@@ -35,7 +35,10 @@ export type RefreshedAuthTokens = {
 const SETTLED_REUSE_MS = 5_000;
 
 const inFlight = new Map<string, Promise<RefreshedAuthTokens | null>>();
-const settled = new Map<string, { tokens: RefreshedAuthTokens; expiresAt: number }>();
+const settled = new Map<
+  string,
+  { tokens: RefreshedAuthTokens; expiresAt: number }
+>();
 
 function prune(now: number): void {
   for (const [token, entry] of settled) {

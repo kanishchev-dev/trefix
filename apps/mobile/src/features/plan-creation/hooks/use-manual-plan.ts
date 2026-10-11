@@ -1,9 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import {
-  createManualPlan,
-  previewManualPlan,
-} from "../../../lib/training-api";
+import { createManualPlan, previewManualPlan } from "../../../lib/training-api";
 import type {
   CreateManualPlanInput,
   ManualPlanPreview,
@@ -29,7 +26,10 @@ export function useCreateManualPlan() {
   return useMutation<TrainingPlan, Error, CreateManualPlanInput>({
     mutationFn: (input) => createManualPlan(input),
     onSuccess: (_plan, input) => {
-      invalidatePlanQueries(queryClient, input.saveAsDraft ? "library" : "lifecycle");
+      invalidatePlanQueries(
+        queryClient,
+        input.saveAsDraft ? "library" : "lifecycle",
+      );
     },
   });
 }

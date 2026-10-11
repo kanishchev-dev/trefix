@@ -17,30 +17,38 @@ import {
   setWorkoutRecordsExcluded,
 } from "../../../lib/progress-api";
 import { useRealtimeEvent } from "../../../lib/realtime";
+import { queryKeys } from "../../../shared/lib/query-keys";
 
 export function useProgressOverview(period: ProgressPeriodKey) {
   return useQuery({
-    queryKey: ["progress", "overview", period],
+    queryKey: queryKeys.progress.overview(period),
     queryFn: () => getProgressOverview(period),
     staleTime: 1000 * 60 * 5,
   });
 }
 
-export function useProgressMetric(metric: ProgressMetricDetail["metric"], period: ProgressPeriodKey) {
+export function useProgressMetric(
+  metric: ProgressMetricDetail["metric"],
+  period: ProgressPeriodKey,
+) {
   return useQuery({
-    queryKey: ["progress", "metric", metric, period],
+    queryKey: queryKeys.progress.metric(metric, period),
     queryFn: () => getProgressMetric(metric, period),
     staleTime: 1000 * 60 * 5,
   });
 }
 
 export function useRecords() {
-  return useQuery({ queryKey: ["progress", "records"], queryFn: getRecords, staleTime: 1000 * 60 * 5 });
+  return useQuery({
+    queryKey: queryKeys.progress.records(),
+    queryFn: getRecords,
+    staleTime: 1000 * 60 * 5,
+  });
 }
 
 export function useRecordHistory(distance: RecordDistance | null) {
   return useQuery({
-    queryKey: ["progress", "records", distance],
+    queryKey: queryKeys.progress.record(distance),
     queryFn: () => getRecordHistory(distance as RecordDistance),
     enabled: distance !== null,
   });
@@ -60,7 +68,7 @@ export function useProgressMutation() {
       return setWorkoutRecordsExcluded(action.workoutId, action.excluded);
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["progress"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
     },
   });
 }
@@ -68,7 +76,8 @@ export function useProgressMutation() {
 /** Computed progress changes after workouts, results, plan and profile updates. */
 export function useProgressRealtime(): void {
   const queryClient = useQueryClient();
-  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ["progress"] });
+  const invalidate = () =>
+    void queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
   useRealtimeEvent("progress.updated", invalidate);
   useRealtimeEvent("training.plans.changed", invalidate);
   useRealtimeEvent("athlete.updated", invalidate);

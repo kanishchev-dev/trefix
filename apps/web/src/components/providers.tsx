@@ -1,11 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  useState,
-  type ReactElement,
-  type ReactNode,
-} from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 
 import { Toaster } from "@workspace/ui/components/toast";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";

@@ -18,9 +18,27 @@ describe("buildSplits", () => {
 
   it("cuts kilometres and keeps the tail as a partial split", () => {
     expect(buildSplits(timeline, 2500, 2500)).toEqual([
-      { km: 1, durationSec: 300, paceSecPerKm: 300, elevationGainM: 5, partial: false },
-      { km: 2, durationSec: 310, paceSecPerKm: 310, elevationGainM: 0, partial: false },
-      { km: 3, durationSec: 150, paceSecPerKm: 300, elevationGainM: 7, partial: true },
+      {
+        km: 1,
+        durationSec: 300,
+        paceSecPerKm: 300,
+        elevationGainM: 5,
+        partial: false,
+      },
+      {
+        km: 2,
+        durationSec: 310,
+        paceSecPerKm: 310,
+        elevationGainM: 0,
+        partial: false,
+      },
+      {
+        km: 3,
+        durationSec: 150,
+        paceSecPerKm: 300,
+        elevationGainM: 7,
+        partial: true,
+      },
     ]);
   });
 
@@ -43,22 +61,46 @@ describe("geo", () => {
   });
 
   it("simplifies a long straight line to its ends", () => {
-    const line = Array.from({ length: 1000 }, (_, i) => ({ lat: 55.75 + i * 1e-5, lng: 37.62 }));
+    const line = Array.from({ length: 1000 }, (_, i) => ({
+      lat: 55.75 + i * 1e-5,
+      lng: 37.62,
+    }));
     expect(simplifyTo(line, 500)).toHaveLength(2);
   });
 });
 
 describe("buildRecording", () => {
   it("builds the request and the track of a GPS run", () => {
-    const engine = RecordingEngine.start({ environment: "outdoor", distanceMode: "gps", strideM: 1, autoPause: false }, T0);
+    const engine = RecordingEngine.start(
+      {
+        environment: "outdoor",
+        distanceMode: "gps",
+        strideM: 1,
+        autoPause: false,
+      },
+      T0,
+    );
     const points: LocationSample[] = [];
     for (let second = 0; second <= 700; second += 1) {
-      const sample = { t: T0 + second * 1000, lat: 55.75 + (second * 3) / 111_195, lng: 37.62, alt: 150, acc: 5, speed: 3 };
+      const sample = {
+        t: T0 + second * 1000,
+        lat: 55.75 + (second * 3) / 111_195,
+        lng: 37.62,
+        alt: 150,
+        acc: 5,
+        speed: 3,
+      };
       if (engine.onLocation(sample)) points.push(sample);
     }
     engine.finish(T0 + 700_000);
 
-    const { summary, track } = buildRecording("session-1", engine.state, points, { workoutType: "easy", rpe: 4 }, device);
+    const { summary, track } = buildRecording(
+      "session-1",
+      engine.state,
+      points,
+      { workoutType: "easy", rpe: 4 },
+      device,
+    );
 
     expect(summary).toMatchObject({
       clientSessionId: "session-1",
@@ -79,13 +121,33 @@ describe("buildRecording", () => {
   });
 
   it("marks a corrected treadmill distance as manual", () => {
-    const engine = RecordingEngine.start({ environment: "treadmill", distanceMode: "time", strideM: 1, autoPause: false }, T0);
+    const engine = RecordingEngine.start(
+      {
+        environment: "treadmill",
+        distanceMode: "time",
+        strideM: 1,
+        autoPause: false,
+      },
+      T0,
+    );
     engine.onSteps(0, T0);
-    for (let second = 1; second <= 600; second += 1) engine.onSteps(second * 3, T0 + second * 1000);
+    for (let second = 1; second <= 600; second += 1)
+      engine.onSteps(second * 3, T0 + second * 1000);
     engine.finish(T0 + 600_000);
 
-    const { summary, track } = buildRecording("session-2", engine.state, [], { distanceM: 2000 }, device);
-    expect(summary).toMatchObject({ distanceSource: "manual", distanceM: 2000, measuredDistanceM: 1800, routeLine: null });
+    const { summary, track } = buildRecording(
+      "session-2",
+      engine.state,
+      [],
+      { distanceM: 2000 },
+      device,
+    );
+    expect(summary).toMatchObject({
+      distanceSource: "manual",
+      distanceM: 2000,
+      measuredDistanceM: 1800,
+      routeLine: null,
+    });
     expect(summary.splits?.map((split) => split.km)).toEqual([1, 2]);
     expect(track).toBeNull();
   });

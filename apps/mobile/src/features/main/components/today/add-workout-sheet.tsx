@@ -13,6 +13,7 @@ import {
 } from "../../../../shared/ui/bottom-sheet";
 import { useCreateWorkout } from "../../hooks/use-workouts";
 import { type MainCopy } from "../../../../locales";
+import { getErrorMessage } from "../../../../shared/lib/error-message";
 
 type Props = {
   visible: boolean;
@@ -24,14 +25,14 @@ type Props = {
 };
 
 const WORKOUT_TYPES = [
-  { key: "easy", label: "Легкий бег" },
-  { key: "long_run", label: "Длительный" },
-  { key: "tempo", label: "Темповый" },
-  { key: "threshold", label: "Пороговый" },
-  { key: "interval", label: "Интервалы" },
-  { key: "recovery", label: "Восстановление" },
-  { key: "hill", label: "Горки" },
-  { key: "race", label: "Забег" },
+  { key: "easy" },
+  { key: "long_run" },
+  { key: "tempo" },
+  { key: "threshold" },
+  { key: "interval" },
+  { key: "recovery" },
+  { key: "hill" },
+  { key: "race" },
 ] as const;
 
 export function AddWorkoutSheet({
@@ -43,7 +44,7 @@ export function AddWorkoutSheet({
   copy,
 }: Props) {
   const createWorkoutMutation = useCreateWorkout();
-  const locale = copy?.today?.addSheet || {};
+  const locale = copy.today.addSheet;
 
   const [mode, setMode] = useState<"planned" | "completed">("planned");
   const [dateStr, setDateStr] = useState(
@@ -81,14 +82,12 @@ export function AddWorkoutSheet({
     );
 
     if (isNaN(dist) || dist <= 0) {
-      setErrorMessage(locale.invalidDistance || "Укажите корректную дистанцию");
+      setErrorMessage(locale.invalidDistance);
       return;
     }
 
     if (isNaN(dur) || dur <= 0) {
-      setErrorMessage(
-        locale.invalidDuration || "Укажите корректную продолжительность",
-      );
+      setErrorMessage(locale.invalidDuration);
       return;
     }
 
@@ -125,17 +124,15 @@ export function AddWorkoutSheet({
 
       onClose();
     } catch (err: unknown) {
-      // Backend messages arrive in the app language (Accept-Language).
       setErrorMessage(
-        (err instanceof Error && err.message) ||
-          "Не удалось сохранить тренировку",
+        getErrorMessage(err, copy.errors, copy.errors.saveWorkoutFailed),
       );
     }
   };
 
   return (
     <BottomSheet
-      title={locale.title || "Добавить тренировку"}
+      title={locale.title}
       visible={visible}
       onClose={onClose}
       theme={theme}
@@ -156,11 +153,11 @@ export function AddWorkoutSheet({
             tabs={[
               {
                 key: "planned" as const,
-                label: locale.planTab || "Запланировать",
+                label: locale.planTab,
               },
               {
                 key: "completed" as const,
-                label: locale.logTab || "Внести выполненную",
+                label: locale.logTab,
               },
             ]}
           />
@@ -182,7 +179,7 @@ export function AddWorkoutSheet({
         <GlassInput
           leftIcon={<Calendar color={theme.color.mutedForeground} size={18} />}
           keyboardType="default"
-          label={locale.dateLabel || "Дата (ГГГГ-ММ-ДД)"}
+          label={locale.dateLabel}
           onChangeText={setDateStr}
           theme={theme}
           value={dateStr}
@@ -191,21 +188,16 @@ export function AddWorkoutSheet({
         {/* Title Input */}
         <GlassInput
           leftIcon={<Activity color={theme.color.mutedForeground} size={18} />}
-          label={locale.titleLabel || "Название (опционально)"}
+          label={locale.titleLabel}
           onChangeText={setTitle}
-          placeholder={
-            locale.titlePlaceholder || "Например: Утренняя тренировка"
-          }
+          placeholder={locale.titlePlaceholder}
           theme={theme}
           value={title}
         />
 
         {/* Workout Type Selector */}
         <View style={styles.section}>
-          <SheetSectionLabel
-            text={locale.typeLabel || "ТИП ТРЕНИРОВКИ"}
-            theme={theme}
-          />
+          <SheetSectionLabel text={locale.typeLabel} theme={theme} />
         </View>
 
         <SheetBlock theme={theme} edgeToEdge>
@@ -244,7 +236,7 @@ export function AddWorkoutSheet({
                       },
                     ]}
                   >
-                    {t.label}
+                    {copy.profile.workoutTypes[t.key]}
                   </Text>
                 </Pressable>
               );
@@ -262,8 +254,8 @@ export function AddWorkoutSheet({
               keyboardType="numeric"
               label={
                 mode === "completed"
-                  ? locale.actualDistance || "Дистанция (км)"
-                  : locale.planDistance || "План км"
+                  ? locale.actualDistance
+                  : locale.planDistance
               }
               onChangeText={
                 mode === "completed" ? setActualDistanceKm : setDistanceKm
@@ -279,8 +271,8 @@ export function AddWorkoutSheet({
               keyboardType="numeric"
               label={
                 mode === "completed"
-                  ? locale.actualDuration || "Время (мин)"
-                  : locale.planDuration || "План мин"
+                  ? locale.actualDuration
+                  : locale.planDuration
               }
               onChangeText={
                 mode === "completed"
@@ -305,7 +297,7 @@ export function AddWorkoutSheet({
                     <Heart color={theme.color.mutedForeground} size={18} />
                   }
                   keyboardType="numeric"
-                  label={locale.heartRate || "Ср. пульс (уд/мин)"}
+                  label={locale.heartRate}
                   onChangeText={setHeartRate}
                   placeholder="145"
                   theme={theme}
@@ -319,7 +311,7 @@ export function AddWorkoutSheet({
                     <Award color={theme.color.mutedForeground} size={18} />
                   }
                   keyboardType="numeric"
-                  label={locale.rpe || "Усилие RPE (1-10)"}
+                  label={locale.rpe}
                   onChangeText={setRpe}
                   placeholder="6"
                   theme={theme}
@@ -329,11 +321,11 @@ export function AddWorkoutSheet({
             </View>
 
             <GlassInput
-              label={locale.notes || "Заметки / Ощущения"}
+              label={locale.notes}
               multiline
               numberOfLines={3}
               onChangeText={setNotes}
-              placeholder={locale.notesPlaceholder || "Хорошее самочувствие..."}
+              placeholder={locale.notesPlaceholder}
               theme={theme}
               value={notes}
             />
@@ -345,7 +337,7 @@ export function AddWorkoutSheet({
       <SheetBlock theme={theme}>
         <View style={styles.actionsRow}>
           <SheetButton
-            label={locale.cancel || "Отменить"}
+            label={locale.cancel}
             onPress={onClose}
             variant="secondary"
             theme={theme}
@@ -353,11 +345,7 @@ export function AddWorkoutSheet({
           />
 
           <SheetButton
-            label={
-              mode === "planned"
-                ? locale.submitPlan || "Запланировать"
-                : locale.submitLog || "Сохранить"
-            }
+            label={mode === "planned" ? locale.submitPlan : locale.submitLog}
             onPress={handleSubmit}
             pending={createWorkoutMutation.isPending}
             theme={theme}

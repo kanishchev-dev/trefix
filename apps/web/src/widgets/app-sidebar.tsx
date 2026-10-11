@@ -2,11 +2,7 @@
 
 import type { ReactElement } from "react";
 
-import {
-  LayoutDashboardIcon,
-  SettingsIcon,
-  UsersIcon,
-} from "lucide-react";
+import { LayoutDashboardIcon, SettingsIcon, UsersIcon } from "lucide-react";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { useAuth } from "@/components/auth-provider";
@@ -78,10 +74,7 @@ const NAVIGATION: NavigationNode[] = [
   },
 ];
 
-function hasPermission(
-  userPermissions: string[],
-  required: string[],
-): boolean {
+function hasPermission(userPermissions: string[], required: string[]): boolean {
   if (required.length === 0) {
     return true;
   }
@@ -116,7 +109,9 @@ export function AppSidebar({
         url: node.url,
         icon: node.icon,
         items: node.items
-          ?.filter((child) => hasPermission(permissions, child.requiredPermissions))
+          ?.filter((child) =>
+            hasPermission(permissions, child.requiredPermissions),
+          )
           .map((child) => ({ title: t(child.titleKey), url: child.url })),
       }));
 

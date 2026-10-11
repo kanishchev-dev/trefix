@@ -16,7 +16,10 @@ export class BackendUnavailableError extends Error {
 }
 
 /** `fetch` that turns a network failure into `BackendUnavailableError`. */
-export async function fetchBackend(input: string, init?: RequestInit): Promise<Response> {
+export async function fetchBackend(
+  input: string,
+  init?: RequestInit,
+): Promise<Response> {
   try {
     return await fetch(input, init);
   } catch (error) {

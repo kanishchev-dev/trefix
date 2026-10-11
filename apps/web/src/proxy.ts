@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { BackendUnavailableError } from "@/lib/server/backend-availability";
 import {
-  BackendUnavailableError,
-  fetchBackend,
-  isSessionRejection,
-} from "@/lib/server/backend-availability";
-import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
+  ACCESS_COOKIE,
+  clearAuthCookies,
+  REFRESH_COOKIE,
+  refreshSessionTokens,
+  type SessionTokens,
+  setAuthCookies,
+} from "@/lib/server/session";
 
-// Proxy always runs on the Node.js runtime (Next 16), so this module shares its
-// single-flight refresh map with the route handlers; on the edge runtime each
-// request would get its own isolate and the guard would protect nothing.
+// Proxy always runs on the Node.js runtime (Next 16), so it shares the
+// single-flight refresh map with the route handlers: the proxy refreshes while
+// the page it guards fires its first authenticated requests, and both present
+// the same token, which the backend rotates on every use.
 
-const BACKEND_BASE_URL =
-  process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
-const ACCESS_COOKIE = "trefix_access_token";
-const REFRESH_COOKIE = "trefix_refresh_token";
-const SESSION_COOKIE = "trefix_session_id";
 const PUBLIC_ROUTES = [
   "/login",
   "/forgot-password",
@@ -54,109 +53,19 @@ function decodeJwtExp(token: string): number | null {
   }
 }
 
-function clearAuthCookies(response: NextResponse): NextResponse {
-  response.cookies.delete(ACCESS_COOKIE);
-  response.cookies.delete(REFRESH_COOKIE);
-  response.cookies.delete(SESSION_COOKIE);
-  return response;
-}
-
-async function refreshSession(request: NextRequest): Promise<{
-  ok: boolean;
-  /** The backend did not answer: the session may well be alive. */
-  unavailable?: boolean;
-  tokens?: {
-    accessToken: string;
-    refreshToken: string;
-    sessionId: string;
-    accessTokenExpiresIn: number;
-  };
-}> {
-  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
-
-  if (!refreshToken) {
-    return { ok: false };
-  }
-
-  // Single-flight for the same reason as the API proxies. This is the third
-  // place that spends the refresh token, and the one most likely to collide
-  // with them: the proxy refreshes while the page it is guarding fires its
-  // first authenticated requests, and both present the same token. The backend
-  // rotates it on every use and deletes the session on the second presentation.
-  let tokens: Awaited<ReturnType<typeof runSingleFlightRefresh>>;
+async function refreshSession(
+  request: NextRequest,
+): Promise<{ ok: boolean; unavailable?: boolean; tokens?: SessionTokens }> {
   try {
-    tokens = await runSingleFlightRefresh(refreshToken, async () => {
-      const response = await fetchBackend(`${BACKEND_BASE_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!response.ok) {
-        if (isSessionRejection(response.status)) {
-          return null;
-        }
-        throw new BackendUnavailableError(response.status);
-      }
-
-      return (await response.json()) as {
-        accessToken: string;
-        refreshToken: string;
-        sessionId: string;
-        accessTokenExpiresIn: number;
-      };
-    });
+    const tokens = await refreshSessionTokens(request);
+    return tokens ? { ok: true, tokens } : { ok: false };
   } catch (error) {
     if (error instanceof BackendUnavailableError) {
+      // The backend did not answer: the session may well be alive.
       return { ok: false, unavailable: true };
     }
     throw error;
   }
-
-  if (!tokens) {
-    return { ok: false };
-  }
-
-  return { ok: true, tokens };
-}
-
-function writeAuthCookies(
-  response: NextResponse,
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-    sessionId: string;
-    accessTokenExpiresIn: number;
-  },
-): NextResponse {
-  const isProduction = process.env.NODE_ENV === "production";
-  const refreshMaxAge = 60 * 60 * 24 * 30;
-
-  response.cookies.set(ACCESS_COOKIE, tokens.accessToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProduction,
-    path: "/",
-    maxAge: tokens.accessTokenExpiresIn,
-  });
-  response.cookies.set(REFRESH_COOKIE, tokens.refreshToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProduction,
-    path: "/",
-    maxAge: refreshMaxAge,
-  });
-  response.cookies.set(SESSION_COOKIE, tokens.sessionId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProduction,
-    path: "/",
-    maxAge: refreshMaxAge,
-  });
-
-  return response;
 }
 
 async function ensureActiveSession(
@@ -192,7 +101,7 @@ async function ensureActiveSession(
         const response = NextResponse.redirect(new URL("/", request.url));
         return {
           allowed: false,
-          response: writeAuthCookies(response, refreshed.tokens),
+          response: setAuthCookies(response, refreshed.tokens),
         };
       }
     }
@@ -210,7 +119,7 @@ async function ensureActiveSession(
       const response = NextResponse.next();
       return {
         allowed: true,
-        response: writeAuthCookies(response, refreshed.tokens),
+        response: setAuthCookies(response, refreshed.tokens),
       };
     }
     if (refreshed?.unavailable) {
