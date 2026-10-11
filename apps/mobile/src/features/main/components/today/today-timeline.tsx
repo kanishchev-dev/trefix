@@ -1,13 +1,23 @@
-import React, { forwardRef, useImperativeHandle, useRef, useMemo, useEffect } from "react";
-import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useMemo,
+  useEffect,
+} from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 import { type Day, type DayEvent, type CalendarMode } from "../../today-types";
-import { DayHeader, WorkoutCard, RecoveryCard, EmptyDayCard } from "./day-event-cards";
+import { WorkoutCard, RecoveryCard, EmptyDayCard } from "./day-event-cards";
 import { AddWorkoutSection } from "./add-workout-section";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
-import { formatDateLong, type AppLanguage, type MainCopy } from "../../../../locales";
-import { parseIsoDate } from "../../../plans/lib/plan-dates";
+import { type AppLanguage, type MainCopy } from "../../../../locales";
 
 type Props = {
   theme: ThemeTokens;
@@ -26,7 +36,18 @@ export type TodayTimelineRef = {
 };
 
 export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
-  ({ theme, themeMode, language, day, copy, calendarMode, onEventPress, onEventAction, onSelectWorkoutType }, ref) => {
+  (
+    {
+      theme,
+      themeMode,
+      day,
+      copy,
+      onEventPress,
+      onEventAction,
+      onSelectWorkoutType,
+    },
+    ref,
+  ) => {
     const scrollRef = useRef<ScrollView>(null);
     const { height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
@@ -55,16 +76,6 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
 
     if (!day) return null;
 
-    const dateObj = parseIsoDate(day.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const isToday = dateObj.getTime() === today.getTime();
-    const isTomorrow = dateObj.getTime() === tomorrow.getTime();
-    const isFutureDay = dateObj.getTime() > today.getTime();
-
     return (
       <ScrollView
         ref={scrollRef}
@@ -72,53 +83,60 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
         alwaysBounceVertical={false}
         style={[styles.scrollView, { paddingTop: headerOffset + 16 }]}
         contentContainerStyle={[
-            styles.content,
-            { paddingBottom: insets.bottom + 40 }
+          styles.content,
+          { paddingBottom: insets.bottom + 40 },
         ]}
       >
         <View style={[styles.dayContainer, { minHeight: minDayHeight }]}>
-            <View style={styles.populatedInner}>
-              <View>
-                {day.events.length > 0 ? (
-                  day.events.map((event) => {
-                    if (event.type === "workout") {
-                        return (
-                        <WorkoutCard
-                            key={event.id}
-                            theme={theme}
-                            themeMode={themeMode}
-                            event={event}
-                            copy={copy}
-                            onPress={onEventPress}
-                            onAction={onEventAction}
-                        />
-                        );
-                    }
-                    if (event.type === "recovery") {
-                        return <RecoveryCard key={event.id} theme={theme} themeMode={themeMode} copy={copy} />;
-                    }
-                    return null;
-                  })
-                ) : (
-                  <EmptyDayCard theme={theme} copy={copy} />
-                )}
-              </View>
-
-              {onSelectWorkoutType && (
-                <View style={styles.additionalAddSection}>
-                  <AddWorkoutSection
-                    copy={copy}
-                    onSelectType={onSelectWorkoutType}
-                    theme={theme}
-                    themeMode={themeMode}
-                  />
-                </View>
+          <View style={styles.populatedInner}>
+            <View>
+              {day.events.length > 0 ? (
+                day.events.map((event) => {
+                  if (event.type === "workout") {
+                    return (
+                      <WorkoutCard
+                        key={event.id}
+                        theme={theme}
+                        themeMode={themeMode}
+                        event={event}
+                        copy={copy}
+                        onPress={onEventPress}
+                        onAction={onEventAction}
+                      />
+                    );
+                  }
+                  if (event.type === "recovery") {
+                    return (
+                      <RecoveryCard
+                        key={event.id}
+                        theme={theme}
+                        themeMode={themeMode}
+                        copy={copy}
+                      />
+                    );
+                  }
+                  return null;
+                })
+              ) : (
+                <EmptyDayCard theme={theme} copy={copy} />
               )}
             </View>
+
+            {onSelectWorkoutType && (
+              <View style={styles.additionalAddSection}>
+                <AddWorkoutSection
+                  copy={copy}
+                  onSelectType={onSelectWorkoutType}
+                  theme={theme}
+                  themeMode={themeMode}
+                />
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
     );
-  }
+  },
 );
 
 const styles = StyleSheet.create({

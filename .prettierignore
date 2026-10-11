@@ -1,0 +1,10 @@
+node_modules
+.next
+.turbo
+.expo
+dist
+coverage
+pnpm-lock.yaml
+*.tsbuildinfo
+apps/mobile/ios
+apps/mobile/android

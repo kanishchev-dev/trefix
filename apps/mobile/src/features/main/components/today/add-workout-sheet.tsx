@@ -72,8 +72,13 @@ export function AddWorkoutSheet({
   const handleSubmit = async () => {
     setErrorMessage("");
 
-    const dist = parseFloat(mode === "completed" ? actualDistanceKm : distanceKm);
-    const dur = parseInt(mode === "completed" ? actualDurationMinutes : durationMinutes, 10);
+    const dist = parseFloat(
+      mode === "completed" ? actualDistanceKm : distanceKm,
+    );
+    const dur = parseInt(
+      mode === "completed" ? actualDurationMinutes : durationMinutes,
+      10,
+    );
 
     if (isNaN(dist) || dist <= 0) {
       setErrorMessage(locale.invalidDistance || "Укажите корректную дистанцию");
@@ -81,7 +86,9 @@ export function AddWorkoutSheet({
     }
 
     if (isNaN(dur) || dur <= 0) {
-      setErrorMessage(locale.invalidDuration || "Укажите корректную продолжительность");
+      setErrorMessage(
+        locale.invalidDuration || "Укажите корректную продолжительность",
+      );
       return;
     }
 
@@ -117,8 +124,12 @@ export function AddWorkoutSheet({
       }
 
       onClose();
-    } catch (err: any) {
-      setErrorMessage(err?.message || "Не удалось сохранить тренировку");
+    } catch (err: unknown) {
+      // Backend messages arrive in the app language (Accept-Language).
+      setErrorMessage(
+        (err instanceof Error && err.message) ||
+          "Не удалось сохранить тренировку",
+      );
     }
   };
 
@@ -143,16 +154,27 @@ export function AddWorkoutSheet({
             onChange={setMode}
             theme={theme}
             tabs={[
-              { key: "planned" as const, label: locale.planTab || "Запланировать" },
-              { key: "completed" as const, label: locale.logTab || "Внести выполненную" },
+              {
+                key: "planned" as const,
+                label: locale.planTab || "Запланировать",
+              },
+              {
+                key: "completed" as const,
+                label: locale.logTab || "Внести выполненную",
+              },
             ]}
           />
         </SheetBlock>
         {errorMessage ? (
           <View
-            style={[styles.errorBanner, { backgroundColor: theme.color.dangerSurface }]}
+            style={[
+              styles.errorBanner,
+              { backgroundColor: theme.color.dangerSurface },
+            ]}
           >
-            <Text style={[styles.errorText, { color: theme.color.danger }]}>{errorMessage}</Text>
+            <Text style={[styles.errorText, { color: theme.color.danger }]}>
+              {errorMessage}
+            </Text>
           </View>
         ) : null}
 
@@ -171,14 +193,19 @@ export function AddWorkoutSheet({
           leftIcon={<Activity color={theme.color.mutedForeground} size={18} />}
           label={locale.titleLabel || "Название (опционально)"}
           onChangeText={setTitle}
-          placeholder={locale.titlePlaceholder || "Например: Утренняя тренировка"}
+          placeholder={
+            locale.titlePlaceholder || "Например: Утренняя тренировка"
+          }
           theme={theme}
           value={title}
         />
 
         {/* Workout Type Selector */}
         <View style={styles.section}>
-          <SheetSectionLabel text={locale.typeLabel || "ТИП ТРЕНИРОВКИ"} theme={theme} />
+          <SheetSectionLabel
+            text={locale.typeLabel || "ТИП ТРЕНИРОВКИ"}
+            theme={theme}
+          />
         </View>
 
         <SheetBlock theme={theme} edgeToEdge>
@@ -188,41 +215,40 @@ export function AddWorkoutSheet({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.typesRow}
           >
-          {WORKOUT_TYPES.map((t) => {
-            const selected = type === t.key;
-            return (
-              <Pressable
-                key={t.key}
-                onPress={() => setType(t.key)}
-                style={[
-                  styles.typeChip,
-                  {
-                    backgroundColor: selected
-                      ? theme.color.primary
-                      : theme.color.control,
-                    borderColor:
-                      theme.color.controlBorder,
-                  },
-                ]}
-              >
-                <Text
+            {WORKOUT_TYPES.map((t) => {
+              const selected = type === t.key;
+              return (
+                <Pressable
+                  key={t.key}
+                  onPress={() => setType(t.key)}
                   style={[
-                    styles.typeChipText,
+                    styles.typeChip,
                     {
-                      color: selected
-                        ? theme.color.primaryForeground
-                        : theme.color.foreground,
-                      fontFamily: selected
-                        ? theme.typography.fontFamily.sans.bold
-                        : theme.typography.fontFamily.sans.medium,
+                      backgroundColor: selected
+                        ? theme.color.primary
+                        : theme.color.control,
+                      borderColor: theme.color.controlBorder,
                     },
                   ]}
                 >
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.typeChipText,
+                      {
+                        color: selected
+                          ? theme.color.primaryForeground
+                          : theme.color.foreground,
+                        fontFamily: selected
+                          ? theme.typography.fontFamily.sans.bold
+                          : theme.typography.fontFamily.sans.medium,
+                      },
+                    ]}
+                  >
+                    {t.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </SheetBlock>
 
@@ -230,14 +256,18 @@ export function AddWorkoutSheet({
         <View style={styles.metricsRow}>
           <View style={styles.metricField}>
             <GlassInput
-              leftIcon={<Activity color={theme.color.mutedForeground} size={18} />}
+              leftIcon={
+                <Activity color={theme.color.mutedForeground} size={18} />
+              }
               keyboardType="numeric"
               label={
                 mode === "completed"
                   ? locale.actualDistance || "Дистанция (км)"
                   : locale.planDistance || "План км"
               }
-              onChangeText={mode === "completed" ? setActualDistanceKm : setDistanceKm}
+              onChangeText={
+                mode === "completed" ? setActualDistanceKm : setDistanceKm
+              }
               theme={theme}
               value={mode === "completed" ? actualDistanceKm : distanceKm}
             />
@@ -253,10 +283,14 @@ export function AddWorkoutSheet({
                   : locale.planDuration || "План мин"
               }
               onChangeText={
-                mode === "completed" ? setActualDurationMinutes : setDurationMinutes
+                mode === "completed"
+                  ? setActualDurationMinutes
+                  : setDurationMinutes
               }
               theme={theme}
-              value={mode === "completed" ? actualDurationMinutes : durationMinutes}
+              value={
+                mode === "completed" ? actualDurationMinutes : durationMinutes
+              }
             />
           </View>
         </View>
@@ -267,7 +301,9 @@ export function AddWorkoutSheet({
             <View style={styles.metricsRow}>
               <View style={styles.metricField}>
                 <GlassInput
-                  leftIcon={<Heart color={theme.color.mutedForeground} size={18} />}
+                  leftIcon={
+                    <Heart color={theme.color.mutedForeground} size={18} />
+                  }
                   keyboardType="numeric"
                   label={locale.heartRate || "Ср. пульс (уд/мин)"}
                   onChangeText={setHeartRate}
@@ -279,7 +315,9 @@ export function AddWorkoutSheet({
 
               <View style={styles.metricField}>
                 <GlassInput
-                  leftIcon={<Award color={theme.color.mutedForeground} size={18} />}
+                  leftIcon={
+                    <Award color={theme.color.mutedForeground} size={18} />
+                  }
                   keyboardType="numeric"
                   label={locale.rpe || "Усилие RPE (1-10)"}
                   onChangeText={setRpe}

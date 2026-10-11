@@ -7,6 +7,11 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "generate:web-css": "pnpm dlx tsx@4.20.6 scripts/generate-web-css.ts"
+    "generate:web-css": "pnpm dlx tsx@4.20.6 scripts/generate-web-css.ts",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "eslint": "9.35.0"
   }
 }

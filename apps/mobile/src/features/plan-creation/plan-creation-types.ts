@@ -1,8 +1,6 @@
 import type {
   AthleteGoalPayloadInput,
   AthleteGoalType,
-  CreateManualPlanInput,
-  GoalMetricKey,
   ManualPlanGoalInput,
   ManualPlanPreview,
   ManualPlanScheduleInput,
@@ -33,7 +31,13 @@ export const PLAN_GOAL_OPTIONS = [
 
 export const PLAN_WEEKDAY_ORDER = [0, 1, 2, 3, 4, 5, 6] as const;
 
-export const PLAN_FOCUS_OPTIONS = ["easy", "long_run", "tempo", "interval", "hill"] as const;
+export const PLAN_FOCUS_OPTIONS = [
+  "easy",
+  "long_run",
+  "tempo",
+  "interval",
+  "hill",
+] as const;
 
 /** Workout types the user can switch to in the preview editor. */
 export const PLAN_WORKOUT_TYPE_KEYS = [
@@ -96,16 +100,50 @@ export const MANUAL_PLAN_MAX_DURATION_MINUTES = 300;
  * marathon every 10 min (240px).
  */
 export const RACE_TIME_RANGES = {
-  "5k": { min: 12 * 60, max: 60 * 60, step: 5, majorEvery: 60, labelEvery: 60, defaultTarget: 25 * 60, defaultCurrent: 27 * 60 },
-  "10k": { min: 25 * 60, max: 2 * 3600, step: 5, majorEvery: 60, labelEvery: 60, defaultTarget: 45 * 60, defaultCurrent: 48 * 60 + 30 },
-  half_marathon: { min: 55 * 60, max: 4 * 3600, step: 15, majorEvery: 60, labelEvery: 300, defaultTarget: 1 * 3600 + 50 * 60, defaultCurrent: 2 * 3600 },
-  marathon: { min: 1 * 3600 + 55 * 60, max: 7 * 3600 + 30 * 60, step: 30, majorEvery: 300, labelEvery: 600, defaultTarget: 4 * 3600, defaultCurrent: 4 * 3600 + 20 * 60 },
+  "5k": {
+    min: 12 * 60,
+    max: 60 * 60,
+    step: 5,
+    majorEvery: 60,
+    labelEvery: 60,
+    defaultTarget: 25 * 60,
+    defaultCurrent: 27 * 60,
+  },
+  "10k": {
+    min: 25 * 60,
+    max: 2 * 3600,
+    step: 5,
+    majorEvery: 60,
+    labelEvery: 60,
+    defaultTarget: 45 * 60,
+    defaultCurrent: 48 * 60 + 30,
+  },
+  half_marathon: {
+    min: 55 * 60,
+    max: 4 * 3600,
+    step: 15,
+    majorEvery: 60,
+    labelEvery: 300,
+    defaultTarget: 1 * 3600 + 50 * 60,
+    defaultCurrent: 2 * 3600,
+  },
+  marathon: {
+    min: 1 * 3600 + 55 * 60,
+    max: 7 * 3600 + 30 * 60,
+    step: 30,
+    majorEvery: 300,
+    labelEvery: 600,
+    defaultTarget: 4 * 3600,
+    defaultCurrent: 4 * 3600 + 20 * 60,
+  },
 } as const;
 
 export type RaceDistancePreset = keyof typeof RACE_TIME_RANGES;
 
 /** Quick picks shown under the race-distance ruler (metres, official values). */
-export const RACE_DISTANCE_PRESETS_METERS = [5_000, 10_000, 21_097, 42_195, 50_000, 100_000] as const;
+export const RACE_DISTANCE_PRESETS_METERS = [
+  5_000, 10_000, 21_097, 42_195, 50_000, 100_000,
+] as const;
 
 export type RaceTimeRange = {
   min: number;
@@ -117,7 +155,8 @@ export type RaceTimeRange = {
   defaultCurrent: number;
 };
 
-const roundTo = (value: number, step: number) => Math.round(value / step) * step;
+const roundTo = (value: number, step: number) =>
+  Math.round(value / step) * step;
 
 /**
  * Finish-time ruler scale for any race distance (seconds). Classic distances
@@ -126,7 +165,10 @@ const roundTo = (value: number, step: number) => Math.round(value / step) * step
  * stays short.
  */
 export function raceTimeRange(distanceMeters: unknown): RaceTimeRange {
-  const meters = typeof distanceMeters === "number" && distanceMeters > 0 ? distanceMeters : 10_000;
+  const meters =
+    typeof distanceMeters === "number" && distanceMeters > 0
+      ? distanceMeters
+      : 10_000;
   const classic = (Object.keys(RACE_TIME_RANGES) as RaceDistancePreset[]).find(
     (key) => Math.abs((RACE_PRESET_METERS[key] ?? 0) - meters) < 100,
   );
@@ -136,15 +178,24 @@ export function raceTimeRange(distanceMeters: unknown): RaceTimeRange {
   const fastPace = 2 * 60 + 45; // faster than any realistic amateur, keeps bad inputs out
   const slowPace = km <= 50 ? 10 * 60 : 15 * 60;
   const rawMax = km * slowPace;
-  const step = rawMax <= 2 * 3600 ? 5 : rawMax <= 6 * 3600 ? 15 : rawMax <= 12 * 3600 ? 30 : 60;
+  const step =
+    rawMax <= 2 * 3600
+      ? 5
+      : rawMax <= 6 * 3600
+        ? 15
+        : rawMax <= 12 * 3600
+          ? 30
+          : 60;
   // At 12px per tick: label roughly every 150–360px.
   const majorEvery = step <= 15 ? 60 : step === 30 ? 300 : 600;
-  const labelEvery = step === 5 ? 60 : step === 15 ? 300 : step === 30 ? 600 : 1800;
+  const labelEvery =
+    step === 5 ? 60 : step === 15 ? 300 : step === 30 ? 600 : 1800;
   const min = Math.max(60, roundTo(km * fastPace, majorEvery));
   // Backend caps finishTimeSec at 260 000 s; 72 h stays under it.
   const max = Math.min(roundTo(rawMax, majorEvery), 72 * 3600);
   const typicalPace = km <= 42.2 ? 6 * 60 : 8 * 60;
-  const clamp = (value: number) => Math.min(max, Math.max(min, roundTo(value, step)));
+  const clamp = (value: number) =>
+    Math.min(max, Math.max(min, roundTo(value, step)));
 
   return {
     min,
@@ -158,8 +209,16 @@ export function raceTimeRange(distanceMeters: unknown): RaceTimeRange {
 }
 
 /** Keeps a time if it still fits the scale of a new distance, otherwise the scale default. */
-export function fitTimeToRange(seconds: unknown, range: RaceTimeRange, fallback: number): number {
-  return typeof seconds === "number" && seconds >= range.min && seconds <= range.max ? seconds : fallback;
+export function fitTimeToRange(
+  seconds: unknown,
+  range: RaceTimeRange,
+  fallback: number,
+): number {
+  return typeof seconds === "number" &&
+    seconds >= range.min &&
+    seconds <= range.max
+    ? seconds
+    : fallback;
 }
 
 const RACE_PRESET_METERS: Record<RaceDistancePreset, number> = {
@@ -205,7 +264,9 @@ export const GOAL_FIELD_DEFAULTS = {
 } as const;
 
 /** Target fields each goal type needs to be valid, pre-filled on selection. */
-export function withRequiredGoalDefaults(goal: PlanCreationDraft["goal"]): PlanCreationDraft["goal"] {
+export function withRequiredGoalDefaults(
+  goal: PlanCreationDraft["goal"],
+): PlanCreationDraft["goal"] {
   const target: Record<string, unknown> = { ...(goal.target ?? {}) };
   const fill = (key: string, value: unknown) => {
     if (target[key] === undefined || target[key] === null) target[key] = value;
@@ -235,10 +296,12 @@ export function withRequiredGoalDefaults(goal: PlanCreationDraft["goal"]): PlanC
       fill("paceSecondsPerKm", D.targetPace);
       break;
     case "build_endurance":
-      if (target.continuousDistanceKm === undefined) fill("continuousDurationMinutes", D.enduranceMinutes);
+      if (target.continuousDistanceKm === undefined)
+        fill("continuousDurationMinutes", D.enduranceMinutes);
       break;
     case "run_continuously":
-      if (target.continuousDistanceKm === undefined) fill("continuousDurationMinutes", D.continuousMinutes);
+      if (target.continuousDistanceKm === undefined)
+        fill("continuousDurationMinutes", D.continuousMinutes);
       break;
     case "build_consistency":
       fill("runsPerWeek", D.runsPerWeek);
@@ -258,7 +321,10 @@ export function withRequiredGoalDefaults(goal: PlanCreationDraft["goal"]): PlanC
       break;
   }
 
-  return { ...goal, target: Object.keys(target).length > 0 ? target : undefined };
+  return {
+    ...goal,
+    target: Object.keys(target).length > 0 ? target : undefined,
+  };
 }
 
 /** Formats seconds into a mm:ss or h:mm:ss string. */
@@ -284,7 +350,10 @@ export function parseTargetTime(value: string): number | null {
   }
   const numbers = parts.map(Number);
   const [first, second, third] = numbers;
-  const seconds = parts.length === 3 ? first * 3600 + second * 60 + third : first * 60 + second;
+  const seconds =
+    parts.length === 3
+      ? first * 3600 + second * 60 + third
+      : first * 60 + second;
   return seconds > 0 ? seconds : null;
 }
 
@@ -343,7 +412,9 @@ export function validateTargetDate(
   if (!targetDate) {
     return null;
   }
-  return new Date(targetDate) > new Date(startDate) ? null : "invalidTargetDate";
+  return new Date(targetDate) > new Date(startDate)
+    ? null
+    : "invalidTargetDate";
 }
 
 /**
@@ -398,27 +469,53 @@ export function formatGoalSummary(
   const creationCopy = copy.plan.creation;
   const units = creationCopy.units;
   const goalTypesCopy = creationCopy.goalTypes;
-  const typeTitle = goalTypesCopy[goal.type as keyof typeof goalTypesCopy] ?? goal.type;
+  const typeTitle =
+    goalTypesCopy[goal.type as keyof typeof goalTypesCopy] ?? goal.type;
   const target = goal.target ?? {};
-  const number = (value: number) => value.toLocaleString(locale, { maximumFractionDigits: 1 });
+  const number = (value: number) =>
+    value.toLocaleString(locale, { maximumFractionDigits: 1 });
   const dateLabel = goal.targetDate
-    ? new Date(`${goal.targetDate}T00:00:00`).toLocaleDateString(locale, { day: "numeric", month: "long" })
+    ? new Date(`${goal.targetDate}T00:00:00`).toLocaleDateString(locale, {
+        day: "numeric",
+        month: "long",
+      })
     : null;
 
   let detail: string | null = null;
-  if (goal.type === "prepare_for_race" || goal.type === "improve_race_result" || goal.type === "run_new_distance") {
+  if (
+    goal.type === "prepare_for_race" ||
+    goal.type === "improve_race_result" ||
+    goal.type === "run_new_distance"
+  ) {
     const meters = target.distanceMeters as number | undefined;
-    const distance = meters ? `${number(Math.round(meters / 100) / 10)} ${units.km}` : null;
-    const time = typeof target.finishTimeSec === "number" ? formatTargetTime(target.finishTimeSec) : null;
+    const distance = meters
+      ? `${number(Math.round(meters / 100) / 10)} ${units.km}`
+      : null;
+    const time =
+      typeof target.finishTimeSec === "number"
+        ? formatTargetTime(target.finishTimeSec)
+        : null;
     detail = [distance, time].filter(Boolean).join(" · ") || null;
-  } else if (goal.type === "lose_weight" && typeof target.weightKg === "number") {
+  } else if (
+    goal.type === "lose_weight" &&
+    typeof target.weightKg === "number"
+  ) {
     detail = `${number(target.weightKg)} ${units.kg}`;
-  } else if (goal.type === "build_consistency" && typeof target.runsPerWeek === "number") {
+  } else if (
+    goal.type === "build_consistency" &&
+    typeof target.runsPerWeek === "number"
+  ) {
     detail = `${target.runsPerWeek} ${creationCopy.preview.statRuns}`;
-  } else if (goal.type === "increase_running_volume" && typeof target.weeklyDistanceKm === "number") {
+  } else if (
+    goal.type === "increase_running_volume" &&
+    typeof target.weeklyDistanceKm === "number"
+  ) {
     detail = `${number(target.weeklyDistanceKm)} ${units.km} · ${creationCopy.goalForm.weeklyDistance.toLowerCase()}`;
   } else if (goal.type === "custom" && goal.description) {
-    detail = goal.description.length > 40 ? `${goal.description.slice(0, 40)}…` : goal.description;
+    detail =
+      goal.description.length > 40
+        ? `${goal.description.slice(0, 40)}…`
+        : goal.description;
   }
 
   return [typeTitle, detail, dateLabel].filter(Boolean).join(" · ");

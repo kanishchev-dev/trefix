@@ -73,7 +73,6 @@ export function GoalTypeCard({
   goalType,
   title,
   theme,
-  themeMode,
   onPress,
 }: GoalTypeCardProps) {
   return (
@@ -92,8 +91,7 @@ export function GoalTypeCard({
         style={[
           styles.iconWrap,
           {
-            backgroundColor:
-              theme.color.iconSurface,
+            backgroundColor: theme.color.iconSurface,
           },
         ]}
       >

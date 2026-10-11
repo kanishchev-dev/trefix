@@ -8,7 +8,7 @@ import { type RealtimeEventHandler, type RealtimeEventMeta } from "./types";
  *
  * @example
  * useRealtimeEvent("coach.message_received", (message) => {
- *   console.log("New coach message:", message);
+ *   logger.debug("New coach message:", message);
  * });
  */
 export function useRealtimeEvent<T = unknown>(

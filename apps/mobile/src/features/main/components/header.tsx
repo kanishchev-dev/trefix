@@ -207,7 +207,6 @@ export function Header({
   blurTarget,
   leftAction,
   rightAction,
-  contentHeight = HEADER_CONTENT_HEIGHT,
   variant = "default",
   bottomContent,
 }: HeaderProps) {
@@ -222,7 +221,11 @@ export function Header({
         {
           height: isCalendar
             ? undefined // Let it grow with bottomContent
-            : insets.top + Math.max(HEADER_CONTENT_HEIGHT, BACKGROUND_TOP_OFFSET + BACKGROUND_TOTAL_HEIGHT),
+            : insets.top +
+              Math.max(
+                HEADER_CONTENT_HEIGHT,
+                BACKGROUND_TOP_OFFSET + BACKGROUND_TOTAL_HEIGHT,
+              ),
         },
       ]}
     >
@@ -332,9 +335,7 @@ export function Header({
       </View>
 
       {isCalendar && bottomContent && (
-        <View style={styles.bottomContent}>
-          {bottomContent}
-        </View>
+        <View style={styles.bottomContent}>{bottomContent}</View>
       )}
     </View>
   );
@@ -354,7 +355,9 @@ export function HeaderBackButton({
       accessibilityLabel="Back"
       themeMode={themeMode}
       theme={theme}
-      icon={<ArrowLeft color={theme.color.foreground} size={20} strokeWidth={2.4} />}
+      icon={
+        <ArrowLeft color={theme.color.foreground} size={20} strokeWidth={2.4} />
+      }
       onPress={onPress}
     />
   );
@@ -394,7 +397,9 @@ export function HeaderSearchButton({
       accessibilityLabel="Search"
       themeMode={themeMode}
       theme={theme}
-      icon={<Search color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      icon={
+        <Search color={theme.color.foreground} size={20} strokeWidth={2.2} />
+      }
       onPress={onPress}
     />
   );
@@ -454,7 +459,13 @@ export function HeaderOptionsButton({
       accessibilityLabel="More"
       themeMode={themeMode}
       theme={theme}
-      icon={<EllipsisVertical color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      icon={
+        <EllipsisVertical
+          color={theme.color.foreground}
+          size={20}
+          strokeWidth={2.2}
+        />
+      }
       onPress={onPress}
     />
   );
@@ -474,7 +485,13 @@ export function HeaderFiltersButton({
       accessibilityLabel="Filters"
       themeMode={themeMode}
       theme={theme}
-      icon={<SlidersHorizontal color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      icon={
+        <SlidersHorizontal
+          color={theme.color.foreground}
+          size={20}
+          strokeWidth={2.2}
+        />
+      }
       onPress={onPress}
     />
   );
@@ -494,17 +511,15 @@ export function HeaderSparklesButton({
       accessibilityLabel="Trefix"
       themeMode={themeMode}
       theme={theme}
-      icon={<Sparkles color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      icon={
+        <Sparkles color={theme.color.foreground} size={20} strokeWidth={2.2} />
+      }
       onPress={onPress}
     />
   );
 }
 
-export function HeaderLogo({
-  source,
-}: {
-  source: ImageSourcePropType;
-}) {
+export function HeaderLogo({ source }: { source: ImageSourcePropType }) {
   return <Image source={source} style={styles.logo} resizeMode="contain" />;
 }
 
@@ -673,7 +688,9 @@ export function HeaderQrButton({
       accessibilityLabel="QR Code"
       themeMode={themeMode}
       theme={theme}
-      icon={<QrCode color={theme.color.foreground} size={20} strokeWidth={2.2} />}
+      icon={
+        <QrCode color={theme.color.foreground} size={20} strokeWidth={2.2} />
+      }
       onPress={onPress}
     />
   );

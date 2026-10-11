@@ -16,10 +16,13 @@ export const authUserSchema = z.object({
   emailVerified: z.boolean(),
   createdAt: z.string().or(z.date()).optional(),
   permissions: z.array(z.string()).optional(),
-  features: z.object({
-    showReferral: z.boolean().default(false),
-    theme: z.string().optional(),
-  }).optional().default({ showReferral: false }),
+  features: z
+    .object({
+      showReferral: z.boolean().default(false),
+      theme: z.string().optional(),
+    })
+    .optional()
+    .default({ showReferral: false }),
 });
 
 export const authTokensSchema = z.object({
@@ -193,7 +196,10 @@ export const trainingAthleteSchema = z.object({
   fieldSources: z
     .record(
       z.string(),
-      z.object({ source: z.enum(["manual", "strava", "apple_health", "health_connect"]), updatedAt: z.string() }),
+      z.object({
+        source: z.enum(["manual", "strava", "apple_health", "health_connect"]),
+        updatedAt: z.string(),
+      }),
     )
     .optional(),
   createdAt: z.string().or(z.date()),
@@ -202,8 +208,17 @@ export const trainingAthleteSchema = z.object({
 
 export const hrZonesMethodSchema = z.enum(["threshold", "max_hr", "custom"]);
 export const timeOfDaySchema = z.enum(["morning", "day", "evening", "any"]);
-export const athleteSexSchema = z.enum(["female", "male", "other", "prefer_not_to_say"]);
-export const experienceLevelSchema = z.enum(["beginner", "intermediate", "advanced"]);
+export const athleteSexSchema = z.enum([
+  "female",
+  "male",
+  "other",
+  "prefer_not_to_say",
+]);
+export const experienceLevelSchema = z.enum([
+  "beginner",
+  "intermediate",
+  "advanced",
+]);
 export const trainingWeekdaySchema = z.enum([
   "monday",
   "tuesday",
@@ -229,7 +244,10 @@ export const profileCompletenessSchema = z.object({
 export const athleteProfileSchema = trainingAthleteSchema.extend({
   maxHeartRateEstimate: z.number().nullable().optional(),
   hrZones: z.array(hrZoneSchema).nullable().optional(),
-  hrZonesUnavailableReason: z.enum(["threshold_missing", "max_missing", "custom_missing"]).nullable().optional(),
+  hrZonesUnavailableReason: z
+    .enum(["threshold_missing", "max_missing", "custom_missing"])
+    .nullable()
+    .optional(),
   weeklyMileageSuggestion: z
     .object({ valueKm: z.number(), source: z.string(), windowDays: z.number() })
     .nullable()
@@ -333,6 +351,8 @@ export const userPreferencesSchema = z.object({
   coachQuietHours: quietHoursSchema.nullable(),
   stravaProfileSync: z.boolean(),
   timezone: z.string().nullable().optional(),
+  /** App language; the coach and emails write in it. `null` until the app reports it. */
+  language: z.enum(["ru", "en"]).nullable().optional(),
   updatedAt: z.string().optional(),
 });
 
@@ -354,7 +374,9 @@ export const pendingAdaptationSchema = z.object({
   decision: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
 });
-export const pendingAdaptationListSchema = z.object({ items: z.array(pendingAdaptationSchema) });
+export const pendingAdaptationListSchema = z.object({
+  items: z.array(pendingAdaptationSchema),
+});
 export type PendingAdaptation = z.infer<typeof pendingAdaptationSchema>;
 export type QuietHours = z.infer<typeof quietHoursSchema>;
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
@@ -479,112 +501,124 @@ export type CompleteWorkoutInput = z.infer<typeof completeWorkoutSchema>;
 
 export const ATHLETE_GOAL_TYPES = [
   // Race & Event
-  'prepare_for_race',
-  'improve_race_result',
-  'run_new_distance',
-  'trail_preparation',
-  'ultra_preparation',
-  'backyard_preparation',
+  "prepare_for_race",
+  "improve_race_result",
+  "run_new_distance",
+  "trail_preparation",
+  "ultra_preparation",
+  "backyard_preparation",
   // Performance
-  'improve_speed',
-  'improve_pace',
-  'build_endurance',
-  'improve_aerobic_fitness',
-  'improve_hills',
+  "improve_speed",
+  "improve_pace",
+  "build_endurance",
+  "improve_aerobic_fitness",
+  "improve_hills",
   // Training habit
-  'start_running',
-  'return_to_running',
-  'build_consistency',
-  'increase_running_volume',
-  'run_continuously',
+  "start_running",
+  "return_to_running",
+  "build_consistency",
+  "increase_running_volume",
+  "run_continuously",
   // Fitness & Lifestyle
-  'lose_weight',
-  'maintain_fitness',
-  'general_health',
+  "lose_weight",
+  "maintain_fitness",
+  "general_health",
   // Challenge
-  'complete_challenge',
+  "complete_challenge",
   // Flexible
-  'custom',
+  "custom",
 ] as const;
 
 export type AthleteGoalType = (typeof ATHLETE_GOAL_TYPES)[number];
 
 export const ATHLETE_GOAL_CATEGORIES = [
-  'race_event',
-  'performance',
-  'training_habit',
-  'fitness_lifestyle',
-  'challenge',
-  'flexible',
+  "race_event",
+  "performance",
+  "training_habit",
+  "fitness_lifestyle",
+  "challenge",
+  "flexible",
 ] as const;
 
 export type AthleteGoalCategory = (typeof ATHLETE_GOAL_CATEGORIES)[number];
 
-export const GOAL_TYPE_CATEGORY: Record<AthleteGoalType, AthleteGoalCategory> = {
-  prepare_for_race: 'race_event',
-  improve_race_result: 'race_event',
-  run_new_distance: 'race_event',
-  trail_preparation: 'race_event',
-  ultra_preparation: 'race_event',
-  backyard_preparation: 'race_event',
-  improve_speed: 'performance',
-  improve_pace: 'performance',
-  build_endurance: 'performance',
-  improve_aerobic_fitness: 'performance',
-  improve_hills: 'performance',
-  start_running: 'training_habit',
-  return_to_running: 'training_habit',
-  build_consistency: 'training_habit',
-  increase_running_volume: 'training_habit',
-  run_continuously: 'training_habit',
-  lose_weight: 'fitness_lifestyle',
-  maintain_fitness: 'fitness_lifestyle',
-  general_health: 'fitness_lifestyle',
-  complete_challenge: 'challenge',
-  custom: 'flexible',
-};
+export const GOAL_TYPE_CATEGORY: Record<AthleteGoalType, AthleteGoalCategory> =
+  {
+    prepare_for_race: "race_event",
+    improve_race_result: "race_event",
+    run_new_distance: "race_event",
+    trail_preparation: "race_event",
+    ultra_preparation: "race_event",
+    backyard_preparation: "race_event",
+    improve_speed: "performance",
+    improve_pace: "performance",
+    build_endurance: "performance",
+    improve_aerobic_fitness: "performance",
+    improve_hills: "performance",
+    start_running: "training_habit",
+    return_to_running: "training_habit",
+    build_consistency: "training_habit",
+    increase_running_volume: "training_habit",
+    run_continuously: "training_habit",
+    lose_weight: "fitness_lifestyle",
+    maintain_fitness: "fitness_lifestyle",
+    general_health: "fitness_lifestyle",
+    complete_challenge: "challenge",
+    custom: "flexible",
+  };
 
 export const GOAL_METRIC_KEYS = [
-  'distanceMeters',
-  'finishTimeSec',
-  'paceSecondsPerKm',
-  'weightKg',
-  'runsPerWeek',
-  'weeklyDistanceKm',
-  'weeklyDurationMinutes',
-  'continuousDurationMinutes',
-  'continuousDistanceKm',
-  'elevationGainMeters',
-  'shortDistanceResultSec',
-  'benchmarkValue',
-  'timeOnFeetMinutes',
-  'loopsCount',
-  'challengeMetric',
-  'challengeTargetValue',
-  'challengePeriod',
-  'challengeProgressValue',
+  "distanceMeters",
+  "finishTimeSec",
+  "paceSecondsPerKm",
+  "weightKg",
+  "runsPerWeek",
+  "weeklyDistanceKm",
+  "weeklyDurationMinutes",
+  "continuousDurationMinutes",
+  "continuousDistanceKm",
+  "elevationGainMeters",
+  "shortDistanceResultSec",
+  "benchmarkValue",
+  "timeOnFeetMinutes",
+  "loopsCount",
+  "challengeMetric",
+  "challengeTargetValue",
+  "challengePeriod",
+  "challengeProgressValue",
 ] as const;
 
 export type GoalMetricKey = (typeof GOAL_METRIC_KEYS)[number];
 
-export type GoalChallengeMetric = 'total_distance' | 'total_duration' | 'runs_count' | 'active_days';
-export type GoalChallengePeriod = 'this_week' | 'this_month' | 'this_year' | 'custom';
+export type GoalChallengeMetric =
+  | "total_distance"
+  | "total_duration"
+  | "runs_count"
+  | "active_days";
+export type GoalChallengePeriod =
+  | "this_week"
+  | "this_month"
+  | "this_year"
+  | "custom";
 
 export const GOAL_CHALLENGE_METRICS: readonly GoalChallengeMetric[] = [
-  'total_distance',
-  'total_duration',
-  'runs_count',
-  'active_days',
+  "total_distance",
+  "total_duration",
+  "runs_count",
+  "active_days",
 ];
 
 export const GOAL_CHALLENGE_PERIODS: readonly GoalChallengePeriod[] = [
-  'this_week',
-  'this_month',
-  'this_year',
-  'custom',
+  "this_week",
+  "this_month",
+  "this_year",
+  "custom",
 ];
 
-export const GOAL_METRIC_BOUNDS: Record<GoalMetricKey, { min: number; max: number; integer?: boolean }> = {
+export const GOAL_METRIC_BOUNDS: Record<
+  GoalMetricKey,
+  { min: number; max: number; integer?: boolean }
+> = {
   distanceMeters: { min: 500, max: 300_000, integer: true },
   finishTimeSec: { min: 60, max: 260_000, integer: true },
   paceSecondsPerKm: { min: 120, max: 1_200, integer: true },
@@ -613,16 +647,20 @@ export interface GoalTypeConfig {
 }
 
 const T: Record<string, readonly GoalMetricKey[]> = {
-  distance: ['distanceMeters'],
-  finishTime: ['finishTimeSec'],
-  pace: ['paceSecondsPerKm'],
-  weight: ['weightKg'],
-  runsPerWeek: ['runsPerWeek'],
-  weeklyVolume: ['weeklyDistanceKm', 'weeklyDurationMinutes'],
-  continuous: ['continuousDurationMinutes', 'continuousDistanceKm'],
+  distance: ["distanceMeters"],
+  finishTime: ["finishTimeSec"],
+  pace: ["paceSecondsPerKm"],
+  weight: ["weightKg"],
+  runsPerWeek: ["runsPerWeek"],
+  weeklyVolume: ["weeklyDistanceKm", "weeklyDurationMinutes"],
+  continuous: ["continuousDurationMinutes", "continuousDistanceKm"],
 };
 
-const RACE_CURRENT: readonly GoalMetricKey[] = ['distanceMeters', 'finishTimeSec', 'paceSecondsPerKm'];
+const RACE_CURRENT: readonly GoalMetricKey[] = [
+  "distanceMeters",
+  "finishTimeSec",
+  "paceSecondsPerKm",
+];
 
 export const GOAL_TYPE_CONFIG: Record<AthleteGoalType, GoalTypeConfig> = {
   prepare_for_race: {
@@ -641,53 +679,73 @@ export const GOAL_TYPE_CONFIG: Record<AthleteGoalType, GoalTypeConfig> = {
     requiredTargetGroups: [T.distance],
   },
   trail_preparation: {
-    targetFields: ['distanceMeters', 'elevationGainMeters'],
-    currentFields: ['distanceMeters', 'elevationGainMeters', 'weeklyDistanceKm'],
+    targetFields: ["distanceMeters", "elevationGainMeters"],
+    currentFields: [
+      "distanceMeters",
+      "elevationGainMeters",
+      "weeklyDistanceKm",
+    ],
     requiredTargetGroups: [T.distance],
   },
   ultra_preparation: {
-    targetFields: ['distanceMeters', 'elevationGainMeters'],
-    currentFields: ['distanceMeters', 'weeklyDistanceKm'],
+    targetFields: ["distanceMeters", "elevationGainMeters"],
+    currentFields: ["distanceMeters", "weeklyDistanceKm"],
     requiredTargetGroups: [T.distance],
   },
   backyard_preparation: {
-    targetFields: ['loopsCount', 'timeOnFeetMinutes', 'distanceMeters'],
-    currentFields: ['timeOnFeetMinutes', 'distanceMeters'],
+    targetFields: ["loopsCount", "timeOnFeetMinutes", "distanceMeters"],
+    currentFields: ["timeOnFeetMinutes", "distanceMeters"],
     requiredTargetGroups: [],
   },
   improve_speed: {
-    targetFields: ['shortDistanceResultSec', 'paceSecondsPerKm', 'benchmarkValue'],
-    currentFields: ['shortDistanceResultSec', 'paceSecondsPerKm', 'benchmarkValue'],
+    targetFields: [
+      "shortDistanceResultSec",
+      "paceSecondsPerKm",
+      "benchmarkValue",
+    ],
+    currentFields: [
+      "shortDistanceResultSec",
+      "paceSecondsPerKm",
+      "benchmarkValue",
+    ],
     requiredTargetGroups: [],
   },
   improve_pace: {
-    targetFields: [...T.pace, 'distanceMeters'],
+    targetFields: [...T.pace, "distanceMeters"],
     currentFields: [...T.pace, ...T.distance],
     requiredTargetGroups: [T.pace],
   },
   build_endurance: {
     targetFields: [...T.continuous],
-    currentFields: ['continuousDurationMinutes', 'continuousDistanceKm', 'distanceMeters'],
+    currentFields: [
+      "continuousDurationMinutes",
+      "continuousDistanceKm",
+      "distanceMeters",
+    ],
     requiredTargetGroups: [T.continuous],
   },
   improve_aerobic_fitness: {
-    targetFields: ['benchmarkValue'],
-    currentFields: ['benchmarkValue'],
+    targetFields: ["benchmarkValue"],
+    currentFields: ["benchmarkValue"],
     requiredTargetGroups: [],
   },
   improve_hills: {
-    targetFields: ['elevationGainMeters', 'continuousDurationMinutes'],
-    currentFields: ['elevationGainMeters', 'benchmarkValue'],
+    targetFields: ["elevationGainMeters", "continuousDurationMinutes"],
+    currentFields: ["elevationGainMeters", "benchmarkValue"],
     requiredTargetGroups: [],
   },
   start_running: {
-    targetFields: ['continuousDurationMinutes', 'continuousDistanceKm'],
-    currentFields: ['continuousDurationMinutes', 'continuousDistanceKm'],
+    targetFields: ["continuousDurationMinutes", "continuousDistanceKm"],
+    currentFields: ["continuousDurationMinutes", "continuousDistanceKm"],
     requiredTargetGroups: [],
   },
   return_to_running: {
-    targetFields: ['weeklyDistanceKm', 'continuousDurationMinutes'],
-    currentFields: ['weeklyDistanceKm', 'continuousDurationMinutes', 'continuousDistanceKm'],
+    targetFields: ["weeklyDistanceKm", "continuousDurationMinutes"],
+    currentFields: [
+      "weeklyDistanceKm",
+      "continuousDurationMinutes",
+      "continuousDistanceKm",
+    ],
     requiredTargetGroups: [],
   },
   build_consistency: {
@@ -711,19 +769,25 @@ export const GOAL_TYPE_CONFIG: Record<AthleteGoalType, GoalTypeConfig> = {
     requiredTargetGroups: [T.weight],
   },
   maintain_fitness: {
-    targetFields: ['runsPerWeek', 'weeklyDistanceKm'],
-    currentFields: ['runsPerWeek', 'weeklyDistanceKm'],
+    targetFields: ["runsPerWeek", "weeklyDistanceKm"],
+    currentFields: ["runsPerWeek", "weeklyDistanceKm"],
     requiredTargetGroups: [],
   },
   general_health: {
-    targetFields: ['runsPerWeek', 'weeklyDurationMinutes'],
-    currentFields: ['runsPerWeek'],
+    targetFields: ["runsPerWeek", "weeklyDurationMinutes"],
+    currentFields: ["runsPerWeek"],
     requiredTargetGroups: [],
   },
   complete_challenge: {
-    targetFields: ['challengeMetric', 'challengeTargetValue', 'challengePeriod'],
-    currentFields: ['challengeProgressValue'],
-    requiredTargetGroups: [['challengeMetric', 'challengeTargetValue'] as readonly GoalMetricKey[]],
+    targetFields: [
+      "challengeMetric",
+      "challengeTargetValue",
+      "challengePeriod",
+    ],
+    currentFields: ["challengeProgressValue"],
+    requiredTargetGroups: [
+      ["challengeMetric", "challengeTargetValue"] as readonly GoalMetricKey[],
+    ],
   },
   custom: {
     targetFields: [],
@@ -747,11 +811,16 @@ export function validateGoalPayload(goal: {
 }): GoalValidationResult {
   const config = GOAL_TYPE_CONFIG[goal.type];
   if (!config) {
-    return { valid: false, code: 'GOAL_TYPE_UNKNOWN' };
+    return { valid: false, code: "GOAL_TYPE_UNKNOWN" };
   }
 
-  if (config.requiresDescription && !(typeof goal.description === 'string' && goal.description.trim().length > 0)) {
-    return { valid: false, code: 'GOAL_DESCRIPTION_REQUIRED' };
+  if (
+    config.requiresDescription &&
+    !(
+      typeof goal.description === "string" && goal.description.trim().length > 0
+    )
+  ) {
+    return { valid: false, code: "GOAL_DESCRIPTION_REQUIRED" };
   }
 
   const target = goal.target ?? {};
@@ -759,10 +828,10 @@ export function validateGoalPayload(goal: {
   for (const group of config.requiredTargetGroups) {
     const satisfied = group.some((field) => {
       const value = target[field];
-      return value !== undefined && value !== null && value !== '';
+      return value !== undefined && value !== null && value !== "";
     });
     if (!satisfied) {
-      return { valid: false, code: 'GOAL_TARGET_REQUIRED', field: group[0] };
+      return { valid: false, code: "GOAL_TARGET_REQUIRED", field: group[0] };
     }
   }
 
@@ -784,13 +853,19 @@ export const athleteGoalPayloadSchema = z.object({
 export type AthleteGoalPayloadInput = z.infer<typeof athleteGoalPayloadSchema>;
 
 export const LEGACY_RACE_DISTANCE_METERS: Record<string, number> = {
-  '5k': 5_000,
-  '10k': 10_000,
+  "5k": 5_000,
+  "10k": 10_000,
   half_marathon: 21_097,
   marathon: 42_195,
 };
 
-export const LEGACY_RACE_DISTANCE_VALUES = ['5k', '10k', 'half_marathon', 'marathon', 'just_running'] as const;
+export const LEGACY_RACE_DISTANCE_VALUES = [
+  "5k",
+  "10k",
+  "half_marathon",
+  "marathon",
+  "just_running",
+] as const;
 
 export function mapLegacyRaceGoal(
   raceDistance: string,
@@ -802,9 +877,12 @@ export function mapLegacyRaceGoal(
     target.distanceMeters = distanceMeters;
   }
   if (targetTimeSeconds && distanceMeters) {
-    return { type: 'improve_race_result', target: { ...target, finishTimeSec: targetTimeSeconds } };
+    return {
+      type: "improve_race_result",
+      target: { ...target, finishTimeSec: targetTimeSeconds },
+    };
   }
-  return { type: 'prepare_for_race', target };
+  return { type: "prepare_for_race", target };
 }
 
 export function deriveLegacyRaceFields(goal: {
@@ -816,18 +894,25 @@ export function deriveLegacyRaceFields(goal: {
 } {
   const distanceMeters = goal.target?.distanceMeters;
   const finishTimeSec = goal.target?.finishTimeSec;
-  const targetTimeSeconds = typeof finishTimeSec === 'number' && Number.isFinite(finishTimeSec) ? finishTimeSec : null;
+  const targetTimeSeconds =
+    typeof finishTimeSec === "number" && Number.isFinite(finishTimeSec)
+      ? finishTimeSec
+      : null;
 
-  if (typeof distanceMeters === 'number') {
+  if (typeof distanceMeters === "number") {
     const matched = Object.entries(LEGACY_RACE_DISTANCE_METERS).find(
       ([, meters]) => Math.abs(meters - distanceMeters) < 1,
     );
     if (matched) {
-      return { raceDistance: matched[0] as (typeof LEGACY_RACE_DISTANCE_VALUES)[number], targetTimeSeconds };
+      return {
+        raceDistance:
+          matched[0] as (typeof LEGACY_RACE_DISTANCE_VALUES)[number],
+        targetTimeSeconds,
+      };
     }
   }
 
-  return { raceDistance: 'just_running', targetTimeSeconds };
+  return { raceDistance: "just_running", targetTimeSeconds };
 }
 
 // --- Plan start options & athlete metrics ---
@@ -856,7 +941,11 @@ export const activePlanSummarySchema = z.object({
   futurePlannedWorkouts: z.number(),
 });
 
-export const planStartOptionKindSchema = z.enum(["today", "next_monday", "race_aligned"]);
+export const planStartOptionKindSchema = z.enum([
+  "today",
+  "next_monday",
+  "race_aligned",
+]);
 
 export const planStartOptionSchema = z.object({
   kind: planStartOptionKindSchema,
@@ -914,7 +1003,14 @@ export const metricsSnapshotSchema = z.object({
   source: z.string().optional(),
 });
 
-export const metricsSourceSchema = z.enum(["profile", "strava", "health", "manual_workouts", "athlete_state", "none"]);
+export const metricsSourceSchema = z.enum([
+  "profile",
+  "strava",
+  "health",
+  "manual_workouts",
+  "athlete_state",
+  "none",
+]);
 
 const sourcedNumberSchema = z.object({
   value: z.number().nullable(),
@@ -955,7 +1051,9 @@ export const manualPlanGoalSchema = z.object({
   targetDate: z.string().optional(),
   priority: z.number().int().min(1).max(10).optional(),
   // Legacy fields kept for backward compatibility
-  raceDistance: z.enum(['5k', '10k', 'half_marathon', 'marathon', 'just_running']).optional(),
+  raceDistance: z
+    .enum(["5k", "10k", "half_marathon", "marathon", "just_running"])
+    .optional(),
   targetTimeSeconds: z.number().int().nonnegative().optional(),
 });
 
@@ -1043,20 +1141,30 @@ export const planSaveFieldsSchema = z.object({
   start: planStartBlockSchema.optional(),
 });
 
-export const createManualPlanSchema = previewManualPlanSchema.extend({
-  startDate: z.string().optional(),
-  weekOverrides: z.array(manualPlanWeekOverridesSchema).optional(),
-}).extend(planSaveFieldsSchema.shape);
+export const createManualPlanSchema = previewManualPlanSchema
+  .extend({
+    startDate: z.string().optional(),
+    weekOverrides: z.array(manualPlanWeekOverridesSchema).optional(),
+  })
+  .extend(planSaveFieldsSchema.shape);
 
 export type ManualPlanGoalInput = z.infer<typeof manualPlanGoalSchema>;
 export type ManualPlanScheduleInput = z.infer<typeof manualPlanScheduleSchema>;
-export type ManualPlanStructureInput = z.infer<typeof manualPlanStructureSchema>;
-export type ManualPlanPreviewWorkout = z.infer<typeof manualPlanPreviewWorkoutSchema>;
+export type ManualPlanStructureInput = z.infer<
+  typeof manualPlanStructureSchema
+>;
+export type ManualPlanPreviewWorkout = z.infer<
+  typeof manualPlanPreviewWorkoutSchema
+>;
 export type ManualPlanPreviewWeek = z.infer<typeof manualPlanPreviewWeekSchema>;
 export type ManualPlanPreview = z.infer<typeof manualPlanPreviewSchema>;
-export type ManualPlanWorkoutOverride = z.infer<typeof manualPlanWorkoutOverrideSchema>;
+export type ManualPlanWorkoutOverride = z.infer<
+  typeof manualPlanWorkoutOverrideSchema
+>;
 export type ManualPlanNewWorkout = z.infer<typeof manualPlanNewWorkoutSchema>;
-export type ManualPlanWeekOverrides = z.infer<typeof manualPlanWeekOverridesSchema>;
+export type ManualPlanWeekOverrides = z.infer<
+  typeof manualPlanWeekOverridesSchema
+>;
 export type PreviewManualPlanInput = z.infer<typeof previewManualPlanSchema>;
 export type CreateManualPlanInput = z.infer<typeof createManualPlanSchema>;
 export type PlanSaveFields = z.infer<typeof planSaveFieldsSchema>;
@@ -1185,7 +1293,13 @@ export type PlanConfig = z.infer<typeof planConfigSchema>;
 
 // --- Plans library: drafts, active plan, history ---
 
-export const planLifecycleStatusSchema = z.enum(["draft", "active", "completed", "cancelled", "paused"]);
+export const planLifecycleStatusSchema = z.enum([
+  "draft",
+  "active",
+  "completed",
+  "cancelled",
+  "paused",
+]);
 export const planListGroupSchema = z.enum(["draft", "active", "history"]);
 
 export const planGoalSummarySchema = z.object({
@@ -1405,11 +1519,17 @@ export const planDiffWeekSchema = z.object({
   workouts: z.array(planDiffWorkoutSchema),
 });
 
-const beforeAfterNumber = z.object({ before: z.number().nullable(), after: z.number().nullable() });
+const beforeAfterNumber = z.object({
+  before: z.number().nullable(),
+  after: z.number().nullable(),
+});
 
 export const planDiffSchema = z.object({
   summary: z.object({
-    weeklyVolumeKm: z.object({ before: z.array(z.number()), after: z.array(z.number()) }),
+    weeklyVolumeKm: z.object({
+      before: z.array(z.number()),
+      after: z.array(z.number()),
+    }),
     peakWeekKm: beforeAfterNumber,
     longestRunKm: beforeAfterNumber,
     thresholdPace: beforeAfterNumber,
@@ -1433,7 +1553,9 @@ export const rebuildPrefillSchema = z.object({
   goalSuggestion: z.object({
     targetDate: z.string().nullable(),
     previousTargetDate: z.string().nullable(),
-    previousResult: z.object({ timeSeconds: z.number(), workoutId: z.string() }).nullable(),
+    previousResult: z
+      .object({ timeSeconds: z.number(), workoutId: z.string() })
+      .nullable(),
   }),
   metrics: z.object({
     previous: metricsSnapshotSchema.nullable().optional(),
@@ -1488,7 +1610,9 @@ export type CancelPlanResponse = z.infer<typeof cancelPlanResponseSchema>;
 export type UpdatePlanMetaInput = z.infer<typeof updatePlanMetaSchema>;
 export type DraftWorkoutOverride = z.infer<typeof draftWorkoutOverrideSchema>;
 export type DraftWeekOverride = z.infer<typeof draftWeekOverrideSchema>;
-export type UpdatePlanStructureInput = z.infer<typeof updatePlanStructureSchema>;
+export type UpdatePlanStructureInput = z.infer<
+  typeof updatePlanStructureSchema
+>;
 export type PlanWorkoutOperation = z.infer<typeof planWorkoutOperationSchema>;
 export type PlanScheduleChange = z.infer<typeof planScheduleChangeSchema>;
 export type PlanChangeRequest = z.infer<typeof planChangeRequestSchema>;
@@ -1572,8 +1696,20 @@ export type SendCoachMessageInput = z.infer<typeof sendCoachMessageSchema>;
 // --- Progress ---
 
 export const progressPeriodKeySchema = z.enum(["4W", "8W", "3M", "6M", "1Y"]);
-export const recordDistanceSchema = z.enum(["1k", "5k", "10k", "half_marathon", "marathon"]);
-export const capabilityTypeSchema = z.enum(["endurance", "threshold", "speed", "recovery", "consistency"]);
+export const recordDistanceSchema = z.enum([
+  "1k",
+  "5k",
+  "10k",
+  "half_marathon",
+  "marathon",
+]);
+export const capabilityTypeSchema = z.enum([
+  "endurance",
+  "threshold",
+  "speed",
+  "recovery",
+  "consistency",
+]);
 export const trendSchema = z.enum(["up", "down", "stable"]);
 
 const secondsPointSchema = z.object({ date: z.string(), seconds: z.number() });
@@ -1613,14 +1749,26 @@ export const progressRecordSchema = z.object({
 const dynamicsSeriesSchema = z.object({
   average: z.number().nullable(),
   changePercent: z.number().nullable(),
-  points: z.array(z.object({ start: z.string(), value: z.number().nullable() })),
+  points: z.array(
+    z.object({ start: z.string(), value: z.number().nullable() }),
+  ),
 });
 
 export const progressOverviewSchema = z.object({
-  period: z.object({ key: progressPeriodKeySchema, from: z.string(), to: z.string() }),
-  metricsUnlock: z.object({ required: z.number(), completed: z.number(), unlocked: z.boolean() }),
+  period: z.object({
+    key: progressPeriodKeySchema,
+    from: z.string(),
+    to: z.string(),
+  }),
+  metricsUnlock: z.object({
+    required: z.number(),
+    completed: z.number(),
+    unlocked: z.boolean(),
+  }),
   goal: progressGoalSchema.nullable(),
-  predictions: z.array(z.object({ distance: recordDistanceSchema, seconds: z.number() })),
+  predictions: z.array(
+    z.object({ distance: recordDistanceSchema, seconds: z.number() }),
+  ),
   predictionBasis: z.number(),
   form: z
     .object({
@@ -1632,12 +1780,24 @@ export const progressOverviewSchema = z.object({
     })
     .nullable(),
   metrics: z.object({
-    thresholdPace: z.object({ value: z.number(), change: z.number().nullable() }).nullable(),
-    vo2max: z.object({ value: z.number(), change: z.number().nullable() }).nullable(),
-    thresholdHeartRate: z.object({ value: z.number(), estimated: z.boolean() }).nullable(),
+    thresholdPace: z
+      .object({ value: z.number(), change: z.number().nullable() })
+      .nullable(),
+    vo2max: z
+      .object({ value: z.number(), change: z.number().nullable() })
+      .nullable(),
+    thresholdHeartRate: z
+      .object({ value: z.number(), estimated: z.boolean() })
+      .nullable(),
   }),
   capabilities: z
-    .array(z.object({ type: capabilityTypeSchema, value: z.number().nullable(), trend: trendSchema }))
+    .array(
+      z.object({
+        type: capabilityTypeSchema,
+        value: z.number().nullable(),
+        trend: trendSchema,
+      }),
+    )
     .nullable(),
   records: z.array(progressRecordSchema),
   dynamics: z.object({
@@ -1648,7 +1808,9 @@ export const progressOverviewSchema = z.object({
       heartRate: dynamicsSeriesSchema,
       load: dynamicsSeriesSchema,
     }),
-    profileVolumeHint: z.object({ profileKm: z.number(), actualKm: z.number() }).nullable(),
+    profileVolumeHint: z
+      .object({ profileKm: z.number(), actualKm: z.number() })
+      .nullable(),
   }),
   achievements: z.array(
     z.object({
@@ -1666,7 +1828,10 @@ export const progressMetricSchema = z.object({
   change: z.number().nullable(),
   updatedAt: z.string().nullable(),
   series: z.array(z.object({ date: z.string(), value: z.number() })),
-  accuracy: z.object({ level: z.enum(["high", "medium", "low"]), efforts: z.number() }),
+  accuracy: z.object({
+    level: z.enum(["high", "medium", "low"]),
+    efforts: z.number(),
+  }),
   zones: z
     .object({
       method: z.string(),
@@ -1697,7 +1862,9 @@ export const progressMetricSchema = z.object({
     .optional(),
 });
 
-export const progressRecordsSchema = z.object({ items: z.array(progressRecordSchema) });
+export const progressRecordsSchema = z.object({
+  items: z.array(progressRecordSchema),
+});
 
 export const recordAttemptSchema = z.object({
   id: z.string(),
@@ -1821,7 +1988,13 @@ export const deviceScopeSchema = z.enum([
 ]);
 export type DeviceScope = z.infer<typeof deviceScopeSchema>;
 
-export const deviceSyncTypeSchema = z.enum(["initial", "foreground", "background", "manual", "backfill"]);
+export const deviceSyncTypeSchema = z.enum([
+  "initial",
+  "foreground",
+  "background",
+  "manual",
+  "backfill",
+]);
 export type DeviceSyncType = z.infer<typeof deviceSyncTypeSchema>;
 
 export type DeviceConnectionRequest = {
@@ -1835,7 +2008,10 @@ export type DeviceConnectionRequest = {
 };
 
 export type DeviceConnectionUpdate = Partial<
-  Pick<DeviceConnectionRequest, "osVersion" | "appVersion" | "grantedScopes" | "profileSync">
+  Pick<
+    DeviceConnectionRequest,
+    "osVersion" | "appVersion" | "grantedScopes" | "profileSync"
+  >
 >;
 
 /** A run read on the device, in the shape the backend accepts. */
@@ -1870,9 +2046,13 @@ export const deviceSyncBatchAcceptedSchema = z.object({
   syncId: z.string(),
   batchId: z.string(),
   accepted: z.number(),
-  rejected: z.array(z.object({ sourceActivityId: z.string(), code: z.string() })),
+  rejected: z.array(
+    z.object({ sourceActivityId: z.string(), code: z.string() }),
+  ),
 });
-export type DeviceSyncBatchAccepted = z.infer<typeof deviceSyncBatchAcceptedSchema>;
+export type DeviceSyncBatchAccepted = z.infer<
+  typeof deviceSyncBatchAcceptedSchema
+>;
 
 export const deviceSyncCountersSchema = z.object({
   created: z.number(),
@@ -1905,12 +2085,25 @@ export type DeviceProfileMetricsRequest = {
 };
 
 export const deviceProfileMetricsResultSchema = z.object({
-  applied: z.array(z.enum(["weightKg", "heightCm", "sex", "birthDate", "restingHeartRate"])),
+  applied: z.array(
+    z.enum(["weightKg", "heightCm", "sex", "birthDate", "restingHeartRate"]),
+  ),
   skipped: z.array(
-    z.object({ field: z.enum(["weightKg", "heightCm", "sex", "birthDate", "restingHeartRate"]), reason: z.string() }),
+    z.object({
+      field: z.enum([
+        "weightKg",
+        "heightCm",
+        "sex",
+        "birthDate",
+        "restingHeartRate",
+      ]),
+      reason: z.string(),
+    }),
   ),
 });
-export type DeviceProfileMetricsResult = z.infer<typeof deviceProfileMetricsResultSchema>;
+export type DeviceProfileMetricsResult = z.infer<
+  typeof deviceProfileMetricsResultSchema
+>;
 
 export const workoutSourcesSchema = z.object({
   items: z.array(
@@ -2065,7 +2258,9 @@ export const userListQuerySchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
-  sortBy: z.enum(["createdAt", "email", "firstName", "lastName"]).default("createdAt"),
+  sortBy: z
+    .enum(["createdAt", "email", "firstName", "lastName"])
+    .default("createdAt"),
   sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
 });
 
@@ -2113,7 +2308,12 @@ export const WORKOUT_TYPES = [
   "race",
   "rest",
 ] as const;
-export const WORKOUT_STATUSES = ["planned", "completed", "skipped", "cancelled"] as const;
+export const WORKOUT_STATUSES = [
+  "planned",
+  "completed",
+  "skipped",
+  "cancelled",
+] as const;
 
 /**
  * Statuses the admin panel may set. Completing a workout needs an actual
@@ -2134,7 +2334,9 @@ export const ADMIN_CALENDAR_SUMMARY_MAX_DAYS = 62;
 
 export const workoutTypeSchema = z.enum(WORKOUT_TYPES);
 export const workoutStatusSchema = z.enum(WORKOUT_STATUSES);
-export const adminWorkoutEditableStatusSchema = z.enum(ADMIN_WORKOUT_EDITABLE_STATUSES);
+export const adminWorkoutEditableStatusSchema = z.enum(
+  ADMIN_WORKOUT_EDITABLE_STATUSES,
+);
 
 export const adminCalendarWorkoutSchema = z.object({
   id: z.string(),
@@ -2179,7 +2381,11 @@ export const adminWorkoutMutationSchema = z.object({
   workout: adminCalendarWorkoutSchema,
 });
 
-const adminWorkoutTitleSchema = z.string().trim().min(1).max(ADMIN_WORKOUT_LIMITS.titleMaxLength);
+const adminWorkoutTitleSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(ADMIN_WORKOUT_LIMITS.titleMaxLength);
 
 export const adminCreateWorkoutSchema = z.object({
   scheduledAt: z.string().datetime({ offset: true }),
@@ -2204,10 +2410,19 @@ export type WorkoutType = z.infer<typeof workoutTypeSchema>;
 
 // --- Tracker ---
 
-export const recordingEnvironmentSchema = z.enum(["outdoor", "trail", "treadmill"]);
+export const recordingEnvironmentSchema = z.enum([
+  "outdoor",
+  "trail",
+  "treadmill",
+]);
 export type RecordingEnvironment = z.infer<typeof recordingEnvironmentSchema>;
 /** `mixed` — GPS with stretches counted by the pedometer while the signal was lost. */
-export const distanceSourceSchema = z.enum(["gps", "pedometer", "manual", "mixed"]);
+export const distanceSourceSchema = z.enum([
+  "gps",
+  "pedometer",
+  "manual",
+  "mixed",
+]);
 export type DistanceSource = z.infer<typeof distanceSourceSchema>;
 
 export const executionStepSchema = z.object({
@@ -2215,7 +2430,9 @@ export const executionStepSchema = z.object({
   kind: z.enum(["warmup", "work", "recovery", "steady", "cooldown"]),
   durationSec: z.number().nullable(),
   distanceM: z.number().nullable(),
-  targetPace: z.object({ minSecPerKm: z.number(), maxSecPerKm: z.number() }).nullable(),
+  targetPace: z
+    .object({ minSecPerKm: z.number(), maxSecPerKm: z.number() })
+    .nullable(),
   zone: z.string().nullable(),
   repetition: z.object({ index: z.number(), total: z.number() }).nullable(),
 });
@@ -2252,10 +2469,19 @@ export const recordedLapSchema = z.object({
 });
 export type RecordedLap = z.infer<typeof recordedLapSchema>;
 
-export const recordedPauseSchema = z.object({ startedAt: z.string(), endedAt: z.string(), auto: z.boolean() });
+export const recordedPauseSchema = z.object({
+  startedAt: z.string(),
+  endedAt: z.string(),
+  auto: z.boolean(),
+});
 export type RecordedPause = z.infer<typeof recordedPauseSchema>;
 
-export const routeBoundsSchema = z.object({ minLat: z.number(), minLng: z.number(), maxLat: z.number(), maxLng: z.number() });
+export const routeBoundsSchema = z.object({
+  minLat: z.number(),
+  minLng: z.number(),
+  maxLat: z.number(),
+  maxLng: z.number(),
+});
 export type RouteBounds = z.infer<typeof routeBoundsSchema>;
 
 /** Body of `POST /recorded-activities` (the `summary` part of the multipart request). */
@@ -2289,7 +2515,12 @@ export type RecordedActivityRequest = {
   feeling?: number | null;
   rpe?: number | null;
   notes?: string | null;
-  device: { platform: "ios" | "android"; osVersion?: string; appVersion?: string; model?: string };
+  device: {
+    platform: "ios" | "android";
+    osVersion?: string;
+    appVersion?: string;
+    model?: string;
+  };
 };
 
 export const recordedActivityAcceptedSchema = z.object({
@@ -2297,7 +2528,9 @@ export const recordedActivityAcceptedSchema = z.object({
   workoutId: z.string(),
   outcome: z.enum(["created", "completed_planned", "merged", "matched_manual"]),
 });
-export type RecordedActivityAccepted = z.infer<typeof recordedActivityAcceptedSchema>;
+export type RecordedActivityAccepted = z.infer<
+  typeof recordedActivityAcceptedSchema
+>;
 
 export const workoutRecordingSchema = z.object({
   id: z.string(),
@@ -2328,11 +2561,15 @@ export const workoutRecordingSchema = z.object({
 });
 export type WorkoutRecording = z.infer<typeof workoutRecordingSchema>;
 export type WorkoutStatus = z.infer<typeof workoutStatusSchema>;
-export type AdminWorkoutEditableStatus = z.infer<typeof adminWorkoutEditableStatusSchema>;
+export type AdminWorkoutEditableStatus = z.infer<
+  typeof adminWorkoutEditableStatusSchema
+>;
 export type AdminCalendarWorkout = z.infer<typeof adminCalendarWorkoutSchema>;
 export type AdminCalendarDay = z.infer<typeof adminCalendarDaySchema>;
 export type AdminCalendarSummary = z.infer<typeof adminCalendarSummarySchema>;
-export type AdminCalendarSummaryDay = z.infer<typeof adminCalendarSummaryDaySchema>;
+export type AdminCalendarSummaryDay = z.infer<
+  typeof adminCalendarSummaryDaySchema
+>;
 export type AdminCreateWorkoutInput = z.infer<typeof adminCreateWorkoutSchema>;
 export type AdminUpdateWorkoutInput = z.infer<typeof adminUpdateWorkoutSchema>;
 

@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocalRuntime, type ChatModelAdapter } from "@assistant-ui/react-native";
-import { createCoachSession, streamCoachMessage, getLatestCoachSession } from "../../lib/coach-api";
-import { useAthlete } from "../main/hooks/use-athlete";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  useLocalRuntime,
+  type ChatModelAdapter,
+  type ThreadMessageLike,
+} from "@assistant-ui/react-native";
+import { createCoachSession, streamCoachMessage } from "../../lib/coach-api";
+import { logger } from "../../lib/logger";
 
 type RuntimeMessage = {
   role?: "user" | "assistant" | "system" | "tool";
@@ -11,21 +15,23 @@ type RuntimeMessage = {
 function extractText(message?: RuntimeMessage): string {
   return (
     message?.content
-      ?.map((part) => (part.type === "text" ? part.text ?? "" : ""))
+      ?.map((part) => (part.type === "text" ? (part.text ?? "") : ""))
       .join("\n")
       .trim() ?? ""
   );
 }
 
 function getPrompt(messages: readonly RuntimeMessage[]): string {
-  const lastUserMessage = [...messages].reverse().find((message) => message.role === "user");
+  const lastUserMessage = [...messages]
+    .reverse()
+    .find((message) => message.role === "user");
   return extractText(lastUserMessage);
 }
 
 export function useTrefixRuntime(
   athleteId: string | undefined,
   sessionId: string | null,
-  initialMessages: RuntimeMessage[],
+  initialMessages: ThreadMessageLike[],
 ) {
   const sessionIdRef = useRef<string | null>(sessionId);
 
@@ -37,11 +43,15 @@ export function useTrefixRuntime(
     () => ({
       async *run({ messages, abortSignal }) {
         if (!athleteId) {
-          yield { content: [{ type: "text", text: "Athlete profile not found." }] };
+          yield {
+            content: [{ type: "text", text: "Athlete profile not found." }],
+          };
           return;
         }
 
-        const prompt = getPrompt(messages as unknown as readonly RuntimeMessage[]);
+        const prompt = getPrompt(
+          messages as unknown as readonly RuntimeMessage[],
+        );
 
         try {
           if (!sessionIdRef.current) {
@@ -52,7 +62,11 @@ export function useTrefixRuntime(
             sessionIdRef.current = session.id;
           }
 
-          const stream = await streamCoachMessage(sessionIdRef.current, prompt, abortSignal);
+          const stream = await streamCoachMessage(
+            sessionIdRef.current,
+            prompt,
+            abortSignal,
+          );
           let fullText = "";
 
           for await (const chunk of stream) {
@@ -63,8 +77,15 @@ export function useTrefixRuntime(
             }
           }
         } catch (error) {
-          console.error("[ChatModel] Error:", error);
-          yield { content: [{ type: "text", text: "Error connecting to AI. Please try again." }] };
+          logger.error("[ChatModel] Error:", error);
+          yield {
+            content: [
+              {
+                type: "text",
+                text: "Error connecting to AI. Please try again.",
+              },
+            ],
+          };
         }
       },
     }),
@@ -72,7 +93,6 @@ export function useTrefixRuntime(
   );
 
   return useLocalRuntime(chatModel, {
-    initialMessages: initialMessages as any,
+    initialMessages,
   });
 }
-

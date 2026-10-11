@@ -24,10 +24,9 @@ const WORKOUT_TYPES: Array<{
 ];
 
 export const AddWorkoutSection = React.memo(
-  ({ theme, themeMode, copy, onSelectType }: Props) => {
+  ({ theme, copy, onSelectType }: Props) => {
     const typesCopy = copy?.today?.types || {};
     const title = copy?.today?.addSectionTitle || "Добавить тренировку";
-    const isDark = themeMode === "dark";
 
     const getDefaultLabel = (key: ManualWorkoutType) => {
       switch (key) {

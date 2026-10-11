@@ -19,15 +19,16 @@ import {
   type MobileAuthEmailVerifyInput,
   type AppleNativeExchangeInput,
   type GoogleNativeExchangeInput,
-  type ApiErrorShape,
 } from "@workspace/api-client";
 
 import { getGoogleSigninModule } from "./google-signin";
 import { loadAuthSession, saveAuthSession } from "./auth-session";
-import { request } from "./api-client";
-import { BACKEND_BASE_URL } from "./backend-url";
+import { authorizedFetch, request, toApiError } from "./api-client";
+import { logger } from "./logger";
 
-const AUTH_BACKEND_BASE_URL = BACKEND_BASE_URL;
+/** Refresh answers that mean the session itself is invalid, not a transient failure. */
+const SESSION_REJECTED_STATUSES = new Set([400, 401, 403]);
+const AVATAR_UPLOAD_TIMEOUT_MS = 60_000;
 
 export async function requestEmailOtp(
   email: string,
@@ -139,9 +140,16 @@ export async function signInWithGoogleNative(): Promise<AuthTokens | null> {
 
 let activeRefreshPromise: Promise<AuthTokens | null> | null = null;
 
-export async function refreshAuthTokens(
-  existingRefreshToken?: string,
-): Promise<AuthTokens | null> {
+/**
+ * Exchanges the refresh token for a new pair. Single-flight: the backend
+ * revokes every session when a rotated refresh token is presented twice, so
+ * concurrent callers share one request.
+ *
+ * Resolves to `null` only when the session is gone (no refresh token, or the
+ * backend rejected it); network and server failures are rethrown, so a user
+ * who is offline keeps the session instead of being logged out.
+ */
+export async function refreshAuthTokens(): Promise<AuthTokens | null> {
   if (activeRefreshPromise) {
     return activeRefreshPromise;
   }
@@ -149,26 +157,29 @@ export async function refreshAuthTokens(
   activeRefreshPromise = (async () => {
     try {
       const session = await loadAuthSession();
-      const tokenToUse = existingRefreshToken || session?.refreshToken;
-      if (!tokenToUse) {
-        console.warn("[AuthAPI] No refresh token available to refresh session");
+      if (!session?.refreshToken) {
         return null;
       }
 
-      console.log("[AuthAPI] Refreshing auth tokens via POST /auth/refresh...");
+      logger.debug("[AuthAPI] Refreshing auth tokens");
       const response = await request<unknown>("/auth/refresh", {
         method: "POST",
-        body: { refreshToken: tokenToUse },
+        body: { refreshToken: session.refreshToken },
         skipAutoRefresh: true,
       });
 
       const newTokens = authTokensSchema.parse(response);
       await saveAuthSession(newTokens);
-      console.log("[AuthAPI] Auth tokens refreshed successfully!");
       return newTokens;
     } catch (error) {
-      console.warn("[AuthAPI] Failed to refresh auth tokens:", error);
-      return null;
+      if (
+        error instanceof ApiClientError &&
+        SESSION_REJECTED_STATUSES.has(error.status)
+      ) {
+        logger.warn("[AuthAPI] Session rejected on refresh", error.code);
+        return null;
+      }
+      throw error;
     } finally {
       activeRefreshPromise = null;
     }
@@ -213,62 +224,28 @@ export async function updateMe(data: UpdateUserInput): Promise<AuthUser> {
 
 export async function uploadAvatar(uri: string): Promise<string> {
   const formData = new FormData();
-
-  // Extract filename from URI
-  const filename = uri.split('/').pop() || 'avatar.jpg';
+  const filename = uri.split("/").pop() || "avatar.jpg";
   const match = /\.(\w+)$/.exec(filename);
-  const type = match ? `image/${match[1]}` : `image/jpeg`;
+  const type = match ? `image/${match[1]}` : "image/jpeg";
 
-  // @ts-expect-error: React Native FormData needs object with uri, name, type
-  formData.append('file', {
-    uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+  // React Native sends a local file as a part described by uri/name/type.
+  formData.append("file", {
+    uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
     name: filename,
     type,
-  });
+  } as unknown as Blob);
 
-  const session = await loadAuthSession();
   // Public avatar endpoint: stores the file, updates the user and returns a link
   // that loads without a token (the storage file endpoint requires one).
-  const url = `${AUTH_BACKEND_BASE_URL}/avatars/me`;
-
-  console.log(`[AuthAPI] Uploading avatar to: ${url}`);
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-    });
-
-    console.log(`[AuthAPI] Upload status: ${response.status}`);
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "No body");
-      console.error(`[AuthAPI] Upload failed body: ${errorText}`);
-
-      let errorBody: ApiErrorShape = {};
-      try {
-        errorBody = JSON.parse(errorText);
-      } catch {
-        // Not JSON
-      }
-
-      throw new ApiClientError(
-        errorBody.message || "Avatar upload failed",
-        response.status,
-        errorBody.code,
-        errorBody,
-      );
-    }
-
-    const data = (await response.json()) as { avatarUrl: string };
-    console.log(`[AuthAPI] Avatar uploaded: ${data.avatarUrl}`);
-    return data.avatarUrl;
-  } catch (error) {
-    console.error(`[AuthAPI] Avatar upload exception:`, error);
-    throw error;
+  const response = await authorizedFetch(
+    "/avatars/me",
+    { method: "POST", body: formData, headers: { Accept: "application/json" } },
+    { useAuth: true, timeoutMs: AVATAR_UPLOAD_TIMEOUT_MS },
+  );
+  if (!response.ok) {
+    throw await toApiError(response);
   }
+
+  const data = (await response.json()) as { avatarUrl: string };
+  return data.avatarUrl;
 }

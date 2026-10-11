@@ -2,6 +2,7 @@ import { Platform, TurboModuleRegistry } from "react-native";
 import type { DeviceProvider } from "@workspace/api-client";
 
 import type { DeviceHealthSource } from "../types";
+import { logger } from "../../../lib/logger";
 
 let cached: DeviceHealthSource | null | undefined;
 
@@ -21,8 +22,12 @@ function hasNativeHealthModule(): boolean {
     if (Platform.OS === "ios") {
       if (TurboModuleRegistry.get("NitroModules") == null) return false;
       // Nitro is linked, so loading it is safe; HealthKit registers its hybrid objects there.
-      const { NitroModules } = require("react-native-nitro-modules") as typeof import("react-native-nitro-modules");
-      return NitroModules.hasHybridObject("CoreModule") && NitroModules.hasHybridObject("WorkoutsModule");
+      const { NitroModules } =
+        require("react-native-nitro-modules") as typeof import("react-native-nitro-modules");
+      return (
+        NitroModules.hasHybridObject("CoreModule") &&
+        NitroModules.hasHybridObject("WorkoutsModule")
+      );
     }
   } catch {
     return false;
@@ -35,16 +40,22 @@ export function getHealthSource(): DeviceHealthSource | null {
   if (cached !== undefined) return cached;
   if (!hasNativeHealthModule()) {
     if (__DEV__) {
-      console.warn("[HealthSync] Native health module is not in this build; rebuild the app (expo run:ios / run:android).");
+      logger.warn(
+        "[HealthSync] Native health module is not in this build; rebuild the app (expo run:ios / run:android).",
+      );
     }
     cached = null;
     return cached;
   }
   try {
     if (Platform.OS === "ios") {
-      cached = (require("./apple-health-source") as typeof import("./apple-health-source")).appleHealthSource;
+      cached = (
+        require("./apple-health-source") as typeof import("./apple-health-source")
+      ).appleHealthSource;
     } else if (Platform.OS === "android") {
-      cached = (require("./health-connect-source") as typeof import("./health-connect-source")).healthConnectSource;
+      cached = (
+        require("./health-connect-source") as typeof import("./health-connect-source")
+      ).healthConnectSource;
     } else {
       cached = null;
     }

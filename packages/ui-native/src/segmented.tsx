@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -40,7 +46,7 @@ export function Segmented<T>({
 
   const activeIndex = Math.max(
     0,
-    segments.findIndex((s) => s.value === value)
+    segments.findIndex((s) => s.value === value),
   );
 
   const activeX = useSharedValue(activeIndex);
@@ -54,9 +60,8 @@ export function Segmented<T>({
   }, [activeIndex, activeX]);
 
   const triggerHaptic = useCallback(() => {
-    try {
-      Haptics.selectionAsync();
-    } catch {}
+    // Haptics are optional (simulator, disabled in settings); a failure must not surface.
+    void Haptics.selectionAsync().catch(() => undefined);
   }, []);
 
   const handleLayout = (e: LayoutChangeEvent) => {
@@ -75,7 +80,7 @@ export function Segmented<T>({
           translateX: interpolate(
             activeX.value,
             [0, Math.max(1, segments.length - 1)],
-            [4, 4 + (segments.length - 1) * indicatorWidth]
+            [4, 4 + (segments.length - 1) * indicatorWidth],
           ),
         },
       ],

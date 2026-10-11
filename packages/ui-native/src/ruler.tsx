@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   type LayoutChangeEvent,
   Pressable,
@@ -88,13 +95,17 @@ function FadeSlot({
   }, [char, progress]);
 
   const fadeInStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
-  const fadeOutStyle = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
+  const fadeOutStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+  }));
 
   return (
     <View>
       <Animated.Text style={[style, fadeInStyle]}>{char}</Animated.Text>
       {previous !== null ? (
-        <Animated.Text style={[style, styles.fadeOutGlyph, fadeOutStyle]}>{previous}</Animated.Text>
+        <Animated.Text style={[style, styles.fadeOutGlyph, fadeOutStyle]}>
+          {previous}
+        </Animated.Text>
       ) : null}
     </View>
   );
@@ -115,7 +126,11 @@ function RollingNumber({
   return (
     <View style={styles.rollingRow}>
       {chars.map((char, index) => (
-        <FadeSlot key={`slot-${chars.length - index}`} char={char} style={style} />
+        <FadeSlot
+          key={`slot-${chars.length - index}`}
+          char={char}
+          style={style}
+        />
       ))}
     </View>
   );
@@ -181,9 +196,8 @@ export function Ruler({
   const lastIndex = useSharedValue(indexOf(value));
 
   const triggerHaptic = useCallback(() => {
-    try {
-      Haptics.selectionAsync();
-    } catch {}
+    // Haptics are optional (simulator, disabled in settings); a failure must not surface.
+    void Haptics.selectionAsync().catch(() => undefined);
   }, []);
 
   const handleIndexCross = useCallback(
@@ -213,9 +227,11 @@ export function Ruler({
 
   // Live index while dragging / flinging → display value + haptics.
   useAnimatedReaction(
-    () => Math.max(0, Math.min(tickCount, Math.round(offset.value / tickSpacing))),
+    () =>
+      Math.max(0, Math.min(tickCount, Math.round(offset.value / tickSpacing))),
     (index, previous) => {
-      if (previous === null || index === previous || index === lastIndex.value) return;
+      if (previous === null || index === previous || index === lastIndex.value)
+        return;
       lastIndex.value = index;
       runOnJS(handleIndexCross)(index);
     },
@@ -245,12 +261,18 @@ export function Ruler({
       "worklet";
       const next = offset.value - event.changeX;
       // Rubber-band past the ends.
-      offset.value = next < 0 || next > maxOffset ? offset.value - event.changeX * 0.3 : next;
+      offset.value =
+        next < 0 || next > maxOffset
+          ? offset.value - event.changeX * 0.3
+          : next;
     })
     .onEnd((event) => {
       "worklet";
       const projected = offset.value - event.velocityX * momentum;
-      const index = Math.max(0, Math.min(tickCount, Math.round(projected / tickSpacing)));
+      const index = Math.max(
+        0,
+        Math.min(tickCount, Math.round(projected / tickSpacing)),
+      );
       offset.value = withSpring(
         index * tickSpacing,
         { ...SNAP_SPRING, velocity: -event.velocityX },
@@ -280,7 +302,13 @@ export function Ruler({
     const half = Math.ceil(width / 2 / tickSpacing);
     const from = Math.max(0, centerIndex - half - TICK_BUFFER);
     const to = Math.min(tickCount, centerIndex + half + TICK_BUFFER);
-    const list: { index: number; value: number; isMajor: boolean; hasLabel: boolean; opacity: number }[] = [];
+    const list: {
+      index: number;
+      value: number;
+      isMajor: boolean;
+      hasLabel: boolean;
+      opacity: number;
+    }[] = [];
     for (let index = from; index <= to; index += 1) {
       const tickValue = valueAt(index);
       const distance = Math.abs(index - centerIndex) * tickSpacing;
@@ -316,7 +344,9 @@ export function Ruler({
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ text: `${format(value)}${unit ? ` ${unit}` : ""}` }}
       accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
-      onAccessibilityAction={(event) => bump(event.nativeEvent.actionName === "increment" ? 1 : -1)}
+      onAccessibilityAction={(event) =>
+        bump(event.nativeEvent.actionName === "increment" ? 1 : -1)
+      }
       style={[styles.container, disabled && styles.disabled]}
     >
       <View style={styles.valueRow}>
@@ -325,20 +355,34 @@ export function Ruler({
           hitSlop={10}
           disabled={disabled || displayIndex <= 0}
           onPress={() => bump(-1)}
-          style={({ pressed }) => [styles.sideButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.sideButton,
+            pressed && styles.pressed,
+          ]}
         >
-          <Minus color={displayIndex <= 0 ? muted : foreground} size={26} strokeWidth={2} />
+          <Minus
+            color={displayIndex <= 0 ? muted : foreground}
+            size={26}
+            strokeWidth={2}
+          />
         </Pressable>
 
         <View style={styles.valueGroup}>
           {/* Unit floats above the number (absolute) so the number itself is
               centred both horizontally and vertically against − / +. */}
           {unit ? (
-            <Text style={[styles.unitText, { color: muted, fontFamily: labelFont }]}>{unit}</Text>
+            <Text
+              style={[styles.unitText, { color: muted, fontFamily: labelFont }]}
+            >
+              {unit}
+            </Text>
           ) : null}
           <RollingNumber
             text={format(displayValue)}
-            style={[styles.valueText, { color: foreground, fontFamily: textFont }]}
+            style={[
+              styles.valueText,
+              { color: foreground, fontFamily: textFont },
+            ]}
           />
         </View>
 
@@ -347,9 +391,16 @@ export function Ruler({
           hitSlop={10}
           disabled={disabled || displayIndex >= tickCount}
           onPress={() => bump(1)}
-          style={({ pressed }) => [styles.sideButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.sideButton,
+            pressed && styles.pressed,
+          ]}
         >
-          <Plus color={displayIndex >= tickCount ? muted : foreground} size={26} strokeWidth={2} />
+          <Plus
+            color={displayIndex >= tickCount ? muted : foreground}
+            size={26}
+            strokeWidth={2}
+          />
         </Pressable>
       </View>
 
@@ -362,7 +413,8 @@ export function Ruler({
                   style={[
                     styles.tick,
                     {
-                      left: tick.index * tickSpacing - (tick.isMajor ? 0.75 : 0.5),
+                      left:
+                        tick.index * tickSpacing - (tick.isMajor ? 0.75 : 0.5),
                       width: tick.isMajor ? 1.5 : 1,
                       height: tick.isMajor ? MAJOR_TICK : MINOR_TICK,
                       backgroundColor: foreground,
@@ -382,7 +434,9 @@ export function Ruler({
                       },
                     ]}
                   >
-                    {formatLabel ? formatLabel(tick.value) : defaultFormat(tick.value, step)}
+                    {formatLabel
+                      ? formatLabel(tick.value)
+                      : defaultFormat(tick.value, step)}
                   </Text>
                 ) : null}
               </React.Fragment>
@@ -391,7 +445,10 @@ export function Ruler({
 
           <View
             pointerEvents="none"
-            style={[styles.indicator, { left: width / 2 - 1, backgroundColor: foreground }]}
+            style={[
+              styles.indicator,
+              { left: width / 2 - 1, backgroundColor: foreground },
+            ]}
           />
         </View>
       </GestureDetector>

@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 /**
  * Helper utilities for parsing JWT tokens and inspecting claims (e.g. expiration)
  * without external binary dependencies.
@@ -62,7 +64,7 @@ export function parseJwtPayload(token: string): JwtPayload | null {
     const decodedStr = base64UrlDecode(parts[1]);
     return JSON.parse(decodedStr) as JwtPayload;
   } catch (error) {
-    console.warn("[jwt-utils] Failed to parse JWT payload:", error);
+    logger.warn("[jwt-utils] Failed to parse JWT payload:", error);
     return null;
   }
 }

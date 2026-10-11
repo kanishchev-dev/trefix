@@ -9,8 +9,7 @@ import {
   type SendCoachMessageInput,
 } from "@workspace/api-client";
 import { request } from "./api-client";
-import { BACKEND_BASE_URL } from "./backend-url";
-import { fetchSseStream } from "./stream-utils";
+import { postSseStream } from "./stream-utils";
 
 export async function createCoachSession(
   input: CreateCoachSessionInput,
@@ -33,6 +32,7 @@ export async function getCoachSession(
 }
 
 import { ApiClientError } from "@workspace/api-client";
+import { logger } from "./logger";
 
 export async function getLatestCoachSession(): Promise<CoachSessionDetail | null> {
   try {
@@ -44,7 +44,7 @@ export async function getLatestCoachSession(): Promise<CoachSessionDetail | null
     if (error instanceof ApiClientError && error.status === 404) {
       return null;
     }
-    console.error("[CoachAPI] Error getting latest coach session:", error);
+    logger.error("[CoachAPI] Error getting latest coach session:", error);
     return null;
   }
 }
@@ -53,25 +53,28 @@ export async function sendCoachMessage(
   sessionId: string,
   input: SendCoachMessageInput,
 ): Promise<CoachChatResponse> {
-  const response = await request<unknown>(`/coach/sessions/${sessionId}/messages`, {
-    method: "POST",
-    body: input,
-    useAuth: true,
-  });
+  const response = await request<unknown>(
+    `/coach/sessions/${sessionId}/messages`,
+    {
+      method: "POST",
+      body: input,
+      useAuth: true,
+    },
+  );
   return coachChatResponseSchema.parse(response);
 }
 
+/** Streams the coach reply; the message goes in the request body, never in the URL. */
 export async function streamCoachMessage(
   sessionId: string,
   message: string,
   abortSignal?: AbortSignal,
 ) {
-
-  const url = `${BACKEND_BASE_URL}/coach/sessions/${sessionId}/stream?message=${encodeURIComponent(
-    message,
-  )}`;
-
-  return fetchSseStream(url, abortSignal);
+  return postSseStream(
+    `/coach/sessions/${sessionId}/stream`,
+    { message },
+    abortSignal,
+  );
 }
 
 /** Clears the chat history with the coach; plans and workouts stay. */

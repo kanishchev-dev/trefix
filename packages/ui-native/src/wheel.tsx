@@ -46,14 +46,14 @@ function WheelItem({
       distance,
       [0, itemHeight, maxDistance],
       [1, 0.45, 0.2],
-      "clamp"
+      "clamp",
     );
 
     const scale = interpolate(
       distance,
       [0, itemHeight, maxDistance],
       [1, 0.9, 0.82],
-      "clamp"
+      "clamp",
     );
 
     return {
@@ -66,11 +66,7 @@ function WheelItem({
 
   return (
     <Animated.View
-      style={[
-        styles.itemContainer,
-        { height: itemHeight },
-        animatedStyle,
-      ]}
+      style={[styles.itemContainer, { height: itemHeight }, animatedStyle]}
     >
       <Text
         style={[
@@ -110,7 +106,11 @@ export function Wheel({
 
   const items = useMemo(() => {
     const list: number[] = [];
-    for (let v = effectiveMin; v <= effectiveMax; v = Number((v + effectiveStep).toFixed(4))) {
+    for (
+      let v = effectiveMin;
+      v <= effectiveMax;
+      v = Number((v + effectiveStep).toFixed(4))
+    ) {
       list.push(v);
     }
     if (list.length === 0) list.push(effectiveMin);
@@ -133,9 +133,8 @@ export function Wheel({
   const translateY = useSharedValue(-currentIndex * itemHeight);
 
   const triggerHaptic = useCallback(() => {
-    try {
-      Haptics.selectionAsync();
-    } catch {}
+    // Haptics are optional (simulator, disabled in settings); a failure must not surface.
+    void Haptics.selectionAsync().catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -151,7 +150,7 @@ export function Wheel({
         onChange(val);
       }
     },
-    [items, onChange, triggerHaptic]
+    [items, onChange, triggerHaptic],
   );
 
   const itemsLength = items.length;
@@ -213,7 +212,9 @@ export function Wheel({
 
       <GestureDetector gesture={panGesture}>
         <View style={[styles.gestureArea, { height: containerHeight }]}>
-          <Animated.View style={[styles.wheelList, { top: topOffset }, animatedStyle]}>
+          <Animated.View
+            style={[styles.wheelList, { top: topOffset }, animatedStyle]}
+          >
             {items.map((item: number, index: number) => (
               <WheelItem
                 key={index}

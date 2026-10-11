@@ -39,9 +39,7 @@ import {
   updateProfile as updateProfileRequest,
   verifyEmail,
 } from "@/lib/api";
-import {
-  getFriendlyAuthMessage,
-} from "@/lib/errors";
+import { getFriendlyAuthMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useI18n } from "@/shared/i18n";
 import { useAppSettings } from "@/shared/state/app-settings-provider";
@@ -158,7 +156,7 @@ export function AuthProvider({
             setUser(null);
             // A backend that does not answer is not a verdict on the session:
             // "unauthenticated" here sent the dashboard to /login, the
-            // middleware saw a valid cookie and sent it back — forever.
+            // proxy saw a valid cookie and sent it back — forever.
             setStatus(transient ? "error" : "unauthenticated");
             setError(
               isApiClientError(bootstrapError)
@@ -203,10 +201,7 @@ export function AuthProvider({
           setStatus("authenticated");
           setError(null);
           syncFromBackend();
-          notifySuccess(
-            t("auth.signInSuccess"),
-            tokens.user.email,
-          );
+          notifySuccess(t("auth.signInSuccess"), tokens.user.email);
           router.replace("/dashboard");
           router.refresh();
           return tokens.user;
@@ -282,11 +277,10 @@ export function AuthProvider({
        * already persisted it, so only the cached user has to be updated.
        */
       setAvatarUrl(avatarUrl) {
-        setUser((current) =>
-          current ? { ...current, avatarUrl } : current,
-        );
+        setUser((current) => (current ? { ...current, avatarUrl } : current));
       },
-      async refreshAuth() {        try {
+      async refreshAuth() {
+        try {
           await refreshSession();
           const currentUser = await getCurrentUser();
           setUser(currentUser);

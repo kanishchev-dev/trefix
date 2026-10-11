@@ -9,19 +9,36 @@ import {
   HeaderPlusButton,
   HeaderBellButton,
 } from "../components/header";
-import { HeaderContext, useHeaderOptions } from "../context/header-context";
+import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import { type MainCopy, getAppLanguage } from "../../../locales";
 import { TodayCalendarHeader } from "../components/today/today-calendar-header";
-import { TodayTimeline, type TodayTimelineRef } from "../components/today/today-timeline";
-import { AddWorkoutSection } from "../components/today/add-workout-section";
+import {
+  TodayTimeline,
+  type TodayTimelineRef,
+} from "../components/today/today-timeline";
 import { AddWorkoutSheet } from "../components/today/add-workout-sheet";
 import { WorkoutDetailSheet } from "../components/today/workout-detail-sheet";
-import { WorkoutGoalSheet, type ManualWorkoutType } from "../components/today/workout-goal-sheet";
+import {
+  WorkoutGoalSheet,
+  type ManualWorkoutType,
+} from "../components/today/workout-goal-sheet";
 import { useWorkouts } from "../hooks/use-workouts";
-import { type Day, type DayEvent, type CalendarMode } from "../today-types";
+import {
+  type DayEvent,
+  type DayEventStatus,
+  type CalendarMode,
+} from "../today-types";
+import { workoutTargetText } from "../../../shared/lib/workout-target";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 import { toIsoDate, workoutLocalDate } from "../../plans/lib/plan-dates";
+
+/** Backend status → card status; a skipped workout is shown as missed. */
+function toDayEventStatus(status: string): DayEventStatus {
+  if (status === "completed") return "completed";
+  if (status === "skipped") return "missed";
+  return "planned";
+}
 
 type Props = {
   theme: ThemeTokens;
@@ -42,8 +59,10 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   // Sheet states
   const [addSheetVisible, setAddSheetVisible] = useState(false);
   const [goalSheetVisible, setGoalSheetVisible] = useState(false);
-  const [selectedWorkoutType, setSelectedWorkoutType] = useState<ManualWorkoutType>("easy");
-  const [selectedWorkout, setSelectedWorkout] = useState<TrainingWorkout | null>(null);
+  const [selectedWorkoutType, setSelectedWorkoutType] =
+    useState<ManualWorkoutType>("easy");
+  const [selectedWorkout, setSelectedWorkout] =
+    useState<TrainingWorkout | null>(null);
   const [detailSheetVisible, setDetailSheetVisible] = useState(false);
 
   // Compute 60-day query range around selectedDate
@@ -76,13 +95,13 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       existing.push({
         id: workout.id,
         type: isRecovery ? "recovery" : "workout",
-        status: workout.status as any,
+        status: toDayEventStatus(workout.status),
         title:
-          ((workout.target as any)?.title as string) ||
+          workoutTargetText(workout.target, "title") ||
           `${workout.type.toUpperCase()} Run`,
         duration: `${Math.round(workout.durationMinutes)} min`,
         distance: format.distance(workout.distanceKm),
-        description: ((workout.target as any)?.description as string) || "",
+        description: workoutTargetText(workout.target, "description") || "",
       });
 
       map.set(dateStr, existing);
@@ -165,7 +184,17 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
         />
       ),
     },
-    [theme, themeMode, language, selectedDate, handleSelectDate, calendarMode, setCalendarMode, eventDates, logoSource],
+    [
+      theme,
+      themeMode,
+      language,
+      selectedDate,
+      handleSelectDate,
+      calendarMode,
+      setCalendarMode,
+      eventDates,
+      logoSource,
+    ],
   );
 
   return (

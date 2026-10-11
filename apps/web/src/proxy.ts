@@ -7,10 +7,9 @@ import {
 } from "@/lib/server/backend-availability";
 import { runSingleFlightRefresh } from "@/lib/server/refresh-single-flight";
 
-// Node.js runtime so this module shares its single-flight map with the route
-// handlers below. On the edge runtime each request would get its own isolate
-// with its own map, and the guard would protect nothing.
-export const runtime = "nodejs";
+// Proxy always runs on the Node.js runtime (Next 16), so this module shares its
+// single-flight refresh map with the route handlers; on the edge runtime each
+// request would get its own isolate and the guard would protect nothing.
 
 const BACKEND_BASE_URL =
   process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:3000/v1";
@@ -81,7 +80,7 @@ async function refreshSession(request: NextRequest): Promise<{
 
   // Single-flight for the same reason as the API proxies. This is the third
   // place that spends the refresh token, and the one most likely to collide
-  // with them: the middleware refreshes while the page it is guarding fires its
+  // with them: the proxy refreshes while the page it is guarding fires its
   // first authenticated requests, and both present the same token. The backend
   // rotates it on every use and deletes the session on the second presentation.
   let tokens: Awaited<ReturnType<typeof runSingleFlightRefresh>>;
@@ -227,7 +226,7 @@ async function ensureActiveSession(
   return { allowed: false, response };
 }
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const result = await ensureActiveSession(request);
   return result.response ?? NextResponse.next();
 }

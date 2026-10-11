@@ -1,13 +1,20 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ChevronRight, RefreshCw } from "lucide-react-native";
+import { ChevronRight } from "lucide-react-native";
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
-import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
-import { useHealthAvailability, useHealthProvider } from "../../health-sync/hooks";
+import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
+import {
+  useHealthAvailability,
+  useHealthProvider,
+} from "../../health-sync/hooks";
 import { healthStoreName } from "../../health-sync/health-integration-screen";
 import { getHealthSource } from "../../health-sync/sources";
 import { HealthLogo } from "../../health-sync/components/health-logo";
@@ -95,14 +102,15 @@ export function IntegrationsScreen({
   theme,
   themeMode,
   copy,
-  userLanguage,
   onBack,
   onOpenStrava,
   onOpenHealth,
 }: Props) {
   const { data: integrationsData, isLoading } = useIntegrations();
   const healthProvider = useHealthProvider();
-  const healthItem = integrationsData?.items.find((i) => i.provider === healthProvider);
+  const healthItem = integrationsData?.items.find(
+    (i) => i.provider === healthProvider,
+  );
   // `available` is false while the backend keeps the feature off.
   const healthAvailable = !!healthProvider && healthItem?.available !== false;
   const { data: healthAvailability } = useHealthAvailability();
@@ -112,13 +120,18 @@ export function IntegrationsScreen({
     if (isLoading) return "...";
     if (!getHealthSource()) return h.status.unsupported;
     if (healthAvailability === "not_installed") return h.status.notInstalled;
-    if (healthAvailability === "update_required") return h.status.updateRequired;
+    if (healthAvailability === "update_required")
+      return h.status.updateRequired;
     if (healthAvailability === "unsupported") return h.status.unsupported;
-    if (!healthItem || healthItem.status === "disconnected") return h.status.disconnected;
+    if (!healthItem || healthItem.status === "disconnected")
+      return h.status.disconnected;
     if (healthItem.status === "error") return h.status.error;
-    if ((healthItem.pendingBatches ?? 0) > 0 || healthItem.status === "syncing") return h.status.syncing;
+    if ((healthItem.pendingBatches ?? 0) > 0 || healthItem.status === "syncing")
+      return h.status.syncing;
     if (healthItem.lastSyncedAt) {
-      return fillTemplate(h.status.syncedAgo, { ago: formatAgo(healthItem.lastSyncedAt, copy) });
+      return fillTemplate(h.status.syncedAgo, {
+        ago: formatAgo(healthItem.lastSyncedAt, copy),
+      });
     }
     return h.status.connected;
   };
@@ -193,19 +206,40 @@ export function IntegrationsScreen({
               <IntegrationRow
                 theme={theme}
                 title={healthStoreName(copy)}
-                subtitle={healthAvailable ? healthSubtitle() : copy.profile.integrations.comingSoon}
-                icon={<HealthLogo provider={healthProvider} themeMode={themeMode} size={32} />}
+                subtitle={
+                  healthAvailable
+                    ? healthSubtitle()
+                    : copy.profile.integrations.comingSoon
+                }
+                icon={
+                  <HealthLogo
+                    provider={healthProvider}
+                    themeMode={themeMode}
+                    size={32}
+                  />
+                }
                 onPress={healthAvailable ? onOpenHealth : undefined}
                 disabled={!healthAvailable}
               />
-              <View style={[styles.separator, { backgroundColor: theme.color.border }]} />
+              <View
+                style={[
+                  styles.separator,
+                  { backgroundColor: theme.color.border },
+                ]}
+              />
             </>
           ) : null}
           <IntegrationRow
             theme={theme}
             title="Strava"
             subtitle={getStravaSubtitle()}
-            icon={<IntegrationLogo provider="strava" themeMode={themeMode} size={32} />}
+            icon={
+              <IntegrationLogo
+                provider="strava"
+                themeMode={themeMode}
+                size={32}
+              />
+            }
             onPress={onOpenStrava}
           />
           <View
@@ -215,7 +249,13 @@ export function IntegrationsScreen({
             theme={theme}
             title="Garmin Connect"
             subtitle={copy.profile.integrations.comingSoon}
-            icon={<IntegrationLogo provider="garmin" themeMode={themeMode} size={32} />}
+            icon={
+              <IntegrationLogo
+                provider="garmin"
+                themeMode={themeMode}
+                size={32}
+              />
+            }
             disabled
           />
         </View>

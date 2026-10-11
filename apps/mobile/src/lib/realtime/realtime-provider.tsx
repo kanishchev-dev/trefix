@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { logger } from "../logger";
 import { RealtimeClient } from "./realtime-client";
 import {
   type RealtimeConnectionStatus,
@@ -45,7 +46,8 @@ export function RealtimeProvider({
   }
 
   const client = clientRef.current;
-  const [status, setStatus] = useState<RealtimeConnectionStatus>("disconnected");
+  const [status, setStatus] =
+    useState<RealtimeConnectionStatus>("disconnected");
 
   const onAuthErrorRef = useRef(onAuthError);
   onAuthErrorRef.current = onAuthError;
@@ -53,14 +55,15 @@ export function RealtimeProvider({
   useEffect(() => {
     const unsubStatus = client.onStatusChange(setStatus);
     const unsubAuthError = client.onAuthError(async (error) => {
-      console.log("[RealtimeProvider] WS Auth error received. Attempting silent token refresh...");
       const { refreshAuthTokens } = await import("../auth-api");
-      const newTokens = await refreshAuthTokens();
-      if (!newTokens) {
-        console.warn("[RealtimeProvider] WS Silent refresh failed. Triggering logout...");
-        if (onAuthErrorRef.current) {
-          onAuthErrorRef.current(error);
+      try {
+        const newTokens = await refreshAuthTokens();
+        if (!newTokens) {
+          onAuthErrorRef.current?.(error);
         }
+      } catch (refreshError) {
+        // Offline or backend down: the socket reconnects with the next token.
+        logger.warn("[RealtimeProvider] Token refresh failed", refreshError);
       }
     });
 

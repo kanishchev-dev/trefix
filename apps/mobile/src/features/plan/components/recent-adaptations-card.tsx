@@ -18,7 +18,6 @@ type Props = {
 export function RecentAdaptationsCard({
   adaptations,
   theme,
-  themeMode,
   copy,
   onSelectAdaptation,
 }: Props) {
@@ -66,12 +65,18 @@ export function RecentAdaptationsCard({
 
   // Format created at (e.g., 2 days ago or raw text)
   const formatTimeAgo = (createdAt: string) => {
-    if (createdAt.includes(" ago") || createdAt.includes("назад") || createdAt.includes("d ago")) {
+    if (
+      createdAt.includes(" ago") ||
+      createdAt.includes("назад") ||
+      createdAt.includes("d ago")
+    ) {
       return createdAt;
     }
     const createdDate = new Date(createdAt);
     const now = new Date();
-    const diffHours = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60));
+    const diffHours = Math.floor(
+      (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60),
+    );
     if (diffHours < 24) {
       return diffHours <= 1
         ? planCopy.adaptations.justNow

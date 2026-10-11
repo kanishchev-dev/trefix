@@ -61,7 +61,10 @@ const STACK_FADE_OUT = { duration: 140 };
 
 type StackLayerRole = "top" | "behind" | "parked";
 
-function getStackLayerRole(layerIndex: number, layerCount: number): StackLayerRole {
+function getStackLayerRole(
+  layerIndex: number,
+  layerCount: number,
+): StackLayerRole {
   if (layerIndex >= layerCount) {
     return "parked";
   }
@@ -93,7 +96,9 @@ const SheetStackContext = React.createContext<SheetStackApi | null>(null);
 export function useSheetStack(): SheetStackApi {
   const api = React.useContext(SheetStackContext);
   if (!api) {
-    throw new Error("useSheetStack must be used within a stack-mode BottomSheet");
+    throw new Error(
+      "useSheetStack must be used within a stack-mode BottomSheet",
+    );
   }
   return api;
 }
@@ -281,7 +286,15 @@ export function BottomSheet({
         runOnJS(finishSingleClose)();
       });
     }
-  }, [animatedHide, backdropOpacity, finishSingleClose, hideMounted, isStack, translateY, visible]);
+  }, [
+    animatedHide,
+    backdropOpacity,
+    finishSingleClose,
+    hideMounted,
+    isStack,
+    translateY,
+    visible,
+  ]);
 
   const finishStackExit = useCallback(() => {
     if (exitTimerRef.current) {
@@ -311,7 +324,10 @@ export function BottomSheet({
     if (exitTimerRef.current) {
       clearTimeout(exitTimerRef.current);
     }
-    exitTimerRef.current = setTimeout(finishStackExit, STACK_EXIT_TIMING.duration + 60);
+    exitTimerRef.current = setTimeout(
+      finishStackExit,
+      STACK_EXIT_TIMING.duration + 60,
+    );
   }, [backdropOpacity, finishStackExit]);
 
   useEffect(() => {
@@ -375,7 +391,10 @@ export function BottomSheet({
       }
     }
 
-    popTimerRef.current = setTimeout(finishPop, STACK_EXIT_TIMING.duration + 40);
+    popTimerRef.current = setTimeout(
+      finishPop,
+      STACK_EXIT_TIMING.duration + 40,
+    );
   }, [finishPop]);
 
   // Swipe-down on the first (single) layer closes the whole stack with the
@@ -430,24 +449,35 @@ export function BottomSheet({
 
   if (!isStack) {
     return (
-      <Modal animationType="none" onRequestClose={handleSingleClose} transparent visible={animatedHide ? hideMounted : visible}>
+      <Modal
+        animationType="none"
+        onRequestClose={handleSingleClose}
+        transparent
+        visible={animatedHide ? hideMounted : visible}
+      >
         <View style={styles.overlay}>
-          <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+          <Animated.View
+            style={[styles.backdropContainer, backdropAnimatedStyle]}
+          >
             <BlurView
               intensity={25}
               tint={themeMode === "dark" ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
             />
-            <Pressable style={StyleSheet.absoluteFill} onPress={handleSingleClose} />
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={handleSingleClose}
+            />
           </Animated.View>
 
-          <Animated.View style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}>
+          <Animated.View
+            style={[styles.container, { marginBottom: 8 }, cardAnimatedStyle]}
+          >
             <View
               style={[
                 styles.card,
                 {
-                  borderColor:
-                    theme.color.controlBorder,
+                  borderColor: theme.color.controlBorder,
                   backgroundColor: theme.color.sheet,
                 },
               ]}
@@ -455,7 +485,12 @@ export function BottomSheet({
               <GestureDetector gesture={handleSingleGesture}>
                 <View style={[styles.topDragArea, styles.paddedContent]}>
                   <View style={styles.handleContainer}>
-                    <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+                    <View
+                      style={[
+                        styles.handle,
+                        { backgroundColor: theme.color.border },
+                      ]}
+                    />
                   </View>
 
                   {renderHeader ? (
@@ -528,13 +563,18 @@ export function BottomSheet({
       visible={stackMounted}
     >
       <View style={styles.overlay}>
-        <Animated.View style={[styles.backdropContainer, backdropAnimatedStyle]}>
+        <Animated.View
+          style={[styles.backdropContainer, backdropAnimatedStyle]}
+        >
           <BlurView
             intensity={25}
             tint={themeMode === "dark" ? "dark" : "light"}
             style={StyleSheet.absoluteFill}
           />
-          <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropTap} />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={handleBackdropTap}
+          />
         </Animated.View>
 
         <SheetStackContext.Provider value={stackApi}>
@@ -585,7 +625,6 @@ function StackLayer({
   sheetVisible,
   isTransitioning,
   theme,
-  themeMode,
   onDragEnd,
   children,
 }: {
@@ -617,7 +656,9 @@ function StackLayer({
       return;
     }
 
-    const spring = hasEnteredRef.current ? STACK_SPRING_CONFIG : SHEET_SPRING_CONFIG;
+    const spring = hasEnteredRef.current
+      ? STACK_SPRING_CONFIG
+      : SHEET_SPRING_CONFIG;
     hasEnteredRef.current = true;
 
     layerY.value = withSpring(getStackLayerTargetY(role), spring);
@@ -635,7 +676,10 @@ function StackLayer({
     .onEnd((event) => {
       const shouldClose = event.translationY > 100 || event.velocityY > 500;
       if (!shouldClose) {
-        layerY.value = withSpring(getStackLayerTargetY(role), STACK_SPRING_CONFIG);
+        layerY.value = withSpring(
+          getStackLayerTargetY(role),
+          STACK_SPRING_CONFIG,
+        );
         return;
       }
       runOnJS(onDragEnd)(true);
@@ -661,8 +705,7 @@ function StackLayer({
             styles.card,
             styles.stackCard,
             {
-              borderColor:
-                theme.color.controlBorder,
+              borderColor: theme.color.controlBorder,
               backgroundColor: theme.color.sheet,
             },
           ]}
@@ -670,9 +713,13 @@ function StackLayer({
           <GestureDetector gesture={panGesture}>
             <View style={[styles.topDragArea, styles.paddedContent]}>
               <View style={styles.handleContainer}>
-                <View style={[styles.handle, { backgroundColor: theme.color.border }]} />
+                <View
+                  style={[
+                    styles.handle,
+                    { backgroundColor: theme.color.border },
+                  ]}
+                />
               </View>
-
 
               {title !== undefined ? (
                 <View style={styles.header}>
@@ -692,25 +739,25 @@ function StackLayer({
             </View>
           </GestureDetector>
 
-              <View style={styles.sheetContent}>
-                {children}
-                <LinearGradient
-                  colors={[
-                    withAlpha(theme.color.sheet, 0.95),
-                    withAlpha(theme.color.sheet, 0),
-                  ]}
-                  style={styles.topFade}
-                  pointerEvents="none"
-                />
-                <LinearGradient
-                  colors={[
-                    withAlpha(theme.color.sheet, 0),
-                    withAlpha(theme.color.sheet, 0.95),
-                  ]}
-                  style={styles.bottomFade}
-                  pointerEvents="none"
-                />
-              </View>
+          <View style={styles.sheetContent}>
+            {children}
+            <LinearGradient
+              colors={[
+                withAlpha(theme.color.sheet, 0.95),
+                withAlpha(theme.color.sheet, 0),
+              ]}
+              style={styles.topFade}
+              pointerEvents="none"
+            />
+            <LinearGradient
+              colors={[
+                withAlpha(theme.color.sheet, 0),
+                withAlpha(theme.color.sheet, 0.95),
+              ]}
+              style={styles.bottomFade}
+              pointerEvents="none"
+            />
+          </View>
         </View>
       </View>
     </Animated.View>
@@ -724,7 +771,6 @@ export function SheetButton({
   disabled = false,
   pending = false,
   theme,
-  themeMode,
   trailing,
   style,
 }: {
@@ -739,7 +785,6 @@ export function SheetButton({
   trailing?: ReactNode;
   style?: object;
 }) {
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -788,7 +833,13 @@ export function SheetButton({
   );
 }
 
-export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeTokens }) {
+export function SheetSectionLabel({
+  text,
+  theme,
+}: {
+  text: string;
+  theme: ThemeTokens;
+}) {
   return (
     <Text
       style={[
@@ -814,7 +865,6 @@ export function SheetSectionLabel({ text, theme }: { text: string; theme: ThemeT
  * negative margins, so only the wrapper needs to know about padding.
  */
 export function SheetBlock({
-  theme,
   edgeToEdge = false,
   disableLeftPadding = false,
   disableRightPadding = false,
@@ -860,7 +910,10 @@ export function SheetTabs<T extends string>({
   theme: ThemeTokens;
 }) {
   const [tabsWidth, setTabsWidth] = useState(0);
-  const activeIndex = Math.max(0, tabs.findIndex((t) => t.key === value));
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex((t) => t.key === value),
+  );
   const activeTabX = useSharedValue(activeIndex);
 
   useEffect(() => {
@@ -877,7 +930,11 @@ export function SheetTabs<T extends string>({
       width: tabWidth,
       transform: [
         {
-          translateX: interpolate(activeTabX.value, [0, tabs.length - 1], [4, 4 + tabWidth]),
+          translateX: interpolate(
+            activeTabX.value,
+            [0, tabs.length - 1],
+            [4, 4 + tabWidth],
+          ),
         },
       ],
     };
@@ -899,12 +956,18 @@ export function SheetTabs<T extends string>({
       {tabs.map((tab) => {
         const isActive = tab.key === value;
         return (
-          <Pressable key={tab.key} onPress={() => onChange(tab.key)} style={styles.tab}>
+          <Pressable
+            key={tab.key}
+            onPress={() => onChange(tab.key)}
+            style={styles.tab}
+          >
             <Text
               style={[
                 styles.tabText,
                 {
-                  color: isActive ? theme.color.primaryForeground : theme.color.mutedForeground,
+                  color: isActive
+                    ? theme.color.primaryForeground
+                    : theme.color.mutedForeground,
                   fontFamily: theme.typography.fontFamily.sans.bold,
                 },
               ]}

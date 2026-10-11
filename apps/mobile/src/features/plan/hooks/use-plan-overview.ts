@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlanOverview } from "../../../lib/training-api";
-import { type PlanOverview, ApiClientError } from "@workspace/api-client";
+import { ApiClientError } from "@workspace/api-client";
 
 export type PlanDisplayState =
   | "active"
@@ -12,14 +12,7 @@ export type PlanDisplayState =
   | "error";
 
 export function usePlanOverview() {
-  const {
-    data,
-    isLoading,
-    error,
-    isError,
-    refetch,
-    isRefetching
-  } = useQuery({
+  const { data, isLoading, error, isError, refetch, isRefetching } = useQuery({
     queryKey: ["plan", "overview", "current"],
     queryFn: () => getPlanOverview("current"),
     retry: (failureCount, err) => {

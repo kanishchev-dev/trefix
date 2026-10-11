@@ -10,7 +10,9 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
-    "shadcn": "pnpm dlx shadcn@latest"
+    "shadcn": "pnpm dlx shadcn@latest",
+    "test": "turbo run test",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "prettier": "3.6.2",

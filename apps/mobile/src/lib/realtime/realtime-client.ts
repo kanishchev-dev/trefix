@@ -9,6 +9,7 @@ import {
   type RealtimeEvent,
   type RealtimeEventHandler,
 } from "./types";
+import { logger } from "../logger";
 
 const DEFAULT_BACKEND_URL = "http://127.0.0.1:3000";
 
@@ -31,10 +32,13 @@ export class RealtimeClient {
   private status: RealtimeConnectionStatus = "disconnected";
   private token: string | null = null;
   private eventHandlers = new Map<string, Set<RealtimeEventHandler>>();
-  private statusListeners = new Set<(status: RealtimeConnectionStatus) => void>();
+  private statusListeners = new Set<
+    (status: RealtimeConnectionStatus) => void
+  >();
   private authErrorListeners = new Set<RealtimeAuthErrorListener>();
   private appStateSubscription: { remove: () => void } | null = null;
-  private backgroundDisconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private backgroundDisconnectTimer: ReturnType<typeof setTimeout> | null =
+    null;
 
   public getStatus(): RealtimeConnectionStatus {
     return this.status;
@@ -56,7 +60,7 @@ export class RealtimeClient {
     const origin = resolveSocketOrigin();
     const namespaceUrl = `${origin}/realtime`;
 
-    console.log(`[RealtimeClient] Connecting to WebSocket: ${namespaceUrl}`);
+    logger.debug(`[RealtimeClient] Connecting to WebSocket: ${namespaceUrl}`);
 
     this.socket = io(namespaceUrl, {
       auth: { token },
@@ -83,7 +87,7 @@ export class RealtimeClient {
     }
 
     if (this.socket) {
-      console.log("[RealtimeClient] Disconnecting socket...");
+      logger.debug("[RealtimeClient] Disconnecting socket...");
       this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
@@ -110,7 +114,10 @@ export class RealtimeClient {
     };
   }
 
-  public on<T = unknown>(event: string, handler: RealtimeEventHandler<T>): () => void {
+  public on<T = unknown>(
+    event: string,
+    handler: RealtimeEventHandler<T>,
+  ): () => void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -141,7 +148,9 @@ export class RealtimeClient {
   private setStatus(nextStatus: RealtimeConnectionStatus): void {
     if (this.status === nextStatus) return;
     this.status = nextStatus;
-    console.log(`[RealtimeClient] Connection status changed to: ${nextStatus}`);
+    logger.debug(
+      `[RealtimeClient] Connection status changed to: ${nextStatus}`,
+    );
     this.statusListeners.forEach((listener) => listener(nextStatus));
   }
 
@@ -149,29 +158,32 @@ export class RealtimeClient {
     if (!this.socket) return;
 
     this.socket.on("connect", () => {
-      console.log("[RealtimeClient] WebSocket connected successfully");
+      logger.debug("[RealtimeClient] WebSocket connected successfully");
       this.setStatus("connected");
     });
 
     this.socket.on("disconnect", (reason: string) => {
-      console.log(`[RealtimeClient] Socket disconnected. Reason: ${reason}`);
+      logger.debug(`[RealtimeClient] Socket disconnected. Reason: ${reason}`);
       this.setStatus("disconnected");
     });
 
     this.socket.on("connect_error", (error: Error) => {
-      console.warn("[RealtimeClient] Socket connect error:", error.message);
+      logger.warn("[RealtimeClient] Socket connect error:", error.message);
       this.setStatus("error");
     });
 
     this.socket.on("realtime.authenticated", (payload: unknown) => {
-      console.log("[RealtimeClient] Authenticated event received from server:", payload);
+      logger.debug(
+        "[RealtimeClient] Authenticated event received from server:",
+        payload,
+      );
       this.setStatus("connected");
     });
 
     this.socket.on("realtime.error", (errorPayload: RealtimeErrorPayload) => {
-      console.warn("[RealtimeClient] Realtime error from server:", errorPayload);
+      logger.warn("[RealtimeClient] Realtime error from server:", errorPayload);
       if (errorPayload?.code && AUTH_ERROR_CODES.has(errorPayload.code)) {
-        console.log(
+        logger.debug(
           `[RealtimeClient] Authentication error detected (${errorPayload.code}). Notifying auth listeners...`,
         );
         this.authErrorListeners.forEach((listener) => listener(errorPayload));
@@ -180,7 +192,10 @@ export class RealtimeClient {
 
     // Catch-all listener using socket.io onAny to dispatch all incoming events
     this.socket.onAny((eventName: string, payload: unknown) => {
-      if (eventName.startsWith("connect") || eventName.startsWith("disconnect")) {
+      if (
+        eventName.startsWith("connect") ||
+        eventName.startsWith("disconnect")
+      ) {
         return;
       }
 
@@ -206,7 +221,7 @@ export class RealtimeClient {
       meta = envelope.meta;
     }
 
-    console.log(`[RealtimeClient] Dispatching event "${resolvedEventName}"`);
+    logger.debug(`[RealtimeClient] Dispatching event "${resolvedEventName}"`);
 
     const handlers = this.eventHandlers.get(resolvedEventName);
     if (handlers && handlers.size > 0) {
@@ -214,7 +229,7 @@ export class RealtimeClient {
         try {
           handler(data, meta);
         } catch (error) {
-          console.error(
+          logger.error(
             `[RealtimeClient] Error in handler for event "${resolvedEventName}":`,
             error,
           );
@@ -233,7 +248,9 @@ export class RealtimeClient {
         // Delay disconnect slightly (15s) in case of brief app switches
         this.backgroundDisconnectTimer = setTimeout(() => {
           if (this.socket && this.status === "connected") {
-            console.log("[RealtimeClient] App in background, pausing WebSocket...");
+            logger.debug(
+              "[RealtimeClient] App in background, pausing WebSocket...",
+            );
             this.socket.disconnect();
             this.setStatus("disconnected");
           }
@@ -245,12 +262,17 @@ export class RealtimeClient {
         }
 
         if (this.token && (!this.socket || !this.socket.connected)) {
-          console.log("[RealtimeClient] App returned to foreground, reconnecting WebSocket...");
+          logger.debug(
+            "[RealtimeClient] App returned to foreground, reconnecting WebSocket...",
+          );
           this.connect(this.token);
         }
       }
     };
 
-    this.appStateSubscription = AppState.addEventListener("change", handleAppStateChange);
+    this.appStateSubscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
   }
 }

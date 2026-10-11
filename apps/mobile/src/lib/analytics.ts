@@ -1,9 +1,14 @@
+import { logger } from "./logger";
+
 /**
  * Thin analytics adapter. Product events go through `trackEvent` so a real
  * provider can be plugged in at one place; until then events are only logged
  * in development builds.
  */
-export type AnalyticsProps = Record<string, string | number | boolean | null | undefined>;
+export type AnalyticsProps = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
 type AnalyticsSink = (event: string, props: AnalyticsProps) => void;
 
@@ -19,6 +24,6 @@ export function trackEvent(event: string, props: AnalyticsProps = {}): void {
     return;
   }
   if (__DEV__) {
-    console.log(`[analytics] ${event}`, props);
+    logger.debug(`[analytics] ${event}`, props);
   }
 }

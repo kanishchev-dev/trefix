@@ -7,7 +7,6 @@ import {
   HeaderOptionsButton,
 } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
-import { type MainCopy } from "../../../locales";
 
 type Props = {
   theme: ThemeTokens;

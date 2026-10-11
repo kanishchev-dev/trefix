@@ -1,13 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Activity, ChevronRight, Dumbbell, Plus, Sparkles } from "lucide-react-native";
+import {
+  Activity,
+  ChevronRight,
+  Dumbbell,
+  Plus,
+  Sparkles,
+} from "lucide-react-native";
 
 import { type PlanAdaptation, type PlanWeek } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
-import { BottomSheet, SheetSectionLabel } from "../../../shared/ui/bottom-sheet";
-import { type PlanTimelineMode, type WeekWorkoutRow } from "../../plans/lib/plan-weeks";
+import {
+  BottomSheet,
+  SheetSectionLabel,
+} from "../../../shared/ui/bottom-sheet";
+import {
+  type PlanTimelineMode,
+  type WeekWorkoutRow,
+} from "../../plans/lib/plan-weeks";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 
 type Props = {
@@ -65,7 +77,12 @@ export function PlanWeekDetailsSheet({
 
   if (!week) {
     return (
-      <BottomSheet visible={false} onClose={onClose} theme={theme} themeMode={themeMode} />
+      <BottomSheet
+        visible={false}
+        onClose={onClose}
+        theme={theme}
+        themeMode={themeMode}
+      />
     );
   }
 
@@ -74,7 +91,6 @@ export function PlanWeekDetailsSheet({
   const units = copy.plan.creation.units;
 
   const planCopy = copy.plan;
-  const phaseLabel = planCopy.phases[week.phase] || week.phase;
 
   const weekAdaptations = adaptations.filter(
     (a) => a.weekId === week.id || a.weekNumber === week.weekNumber,
@@ -82,7 +98,10 @@ export function PlanWeekDetailsSheet({
 
   return (
     <BottomSheet
-      title={planCopy.weekDetails.title.replace("{{number}}", String(week.weekNumber))}
+      title={planCopy.weekDetails.title.replace(
+        "{{number}}",
+        String(week.weekNumber),
+      )}
       visible={open}
       animatedHide
       onClose={() => {
@@ -141,7 +160,7 @@ export function PlanWeekDetailsSheet({
         ) : null}
 
         {/* Planned Volume Stats */}
-        {(week.plannedWorkoutsCount || week.plannedDistance) ? (
+        {week.plannedWorkoutsCount || week.plannedDistance ? (
           <View style={styles.section}>
             <SheetSectionLabel
               text={planCopy.weekDetails.plannedVolume}
@@ -166,7 +185,8 @@ export function PlanWeekDetailsSheet({
                         styles.statValue,
                         {
                           color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.extrabold,
+                          fontFamily:
+                            theme.typography.fontFamily.sans.extrabold,
                         },
                       ]}
                     >
@@ -204,7 +224,8 @@ export function PlanWeekDetailsSheet({
                         styles.statValue,
                         {
                           color: theme.color.foreground,
-                          fontFamily: theme.typography.fontFamily.sans.extrabold,
+                          fontFamily:
+                            theme.typography.fontFamily.sans.extrabold,
                         },
                       ]}
                     >
@@ -231,12 +252,18 @@ export function PlanWeekDetailsSheet({
         {/* Workouts of the week */}
         {workouts && workouts.length > 0 ? (
           <View style={styles.section}>
-            <SheetSectionLabel text={planCopy.weekDetails.workouts} theme={theme} />
+            <SheetSectionLabel
+              text={planCopy.weekDetails.workouts}
+              theme={theme}
+            />
             <View style={styles.sessionsList}>
               {workouts.map((workout) => {
-                const status = workout.status ? statuses[workout.status] ?? workout.status : null;
+                const status = workout.status
+                  ? (statuses[workout.status] ?? workout.status)
+                  : null;
                 const actual =
-                  workout.actualDistanceKm !== null && workout.actualDistanceKm !== undefined
+                  workout.actualDistanceKm !== null &&
+                  workout.actualDistanceKm !== undefined
                     ? ` → ${format.distance(workout.actualDistanceKm)}`
                     : "";
                 const meta = `${format.distance(workout.distanceKm)}${actual} · ${workout.durationMinutes} ${units.min}`;
@@ -244,21 +271,46 @@ export function PlanWeekDetailsSheet({
                 const content = (
                   <>
                     <View style={styles.workoutText}>
-                      <Text style={[styles.sessionText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+                      <Text
+                        style={[
+                          styles.sessionText,
+                          {
+                            color: theme.color.foreground,
+                            fontFamily: theme.typography.fontFamily.sans.medium,
+                          },
+                        ]}
+                      >
                         {label}
                       </Text>
-                      <Text style={[styles.adaptationDesc, { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular }]}>
-                        {status && mode !== "relative" ? `${meta} · ${status}` : meta}
+                      <Text
+                        style={[
+                          styles.adaptationDesc,
+                          {
+                            color: theme.color.mutedForeground,
+                            fontFamily:
+                              theme.typography.fontFamily.sans.regular,
+                          },
+                        ]}
+                      >
+                        {status && mode !== "relative"
+                          ? `${meta} · ${status}`
+                          : meta}
                       </Text>
                     </View>
                     {workout.selectable && onSelectWorkout ? (
-                      <ChevronRight color={theme.color.mutedForeground} size={18} />
+                      <ChevronRight
+                        color={theme.color.mutedForeground}
+                        size={18}
+                      />
                     ) : null}
                   </>
                 );
                 const cardStyle = [
                   styles.sessionCard,
-                  { backgroundColor: theme.color.surface, borderColor: theme.color.border },
+                  {
+                    backgroundColor: theme.color.surface,
+                    borderColor: theme.color.border,
+                  },
                 ];
                 return workout.selectable && onSelectWorkout ? (
                   <Pressable
@@ -266,7 +318,10 @@ export function PlanWeekDetailsSheet({
                     accessibilityRole="button"
                     accessibilityLabel={`${label}, ${meta}${status ? `, ${status}` : ""}`}
                     onPress={() => closeThen(() => onSelectWorkout(workout.id))}
-                    style={({ pressed }) => [...cardStyle, pressed && styles.doneButtonPressed]}
+                    style={({ pressed }) => [
+                      ...cardStyle,
+                      pressed && styles.doneButtonPressed,
+                    ]}
                   >
                     {content}
                   </Pressable>
@@ -283,12 +338,24 @@ export function PlanWeekDetailsSheet({
                 onPress={() => closeThen(onAddWorkout)}
                 style={({ pressed }) => [
                   styles.sessionCard,
-                  { backgroundColor: theme.color.surface, borderColor: theme.color.border, justifyContent: "center" },
+                  {
+                    backgroundColor: theme.color.surface,
+                    borderColor: theme.color.border,
+                    justifyContent: "center",
+                  },
                   pressed && styles.doneButtonPressed,
                 ]}
               >
                 <Plus color={theme.color.foreground} size={16} />
-                <Text style={[styles.sessionText, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold }]}>
+                <Text
+                  style={[
+                    styles.sessionText,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.semibold,
+                    },
+                  ]}
+                >
                   {copy.plans.edit.addWorkout}
                 </Text>
               </Pressable>
@@ -316,7 +383,10 @@ export function PlanWeekDetailsSheet({
                   ]}
                 >
                   <View
-                    style={[styles.sessionDot, { backgroundColor: theme.color.primary }]}
+                    style={[
+                      styles.sessionDot,
+                      { backgroundColor: theme.color.primary },
+                    ]}
                   />
                   <Text
                     style={[
@@ -373,7 +443,8 @@ export function PlanWeekDetailsSheet({
                           styles.adaptationDesc,
                           {
                             color: theme.color.mutedForeground,
-                            fontFamily: theme.typography.fontFamily.sans.regular,
+                            fontFamily:
+                              theme.typography.fontFamily.sans.regular,
                           },
                         ]}
                       >

@@ -14,20 +14,11 @@ type Props = {
   copy: MainCopy;
 };
 
-export function CurrentWeekContextCard({
-  context,
-  theme,
-  themeMode,
-  copy,
-}: Props) {
+export function CurrentWeekContextCard({ context, theme, copy }: Props) {
   const planCopy = copy.plan;
 
   return (
-    <Card
-      variant="glass"
-      theme={theme}
-      style={styles.card}
-    >
+    <Card variant="glass" theme={theme} style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.titleRow}>
           <Zap color={theme.color.accent} size={16} />

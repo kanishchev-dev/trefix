@@ -20,7 +20,6 @@ type Props = {
 export function PlanWeekItem({
   week,
   theme,
-  themeMode,
   copy,
   onPress,
   mode = "active",
@@ -30,8 +29,7 @@ export function PlanWeekItem({
   const isCurrent = week.status === "current";
   const isCompleted = week.status === "completed";
 
-  const phaseLabel =
-    planCopy.phases[week.phase] || week.phase;
+  const phaseLabel = planCopy.phases[week.phase] || week.phase;
 
   const workoutsText = week.plannedWorkoutsCount
     ? planCopy.timeline.workoutsCount.replace(
@@ -40,7 +38,9 @@ export function PlanWeekItem({
       )
     : null;
 
-  const distanceText = week.plannedDistance ? format.distance(week.plannedDistance, 0) : null;
+  const distanceText = week.plannedDistance
+    ? format.distance(week.plannedDistance, 0)
+    : null;
 
   const summaryText =
     week.summaryText ||
@@ -82,10 +82,17 @@ export function PlanWeekItem({
           <View
             style={[
               styles.completedNode,
-              { backgroundColor: theme.color.surfaceElevated, borderColor: theme.color.border },
+              {
+                backgroundColor: theme.color.surfaceElevated,
+                borderColor: theme.color.border,
+              },
             ]}
           >
-            <Check color={theme.color.mutedForeground} size={12} strokeWidth={3} />
+            <Check
+              color={theme.color.mutedForeground}
+              size={12}
+              strokeWidth={3}
+            />
           </View>
         ) : isCurrent ? (
           <View
@@ -103,10 +110,7 @@ export function PlanWeekItem({
           </View>
         ) : (
           <View
-            style={[
-              styles.upcomingNode,
-              { borderColor: theme.color.border },
-            ]}
+            style={[styles.upcomingNode, { borderColor: theme.color.border }]}
           />
         )}
       </View>
@@ -131,7 +135,10 @@ export function PlanWeekItem({
                 },
               ]}
             >
-              {planCopy.timeline.weekLabel.replace("{{number}}", String(week.weekNumber))}
+              {planCopy.timeline.weekLabel.replace(
+                "{{number}}",
+                String(week.weekNumber),
+              )}
             </Text>
 
             <View

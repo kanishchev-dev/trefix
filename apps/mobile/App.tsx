@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Image,
-  Platform,
-  useColorScheme,
-} from "react-native";
+import { Alert, Image, Platform, useColorScheme } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -53,12 +48,13 @@ import {
   saveAuthSession,
 } from "./src/lib/auth-session";
 import { useAuthSessionMonitor } from "./src/lib/use-auth-session-monitor";
+import { setRequestLanguage } from "./src/lib/api-client";
+import { logger } from "./src/lib/logger";
+import { updatePreferences } from "./src/lib/preferences-api";
 import { RealtimeProvider } from "./src/lib/realtime";
 import { disableHealthBackground } from "./src/features/health-sync/background-control";
 import { clearHealthSyncState } from "./src/features/health-sync/state";
-import {
-  getGoogleSigninModule,
-} from "./src/lib/google-signin";
+import { getGoogleSigninModule } from "./src/lib/google-signin";
 import {
   getAuthCopy,
   getMainCopy,
@@ -67,6 +63,8 @@ import {
 } from "./src/locales";
 
 void SplashScreen.preventAutoHideAsync();
+// Device language until the stored choice is read, so the first requests are localized too.
+setRequestLanguage(getAppLanguage());
 
 type AuthStackParamList = {
   email: undefined;
@@ -83,23 +81,24 @@ export default function App() {
 
   const [userLanguage, setUserLanguage] = useState<AppLanguage | null>(null);
   const [userTheme, setUserTheme] = useState<ThemePreference>("system");
+  const [arePreferencesLoaded, setArePreferencesLoaded] = useState(false);
 
+  // The client lives for the app's lifetime; it reaches the current logout through a ref.
+  const logoutRef = useRef<() => Promise<void>>(async () => undefined);
   const queryClient = useMemo(
     () =>
       new QueryClient({
         queryCache: new QueryCache({
           onError: (error) => {
             if (error instanceof ApiClientError && error.status === 401) {
-              console.log("[App] 401 Unauthorized detected, logging out...");
-              void handleLogout();
+              void logoutRef.current();
             }
           },
         }),
         mutationCache: new MutationCache({
           onError: (error) => {
             if (error instanceof ApiClientError && error.status === 401) {
-              console.log("[App] 401 Unauthorized detected in mutation, logging out...");
-              void handleLogout();
+              void logoutRef.current();
             }
           },
         }),
@@ -113,11 +112,13 @@ export default function App() {
     [],
   );
 
+  logoutRef.current = handleLogout;
+
   async function handleLogout(): Promise<void> {
     try {
       await logout();
     } catch (error) {
-      console.warn("Logout request failed:", error);
+      logger.warn("Logout request failed:", error);
     } finally {
       // The next account on this device must not inherit Health sync or its background wake-ups.
       await disableHealthBackground();
@@ -133,10 +134,14 @@ export default function App() {
     await disableHealthBackground();
     try {
       const keys = await AsyncStorage.getAllKeys();
-      await AsyncStorage.multiRemove(keys.filter((key) => key !== "@trefix/language" && key !== "@trefix/theme"));
+      await AsyncStorage.multiRemove(
+        keys.filter(
+          (key) => key !== "@trefix/language" && key !== "@trefix/theme",
+        ),
+      );
       await getGoogleSigninModule()?.GoogleSignin.signOut();
     } catch (error) {
-      console.warn("Local cleanup after account deletion failed:", error);
+      logger.warn("Local cleanup after account deletion failed:", error);
     }
     await clearAuthSession();
     setSession(null);
@@ -146,7 +151,7 @@ export default function App() {
   useAuthSessionMonitor({
     session,
     onSessionUpdated: (nextSession) => {
-      console.log("[App] Updating active session with refreshed tokens...");
+      logger.debug("[App] Updating active session with refreshed tokens...");
       setSession(nextSession);
     },
     onLogout: handleLogout,
@@ -244,11 +249,36 @@ export default function App() {
           setUserTheme(storedTheme as ThemePreference);
         }
       } catch (error) {
-        console.warn("Failed to load user preferences:", error);
+        logger.warn("Failed to load user preferences:", error);
+      } finally {
+        setArePreferencesLoaded(true);
       }
     }
     void loadPreferences();
   }, []);
+
+  const effectiveLanguage: AppLanguage = userLanguage ?? getAppLanguage();
+  const reportedLanguageRef = useRef<string | null>(null);
+
+  // The backend answers (error messages) and writes (coach messages, emails)
+  // in the app language, so it has to know it.
+  useEffect(() => {
+    setRequestLanguage(effectiveLanguage);
+    if (!session || !arePreferencesLoaded) {
+      return;
+    }
+    const reportKey = `${session.sessionId}:${effectiveLanguage}`;
+    if (reportedLanguageRef.current === reportKey) {
+      return;
+    }
+    reportedLanguageRef.current = reportKey;
+    updatePreferences({ language: effectiveLanguage }).catch(
+      (error: unknown) => {
+        reportedLanguageRef.current = null;
+        logger.warn("Failed to report the app language:", error);
+      },
+    );
+  }, [session, effectiveLanguage, arePreferencesLoaded]);
 
   const handleSelectLanguage = (nextLanguage: AppLanguage) => {
     setUserLanguage(nextLanguage);
@@ -279,7 +309,7 @@ export default function App() {
         : "light"
       : userTheme;
   const theme = getMobileThemeTokens(themeMode);
-  const language: AppLanguage = userLanguage ?? getAppLanguage();
+  const language = effectiveLanguage;
   const authCopy = getAuthCopy(language);
   const mainCopy = getMainCopy(language);
   const logoSource =
@@ -418,12 +448,12 @@ export default function App() {
                   onSelectLanguage={handleSelectLanguage}
                   onSelectTheme={handleSelectTheme}
                 />
-              <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
-            </NavigationContainer>
-          </SafeAreaProvider>
-        </RealtimeProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+                <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+              </NavigationContainer>
+            </SafeAreaProvider>
+          </RealtimeProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
     );
   }
 
@@ -442,72 +472,72 @@ export default function App() {
                 headerTintColor: theme.color.foreground,
               }}
             >
-            <AuthStack.Screen
-              name="email"
-              options={{ headerShown: false, headerBackTitle: "" }}
-            >
-              {({ navigation }) => (
-                <AuthScreen
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={authCopy}
-                  email={email}
-                  isEmailSubmitting={isAuthBusy}
-                  isSocialSubmitting={isSocialSubmitting}
-                  isSocialDisabled={isAuthBusy}
-                  showGoogleButton={isGoogleAuthAvailable}
-                  showAppleButton={isAppleAuthAvailable}
-                  onEmailChange={setEmail}
-                  onSubmitEmail={(submittedEmail) => {
-                    setEmail(submittedEmail);
-                    void handleEmailSubmit(submittedEmail, () =>
-                      navigation.navigate("verification"),
-                    );
-                  }}
-                  onGooglePress={() => {
-                    void handleSocialPress();
-                  }}
-                  onApplePress={() => {
-                    void handleApplePress();
-                  }}
-                />
-              )}
-            </AuthStack.Screen>
-            <AuthStack.Screen
-              name="verification"
-              options={{
-                headerTransparent: true,
-                headerBackButtonDisplayMode: "minimal",
-                headerTitle: () => (
-                  <Image
-                    source={logoSource}
-                    style={{ width: 160, height: 40 }}
-                    resizeMode="contain"
-                  />
-                ),
-                headerTintColor: theme.color.foreground,
-                headerBackTitle: "",
-              }}
-            >
-              {() =>
-                challenge ? (
-                  <AuthVerificationScreen
+              <AuthStack.Screen
+                name="email"
+                options={{ headerShown: false, headerBackTitle: "" }}
+              >
+                {({ navigation }) => (
+                  <AuthScreen
                     theme={theme}
+                    themeMode={themeMode}
                     copy={authCopy}
                     email={email}
-                    challenge={challenge}
-                    isSubmitting={isVerificationSubmitting}
-                    onSubmitCode={handleVerificationSubmit}
-                    onResendCode={() => handleResendCode()}
+                    isEmailSubmitting={isAuthBusy}
+                    isSocialSubmitting={isSocialSubmitting}
+                    isSocialDisabled={isAuthBusy}
+                    showGoogleButton={isGoogleAuthAvailable}
+                    showAppleButton={isAppleAuthAvailable}
+                    onEmailChange={setEmail}
+                    onSubmitEmail={(submittedEmail) => {
+                      setEmail(submittedEmail);
+                      void handleEmailSubmit(submittedEmail, () =>
+                        navigation.navigate("verification"),
+                      );
+                    }}
+                    onGooglePress={() => {
+                      void handleSocialPress();
+                    }}
+                    onApplePress={() => {
+                      void handleApplePress();
+                    }}
                   />
-                ) : null
-              }
-            </AuthStack.Screen>
-          </AuthStack.Navigator>
-        </NavigationContainer>
-        <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
-      </SafeAreaProvider>
-    </QueryClientProvider>
-  </GestureHandlerRootView>
+                )}
+              </AuthStack.Screen>
+              <AuthStack.Screen
+                name="verification"
+                options={{
+                  headerTransparent: true,
+                  headerBackButtonDisplayMode: "minimal",
+                  headerTitle: () => (
+                    <Image
+                      source={logoSource}
+                      style={{ width: 160, height: 40 }}
+                      resizeMode="contain"
+                    />
+                  ),
+                  headerTintColor: theme.color.foreground,
+                  headerBackTitle: "",
+                }}
+              >
+                {() =>
+                  challenge ? (
+                    <AuthVerificationScreen
+                      theme={theme}
+                      copy={authCopy}
+                      email={email}
+                      challenge={challenge}
+                      isSubmitting={isVerificationSubmitting}
+                      onSubmitCode={handleVerificationSubmit}
+                      onResendCode={() => handleResendCode()}
+                    />
+                  ) : null
+                }
+              </AuthStack.Screen>
+            </AuthStack.Navigator>
+          </NavigationContainer>
+          <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

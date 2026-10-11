@@ -1,16 +1,10 @@
 import { type ReactNode } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
 
 import { SheetBlock } from "../../../shared/ui/bottom-sheet";
-import { formatTargetTime, parseTargetTime, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
+import { formatTargetTime, PLAN_WEEKDAY_ORDER } from "../plan-creation-types";
 import { Ruler } from "@workspace/ui-native";
 import { Plus } from "lucide-react-native";
 
@@ -22,7 +16,12 @@ type OptionChipProps = {
   onPress: () => void;
 };
 
-export function OptionChip({ label, selected, theme, onPress }: OptionChipProps) {
+export function OptionChip({
+  label,
+  selected,
+  theme,
+  onPress,
+}: OptionChipProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -31,9 +30,7 @@ export function OptionChip({ label, selected, theme, onPress }: OptionChipProps)
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected
-            ? theme.color.primary
-            : theme.color.control,
+          backgroundColor: selected ? theme.color.primary : theme.color.control,
           borderColor: theme.color.controlBorder,
           borderWidth: StyleSheet.hairlineWidth,
         },
@@ -90,8 +87,12 @@ export function CirclePicker<T extends string | number>({
             style={({ pressed }) => [
               styles.dayCell,
               {
-                backgroundColor: isSelected ? theme.color.primary : "transparent",
-                borderColor: isSelected ? theme.color.primary : theme.color.border,
+                backgroundColor: isSelected
+                  ? theme.color.primary
+                  : "transparent",
+                borderColor: isSelected
+                  ? theme.color.primary
+                  : theme.color.border,
                 opacity: disabled ? 0.3 : 1,
               },
               pressed && !disabled && styles.pressed,
@@ -101,7 +102,9 @@ export function CirclePicker<T extends string | number>({
               style={[
                 styles.dayLabel,
                 {
-                  color: isSelected ? theme.color.primaryForeground : theme.color.foreground,
+                  color: isSelected
+                    ? theme.color.primaryForeground
+                    : theme.color.foreground,
                   fontFamily: isSelected
                     ? theme.typography.fontFamily.sans.semibold
                     : theme.typography.fontFamily.sans.medium,
@@ -176,7 +179,9 @@ export function SectionBlock({
       style={[
         isDivider ? styles.dividerTitle : styles.sectionTitle,
         {
-          color: isDivider ? theme.color.mutedForeground : theme.color.foreground,
+          color: isDivider
+            ? theme.color.mutedForeground
+            : theme.color.foreground,
           fontFamily: isDivider
             ? theme.typography.fontFamily.sans.medium
             : theme.typography.fontFamily.sans.medium,
@@ -193,9 +198,19 @@ export function SectionBlock({
         <View style={styles.sectionHeader}>
           {isDivider ? (
             <View style={styles.dividerRow}>
-              <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
+              <View
+                style={[
+                  styles.dividerLine,
+                  { backgroundColor: theme.color.border },
+                ]}
+              />
               {titleText}
-              <View style={[styles.dividerLine, { backgroundColor: theme.color.border }]} />
+              <View
+                style={[
+                  styles.dividerLine,
+                  { backgroundColor: theme.color.border },
+                ]}
+              />
             </View>
           ) : (
             titleText
@@ -204,7 +219,10 @@ export function SectionBlock({
             <Text
               style={[
                 styles.sectionDescription,
-                { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
               ]}
             >
               {description}
@@ -217,20 +235,28 @@ export function SectionBlock({
   );
 }
 
-export function FieldError({ message, theme }: { message: string; theme: ThemeTokens }) {
+export function FieldError({
+  message,
+  theme,
+}: {
+  message: string;
+  theme: ThemeTokens;
+}) {
   return (
     <Text
       accessibilityLiveRegion="polite"
       style={[
         styles.fieldError,
-        { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
+        {
+          color: theme.color.danger,
+          fontFamily: theme.typography.fontFamily.sans.regular,
+        },
       ]}
     >
       {message}
     </Text>
   );
 }
-
 
 /** Centred field label with an optional short description in small muted text under it. */
 function InputRowHeader({
@@ -250,17 +276,28 @@ function InputRowHeader({
         <Text
           style={[
             styles.inputRowLabel,
-            { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.semibold,
+            },
           ]}
         >
           {label}
         </Text>
         {badge ? (
-          <View style={[styles.badgePill, { backgroundColor: theme.color.surfaceElevated }]}>
+          <View
+            style={[
+              styles.badgePill,
+              { backgroundColor: theme.color.surfaceElevated },
+            ]}
+          >
             <Text
               style={[
                 styles.badgePillText,
-                { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
               ]}
             >
               {badge}
@@ -272,7 +309,10 @@ function InputRowHeader({
         <Text
           style={[
             styles.fieldInfo,
-            { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.regular },
+            {
+              color: theme.color.mutedForeground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
           ]}
         >
           {info}
@@ -323,7 +363,10 @@ export function AddLink({
       <Text
         style={[
           styles.addLinkText,
-          { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.semibold },
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.semibold,
+          },
         ]}
       >
         {label}
@@ -346,12 +389,18 @@ function RemoveLink({
       accessibilityRole="button"
       hitSlop={8}
       onPress={onPress}
-      style={({ pressed }) => [styles.optionalRemove, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.optionalRemove,
+        pressed && styles.pressed,
+      ]}
     >
       <Text
         style={[
           styles.optionalRemoveText,
-          { color: theme.color.mutedForeground, fontFamily: theme.typography.fontFamily.sans.medium },
+          {
+            color: theme.color.mutedForeground,
+            fontFamily: theme.typography.fontFamily.sans.medium,
+          },
         ]}
       >
         {label}
@@ -434,7 +483,12 @@ export function OptionalSection({
   }
 
   return (
-    <SectionBlock title={title} description={description} theme={theme} variant="divider">
+    <SectionBlock
+      title={title}
+      description={description}
+      theme={theme}
+      variant="divider"
+    >
       {children}
       <RemoveLink label={removeLabel} onPress={onRemove} theme={theme} />
     </SectionBlock>
@@ -501,7 +555,12 @@ type FormInputRowProps = {
   onChangeText: (text: string) => void;
   placeholder?: string;
   unit?: string;
-  keyboardType?: 'default' | 'numeric' | 'decimal-pad' | 'number-pad' | 'numbers-and-punctuation';
+  keyboardType?:
+    | "default"
+    | "numeric"
+    | "decimal-pad"
+    | "number-pad"
+    | "numbers-and-punctuation";
   error?: string | null;
   badge?: string;
   theme: ThemeTokens;
@@ -513,7 +572,7 @@ export function FormInputRow({
   onChangeText,
   placeholder,
   unit,
-  keyboardType = 'numeric',
+  keyboardType = "numeric",
   error,
   badge,
   theme,

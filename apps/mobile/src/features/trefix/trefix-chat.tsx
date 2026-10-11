@@ -28,6 +28,7 @@ import {
   ThreadPrimitive,
   useAui,
   useAuiState,
+  type ThreadMessageLike,
 } from "@assistant-ui/react-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
@@ -57,7 +58,7 @@ type SelectedAttachment = {
 
 type HistoryData = {
   sessionId: string | null;
-  messages: any[];
+  messages: ThreadMessageLike[];
 };
 
 export function TrefixChatScreen({ theme, themeMode, copy, onBack }: Props) {
@@ -69,13 +70,17 @@ export function TrefixChatScreen({ theme, themeMode, copy, onBack }: Props) {
       try {
         const latest = await getLatestCoachSession();
         if (latest) {
-          const messages = latest.messages
-            .filter((m) => m.role !== "tool")
-            .map((m) => ({
-              id: m.id,
-              role: m.role,
-              content: [{ type: "text", text: m.content }],
-            }));
+          const messages: ThreadMessageLike[] = latest.messages.flatMap((m) =>
+            m.role === "tool"
+              ? []
+              : [
+                  {
+                    id: m.id,
+                    role: m.role,
+                    content: [{ type: "text" as const, text: m.content }],
+                  },
+                ],
+          );
           setHistory({ sessionId: latest.session.id, messages });
         } else {
           setHistory({ sessionId: null, messages: [] });
@@ -357,9 +362,24 @@ function AssistantMessage({ theme }: { theme: ThemeTokens }) {
                 { backgroundColor: theme.color.glassBackground },
               ]}
             >
-              <View style={[styles.typingDot, { backgroundColor: theme.color.mutedForeground }]} />
-              <View style={[styles.typingDot, { backgroundColor: theme.color.mutedForeground }]} />
-              <View style={[styles.typingDot, { backgroundColor: theme.color.mutedForeground }]} />
+              <View
+                style={[
+                  styles.typingDot,
+                  { backgroundColor: theme.color.mutedForeground },
+                ]}
+              />
+              <View
+                style={[
+                  styles.typingDot,
+                  { backgroundColor: theme.color.mutedForeground },
+                ]}
+              />
+              <View
+                style={[
+                  styles.typingDot,
+                  { backgroundColor: theme.color.mutedForeground },
+                ]}
+              />
             </View>
           ) : null}
         </View>
@@ -404,7 +424,6 @@ function ComposerDock({
 
 function ComposerPanel({
   theme,
-  themeMode,
   copy,
 }: {
   theme: ThemeTokens;
@@ -588,7 +607,10 @@ function AttachmentPreview({
       {kind === "image" ? (
         <Image
           source={{ uri: attachment.uri }}
-          style={[styles.attachmentImage, { backgroundColor: theme.color.iconSurface }]}
+          style={[
+            styles.attachmentImage,
+            { backgroundColor: theme.color.iconSurface },
+          ]}
         />
       ) : (
         <View

@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -56,7 +62,11 @@ function ColumnItem({
     <Animated.View
       style={[
         styles.item,
-        { top: row * ITEM_HEIGHT, alignItems: ALIGN_TO_FLEX[align], transformOrigin: align },
+        {
+          top: row * ITEM_HEIGHT,
+          alignItems: ALIGN_TO_FLEX[align],
+          transformOrigin: align,
+        },
         animatedStyle,
       ]}
     >
@@ -120,9 +130,8 @@ function WheelColumn({
 
   const handleCross = useCallback((next: number) => {
     setCenterIndex(next);
-    try {
-      Haptics.selectionAsync();
-    } catch {}
+    // Haptics are optional (simulator, disabled in settings); a failure must not surface.
+    void Haptics.selectionAsync().catch(() => undefined);
   }, []);
 
   const commit = useCallback(
@@ -135,9 +144,16 @@ function WheelColumn({
   );
 
   useAnimatedReaction(
-    () => minIndex + Math.max(0, Math.min(lastRow, Math.round(offset.value / ITEM_HEIGHT))),
+    () =>
+      minIndex +
+      Math.max(0, Math.min(lastRow, Math.round(offset.value / ITEM_HEIGHT))),
     (current, previous) => {
-      if (previous === null || current === previous || current === lastIndex.value) return;
+      if (
+        previous === null ||
+        current === previous ||
+        current === lastIndex.value
+      )
+        return;
       lastIndex.value = current;
       runOnJS(handleCross)(current);
     },
@@ -157,12 +173,18 @@ function WheelColumn({
       const maxOffset = lastRow * ITEM_HEIGHT;
       const next = offset.value - event.changeY;
       // Rubber-band past the ends.
-      offset.value = next < 0 || next > maxOffset ? offset.value - event.changeY * 0.3 : next;
+      offset.value =
+        next < 0 || next > maxOffset
+          ? offset.value - event.changeY * 0.3
+          : next;
     })
     .onEnd((event) => {
       "worklet";
       const projected = offset.value - event.velocityY * MOMENTUM;
-      const row = Math.max(0, Math.min(lastRow, Math.round(projected / ITEM_HEIGHT)));
+      const row = Math.max(
+        0,
+        Math.min(lastRow, Math.round(projected / ITEM_HEIGHT)),
+      );
       offset.value = withSpring(
         row * ITEM_HEIGHT,
         { ...SNAP_SPRING, velocity: -event.velocityY },
@@ -177,7 +199,10 @@ function WheelColumn({
       if (success) return;
       isInteracting.value = false;
       // A touch that stopped a fling mid-way: settle on the nearest row.
-      const row = Math.max(0, Math.min(lastRow, Math.round(offset.value / ITEM_HEIGHT)));
+      const row = Math.max(
+        0,
+        Math.min(lastRow, Math.round(offset.value / ITEM_HEIGHT)),
+      );
       if (Math.abs(offset.value - row * ITEM_HEIGHT) > 0.5) {
         offset.value = withSpring(row * ITEM_HEIGHT, SNAP_SPRING);
         runOnJS(commit)(row);
@@ -192,7 +217,10 @@ function WheelColumn({
         0,
         Math.min(
           lastRow,
-          Math.round((offset.value + event.y - SIDE_PADDING - ITEM_HEIGHT / 2) / ITEM_HEIGHT),
+          Math.round(
+            (offset.value + event.y - SIDE_PADDING - ITEM_HEIGHT / 2) /
+              ITEM_HEIGHT,
+          ),
         ),
       );
       offset.value = withSpring(row * ITEM_HEIGHT, SNAP_SPRING);
@@ -235,7 +263,11 @@ function parseIsoDate(value: string | undefined): DateParts | null {
   if (!value) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (!match) return null;
-  return { year: Number(match[1]), month: Number(match[2]) - 1, day: Number(match[3]) };
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]) - 1,
+    day: Number(match[3]),
+  };
 }
 
 function toIsoDate({ year, month, day }: DateParts) {
@@ -266,7 +298,11 @@ function toDayNumber({ year, month, day }: DateParts) {
 
 function fromDayNumber(dayNumber: number): DateParts {
   const date = new Date(dayNumber * DAY_MS);
-  return { year: date.getUTCFullYear(), month: date.getUTCMonth(), day: date.getUTCDate() };
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth(),
+    day: date.getUTCDate(),
+  };
 }
 
 function toMonthNumber({ year, month }: DateParts) {
@@ -314,7 +350,10 @@ export function DateWheel({
   const fontFamily = theme?.typography.fontFamily.sans.medium || "System";
 
   const min = useMemo(() => parseIsoDate(minDate), [minDate]);
-  const selected = useMemo(() => parseIsoDate(value) ?? min ?? todayParts(), [value, min]);
+  const selected = useMemo(
+    () => parseIsoDate(value) ?? min ?? todayParts(),
+    [value, min],
+  );
 
   // Without minDate the axes start far in the past; fixed once so they never shift.
   const [fallbackLower] = useState<DateParts>(() => ({
@@ -326,7 +365,10 @@ export function DateWheel({
 
   const dayAxis = useMemo(() => {
     const minIndex = toDayNumber(lower);
-    return { minIndex, maxIndex: toDayNumber({ ...lower, year: lower.year + SPAN_YEARS }) };
+    return {
+      minIndex,
+      maxIndex: toDayNumber({ ...lower, year: lower.year + SPAN_YEARS }),
+    };
   }, [lower]);
   const monthAxis = useMemo(() => {
     const minIndex = toMonthNumber(lower);
@@ -337,7 +379,10 @@ export function DateWheel({
 
   const emit = useCallback(
     (next: DateParts) => {
-      const clamped = { ...next, day: Math.min(next.day, daysInMonth(next.year, next.month)) };
+      const clamped = {
+        ...next,
+        day: Math.min(next.day, daysInMonth(next.year, next.month)),
+      };
       const result = min && compareParts(clamped, min) < 0 ? min : clamped;
       if (compareParts(result, selected) !== 0) {
         onChange(toIsoDate(result));
@@ -349,12 +394,21 @@ export function DateWheel({
     [min, onChange, selected],
   );
 
-  const dayLabel = useCallback((index: number) => String(fromDayNumber(index).day), []);
-  const monthLabel = useCallback((index: number) => monthNames[index % 12] ?? "", [monthNames]);
+  const dayLabel = useCallback(
+    (index: number) => String(fromDayNumber(index).day),
+    [],
+  );
+  const monthLabel = useCallback(
+    (index: number) => monthNames[index % 12] ?? "",
+    [monthNames],
+  );
   const yearLabel = useCallback((index: number) => String(index), []);
 
   return (
-    <View accessibilityLabel={accessibilityLabel} style={[styles.container, disabled && styles.disabled]}>
+    <View
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.container, disabled && styles.disabled]}
+    >
       <WheelColumn
         minIndex={dayAxis.minIndex}
         maxIndex={dayAxis.maxIndex}
@@ -374,7 +428,11 @@ export function DateWheel({
         index={toMonthNumber(selected)}
         getLabel={monthLabel}
         onIndexChange={(index) =>
-          emit({ year: Math.floor(index / 12), month: index % 12, day: selected.day })
+          emit({
+            year: Math.floor(index / 12),
+            month: index % 12,
+            day: selected.day,
+          })
         }
         align="center"
         flex={1.7}
@@ -398,7 +456,10 @@ export function DateWheel({
       />
 
       {showGuides ? (
-        <View pointerEvents="none" style={[styles.guides, { borderColor: guideColor }]} />
+        <View
+          pointerEvents="none"
+          style={[styles.guides, { borderColor: guideColor }]}
+        />
       ) : null}
     </View>
   );

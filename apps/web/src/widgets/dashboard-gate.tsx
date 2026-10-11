@@ -62,7 +62,7 @@ export function DashboardGate({
    *
    * Treating that the same as "still resolving" — an empty span — produced a
    * blank page that only a manual reload could clear, because the server
-   * middleware never runs on a client-side transition. The middleware already
+   * proxy never runs on a client-side transition. The proxy already
    * sends an unauthenticated visitor to /login; this makes the client agree.
    */
   useEffect(() => {

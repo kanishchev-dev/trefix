@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 
 import { authTokensSchema, type AuthTokens } from "@workspace/api-client";
+import { logger } from "./logger";
 
 const AUTH_SESSION_KEY = "workspace.auth.session";
 
@@ -25,18 +26,26 @@ export async function loadAuthSession(): Promise<AuthTokens | null> {
     if (!accessibilityMigrated) {
       // Sessions saved before AFTER_FIRST_UNLOCK keep the old attribute until rewritten.
       accessibilityMigrated = true;
-      await SecureStore.setItemAsync(AUTH_SESSION_KEY, rawSession, STORE_OPTIONS).catch(() => undefined);
+      await SecureStore.setItemAsync(
+        AUTH_SESSION_KEY,
+        rawSession,
+        STORE_OPTIONS,
+      ).catch(() => undefined);
     }
     return session;
   } catch (error) {
-    console.warn("[AuthSession] Failed to parse session, clearing:", error);
+    logger.warn("[AuthSession] Failed to parse session, clearing:", error);
     await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
     return null;
   }
 }
 
 export async function saveAuthSession(session: AuthTokens): Promise<void> {
-  await SecureStore.setItemAsync(AUTH_SESSION_KEY, JSON.stringify(session), STORE_OPTIONS);
+  await SecureStore.setItemAsync(
+    AUTH_SESSION_KEY,
+    JSON.stringify(session),
+    STORE_OPTIONS,
+  );
 }
 
 export async function clearAuthSession(): Promise<void> {

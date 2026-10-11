@@ -1,11 +1,14 @@
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { DateWheel } from "@workspace/ui-native";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
 import { type MainCopy } from "../../../locales";
-import { MANUAL_PLAN_MAX_WEEKS, MANUAL_PLAN_MIN_WEEKS } from "../plan-creation-types";
+import {
+  MANUAL_PLAN_MAX_WEEKS,
+  MANUAL_PLAN_MIN_WEEKS,
+} from "../plan-creation-types";
 
 type TargetDatePickerProps = {
   /** "YYYY-MM-DD" or undefined when the goal has no date. */
@@ -40,7 +43,13 @@ function parseLocalDate(iso: string) {
  * "weekday · in N wk" and a hint when the date falls outside the plan window.
  * Setting / removing the (optional) date is handled by the surrounding OptionalField.
  */
-export function TargetDatePicker({ value, onChange, theme, themeMode, copy }: TargetDatePickerProps) {
+export function TargetDatePicker({
+  value,
+  onChange,
+  theme,
+  themeMode,
+  copy,
+}: TargetDatePickerProps) {
   const pickerCopy = copy.plan.creation.datePicker;
   const today = useMemo(startOfToday, []);
   const todayIso = toIsoDate(today);
@@ -59,32 +68,44 @@ export function TargetDatePicker({ value, onChange, theme, themeMode, copy }: Ta
       relative = pickerCopy.tomorrow;
     } else {
       const parts = [
-        weeks > 0 ? pickerCopy.weeksShort.replace("{{count}}", String(weeks)) : null,
-        days > 0 ? pickerCopy.daysShort.replace("{{count}}", String(days)) : null,
+        weeks > 0
+          ? pickerCopy.weeksShort.replace("{{count}}", String(weeks))
+          : null,
+        days > 0
+          ? pickerCopy.daysShort.replace("{{count}}", String(days))
+          : null,
       ].filter(Boolean);
       relative = pickerCopy.inTime.replace("{{value}}", parts.join(" "));
     }
 
     const outOfPlan =
-      daysAhead < MANUAL_PLAN_MIN_WEEKS * 7 || daysAhead > MANUAL_PLAN_MAX_WEEKS * 7
+      daysAhead < MANUAL_PLAN_MIN_WEEKS * 7 ||
+      daysAhead > MANUAL_PLAN_MAX_WEEKS * 7
         ? pickerCopy.outOfPlan
             .replace("{{min}}", String(MANUAL_PLAN_MIN_WEEKS))
             .replace("{{max}}", String(MANUAL_PLAN_MAX_WEEKS))
         : null;
 
-    return { main: `${pickerCopy.weekdays[date.getDay()]} · ${relative}`, outOfPlan };
+    return {
+      main: `${pickerCopy.weekdays[date.getDay()]} · ${relative}`,
+      outOfPlan,
+    };
   }, [value, today, pickerCopy]);
 
   const regular = theme.typography.fontFamily.sans.regular;
   const medium = theme.typography.fontFamily.sans.medium;
-  const semibold = theme.typography.fontFamily.sans.semibold;
 
   if (!value) return null;
 
   return (
     <View style={styles.container}>
       {caption ? (
-        <Text style={[styles.caption, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+        <Text
+          style={[
+            styles.caption,
+            { color: theme.color.mutedForeground, fontFamily: regular },
+          ]}
+        >
           {caption.main}
           {caption.outOfPlan ? (
             <Text style={{ color: theme.color.foreground, fontFamily: medium }}>
@@ -102,7 +123,6 @@ export function TargetDatePicker({ value, onChange, theme, themeMode, copy }: Ta
         theme={theme}
         themeMode={themeMode}
       />
-
     </View>
   );
 }

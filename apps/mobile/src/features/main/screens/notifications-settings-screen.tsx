@@ -8,6 +8,7 @@ import { Switch } from "../../../shared/ui/switch";
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { SectionLayout } from "../components/section-layout";
 import { type MainCopy } from "../../../locales";
+import { logger } from "../../../lib/logger";
 
 const NOTIFICATIONS_STORAGE_KEY = "@trefix/notifications_settings";
 
@@ -47,7 +48,7 @@ export function NotificationsSettingsScreen({
           setSettings(JSON.parse(stored) as NotificationsSettings);
         }
       } catch (error) {
-        console.warn("Failed to load notifications settings:", error);
+        logger.warn("Failed to load notifications settings:", error);
       }
     }
     void loadSettings();
@@ -63,7 +64,6 @@ export function NotificationsSettingsScreen({
       return next;
     });
   };
-
 
   return (
     <SectionLayout

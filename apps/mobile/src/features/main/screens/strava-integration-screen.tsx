@@ -1,13 +1,27 @@
-import { useState } from "react";
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from "react-native";
-import { CheckCircle2, AlertCircle, RefreshCw, Unplug } from "lucide-react-native";
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import {
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Unplug,
+} from "lucide-react-native";
 import { type ThemeTokens } from "@workspace/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
 import { type AppLanguage, type MainCopy } from "../../../locales";
-import { StravaCompatibleLogo, StravaConnectButton } from "../../../shared/ui/integration-logo";
+import {
+  StravaCompatibleLogo,
+  StravaConnectButton,
+} from "../../../shared/ui/integration-logo";
 import {
   useConnectStrava,
   useDisconnectStrava,
@@ -28,15 +42,19 @@ export function StravaIntegrationScreen({
   theme,
   themeMode,
   copy,
-  userLanguage,
   onBack,
 }: Props) {
-  const { data: strava, isLoading: isStravaLoading, refetch: refetchStrava } = useStravaIntegration();
+  const {
+    data: strava,
+    isLoading: isStravaLoading,
+    refetch: refetchStrava,
+  } = useStravaIntegration();
   const connectMutation = useConnectStrava();
   const disconnectMutation = useDisconnectStrava();
   const triggerSyncMutation = useTriggerStravaSync();
 
-  const isSyncing = strava?.status === "syncing" || strava?.status === "connecting";
+  const isSyncing =
+    strava?.status === "syncing" || strava?.status === "connecting";
   const { data: syncStatus } = useStravaSyncStatus(isSyncing);
 
   const handleConnect = async () => {
@@ -60,8 +78,10 @@ export function StravaIntegrationScreen({
     refetchStrava();
   };
 
-  const isConnected = strava?.status === "connected" || strava?.status === "syncing";
-  const isError = strava?.status === "error" || strava?.status === "reauthorization_required";
+  const isConnected =
+    strava?.status === "connected" || strava?.status === "syncing";
+  const isError =
+    strava?.status === "error" || strava?.status === "reauthorization_required";
 
   useHeaderOptions(
     {
@@ -130,7 +150,11 @@ export function StravaIntegrationScreen({
               ]}
             >
               <View style={styles.statusHeader}>
-                <CheckCircle2 color={theme.color.success} size={24} strokeWidth={2} />
+                <CheckCircle2
+                  color={theme.color.success}
+                  size={24}
+                  strokeWidth={2}
+                />
                 <Text
                   style={[
                     styles.statusTitle,
@@ -209,7 +233,9 @@ export function StravaIntegrationScreen({
                     ]}
                   >
                     {copy.profile.integrations.strava.importingHistory}
-                    {syncStatus?.processed ? ` (${syncStatus.imported} imported)` : ""}
+                    {syncStatus?.processed
+                      ? ` (${syncStatus.imported} imported)`
+                      : ""}
                   </Text>
                 </View>
               ) : null}
@@ -278,7 +304,11 @@ export function StravaIntegrationScreen({
               ]}
             >
               <View style={styles.statusHeader}>
-                <AlertCircle color={theme.color.danger} size={24} strokeWidth={2} />
+                <AlertCircle
+                  color={theme.color.danger}
+                  size={24}
+                  strokeWidth={2}
+                />
                 <Text
                   style={[
                     styles.statusTitle,

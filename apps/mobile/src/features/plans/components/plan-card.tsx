@@ -4,7 +4,11 @@ import { MoreHorizontal } from "lucide-react-native";
 import { type PlanListItem } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 
-import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
+import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { Card } from "../../../shared/ui/card";
 import { planCardStatus, planCardSubtitle } from "../lib/plan-card-format";
 import { ProgressBar } from "./plans-ui";
@@ -40,56 +44,100 @@ export function PlanCard({
   const isActive = plan.status === "active";
   const regular = theme.typography.fontFamily.sans.regular;
   const medium = theme.typography.fontFamily.sans.medium;
-  const semibold = theme.typography.fontFamily.sans.semibold;
 
   return (
     <Card
       size="sm"
       theme={theme}
       themeMode={themeMode}
-      style={[styles.card, highlighted && { borderColor: theme.color.primary, borderWidth: 1.5 }]}
+      style={[
+        styles.card,
+        highlighted && { borderColor: theme.color.primary, borderWidth: 1.5 },
+      ]}
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={fillTemplate(plansCopy.card.a11y, { name: plan.name, status })}
+        accessibilityLabel={fillTemplate(plansCopy.card.a11y, {
+          name: plan.name,
+          status,
+        })}
         onPress={onPress}
         onLongPress={onOpenActions}
         style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       >
         <View style={styles.titleRow}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.color.foreground, fontFamily: theme.typography.fontFamily.sans.medium }]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.title,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {plan.name}
           </Text>
           {plan.creationSource === "ai" ? (
             <Badge label={plansCopy.badge.ai} theme={theme} />
           ) : null}
-          {isActive ? <Badge label={`● ${plansCopy.badge.active}`} theme={theme} strong /> : null}
+          {isActive ? (
+            <Badge label={`● ${plansCopy.badge.active}`} theme={theme} strong />
+          ) : null}
         </View>
 
         {!compact || !isActive ? (
-          <Text numberOfLines={1} style={[styles.meta, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.meta,
+              { color: theme.color.mutedForeground, fontFamily: regular },
+            ]}
+          >
             {subtitle}
           </Text>
         ) : null}
 
-        <Text style={[styles.status, { color: theme.color.foreground, fontFamily: medium }]}>{status}</Text>
+        <Text
+          style={[
+            styles.status,
+            { color: theme.color.foreground, fontFamily: medium },
+          ]}
+        >
+          {status}
+        </Text>
 
         {isActive && plan.progress !== undefined ? (
           <ProgressBar
             value={plan.progress}
-            accessibilityLabel={fillTemplate(plansCopy.card.progressA11y, { percent: Math.round(plan.progress * 100) })}
+            accessibilityLabel={fillTemplate(plansCopy.card.progressA11y, {
+              percent: Math.round(plan.progress * 100),
+            })}
             theme={theme}
           />
         ) : null}
 
         {!compact && plan.notesPreview ? (
-          <Text numberOfLines={1} style={[styles.notes, { color: theme.color.mutedForeground, fontFamily: regular }]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.notes,
+              { color: theme.color.mutedForeground, fontFamily: regular },
+            ]}
+          >
             {`«${plan.notesPreview.split("\n")[0]}»`}
           </Text>
         ) : null}
 
         {plan.metricsStale ? (
-          <Text style={[styles.stale, { color: theme.color.danger, fontFamily: medium }]}>{plansCopy.badge.stale}</Text>
+          <Text
+            style={[
+              styles.stale,
+              { color: theme.color.danger, fontFamily: medium },
+            ]}
+          >
+            {plansCopy.badge.stale}
+          </Text>
         ) : null}
       </Pressable>
 
@@ -108,14 +156,31 @@ export function PlanCard({
   );
 }
 
-function Badge({ label, theme, strong = false }: { label: string; theme: ThemeTokens; strong?: boolean }) {
+function Badge({
+  label,
+  theme,
+  strong = false,
+}: {
+  label: string;
+  theme: ThemeTokens;
+  strong?: boolean;
+}) {
   return (
-    <View style={[styles.badge, { backgroundColor: strong ? theme.color.primary : theme.color.secondary }]}>
+    <View
+      style={[
+        styles.badge,
+        {
+          backgroundColor: strong ? theme.color.primary : theme.color.secondary,
+        },
+      ]}
+    >
       <Text
         style={[
           styles.badgeText,
           {
-            color: strong ? theme.color.primaryForeground : theme.color.foreground,
+            color: strong
+              ? theme.color.primaryForeground
+              : theme.color.foreground,
             fontFamily: theme.typography.fontFamily.sans.semibold,
           },
         ]}
