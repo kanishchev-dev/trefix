@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Response } from 'express';
 import { Observable } from 'rxjs';
 
 import { OpenAiInputMessage } from '@/modules/openai/interfaces/openai-types.interface';
@@ -130,4 +131,28 @@ export class CoachStreamService {
         });
     });
   }
+}
+
+/**
+ * Writes a reply stream as server-sent events. Closing the connection only
+ * stops the delivery: the reply is still generated and stored.
+ */
+export function writeEventStream(res: Response, stream: Observable<CoachStreamChunk>): void {
+  res.status(200);
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  // nginx buffers responses by default; fragments must reach the client as they come.
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  const subscription = stream.subscribe({
+    next: (chunk) => res.write(`data: ${JSON.stringify(chunk)}\n\n`),
+    error: () => {
+      res.write(`event: error\ndata: ${JSON.stringify({ code: 'COACH_STREAM_FAILED' })}\n\n`);
+      res.end();
+    },
+    complete: () => res.end(),
+  });
+  res.on('close', () => subscription.unsubscribe());
 }

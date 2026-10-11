@@ -1,11 +1,13 @@
-import { firstValueFrom, of, toArray } from 'rxjs';
+import { EventEmitter } from 'events';
+import { Response } from 'express';
+import { firstValueFrom, of, throwError, toArray } from 'rxjs';
 
 import { OpenAiService } from '@/modules/openai/openai.service';
 
 import { CoachToolRunner } from './coach.tool-runner';
 import { CoachConversationService, CoachTurn } from './coach-conversation.service';
 import { ReplyFieldExtractor } from './coach-reply-extractor';
-import { CoachStreamService } from './coach-stream.service';
+import { CoachStreamService, writeEventStream } from './coach-stream.service';
 
 function chunks(json: string, size = 7): Array<{ type: 'text'; delta: string }> {
   const parts: Array<{ type: 'text'; delta: string }> = [];
@@ -94,5 +96,43 @@ describe('CoachStreamService', () => {
       reply: 'Your plan looks good.',
       metadata: { toolResults, isStreamed: true },
     });
+  });
+});
+
+describe('writeEventStream', () => {
+  function fakeResponse(): { res: Response; written: string[]; ended: () => boolean } {
+    const emitter = new EventEmitter();
+    const written: string[] = [];
+    let ended = false;
+    const res = Object.assign(emitter, {
+      status: jest.fn().mockReturnThis(),
+      setHeader: jest.fn(),
+      flushHeaders: jest.fn(),
+      write: jest.fn((chunk: string) => written.push(chunk)),
+      end: jest.fn(() => {
+        ended = true;
+      }),
+    }) as unknown as Response;
+    return { res, written, ended: () => ended };
+  }
+
+  it('writes every chunk as an SSE data event and ends the response', () => {
+    const { res, written, ended } = fakeResponse();
+    writeEventStream(res, of({ delta: 'Hi', isDone: false }, { isDone: true }));
+
+    expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
+    expect(written).toEqual(['data: {"delta":"Hi","isDone":false}\n\n', 'data: {"isDone":true}\n\n']);
+    expect(ended()).toBe(true);
+  });
+
+  it('ends a failed stream with an error event carrying a code only', () => {
+    const { res, written, ended } = fakeResponse();
+    writeEventStream(
+      res,
+      throwError(() => new Error('provider details')),
+    );
+
+    expect(written).toEqual(['event: error\ndata: {"code":"COACH_STREAM_FAILED"}\n\n']);
+    expect(ended()).toBe(true);
   });
 });

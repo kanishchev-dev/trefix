@@ -3,12 +3,14 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   MessageEvent,
   Param,
   Post,
   Query,
+  Res,
   Sse,
 } from '@nestjs/common';
 import {
@@ -17,8 +19,10 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiProduces,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 import { map, Observable } from 'rxjs';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -27,7 +31,7 @@ import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.int
 
 import { COACH_CHAT_RESPONSE_EXAMPLE, COACH_SESSION_DETAIL_EXAMPLE, COACH_SESSION_EXAMPLE } from './coach.openapi';
 import { CoachService } from './coach.service';
-import { CoachStreamService } from './coach-stream.service';
+import { CoachStreamService, writeEventStream } from './coach-stream.service';
 import { CoachChatDto } from './dto/coach-chat.dto';
 import { CoachChatResponseDto, CoachSessionDetailResponseDto, CoachSessionResponseDto } from './dto/coach-response.dto';
 import { CreateCoachSessionDto } from './dto/create-coach-session.dto';
@@ -83,9 +87,33 @@ export class CoachController {
     return this.coachService.getSession(user.id, id);
   }
 
+  /**
+   * Streams the reply as server-sent events over a POST: the message travels in
+   * a validated body instead of the URL, so it never lands in access logs.
+   * Events: `data: {delta?, isDone}`; a failure ends the stream with
+   * `event: error` and `data: {"code": "COACH_STREAM_FAILED"}`.
+   */
+  @Post('sessions/:id/stream')
+  @RequirePermissions('coach.sessions.message')
+  @ApiOperation({ summary: 'Stream a reply of the coach (server-sent events)' })
+  @ApiProduces('text/event-stream')
+  @ApiOkResponse({ description: 'Event stream of reply fragments' })
+  async streamReply(
+    @CurrentUser() user: AuthUserContext,
+    @Param('id') id: string,
+    @Body() dto: SendCoachMessageDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    // Errors before the first byte (no session, coach disabled) go through the exception filter as JSON.
+    const stream = await this.coachStreamService.streamMessage(user.id, id, dto);
+    writeEventStream(res, stream);
+  }
+
+  /** Kept while clients move to `POST sessions/:id/stream`: the message is in the URL. */
   @Sse('sessions/:id/stream')
+  @Header('Deprecation', 'true')
   @RequirePermissions('coach.sessions.read')
-  @ApiOperation({ summary: 'Stream a message from the coach' })
+  @ApiOperation({ summary: 'Stream a message from the coach', deprecated: true })
   async streamMessage(
     @CurrentUser() user: AuthUserContext,
     @Param('id') id: string,
