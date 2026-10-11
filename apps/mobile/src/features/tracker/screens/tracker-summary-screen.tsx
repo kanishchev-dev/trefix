@@ -6,15 +6,19 @@ import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Ruler } from "@workspace/ui-native";
 
 import appConfig from "../../../../app.json";
-import type { AppLanguage, MainCopy } from "../../../locales";
+import { fillTemplate, type AppLanguage, type MainCopy } from "../../../locales";
 import { displayToKm, kmToDisplay } from "../../../shared/lib/units";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
 import { Chip, ChipScroller } from "../../../shared/ui/chip-scroller";
 import { SectionTitle } from "../../../shared/ui/list-card";
+import { Switch } from "../../../shared/ui/switch";
 import { useToast } from "../../../shared/ui/toast";
 import { openTab } from "../../main/main-routes";
 import { ProfileSubScreen } from "../../profile/components/profile-sub-screen";
+import { useAthleteProfile } from "../../profile/hooks/use-athlete-profile";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
+import { buildRunExport, exportRun } from "../health-export";
+import { useSummaryHealth } from "../use-summary-health";
 import { buildSplits } from "../engine/summary";
 import { formatClock, formatDistanceValue, formatPaceValue } from "../format";
 import { formatStepSize } from "../plan-format";
@@ -49,6 +53,12 @@ export function TrackerSummaryScreen({ theme, themeMode, copy, language }: Props
   const format = useUnitFormat(copy, language);
   const upload = useUploadQueue(copy);
   const { showToast } = useToast();
+  const athlete = useAthleteProfile();
+  const health = useSummaryHealth(state?.startedAt ?? null, state ? (state.endedAt ?? state.clock) : null);
+  const store =
+    health.source?.provider === "apple_health"
+      ? copy.profile.integrations.health.appleTitle
+      : copy.profile.integrations.health.connectTitle;
 
   const measuredM = Math.round(state?.distanceM ?? 0);
   const byPedometer = state ? state.config.environment === "treadmill" || state.config.distanceMode === "time" || state.gpsDistanceM <= 0 : false;
@@ -80,11 +90,17 @@ export function TrackerSummaryScreen({ theme, themeMode, copy, language }: Props
   const save = async (): Promise<void> => {
     setSaving(true);
     try {
+      // The recorder forgets the session once it is saved: take what Health needs first.
+      const run =
+        health.source && health.exportEnabled
+          ? buildRunExport(snapshot.sessionId, state, [...track], distanceM, athlete.data?.weightKg)
+          : null;
       const sessionId = await recorder.save(
         {
           distanceM: distanceM !== measuredM ? distanceM : null,
           workoutType,
           plannedWorkoutId: snapshot.meta.plannedWorkoutId,
+          heartRate: health.heartRate,
           feeling,
           rpe,
           notes,
@@ -95,6 +111,11 @@ export function TrackerSummaryScreen({ theme, themeMode, copy, language }: Props
       const mine = outcomes.find((outcome) => outcome.sessionId === sessionId);
       if (!mine || mine.status === "uploaded") showToast(t.saved);
       else if (mine.status === "retry") showToast(t.savedOffline);
+      if (run && health.source) {
+        const outcome = await exportRun(health.source, run);
+        if (outcome === "denied") showToast(fillTemplate(t.healthDenied, { store }));
+        else if (outcome === "failed") showToast(fillTemplate(t.healthFailed, { store }));
+      }
       openTab("today");
     } finally {
       setSaving(false);
@@ -120,6 +141,12 @@ export function TrackerSummaryScreen({ theme, themeMode, copy, language }: Props
     { label: t.metrics.avgPace, value: formatPaceValue(avgPace, format.units), unit: paceUnit },
   ];
   if (state.gpsDistanceM > 0 || state.elevation.source === "baro") stats.push({ label: t.metrics.elevation, value: String(Math.round(state.elevation.gainM)), unit: t.metrics.metres });
+  if (health.heartRate) {
+    stats.push(
+      { label: t.metrics.heartRate, value: String(health.heartRate.avg), unit: t.metrics.bpm },
+      { label: t.metrics.maxHeartRate, value: String(health.heartRate.max), unit: t.metrics.bpm },
+    );
+  }
   if (state.steps > 0 && state.movingMs >= 60_000) {
     stats.push({ label: t.metrics.cadence, value: String(Math.round(state.steps / (state.movingMs / 60_000))), unit: t.metrics.spm });
   }
@@ -281,6 +308,21 @@ export function TrackerSummaryScreen({ theme, themeMode, copy, language }: Props
         />
       </View>
 
+      {health.source ? (
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={[styles.switchLabel, text]}>{fillTemplate(t.healthExport, { store })}</Text>
+            <Text style={[styles.switchHint, muted]}>{fillTemplate(t.healthExportHint, { store })}</Text>
+          </View>
+          <Switch
+            value={health.exportEnabled}
+            onValueChange={health.setExportEnabled}
+            theme={theme}
+            accessibilityLabel={fillTemplate(t.healthExport, { store })}
+          />
+        </View>
+      ) : null}
+
       <View style={styles.actions}>
         <SheetButton label={t.save} onPress={() => void save()} pending={saving} theme={theme} themeMode={themeMode} />
         <SheetButton label={t.discard} variant="destructive" onPress={discard} disabled={saving} theme={theme} themeMode={themeMode} />
@@ -308,4 +350,8 @@ const styles = StyleSheet.create({
   lapPace: { width: 56, textAlign: "right", fontSize: 15, lineHeight: 20, fontVariant: ["tabular-nums"] },
   notes: { minHeight: 88, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 14, fontSize: 15, textAlignVertical: "top" },
   actions: { gap: 10, paddingTop: 8 },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  flex: { flex: 1, gap: 2 },
+  switchLabel: { fontSize: 15, lineHeight: 20 },
+  switchHint: { fontSize: 13, lineHeight: 18 },
 });

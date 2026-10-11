@@ -1645,7 +1645,10 @@
       "elevation": "Elevation gain",
       "cadence": "Cadence",
       "spm": "spm",
-      "metres": "m"
+      "metres": "m",
+      "heartRate": "Heart rate",
+      "maxHeartRate": "Max heart rate",
+      "bpm": "bpm"
     },
     "pause": "Pause",
     "resume": "Resume",
@@ -1754,6 +1757,10 @@
     "showMap": "Show map",
     "showMetrics": "Show metrics",
     "centerMap": "Back to my position",
-    "keepAliveHint": "To speak with the screen off, the app will ask for location access. The route is not recorded."
+    "keepAliveHint": "To speak with the screen off, the app will ask for location access. The route is not recorded.",
+    "healthExport": "Save to {{store}}",
+    "healthExportHint": "The workout and its route will appear in {{store}}. Write access is asked once.",
+    "healthDenied": "No write access to {{store}}. Allow it in {{store}} settings.",
+    "healthFailed": "Couldn't save the workout to {{store}}"
   }
 }

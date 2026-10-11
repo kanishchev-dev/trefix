@@ -25,6 +25,25 @@ export type PermissionRequest = {
   background: boolean;
 };
 
+/** Whether the app may write workouts to the store. */
+export type HealthWriteAccess = "granted" | "denied" | "not_asked";
+
+/** A run recorded with the tracker, as written to the store. */
+export type RecordedRunExport = {
+  /** Session id of the recording; marks the record as ours. */
+  id: string;
+  startedAt: Date;
+  endedAt: Date;
+  distanceM: number;
+  indoor: boolean;
+  energyKcal: number | null;
+  elevationGainM: number | null;
+  /** Route fixes, epoch ms; empty without GPS. */
+  route: Array<{ t: number; lat: number; lng: number; alt: number | null; acc: number | null; speed: number | null }>;
+};
+
+export type HeartRateSummary = { avg: number; max: number };
+
 /** One platform health store, read on the device. */
 export interface DeviceHealthSource {
   readonly provider: DeviceProvider;
@@ -40,6 +59,13 @@ export interface DeviceHealthSource {
    * (the system dialog shows only the new ones). No-op when nothing is missing.
    */
   ensureReadAccess?(): Promise<void>;
+  /** Write side, for runs recorded with the tracker. */
+  getWriteAccess?(): Promise<HealthWriteAccess>;
+  /** Shows the system dialog for writing workouts; true when granted. */
+  requestWriteAccess?(): Promise<boolean>;
+  saveRecordedRun?(run: RecordedRunExport): Promise<void>;
+  /** Heart rate written by any app (a watch, a chest strap) over an interval; null without samples. */
+  readHeartRate?(from: Date, to: Date): Promise<HeartRateSummary | null>;
   openSystemSettings(): Promise<void>;
   /** Android: the Play Store page of Health Connect. */
   openStorePage?(): Promise<void>;

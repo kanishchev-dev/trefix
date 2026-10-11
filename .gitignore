@@ -10,3 +10,4 @@ apps/mobile/.expo/
 apps/mobile/.env
 .env
 *.tsbuildinfo
+.env*.local

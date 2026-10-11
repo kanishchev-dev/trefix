@@ -67,8 +67,18 @@
 	<string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Trefix reads your running workouts, heart rate, weight and resting heart rate to use them in your plan and workout analysis.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Trefix saves workouts recorded in the app to Health, with their route.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to access your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to access your location</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Trefix uses your location to record the route, distance and pace of your run.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to access your microphone</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Trefix counts your steps to measure distance when GPS is unavailable and on a treadmill.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to access your photos</string>
 	<key>RCTMetroPort</key>
@@ -77,7 +87,9 @@
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>audio</string>
 		<string>fetch</string>
+		<string>location</string>
 		<string>processing</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

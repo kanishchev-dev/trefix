@@ -4,13 +4,17 @@ import {
   getChanges,
   getGrantedPermissions,
   getSdkStatus,
+  ExerciseType,
   initialize,
+  insertRecords,
   openHealthConnectSettings,
   readRecords,
   requestPermission,
   SdkAvailabilityStatus,
+  type HealthConnectRecord,
   type Permission,
   type RecordType,
+  type WriteExerciseRoutePermission,
 } from "react-native-health-connect";
 import type { DeviceActivity, DeviceProfileMetricsRequest, DeviceScope } from "@workspace/api-client";
 
@@ -20,7 +24,16 @@ import {
   type HealthConnectSessionInput,
   type HealthConnectSessionStats,
 } from "../mapping/health-connect-mapper";
-import type { DeviceHealthSource, HealthAvailability, PermissionRequest, SyncCursor, WorkoutChangesPage } from "../types";
+import type {
+  DeviceHealthSource,
+  HealthAvailability,
+  HealthWriteAccess,
+  HeartRateSummary,
+  PermissionRequest,
+  RecordedRunExport,
+  SyncCursor,
+  WorkoutChangesPage,
+} from "../types";
 
 type TimeRangeFilter = Parameters<typeof readRecords>[1]["timeRangeFilter"];
 
@@ -46,6 +59,15 @@ const READ_PERMISSIONS: Array<{ recordType: RecordType; scope: DeviceScope }> = 
   { recordType: "Weight", scope: "weight" },
   { recordType: "Height", scope: "height" },
   { recordType: "RestingHeartRate", scope: "resting_heart_rate" },
+];
+
+/** Written for runs recorded with the tracker. */
+const WRITE_PERMISSIONS: Array<Permission | WriteExerciseRoutePermission> = [
+  { accessType: "write", recordType: "ExerciseSession" },
+  { accessType: "write", recordType: "Distance" },
+  { accessType: "write", recordType: "ActiveCaloriesBurned" },
+  { accessType: "write", recordType: "ElevationGained" },
+  { accessType: "write", recordType: "ExerciseRoute" },
 ];
 
 /**
@@ -322,6 +344,81 @@ export const healthConnectSource: DeviceHealthSource = {
       // Same as above.
     }
     return metrics;
+  },
+
+  async getWriteAccess(): Promise<HealthWriteAccess> {
+    await ensureInitialized();
+    const granted = await getGrantedPermissions();
+    // Health Connect does not tell a refusal from a question never asked.
+    return granted.some((permission) => permission.accessType === "write" && permission.recordType === "ExerciseSession")
+      ? "granted"
+      : "not_asked";
+  },
+
+  async requestWriteAccess(): Promise<boolean> {
+    await ensureInitialized();
+    const granted = await requestPermission(WRITE_PERMISSIONS);
+    return granted.some((permission) => permission.accessType === "write" && permission.recordType === "ExerciseSession");
+  },
+
+  async saveRecordedRun(run: RecordedRunExport): Promise<void> {
+    await ensureInitialized();
+    const granted = new Set(
+      (await getGrantedPermissions()).filter((permission) => permission.accessType === "write").map((p) => p.recordType),
+    );
+    const interval = { startTime: run.startedAt.toISOString(), endTime: run.endedAt.toISOString() };
+    // The client id makes a repeated write replace the record instead of adding one.
+    const metadata = (suffix: string) => ({ clientRecordId: `trefix-${run.id}-${suffix}` });
+    const records: HealthConnectRecord[] = [
+      {
+        recordType: "ExerciseSession",
+        exerciseType: run.indoor ? ExerciseType.RUNNING_TREADMILL : ExerciseType.RUNNING,
+        ...interval,
+        metadata: metadata("session"),
+        ...(run.route.length >= 2 && granted.has("ExerciseRoute")
+          ? {
+              exerciseRoute: {
+                route: run.route.map((point) => ({
+                  time: new Date(point.t).toISOString(),
+                  latitude: point.lat,
+                  longitude: point.lng,
+                  ...(point.alt !== null ? { altitude: { value: point.alt, unit: "meters" as const } } : {}),
+                  ...(point.acc !== null ? { horizontalAccuracy: { value: point.acc, unit: "meters" as const } } : {}),
+                })),
+              },
+            }
+          : {}),
+      },
+    ];
+    if (granted.has("Distance") && run.distanceM > 0) {
+      records.push({ recordType: "Distance", ...interval, distance: { value: run.distanceM, unit: "meters" }, metadata: metadata("distance") });
+    }
+    if (granted.has("ActiveCaloriesBurned") && run.energyKcal) {
+      records.push({
+        recordType: "ActiveCaloriesBurned",
+        ...interval,
+        energy: { value: run.energyKcal, unit: "kilocalories" },
+        metadata: metadata("calories"),
+      });
+    }
+    if (granted.has("ElevationGained") && run.elevationGainM) {
+      records.push({
+        recordType: "ElevationGained",
+        ...interval,
+        elevation: { value: run.elevationGainM, unit: "meters" },
+        metadata: metadata("elevation"),
+      });
+    }
+    await insertRecords(records);
+  },
+
+  async readHeartRate(from: Date, to: Date): Promise<HeartRateSummary | null> {
+    await ensureInitialized();
+    const result = await aggregateRecord({
+      recordType: "HeartRate",
+      timeRangeFilter: { operator: "between", startTime: from.toISOString(), endTime: to.toISOString() },
+    });
+    return result.BPM_AVG && result.BPM_MAX ? { avg: Math.round(result.BPM_AVG), max: Math.round(result.BPM_MAX) } : null;
   },
 
   async openSystemSettings(): Promise<void> {

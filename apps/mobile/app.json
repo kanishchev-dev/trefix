@@ -43,6 +43,11 @@
         "android.permission.health.READ_RESTING_HEART_RATE",
         "android.permission.health.READ_HEALTH_DATA_HISTORY",
         "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND",
+        "android.permission.health.WRITE_EXERCISE",
+        "android.permission.health.WRITE_EXERCISE_ROUTE",
+        "android.permission.health.WRITE_DISTANCE",
+        "android.permission.health.WRITE_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.WRITE_ELEVATION_GAINED",
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.POST_NOTIFICATIONS"
       ]
@@ -78,7 +83,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Trefix reads your running workouts, heart rate, weight and resting heart rate to use them in your plan and workout analysis.",
-          "NSHealthUpdateUsageDescription": false,
+          "NSHealthUpdateUsageDescription": "Trefix saves workouts recorded in the app to Health, with their route.",
           "background": true
         }
       ],

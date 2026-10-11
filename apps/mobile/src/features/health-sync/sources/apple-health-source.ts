@@ -1,12 +1,16 @@
 import { Linking } from "react-native";
 import {
+  authorizationStatusFor,
+  AuthorizationStatus,
   getBiologicalSexAsync,
   getDateOfBirthAsync,
   getMostRecentQuantitySample,
   isHealthDataAvailableAsync,
   queryQuantitySamples,
+  queryStatisticsForQuantity,
   queryWorkoutSamplesWithAnchor,
   requestAuthorization,
+  saveWorkoutSample,
   WorkoutActivityType,
 } from "@kingstinct/react-native-healthkit";
 import type { DeviceActivity, DeviceProfileMetricsRequest, DeviceScope } from "@workspace/api-client";
@@ -14,7 +18,15 @@ import type { DeviceActivity, DeviceProfileMetricsRequest, DeviceScope } from "@
 import { mapAppleWorkout, type AppleWorkoutInput, type AppleWorkoutStats } from "../mapping/apple-health-mapper";
 import { localDateKey } from "../mapping/time";
 import { toKilograms } from "../mapping/units";
-import type { DeviceHealthSource, HealthAvailability, SyncCursor, WorkoutChangesPage } from "../types";
+import type {
+  DeviceHealthSource,
+  HealthAvailability,
+  HealthWriteAccess,
+  HeartRateSummary,
+  RecordedRunExport,
+  SyncCursor,
+  WorkoutChangesPage,
+} from "../types";
 
 const PAGE_SIZE = 25;
 const RESTING_HR_DAYS = 14;
@@ -32,6 +44,17 @@ const READ_TYPES = [
   "HKCharacteristicTypeIdentifierBiologicalSex",
   "HKCharacteristicTypeIdentifierDateOfBirth",
 ] as const;
+
+/** Written for runs recorded with the tracker. */
+const WRITE_TYPES = [
+  "HKWorkoutTypeIdentifier",
+  "HKWorkoutRouteTypeIdentifier",
+  "HKQuantityTypeIdentifierDistanceWalkingRunning",
+  "HKQuantityTypeIdentifierActiveEnergyBurned",
+] as const;
+
+/** Accuracy reported for a fix without one, metres. */
+const DEFAULT_ACCURACY_M = 10;
 
 /** HealthKit BiologicalSex: 0 notSet, 1 female, 2 male, 3 other. */
 const SEX_BY_HEALTHKIT: Record<number, DeviceProfileMetricsRequest["sex"]> = { 1: "female", 2: "male", 3: "other" };
@@ -204,6 +227,79 @@ export const appleHealthSource: DeviceHealthSource = {
       // Same as above.
     }
     return metrics;
+  },
+
+  async getWriteAccess(): Promise<HealthWriteAccess> {
+    // Unlike reading, the write status is disclosed.
+    switch (authorizationStatusFor("HKWorkoutTypeIdentifier")) {
+      case AuthorizationStatus.sharingAuthorized:
+        return "granted";
+      case AuthorizationStatus.sharingDenied:
+        return "denied";
+      default:
+        return "not_asked";
+    }
+  },
+
+  async requestWriteAccess(): Promise<boolean> {
+    await requestAuthorization({ toShare: [...WRITE_TYPES] });
+    return authorizationStatusFor("HKWorkoutTypeIdentifier") === AuthorizationStatus.sharingAuthorized;
+  },
+
+  async saveRecordedRun(run: RecordedRunExport): Promise<void> {
+    const quantities = [
+      {
+        quantityType: "HKQuantityTypeIdentifierDistanceWalkingRunning" as const,
+        quantity: run.distanceM,
+        unit: "m",
+        startDate: run.startedAt,
+        endDate: run.endedAt,
+      },
+      ...(run.energyKcal
+        ? [
+            {
+              quantityType: "HKQuantityTypeIdentifierActiveEnergyBurned" as const,
+              quantity: run.energyKcal,
+              unit: "kcal",
+              startDate: run.startedAt,
+              endDate: run.endedAt,
+            },
+          ]
+        : []),
+    ];
+    const workout = await saveWorkoutSample(
+      WorkoutActivityType.running,
+      quantities,
+      run.startedAt,
+      run.endedAt,
+      { distance: run.distanceM, energyBurned: run.energyKcal ?? undefined },
+      { HKIndoorWorkout: run.indoor, HKExternalUUID: run.id },
+    );
+    if (run.route.length >= 2) {
+      await workout.saveWorkoutRoute(
+        run.route.map((point) => ({
+          latitude: point.lat,
+          longitude: point.lng,
+          altitude: point.alt ?? 0,
+          // Negative accuracy marks the value as unknown.
+          verticalAccuracy: point.alt === null ? -1 : DEFAULT_ACCURACY_M,
+          horizontalAccuracy: point.acc ?? DEFAULT_ACCURACY_M,
+          speed: point.speed ?? -1,
+          course: -1,
+          date: new Date(point.t),
+        })),
+      );
+    }
+  },
+
+  async readHeartRate(from: Date, to: Date): Promise<HeartRateSummary | null> {
+    const stats = await queryStatisticsForQuantity("HKQuantityTypeIdentifierHeartRate", ["discreteAverage", "discreteMax"], {
+      filter: { date: { startDate: from, endDate: to } },
+      unit: "count/min",
+    });
+    const avg = stats.averageQuantity?.quantity;
+    const max = stats.maximumQuantity?.quantity;
+    return avg && max ? { avg: Math.round(avg), max: Math.round(max) } : null;
   },
 
   async openSystemSettings(): Promise<void> {

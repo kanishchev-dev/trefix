@@ -77,6 +77,8 @@ PODS:
     - ExpoModulesCore
   - ExpoLocalization (57.0.2):
     - ExpoModulesCore
+  - ExpoLocation (57.0.20):
+    - ExpoModulesCore
   - ExpoLogBox (57.0.4):
     - React-Core
   - ExpoModulesCore (57.0.18):
@@ -116,7 +118,13 @@ PODS:
     - RNWorklets
   - ExpoSecureStore (57.0.4):
     - ExpoModulesCore
+  - ExpoSensors (57.0.3):
+    - ExpoModulesCore
+  - ExpoSpeech (57.0.3):
+    - ExpoModulesCore
   - ExpoSplashScreen (57.0.9):
+    - ExpoModulesCore
+  - ExpoSQLite (57.0.4):
     - ExpoModulesCore
   - ExpoTaskManager (57.0.21):
     - ExpoModulesCore
@@ -147,6 +155,14 @@ PODS:
   - hermes-engine (250829098.0.17):
     - hermes-engine/Pre-built (= 250829098.0.17)
   - hermes-engine/Pre-built (250829098.0.17)
+  - MapboxCommon (24.23.1):
+    - Turf (= 4.0.0)
+  - MapboxCoreMaps (11.23.1):
+    - MapboxCommon (= 24.23.1)
+  - MapboxMaps (11.23.1):
+    - MapboxCommon (= 24.23.1)
+    - MapboxCoreMaps (= 11.23.1)
+    - Turf (= 4.0.0)
   - NitroModules (0.37.1):
     - hermes-engine
     - RCTRequired
@@ -2201,6 +2217,33 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - rnmapbox-maps (10.3.7):
+    - MapboxMaps (~> 11.23.1)
+    - React
+    - React-Core
+    - rnmapbox-maps/DynamicLibrary (= 10.3.7)
+    - Turf
+  - rnmapbox-maps/DynamicLibrary (10.3.7):
+    - hermes-engine
+    - MapboxMaps (~> 11.23.1)
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-Core
+    - React-Core-prebuilt
+    - React-featureflags
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Turf
+    - Yoga
   - RNReanimated (4.5.1):
     - hermes-engine
     - RCTRequired
@@ -2463,6 +2506,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - Turf (4.0.0)
   - UMAppLoader (57.0.2)
   - Yoga (0.0.0)
 
@@ -2485,13 +2529,17 @@ DEPENDENCIES:
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@57.0.2_expo@57.0.23_react@19.2.3/node_modules/expo-keep-awake/ios`)"
   - "ExpoLinearGradient (from `../../../node_modules/.pnpm/expo-linear-gradient@57.0.2_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-_867b13998358c48255ab4cd70f39834d/node_modules/expo-linear-gradient/ios`)"
   - "ExpoLocalization (from `../../../node_modules/.pnpm/expo-localization@57.0.2_expo@57.0.23_react@19.2.3/node_modules/expo-localization/ios`)"
+  - "ExpoLocation (from `../../../node_modules/.pnpm/expo-location@57.0.20_expo@57.0.23_typescript@6.0.3/node_modules/expo-location/ios/ExpoLocation.podspec`)"
   - "ExpoLogBox (from `../../../node_modules/.pnpm/@expo+log-box@57.0.4_@expo+dom-webview@57.0.1_expo@57.0.23_react-native@0.86.3_@babel+c_d9694bccd021e96ee8342b086890729b/node_modules/@expo/log-box`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core/ExpoModulesCore.podspec`)"
-  - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-jsi@57.1.0_patch_hash=0db8835a42b5a246f84cc56d8deceb24d6da5e78318955ef9a9c_0be1a2728b30ecb19840a400930c8585/node_modules/expo-modules-jsi/apple`)"
+  - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-jsi@57.1.0_patch_hash=e574242d8961392542e534744aa86fad7f3cdad4728f6fa18d4e_f69246657f6ce874bbeed4749215a679/node_modules/expo-modules-jsi/apple`)"
   - "ExpoModulesWorklets (from `../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core/ExpoModulesWorklets.podspec`)"
   - "ExpoModulesWorkletsAdapter (from `../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@57.0.4_expo@57.0.23/node_modules/expo-secure-store/ios`)"
+  - "ExpoSensors (from `../../../node_modules/.pnpm/expo-sensors@57.0.3_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+m_98a930dcf651c0c231dd44e3e7463f8d/node_modules/expo-sensors/ios`)"
+  - "ExpoSpeech (from `../../../node_modules/.pnpm/expo-speech@57.0.3_expo@57.0.23/node_modules/expo-speech/ios`)"
   - "ExpoSplashScreen (from `../../../node_modules/.pnpm/expo-splash-screen@57.0.9_expo@57.0.23_typescript@6.0.3/node_modules/expo-splash-screen/ios`)"
+  - "ExpoSQLite (from `../../../node_modules/.pnpm/expo-sqlite@57.0.4_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+me_7ea31dc0121450af984d4adc23b0b59b/node_modules/expo-sqlite/ios`)"
   - "ExpoTaskManager (from `../../../node_modules/.pnpm/expo-task-manager@57.0.21_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-na_4754c91902ac74031bb508fda384502f/node_modules/expo-task-manager/ios`)"
   - "ExpoVideo (from `../../../node_modules/.pnpm/expo-video@57.0.4_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+met_672c0b89e74ff8055ddcea968c358fdd/node_modules/expo-video/ios/ExpoVideo.podspec`)"
   - "ExpoWebBrowser (from `../../../node_modules/.pnpm/expo-web-browser@57.0.3_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nati_8ab6e59a47712f4047b58e2dfaaad3b7/node_modules/expo-web-browser/ios`)"
@@ -2578,6 +2626,7 @@ DEPENDENCIES:
   - "RNCMaskedView (from `../../../node_modules/.pnpm/@react-native-masked-view+masked-view@0.3.2_react-native@0.86.3_@babel+core@7.29.7_@rea_ce77b5b5946808457c8d6b160d017ead/node_modules/@react-native-masked-view/masked-view`)"
   - "RNGestureHandler (from `../../../node_modules/.pnpm/react-native-gesture-handler@2.32.0_react-native@0.86.3_@babel+core@7.29.7_@react-nativ_2da1c43a237cd5d18277f65796ac5d60/node_modules/react-native-gesture-handler`)"
   - "RNGoogleSignin (from `../../../node_modules/.pnpm/@react-native-google-signin+google-signin@16.1.5_expo@57.0.23_react-native@0.86.3_@babe_8018907b9971da4127b83cf101c36cf1/node_modules/@react-native-google-signin/google-signin`)"
+  - "rnmapbox-maps (from `../../../node_modules/.pnpm/@rnmapbox+maps@10.3.7_expo@57.0.23_react-dom@19.3.0_react@19.2.3__react-native@0.86.3_@_1041357f247669c688064502fcdfc6cf/node_modules/@rnmapbox/maps`)"
   - "RNReanimated (from `../../../node_modules/.pnpm/react-native-reanimated@4.5.1_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-na_ee9f5702c4ced316c823a90b3755dce0/node_modules/react-native-reanimated`)"
   - "RNScreens (from `../../../node_modules/.pnpm/react-native-screens@4.26.0_react-native@0.86.3_@babel+core@7.29.7_@react-native+metro-_649ee535f6f41af399d95a78ff6dbe75/node_modules/react-native-screens`)"
   - "RNSVG (from `../../../node_modules/.pnpm/react-native-svg@15.15.5_react-native@0.86.3_@babel+core@7.29.7_@react-native+metro-con_1952fd3d81169ffe39ec0b568384d2f4/node_modules/react-native-svg`)"
@@ -2593,9 +2642,13 @@ SPEC REPOS:
     - GoogleUtilities
     - GTMAppAuth
     - GTMSessionFetcher
+    - MapboxCommon
+    - MapboxCoreMaps
+    - MapboxMaps
     - PromisesObjC
     - PromisesSwift
     - RecaptchaInterop
+    - Turf
 
 EXTERNAL SOURCES:
   EXConstants:
@@ -2634,20 +2687,28 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-linear-gradient@57.0.2_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-_867b13998358c48255ab4cd70f39834d/node_modules/expo-linear-gradient/ios"
   ExpoLocalization:
     :path: "../../../node_modules/.pnpm/expo-localization@57.0.2_expo@57.0.23_react@19.2.3/node_modules/expo-localization/ios"
+  ExpoLocation:
+    :podspec: "../../../node_modules/.pnpm/expo-location@57.0.20_expo@57.0.23_typescript@6.0.3/node_modules/expo-location/ios/ExpoLocation.podspec"
   ExpoLogBox:
     :path: "../../../node_modules/.pnpm/@expo+log-box@57.0.4_@expo+dom-webview@57.0.1_expo@57.0.23_react-native@0.86.3_@babel+c_d9694bccd021e96ee8342b086890729b/node_modules/@expo/log-box"
   ExpoModulesCore:
     :podspec: "../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core/ExpoModulesCore.podspec"
   ExpoModulesJSI:
-    :path: "../../../node_modules/.pnpm/expo-modules-jsi@57.1.0_patch_hash=0db8835a42b5a246f84cc56d8deceb24d6da5e78318955ef9a9c_0be1a2728b30ecb19840a400930c8585/node_modules/expo-modules-jsi/apple"
+    :path: "../../../node_modules/.pnpm/expo-modules-jsi@57.1.0_patch_hash=e574242d8961392542e534744aa86fad7f3cdad4728f6fa18d4e_f69246657f6ce874bbeed4749215a679/node_modules/expo-modules-jsi/apple"
   ExpoModulesWorklets:
     :podspec: "../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core/ExpoModulesWorklets.podspec"
   ExpoModulesWorkletsAdapter:
     :path: "../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core"
   ExpoSecureStore:
     :path: "../../../node_modules/.pnpm/expo-secure-store@57.0.4_expo@57.0.23/node_modules/expo-secure-store/ios"
+  ExpoSensors:
+    :path: "../../../node_modules/.pnpm/expo-sensors@57.0.3_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+m_98a930dcf651c0c231dd44e3e7463f8d/node_modules/expo-sensors/ios"
+  ExpoSpeech:
+    :path: "../../../node_modules/.pnpm/expo-speech@57.0.3_expo@57.0.23/node_modules/expo-speech/ios"
   ExpoSplashScreen:
     :path: "../../../node_modules/.pnpm/expo-splash-screen@57.0.9_expo@57.0.23_typescript@6.0.3/node_modules/expo-splash-screen/ios"
+  ExpoSQLite:
+    :path: "../../../node_modules/.pnpm/expo-sqlite@57.0.4_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+me_7ea31dc0121450af984d4adc23b0b59b/node_modules/expo-sqlite/ios"
   ExpoTaskManager:
     :path: "../../../node_modules/.pnpm/expo-task-manager@57.0.21_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-na_4754c91902ac74031bb508fda384502f/node_modules/expo-task-manager/ios"
   ExpoVideo:
@@ -2819,6 +2880,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/react-native-gesture-handler@2.32.0_react-native@0.86.3_@babel+core@7.29.7_@react-nativ_2da1c43a237cd5d18277f65796ac5d60/node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../../../node_modules/.pnpm/@react-native-google-signin+google-signin@16.1.5_expo@57.0.23_react-native@0.86.3_@babe_8018907b9971da4127b83cf101c36cf1/node_modules/@react-native-google-signin/google-signin"
+  rnmapbox-maps:
+    :path: "../../../node_modules/.pnpm/@rnmapbox+maps@10.3.7_expo@57.0.23_react-dom@19.3.0_react@19.2.3__react-native@0.86.3_@_1041357f247669c688064502fcdfc6cf/node_modules/@rnmapbox/maps"
   RNReanimated:
     :path: "../../../node_modules/.pnpm/react-native-reanimated@4.5.1_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-na_ee9f5702c4ced316c823a90b3755dce0/node_modules/react-native-reanimated"
   RNScreens:
@@ -2853,13 +2916,17 @@ SPEC CHECKSUMS:
   ExpoKeepAwake: b9ebf2ba14c42a2b5782adab42a2168a689bfd07
   ExpoLinearGradient: e27e8781d3ab33e5b48df94d02d072d2a49f611e
   ExpoLocalization: fdd0a71791af322b739ea8aebddeb669498e4f2b
+  ExpoLocation: 0320e2007f86482c669a1636bfb207c1d907a966
   ExpoLogBox: c5a2405d8f6bfbb52c2ef3336b511825479a2a43
   ExpoModulesCore: 033e8a23924df814ca78a69881e531355fb46142
   ExpoModulesJSI: c8dd52f25cdeaeadf733197eefd279dd22e63f17
   ExpoModulesWorklets: 37830cb23e90c87218523f942c3e10eaac9c9322
   ExpoModulesWorkletsAdapter: 1e31a552ba2570c9ba3d3260fe045221fdde9ab3
   ExpoSecureStore: c704911d323d1d62ecf6b81bf3afa58eecedd80c
+  ExpoSensors: 1dd2b96e5fb76c4433ea1db1ab77cd1ba1e5c376
+  ExpoSpeech: d4a346d40ae3ff8ad2e7273baf84beedeef8b6d4
   ExpoSplashScreen: 414f03c750fd71772a44e4e22bcdad58dbb5b1b8
+  ExpoSQLite: 9bdbcf58d41cfeb9970c98c712b5dcf7cd7052a5
   ExpoTaskManager: 8a707221d3b03d32e8a5347d15e5b85b329f9bba
   ExpoVideo: 1662c08a55b329071fe79ccc57ad8b69699c7a43
   ExpoWebBrowser: 15f1d2ab6f778156eec1eadd4430f1bf66100b9d
@@ -2869,6 +2936,9 @@ SPEC CHECKSUMS:
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   hermes-engine: f950618e994e43d007f013c66a7666906b11ed29
+  MapboxCommon: d006256c4643860a7b3046af45d1671569b6c5ac
+  MapboxCoreMaps: de1a4461d0ab5d65d907f06e8d82fdbe06bb3213
+  MapboxMaps: 22340ae0e0d47b2e4761019b1d6c569ab04e088d
   NitroModules: d61a1f895b7f6cdd50e5ab7d50b90d8ca1650ccd
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
@@ -2952,13 +3022,15 @@ SPEC CHECKSUMS:
   RNCMaskedView: 48989935d9665d97d87fa7e44f486b4d22cd5b9f
   RNGestureHandler: a21ad1bb32b203570440c29b7e406a342a690842
   RNGoogleSignin: 0bdb79f8bb7b598754a42db310c7864535421a97
+  rnmapbox-maps: 1aeb72dc788e52cc0ac63c9e63e3801255d91487
   RNReanimated: 1bdc1bc25e8145b0207d7bc27f9eeb51dd9475c9
   RNScreens: 37cece0483decca1c3300bb1c2225c798039b8fc
   RNSVG: ffe18ba0e8fbad864bf22d6f0060a4ee88ec9bf3
   RNWorklets: f48b173638cb29bf8b7c4704508188c30456fa08
+  Turf: c9eb11a65d96af58cac523460fd40fec5061b081
   UMAppLoader: 085b1dd7d3dc25df9bd27dfc6da2356c25846ec5
   Yoga: 18b74b3ade30bebc1904004dfaceae1dd02a330a
 
-PODFILE CHECKSUM: 330b08d8ebd7a076f33d04aae8bf88306ad312d6
+PODFILE CHECKSUM: 45763180e9fc2ae310e1d4223252abb9682a0aea
 
 COCOAPODS: 1.15.2

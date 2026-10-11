@@ -22,6 +22,8 @@ export type SummaryEdits = {
   rpe?: number | null;
   notes?: string | null;
   gearId?: string | null;
+  /** From the health store (a watch or a strap worn during the run). */
+  heartRate?: { avg: number; max: number } | null;
 };
 
 export type TrackFile = {
@@ -132,6 +134,8 @@ export function buildRecording(
     elevationLossM: hasElevation ? round(state.elevation.lossM) : null,
     avgPaceSecPerKm: distanceM > 0 ? round((movingSec / distanceM) * 1000) : null,
     bestPaceSecPerKm: fullSplits.length > 0 ? Math.min(...fullSplits.map((split) => split.paceSecPerKm)) : null,
+    avgHeartRate: edits.heartRate?.avg ?? null,
+    maxHeartRate: edits.heartRate?.max ?? null,
     avgCadence: state.steps > 0 && movingMinutes >= 1 ? round(state.steps / movingMinutes) : null,
     splits,
     laps: state.plan?.laps ?? [],

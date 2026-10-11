@@ -28,6 +28,8 @@ type Props = {
 };
 
 const CODE_LENGTH = 4;
+/** A wrong code stays red this long, then the cells clear for the next try. */
+const ERROR_CLEAR_MS = 700;
 
 type HighlightState = "normal" | "error" | "success";
 
@@ -43,6 +45,7 @@ export function AuthVerificationScreen({
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const resendTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSubmittedCode = useRef<string | null>(null);
 
   const [code, setCode] = useState("");
@@ -51,6 +54,7 @@ export function AuthVerificationScreen({
   );
   const [isResending, setIsResending] = useState(false);
   const [highlightState, setHighlightState] = useState<HighlightState>("normal");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const normalizedCode = useMemo(
     () => code.replace(/\D/g, "").slice(0, CODE_LENGTH),
@@ -66,21 +70,10 @@ export function AuthVerificationScreen({
     setCode("");
     setSecondsRemaining(challenge.resendAfterSeconds);
     setHighlightState("normal");
+    setErrorMessage(null);
     lastSubmittedCode.current = null;
     inputRef.current?.focus();
   }, [challenge]);
-
-  useEffect(() => {
-    if (code === normalizedCode) {
-      return;
-    }
-
-    setCode(normalizedCode);
-    // Reset highlight when user starts typing again
-    if (highlightState === "error") {
-      setHighlightState("normal");
-    }
-  }, [code, normalizedCode, highlightState]);
 
   useEffect(() => {
     async function triggerSubmit() {
@@ -95,12 +88,19 @@ export function AuthVerificationScreen({
           setHighlightState("success");
         } catch (error) {
           setHighlightState("error");
-          // Alert is handled by parent or we can add it here if needed
+          setErrorMessage(error instanceof Error && error.message ? error.message : copy.errors.verificationFailed);
+          // Keep the keyboard up: clear the wrong code and let the user type again.
+          if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+          errorTimeoutRef.current = setTimeout(() => {
+            setCode("");
+            lastSubmittedCode.current = null;
+            inputRef.current?.focus();
+          }, ERROR_CLEAR_MS);
         }
       }
     }
     void triggerSubmit();
-  }, [normalizedCode, isSubmitting, onSubmitCode]);
+  }, [normalizedCode, isSubmitting, onSubmitCode, copy.errors.verificationFailed]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -115,11 +115,25 @@ export function AuthVerificationScreen({
       if (resendTimeoutRef.current) {
         clearTimeout(resendTimeoutRef.current);
       }
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
     },
     [],
   );
 
   function handleChangeText(nextValue: string): void {
+    // While the code is checked the input stays focused (no keyboard flicker) but ignores typing.
+    if (isSubmitting || highlightState === "success") return;
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = null;
+    }
+    if (highlightState === "error") {
+      setHighlightState("normal");
+      setErrorMessage(null);
+      lastSubmittedCode.current = null;
+    }
     setCode(nextValue.replace(/\D/g, "").slice(0, CODE_LENGTH));
   }
 
@@ -128,7 +142,12 @@ export function AuthVerificationScreen({
       return;
     }
 
-    onSubmitCode(normalizedCode);
+    if (isSubmitting || normalizedCode === lastSubmittedCode.current) {
+      return;
+    }
+
+    lastSubmittedCode.current = normalizedCode;
+    void Promise.resolve(onSubmitCode(normalizedCode)).catch(() => undefined);
   }
 
   function handleResend(): void {
@@ -140,6 +159,8 @@ export function AuthVerificationScreen({
     void onResendCode()
       .then((nextChallenge) => {
         setCode("");
+        setErrorMessage(null);
+        setHighlightState("normal");
         setSecondsRemaining(nextChallenge.resendAfterSeconds);
         inputRef.current?.focus();
       })
@@ -260,7 +281,7 @@ export function AuthVerificationScreen({
               autoComplete="one-time-code"
               autoCorrect={false}
               keyboardType="number-pad"
-              editable={!isSubmitting && highlightState !== "success"}
+              editable={highlightState !== "success"}
               onChangeText={handleChangeText}
               onSubmitEditing={handleSubmit}
               placeholder=""
@@ -268,6 +289,18 @@ export function AuthVerificationScreen({
               textContentType="oneTimeCode"
               value={code}
             />
+
+            {errorMessage ? (
+              <Text
+                accessibilityLiveRegion="polite"
+                style={[
+                  styles.errorText,
+                  { color: theme.color.danger, fontFamily: theme.typography.fontFamily.sans.regular },
+                ]}
+              >
+                {errorMessage}
+              </Text>
+            ) : null}
 
             {secondsRemaining > 0 ? (
               <View style={styles.resendBlock}>
@@ -488,6 +521,12 @@ const styles = StyleSheet.create({
     width: 2,
     height: 26,
     borderRadius: 999,
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    marginTop: 12,
   },
   hiddenInput: {
     position: "absolute",

@@ -336,13 +336,8 @@ export default function App() {
       const tokens = await verifyEmailOtp(activeChallenge.email, code);
       await saveAuthSession(tokens);
       setSession(tokens);
-    } catch (error) {
-      Alert.alert(
-        authCopy.errors.verificationFailedTitle,
-        error instanceof Error ? error.message : authCopy.errors.verificationFailed,
-      );
-      throw error;
     } finally {
+      // The error is shown on the code screen: an alert would take the keyboard away.
       setIsVerificationSubmitting(false);
     }
   }
@@ -502,9 +497,7 @@ export default function App() {
                     email={email}
                     challenge={challenge}
                     isSubmitting={isVerificationSubmitting}
-                    onSubmitCode={(submittedCode) => {
-                      void handleVerificationSubmit(submittedCode);
-                    }}
+                    onSubmitCode={handleVerificationSubmit}
                     onResendCode={() => handleResendCode()}
                   />
                 ) : null
