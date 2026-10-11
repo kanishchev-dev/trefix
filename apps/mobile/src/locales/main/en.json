@@ -1603,5 +1603,157 @@
         "default": "Adjust the plan"
       }
     }
+  },
+  "tracker": {
+    "record": "Record",
+    "setupTitle": "New workout",
+    "where": "Where you run",
+    "environments": {
+      "outdoor": "Outdoor",
+      "trail": "Trail",
+      "treadmill": "Treadmill"
+    },
+    "measure": "Distance",
+    "modes": {
+      "gps": "GPS",
+      "time": "By time"
+    },
+    "modeHints": {
+      "gps": "Route and pace from satellites. If the signal drops, the pedometer keeps counting.",
+      "time": "No location: time and pace from the pedometer; you can correct the distance at the end.",
+      "treadmill": "Distance from the pedometer. Enter the treadmill reading at the end."
+    },
+    "gps": {
+      "searching": "Looking for GPS",
+      "weak": "Weak GPS signal",
+      "good": "GPS ready",
+      "lost": "GPS lost — counting steps",
+      "off": "No GPS"
+    },
+    "gpsSlowHint": "No GPS fix yet. You can start by time.",
+    "startByTime": "Start by time",
+    "autoPause": "Auto-pause",
+    "autoPauseHint": "Pause the recording while you stand still",
+    "type": "Workout type",
+    "typeFree": "No type",
+    "start": "Start",
+    "metrics": {
+      "time": "Time",
+      "distance": "Distance",
+      "pace": "Pace",
+      "avgPace": "Avg pace",
+      "elevation": "Elevation gain",
+      "cadence": "Cadence",
+      "spm": "spm",
+      "metres": "m"
+    },
+    "pause": "Pause",
+    "resume": "Resume",
+    "finish": "Finish",
+    "holdToFinish": "Hold to finish",
+    "lock": "Lock screen",
+    "unlockHint": "Hold to unlock",
+    "paused": "Paused",
+    "autoPaused": "Auto-paused",
+    "summaryTitle": "Workout summary",
+    "splits": "Splits",
+    "splitKm": "Km",
+    "splitPace": "Pace",
+    "splitElevation": "Elev.",
+    "save": "Save",
+    "discard": "Delete recording",
+    "discardTitle": "Delete the recording?",
+    "discardBody": "The workout will not be saved.",
+    "discardConfirm": "Delete",
+    "cancel": "Cancel",
+    "distanceTreadmill": "What did the treadmill show?",
+    "distanceTime": "Distance, if you know it exactly",
+    "feeling": "How you felt",
+    "feelings": [
+      "Bad",
+      "So-so",
+      "Okay",
+      "Good",
+      "Great"
+    ],
+    "rpe": "Effort, RPE",
+    "notes": "Note",
+    "notesPlaceholder": "How did it go",
+    "saved": "Workout saved",
+    "savedOffline": "Saved on the phone — will upload when online",
+    "uploadRejected": "The server rejected the workout: {{message}}",
+    "recoveryTitle": "Unfinished workout",
+    "recoveryBody": "The recording was interrupted. Resume or finish it?",
+    "recoveryResume": "Resume",
+    "recoveryFinish": "Finish",
+    "permissions": {
+      "location": "Allow location access to record the route, or start by time.",
+      "location_services": "Turn on location services in the phone settings.",
+      "motion": "Allow Motion & Fitness access to count steps."
+    },
+    "openSettings": "Open settings",
+    "startFailed": "Could not start recording",
+    "notification": {
+      "title": "Trefix is recording a workout",
+      "body": "Recording continues with the screen off"
+    },
+    "runMode": {
+      "plan": "Planned",
+      "free": "Free run"
+    },
+    "planToday": "Today's workout",
+    "planLoading": "Loading the workout steps…",
+    "planUnavailable": "This workout can't be run step by step. It will be recorded as a free run.",
+    "stepKinds": {
+      "warmup": "Warm-up",
+      "work": "Work",
+      "recovery": "Rest",
+      "steady": "Main set",
+      "cooldown": "Cool-down"
+    },
+    "repeats": "{{count}} × {{work}}, rest {{rest}}",
+    "units": {
+      "min": "min",
+      "m": "m",
+      "km": "km",
+      "decimal": "."
+    },
+    "voice": "Voice cues",
+    "voiceHint": "Distance, pace and plan steps read aloud, even with the screen off",
+    "voiceInterval": "Report every",
+    "voiceIntervals": {
+      "1u": "1 km",
+      "2u": "2 km",
+      "5min": "5 min",
+      "10min": "10 min"
+    },
+    "voiceIntervalsImperial": {
+      "1u": "1 mile",
+      "2u": "2 miles"
+    },
+    "step": {
+      "of": "Step {{current}} of {{total}}",
+      "repetition": "repeat {{index}} of {{total}}",
+      "remaining": "Remaining",
+      "target": "Target",
+      "pace": {
+        "in": "On pace",
+        "fast": "Faster than planned",
+        "slow": "Slower than planned"
+      },
+      "next": "Next: {{step}}",
+      "last": "Last step",
+      "skip": "Next step",
+      "done": "Plan complete",
+      "doneHint": "Finish now or keep running"
+    },
+    "laps": "Plan vs actual",
+    "lapPlanned": "Plan",
+    "lapActual": "Actual",
+    "startPlanned": "Start recording",
+    "showMap": "Show map",
+    "showMetrics": "Show metrics",
+    "centerMap": "Back to my position",
+    "keepAliveHint": "To speak with the screen off, the app will ask for location access. The route is not recorded."
   }
 }

@@ -7,6 +7,9 @@ ROOT_DIR="$(cd "$MOBILE_DIR/../.." && pwd)"
 echo "▶ pnpm install"
 cd "$ROOT_DIR" && pnpm install
 
+echo "▶ expo prebuild (app.json plugins, permissions, background modes)"
+cd "$MOBILE_DIR" && npx expo prebuild --platform ios --no-install
+
 echo "▶ pod install"
 cd "$MOBILE_DIR/ios" && pod install
 JSI_REL="$(sed -n 's/.*:path: "\(.*expo-modules-jsi\/apple\)".*/\1/p' Podfile.lock | head -1)"

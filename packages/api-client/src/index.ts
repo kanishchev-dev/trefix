@@ -2201,6 +2201,132 @@ export const adminCreateWorkoutSchema = z.object({
 export const adminUpdateWorkoutSchema = adminCreateWorkoutSchema.partial();
 
 export type WorkoutType = z.infer<typeof workoutTypeSchema>;
+
+// --- Tracker ---
+
+export const recordingEnvironmentSchema = z.enum(["outdoor", "trail", "treadmill"]);
+export type RecordingEnvironment = z.infer<typeof recordingEnvironmentSchema>;
+/** `mixed` — GPS with stretches counted by the pedometer while the signal was lost. */
+export const distanceSourceSchema = z.enum(["gps", "pedometer", "manual", "mixed"]);
+export type DistanceSource = z.infer<typeof distanceSourceSchema>;
+
+export const executionStepSchema = z.object({
+  index: z.number(),
+  kind: z.enum(["warmup", "work", "recovery", "steady", "cooldown"]),
+  durationSec: z.number().nullable(),
+  distanceM: z.number().nullable(),
+  targetPace: z.object({ minSecPerKm: z.number(), maxSecPerKm: z.number() }).nullable(),
+  zone: z.string().nullable(),
+  repetition: z.object({ index: z.number(), total: z.number() }).nullable(),
+});
+export type ExecutionStep = z.infer<typeof executionStepSchema>;
+
+export const workoutExecutionSchema = z.object({
+  workoutId: z.string(),
+  type: workoutTypeSchema,
+  steps: z.array(executionStepSchema),
+  totalDurationSec: z.number(),
+  totalDistanceM: z.number().nullable(),
+});
+export type WorkoutExecution = z.infer<typeof workoutExecutionSchema>;
+
+export const recordedSplitSchema = z.object({
+  km: z.number(),
+  durationSec: z.number(),
+  paceSecPerKm: z.number(),
+  elevationGainM: z.number().nullable().optional(),
+  avgHeartRate: z.number().nullable().optional(),
+  partial: z.boolean().optional(),
+});
+export type RecordedSplit = z.infer<typeof recordedSplitSchema>;
+
+export const recordedLapSchema = z.object({
+  index: z.number(),
+  kind: z.string(),
+  plannedSec: z.number().nullable().optional(),
+  plannedM: z.number().nullable().optional(),
+  actualSec: z.number(),
+  actualM: z.number(),
+  avgPaceSecPerKm: z.number().nullable().optional(),
+  inTarget: z.boolean().nullable().optional(),
+});
+export type RecordedLap = z.infer<typeof recordedLapSchema>;
+
+export const recordedPauseSchema = z.object({ startedAt: z.string(), endedAt: z.string(), auto: z.boolean() });
+export type RecordedPause = z.infer<typeof recordedPauseSchema>;
+
+export const routeBoundsSchema = z.object({ minLat: z.number(), minLng: z.number(), maxLat: z.number(), maxLng: z.number() });
+export type RouteBounds = z.infer<typeof routeBoundsSchema>;
+
+/** Body of `POST /recorded-activities` (the `summary` part of the multipart request). */
+export type RecordedActivityRequest = {
+  clientSessionId: string;
+  environment: RecordingEnvironment;
+  distanceSource: DistanceSource;
+  plannedWorkoutId?: string | null;
+  workoutType?: Exclude<WorkoutType, "rest"> | null;
+  startedAt: string;
+  endedAt: string;
+  utcOffsetMinutes?: number;
+  elapsedSec: number;
+  movingSec: number;
+  distanceM: number;
+  measuredDistanceM?: number | null;
+  elevationGainM?: number | null;
+  elevationLossM?: number | null;
+  avgPaceSecPerKm?: number | null;
+  bestPaceSecPerKm?: number | null;
+  avgHeartRate?: number | null;
+  maxHeartRate?: number | null;
+  avgCadence?: number | null;
+  splits?: RecordedSplit[];
+  laps?: RecordedLap[];
+  pauses?: RecordedPause[];
+  routeLine?: string | null;
+  routeBounds?: RouteBounds | null;
+  startPoint?: { lat: number; lng: number } | null;
+  gearId?: string | null;
+  feeling?: number | null;
+  rpe?: number | null;
+  notes?: string | null;
+  device: { platform: "ios" | "android"; osVersion?: string; appVersion?: string; model?: string };
+};
+
+export const recordedActivityAcceptedSchema = z.object({
+  recordedActivityId: z.string(),
+  workoutId: z.string(),
+  outcome: z.enum(["created", "completed_planned", "merged", "matched_manual"]),
+});
+export type RecordedActivityAccepted = z.infer<typeof recordedActivityAcceptedSchema>;
+
+export const workoutRecordingSchema = z.object({
+  id: z.string(),
+  environment: recordingEnvironmentSchema,
+  distanceSource: distanceSourceSchema,
+  startedAt: z.string(),
+  endedAt: z.string(),
+  elapsedSec: z.number(),
+  movingSec: z.number(),
+  distanceM: z.number(),
+  measuredDistanceM: z.number().nullable(),
+  elevationGainM: z.number().nullable(),
+  elevationLossM: z.number().nullable(),
+  avgPaceSecPerKm: z.number().nullable(),
+  bestPaceSecPerKm: z.number().nullable(),
+  avgHeartRate: z.number().nullable(),
+  maxHeartRate: z.number().nullable(),
+  avgCadence: z.number().nullable(),
+  splits: z.array(recordedSplitSchema),
+  laps: z.array(recordedLapSchema),
+  pauses: z.array(recordedPauseSchema),
+  routeLine: z.string().nullable(),
+  routeBounds: routeBoundsSchema.nullable(),
+  trackFileId: z.string().nullable(),
+  feeling: z.number().nullable(),
+  rpe: z.number().nullable(),
+  notes: z.string().nullable(),
+});
+export type WorkoutRecording = z.infer<typeof workoutRecordingSchema>;
 export type WorkoutStatus = z.infer<typeof workoutStatusSchema>;
 export type AdminWorkoutEditableStatus = z.infer<typeof adminWorkoutEditableStatusSchema>;
 export type AdminCalendarWorkout = z.infer<typeof adminCalendarWorkoutSchema>;

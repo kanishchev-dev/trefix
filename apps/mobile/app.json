@@ -15,6 +15,9 @@
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "x-apple-health"
+        ],
+        "UIBackgroundModes": [
+          "audio"
         ]
       }
     },
@@ -39,7 +42,9 @@
         "android.permission.health.READ_HEIGHT",
         "android.permission.health.READ_RESTING_HEART_RATE",
         "android.permission.health.READ_HEALTH_DATA_HISTORY",
-        "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
+        "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -86,7 +91,24 @@
           }
         }
       ],
-      "expo-background-task"
+      "expo-background-task",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Trefix uses your location to record the route, distance and pace of your run.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Trefix counts your steps to measure distance when GPS is unavailable and on a treadmill."
+        }
+      ],
+      "expo-sqlite",
+      "@rnmapbox/maps"
     ],
     "locales": {
       "ru": "./locales/ru.json",

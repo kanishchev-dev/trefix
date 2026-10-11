@@ -8,6 +8,7 @@ import { ProfileScreen } from "../profile/screens/profile-screen";
 import { ProgressScreen } from "../progress/screens/progress-screen";
 import { PushedScreen } from "./components/pushed-screen";
 import { TabBar } from "./components/tab-bar";
+import { RecordButton } from "../tracker/components/record-button";
 import { openStackScreen, useMainShell, type MainTabParamList } from "./main-routes";
 import { type MainTabKey } from "./main-types";
 import { PlanScreen } from "./screens/plan-screen";
@@ -75,6 +76,7 @@ export function MainTabsScreen({
         {() => (
           <PushedScreen theme={theme} themeMode={themeMode}>
             <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
+            <RecordButton theme={theme} copy={copy} language={userLanguage} />
           </PushedScreen>
         )}
       </Tabs.Screen>

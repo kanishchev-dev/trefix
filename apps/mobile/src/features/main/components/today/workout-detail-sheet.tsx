@@ -15,6 +15,7 @@ import {
   Award,
   Sparkles,
   ChevronRight,
+  Play,
 } from "lucide-react-native";
 
 import { type TrainingWorkout } from "@workspace/api-client";
@@ -35,6 +36,9 @@ import {
 } from "../../../plans/components/plan-workout-edit-panel";
 import { useUnitFormat } from "../../../profile/hooks/use-unit-format";
 import { WorkoutSourceRow } from "../../../health-sync/components/workout-source-row";
+import { RecordingMap } from "../../../tracker/map/recording-map";
+import { recorder } from "../../../tracker/recorder";
+import { pushSubScreen } from "../../main-routes";
 
 type Props = {
   workout: TrainingWorkout | null;
@@ -97,6 +101,8 @@ export function WorkoutDetailSheet({
   // Manual completion stays available whatever the plan status: Strava may be missing.
   const canComplete = (isPending || workout.status === "missed") && workoutDate <= today;
   const planCopy = copy.plans.edit;
+  // Today's run can be recorded with the tracker, step by step.
+  const canRecord = isPending && workoutDate === today && workout.type !== "rest" && !recorder.active;
   const actualData = (workout.actual as Record<string, unknown>) || {};
   const analysisData = workout.analysis;
 
@@ -375,6 +381,7 @@ export function WorkoutDetailSheet({
         {isCompleted && (
           <View style={styles.section}>
             <SheetSectionLabel text={locale.result || "РЕЗУЛЬТАТ"} theme={theme} />
+            <RecordingMap workoutId={workout.id} theme={theme} units={format.units} />
 
             <View style={styles.statsGrid}>
               {actualData.actualDistanceKm ? (
@@ -596,6 +603,19 @@ export function WorkoutDetailSheet({
           </View>
         )}
       </ScrollView>
+
+      {canRecord && !isCompleting ? (
+        <SheetButton
+          label={copy.tracker.startPlanned}
+          onPress={() => {
+            onClose();
+            pushSubScreen({ kind: "tracker-setup", plannedWorkoutId: workout.id });
+          }}
+          theme={theme}
+          themeMode={themeMode}
+          trailing={<Play color={theme.color.primaryForeground} size={16} />}
+        />
+      ) : null}
 
       {/* Actions Row */}
       <View style={styles.actionsRow}>

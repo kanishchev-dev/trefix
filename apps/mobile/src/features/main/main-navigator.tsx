@@ -37,6 +37,10 @@ import { UnitsScreen } from "../profile/screens/units-screen";
 import { useProgressRealtime } from "../progress/hooks/use-progress-v2";
 import { MetricScreen } from "../progress/screens/metric-screen";
 import { RecordsScreen } from "../progress/screens/records-screen";
+import { useTrackerBootstrap } from "../tracker/hooks";
+import { TrackerRecordingScreen } from "../tracker/screens/tracker-recording-screen";
+import { TrackerSetupScreen } from "../tracker/screens/tracker-setup-screen";
+import { TrackerSummaryScreen } from "../tracker/screens/tracker-summary-screen";
 import { PushedScreen } from "./components/pushed-screen";
 import { MainTabsScreen } from "./main-tabs-screen";
 import {
@@ -110,6 +114,7 @@ function MainStackHost({
   useProfileRealtime();
   useHealthSyncTriggers();
   useProgressRealtime();
+  useTrackerBootstrap(copy);
   const { preferences } = usePreferences();
 
   // With the coach off the chat is unavailable: lead to the setting that turns it back on.
@@ -388,6 +393,28 @@ function MainStackHost({
                   />,
                 )
               }
+            </Stack.Screen>
+
+            {/* Tracker: the run can be left only through "Finish" and the finish screen */}
+            <Stack.Screen name="tracker-setup">
+              {({ route }) =>
+                frame(
+                  <TrackerSetupScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    plannedWorkoutId={route.params?.plannedWorkoutId ?? null}
+                    onBack={goBack}
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="tracker-recording" options={{ gestureEnabled: false, animation: "fade" }}>
+              {() => <TrackerRecordingScreen theme={theme} themeMode={themeMode} copy={copy} language={language} />}
+            </Stack.Screen>
+            <Stack.Screen name="tracker-summary" options={{ gestureEnabled: false }}>
+              {() => frame(<TrackerSummaryScreen theme={theme} themeMode={themeMode} copy={copy} language={language} />)}
             </Stack.Screen>
           </Stack.Navigator>
 

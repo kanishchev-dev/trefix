@@ -14,6 +14,9 @@ export type SubScreen =
   | { kind: "plan-details"; planId: string }
   | { kind: "progress-records" }
   | { kind: "progress-metric"; metric: "threshold_pace" | "vo2max" }
+  | { kind: "tracker-setup"; plannedWorkoutId?: string | null }
+  | { kind: "tracker-recording" }
+  | { kind: "tracker-summary" }
   | ProfileRoute;
 
 type SubScreenParams = {
@@ -38,6 +41,13 @@ export function pushSubScreen(screen: SubScreen): void {
   if (!mainNavigationRef.isReady()) return;
   const { kind, ...params } = screen;
   mainNavigationRef.dispatch(StackActions.push(kind, Object.keys(params).length > 0 ? params : undefined));
+}
+
+/** Swaps the top screen, e.g. setup → recording: going back must not return to the setup. */
+export function replaceSubScreen(screen: SubScreen): void {
+  if (!mainNavigationRef.isReady()) return;
+  const { kind, ...params } = screen;
+  mainNavigationRef.dispatch(StackActions.replace(kind, Object.keys(params).length > 0 ? params : undefined));
 }
 
 export function goBack(): void {

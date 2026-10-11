@@ -22,8 +22,13 @@ import {
   trainingPlanSchema,
   trainingStateSchema,
   trainingWorkoutSchema,
+  workoutExecutionSchema,
+  workoutRecordingSchema,
+  ApiClientError,
   z,
   type ActivePlanResponse,
+  type WorkoutExecution,
+  type WorkoutRecording,
   type AthleteProfile,
   type PendingAdaptation,
   type AthleteProfileUpdate,
@@ -214,6 +219,23 @@ export async function createManualPlan(
 export async function getWorkout(workoutId: string): Promise<TrainingWorkout> {
   const response = await request<unknown>(`/workouts/${workoutId}`, { useAuth: true });
   return trainingWorkoutSchema.parse(response);
+}
+
+/** Steps of a planned workout laid out for the tracker; 409 when it cannot be run. */
+export async function getWorkoutExecution(workoutId: string): Promise<WorkoutExecution> {
+  const response = await request<unknown>(`/workouts/${workoutId}/execution`, { useAuth: true });
+  return workoutExecutionSchema.parse(response);
+}
+
+/** What the tracker recorded for a workout; null when it was not recorded with the tracker. */
+export async function getWorkoutRecording(workoutId: string): Promise<WorkoutRecording | null> {
+  try {
+    const response = await request<unknown>(`/workouts/${workoutId}/recording`, { useAuth: true });
+    return workoutRecordingSchema.parse(response);
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 /** Current athlete metrics with per-field provenance (Strava, manual workouts, profile). */

@@ -1,3 +1,5 @@
 {
-  "NSHealthShareUsageDescription": "Trefix reads your running workouts, heart rate, weight and resting heart rate to use them in your plan and workout analysis."
+  "NSHealthShareUsageDescription": "Trefix reads your running workouts, heart rate, weight and resting heart rate to use them in your plan and workout analysis.",
+  "NSLocationWhenInUseUsageDescription": "Trefix uses your location to record the route, distance and pace of your run.",
+  "NSMotionUsageDescription": "Trefix counts your steps to measure distance when GPS is unavailable and on a treadmill."
 }

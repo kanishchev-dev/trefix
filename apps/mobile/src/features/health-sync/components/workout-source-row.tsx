@@ -24,6 +24,8 @@ function providerName(provider: string, copy: MainCopy): string {
       return "Strava";
     case "garmin":
       return "Garmin";
+    case "trefix":
+      return "Trefix";
     default:
       return provider;
   }
