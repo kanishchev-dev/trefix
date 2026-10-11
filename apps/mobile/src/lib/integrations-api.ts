@@ -41,6 +41,7 @@ export async function getStravaIntegration(): Promise<IntegrationItem> {
 
 export async function initiateStravaConnect(): Promise<StravaConnectResponse> {
   const response = await request<unknown>("/integrations/strava/connect", {
+    method: "POST",
     useAuth: true,
   });
   return stravaConnectResponseSchema.parse(response);
@@ -54,7 +55,8 @@ export async function disconnectStrava(): Promise<{ success: boolean }> {
 }
 
 export async function triggerStravaSync(): Promise<IntegrationSyncStatus> {
-  const response = await request<unknown>("/integrations/strava/sync/trigger", {
+  const response = await request<unknown>("/integrations/strava/sync", {
+    method: "POST",
     useAuth: true,
   });
   return integrationSyncStatusSchema.parse(response);
