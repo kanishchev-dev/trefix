@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
 import { RealtimeService } from '@/modules/realtime/realtime.service';
+import { USERS_EVENTS } from '@/modules/users/users.events';
 
 import { UserUpdatedEvent } from '../events/user-updated.event';
 
@@ -11,7 +12,7 @@ export class UserUpdatedListener {
 
   constructor(private readonly realtimeService: RealtimeService) {}
 
-  @OnEvent('user.updated')
+  @OnEvent(USERS_EVENTS.USER_UPDATED)
   handleUserUpdatedEvent(event: UserUpdatedEvent): void {
     this.logger.log(`Handling user.updated event for user: ${event.userId}`);
     this.realtimeService.emitToUser(event.userId, 'user.updated', event);

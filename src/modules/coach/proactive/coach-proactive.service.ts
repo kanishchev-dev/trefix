@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Queue } from 'bullmq';
 
+import { COACH_EVENTS } from '@/modules/coach/coach.events';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
 import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
 
@@ -84,7 +85,7 @@ export class CoachProactiveService {
     await session.save();
 
     this.eventEmitter.emit(
-      'coach.reply.generated',
+      COACH_EVENTS.REPLY_GENERATED,
       new CoachReplyGeneratedEvent(message.userId, message.athleteId, session.id, created.id),
     );
     this.realtimeService.emitToUser(message.userId, 'coach.message.proactive', {

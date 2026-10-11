@@ -2,6 +2,8 @@ import { VersioningType } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
+import { RealtimePresenceService } from '@/modules/realtime/services/realtime-presence.service';
+import { AdminUsersService } from '@/modules/users/services/admin-users.service';
 import { UsersController } from '@/modules/users/users.controller';
 import { UsersService } from '@/modules/users/users.service';
 
@@ -16,20 +18,21 @@ describe('UsersController (e2e)', () => {
   };
 
   const mockUsersService = {
-    create: jest.fn().mockResolvedValue(userData),
     findAll: jest.fn().mockResolvedValue(new PaginatedResponseDto([userData], 1, 1, 10)),
-    findOne: jest.fn().mockResolvedValue(userData),
-    remove: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<UsersService>;
+  // Admin mutations go through AdminUsersService; UsersService only lists.
+  const mockAdminUsersService = {
+    createFromAdmin: jest.fn().mockResolvedValue(userData),
+    deleteFromAdmin: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<AdminUsersService>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
-        {
-          provide: UsersService,
-          useValue: mockUsersService,
-        },
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: AdminUsersService, useValue: mockAdminUsersService },
+        { provide: RealtimePresenceService, useValue: { onlineAmong: jest.fn().mockResolvedValue(new Set()) } },
       ],
     }).compile();
 

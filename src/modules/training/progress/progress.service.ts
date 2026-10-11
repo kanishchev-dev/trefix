@@ -1,9 +1,13 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException, DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { GoalView } from '@/modules/training/interfaces/training-views.interface';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
+import { toGoalView } from '@/modules/training/training.mappers';
 
 import { estimateMaxHeartRate } from '../athletes/hr-zones';
 import { ageFromBirthDate } from '../athletes/profile-completeness';
@@ -21,7 +25,6 @@ import {
   RECORD_DISTANCES,
   type RecordDistance,
 } from '../training.constants';
-import { TrainingService } from '../training.service';
 import { CreateResultDto } from './dto/progress.dto';
 import {
   type ProgressMetricView,
@@ -80,7 +83,7 @@ export class ProgressService {
     @InjectModel(RaceResult) private readonly resultModel: typeof RaceResult,
     @InjectModel(TrainingPlan) private readonly planModel: typeof TrainingPlan,
     @InjectModel(AthleteGoal) private readonly goalModel: typeof AthleteGoal,
-    private readonly trainingService: TrainingService,
+    private readonly athletesService: AthletesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -243,7 +246,7 @@ export class ProgressService {
 
   async recordHistory(userId: string, distance: RecordDistance): Promise<RecordHistoryView> {
     if (!(distance in RECORD_DISTANCES)) {
-      throw new DomainException('PROGRESS_DISTANCE_UNKNOWN', 'Unknown record distance', HttpStatus.BAD_REQUEST);
+      throw new DomainBadRequestException('PROGRESS_DISTANCE_UNKNOWN', 'Unknown record distance');
     }
     const data = await this.load(userId);
     return {
@@ -263,13 +266,13 @@ export class ProgressService {
   }
 
   async addResult(userId: string, dto: CreateResultDto): Promise<RaceResultView> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const pace = dto.timeSeconds / (dto.distanceM / 1000);
     if (pace < 150 || pace > 900) {
-      throw new DomainException('RESULT_INVALID', 'The pace of this result is not realistic', HttpStatus.BAD_REQUEST);
+      throw new DomainBadRequestException('RESULT_INVALID', 'The pace of this result is not realistic');
     }
     if (dto.date > todayIsoInTz('UTC')) {
-      throw new DomainException('RESULT_INVALID', 'A result cannot be in the future', HttpStatus.BAD_REQUEST);
+      throw new DomainBadRequestException('RESULT_INVALID', 'A result cannot be in the future');
     }
     const result = await this.resultModel.create({
       athleteId: athlete.id,
@@ -279,7 +282,7 @@ export class ProgressService {
       kind: dto.kind,
       name: dto.name?.trim() || null,
     });
-    this.eventEmitter.emit('progress.updated', new ProgressUpdatedEvent(userId));
+    this.eventEmitter.emit(TRAINING_EVENTS.PROGRESS_UPDATED, new ProgressUpdatedEvent(userId));
     return {
       id: result.id,
       distanceM: result.distanceM,
@@ -291,32 +294,32 @@ export class ProgressService {
   }
 
   async deleteResult(userId: string, resultId: string): Promise<void> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const result = await this.resultModel.findOne({ where: { id: resultId, athleteId: athlete.id } });
     if (!result) {
-      throw new DomainException('RESULT_NOT_FOUND', 'Result not found', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('RESULT_NOT_FOUND', 'Result not found');
     }
     await result.destroy();
-    this.eventEmitter.emit('progress.updated', new ProgressUpdatedEvent(userId));
+    this.eventEmitter.emit(TRAINING_EVENTS.PROGRESS_UPDATED, new ProgressUpdatedEvent(userId));
   }
 
   async setRecordsExcluded(userId: string, workoutId: string, excluded: boolean): Promise<RecordsExclusionView> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const workout = await this.workoutModel.findOne({ where: { id: workoutId, athleteId: athlete.id } });
     if (!workout) {
-      throw new DomainException('WORKOUT_NOT_FOUND', 'Workout not found', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('WORKOUT_NOT_FOUND', 'Workout not found');
     }
     workout.excludeFromRecords = excluded;
     await workout.save();
-    this.eventEmitter.emit('progress.updated', new ProgressUpdatedEvent(userId));
+    this.eventEmitter.emit(TRAINING_EVENTS.PROGRESS_UPDATED, new ProgressUpdatedEvent(userId));
     return { workoutId, excluded };
   }
 
   private async load(userId: string): Promise<AthleteData> {
-    const view = await this.trainingService.getOrCreateAthlete(userId);
+    const view = await this.athletesService.getOrCreateAthlete(userId);
     const athlete = await this.athleteModel.findByPk(view.id);
     if (!athlete) {
-      throw new DomainException('ATHLETE_NOT_FOUND', 'The user has no athlete profile yet', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('ATHLETE_NOT_FOUND', 'The user has no athlete profile yet');
     }
     const [workouts, loads, results] = await Promise.all([
       this.workoutModel.findAll({
@@ -360,16 +363,14 @@ export class ProgressService {
   }
 
   /** The goal of the active plan, otherwise the latest active goal. */
-  private async resolveGoal(
-    athleteId: string,
-  ): Promise<{ view: ReturnType<TrainingService['toGoalView']>; planName: string | null } | null> {
+  private async resolveGoal(athleteId: string): Promise<{ view: GoalView; planName: string | null } | null> {
     const plan = await this.planModel.findOne({ where: { athleteId, status: 'active' } });
     let goal = plan?.goalId ? await this.goalModel.findByPk(plan.goalId) : null;
     if (!goal) {
       goal = await this.goalModel.findOne({ where: { athleteId, status: 'active' }, order: [['createdAt', 'DESC']] });
     }
     if (!goal) return null;
-    return { view: this.trainingService.toGoalView(goal), planName: plan?.name ?? null };
+    return { view: toGoalView(goal), planName: plan?.name ?? null };
   }
 
   /** Completed vs scheduled workouts of the active plan in the last 4 weeks. */

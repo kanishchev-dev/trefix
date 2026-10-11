@@ -5,9 +5,11 @@ import { IsBoolean, IsIn, IsOptional, IsTimeZone, Matches, ValidateNested } from
 import {
   COACH_ADAPTATION_MODES,
   type CoachAdaptationMode,
+  PREFERENCE_LANGUAGES,
   PREFERENCE_TIME_FORMATS,
   PREFERENCE_UNITS,
   PREFERENCE_WEEK_STARTS,
+  type PreferenceLanguage,
   type PreferenceTimeFormat,
   type PreferenceUnits,
   type PreferenceWeekStart,
@@ -65,6 +67,14 @@ export class UpdateUserPreferencesDto {
   @IsOptional()
   @IsTimeZone()
   timezone?: string;
+
+  @ApiPropertyOptional({
+    enum: PREFERENCE_LANGUAGES,
+    description: 'App language; coach messages and emails are written in it',
+  })
+  @IsOptional()
+  @IsIn(PREFERENCE_LANGUAGES)
+  language?: PreferenceLanguage;
 }
 
 export class UserPreferencesResponseDto {
@@ -91,6 +101,9 @@ export class UserPreferencesResponseDto {
 
   @ApiPropertyOptional({ nullable: true, example: 'Europe/Moscow' })
   timezone!: string | null;
+
+  @ApiPropertyOptional({ enum: PREFERENCE_LANGUAGES, nullable: true, example: 'ru' })
+  language!: PreferenceLanguage | null;
 
   @ApiProperty()
   updatedAt!: Date;

@@ -1,6 +1,7 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable } from '@nestjs/common';
 import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 /** Redis backs sessions, queues and the cache: without it the API cannot serve requests. */
 @Injectable()

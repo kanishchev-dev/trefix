@@ -1,9 +1,10 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { Redis } from 'ioredis';
 import { Server } from 'socket.io';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 import {
   REALTIME_ROOM_PREFIX,

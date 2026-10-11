@@ -7,9 +7,9 @@ import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { SystemEntityDeletionForbiddenException } from '@/common/exceptions/system-entity-deletion-forbidden.exception';
-import { Permission } from '@/modules/permissions/entities/permission.entity';
-import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 import { SettingsService } from '@/modules/settings/settings.service';
+import { USERS_EVENTS } from '@/modules/users/users.events';
 
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { AdminUserResponseDto } from './dto/admin-user-response.dto';
@@ -30,6 +30,7 @@ export class UsersService {
     private userModel: typeof User,
     private eventEmitter: EventEmitter2,
     private settingsService: SettingsService,
+    private readonly userPermissionsService: UserPermissionsService,
   ) {}
 
   async findByEmail(email: string): Promise<User | null> {
@@ -81,7 +82,10 @@ export class UsersService {
     await this.applyDefaultAssignments(user.id);
 
     // Emit event as per guidelines
-    this.eventEmitter.emit('user.created', new UserCreatedEvent(user.id, user.email, user.firstName, user.lastName));
+    this.eventEmitter.emit(
+      USERS_EVENTS.USER_CREATED,
+      new UserCreatedEvent(user.id, user.email, user.firstName, user.lastName),
+    );
 
     return user;
   }
@@ -98,17 +102,7 @@ export class UsersService {
         return;
       }
 
-      const user = await this.userModel.findByPk(userId);
-      if (!user) {
-        return;
-      }
-
-      if (defaultGroups.length > 0) {
-        await user.$add('permissionGroups', defaultGroups);
-      }
-      if (defaultPermissions.length > 0) {
-        await user.$add('individualPermissions', defaultPermissions);
-      }
+      await this.userPermissionsService.grantInitialAccess(userId, defaultGroups, defaultPermissions);
     } catch (error) {
       // Defaults must never block user creation; admin can fix assignments later.
       this.logger.warn(`Failed to apply default assignments for user ${userId}: ${(error as Error).message}`);
@@ -120,7 +114,7 @@ export class UsersService {
     await user.update(dto);
 
     this.eventEmitter.emit(
-      'user.updated',
+      USERS_EVENTS.USER_UPDATED,
       new UserUpdatedEvent(user.id, user.email, user.firstName, user.lastName, user.avatarUrl),
     );
 
@@ -164,7 +158,7 @@ export class UsersService {
     }
 
     this.eventEmitter.emit(
-      'user.updated',
+      USERS_EVENTS.USER_UPDATED,
       new UserUpdatedEvent(user.id, user.email, user.firstName, user.lastName, user.avatarUrl),
     );
 
@@ -229,41 +223,10 @@ export class UsersService {
    * @throws EntityNotFoundException if user is not found
    */
   async findAdminDetail(id: string): Promise<AdminUserResponseDto> {
-    const user = await this.userModel.findByPk(id, {
-      include: [
-        {
-          model: PermissionGroup,
-          as: 'permissionGroups',
-          through: { attributes: [] },
-          include: [{ model: Permission, as: 'permissions', through: { attributes: [] } }],
-        },
-        { model: Permission, as: 'individualPermissions', through: { attributes: [] } },
-      ],
-    });
-
-    if (!user) {
-      throw new EntityNotFoundException('User', id);
-    }
-
-    const groups = (user.permissionGroups ?? []).map((group) => ({
-      id: group.id,
-      name: group.name,
-      description: group.description,
-      systemKey: group.systemKey,
-      isSystem: group.isSystem,
-    }));
-
-    const individualPermissions = (user.individualPermissions ?? []).map((permission) => ({
-      name: permission.name,
-      description: permission.description,
-    }));
-
-    const effectivePermissions = new Set<string>(individualPermissions.map((permission) => permission.name));
-    for (const group of user.permissionGroups ?? []) {
-      for (const permission of group.permissions ?? []) {
-        effectivePermissions.add(permission.name);
-      }
-    }
+    const user = await this.findOne(id);
+    const { groups, individualPermissions, effectivePermissions } = await this.userPermissionsService.getAccessSummary(
+      user.id,
+    );
 
     return {
       id: user.id,
@@ -281,7 +244,7 @@ export class UsersService {
       passwordChangedAt: user.passwordChangedAt,
       groups,
       individualPermissions,
-      effectivePermissions: [...effectivePermissions],
+      effectivePermissions,
     };
   }
 
@@ -313,7 +276,7 @@ export class UsersService {
 
     await user.destroy(); // Soft delete because of paranoid: true
 
-    this.eventEmitter.emit('user.deleted', new UserDeletedEvent(id));
+    this.eventEmitter.emit(USERS_EVENTS.USER_DELETED, new UserDeletedEvent(id));
   }
 
   async updatePasswordHash(id: string, passwordHash: string): Promise<User> {

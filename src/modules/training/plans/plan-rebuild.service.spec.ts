@@ -9,12 +9,13 @@ import { Athlete } from '../entities/athlete.entity';
 import { AthleteState } from '../entities/athlete-state.entity';
 import { TrainingPlan } from '../entities/training-plan.entity';
 import { Workout } from '../entities/workout.entity';
+import { provideTrainingServicesMock } from '../testing/training-service-providers';
 import { TrainingEngine } from '../training.engine';
-import { TrainingService } from '../training.service';
 import { AthleteMetricsService } from './athlete-metrics.service';
 import { PlanEditingService } from './plan-editing.service';
 import { PlanLifecycleService } from './plan-lifecycle.service';
 import { PlanRebuildService, RebuildInput } from './plan-rebuild.service';
+import { PlanStartOptionsService } from './plan-start-options.service';
 
 describe('AthleteMetricsService', () => {
   let service: AthleteMetricsService;
@@ -195,8 +196,9 @@ describe('PlanRebuildService', () => {
         PlanRebuildService,
         TrainingEngine,
         { provide: getModelToken(Workout), useValue: workoutModel },
-        { provide: TrainingService, useValue: training },
+        ...provideTrainingServicesMock(training),
         { provide: PlanLifecycleService, useValue: lifecycle },
+        { provide: PlanStartOptionsService, useValue: lifecycle },
         { provide: PlanEditingService, useValue: editing },
         {
           provide: AthleteMetricsService,

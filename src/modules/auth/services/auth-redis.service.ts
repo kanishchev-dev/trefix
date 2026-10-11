@@ -1,6 +1,7 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 import {
   AUTH_EMAIL_OTP_COOLDOWN_REDIS_PREFIX,

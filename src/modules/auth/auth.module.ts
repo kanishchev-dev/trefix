@@ -15,7 +15,11 @@ import { AuthRedisModule } from './auth-redis.module';
 import authConfig from './config/auth.config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserDeletedListener } from './listeners/user-deleted.listener';
+import { AuthCodeService } from './services/auth-code.service';
+import { AuthSessionService } from './services/auth-session.service';
+import { AuthSocialFlowService } from './services/auth-social-flow.service';
 import { AuthTokenService } from './services/auth-token.service';
+import { SocialIdentityService } from './services/social-identity.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -31,7 +35,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthSessionService,
+    AuthCodeService,
+    AuthSocialFlowService,
     AuthTokenService,
+    SocialIdentityService,
     JwtStrategy,
     JwtAuthGuard,
     UserDeletedListener,

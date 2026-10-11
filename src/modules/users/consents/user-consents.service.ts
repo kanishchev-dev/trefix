@@ -1,8 +1,9 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainUnprocessableException, ForbiddenActionException } from '@/common/exceptions/domain-exceptions';
+import { USERS_EVENTS } from '@/modules/users/users.events';
 
 import { CONSENT_TYPES, type ConsentType, CURRENT_CONSENT_VERSIONS } from './consents.constants';
 import { ConsentResponseDto, ConsentsListResponseDto, GiveConsentDto } from './dto/consent.dto';
@@ -31,10 +32,9 @@ export class UserConsentsService {
   /** Accepting the current version again is a no-op that returns the active record. */
   async give(userId: string, dto: GiveConsentDto): Promise<ConsentResponseDto> {
     if (dto.version !== CURRENT_CONSENT_VERSIONS[dto.type]) {
-      throw new DomainException(
+      throw new DomainUnprocessableException(
         'CONSENT_VERSION_OUTDATED',
         'The consent text version is outdated; reload the text and accept it again',
-        HttpStatus.UNPROCESSABLE_ENTITY,
         { currentVersion: CURRENT_CONSENT_VERSIONS[dto.type] },
       );
     }
@@ -49,7 +49,7 @@ export class UserConsentsService {
       acceptedAt: new Date(),
       client: dto.client ?? {},
     });
-    this.eventEmitter.emit('users.consent_given', new ConsentGivenEvent(userId, dto.type, dto.version));
+    this.eventEmitter.emit(USERS_EVENTS.CONSENT_GIVEN, new ConsentGivenEvent(userId, dto.type, dto.version));
     return this.toResponse(consent);
   }
 
@@ -60,7 +60,7 @@ export class UserConsentsService {
       { where: { userId, type, revokedAt: null } },
     );
     if (revoked > 0) {
-      await this.eventEmitter.emitAsync('users.consent_revoked', new ConsentRevokedEvent(userId, type));
+      await this.eventEmitter.emitAsync(USERS_EVENTS.CONSENT_REVOKED, new ConsentRevokedEvent(userId, type));
     }
     return { success: true };
   }
@@ -73,10 +73,9 @@ export class UserConsentsService {
 
   async assertCurrent(userId: string, type: ConsentType): Promise<void> {
     if (!(await this.hasCurrent(userId, type))) {
-      throw new DomainException(
+      throw new ForbiddenActionException(
         type === 'health_data' ? 'HEALTH_CONSENT_REQUIRED' : 'CONSENT_REQUIRED',
         'Accept the current consent before continuing',
-        HttpStatus.FORBIDDEN,
         { type, currentVersion: CURRENT_CONSENT_VERSIONS[type] },
       );
     }

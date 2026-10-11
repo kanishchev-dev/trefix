@@ -5,6 +5,13 @@ import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
+import { AdaptationsService } from '@/modules/training/adaptations/adaptations.service';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { GoalsService } from '@/modules/training/goals/goals.service';
+import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
+import { PlanQueryService } from '@/modules/training/plans/plan-query.service';
+import { PlanRegenerationService } from '@/modules/training/plans/plan-regeneration.service';
+import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 
 import { AdaptPlanDto } from './dto/adapt-plan.dto';
 import { AnalyzeWorkoutDto } from './dto/analyze-workout.dto';
@@ -38,7 +45,6 @@ import {
   TRAINING_WORKOUT_COMPLETION_EXAMPLE,
   TRAINING_WORKOUT_EXAMPLE,
 } from './training.openapi';
-import { TrainingService } from './training.service';
 
 @ApiTags('Training')
 @ApiBearerAuth()
@@ -47,7 +53,15 @@ import { TrainingService } from './training.service';
   version: '1',
 })
 export class TrainingController {
-  constructor(private readonly trainingService: TrainingService) {}
+  constructor(
+    private readonly adaptationsService: AdaptationsService,
+    private readonly athletesService: AthletesService,
+    private readonly goalsService: GoalsService,
+    private readonly planGenerationService: PlanGenerationService,
+    private readonly planRegenerationService: PlanRegenerationService,
+    private readonly planQueryService: PlanQueryService,
+    private readonly workoutsService: WorkoutsService,
+  ) {}
 
   @Post('athletes')
   @RequirePermissions('training.athletes.create')
@@ -61,7 +75,7 @@ export class TrainingController {
     @CurrentUser() user: AuthUserContext,
     @Body() dto: CreateAthleteDto,
   ): Promise<TrainingAthleteResponseDto> {
-    return this.trainingService.createAthlete(user.id, dto);
+    return this.athletesService.createAthlete(user.id, dto);
   }
 
   @Get('athletes/:id')
@@ -74,9 +88,9 @@ export class TrainingController {
   })
   async getAthlete(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingAthleteResponseDto> {
     if (id === 'me') {
-      return this.trainingService.getOrCreateAthlete(user.id);
+      return this.athletesService.getOrCreateAthlete(user.id);
     }
-    return this.trainingService.getAthlete(id, user.id);
+    return this.athletesService.getAthlete(id, user.id);
   }
 
   @Get('athletes/:id/state')
@@ -93,10 +107,10 @@ export class TrainingController {
   ): Promise<TrainingStateResponseDto> {
     let targetId = id;
     if (id === 'me') {
-      const athlete = await this.trainingService.getOrCreateAthlete(user.id);
+      const athlete = await this.athletesService.getOrCreateAthlete(user.id);
       targetId = athlete.id;
     }
-    return this.trainingService.getAthleteState(targetId, user.id);
+    return this.athletesService.getAthleteState(targetId, user.id);
   }
 
   @Post('goals')
@@ -108,7 +122,7 @@ export class TrainingController {
     schema: { example: TRAINING_GOAL_EXAMPLE },
   })
   createGoal(@CurrentUser() user: AuthUserContext, @Body() dto: CreateGoalDto): Promise<TrainingGoalResponseDto> {
-    return this.trainingService.createGoal(user.id, dto);
+    return this.goalsService.createGoal(user.id, dto);
   }
 
   @Get('goals/:id')
@@ -120,7 +134,7 @@ export class TrainingController {
     schema: { example: TRAINING_GOAL_EXAMPLE },
   })
   getGoal(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingGoalResponseDto> {
-    return this.trainingService.getGoal(id, user.id);
+    return this.goalsService.getGoal(id, user.id);
   }
 
   @Post('plans/manual/preview')
@@ -134,7 +148,7 @@ export class TrainingController {
     @CurrentUser() user: AuthUserContext,
     @Body() dto: PreviewManualPlanDto,
   ): Promise<ManualPlanPreviewResponseDto> {
-    return this.trainingService.previewManualPlan(user.id, dto);
+    return this.planGenerationService.previewManualPlan(user.id, dto);
   }
 
   @Post('plans/manual')
@@ -149,7 +163,7 @@ export class TrainingController {
     @CurrentUser() user: AuthUserContext,
     @Body() dto: CreateManualPlanDto,
   ): Promise<TrainingPlanResponseDto> {
-    return this.trainingService.createManualPlan(user.id, dto);
+    return this.planGenerationService.createManualPlan(user.id, dto);
   }
 
   @Post('plans')
@@ -162,7 +176,7 @@ export class TrainingController {
     schema: { example: TRAINING_PLAN_EXAMPLE },
   })
   createPlan(@CurrentUser() user: AuthUserContext, @Body() dto: CreatePlanDto): Promise<TrainingPlanResponseDto> {
-    return this.trainingService.createPlan(user.id, dto);
+    return this.planGenerationService.createPlan(user.id, dto);
   }
 
   @Get('plans/:id/overview')
@@ -173,7 +187,7 @@ export class TrainingController {
     type: PlanOverviewResponseDto,
   })
   getPlanOverview(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<PlanOverviewResponseDto> {
-    return this.trainingService.getPlanOverview(id, user.id);
+    return this.planQueryService.getPlanOverview(id, user.id);
   }
 
   @Post('plans/:id/regenerate')
@@ -189,7 +203,7 @@ export class TrainingController {
     @Param('id') id: string,
     @Body() dto: RegeneratePlanDto,
   ): Promise<TrainingPlanResponseDto> {
-    return this.trainingService.regeneratePlan(user.id, id, dto.startDate);
+    return this.planRegenerationService.regeneratePlan(user.id, id, dto.startDate);
   }
 
   @Get('workouts')
@@ -205,7 +219,7 @@ export class TrainingController {
     @Query('to') to?: string,
     @Query('includeCancelled') includeCancelled?: string,
   ): Promise<TrainingWorkoutResponseDto[]> {
-    return this.trainingService.listWorkoutsForDateRange(user.id, from, to, includeCancelled === 'true');
+    return this.workoutsService.listWorkoutsForDateRange(user.id, from, to, includeCancelled === 'true');
   }
 
   @Get('athletes/me/current-metrics')
@@ -216,7 +230,7 @@ export class TrainingController {
       'Each field is `{ value, source }`; source is profile | strava | manual_workouts | athlete_state | none',
   })
   getCurrentMetrics(@CurrentUser() user: AuthUserContext): Promise<CurrentMetrics> {
-    return this.trainingService.getCurrentMetrics(user.id);
+    return this.athletesService.getCurrentMetrics(user.id);
   }
 
   @Post('workouts')
@@ -230,7 +244,7 @@ export class TrainingController {
     @CurrentUser() user: AuthUserContext,
     @Body() dto: CreateWorkoutDto,
   ): Promise<TrainingWorkoutResponseDto> {
-    return this.trainingService.createWorkout(user.id, dto);
+    return this.workoutsService.createWorkout(user.id, dto);
   }
 
   @Get('workouts/:id')
@@ -242,7 +256,7 @@ export class TrainingController {
     schema: { example: TRAINING_WORKOUT_EXAMPLE },
   })
   getWorkout(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingWorkoutResponseDto> {
-    return this.trainingService.getWorkout(id, user.id);
+    return this.workoutsService.getWorkout(id, user.id);
   }
 
   @Post('workouts/:id/complete')
@@ -258,7 +272,7 @@ export class TrainingController {
     @Param('id') id: string,
     @Body() dto: CompleteWorkoutDto,
   ): Promise<TrainingWorkoutCompletionResponseDto> {
-    return this.trainingService.completeWorkout(user.id, id, dto);
+    return this.workoutsService.completeWorkout(user.id, id, dto);
   }
 
   @Post('training/analyze')
@@ -273,7 +287,7 @@ export class TrainingController {
     @CurrentUser() user: AuthUserContext,
     @Body() dto: AnalyzeWorkoutDto,
   ): Promise<TrainingWorkoutAnalysisResponseDto> {
-    return this.trainingService.analyzeWorkout(user.id, dto);
+    return this.workoutsService.analyzeWorkout(user.id, dto);
   }
 
   @Post('training/adapt')
@@ -285,6 +299,6 @@ export class TrainingController {
     schema: { example: TRAINING_ADAPTATION_EXAMPLE },
   })
   adaptPlan(@CurrentUser() user: AuthUserContext, @Body() dto: AdaptPlanDto): Promise<TrainingAdaptationResponseDto> {
-    return this.trainingService.adaptPlan(user.id, dto);
+    return this.adaptationsService.adaptPlan(user.id, dto);
   }
 }

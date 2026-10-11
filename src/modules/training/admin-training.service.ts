@@ -1,9 +1,14 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import {
+  DomainBadRequestException,
+  DomainConflictException,
+  DomainNotFoundException,
+} from '@/common/exceptions/domain-exceptions';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 import { UsersService } from '@/modules/users/users.service';
 
 import {
@@ -12,7 +17,6 @@ import {
   ADMIN_CALENDAR_SUMMARY_MAX_DAYS,
   ADMIN_WORKOUT_ADHOC_PHASE,
   ADMIN_WORKOUT_DEFAULTS,
-  ADMIN_WORKOUT_EVENT_NAMES,
   ADMIN_WORKOUT_SOURCE,
 } from './admin-calendar.constants';
 import { countDaysInclusive, resolveLocalRange, toLocalDateKey } from './admin-calendar-day.util';
@@ -90,10 +94,9 @@ export class AdminTrainingService {
     const timezone = query.timezone ?? DEFAULT_TIMEZONE;
     const span = countDaysInclusive(query.from, query.to);
     if (span < 1 || span > ADMIN_CALENDAR_SUMMARY_MAX_DAYS) {
-      throw new DomainException(
+      throw new DomainBadRequestException(
         ADMIN_CALENDAR_ERROR_CODES.rangeInvalid,
         `The range must cover 1 to ${ADMIN_CALENDAR_SUMMARY_MAX_DAYS} days`,
-        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -151,7 +154,7 @@ export class AdminTrainingService {
     });
 
     this.eventEmitter.emit(
-      ADMIN_WORKOUT_EVENT_NAMES.created,
+      TRAINING_EVENTS.WORKOUT_CREATED,
       new WorkoutCreatedEvent(athlete.id, workout.id, workout.planId, actorUserId),
     );
 
@@ -173,10 +176,9 @@ export class AdminTrainingService {
     const workout = await this.loadOwnedWorkout(workoutId, athlete.id);
 
     if (workout.status === 'completed' || workout.actual !== null) {
-      throw new DomainException(
+      throw new DomainConflictException(
         ADMIN_CALENDAR_ERROR_CODES.workoutCompletedImmutable,
         'A completed workout is training history and cannot be edited',
-        HttpStatus.CONFLICT,
       );
     }
 
@@ -218,7 +220,7 @@ export class AdminTrainingService {
     await workout.save();
 
     this.eventEmitter.emit(
-      ADMIN_WORKOUT_EVENT_NAMES.updated,
+      TRAINING_EVENTS.WORKOUT_UPDATED,
       new WorkoutUpdatedEvent(athlete.id, workout.id, workout.planId, actorUserId, changedFields),
     );
 
@@ -236,11 +238,7 @@ export class AdminTrainingService {
   private async loadAthleteOrThrow(userId: string): Promise<Athlete> {
     const athlete = await this.findAthlete(userId);
     if (!athlete) {
-      throw new DomainException(
-        'ATHLETE_NOT_FOUND',
-        `Athlete profile of user ${userId} not found`,
-        HttpStatus.NOT_FOUND,
-      );
+      throw new DomainNotFoundException('ATHLETE_NOT_FOUND', `Athlete profile of user ${userId} not found`);
     }
     return athlete;
   }
@@ -248,7 +246,7 @@ export class AdminTrainingService {
   private async loadOwnedWorkout(workoutId: string, athleteId: string): Promise<Workout> {
     const workout = await this.workoutModel.findOne({ where: { id: workoutId, athleteId } });
     if (!workout) {
-      throw new DomainException('WORKOUT_NOT_FOUND', `Workout ${workoutId} not found`, HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('WORKOUT_NOT_FOUND', `Workout ${workoutId} not found`);
     }
     return workout;
   }

@@ -7,16 +7,17 @@ import { DEFAULT_QUEUE_JOB_OPTIONS } from '@/common/constants/queue.constants';
 
 import { RealtimeModule } from '../realtime/realtime.module';
 import { StorageModule } from '../storage/storage.module';
-import { Athlete } from '../training/entities/athlete.entity';
-import { Workout } from '../training/entities/workout.entity';
 import { TrainingModule } from '../training/training.module';
 import { ConsentsModule } from '../users/consents/consents.module';
 import { PreferencesModule } from '../users/preferences/preferences.module';
 import integrationsConfig from './config/integrations.config';
 import { INTEGRATIONS_QUEUE_NAME } from './constants/integrations.constants';
+import { DeviceConnectionsService } from './device/device-connections.service';
+import { DeviceIntegrationLookup } from './device/device-integration-lookup.service';
 import { DeviceIntegrationsController } from './device/device-integrations.controller';
 import { DeviceIntegrationsListener } from './device/device-integrations.listener';
-import { DeviceIntegrationsService } from './device/device-integrations.service';
+import { DeviceProfileMetricsService } from './device/device-profile-metrics.service';
+import { DeviceSyncService } from './device/device-sync.service';
 import { DeviceSyncBatch } from './entities/device-sync-batch.entity';
 import { Integration } from './entities/integration.entity';
 import { IntegrationSyncState } from './entities/integration-sync-state.entity';
@@ -35,6 +36,10 @@ import { RecordedActivity } from './recordings/recorded-activity.entity';
 import { RecordingsController } from './recordings/recordings.controller';
 import { RecordingsService } from './recordings/recordings.service';
 import { OAuthStateStore } from './services/oauth-state.store';
+import { StravaActivitySyncService } from './strava/strava-activity-sync.service';
+import { StravaConnectionService } from './strava/strava-connection.service';
+import { StravaProfileSyncService } from './strava/strava-profile-sync.service';
+import { StravaTokenService } from './strava/strava-token.service';
 
 @Module({
   imports: [
@@ -46,8 +51,6 @@ import { OAuthStateStore } from './services/oauth-state.store';
       WorkoutSource,
       DeviceSyncBatch,
       RecordedActivity,
-      Workout,
-      Athlete,
     ]),
     BullModule.registerQueue({
       name: INTEGRATIONS_QUEUE_NAME,
@@ -67,10 +70,17 @@ import { OAuthStateStore } from './services/oauth-state.store';
     ActivityDedupService,
     ActivityIngestionService,
     IntegrationsService,
+    StravaTokenService,
+    StravaConnectionService,
+    StravaProfileSyncService,
+    StravaActivitySyncService,
     IntegrationsProcessor,
     IntegrationsScheduler,
     IntegrationsListener,
-    DeviceIntegrationsService,
+    DeviceIntegrationLookup,
+    DeviceConnectionsService,
+    DeviceSyncService,
+    DeviceProfileMetricsService,
     DeviceIntegrationsListener,
     RecordingsService,
     OAuthStateStore,

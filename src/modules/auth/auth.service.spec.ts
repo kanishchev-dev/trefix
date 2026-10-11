@@ -6,12 +6,17 @@ import { createHash } from 'crypto';
 import { hashPassword } from '@/common/utils/password-hash.util';
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 import { UserInviteService } from '@/modules/users/services/user-invite.service';
 import { UsersService } from '@/modules/users/users.service';
 
 import { AuthService } from './auth.service';
+import { AuthCodeService } from './services/auth-code.service';
 import { AuthRedisService } from './services/auth-redis.service';
+import { AuthSessionService } from './services/auth-session.service';
+import { AuthSocialFlowService } from './services/auth-social-flow.service';
 import { AuthTokenService } from './services/auth-token.service';
+import { SocialIdentityService } from './services/social-identity.service';
 
 async function createPasswordHash(password: string): Promise<string> {
   return hashPassword(password, 12);
@@ -19,6 +24,8 @@ async function createPasswordHash(password: string): Promise<string> {
 
 describe('AuthService', () => {
   let service: AuthService;
+  let sessions: AuthSessionService;
+  let codes: AuthCodeService;
 
   const usersService = {
     findByEmail: jest.fn(),
@@ -94,18 +101,25 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        AuthSessionService,
+        AuthCodeService,
+        AuthSocialFlowService,
         { provide: UsersService, useValue: usersService },
         { provide: UserInviteService, useValue: userInviteService },
         { provide: AuthRedisService, useValue: authRedisService },
         { provide: AuthTokenService, useValue: authTokenService },
         { provide: MailerService, useValue: mailerService },
         { provide: PermissionsService, useValue: permissionsService },
+        { provide: UserPermissionsService, useValue: permissionsService },
+        SocialIdentityService,
         { provide: ConfigService, useValue: configService },
         { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    sessions = module.get(AuthSessionService);
+    codes = module.get(AuthCodeService);
   });
 
   it('registers a user and sends a verification code', async () => {
@@ -259,7 +273,7 @@ describe('AuthService', () => {
     authRedisService.setEmailOtpCode.mockResolvedValue(undefined);
     mailerService.send.mockResolvedValue({ queued: false });
 
-    const result = await service.requestEmailOtpCode({
+    const result = await codes.requestEmailOtpCode({
       email: 'otp@example.com',
     });
 
@@ -309,7 +323,7 @@ describe('AuthService', () => {
     authTokenService.signAccessToken.mockResolvedValue('access-token');
     authRedisService.createSession.mockResolvedValue(undefined);
 
-    const result = await service.verifyEmailOtpCode({
+    const result = await codes.verifyEmailOtpCode({
       email: 'otp@example.com',
       code: '123456',
     });
@@ -370,7 +384,7 @@ describe('AuthService', () => {
       authTokenService.signRefreshToken.mockResolvedValue('next-token');
       authTokenService.signAccessToken.mockResolvedValue('next-access-token');
 
-      const result = await service.refresh({ refreshToken: 'old-token' });
+      const result = await sessions.refresh({ refreshToken: 'old-token' });
 
       expect(result.permissions).toEqual(['users.read', 'users.update']);
     });
@@ -407,7 +421,7 @@ describe('AuthService', () => {
       authTokenService.signAccessToken.mockResolvedValue('access-token');
       authRedisService.createSession.mockResolvedValue(undefined);
 
-      const result = await service.verifyEmailOtpCode({
+      const result = await codes.verifyEmailOtpCode({
         email: 'otp@example.com',
         code: '123456',
       });

@@ -3,8 +3,8 @@ import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Athlete } from '../entities/athlete.entity';
 import type { Workout } from '../entities/workout.entity';
 import type { AthleteFieldSources } from '../training.constants';
-import type { TrainingService } from '../training.service';
 import { AthleteProfileService } from './athlete-profile.service';
+import type { AthletesService } from './athletes.service';
 
 describe('AthleteProfileService.applySourcedValues', () => {
   let athlete: Record<string, unknown> & { fieldSources: AthleteFieldSources; save: jest.Mock };
@@ -31,7 +31,7 @@ describe('AthleteProfileService.applySourcedValues', () => {
     service = new AthleteProfileService(
       { findByPk: jest.fn().mockResolvedValue(athlete) } as unknown as typeof Athlete,
       {} as typeof Workout,
-      {} as TrainingService,
+      {} as AthletesService,
       events as unknown as EventEmitter2,
     );
   });

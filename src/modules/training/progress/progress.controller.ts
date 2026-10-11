@@ -15,7 +15,7 @@ import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTa
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException } from '@/common/exceptions/domain-exceptions';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { PROGRESS_METRICS, type ProgressMetric, RECORD_DISTANCES, type RecordDistance } from '../training.constants';
@@ -93,7 +93,7 @@ export class ProgressController {
     @Query() query: ProgressPeriodQueryDto,
   ): Promise<ProgressMetricView> {
     if (!(PROGRESS_METRICS as readonly string[]).includes(metric)) {
-      throw new DomainException('PROGRESS_METRIC_UNKNOWN', 'Unknown progress metric', HttpStatus.BAD_REQUEST);
+      throw new DomainBadRequestException('PROGRESS_METRIC_UNKNOWN', 'Unknown progress metric');
     }
     return this.progressService.metric(user.id, metric as ProgressMetric, query.period ?? '6M');
   }
@@ -110,7 +110,7 @@ export class ProgressController {
   @ApiOperation({ summary: 'Every attempt on a record distance, newest first' })
   recordHistory(@CurrentUser() user: AuthUserContext, @Param('distance') distance: string): Promise<RecordHistoryView> {
     if (!(distance in RECORD_DISTANCES)) {
-      throw new DomainException('PROGRESS_DISTANCE_UNKNOWN', 'Unknown record distance', HttpStatus.BAD_REQUEST);
+      throw new DomainBadRequestException('PROGRESS_DISTANCE_UNKNOWN', 'Unknown record distance');
     }
     return this.progressService.recordHistory(user.id, distance as RecordDistance);
   }

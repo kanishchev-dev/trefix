@@ -10,7 +10,10 @@ import { TrainingPlan } from '../entities/training-plan.entity';
 import { Workout } from '../entities/workout.entity';
 import { TrainingEngine } from '../training.engine';
 import { AthleteMetricsService } from './athlete-metrics.service';
-import { CreatePlanInput, PlanLifecycleService } from './plan-lifecycle.service';
+import { PlanLifecycleService } from './plan-lifecycle.service';
+import type { CreatePlanInput } from './plan-lifecycle.types';
+import { PlanMaterializer } from './plan-materializer.service';
+import { PlanStartOptionsService } from './plan-start-options.service';
 import { PlanStatsService } from './plan-stats.service';
 
 const relativeWeeks = (): Array<Record<string, unknown>> => [
@@ -72,6 +75,7 @@ const makePlan = (overrides: Partial<Record<string, unknown>> = {}): TrainingPla
 
 describe('PlanLifecycleService', () => {
   let service: PlanLifecycleService;
+  let startOptions: PlanStartOptionsService;
   let planModel: Record<string, jest.Mock | object>;
   let workoutModel: Record<string, jest.Mock | object>;
   let goalModel: { create: jest.Mock; update: jest.Mock; findByPk: jest.Mock };
@@ -122,6 +126,8 @@ describe('PlanLifecycleService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         PlanLifecycleService,
+        PlanMaterializer,
+        PlanStartOptionsService,
         PlanStatsService,
         TrainingEngine,
         { provide: getModelToken(Athlete), useValue: { findByPk: jest.fn().mockResolvedValue({ id: 'athlete-1' }) } },
@@ -141,6 +147,7 @@ describe('PlanLifecycleService', () => {
     }).compile();
 
     service = moduleRef.get(PlanLifecycleService);
+    startOptions = moduleRef.get(PlanStartOptionsService);
   });
 
   afterEach(() => {
@@ -347,7 +354,7 @@ describe('PlanLifecycleService', () => {
   describe('buildStartOptions', () => {
     it('aligns the plan so that the race day falls into the last week', async () => {
       // 2027-09-19 is a Sunday; its week starts on Monday 2027-09-13.
-      const options = await service.buildStartOptions({
+      const options = await startOptions.buildStartOptions({
         athleteId: 'athlete-1',
         totalWeeks: 2,
         targetDate: '2027-09-19',
@@ -359,7 +366,7 @@ describe('PlanLifecycleService', () => {
     });
 
     it('reports how many weeks are left when the plan does not fit', async () => {
-      const options = await service.buildStartOptions({
+      const options = await startOptions.buildStartOptions({
         athleteId: 'athlete-1',
         totalWeeks: 16,
         targetDate: '2027-04-04',
@@ -371,7 +378,7 @@ describe('PlanLifecycleService', () => {
     });
 
     it('marks a passed target date', async () => {
-      const options = await service.buildStartOptions({
+      const options = await startOptions.buildStartOptions({
         athleteId: 'athlete-1',
         totalWeeks: 4,
         targetDate: '2026-01-01',

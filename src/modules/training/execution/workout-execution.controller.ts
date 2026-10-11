@@ -1,12 +1,12 @@
-import { Controller, Get, HttpStatus, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainConflictException } from '@/common/exceptions/domain-exceptions';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
+import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 
-import { TrainingService } from '../training.service';
 import { WorkoutExecutionBuilder } from './workout-execution.builder';
 import { WorkoutExecutionResponseDto } from './workout-execution.dto';
 
@@ -15,7 +15,7 @@ import { WorkoutExecutionResponseDto } from './workout-execution.dto';
 @Controller({ path: '', version: '1' })
 export class WorkoutExecutionController {
   constructor(
-    private readonly trainingService: TrainingService,
+    private readonly workoutsService: WorkoutsService,
     private readonly builder: WorkoutExecutionBuilder,
   ) {}
 
@@ -27,16 +27,12 @@ export class WorkoutExecutionController {
     @CurrentUser() user: AuthUserContext,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<WorkoutExecutionResponseDto> {
-    const workout = await this.trainingService.getWorkout(id, user.id);
+    const workout = await this.workoutsService.getWorkout(id, user.id);
     if (workout.status !== 'planned') {
-      throw new DomainException(
-        'WORKOUT_NOT_PLANNED',
-        'Only a planned workout can be run from the plan',
-        HttpStatus.CONFLICT,
-      );
+      throw new DomainConflictException('WORKOUT_NOT_PLANNED', 'Only a planned workout can be run from the plan');
     }
     if (workout.type === 'rest') {
-      throw new DomainException('WORKOUT_NOT_RUNNABLE', 'A rest day has nothing to run', HttpStatus.CONFLICT);
+      throw new DomainConflictException('WORKOUT_NOT_RUNNABLE', 'A rest day has nothing to run');
     }
     return this.builder.build(workout);
   }

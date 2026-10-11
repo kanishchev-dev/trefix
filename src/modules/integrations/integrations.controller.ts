@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Logger, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Logger, Post, Query, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -8,6 +8,10 @@ import { Public } from '@/common/decorators/public.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { escapeHtml } from '@/common/utils/html.util';
 import { secureCompare } from '@/common/utils/secure-compare.util';
+import { IntegrationsService } from '@/modules/integrations/integrations.service';
+import { StravaActivitySyncService } from '@/modules/integrations/strava/strava-activity-sync.service';
+import { StravaConnectionService } from '@/modules/integrations/strava/strava-connection.service';
+import { StravaProfileSyncService } from '@/modules/integrations/strava/strava-profile-sync.service';
 
 import { AuthUserContext } from '../auth/interfaces/auth-user-context.interface';
 import {
@@ -18,7 +22,6 @@ import {
 import { StravaConnectResponseDto } from './dto/strava-connect-response.dto';
 import { StravaWebhookEventDto, StravaWebhookVerificationQueryDto } from './dto/strava-webhook.dto';
 import { IntegrationSyncStatusResponseDto } from './dto/sync-status-response.dto';
-import { IntegrationsService } from './integrations.service';
 
 interface CallbackPage {
   title: string;
@@ -57,6 +60,9 @@ export class IntegrationsController {
 
   constructor(
     private readonly integrationsService: IntegrationsService,
+    private readonly stravaActivitySync: StravaActivitySyncService,
+    private readonly stravaConnection: StravaConnectionService,
+    private readonly stravaProfileSync: StravaProfileSyncService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -76,12 +82,24 @@ export class IntegrationsController {
     return this.integrationsService.getStravaIntegration(user.id);
   }
 
-  @Get('strava/connect')
+  @Post('strava/connect')
+  @HttpCode(HttpStatus.OK)
   @RequirePermissions('integrations.read')
   @ApiOperation({ summary: 'Initiate Strava OAuth connection flow' })
   @ApiResponse({ status: 200, type: StravaConnectResponseDto })
   async connectStrava(@CurrentUser() user: AuthUserContext): Promise<StravaConnectResponseDto> {
-    return this.integrationsService.initiateStravaConnect(user.id);
+    return this.stravaConnection.initiateStravaConnect(user.id);
+  }
+
+  /** Kept while clients move to `POST strava/connect`: starting the flow stores OAuth state. */
+  @Get('strava/connect')
+  @Header('Deprecation', 'true')
+  @Header('Link', '</v1/integrations/strava/connect>; rel="successor-version"; method="POST"')
+  @RequirePermissions('integrations.read')
+  @ApiOperation({ summary: 'Initiate Strava OAuth connection flow', deprecated: true })
+  @ApiResponse({ status: 200, type: StravaConnectResponseDto })
+  async connectStravaLegacy(@CurrentUser() user: AuthUserContext): Promise<StravaConnectResponseDto> {
+    return this.stravaConnection.initiateStravaConnect(user.id);
   }
 
   @Public()
@@ -101,7 +119,7 @@ export class IntegrationsController {
     }
 
     try {
-      await this.integrationsService.handleStravaCallback(code, state, scope);
+      await this.stravaConnection.handleStravaCallback(code, state, scope);
       res.status(HttpStatus.OK).send(renderCallbackPage(STRAVA_CALLBACK_SUCCESS_PAGE));
     } catch (callbackError) {
       // The page is public: provider and internal details stay in the log only.
@@ -121,7 +139,7 @@ export class IntegrationsController {
   })
   @ApiResponse({ status: 200, type: StravaProfileAccessResponseDto })
   requestStravaProfileAccess(@CurrentUser() user: AuthUserContext): Promise<StravaProfileAccessResponseDto> {
-    return this.integrationsService.requestStravaProfileAccess(user.id);
+    return this.stravaConnection.requestStravaProfileAccess(user.id);
   }
 
   @Post('strava/profile-sync')
@@ -133,7 +151,7 @@ export class IntegrationsController {
   })
   @ApiResponse({ status: 202, schema: { example: { status: 'queued' } } })
   triggerStravaProfileSync(@CurrentUser() user: AuthUserContext): Promise<{ status: 'queued' }> {
-    return this.integrationsService.triggerStravaProfileSync(user.id);
+    return this.stravaProfileSync.triggerStravaProfileSync(user.id);
   }
 
   @Delete('strava')
@@ -141,7 +159,7 @@ export class IntegrationsController {
   @ApiOperation({ summary: 'Disconnect Strava integration' })
   @ApiResponse({ status: 200, schema: { example: { success: true } } })
   async disconnectStrava(@CurrentUser() user: AuthUserContext): Promise<{ success: boolean }> {
-    return this.integrationsService.disconnectStrava(user.id);
+    return this.stravaConnection.disconnectStrava(user.id);
   }
 
   @Get('strava/sync')
@@ -149,15 +167,27 @@ export class IntegrationsController {
   @ApiOperation({ summary: 'Get Strava sync status' })
   @ApiResponse({ status: 200, type: IntegrationSyncStatusResponseDto })
   async getStravaSyncStatus(@CurrentUser() user: AuthUserContext): Promise<IntegrationSyncStatusResponseDto> {
-    return this.integrationsService.getStravaSyncStatus(user.id);
+    return this.stravaActivitySync.getStravaSyncStatus(user.id);
   }
 
-  @Get('strava/sync/trigger')
+  @Post('strava/sync')
+  @HttpCode(HttpStatus.OK)
   @RequirePermissions('integrations.sync')
   @ApiOperation({ summary: 'Trigger manual Strava sync' })
   @ApiResponse({ status: 200, type: IntegrationSyncStatusResponseDto })
   async triggerStravaSync(@CurrentUser() user: AuthUserContext): Promise<IntegrationSyncStatusResponseDto> {
-    return this.integrationsService.triggerStravaSync(user.id);
+    return this.stravaActivitySync.triggerStravaSync(user.id);
+  }
+
+  /** Kept while clients move to `POST strava/sync`. */
+  @Get('strava/sync/trigger')
+  @Header('Deprecation', 'true')
+  @Header('Link', '</v1/integrations/strava/sync>; rel="successor-version"; method="POST"')
+  @RequirePermissions('integrations.sync')
+  @ApiOperation({ summary: 'Trigger manual Strava sync', deprecated: true })
+  @ApiResponse({ status: 200, type: IntegrationSyncStatusResponseDto })
+  async triggerStravaSyncLegacy(@CurrentUser() user: AuthUserContext): Promise<IntegrationSyncStatusResponseDto> {
+    return this.stravaActivitySync.triggerStravaSync(user.id);
   }
 
   @Public()
@@ -182,6 +212,6 @@ export class IntegrationsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Receive Strava Webhook Event' })
   async handleWebhookEvent(@Body() payload: StravaWebhookEventDto): Promise<{ status: string }> {
-    return this.integrationsService.handleWebhookIngestion(payload);
+    return this.stravaActivitySync.handleWebhookIngestion(payload);
   }
 }

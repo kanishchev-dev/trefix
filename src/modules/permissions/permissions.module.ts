@@ -1,17 +1,16 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-
-import { RealtimeModule } from '@/modules/realtime/realtime.module';
-import { User } from '@/modules/users/entities/user.entity';
 
 import { Permission } from './entities/permission.entity';
 import { PermissionGroup } from './entities/permission-group.entity';
 import { PermissionGroupPermission } from './entities/permission-group-permission.entity';
 import { UserPermission } from './entities/user-permission.entity';
 import { UserPermissionGroup } from './entities/user-permission-group.entity';
-import { PermissionsListener } from './listeners/permissions.listener';
+import { PermissionsCacheListener } from './listeners/permissions-cache.listener';
 import { PermissionsController } from './permissions.controller';
 import { PermissionsService } from './permissions.service';
+import { PermissionCatalogSeeder } from './services/permission-catalog-seeder.service';
+import { UserPermissionsService } from './services/user-permissions.service';
 
 @Module({
   imports: [
@@ -21,14 +20,10 @@ import { PermissionsService } from './permissions.service';
       PermissionGroupPermission,
       UserPermission,
       UserPermissionGroup,
-      User,
     ]),
-    // forwardRef breaks the RealtimeModule <-> PermissionsModule cycle:
-    // the realtime gateway resolves room permissions through PermissionsService.
-    forwardRef(() => RealtimeModule),
   ],
   controllers: [PermissionsController],
-  providers: [PermissionsService, PermissionsListener],
-  exports: [PermissionsService],
+  providers: [PermissionsService, UserPermissionsService, PermissionsCacheListener, PermissionCatalogSeeder],
+  exports: [PermissionsService, UserPermissionsService, PermissionCatalogSeeder],
 })
 export class PermissionsModule {}

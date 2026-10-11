@@ -1,9 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException, DomainConflictException } from '@/common/exceptions/domain-exceptions';
+import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import type { ManualPlanGoalDto, ManualPlanScheduleDto, ManualPlanStructureDto } from '../dto/create-manual-plan.dto';
 import type { PlanStartBlockDto } from '../dto/plan-metrics.dto';
@@ -12,10 +14,11 @@ import { Workout } from '../entities/workout.entity';
 import { PlanMetricsEnteredEvent } from '../events/plan-metrics-entered.event';
 import { PlanUpdatedEvent } from '../events/plan-updated.event';
 import { type AthleteMetrics, type PlanDiff, type RelativeWeek, TrainingEngine } from '../training.engine';
-import { TrainingService } from '../training.service';
 import { AthleteMetricsService, CurrentMetrics } from './athlete-metrics.service';
 import { PlanEditingService } from './plan-editing.service';
-import { PlanLifecycleService, StartOptionsResult } from './plan-lifecycle.service';
+import { PlanLifecycleService } from './plan-lifecycle.service';
+import type { StartOptionsResult } from './plan-lifecycle.types';
+import { PlanStartOptionsService } from './plan-start-options.service';
 import {
   applyRelativeOverrides,
   asRelativeWeeks,
@@ -81,8 +84,9 @@ export class PlanRebuildService {
     @InjectModel(Workout)
     private readonly workoutModel: typeof Workout,
     private readonly engine: TrainingEngine,
-    private readonly trainingService: TrainingService,
+    private readonly planGenerationService: PlanGenerationService,
     private readonly lifecycleService: PlanLifecycleService,
+    private readonly startOptions: PlanStartOptionsService,
     private readonly editingService: PlanEditingService,
     private readonly metricsService: AthleteMetricsService,
     private readonly eventEmitter: EventEmitter2,
@@ -139,7 +143,7 @@ export class PlanRebuildService {
     if (structureChanged) {
       // Manual edits of the source cannot survive a regeneration; the client warns the user.
       warnings.push('STRUCTURE_CHANGED_REGENERATED');
-      const generated = await this.trainingService.generateFromConfig(plan.athleteId, {
+      const generated = await this.planGenerationService.generateFromConfig(plan.athleteId, {
         goal: input.goal,
         schedule: input.schedule,
         structure: input.structure,
@@ -163,7 +167,7 @@ export class PlanRebuildService {
       adjustments = scaled.adjustments;
     }
 
-    const startOptions = await this.lifecycleService.buildStartOptions({
+    const startOptions = await this.startOptions.buildStartOptions({
       athleteId: plan.athleteId,
       totalWeeks: weeks.length,
       targetDate: input.goal.targetDate ?? null,
@@ -199,7 +203,7 @@ export class PlanRebuildService {
     };
     if (metricsSnapshot.source === 'user_input') {
       this.eventEmitter.emit(
-        'training.plan.metrics_entered',
+        TRAINING_EVENTS.PLAN_METRICS_ENTERED,
         new PlanMetricsEnteredEvent(source.athleteId, input.metrics),
       );
     }
@@ -245,10 +249,9 @@ export class PlanRebuildService {
     return this.lifecycleService.inTransaction(async (transaction) => {
       const draft = await this.editingService.loadOwnedPlan(source.id, actorUserId, transaction);
       if (input.expectedVersion === undefined || draft.version !== input.expectedVersion) {
-        throw new DomainException(
+        throw new DomainConflictException(
           'PLAN_VERSION_CONFLICT',
           'The draft was modified concurrently; reload it and try again',
-          HttpStatus.CONFLICT,
         );
       }
 
@@ -265,7 +268,10 @@ export class PlanRebuildService {
       await draft.save({ transaction });
 
       transaction.afterCommit(() => {
-        this.eventEmitter.emit('training.plan.updated', new PlanUpdatedEvent(draft.athleteId, draft.id, 'rebuild'));
+        this.eventEmitter.emit(
+          TRAINING_EVENTS.PLAN_UPDATED,
+          new PlanUpdatedEvent(draft.athleteId, draft.id, 'rebuild'),
+        );
       });
       return draft;
     });
@@ -274,21 +280,16 @@ export class PlanRebuildService {
   private async loadSource(planId: string, actorUserId: string): Promise<TrainingPlan> {
     const plan = await this.editingService.loadOwnedPlan(planId, actorUserId);
     if (!REBUILD_SOURCE_STATUSES.includes(plan.status)) {
-      throw new DomainException(
-        'PLAN_INVALID_STATUS',
-        'Only history plans and drafts support rebuild',
-        HttpStatus.CONFLICT,
-      );
+      throw new DomainConflictException('PLAN_INVALID_STATUS', 'Only history plans and drafts support rebuild');
     }
     return plan;
   }
 
   private ensureTargetAllowed(plan: TrainingPlan, target: RebuildPreviewInput['target']): void {
     if (target === 'in_place' && plan.status !== 'draft') {
-      throw new DomainException(
+      throw new DomainConflictException(
         'PLAN_INVALID_STATUS',
         'Only a draft can be updated in place; history plans are rebuilt into a new plan',
-        HttpStatus.CONFLICT,
       );
     }
   }
@@ -296,11 +297,7 @@ export class PlanRebuildService {
   private ensureMetricsValid(metrics: AthleteMetrics): void {
     const violations = this.metricsService.validateMetrics(metrics);
     if (violations.length > 0) {
-      throw new DomainException(
-        'PLAN_METRICS_INVALID',
-        `Invalid metrics: ${violations.join(', ')}`,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new DomainBadRequestException('PLAN_METRICS_INVALID', `Invalid metrics: ${violations.join(', ')}`);
     }
   }
 

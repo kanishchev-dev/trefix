@@ -3,57 +3,60 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { GearReplaceSoonEvent } from '@/modules/training/events/gear.events';
 import { PlanAdaptationProposedEvent } from '@/modules/training/events/plan-adapted.event';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
-import { ADAPTATION_ACTION_TEXT, type ProactiveMessage } from './coach-proactive.constants';
+import { CoachMessageTexts } from './coach-message-texts';
+import { type ProactiveMessage } from './coach-proactive.constants';
 import { CoachProactiveService } from './coach-proactive.service';
 
 @Injectable()
 export class CoachProactiveListener {
   private readonly logger = new Logger(CoachProactiveListener.name);
 
-  constructor(private readonly proactiveService: CoachProactiveService) {}
+  constructor(
+    private readonly proactiveService: CoachProactiveService,
+    private readonly texts: CoachMessageTexts,
+  ) {}
 
-  @OnEvent('training.gear.replace_soon', { async: true })
+  @OnEvent(TRAINING_EVENTS.GEAR_REPLACE_SOON, { async: true })
   async handleGearReplaceSoon(event: GearReplaceSoonEvent): Promise<void> {
     const distance = Math.round(event.distanceKm);
-    await this.safely({
+    await this.safely(async () => ({
       userId: event.userId,
       athleteId: event.athleteId,
       kind: 'gear_replace_soon',
-      content:
-        `${event.gearName || 'Ваши кроссовки'} уже пробежали ${distance} км из ${event.limitKm}. ` +
-        'Пора присмотреть новую пару: изношенная амортизация повышает риск травм.',
+      content: await this.texts.gearReplaceSoon(event.userId, {
+        gearName: event.gearName,
+        distanceKm: distance,
+        limitKm: event.limitKm,
+      }),
       params: { gearId: event.gearId, gearName: event.gearName, distanceKm: distance, limitKm: event.limitKm },
-    });
+    }));
   }
 
-  @OnEvent('training.plan.adaptation_proposed', { async: true })
+  @OnEvent(TRAINING_EVENTS.PLAN_ADAPTATION_PROPOSED, { async: true })
   async handleAdaptationProposed(event: PlanAdaptationProposedEvent): Promise<void> {
-    const what = ADAPTATION_ACTION_TEXT[event.action] ?? 'скорректировать план';
     const proposed = event.status === 'proposed';
-    await this.safely({
+    await this.safely(async () => ({
       userId: event.userId,
       athleteId: event.athleteId,
       kind: proposed ? 'adaptation_proposed' : 'adaptation_suggested',
-      content: proposed
-        ? `Предлагаю ${what}. Подтвердите изменение в разделе «План» — без вашего «Да» план не поменяется.`
-        : `Совет: стоит ${what}. План я не меняю — решите сами, нужно ли это.`,
+      content: await this.texts.adaptation(event.userId, event.action, proposed),
       params: {
         adaptationId: event.adaptationId,
         planId: event.planId,
         action: event.action,
         changesCount: event.changesCount,
       },
-    });
+    }));
   }
 
-  private async safely(message: ProactiveMessage): Promise<void> {
+  /** Proactive messages are a nicety: a failure is logged and never breaks the flow that triggered it. */
+  private async safely(build: () => Promise<ProactiveMessage>): Promise<void> {
     try {
-      await this.proactiveService.deliver(message);
+      await this.proactiveService.deliver(await build());
     } catch (error) {
-      this.logger.warn(
-        `Proactive message ${message.kind} failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      this.logger.warn(`Proactive message failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

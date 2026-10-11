@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
-import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 
 import { SettingsResponseDto } from './dto/settings-response.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
@@ -17,7 +17,7 @@ import { SettingsService } from './settings.service';
 export class SettingsController {
   constructor(
     private readonly settingsService: SettingsService,
-    private readonly permissionsService: PermissionsService,
+    private readonly userPermissionsService: UserPermissionsService,
   ) {}
 
   @Get()
@@ -47,7 +47,7 @@ export class SettingsController {
     const touchesDefaults = dto.defaultGroups !== undefined || dto.defaultPermissions !== undefined;
 
     if (touchesDefaults) {
-      const permissions = await this.permissionsService.getEffectivePermissions(user.id);
+      const permissions = await this.userPermissionsService.getEffectivePermissions(user.id);
       if (!permissions.includes('permissions.manage')) {
         throw new ForbiddenException({
           statusCode: 403,

@@ -17,6 +17,7 @@ const PREFERENCES_EXAMPLE: UserPreferencesResponseDto = {
   coachQuietHours: { from: '22:00', to: '08:00' },
   stravaProfileSync: true,
   timezone: 'Europe/Moscow',
+  language: 'ru',
   updatedAt: new Date('2026-10-09T08:00:00.000Z'),
 };
 

@@ -2,13 +2,20 @@ import { INestApplication, VersioningType } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 
+import { AdaptationsService } from '@/modules/training/adaptations/adaptations.service';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { GoalsService } from '@/modules/training/goals/goals.service';
 import { PlanEditingService } from '@/modules/training/plans/plan-editing.service';
+import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
 import { PlanLifecycleService } from '@/modules/training/plans/plan-lifecycle.service';
 import { PlanListService } from '@/modules/training/plans/plan-list.service';
+import { PlanQueryService } from '@/modules/training/plans/plan-query.service';
 import { PlanRebuildService } from '@/modules/training/plans/plan-rebuild.service';
+import { PlanRegenerationService } from '@/modules/training/plans/plan-regeneration.service';
+import { PlanStartOptionsService } from '@/modules/training/plans/plan-start-options.service';
 import { PlansController } from '@/modules/training/plans/plans.controller';
 import { TrainingController } from '@/modules/training/training.controller';
-import { TrainingService } from '@/modules/training/training.service';
+import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 
 /**
  * Both controllers own routes under `/v1/plans`; the static plans routes
@@ -21,7 +28,7 @@ describe('Plans routing (e2e)', () => {
     counts: jest.fn().mockResolvedValue({ draft: 1, active: 0, history: 2 }),
     getDetails: jest.fn().mockResolvedValue({ id: 'plan-1' }),
   };
-  const trainingService = { getPlanOverview: jest.fn().mockResolvedValue({ plan: { id: 'plan-1' } }) };
+  const planQueryService = { getPlanOverview: jest.fn().mockResolvedValue({ plan: { id: 'plan-1' } }) };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -30,8 +37,15 @@ describe('Plans routing (e2e)', () => {
         { provide: PlanListService, useValue: planListService },
         { provide: PlanEditingService, useValue: {} },
         { provide: PlanLifecycleService, useValue: {} },
+        { provide: PlanStartOptionsService, useValue: {} },
         { provide: PlanRebuildService, useValue: {} },
-        { provide: TrainingService, useValue: trainingService },
+        { provide: PlanQueryService, useValue: planQueryService },
+        { provide: AthletesService, useValue: {} },
+        { provide: GoalsService, useValue: {} },
+        { provide: PlanGenerationService, useValue: {} },
+        { provide: PlanRegenerationService, useValue: {} },
+        { provide: WorkoutsService, useValue: {} },
+        { provide: AdaptationsService, useValue: {} },
       ],
     }).compile();
 
@@ -62,6 +76,6 @@ describe('Plans routing (e2e)', () => {
 
   it('keeps the overview route of the training controller', async () => {
     await request(app.getHttpServer()).get('/v1/plans/current/overview').expect(200);
-    expect(trainingService.getPlanOverview).toHaveBeenCalledWith('current', 'user-1');
+    expect(planQueryService.getPlanOverview).toHaveBeenCalledWith('current', 'user-1');
   });
 });

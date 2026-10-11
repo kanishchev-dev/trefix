@@ -5,6 +5,7 @@ import { Socket } from 'socket.io';
 
 import { AuthRedisService } from '@/modules/auth/services/auth-redis.service';
 import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 
 import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeService } from './realtime.service';
@@ -109,6 +110,7 @@ describe('RealtimeGateway', () => {
           provide: PermissionsService,
           useValue: mockPermissionsService,
         },
+        { provide: UserPermissionsService, useValue: mockPermissionsService },
         {
           provide: AuthRedisService,
           useValue: mockAuthRedisService,

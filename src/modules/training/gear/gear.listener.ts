@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
+import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { GearUpdatedEvent } from '../events/gear.events';
 import { WorkoutCompletedEvent } from '../events/workout-completed.event';
@@ -22,19 +24,19 @@ export class GearListener {
     private readonly realtimeService: RealtimeService,
   ) {}
 
-  @OnEvent('training.workout.completed', { async: true })
+  @OnEvent(TRAINING_EVENTS.WORKOUT_COMPLETED, { async: true })
   async handleWorkoutCompleted(event: WorkoutCompletedEvent): Promise<void> {
     await this.safely(() => this.gearService.autoAssign(event.workoutId));
   }
 
-  @OnEvent('integrations.activity_imported', { async: true })
-  @OnEvent('integrations.activity_updated', { async: true })
-  @OnEvent('integrations.activity_merged', { async: true })
+  @OnEvent(INTEGRATIONS_EVENTS.ACTIVITY_IMPORTED, { async: true })
+  @OnEvent(INTEGRATIONS_EVENTS.ACTIVITY_UPDATED, { async: true })
+  @OnEvent(INTEGRATIONS_EVENTS.ACTIVITY_MERGED, { async: true })
   async handleActivityImported(event: ImportedActivity): Promise<void> {
     await this.safely(() => this.gearService.autoAssign(event.workoutId, event.gearExternalId ?? null));
   }
 
-  @OnEvent('training.gear.updated')
+  @OnEvent(TRAINING_EVENTS.GEAR_UPDATED)
   handleGearUpdated(event: GearUpdatedEvent): void {
     this.realtimeService.emitToUser(event.userId, 'gear.updated', { gearId: event.gearId });
   }

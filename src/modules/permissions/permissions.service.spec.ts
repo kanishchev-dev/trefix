@@ -2,9 +2,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
-import { User } from '@/modules/users/entities/user.entity';
-
 import { Permission } from './entities/permission.entity';
 import { PermissionGroup } from './entities/permission-group.entity';
 import { PermissionsService } from './permissions.service';
@@ -26,10 +23,6 @@ describe('PermissionsService', () => {
     findByPk: jest.fn(),
   };
 
-  const mockUserModel = {
-    findByPk: jest.fn(),
-  };
-
   const mockEventEmitter = {
     emit: jest.fn(),
   };
@@ -45,10 +38,6 @@ describe('PermissionsService', () => {
         {
           provide: getModelToken(PermissionGroup),
           useValue: mockPermissionGroupModel,
-        },
-        {
-          provide: getModelToken(User),
-          useValue: mockUserModel,
         },
         {
           provide: EventEmitter2,
@@ -131,45 +120,6 @@ describe('PermissionsService', () => {
         order: [['name', 'ASC']],
       });
       expect(mockPermissionModel.findAndCountAll).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('getEffectivePermissions', () => {
-    it('should return combined unique permissions from individual assignments and groups', async () => {
-      const userId = 'user-1';
-      const mockUser = {
-        id: userId,
-        individualPermissions: [{ name: 'perm.a' }, { name: 'perm.b' }],
-        permissionGroups: [
-          {
-            name: 'Group 1',
-            permissions: [
-              { name: 'perm.b' }, // Duplicate
-              { name: 'perm.c' },
-            ],
-          },
-          {
-            name: 'Group 2',
-            permissions: [{ name: 'perm.d' }],
-          },
-        ],
-      };
-
-      mockUserModel.findByPk.mockResolvedValue(mockUser);
-
-      const result = await service.getEffectivePermissions(userId);
-
-      expect(result).toContain('perm.a');
-      expect(result).toContain('perm.b');
-      expect(result).toContain('perm.c');
-      expect(result).toContain('perm.d');
-      expect(result.length).toBe(4);
-    });
-
-    it('should throw EntityNotFoundException if user does not exist', async () => {
-      mockUserModel.findByPk.mockResolvedValue(null);
-
-      await expect(service.getEffectivePermissions('non-existent')).rejects.toThrow(EntityNotFoundException);
     });
   });
 

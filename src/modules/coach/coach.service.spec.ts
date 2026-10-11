@@ -3,13 +3,14 @@ import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { OpenAiService } from '@/modules/openai/openai.service';
-import { TrainingService } from '@/modules/training/training.service';
+import { provideTrainingServicesMock } from '@/modules/training/testing/training-service-providers';
 import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
 
 import { COACH_DEFAULT_TITLE } from './coach.constants';
 import { CoachPromptBuilder } from './coach.prompt';
 import { CoachService } from './coach.service';
 import { CoachToolRunner } from './coach.tool-runner';
+import { CoachConversationService } from './coach-conversation.service';
 import { CoachMessage } from './entities/coach-message.entity';
 import { CoachSession } from './entities/coach-session.entity';
 
@@ -150,9 +151,10 @@ describe('CoachService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoachService,
+        CoachConversationService,
         { provide: getModelToken(CoachSession), useValue: sessionModel },
         { provide: getModelToken(CoachMessage), useValue: messageModel },
-        { provide: TrainingService, useValue: trainingService },
+        ...provideTrainingServicesMock(trainingService),
         { provide: OpenAiService, useValue: openAiService },
         { provide: CoachPromptBuilder, useValue: promptBuilder },
         { provide: CoachToolRunner, useValue: toolRunner },

@@ -1,6 +1,7 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 import {
   REALTIME_PRESENCE_EVENT,

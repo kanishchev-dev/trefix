@@ -1,7 +1,8 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { Redis } from 'ioredis';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 import { OAUTH_STATE_REDIS_PREFIX, OAUTH_STATE_TTL_MS } from '../constants/integrations.constants';
 import { IntegrationStorageUnavailableException } from '../exceptions/integration-storage-unavailable.exception';

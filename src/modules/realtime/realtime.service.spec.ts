@@ -1,8 +1,9 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { Server } from 'socket.io';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 import { RealtimeService } from './realtime.service';
 

@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 
+import { USERS_EVENTS } from '@/modules/users/users.events';
+
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './dto/user-preferences.dto';
 import { PreferencesUpdatedEvent } from './events/preferences-updated.event';
 import { UserPreferences } from './user-preferences.entity';
@@ -46,6 +48,7 @@ export class UserPreferencesService {
     assign('coachAdaptationMode');
     assign('stravaProfileSync');
     assign('timezone');
+    assign('language');
     if (dto.coachQuietHours !== undefined) {
       const next = dto.coachQuietHours ? { from: dto.coachQuietHours.from, to: dto.coachQuietHours.to } : null;
       if (JSON.stringify(preferences.coachQuietHours) !== JSON.stringify(next)) {
@@ -56,7 +59,7 @@ export class UserPreferencesService {
 
     if (changedFields.length > 0) {
       await preferences.save();
-      this.eventEmitter.emit('preferences.updated', new PreferencesUpdatedEvent(userId, changedFields));
+      this.eventEmitter.emit(USERS_EVENTS.PREFERENCES_UPDATED, new PreferencesUpdatedEvent(userId, changedFields));
     }
     return this.toResponse(preferences);
   }
@@ -71,6 +74,7 @@ export class UserPreferencesService {
       coachQuietHours: preferences.coachQuietHours ?? null,
       stravaProfileSync: preferences.stravaProfileSync,
       timezone: preferences.timezone ?? null,
+      language: preferences.language ?? null,
       updatedAt: preferences.updatedAt,
     };
   }

@@ -5,6 +5,9 @@ export const USER_INVITE_TTL_SECONDS = 60 * 60 * 24 * 7;
 export const USER_INVITE_MAX_ATTEMPTS = 5;
 
 export const PREFERENCE_UNITS = ['metric', 'imperial'] as const;
+/** Languages with full translations of user-facing texts (coach messages, emails, errors). */
+export const PREFERENCE_LANGUAGES = ['ru', 'en'] as const;
+export type PreferenceLanguage = (typeof PREFERENCE_LANGUAGES)[number];
 export const PREFERENCE_WEEK_STARTS = ['mon', 'sun'] as const;
 export const PREFERENCE_TIME_FORMATS = ['24h', '12h'] as const;
 export const COACH_ADAPTATION_MODES = ['auto', 'confirm', 'suggest'] as const;

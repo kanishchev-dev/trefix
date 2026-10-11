@@ -8,12 +8,6 @@
 
 import { MANUAL_PLAN_MAX_DISTANCE_KM, MANUAL_PLAN_MAX_DURATION_MINUTES, WorkoutStatus } from './training.constants';
 
-/** Events emitted when the admin mutates a workout. */
-export const ADMIN_WORKOUT_EVENT_NAMES = {
-  created: 'training.workout.created',
-  updated: 'training.workout.updated',
-} as const;
-
 /**
  * Statuses the admin panel may set. `completed` requires an actual result and
  * load recalculation, and `cancelled` is a plan lifecycle outcome — both stay

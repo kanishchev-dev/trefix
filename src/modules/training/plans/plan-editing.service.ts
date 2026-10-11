@@ -1,9 +1,14 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import {
+  DomainBadRequestException,
+  DomainConflictException,
+  DomainNotFoundException,
+} from '@/common/exceptions/domain-exceptions';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { AdaptationEvent } from '../entities/adaptation-event.entity';
 import { Athlete } from '../entities/athlete.entity';
@@ -84,7 +89,7 @@ export class PlanEditingService {
     if (input.name !== undefined) {
       const name = input.name.trim();
       if (name.length === 0) {
-        throw new DomainException('PLAN_CHANGE_INVALID', 'Plan name cannot be empty', HttpStatus.BAD_REQUEST);
+        throw new DomainBadRequestException('PLAN_CHANGE_INVALID', 'Plan name cannot be empty');
       }
       plan.name = name.slice(0, 80);
     }
@@ -93,7 +98,7 @@ export class PlanEditingService {
     }
 
     await plan.save();
-    this.eventEmitter.emit('training.plan.updated', new PlanUpdatedEvent(plan.athleteId, plan.id, 'meta'));
+    this.eventEmitter.emit(TRAINING_EVENTS.PLAN_UPDATED, new PlanUpdatedEvent(plan.athleteId, plan.id, 'meta'));
     return plan;
   }
 
@@ -101,15 +106,14 @@ export class PlanEditingService {
   async deletePlan(planId: string, actorUserId: string): Promise<void> {
     const plan = await this.loadOwnedPlan(planId, actorUserId);
     if (plan.status === 'active') {
-      throw new DomainException(
+      throw new DomainConflictException(
         'PLAN_ACTIVE_CANNOT_DELETE',
         'The active plan cannot be deleted; cancel it first',
-        HttpStatus.CONFLICT,
       );
     }
 
     await plan.destroy();
-    this.eventEmitter.emit('training.plan.deleted', new PlanDeletedEvent(plan.athleteId, plan.id));
+    this.eventEmitter.emit(TRAINING_EVENTS.PLAN_DELETED, new PlanDeletedEvent(plan.athleteId, plan.id));
   }
 
   /** Edits the workouts of a draft by key; every change is validated by the engine. */
@@ -120,11 +124,7 @@ export class PlanEditingService {
   ): Promise<TrainingPlan> {
     const plan = await this.loadOwnedPlan(planId, actorUserId);
     if (plan.status !== 'draft') {
-      throw new DomainException(
-        'PLAN_INVALID_STATUS',
-        'Only a draft plan supports structure editing',
-        HttpStatus.CONFLICT,
-      );
+      throw new DomainConflictException('PLAN_INVALID_STATUS', 'Only a draft plan supports structure editing');
     }
     this.ensureVersion(plan, input.expectedVersion);
 
@@ -134,7 +134,7 @@ export class PlanEditingService {
     });
     plan.weeks = weeks as unknown as Array<Record<string, unknown>>;
     await plan.save();
-    this.eventEmitter.emit('training.plan.updated', new PlanUpdatedEvent(plan.athleteId, plan.id, 'structure'));
+    this.eventEmitter.emit(TRAINING_EVENTS.PLAN_UPDATED, new PlanUpdatedEvent(plan.athleteId, plan.id, 'structure'));
     return plan;
   }
 
@@ -186,7 +186,10 @@ export class PlanEditingService {
 
       await locked.save({ transaction });
       transaction.afterCommit(() => {
-        this.eventEmitter.emit('training.plan.updated', new PlanUpdatedEvent(locked.athleteId, locked.id, input.kind));
+        this.eventEmitter.emit(
+          TRAINING_EVENTS.PLAN_UPDATED,
+          new PlanUpdatedEvent(locked.athleteId, locked.id, input.kind),
+        );
       });
       return locked;
     });
@@ -292,25 +295,20 @@ export class PlanEditingService {
 
   private ensureActive(plan: TrainingPlan): void {
     if (plan.status !== 'active') {
-      throw new DomainException(
-        'PLAN_INVALID_STATUS',
-        'Only the active plan supports this change',
-        HttpStatus.CONFLICT,
-      );
+      throw new DomainConflictException('PLAN_INVALID_STATUS', 'Only the active plan supports this change');
     }
   }
 
   private ensureVersion(plan: TrainingPlan, expectedVersion: number): void {
     if (plan.version !== expectedVersion) {
-      throw new DomainException(
+      throw new DomainConflictException(
         'PLAN_VERSION_CONFLICT',
         `Plan was modified concurrently (expected version ${expectedVersion}, current ${plan.version})`,
-        HttpStatus.CONFLICT,
       );
     }
   }
 
-  private notFound(): DomainException {
-    return new DomainException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found', HttpStatus.NOT_FOUND);
+  private notFound(): DomainNotFoundException {
+    return new DomainNotFoundException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found');
   }
 }

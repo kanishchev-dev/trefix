@@ -2,6 +2,10 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 
+import { DeviceSyncService } from '@/modules/integrations/device/device-sync.service';
+import { StravaActivitySyncService } from '@/modules/integrations/strava/strava-activity-sync.service';
+import { StravaProfileSyncService } from '@/modules/integrations/strava/strava-profile-sync.service';
+
 import {
   INTEGRATIONS_QUEUE_NAME,
   JOB_DEVICE_BATCHES_CLEANUP,
@@ -12,8 +16,7 @@ import {
   JOB_STRAVA_PROFILE_SYNC,
   JOB_STRAVA_PROFILE_SYNC_ALL,
 } from '../constants/integrations.constants';
-import { DeviceIntegrationsService, ProcessBatchJobData } from '../device/device-integrations.service';
-import { IntegrationsService } from '../integrations.service';
+import { ProcessBatchJobData } from '../device/device-integrations.shared';
 
 export interface InitialSyncJobData {
   integrationId: string;
@@ -38,8 +41,9 @@ export class IntegrationsProcessor extends WorkerHost {
   private readonly logger = new Logger(IntegrationsProcessor.name);
 
   constructor(
-    private readonly integrationsService: IntegrationsService,
-    private readonly deviceService: DeviceIntegrationsService,
+    private readonly stravaActivitySync: StravaActivitySyncService,
+    private readonly stravaProfileSync: StravaProfileSyncService,
+    private readonly deviceSync: DeviceSyncService,
   ) {
     super();
   }
@@ -50,34 +54,34 @@ export class IntegrationsProcessor extends WorkerHost {
     switch (job.name) {
       case JOB_STRAVA_INITIAL_SYNC: {
         const { integrationId } = job.data as InitialSyncJobData;
-        return this.integrationsService.executeInitialSync(integrationId);
+        return this.stravaActivitySync.executeInitialSync(integrationId);
       }
 
       case JOB_STRAVA_PROCESS_WEBHOOK: {
         const { webhookEventId } = job.data as ProcessWebhookJobData;
-        return this.integrationsService.processWebhookEvent(webhookEventId);
+        return this.stravaActivitySync.processWebhookEvent(webhookEventId);
       }
 
       case JOB_STRAVA_FETCH_ACTIVITY: {
         const { integrationId, activityId } = job.data as FetchActivityJobData;
-        return this.integrationsService.fetchAndImportSingleActivity(integrationId, activityId);
+        return this.stravaActivitySync.fetchAndImportSingleActivity(integrationId, activityId);
       }
 
       case JOB_STRAVA_PROFILE_SYNC: {
         const { integrationId } = job.data as InitialSyncJobData;
-        return this.integrationsService.syncStravaProfile(integrationId);
+        return this.stravaProfileSync.syncStravaProfile(integrationId);
       }
 
       case JOB_STRAVA_PROFILE_SYNC_ALL:
-        return this.integrationsService.syncAllStravaProfiles();
+        return this.stravaProfileSync.syncAllStravaProfiles();
 
       case JOB_DEVICE_PROCESS_BATCH: {
         const { batchId } = job.data as ProcessBatchJobData;
-        return this.deviceService.processBatch(batchId);
+        return this.deviceSync.processBatch(batchId);
       }
 
       case JOB_DEVICE_BATCHES_CLEANUP:
-        return this.deviceService.cleanupBatches();
+        return this.deviceSync.cleanupBatches();
 
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

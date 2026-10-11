@@ -1,6 +1,6 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { ForbiddenActionException } from '@/common/exceptions/domain-exceptions';
 
 import { type CoachAdaptationMode, type QuietHours } from '../users.constants';
 import { UserPreferencesService } from './user-preferences.service';
@@ -35,7 +35,7 @@ export class CoachPolicyService {
   /** Throws `COACH_DISABLED` when the user switched the coach off. */
   async assertEnabled(userId: string): Promise<void> {
     if (!(await this.isEnabled(userId))) {
-      throw new DomainException('COACH_DISABLED', 'The AI coach is turned off', HttpStatus.FORBIDDEN);
+      throw new ForbiddenActionException('COACH_DISABLED', 'The AI coach is turned off');
     }
   }
 

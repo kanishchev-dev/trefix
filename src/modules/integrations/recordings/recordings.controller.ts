@@ -19,7 +19,7 @@ import type { Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException } from '@/common/exceptions/domain-exceptions';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 import { StorageUploadedFile } from '@/modules/storage/interfaces/storage-uploaded-file.interface';
 
@@ -86,18 +86,18 @@ async function parseSummary(summary: unknown): Promise<RecordedActivityDto> {
   try {
     plain = typeof summary === 'string' ? JSON.parse(summary) : summary;
   } catch {
-    throw new DomainException('RECORDING_INVALID', 'summary is not valid JSON', HttpStatus.BAD_REQUEST, {
+    throw new DomainBadRequestException('RECORDING_INVALID', 'summary is not valid JSON', {
       field: 'summary',
     });
   }
   if (!plain || typeof plain !== 'object' || Array.isArray(plain)) {
-    throw new DomainException('RECORDING_INVALID', 'summary is required', HttpStatus.BAD_REQUEST, { field: 'summary' });
+    throw new DomainBadRequestException('RECORDING_INVALID', 'summary is required', { field: 'summary' });
   }
   const dto = plainToInstance(RecordedActivityDto, plain);
   const errors = await validate(dto, { whitelist: true, forbidNonWhitelisted: true });
   if (errors.length > 0) {
     const field = firstPath(errors[0]!);
-    throw new DomainException('RECORDING_INVALID', `Invalid field ${field}`, HttpStatus.BAD_REQUEST, { field });
+    throw new DomainBadRequestException('RECORDING_INVALID', `Invalid field ${field}`, { field });
   }
   return dto;
 }

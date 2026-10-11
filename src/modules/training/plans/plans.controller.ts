@@ -18,6 +18,7 @@ import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
+import { AdaptationsService } from '@/modules/training/adaptations/adaptations.service';
 
 import { PlanDetailsDto } from '../dto/plan-details.dto';
 import {
@@ -47,12 +48,13 @@ import {
 } from '../dto/plan-rebuild.dto';
 import { TrainingAdaptationResponseDto } from '../dto/training-response.dto';
 import type { AdaptationEventView } from '../interfaces/training-views.interface';
-import { TrainingService } from '../training.service';
 import { PLAN_CREATE_THROTTLE } from './plan-create-throttle';
 import { PlanEditingService, PlanPreviewResult } from './plan-editing.service';
-import { PlanLifecycleService, StartOptionsResult } from './plan-lifecycle.service';
+import { PlanLifecycleService } from './plan-lifecycle.service';
+import type { StartOptionsResult } from './plan-lifecycle.types';
 import { PlanDetails, PlanListResult, PlanListService } from './plan-list.service';
 import { PlanRebuildService, RebuildPrefillResult, RebuildPreviewResult } from './plan-rebuild.service';
+import { PlanStartOptionsService } from './plan-start-options.service';
 import { ActivePlanSummary } from './plan-stats.service';
 
 /** Plans library: lifecycle, editing and rebuild. Creation stays in TrainingController. */
@@ -64,8 +66,9 @@ export class PlansController {
     private readonly planListService: PlanListService,
     private readonly planEditingService: PlanEditingService,
     private readonly planLifecycleService: PlanLifecycleService,
+    private readonly startOptions: PlanStartOptionsService,
     private readonly planRebuildService: PlanRebuildService,
-    private readonly trainingService: TrainingService,
+    private readonly adaptationsService: AdaptationsService,
   ) {}
 
   @Get()
@@ -104,7 +107,7 @@ export class PlansController {
   })
   @ApiOkResponse({ type: [TrainingAdaptationResponseDto] })
   async listAdaptations(@CurrentUser() user: AuthUserContext): Promise<{ items: AdaptationEventView[] }> {
-    return { items: await this.trainingService.listPendingAdaptations(user.id) };
+    return { items: await this.adaptationsService.listPendingAdaptations(user.id) };
   }
 
   @Post('active/adaptations/:adaptationId/apply')
@@ -119,7 +122,7 @@ export class PlansController {
     @CurrentUser() user: AuthUserContext,
     @Param('adaptationId', ParseUUIDPipe) adaptationId: string,
   ): Promise<AdaptationEventView> {
-    return this.trainingService.applyProposedAdaptation(user.id, adaptationId);
+    return this.adaptationsService.applyProposedAdaptation(user.id, adaptationId);
   }
 
   @Post('active/adaptations/:adaptationId/dismiss')
@@ -131,7 +134,7 @@ export class PlansController {
     @CurrentUser() user: AuthUserContext,
     @Param('adaptationId', ParseUUIDPipe) adaptationId: string,
   ): Promise<AdaptationEventView> {
-    return this.trainingService.dismissProposedAdaptation(user.id, adaptationId);
+    return this.adaptationsService.dismissProposedAdaptation(user.id, adaptationId);
   }
 
   @Get(':id')
@@ -187,7 +190,7 @@ export class PlansController {
     @Query() query: StartOptionsQueryDto,
   ): Promise<StartOptionsResult> {
     await this.planEditingService.loadOwnedPlan(id, user.id);
-    return this.planLifecycleService.getStartOptions(id, query.timezone, query.goalTargetDate);
+    return this.startOptions.getStartOptions(id, query.timezone, query.goalTargetDate);
   }
 
   @Post(':id/start')

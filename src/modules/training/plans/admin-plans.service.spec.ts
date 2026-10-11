@@ -6,12 +6,14 @@ import { UsersService } from '@/modules/users/users.service';
 
 import { CreateManualPlanDto, PreviewManualPlanDto } from '../dto/create-manual-plan.dto';
 import { AdminPlanActionEvent } from '../events/admin-plan-action.event';
-import { TrainingService } from '../training.service';
-import { ADMIN_PLAN_ACTION_EVENT, AdminPlansService } from './admin-plans.service';
+import { provideTrainingServicesMock } from '../testing/training-service-providers';
+import { TRAINING_EVENTS } from '../training.events';
+import { AdminPlansService } from './admin-plans.service';
 import { PlanEditingService } from './plan-editing.service';
 import { PlanLifecycleService } from './plan-lifecycle.service';
 import { PlanListService } from './plan-list.service';
 import { PlanRebuildService } from './plan-rebuild.service';
+import { PlanStartOptionsService } from './plan-start-options.service';
 
 const USER_ID = '0199b0c4-0000-7000-8000-000000000001';
 const ACTOR_ID = '0199b0c4-0000-7000-8000-000000000002';
@@ -48,10 +50,11 @@ describe('AdminPlansService', () => {
       providers: [
         AdminPlansService,
         { provide: UsersService, useValue: usersService },
-        { provide: TrainingService, useValue: trainingService },
+        ...provideTrainingServicesMock(trainingService),
         { provide: PlanListService, useValue: listService },
         { provide: PlanEditingService, useValue: editingService },
         { provide: PlanLifecycleService, useValue: lifecycleService },
+        { provide: PlanStartOptionsService, useValue: lifecycleService },
         { provide: PlanRebuildService, useValue: rebuildService },
         { provide: EventEmitter2, useValue: eventEmitter },
       ],
@@ -62,7 +65,7 @@ describe('AdminPlansService', () => {
 
   const expectAudit = (action: string, planId = PLAN_ID): void =>
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      ADMIN_PLAN_ACTION_EVENT,
+      TRAINING_EVENTS.PLAN_ADMIN_ACTION,
       new AdminPlanActionEvent(ACTOR_ID, USER_ID, planId, action as AdminPlanActionEvent['action']),
     );
 

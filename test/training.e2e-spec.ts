@@ -4,6 +4,10 @@ import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
+import { AdaptationsService } from '@/modules/training/adaptations/adaptations.service';
+import { PlanAdaptationApplier } from '@/modules/training/adaptations/plan-adaptation-applier';
+import { AthleteStateService } from '@/modules/training/athletes/athlete-state.service';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
 import { AdaptationEvent } from '@/modules/training/entities/adaptation-event.entity';
 import { Athlete } from '@/modules/training/entities/athlete.entity';
 import { AthleteGoal } from '@/modules/training/entities/athlete-goal.entity';
@@ -11,11 +15,18 @@ import { AthleteState } from '@/modules/training/entities/athlete-state.entity';
 import { TrainingLoad } from '@/modules/training/entities/training-load.entity';
 import { TrainingPlan } from '@/modules/training/entities/training-plan.entity';
 import { Workout } from '@/modules/training/entities/workout.entity';
+import { GoalsService } from '@/modules/training/goals/goals.service';
 import { AthleteMetricsService } from '@/modules/training/plans/athlete-metrics.service';
+import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
 import { PlanLifecycleService } from '@/modules/training/plans/plan-lifecycle.service';
+import { PlanMaterializer } from '@/modules/training/plans/plan-materializer.service';
+import { PlanQueryService } from '@/modules/training/plans/plan-query.service';
+import { PlanStartOptionsService } from '@/modules/training/plans/plan-start-options.service';
 import { PlanStatsService } from '@/modules/training/plans/plan-stats.service';
 import { TrainingEngine } from '@/modules/training/training.engine';
-import { TrainingService } from '@/modules/training/training.service';
+import { TrainingLookupService } from '@/modules/training/training-lookup.service';
+import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
+import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
 
 type AthleteRecord = {
   id: string;
@@ -140,7 +151,11 @@ type AdaptationRecord = {
 
 describe('Training loop (e2e)', () => {
   let moduleRef: TestingModule;
-  let trainingService: TrainingService;
+  let athletesService: AthletesService;
+  let goalsService: GoalsService;
+  let planGenerationService: PlanGenerationService;
+  let planQueryService: PlanQueryService;
+  let workoutsService: WorkoutsService;
 
   const emit = jest.fn();
   const eventEmitter = { emit } as unknown as EventEmitter2;
@@ -345,11 +360,7 @@ describe('Training loop (e2e)', () => {
           Array.from(plans.values()).filter((plan) => matches(plan, options.where)).length,
       ),
       increment: jest.fn(),
-      sequelize: {
-        transaction: jest.fn(async (work: (transaction: unknown) => Promise<unknown>) =>
-          work({ LOCK: { UPDATE: 'UPDATE' }, afterCommit: (callback: () => void) => callback() }),
-        ),
-      },
+      sequelize: { transaction: runInFakeTransaction },
     } as unknown as typeof TrainingPlan;
   }
 
@@ -467,9 +478,14 @@ describe('Training loop (e2e)', () => {
         }
         return [updated];
       }),
-      sequelize: { query: jest.fn(async () => []) },
+      sequelize: { query: jest.fn(async () => []), transaction: runInFakeTransaction },
     }) as unknown as typeof Workout;
   }
+
+  /** Commits immediately: `afterCommit` hooks run right away, as after a real commit. */
+  const runInFakeTransaction = jest.fn(async (work: (transaction: unknown) => Promise<unknown>) =>
+    work({ LOCK: { UPDATE: 'UPDATE' }, afterCommit: (callback: () => void) => callback() }),
+  );
 
   function createTrainingLoadModel(): typeof TrainingLoad {
     return {
@@ -491,6 +507,10 @@ describe('Training loop (e2e)', () => {
         const athleteId = options.where?.athleteId;
         return athleteId ? trainingLoads.filter((load) => load.athleteId === athleteId) : trainingLoads;
       }),
+      findOne: jest.fn(
+        async (options: { where?: { workoutId?: string } }) =>
+          trainingLoads.find((load) => load.workoutId === options.where?.workoutId) ?? null,
+      ),
       count: jest.fn(async () => trainingLoads.length),
     } as unknown as typeof TrainingLoad;
   }
@@ -526,9 +546,19 @@ describe('Training loop (e2e)', () => {
 
     moduleRef = await Test.createTestingModule({
       providers: [
-        TrainingService,
+        TrainingLookupService,
+        AthleteStateService,
+        AthletesService,
+        GoalsService,
+        PlanQueryService,
+        PlanGenerationService,
+        WorkoutsService,
+        PlanAdaptationApplier,
+        AdaptationsService,
         TrainingEngine,
         PlanLifecycleService,
+        PlanMaterializer,
+        PlanStartOptionsService,
         PlanStatsService,
         AthleteMetricsService,
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(100) } },
@@ -540,10 +570,16 @@ describe('Training loop (e2e)', () => {
         { provide: getModelToken(TrainingLoad), useValue: createTrainingLoadModel() },
         { provide: getModelToken(AdaptationEvent), useValue: createAdaptationModel() },
         { provide: EventEmitter2, useValue: eventEmitter },
+        // Automatic adaptations follow the user's coach settings; the scenarios expect them applied.
+        { provide: CoachPolicyService, useValue: { automaticAdaptationPolicy: jest.fn().mockResolvedValue('apply') } },
       ],
     }).compile();
 
-    trainingService = moduleRef.get(TrainingService);
+    athletesService = moduleRef.get(AthletesService);
+    goalsService = moduleRef.get(GoalsService);
+    planGenerationService = moduleRef.get(PlanGenerationService);
+    planQueryService = moduleRef.get(PlanQueryService);
+    workoutsService = moduleRef.get(WorkoutsService);
   });
 
   afterEach(async () => {
@@ -554,7 +590,7 @@ describe('Training loop (e2e)', () => {
   });
 
   it('creates athlete, goal, plan and adapts future training after workout completion', async () => {
-    const athlete = await trainingService.createAthlete('user-1', {
+    const athlete = await athletesService.createAthlete('user-1', {
       age: 31,
       sex: 'male',
       heightCm: 178,
@@ -572,7 +608,7 @@ describe('Training loop (e2e)', () => {
     expect(emit).toHaveBeenCalledWith('training.athlete.created', expect.any(Object));
     expect(emit).toHaveBeenCalledWith('training.state.updated', expect.any(Object));
 
-    const goal = await trainingService.createGoal('user-1', {
+    const goal = await goalsService.createGoal('user-1', {
       athleteId: athlete.id,
       goal: {
         type: 'improve_race_result',
@@ -584,7 +620,7 @@ describe('Training loop (e2e)', () => {
       notes: 'Sub-45 target',
     });
 
-    const plan = await trainingService.createPlan('user-1', {
+    const plan = await planGenerationService.createPlan('user-1', {
       athleteId: athlete.id,
       goalId: goal.id,
       startDate: '2026-09-15',
@@ -596,7 +632,7 @@ describe('Training loop (e2e)', () => {
     const hardWorkout =
       plan.workouts.find((workout) => workout.type === 'threshold' || workout.type === 'interval') ?? plan.workouts[0];
 
-    const completion = await trainingService.completeWorkout('user-1', hardWorkout.id, {
+    const completion = await workoutsService.completeWorkout('user-1', hardWorkout.id, {
       actualDurationMinutes: Math.max(20, hardWorkout.durationMinutes - 12),
       actualDistanceKm: Math.max(2, hardWorkout.distanceKm - 3),
       actualAveragePaceSecondsPerKm: 360,
@@ -613,40 +649,40 @@ describe('Training loop (e2e)', () => {
     expect(emit).toHaveBeenCalledWith('training.state.updated', expect.any(Object));
     expect(emit).toHaveBeenCalledWith('training.plan.adapted', expect.any(Object));
 
-    const reloadedPlan = await trainingService.getPlan(plan.id, 'user-1');
+    const reloadedPlan = await planQueryService.getPlan(plan.id, 'user-1');
     expect(reloadedPlan.workouts.some((workout) => workout.type === 'recovery' || workout.type === 'easy')).toBe(true);
   });
 
   it('rejects duplicate athlete creation for the same user', async () => {
-    await trainingService.createAthlete('user-1', {
+    await athletesService.createAthlete('user-1', {
       experienceLevel: 'intermediate',
     });
 
     await expect(
-      trainingService.createAthlete('user-1', {
+      athletesService.createAthlete('user-1', {
         experienceLevel: 'intermediate',
       }),
     ).rejects.toBeInstanceOf(EntityAlreadyExistsException);
   });
 
   it('keeps one active plan: a start over an active plan needs explicit confirmation', async () => {
-    const athlete = await trainingService.createAthlete('user-1', {
+    const athlete = await athletesService.createAthlete('user-1', {
       experienceLevel: 'intermediate',
       weeklyMileageKm: 30,
       availableTrainingDays: ['tuesday', 'thursday', 'saturday'],
     });
-    const goal = await trainingService.createGoal('user-1', {
+    const goal = await goalsService.createGoal('user-1', {
       athleteId: athlete.id,
       goal: { type: 'prepare_for_race', target: { distanceMeters: 10_000 }, targetDate: '2026-11-29', priority: 5 },
     });
     const lifecycle = moduleRef.get(PlanLifecycleService);
 
-    const first = await trainingService.createPlan('user-1', {
+    const first = await planGenerationService.createPlan('user-1', {
       athleteId: athlete.id,
       goalId: goal.id,
       start: { startDate: '2026-09-15', replaceActive: false },
     });
-    const draft = await trainingService.createPlan('user-1', {
+    const draft = await planGenerationService.createPlan('user-1', {
       athleteId: athlete.id,
       goalId: goal.id,
       saveAsDraft: true,

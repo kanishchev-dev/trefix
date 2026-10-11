@@ -27,6 +27,7 @@ import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.int
 
 import { COACH_CHAT_RESPONSE_EXAMPLE, COACH_SESSION_DETAIL_EXAMPLE, COACH_SESSION_EXAMPLE } from './coach.openapi';
 import { CoachService } from './coach.service';
+import { CoachStreamService } from './coach-stream.service';
 import { CoachChatDto } from './dto/coach-chat.dto';
 import { CoachChatResponseDto, CoachSessionDetailResponseDto, CoachSessionResponseDto } from './dto/coach-response.dto';
 import { CreateCoachSessionDto } from './dto/create-coach-session.dto';
@@ -39,7 +40,10 @@ import { SendCoachMessageDto } from './dto/send-coach-message.dto';
   version: '1',
 })
 export class CoachController {
-  constructor(private readonly coachService: CoachService) {}
+  constructor(
+    private readonly coachService: CoachService,
+    private readonly coachStreamService: CoachStreamService,
+  ) {}
 
   @Post('sessions')
   @RequirePermissions('coach.sessions.create')
@@ -87,7 +91,7 @@ export class CoachController {
     @Param('id') id: string,
     @Query('message') message: string,
   ): Promise<Observable<MessageEvent>> {
-    const stream = await this.coachService.streamMessage(user.id, id, { message });
+    const stream = await this.coachStreamService.streamMessage(user.id, id, { message });
     return stream.pipe(
       map((chunk) => ({
         data: chunk,

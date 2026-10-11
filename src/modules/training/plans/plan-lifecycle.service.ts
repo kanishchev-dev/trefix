@@ -1,14 +1,15 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, Transaction, UniqueConstraintError } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainConflictException, DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { Athlete } from '../entities/athlete.entity';
 import { AthleteGoal } from '../entities/athlete-goal.entity';
-import { TrainingPlan, TrainingPlanConfig, TrainingPlanMetricsSnapshot } from '../entities/training-plan.entity';
+import { TrainingPlan, TrainingPlanMetricsSnapshot } from '../entities/training-plan.entity';
 import { Workout } from '../entities/workout.entity';
 import { GoalCreatedEvent } from '../events/goal-created.event';
 import { PlanCancelledEvent } from '../events/plan-cancelled.event';
@@ -16,84 +17,19 @@ import { PlanCompletedEvent } from '../events/plan-completed.event';
 import { PlanCreatedEvent } from '../events/plan-created.event';
 import { PlanGeneratedEvent } from '../events/plan-generated.event';
 import { PlanStartedEvent } from '../events/plan-started.event';
-import { deriveLegacyRaceFields, type GoalPayloadShape } from '../goal-taxonomy';
-import {
-  DRAFT_METRICS_STALE_DAYS,
-  PlanCancelReason,
-  PlanCreationSource,
-  PLANS_PER_ATHLETE_LIMIT,
-} from '../training.constants';
-import { MaterializeResult, RelativeWeek, TrainingEngine } from '../training.engine';
+import { PlanCancelReason, PLANS_PER_ATHLETE_LIMIT } from '../training.constants';
+import { TrainingEngine } from '../training.engine';
 import { AthleteMetricsService } from './athlete-metrics.service';
-import { ActivePlanSummary, PlanStatsService } from './plan-stats.service';
-import { asRelativeWeeks, hasRelativeWorkouts } from './plan-structure';
+import type { CreatePlanInput, PlanStartBehavior, PlanStartInput } from './plan-lifecycle.types';
+import { PlanMaterializer } from './plan-materializer.service';
+import { PlanStatsService } from './plan-stats.service';
 import {
   addDaysIso,
   ensureGoalTargetDateAllowed,
   ensureStartDateAllowed,
-  mondayIndex,
   parseIsoDate,
   todayIsoInTz,
 } from './plan-utils';
-
-export interface PlanStartInput {
-  startDate: string;
-  goalTargetDate?: string | null;
-  replaceActive: boolean;
-  timezone?: string | null;
-}
-
-export interface PlanStartBehavior {
-  /** Metrics to snapshot at start; defaults to the plan's own snapshot or a fresh estimate. */
-  metrics?: TrainingPlanMetricsSnapshot | null;
-  /** Reuse an existing goal (engine-generated plans) instead of creating one from the config. */
-  existingGoalId?: string | null;
-  /** Legacy clients may send yesterday's date across timezones; the date is clamped instead of rejected. */
-  clampPastStartDate?: boolean;
-}
-
-export interface CreatePlanInput {
-  athleteId: string;
-  name: string;
-  notes?: string | null;
-  config: TrainingPlanConfig;
-  creationSource: PlanCreationSource;
-  trainingFrequency: number;
-  weeklyTargetKm: number;
-  weeks: RelativeWeek[];
-  metricsSnapshot: TrainingPlanMetricsSnapshot | null;
-  sourcePlanId?: string | null;
-}
-
-export type StartOptionKind = 'today' | 'next_monday' | 'race_aligned';
-
-export interface StartOption {
-  kind: StartOptionKind;
-  startDate: string;
-  endDate: string;
-  goalTargetDate?: string;
-  fits?: boolean;
-  weeksAvailable?: number;
-  reason?: 'target_date_passed';
-}
-
-export interface StartOptionsResult {
-  today: string;
-  totalWeeks: number;
-  options: StartOption[];
-  recommended: StartOptionKind;
-  metricsStale: boolean;
-  activePlan: ActivePlanSummary | null;
-}
-
-interface GoalSnapshot {
-  type?: string;
-  current?: Record<string, unknown> | null;
-  target?: Record<string, unknown> | null;
-  description?: string | null;
-  targetDate?: string | null;
-  priority?: number;
-}
 
 /**
  * The only service that moves a plan between `draft`, `active`, `completed`
@@ -116,6 +52,7 @@ export class PlanLifecycleService {
     private readonly engine: TrainingEngine,
     private readonly metricsService: AthleteMetricsService,
     private readonly statsService: PlanStatsService,
+    private readonly materializer: PlanMaterializer,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -156,7 +93,7 @@ export class PlanLifecycleService {
 
       transaction.afterCommit(() => {
         this.eventEmitter.emit(
-          'training.plan.created',
+          TRAINING_EVENTS.PLAN_CREATED,
           new PlanCreatedEvent(plan.athleteId, plan.id, 'draft', plan.creationSource, plan.sourcePlanId),
         );
       });
@@ -173,7 +110,7 @@ export class PlanLifecycleService {
     return this.inTransaction(async (transaction) => {
       const plan = await this.planModel.findByPk(planId, { transaction, lock: transaction.LOCK.UPDATE });
       if (!plan) {
-        throw new DomainException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found', HttpStatus.NOT_FOUND);
+        throw new DomainNotFoundException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found');
       }
       await this.startInTransaction(plan, input, transaction, behavior);
       return plan;
@@ -192,11 +129,11 @@ export class PlanLifecycleService {
     return this.inTransaction(async (transaction) => {
       const plan = await this.planModel.findByPk(planId, { transaction, lock: transaction.LOCK.UPDATE });
       if (!plan) {
-        throw new DomainException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found', HttpStatus.NOT_FOUND);
+        throw new DomainNotFoundException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found');
       }
       await this.lockAthlete(plan.athleteId, transaction);
       if (plan.status !== 'active') {
-        throw new DomainException('PLAN_INVALID_STATUS', 'Only an active plan can be cancelled', HttpStatus.CONFLICT);
+        throw new DomainConflictException('PLAN_INVALID_STATUS', 'Only an active plan can be cancelled');
       }
 
       return this.cancelInTransaction(plan, reason, timezone, transaction);
@@ -235,101 +172,6 @@ export class PlanLifecycleService {
     return completed;
   }
 
-  /** Start options of a draft. */
-  async getStartOptions(
-    planId: string,
-    timezone?: string | null,
-    goalTargetDateOverride?: string | null,
-  ): Promise<StartOptionsResult> {
-    const plan = await this.planModel.findByPk(planId);
-    if (!plan || plan.status !== 'draft') {
-      throw new DomainException('TRAINING_PLAN_NOT_FOUND', 'Training plan not found', HttpStatus.NOT_FOUND);
-    }
-
-    const goal = (plan.config?.goal ?? {}) as GoalSnapshot;
-    return this.buildStartOptions({
-      athleteId: plan.athleteId,
-      totalWeeks: plan.weeks.length,
-      targetDate: goalTargetDateOverride || goal.targetDate || null,
-      timezone,
-      metricsStale: this.isMetricsStale(plan),
-    });
-  }
-
-  /**
-   * Start options for any plan shape, including not yet saved previews.
-   * "Race aligned" puts the race date into the last plan week: the plan
-   * starts on the Monday of the race week minus `totalWeeks - 1` weeks.
-   */
-  async buildStartOptions(input: {
-    athleteId: string;
-    totalWeeks: number;
-    targetDate?: string | null;
-    timezone?: string | null;
-    metricsStale?: boolean;
-  }): Promise<StartOptionsResult> {
-    const today = todayIsoInTz(input.timezone);
-    const totalWeeks = Math.max(1, input.totalWeeks);
-    const endOf = (startDate: string): string => addDaysIso(startDate, totalWeeks * 7 - 1);
-
-    const nextMonday = this.nextMondayOrToday(today);
-    const options: StartOption[] = [
-      { kind: 'today', startDate: today, endDate: endOf(today) },
-      { kind: 'next_monday', startDate: nextMonday, endDate: endOf(nextMonday) },
-    ];
-    let recommended: StartOptionKind = nextMonday === today ? 'today' : 'next_monday';
-
-    const targetDate = input.targetDate ?? null;
-    if (targetDate) {
-      const alignedStart = addDaysIso(this.mondayOfWeek(targetDate), -(totalWeeks - 1) * 7);
-      if (targetDate < today) {
-        options.push({
-          kind: 'race_aligned',
-          startDate: alignedStart,
-          endDate: endOf(alignedStart),
-          goalTargetDate: targetDate,
-          fits: false,
-          reason: 'target_date_passed',
-        });
-      } else if (alignedStart >= today) {
-        options.push({
-          kind: 'race_aligned',
-          startDate: alignedStart,
-          endDate: endOf(alignedStart),
-          goalTargetDate: targetDate,
-          fits: true,
-        });
-        recommended = 'race_aligned';
-      } else {
-        options.push({
-          kind: 'race_aligned',
-          startDate: today,
-          endDate: endOf(today),
-          goalTargetDate: targetDate,
-          fits: false,
-          weeksAvailable: this.weeksBetween(today, targetDate),
-        });
-      }
-    }
-
-    const active = await this.planModel.findOne({ where: { athleteId: input.athleteId, status: 'active' } });
-    return {
-      today,
-      totalWeeks,
-      options,
-      recommended,
-      metricsStale: input.metricsStale ?? false,
-      activePlan: active ? await this.statsService.buildActivePlanSummary(active, today) : null,
-    };
-  }
-
-  /** Whether the draft metrics are older than the staleness window. */
-  isMetricsStale(plan: TrainingPlan): boolean {
-    const referenceIso = plan.metricsSnapshot?.capturedAt ?? plan.updatedAt.toISOString();
-    const ageDays = (Date.now() - new Date(referenceIso).getTime()) / 86_400_000;
-    return ageDays > DRAFT_METRICS_STALE_DAYS;
-  }
-
   /** Fresh metrics snapshot from the athlete state and recent workouts. */
   async captureMetricsSnapshot(athleteId: string): Promise<TrainingPlanMetricsSnapshot> {
     const current = await this.metricsService.currentMetrics(athleteId);
@@ -340,7 +182,7 @@ export class PlanLifecycleService {
   async lockAthlete(athleteId: string, transaction: Transaction): Promise<Athlete> {
     const athlete = await this.athleteModel.findByPk(athleteId, { transaction, lock: transaction.LOCK.UPDATE });
     if (!athlete) {
-      throw new DomainException('TRAINING_PLAN_NOT_FOUND', 'Athlete not found', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('TRAINING_PLAN_NOT_FOUND', 'Athlete not found');
     }
     return athlete;
   }
@@ -372,7 +214,7 @@ export class PlanLifecycleService {
     input = { ...input, goalTargetDate };
 
     if (plan.status !== 'draft') {
-      throw new DomainException('PLAN_INVALID_STATUS', 'Only a draft plan can be started', HttpStatus.CONFLICT);
+      throw new DomainConflictException('PLAN_INVALID_STATUS', 'Only a draft plan can be started');
     }
 
     await this.lockAthlete(plan.athleteId, transaction);
@@ -386,17 +228,17 @@ export class PlanLifecycleService {
     if (active) {
       if (!input.replaceActive) {
         const summary = await this.statsService.buildActivePlanSummary(active, today);
-        throw new DomainException('ACTIVE_PLAN_EXISTS', 'Another plan is already active', HttpStatus.CONFLICT, {
+        throw new DomainConflictException('ACTIVE_PLAN_EXISTS', 'Another plan is already active', {
           activePlan: summary,
         });
       }
       replaced = await this.cancelInTransaction(active, 'replaced', input.timezone, transaction);
     }
 
-    const { goal, created: goalCreated } = await this.resolveGoal(plan, input, behavior, transaction);
-    const relativeWeeks = await this.resolveDraftWeeks(plan, transaction);
+    const { goal, created: goalCreated } = await this.materializer.resolveGoal(plan, input, behavior, transaction);
+    const relativeWeeks = await this.materializer.resolveDraftWeeks(plan, transaction);
     const materialized = this.engine.materializeWeeks(relativeWeeks, new Date(`${startDate}T00:00:00Z`));
-    await this.persistMaterialized(plan, goal.id, materialized, transaction);
+    await this.materializer.persistMaterialized(plan, goal.id, materialized, transaction);
 
     plan.goalId = goal.id;
     plan.status = 'active';
@@ -414,7 +256,7 @@ export class PlanLifecycleService {
       await plan.save({ transaction });
     } catch (error) {
       if (error instanceof UniqueConstraintError) {
-        throw new DomainException('ACTIVE_PLAN_EXISTS', 'Another plan is already active', HttpStatus.CONFLICT);
+        throw new DomainConflictException('ACTIVE_PLAN_EXISTS', 'Another plan is already active');
       }
       throw error;
     }
@@ -426,14 +268,14 @@ export class PlanLifecycleService {
 
     transaction.afterCommit(() => {
       if (goalCreated) {
-        this.eventEmitter.emit('training.goal.created', new GoalCreatedEvent(plan.athleteId, goal.id));
+        this.eventEmitter.emit(TRAINING_EVENTS.GOAL_CREATED, new GoalCreatedEvent(plan.athleteId, goal.id));
       }
       this.eventEmitter.emit(
-        'training.plan.generated',
+        TRAINING_EVENTS.PLAN_GENERATED,
         new PlanGeneratedEvent(plan.athleteId, plan.id, plan.creationSource),
       );
       this.eventEmitter.emit(
-        'training.plan.started',
+        TRAINING_EVENTS.PLAN_STARTED,
         new PlanStartedEvent(plan.athleteId, plan.id, replaced?.plan.id ?? null),
       );
     });
@@ -467,7 +309,7 @@ export class PlanLifecycleService {
 
     transaction.afterCommit(() => {
       this.eventEmitter.emit(
-        'training.plan.cancelled',
+        TRAINING_EVENTS.PLAN_CANCELLED,
         new PlanCancelledEvent(plan.athleteId, plan.id, reason, cancelledWorkouts),
       );
     });
@@ -490,148 +332,22 @@ export class PlanLifecycleService {
         );
       }
       transaction.afterCommit(() => {
-        this.eventEmitter.emit('training.plan.completed', new PlanCompletedEvent(plan.athleteId, plan.id));
+        this.eventEmitter.emit(TRAINING_EVENTS.PLAN_COMPLETED, new PlanCompletedEvent(plan.athleteId, plan.id));
       });
       return true;
     });
-  }
-
-  private async resolveGoal(
-    plan: TrainingPlan,
-    input: PlanStartInput,
-    behavior: PlanStartBehavior,
-    transaction: Transaction,
-  ): Promise<{ goal: AthleteGoal; created: boolean }> {
-    const snapshot = (plan.config?.goal ?? {}) as GoalSnapshot;
-
-    if (behavior.existingGoalId) {
-      const existing = await this.goalModel.findByPk(behavior.existingGoalId, { transaction });
-      if (existing && existing.athleteId === plan.athleteId) {
-        existing.status = 'active';
-        if (input.goalTargetDate) {
-          existing.targetDate = input.goalTargetDate;
-        }
-        await existing.save({ transaction });
-        return { goal: existing, created: false };
-      }
-    }
-
-    const payload = {
-      type: (snapshot.type ?? 'prepare_for_race') as GoalPayloadShape['type'],
-      current: snapshot.current ?? undefined,
-      target: snapshot.target ?? undefined,
-      description: snapshot.description ?? undefined,
-    };
-    const legacyFields = deriveLegacyRaceFields(payload);
-    const goal = await this.goalModel.create(
-      {
-        athleteId: plan.athleteId,
-        type: payload.type,
-        payload: { current: payload.current, target: payload.target ?? {}, description: payload.description },
-        raceDistance: legacyFields.raceDistance,
-        targetTimeSeconds: legacyFields.targetTimeSeconds,
-        targetDate: input.goalTargetDate ?? snapshot.targetDate ?? null,
-        priority: snapshot.priority ?? 5,
-        status: 'active',
-        notes: null,
-      },
-      { transaction },
-    );
-    return { goal, created: true };
-  }
-
-  /**
-   * Drafts created before the lifecycle model kept dated weeks and workout
-   * rows; they are converted into the relative structure on start and their
-   * stale rows are removed, so the plan is materialized exactly once.
-   */
-  private async resolveDraftWeeks(plan: TrainingPlan, transaction: Transaction): Promise<RelativeWeek[]> {
-    if (hasRelativeWorkouts(plan.weeks)) {
-      return asRelativeWeeks(plan.weeks);
-    }
-
-    const workouts = await this.workoutModel.findAll({ where: { planId: plan.id }, transaction });
-    const relative = this.engine.extractFinalVersion(
-      { startDate: plan.startDate, endDate: plan.endDate },
-      workouts.map((workout) => ({
-        weekNumber: workout.weekNumber,
-        orderInWeek: workout.orderInWeek,
-        scheduledAt: workout.scheduledAt,
-        type: workout.type,
-        phase: workout.phase,
-        durationMinutes: workout.durationMinutes,
-        distanceKm: workout.distanceKm,
-        target: (workout.target as Record<string, unknown>) ?? {},
-        steps: (workout.steps as Array<Record<string, unknown>>) ?? [],
-      })),
-    );
-    await this.workoutModel.destroy({ where: { planId: plan.id }, transaction });
-    return relative;
-  }
-
-  private async persistMaterialized(
-    plan: TrainingPlan,
-    goalId: string,
-    materialized: MaterializeResult,
-    transaction: Transaction,
-  ): Promise<void> {
-    const created = await this.workoutModel.bulkCreate(
-      materialized.workouts.map((workout) => ({
-        athleteId: plan.athleteId,
-        goalId,
-        planId: plan.id,
-        weekNumber: workout.weekNumber,
-        scheduledAt: workout.scheduledAt,
-        type: workout.type,
-        phase: workout.phase,
-        status: 'planned',
-        orderInWeek: workout.orderInWeek,
-        durationMinutes: workout.durationMinutes,
-        distanceKm: workout.distanceKm,
-        target: workout.target,
-        steps: workout.steps,
-        actual: null,
-        analysis: null,
-        completedAt: null,
-      })),
-      { transaction, returning: true },
-    );
-
-    const idByKey = new Map(materialized.workouts.map((workout, index) => [workout.key, created[index]?.id]));
-    plan.weeks = materialized.weeks.map((week) => ({
-      ...week,
-      workoutIds: ((week.workoutIds as string[]) ?? [])
-        .map((key) => idByKey.get(key))
-        .filter((id): id is string => Boolean(id)),
-    }));
   }
 
   private async ensurePlansLimit(athleteId: string, transaction: Transaction): Promise<void> {
     const limit = this.configService.get<number>('training.plansPerAthleteLimit') ?? PLANS_PER_ATHLETE_LIMIT;
     const count = await this.planModel.count({ where: { athleteId }, transaction });
     if (count >= limit) {
-      throw new DomainException('PLANS_LIMIT_REACHED', `Plan limit of ${limit} reached`, HttpStatus.CONFLICT);
+      throw new DomainConflictException('PLANS_LIMIT_REACHED', `Plan limit of ${limit} reached`);
     }
   }
 
   /** Plans whose end date is before this day are complete (one day of timezone slack). */
   private completionCutoff(): string {
     return addDaysIso(todayIsoInTz('UTC'), -1);
-  }
-
-  private mondayOfWeek(dateIso: string): string {
-    return addDaysIso(dateIso, -mondayIndex(new Date(`${dateIso}T00:00:00Z`)));
-  }
-
-  private nextMondayOrToday(todayIso: string): string {
-    const weekday = mondayIndex(new Date(`${todayIso}T00:00:00Z`));
-    return weekday === 0 ? todayIso : addDaysIso(todayIso, 7 - weekday);
-  }
-
-  private weeksBetween(fromIso: string, toIso: string): number {
-    const days = Math.floor(
-      (new Date(`${toIso}T00:00:00Z`).getTime() - new Date(`${fromIso}T00:00:00Z`).getTime()) / 86_400_000,
-    );
-    return Math.max(0, Math.floor(days / 7) + 1);
   }
 }

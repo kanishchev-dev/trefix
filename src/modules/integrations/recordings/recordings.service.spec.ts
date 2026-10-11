@@ -1,7 +1,9 @@
 import type { StorageService } from '../../storage/storage.service';
+import type { AthletesService } from '../../training/athletes/athletes.service';
 import type { Workout } from '../../training/entities/workout.entity';
 import type { GearService } from '../../training/gear/gear.service';
-import type { TrainingService } from '../../training/training.service';
+import { WorkoutImportService } from '../../training/workouts/workout-import.service';
+import type { WorkoutsService } from '../../training/workouts/workouts.service';
 import type { ActivityIngestionService } from '../ingestion/activity-ingestion.service';
 import type { RecordedActivityDto } from './dto/recorded-activity.dto';
 import type { RecordedActivity } from './recorded-activity.entity';
@@ -30,6 +32,19 @@ const gzipTrack = {
   buffer: Buffer.from([0x1f, 0x8b, 0, 0]),
 };
 
+/** WorkoutImportService whose tracker-details write goes to the workout model mock. */
+function trackerDetailsWriter(model: { findByPk: jest.Mock }): WorkoutImportService {
+  const service = new WorkoutImportService(
+    model as unknown as typeof Workout,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+  );
+  return service;
+}
+
 describe('RecordingsService', () => {
   let recordingModel: { findOne: jest.Mock; create: jest.Mock };
   let workoutModel: { findByPk: jest.Mock };
@@ -55,8 +70,9 @@ describe('RecordingsService', () => {
     storage = { uploadFile: jest.fn().mockResolvedValue({ id: 'file-1' }), deleteFileQuietly: jest.fn() };
     service = new RecordingsService(
       recordingModel as unknown as typeof RecordedActivity,
-      workoutModel as unknown as typeof Workout,
-      trainingService as unknown as TrainingService,
+      trainingService as unknown as AthletesService,
+      trainingService as unknown as WorkoutsService,
+      trackerDetailsWriter(workoutModel),
       gearService as unknown as GearService,
       ingestion as unknown as ActivityIngestionService,
       storage as unknown as StorageService,

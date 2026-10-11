@@ -3,6 +3,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import {
   COACH_ADAPTATION_MODE_DEFAULT,
   type CoachAdaptationMode,
+  type PreferenceLanguage,
   type PreferenceTimeFormat,
   type PreferenceUnits,
   type PreferenceWeekStart,
@@ -47,6 +48,13 @@ export class UserPreferences extends Model {
 
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true, field: 'strava_profile_sync' })
   stravaProfileSync!: boolean;
+
+  /**
+   * Language of texts generated without a request — coach messages, emails.
+   * Null until the client reports it; responses to requests follow `Accept-Language` instead.
+   */
+  @Column({ type: DataType.STRING(8), allowNull: true })
+  language!: PreferenceLanguage | null;
 
   /** IANA time zone reported by the client; quiet hours are evaluated in it. */
   @Column({ type: DataType.STRING(64), allowNull: true })

@@ -66,7 +66,12 @@ export class DomainExceptionFilter implements ExceptionFilter {
     const body: ErrorResponseBody = {
       statusCode: status,
       code,
-      message: await this.translate(code, lang, isServerError ? INTERNAL_ERROR_MESSAGE : originalMessage),
+      message: await this.translate(
+        code,
+        lang,
+        isServerError ? INTERNAL_ERROR_MESSAGE : originalMessage,
+        error instanceof DomainException ? error.messageArgs : undefined,
+      ),
       traceId,
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -121,17 +126,15 @@ export class DomainExceptionFilter implements ExceptionFilter {
     return error instanceof Error ? error.message : INTERNAL_ERROR_MESSAGE;
   }
 
-  /**
-   * Looks the code up as a full i18n key first (`user.ERRORS.USER_NOT_FOUND`),
-   * then among the shared `common.ERRORS`; falls back to the English message.
-   */
-  private async translate(code: string, lang: string, fallback: string): Promise<string> {
+  /** Error messages live in `common.ERRORS`, keyed by the code; the English message is the fallback. */
+  private async translate(
+    code: string,
+    lang: string,
+    fallback: string,
+    args: Record<string, unknown> = {},
+  ): Promise<string> {
     try {
-      const direct = this.i18n.translate(code, { lang, defaultValue: '' }) as string;
-      if (direct) {
-        return direct;
-      }
-      return this.i18n.translate(`common.ERRORS.${code}`, { lang, defaultValue: fallback }) as string;
+      return this.i18n.translate(`common.ERRORS.${code}`, { lang, args, defaultValue: fallback }) as string;
     } catch (translationError) {
       this.logger.warn(`Failed to translate error code ${code}: ${String(translationError)}`);
       return fallback;

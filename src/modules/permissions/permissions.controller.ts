@@ -24,6 +24,7 @@ import { UpdatePermissionGroupDto } from './dto/update-permission-group.dto';
 import { Permission } from './entities/permission.entity';
 import { PermissionGroup } from './entities/permission-group.entity';
 import { PermissionsService } from './permissions.service';
+import { UserPermissionsService } from './services/user-permissions.service';
 
 /**
  * Route declaration order matters here: Express matches routes in the order
@@ -36,7 +37,10 @@ import { PermissionsService } from './permissions.service';
 @ApiBearerAuth()
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) {}
+  constructor(
+    private readonly permissionsService: PermissionsService,
+    private readonly userPermissionsService: UserPermissionsService,
+  ) {}
 
   // --- Permissions: collection ---
 
@@ -180,7 +184,7 @@ export class PermissionsController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('groupId', ParseUUIDPipe) groupId: string,
   ): Promise<void> {
-    return this.permissionsService.assignGroupToUser(userId, groupId);
+    return this.userPermissionsService.assignGroupToUser(userId, groupId);
   }
 
   @Delete('users/:userId/groups/:groupId')
@@ -191,7 +195,7 @@ export class PermissionsController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('groupId', ParseUUIDPipe) groupId: string,
   ): Promise<void> {
-    return this.permissionsService.revokeGroupFromUser(userId, groupId);
+    return this.userPermissionsService.revokeGroupFromUser(userId, groupId);
   }
 
   @Post('users/:userId/permissions/:permissionId')
@@ -202,7 +206,7 @@ export class PermissionsController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('permissionId', ParseUUIDPipe) permissionId: string,
   ): Promise<void> {
-    return this.permissionsService.assignPermissionToUser(userId, permissionId);
+    return this.userPermissionsService.assignPermissionToUser(userId, permissionId);
   }
 
   @Delete('users/:userId/permissions/:permissionId')
@@ -213,7 +217,7 @@ export class PermissionsController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('permissionId', ParseUUIDPipe) permissionId: string,
   ): Promise<void> {
-    return this.permissionsService.revokePermissionFromUser(userId, permissionId);
+    return this.userPermissionsService.revokePermissionFromUser(userId, permissionId);
   }
 
   @Get('users/:userId/effective')
@@ -221,6 +225,6 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Get effective permissions of a user' })
   @ApiResponse({ status: 200, type: [String] })
   getEffectivePermissions(@Param('userId', ParseUUIDPipe) userId: string): Promise<string[]> {
-    return this.permissionsService.getEffectivePermissions(userId);
+    return this.userPermissionsService.getEffectivePermissions(userId);
   }
 }

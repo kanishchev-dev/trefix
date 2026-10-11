@@ -10,7 +10,9 @@ import {
 import { Permission } from '@/modules/permissions/entities/permission.entity';
 import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
 import { UserPermissionGroup } from '@/modules/permissions/entities/user-permission-group.entity';
+import { PermissionCatalogSeeder } from '@/modules/permissions/services/permission-catalog-seeder.service';
 import { User } from '@/modules/users/entities/user.entity';
+import { SystemAdminSeeder } from '@/modules/users/services/system-admin-seeder.service';
 
 import { SystemSeedService } from './system-seed.service';
 
@@ -32,6 +34,8 @@ describe('SystemSeedService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SystemSeedService,
+        PermissionCatalogSeeder,
+        SystemAdminSeeder,
         {
           provide: appConfig.KEY,
           useValue: {

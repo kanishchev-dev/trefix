@@ -1,9 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, Transaction } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException, DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
+import { toAthleteView } from '@/modules/training/training.mappers';
 
 import { Athlete } from '../entities/athlete.entity';
 import { Workout } from '../entities/workout.entity';
@@ -22,7 +25,6 @@ import {
   TRAINING_WEEKDAY_ORDER,
   WEEKLY_MILEAGE_SUGGESTION_THRESHOLD,
 } from '../training.constants';
-import { TrainingService } from '../training.service';
 import { UpdateAthleteProfileDto } from './dto/update-athlete-profile.dto';
 import { calculateHrZones, estimateMaxHeartRate, type HrZone, isValidCustomZones } from './hr-zones';
 import { ageFromBirthDate, calculateCompleteness, type ProfileCompleteness } from './profile-completeness';
@@ -98,7 +100,7 @@ export class AthleteProfileService {
     private readonly athleteModel: typeof Athlete,
     @InjectModel(Workout)
     private readonly workoutModel: typeof Workout,
-    private readonly trainingService: TrainingService,
+    private readonly athletesService: AthletesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -146,9 +148,9 @@ export class AthleteProfileService {
     athlete.changed('fieldSources', true);
     await athlete.save();
 
-    this.eventEmitter.emit('training.athlete.updated', new AthleteUpdatedEvent(athlete.id, userId));
+    this.eventEmitter.emit(TRAINING_EVENTS.ATHLETE_UPDATED, new AthleteUpdatedEvent(athlete.id, userId));
     if ([...changed].some((field) => ZONE_FIELDS.has(field))) {
-      this.eventEmitter.emit('training.athlete.zones_changed', new AthleteZonesChangedEvent(athlete.id, userId));
+      this.eventEmitter.emit(TRAINING_EVENTS.ATHLETE_ZONES_CHANGED, new AthleteZonesChangedEvent(athlete.id, userId));
     }
     return this.toProfileView(athlete);
   }
@@ -185,9 +187,9 @@ export class AthleteProfileService {
     athlete.changed('fieldSources', true);
     await athlete.save({ transaction });
     if (changed) {
-      this.eventEmitter.emit('training.athlete.updated', new AthleteUpdatedEvent(athlete.id, athlete.userId));
+      this.eventEmitter.emit(TRAINING_EVENTS.ATHLETE_UPDATED, new AthleteUpdatedEvent(athlete.id, athlete.userId));
       this.eventEmitter.emit(
-        'training.athlete.zones_changed',
+        TRAINING_EVENTS.ATHLETE_ZONES_CHANGED,
         new AthleteZonesChangedEvent(athlete.id, athlete.userId),
       );
     }
@@ -252,13 +254,13 @@ export class AthleteProfileService {
     athlete.changed('fieldSources', true);
     await athlete.save();
     if (changed) {
-      this.eventEmitter.emit('training.athlete.updated', new AthleteUpdatedEvent(athlete.id, athlete.userId));
+      this.eventEmitter.emit(TRAINING_EVENTS.ATHLETE_UPDATED, new AthleteUpdatedEvent(athlete.id, athlete.userId));
     }
     return changed;
   }
 
   async toProfileView(athlete: Athlete): Promise<AthleteProfileView> {
-    const view = this.trainingService.toAthleteView(athlete);
+    const view = toAthleteView(athlete);
     const age = ageFromBirthDate(athlete.birthDate, todayIsoInTz('UTC')) ?? athlete.age ?? null;
     const zones = calculateHrZones({
       method: athlete.hrZonesMethod,
@@ -291,10 +293,10 @@ export class AthleteProfileService {
   }
 
   private async loadOrCreate(userId: string): Promise<Athlete> {
-    const view = await this.trainingService.getOrCreateAthlete(userId);
+    const view = await this.athletesService.getOrCreateAthlete(userId);
     const athlete = await this.athleteModel.findByPk(view.id);
     if (!athlete) {
-      throw new DomainException('ATHLETE_NOT_FOUND', 'The user has no athlete profile yet', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('ATHLETE_NOT_FOUND', 'The user has no athlete profile yet');
     }
     return athlete;
   }
@@ -370,23 +372,21 @@ export class AthleteProfileService {
     }
 
     if (!this.isHeartRateConsistent(athlete)) {
-      throw new DomainException(
+      throw new DomainBadRequestException(
         'ATHLETE_HEART_RATE_INCONSISTENT',
         'Resting heart rate must be below threshold, and threshold below max',
-        HttpStatus.BAD_REQUEST,
       );
     }
 
     if (athlete.hrZonesMethod === 'custom' || athlete.hrZonesCustom !== null) {
       const custom = athlete.hrZonesCustom;
       if (athlete.hrZonesMethod === 'custom' && !custom) {
-        throw new DomainException('ATHLETE_ZONES_INVALID', 'Custom zones are required', HttpStatus.BAD_REQUEST);
+        throw new DomainBadRequestException('ATHLETE_ZONES_INVALID', 'Custom zones are required');
       }
       if (custom && !isValidCustomZones(custom, athlete.restingHeartRate, athlete.maxHeartRate)) {
-        throw new DomainException(
+        throw new DomainBadRequestException(
           'ATHLETE_ZONES_INVALID',
           'Custom zones must be four increasing values between resting and max heart rate',
-          HttpStatus.BAD_REQUEST,
         );
       }
     }
@@ -408,10 +408,9 @@ export class AthleteProfileService {
   }
 
   private throwOutOfRange(field: string, min: number, max: number): never {
-    throw new DomainException(
+    throw new DomainBadRequestException(
       'ATHLETE_FIELD_OUT_OF_RANGE',
       `${field} is out of the accepted range ${min}–${max}`,
-      HttpStatus.BAD_REQUEST,
       { fields: [{ field, min, max }] },
     );
   }

@@ -2,10 +2,7 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 
 import { MailerModule } from '@/modules/mailer/mailer.module';
-import { Permission } from '@/modules/permissions/entities/permission.entity';
-import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
-import { UserPermission } from '@/modules/permissions/entities/user-permission.entity';
-import { UserPermissionGroup } from '@/modules/permissions/entities/user-permission-group.entity';
+import { PermissionsModule } from '@/modules/permissions/permissions.module';
 import { RealtimeModule } from '@/modules/realtime/realtime.module';
 import { SettingsModule } from '@/modules/settings/settings.module';
 
@@ -15,17 +12,13 @@ import { UserDeletedListener } from './listeners/user-deleted.listener';
 import { UserInvitedListener } from './listeners/user-invited.listener';
 import { UserUpdatedListener } from './listeners/user-updated.listener';
 import { AdminUsersService } from './services/admin-users.service';
+import { SystemAdminSeeder } from './services/system-admin-seeder.service';
 import { UserInviteService } from './services/user-invite.service';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([User, Permission, PermissionGroup, UserPermission, UserPermissionGroup]),
-    MailerModule,
-    RealtimeModule,
-    SettingsModule,
-  ],
+  imports: [SequelizeModule.forFeature([User]), PermissionsModule, MailerModule, RealtimeModule, SettingsModule],
   controllers: [UsersController],
   providers: [
     UsersService,
@@ -35,7 +28,8 @@ import { UsersService } from './users.service';
     UserDeletedListener,
     UserUpdatedListener,
     UserInvitedListener,
+    SystemAdminSeeder,
   ],
-  exports: [UsersService, UserInviteService],
+  exports: [UsersService, UserInviteService, SystemAdminSeeder],
 })
 export class UsersModule {}

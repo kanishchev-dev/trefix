@@ -2,6 +2,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 import { SettingsService } from '@/modules/settings/settings.service';
 
 import { User } from './entities/user.entity';
@@ -47,6 +48,10 @@ describe('UsersService', () => {
               defaultPermissions: [],
             }),
           },
+        },
+        {
+          provide: UserPermissionsService,
+          useValue: { grantInitialAccess: jest.fn(), getAccessSummary: jest.fn() },
         },
       ],
     }).compile();

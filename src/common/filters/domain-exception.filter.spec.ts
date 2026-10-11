@@ -3,6 +3,7 @@ import { ThrottlerException } from '@nestjs/throttler';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
 import { DomainException } from '../exceptions/domain.exception';
+import { EntityNotFoundException } from '../exceptions/entity-not-found.exception';
 import { InvariantViolationException } from '../exceptions/invariant-violation.exception';
 import { ValidationException } from '../exceptions/validation.exception';
 import { DomainExceptionFilter } from './domain-exception.filter';
@@ -66,6 +67,16 @@ describe('DomainExceptionFilter', () => {
 
     expect(captured.status).toBe(HttpStatus.NOT_FOUND);
     expect(captured.body).toMatchObject({ code: 'PLAN_NOT_FOUND', message: 'План не найден', statusCode: 404 });
+  });
+
+  it('fills message placeholders from the exception', async () => {
+    (i18n.translate as jest.Mock).mockImplementationOnce((key: string, options: { args: Record<string, unknown> }) =>
+      key === 'common.ERRORS.USER_NOT_FOUND' ? `User with ID ${String(options.args.id)} not found` : '',
+    );
+
+    await filter.catch(new EntityNotFoundException('User', 'u-1'), createHost(captured));
+
+    expect(captured.body).toMatchObject({ code: 'USER_NOT_FOUND', message: 'User with ID u-1 not found' });
   });
 
   it('falls back to English when the request has no language context', async () => {

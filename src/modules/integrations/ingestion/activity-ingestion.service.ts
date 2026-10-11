@@ -3,10 +3,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, UniqueConstraintError } from 'sequelize';
 
+import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { WorkoutView } from '@/modules/training/interfaces/training-views.interface';
+import { ImportedWorkoutLookupService } from '@/modules/training/workouts/imported-workout-lookup.service';
+import { WorkoutImportService } from '@/modules/training/workouts/workout-import.service';
+
 import { resolveLocalRange, toLocalDateKey } from '../../training/admin-calendar-day.util';
-import { Athlete } from '../../training/entities/athlete.entity';
-import { Workout } from '../../training/entities/workout.entity';
-import { TrainingService } from '../../training/training.service';
 import { UserPreferencesService } from '../../users/preferences/user-preferences.service';
 import {
   ACTIVITY_DEDUP,
@@ -76,13 +79,11 @@ export class ActivityIngestionService {
   constructor(
     @InjectModel(WorkoutSource)
     private readonly sourceModel: typeof WorkoutSource,
-    @InjectModel(Workout)
-    private readonly workoutModel: typeof Workout,
     @InjectModel(Integration)
     private readonly integrationModel: typeof Integration,
-    @InjectModel(Athlete)
-    private readonly athleteModel: typeof Athlete,
-    private readonly trainingService: TrainingService,
+    private readonly workoutImportService: WorkoutImportService,
+    private readonly workoutLookup: ImportedWorkoutLookupService,
+    private readonly athletesService: AthletesService,
     private readonly preferencesService: UserPreferencesService,
     private readonly dedup: ActivityDedupService,
     private readonly eventEmitter: EventEmitter2,
@@ -99,7 +100,7 @@ export class ActivityIngestionService {
       known.set(this.toSourceAttributes(activity));
       await known.save();
       const merged = await this.syncWorkoutWithSources(known.workoutId);
-      this.emitChanged('integrations.activity_updated', activity.athleteId, known.workoutId, merged);
+      this.emitChanged(INTEGRATIONS_EVENTS.ACTIVITY_UPDATED, activity.athleteId, known.workoutId, merged);
       return { outcome: 'updated', workoutId: known.workoutId };
     }
 
@@ -109,7 +110,7 @@ export class ActivityIngestionService {
     if (duplicate) {
       await this.createSource(activity, duplicate.workoutId, false);
       const merged = await this.syncWorkoutWithSources(duplicate.workoutId);
-      this.emitChanged('integrations.activity_merged', activity.athleteId, duplicate.workoutId, merged);
+      this.emitChanged(INTEGRATIONS_EVENTS.ACTIVITY_MERGED, activity.athleteId, duplicate.workoutId, merged);
       return { outcome: 'merged', workoutId: duplicate.workoutId };
     }
 
@@ -122,7 +123,7 @@ export class ActivityIngestionService {
     if (planned) {
       const source = await this.createSource(activity, planned.id, true);
       try {
-        await this.trainingService.completeWorkoutFromImport(planned.id, facts.facts);
+        await this.workoutImportService.completeWorkoutFromImport(planned.id, facts.facts);
       } catch (error) {
         await source.destroy({ force: true });
         throw error;
@@ -135,7 +136,7 @@ export class ActivityIngestionService {
     if (manual) {
       const source = await this.createSource(activity, manual.id, true);
       try {
-        await this.trainingService.applyImportedFacts(manual.id, facts.facts);
+        await this.workoutImportService.applyImportedFacts(manual.id, facts.facts);
       } catch (error) {
         await source.destroy({ force: true });
         throw error;
@@ -144,13 +145,13 @@ export class ActivityIngestionService {
       return { outcome: 'matched_manual', workoutId: manual.id };
     }
 
-    const created = await this.trainingService.createImportedWorkout(activity.athleteId, facts.facts);
+    const created = await this.workoutImportService.createImportedWorkout(activity.athleteId, facts.facts);
     try {
       await this.createSource(activity, created.id, true);
     } catch (error) {
       if (error instanceof UniqueConstraintError) {
         // A parallel ingestion stored the same record first; drop our copy and let the retry update it.
-        await this.trainingService.revertImportedWorkout(created.id);
+        await this.workoutImportService.revertImportedWorkout(created.id);
       }
       throw error;
     }
@@ -171,8 +172,7 @@ export class ActivityIngestionService {
     const workoutId = source.workoutId;
     await source.destroy();
 
-    const workout = await this.workoutModel.findByPk(workoutId);
-    if (!workout) {
+    if (!(await this.workoutLookup.workoutExists(workoutId))) {
       return 'removed';
     }
 
@@ -182,11 +182,11 @@ export class ActivityIngestionService {
       await this.syncWorkoutWithSources(workoutId);
       outcome = 'removed';
     } else {
-      outcome = await this.trainingService.revertImportedWorkout(workoutId);
+      outcome = await this.workoutImportService.revertImportedWorkout(workoutId);
     }
 
     this.eventEmitter.emit(
-      'integrations.activity_source_removed',
+      INTEGRATIONS_EVENTS.ACTIVITY_SOURCE_REMOVED,
       new ActivitySourceChangedEvent(athleteId, workoutId, provider, sourceActivityId),
     );
     return outcome;
@@ -212,9 +212,9 @@ export class ActivityIngestionService {
       }
     }
 
-    const workout = await this.workoutModel.findByPk(workoutId);
+    const workout = await this.workoutLookup.findWorkout(workoutId);
     if (workout?.status === 'completed') {
-      await this.trainingService.applyImportedFacts(workoutId, merged.facts);
+      await this.workoutImportService.applyImportedFacts(workoutId, merged.facts);
     }
     return merged;
   }
@@ -257,7 +257,7 @@ export class ActivityIngestionService {
       await source.destroy({ force: true });
       return null;
     }
-    if (!(await this.workoutModel.count({ where: { id: source.workoutId } }))) {
+    if (!(await this.workoutLookup.workoutExists(source.workoutId))) {
       // The user deleted the workout: forget the stale link and import as new.
       await this.sourceModel.destroy({ where: { workoutId: source.workoutId }, force: true });
       return null;
@@ -283,7 +283,7 @@ export class ActivityIngestionService {
     if (!duplicate) {
       return null;
     }
-    if (!(await this.workoutModel.count({ where: { id: duplicate.workoutId } }))) {
+    if (!(await this.workoutLookup.workoutExists(duplicate.workoutId))) {
       await this.sourceModel.destroy({ where: { workoutId: duplicate.workoutId }, force: true });
       return null;
     }
@@ -295,21 +295,14 @@ export class ActivityIngestionService {
     athleteId: string,
     workoutId: string | null | undefined,
     dayRange: { start: Date; endExclusive: Date },
-  ): Promise<Workout | null> {
+  ): Promise<WorkoutView | null> {
     if (!workoutId) {
       return null;
     }
     const tolerance = RECORDING_LIMITS.plannedWorkoutDayTolerance * DAY_MS;
-    return this.workoutModel.findOne({
-      where: {
-        id: workoutId,
-        athleteId,
-        status: 'planned',
-        scheduledAt: {
-          [Op.gte]: new Date(dayRange.start.getTime() - tolerance),
-          [Op.lt]: new Date(dayRange.endExclusive.getTime() + tolerance),
-        },
-      },
+    return this.workoutLookup.findOpenPlanned(athleteId, workoutId, {
+      from: new Date(dayRange.start.getTime() - tolerance),
+      toExclusive: new Date(dayRange.endExclusive.getTime() + tolerance),
     });
   }
 
@@ -317,13 +310,10 @@ export class ActivityIngestionService {
     athleteId: string,
     dayRange: { start: Date; endExclusive: Date },
     record: SourceRecord,
-  ): Promise<Workout | null> {
-    const planned = await this.workoutModel.findAll({
-      where: {
-        athleteId,
-        status: 'planned',
-        scheduledAt: { [Op.gte]: dayRange.start, [Op.lt]: dayRange.endExclusive },
-      },
+  ): Promise<WorkoutView | null> {
+    const planned = await this.workoutLookup.listPlanned(athleteId, {
+      from: dayRange.start,
+      toExclusive: dayRange.endExclusive,
     });
     if (planned.length === 0) {
       return null;
@@ -344,15 +334,12 @@ export class ActivityIngestionService {
     athleteId: string,
     dayRange: { start: Date; endExclusive: Date },
     record: SourceRecord,
-  ): Promise<Workout | null> {
-    const completed = await this.workoutModel.findAll({
-      where: {
-        athleteId,
-        status: 'completed',
-        scheduledAt: { [Op.gte]: dayRange.start, [Op.lt]: dayRange.endExclusive },
-        [Op.or]: [{ sourceProvider: null }, { sourceProvider: { [Op.notIn]: [...IMPORTED_ACTIVITY_SOURCES] } }],
-      },
-    });
+  ): Promise<WorkoutView | null> {
+    const completed = await this.workoutLookup.listManuallyCompleted(
+      athleteId,
+      { from: dayRange.start, toExclusive: dayRange.endExclusive },
+      IMPORTED_ACTIVITY_SOURCES,
+    );
     const distanceKm = record.distanceMeters / 1000;
     const scored = completed
       .map((workout) => {
@@ -381,7 +368,7 @@ export class ActivityIngestionService {
   }
 
   private async resolveTimezone(athleteId: string): Promise<string> {
-    const athlete = await this.athleteModel.findByPk(athleteId, { attributes: ['id', 'userId'] });
+    const athlete = await this.athletesService.findById(athleteId);
     if (!athlete) {
       return 'UTC';
     }
@@ -464,7 +451,7 @@ export class ActivityIngestionService {
 
   private emitImported(athleteId: string, workoutId: string, merged: MergedSourceFacts): void {
     this.eventEmitter.emit(
-      'integrations.activity_imported',
+      INTEGRATIONS_EVENTS.ACTIVITY_IMPORTED,
       new ActivityImportedEvent(
         athleteId,
         workoutId,
@@ -476,7 +463,7 @@ export class ActivityIngestionService {
   }
 
   private emitChanged(
-    event: 'integrations.activity_updated' | 'integrations.activity_merged',
+    event: typeof INTEGRATIONS_EVENTS.ACTIVITY_UPDATED | typeof INTEGRATIONS_EVENTS.ACTIVITY_MERGED,
     athleteId: string,
     workoutId: string,
     merged: MergedSourceFacts | null,

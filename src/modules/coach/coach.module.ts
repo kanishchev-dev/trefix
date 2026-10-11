@@ -13,8 +13,11 @@ import { CoachListener } from './coach.listener';
 import { CoachPromptBuilder } from './coach.prompt';
 import { CoachService } from './coach.service';
 import { CoachToolRunner } from './coach.tool-runner';
+import { CoachConversationService } from './coach-conversation.service';
+import { CoachStreamService } from './coach-stream.service';
 import { CoachMessage } from './entities/coach-message.entity';
 import { CoachSession } from './entities/coach-session.entity';
+import { CoachMessageTexts } from './proactive/coach-message-texts';
 import { COACH_PROACTIVE_QUEUE } from './proactive/coach-proactive.constants';
 import { CoachProactiveListener } from './proactive/coach-proactive.listener';
 import { CoachProactiveProcessor } from './proactive/coach-proactive.processor';
@@ -32,10 +35,13 @@ import { CoachProactiveService } from './proactive/coach-proactive.service';
   controllers: [CoachController],
   providers: [
     CoachService,
+    CoachConversationService,
+    CoachStreamService,
     CoachPromptBuilder,
     CoachToolRunner,
     CoachListener,
     CoachProactiveService,
+    CoachMessageTexts,
     CoachProactiveProcessor,
     CoachProactiveListener,
   ],

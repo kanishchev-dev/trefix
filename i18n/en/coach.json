@@ -1,0 +1,20 @@
+{
+  "PROACTIVE": {
+    "GEAR_REPLACE_SOON": "{gearName} have already run {distanceKm} km of {limitKm}. Time to look for a new pair: worn cushioning raises the risk of injury.",
+    "DEFAULT_GEAR_NAME": "Your shoes",
+    "ADAPTATION_PROPOSED": "I suggest we {action}. Confirm the change in the Plan section — the plan stays as it is until you say yes.",
+    "ADAPTATION_SUGGESTED": "Tip: it would be worth it to {action}. I am not changing the plan — it is your call."
+  },
+  "ADAPTATION_ACTIONS": {
+    "REDUCE_VOLUME": "reduce the volume of the next workouts",
+    "REDUCE_INTENSITY": "reduce the intensity of the next workouts",
+    "INCREASE_VOLUME": "increase the volume a little",
+    "INCREASE_INTENSITY": "add some intensity",
+    "MOVE": "move a workout",
+    "REPLACE": "replace a workout",
+    "ADD_RECOVERY": "add recovery",
+    "REGENERATE_PLAN": "rebuild the plan",
+    "UPDATE_HEART_RATE": "update heart rate targets to your new zones",
+    "DEFAULT": "adjust the plan"
+  }
+}

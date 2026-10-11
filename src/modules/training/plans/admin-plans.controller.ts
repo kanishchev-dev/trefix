@@ -59,7 +59,7 @@ import { AdminPlansService } from './admin-plans.service';
 import { CurrentMetrics } from './athlete-metrics.service';
 import { PLAN_CREATE_THROTTLE } from './plan-create-throttle';
 import { PlanPreviewResult } from './plan-editing.service';
-import { StartOptionsResult } from './plan-lifecycle.service';
+import type { StartOptionsResult } from './plan-lifecycle.types';
 import { PlanDetails, PlanListResult } from './plan-list.service';
 import { RebuildPrefillResult, RebuildPreviewResult } from './plan-rebuild.service';
 

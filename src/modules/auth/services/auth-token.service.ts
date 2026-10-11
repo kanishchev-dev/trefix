@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'crypto';
 
 import { AUTH_ACCESS_TOKEN_TYPE, AUTH_REFRESH_TOKEN_TYPE, AUTH_TOKEN_ISSUER } from '../auth.constants';
 import { AuthJwtPayload } from '../interfaces/auth-jwt-payload.interface';
@@ -17,16 +18,19 @@ export class AuthTokenService {
   async signAccessToken(userId: string, sessionId: string): Promise<string> {
     return this.jwtService.signAsync(this.buildPayload(userId, sessionId, AUTH_ACCESS_TOKEN_TYPE), {
       secret: this.getAccessTokenSecret(),
-      expiresIn: this.configService.getOrThrow<string>('auth.accessTokenExpiresIn'),
+      expiresIn: parseDurationToSeconds(this.configService.getOrThrow<string>('auth.accessTokenExpiresIn')),
       issuer: AUTH_TOKEN_ISSUER,
     });
   }
 
   async signRefreshToken(userId: string, sessionId: string): Promise<string> {
+    // A unique id per token: without it two tokens issued within the same
+    // second are identical, rotation becomes a no-op and reuse goes unnoticed.
     return this.jwtService.signAsync(this.buildPayload(userId, sessionId, AUTH_REFRESH_TOKEN_TYPE), {
       secret: this.getRefreshTokenSecret(),
-      expiresIn: this.configService.getOrThrow<string>('auth.refreshTokenExpiresIn'),
+      expiresIn: parseDurationToSeconds(this.configService.getOrThrow<string>('auth.refreshTokenExpiresIn')),
       issuer: AUTH_TOKEN_ISSUER,
+      jwtid: randomUUID(),
     });
   }
 

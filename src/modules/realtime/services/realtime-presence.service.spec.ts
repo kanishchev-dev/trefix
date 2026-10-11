@@ -1,5 +1,6 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { RedisService } from '@/common/redis/redis.service';
 
 import {
   REALTIME_PRESENCE_EVENT,

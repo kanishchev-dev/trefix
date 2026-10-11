@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { RealtimeService } from '@/modules/realtime/realtime.service';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { Athlete } from './entities/athlete.entity';
 import { AdminPlanActionEvent } from './events/admin-plan-action.event';
@@ -32,84 +33,84 @@ export class TrainingListener {
     private readonly athleteModel: typeof Athlete,
   ) {}
 
-  @OnEvent('training.athlete.created')
+  @OnEvent(TRAINING_EVENTS.ATHLETE_CREATED)
   handleAthleteCreated(event: AthleteCreatedEvent): void {
     this.logger.log(`training.athlete.created for athlete ${event.athleteId}`);
     this.realtimeService.emitToRoom('training', 'training.athlete.created', event);
   }
 
-  @OnEvent('training.athlete.updated')
+  @OnEvent(TRAINING_EVENTS.ATHLETE_UPDATED)
   handleAthleteUpdated(event: AthleteUpdatedEvent): void {
     this.logger.log(`training.athlete.updated for athlete ${event.athleteId}`);
     this.realtimeService.emitToRoom('training', 'training.athlete.updated', event);
     this.realtimeService.emitToUser(event.actorUserId, 'athlete.updated', { athleteId: event.athleteId });
   }
 
-  @OnEvent('training.plan.adaptation_proposed')
+  @OnEvent(TRAINING_EVENTS.PLAN_ADAPTATION_PROPOSED)
   handleAdaptationProposed(event: PlanAdaptationProposedEvent): void {
     this.realtimeService.emitToUser(event.userId, 'plan.adaptation.proposed', event);
   }
 
-  @OnEvent('training.goal.created')
+  @OnEvent(TRAINING_EVENTS.GOAL_CREATED)
   handleGoalCreated(event: GoalCreatedEvent): void {
     this.logger.log(`training.goal.created for goal ${event.goalId}`);
     this.realtimeService.emitToRoom('training', 'training.goal.created', event);
   }
 
-  @OnEvent('training.plan.generated')
+  @OnEvent(TRAINING_EVENTS.PLAN_GENERATED)
   handlePlanGenerated(event: PlanGeneratedEvent): void {
     this.logger.log(`training.plan.generated for plan ${event.planId}`);
     this.realtimeService.emitToRoom('training', 'training.plan.generated', event);
   }
 
-  @OnEvent('training.plan.created')
+  @OnEvent(TRAINING_EVENTS.PLAN_CREATED)
   async handlePlanCreated(event: PlanCreatedEvent): Promise<void> {
     await this.emitPlansChanged(event.athleteId, 'created', event.planId);
   }
 
-  @OnEvent('training.plan.updated')
+  @OnEvent(TRAINING_EVENTS.PLAN_UPDATED)
   async handlePlanUpdated(event: PlanUpdatedEvent): Promise<void> {
     await this.emitPlansChanged(event.athleteId, event.kind, event.planId);
   }
 
-  @OnEvent('training.plan.deleted')
+  @OnEvent(TRAINING_EVENTS.PLAN_DELETED)
   async handlePlanDeleted(event: PlanDeletedEvent): Promise<void> {
     await this.emitPlansChanged(event.athleteId, 'deleted', event.planId);
   }
 
-  @OnEvent('training.plan.started')
+  @OnEvent(TRAINING_EVENTS.PLAN_STARTED)
   async handlePlanStarted(event: PlanStartedEvent): Promise<void> {
     await this.emitPlansChanged(event.athleteId, 'started', event.planId);
   }
 
-  @OnEvent('training.plan.cancelled')
+  @OnEvent(TRAINING_EVENTS.PLAN_CANCELLED)
   async handlePlanCancelled(event: PlanCancelledEvent): Promise<void> {
     await this.emitPlansChanged(event.athleteId, 'cancelled', event.planId);
   }
 
-  @OnEvent('training.plan.completed')
+  @OnEvent(TRAINING_EVENTS.PLAN_COMPLETED)
   async handlePlanCompleted(event: PlanCompletedEvent): Promise<void> {
     await this.emitPlansChanged(event.athleteId, 'completed', event.planId);
   }
 
-  @OnEvent('training.state.updated')
+  @OnEvent(TRAINING_EVENTS.STATE_UPDATED)
   handleStateUpdated(event: AthleteStateUpdatedEvent): void {
     this.logger.log(`training.state.updated for state ${event.stateId}`);
     this.realtimeService.emitToRoom('training', 'training.state.updated', event);
   }
 
-  @OnEvent('training.workout.completed')
+  @OnEvent(TRAINING_EVENTS.WORKOUT_COMPLETED)
   handleWorkoutCompleted(event: WorkoutCompletedEvent): void {
     this.logger.log(`training.workout.completed for workout ${event.workoutId}`);
     this.realtimeService.emitToRoom('training', 'training.workout.completed', event);
   }
 
-  @OnEvent('training.workout.created')
+  @OnEvent(TRAINING_EVENTS.WORKOUT_CREATED)
   async handleWorkoutCreated(event: WorkoutCreatedEvent): Promise<void> {
     await this.emitWorkoutsChanged(event.athleteId, 'created', event.workoutId, event.planId);
   }
 
-  @OnEvent('training.workout.updated')
+  @OnEvent(TRAINING_EVENTS.WORKOUT_UPDATED)
   async handleWorkoutUpdated(event: WorkoutUpdatedEvent): Promise<void> {
     await this.emitWorkoutsChanged(event.athleteId, 'updated', event.workoutId, event.planId);
   }
@@ -118,14 +119,14 @@ export class TrainingListener {
    * Audit trail of admin-panel plan changes. The plan's own domain events
    * already refresh the athlete's clients; this one only records the actor.
    */
-  @OnEvent('training.plan.admin_action')
+  @OnEvent(TRAINING_EVENTS.PLAN_ADMIN_ACTION)
   handleAdminPlanAction(event: AdminPlanActionEvent): void {
     this.logger.log(
       `training.plan.admin_action: ${event.action} plan ${event.planId} of user ${event.userId} by ${event.actorUserId}`,
     );
   }
 
-  @OnEvent('training.plan.adapted')
+  @OnEvent(TRAINING_EVENTS.PLAN_ADAPTED)
   async handlePlanAdapted(event: PlanAdaptedEvent): Promise<void> {
     this.logger.log(`training.plan.adapted for plan ${event.planId}`);
     this.realtimeService.emitToRoom('training', 'training.plan.adapted', event);

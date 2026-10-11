@@ -1,9 +1,11 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Op } from 'sequelize';
 
+import type { AthletesService } from '../../training/athletes/athletes.service';
 import type { Athlete } from '../../training/entities/athlete.entity';
 import type { Workout } from '../../training/entities/workout.entity';
-import type { TrainingService } from '../../training/training.service';
+import { ImportedWorkoutLookupService } from '../../training/workouts/imported-workout-lookup.service';
+import type { WorkoutImportService } from '../../training/workouts/workout-import.service';
 import type { UserPreferencesService } from '../../users/preferences/user-preferences.service';
 import type { Integration } from '../entities/integration.entity';
 import type { WorkoutSource } from '../entities/workout-source.entity';
@@ -71,6 +73,11 @@ function sourceRow(overrides: Partial<WorkoutSource> = {}): MockSource {
   return row as unknown as MockSource;
 }
 
+/** AthletesService over the athlete model mock: the spec asserts on model lookups. */
+function athletesStub(model: { findByPk: jest.Mock }): AthletesService {
+  return { findById: (id: string) => model.findByPk(id) } as unknown as AthletesService;
+}
+
 describe('ActivityIngestionService', () => {
   let sourceModel: Mocked<Pick<typeof WorkoutSource, 'findOne' | 'findAll' | 'create' | 'count' | 'destroy'>>;
   let workoutModel: Mocked<Pick<typeof Workout, 'findAll' | 'findByPk' | 'findOne' | 'count'>>;
@@ -78,7 +85,7 @@ describe('ActivityIngestionService', () => {
   let athleteModel: Mocked<Pick<typeof Athlete, 'findByPk'>>;
   let trainingService: Mocked<
     Pick<
-      TrainingService,
+      WorkoutImportService,
       'completeWorkoutFromImport' | 'createImportedWorkout' | 'applyImportedFacts' | 'revertImportedWorkout'
     >
   >;
@@ -113,10 +120,10 @@ describe('ActivityIngestionService', () => {
 
     service = new ActivityIngestionService(
       sourceModel as unknown as typeof WorkoutSource,
-      workoutModel as unknown as typeof Workout,
       integrationModel as unknown as typeof Integration,
-      athleteModel as unknown as typeof Athlete,
-      trainingService as unknown as TrainingService,
+      trainingService as unknown as WorkoutImportService,
+      new ImportedWorkoutLookupService(workoutModel as unknown as typeof Workout),
+      athletesStub(athleteModel),
       preferencesService as unknown as UserPreferencesService,
       new ActivityDedupService(),
       eventEmitter as unknown as EventEmitter2,

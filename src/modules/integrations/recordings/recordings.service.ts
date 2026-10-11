@@ -1,15 +1,21 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { UniqueConstraintError } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import {
+  DomainBadRequestException,
+  DomainConflictException,
+  DomainNotFoundException,
+  DomainPayloadTooLargeException,
+} from '@/common/exceptions/domain-exceptions';
 import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { WorkoutImportService } from '@/modules/training/workouts/workout-import.service';
+import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 
 import { StorageUploadedFile } from '../../storage/interfaces/storage-uploaded-file.interface';
 import { StorageService } from '../../storage/storage.service';
-import { Workout } from '../../training/entities/workout.entity';
 import { GearService } from '../../training/gear/gear.service';
-import { TrainingService } from '../../training/training.service';
 import {
   GPS_DISTANCE_SOURCES,
   RECORDING_LIMITS,
@@ -65,16 +71,16 @@ export class RecordingsService {
   constructor(
     @InjectModel(RecordedActivity)
     private readonly recordingModel: typeof RecordedActivity,
-    @InjectModel(Workout)
-    private readonly workoutModel: typeof Workout,
-    private readonly trainingService: TrainingService,
+    private readonly athletesService: AthletesService,
+    private readonly workoutsService: WorkoutsService,
+    private readonly workoutImportService: WorkoutImportService,
     private readonly gearService: GearService,
     private readonly ingestion: ActivityIngestionService,
     private readonly storageService: StorageService,
   ) {}
 
   async accept(userId: string, dto: RecordedActivityDto, track?: StorageUploadedFile): Promise<AcceptResult> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
 
     const existing = await this.recordingModel.findOne({
       where: { athleteId: athlete.id, clientSessionId: dto.clientSessionId },
@@ -108,11 +114,7 @@ export class RecordingsService {
       if (trackFile) await this.storageService.deleteFileQuietly(trackFile.id);
       if (error instanceof UniqueConstraintError) {
         // A parallel request with the same session won the race.
-        throw new DomainException(
-          'RECORDING_IN_PROGRESS',
-          'The recording is being saved, retry later',
-          HttpStatus.CONFLICT,
-        );
+        throw new DomainConflictException('RECORDING_IN_PROGRESS', 'The recording is being saved, retry later');
       }
       throw error;
     }
@@ -140,13 +142,13 @@ export class RecordingsService {
   }
 
   async getForWorkout(userId: string, workoutId: string): Promise<WorkoutRecordingResponseDto> {
-    await this.trainingService.getWorkout(workoutId, userId);
+    await this.workoutsService.getWorkout(workoutId, userId);
     const recording = await this.recordingModel.findOne({
       where: { workoutId },
       order: [['createdAt', 'DESC']],
     });
     if (!recording) {
-      throw new DomainException('RECORDING_NOT_FOUND', 'The workout has no tracker recording', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('RECORDING_NOT_FOUND', 'The workout has no tracker recording');
     }
     return this.toRecordingResponse(recording);
   }
@@ -175,11 +177,7 @@ export class RecordingsService {
     }
     if (track) {
       if (track.size > RECORDING_LIMITS.maxTrackFileBytes) {
-        throw new DomainException(
-          'RECORDING_TRACK_TOO_LARGE',
-          'The track file is too large',
-          HttpStatus.PAYLOAD_TOO_LARGE,
-        );
+        throw new DomainPayloadTooLargeException('RECORDING_TRACK_TOO_LARGE', 'The track file is too large');
       }
       const head = track.buffer?.subarray(0, 2);
       if (!head || head[0] !== GZIP_MAGIC[0] || head[1] !== GZIP_MAGIC[1]) {
@@ -189,7 +187,7 @@ export class RecordingsService {
   }
 
   private invalid(field: string, message: string): never {
-    throw new DomainException('RECORDING_INVALID', message, HttpStatus.BAD_REQUEST, { field });
+    throw new DomainBadRequestException('RECORDING_INVALID', message, { field });
   }
 
   /**
@@ -205,25 +203,13 @@ export class RecordingsService {
     if (outcome === 'merged') {
       return;
     }
-    const workout = await this.workoutModel.findByPk(workoutId);
-    if (!workout) {
-      return;
-    }
-    if (outcome === 'created' && dto.workoutType) {
-      workout.type = dto.workoutType;
-    }
-    // Distance records count only runs measured outdoors by satellites.
-    if (dto.environment !== 'outdoor' || !GPS_DISTANCE_SOURCES.includes(dto.distanceSource)) {
-      workout.excludeFromRecords = true;
-    }
-    if (dto.rpe != null || dto.notes) {
-      workout.actual = {
-        ...(workout.actual ?? {}),
-        rpe: dto.rpe ?? workout.actual?.rpe ?? null,
-        notes: dto.notes ?? workout.actual?.notes ?? null,
-      };
-    }
-    await workout.save();
+    await this.workoutImportService.applyTrackerDetails(workoutId, {
+      type: outcome === 'created' ? (dto.workoutType ?? undefined) : undefined,
+      // Distance records count only runs measured outdoors by satellites.
+      excludeFromRecords: dto.environment !== 'outdoor' || !GPS_DISTANCE_SOURCES.includes(dto.distanceSource),
+      rpe: dto.rpe,
+      notes: dto.notes,
+    });
     if (dto.gearId) {
       await this.gearService.assignToWorkout(userId, workoutId, dto.gearId);
     }

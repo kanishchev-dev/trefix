@@ -1,6 +1,0 @@
-{
-  "ERRORS": {
-    "SETTINGS_GROUP_NOT_FOUND": "One or more selected groups do not exist",
-    "SETTINGS_PERMISSION_NOT_FOUND": "One or more selected permissions do not exist"
-  }
-}

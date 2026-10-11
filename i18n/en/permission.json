@@ -1,9 +1,4 @@
 {
-  "ERRORS": {
-    "PERMISSION_NOT_FOUND": "Permission with ID {id} not found",
-    "PERMISSION_GROUP_NOT_FOUND": "Permission group with ID {id} not found",
-    "USER_NOT_FOUND": "User with ID {id} not found"
-  },
   "FIELDS": {
     "NAME": "Name",
     "DESCRIPTION": "Description"

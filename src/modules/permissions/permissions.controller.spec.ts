@@ -1,6 +1,8 @@
 import { INestApplication, VersioningType } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
+
 import { PermissionsController } from './permissions.controller';
 import { PermissionsService } from './permissions.service';
 
@@ -47,7 +49,10 @@ describe('PermissionsController routing', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [PermissionsController],
-      providers: [{ provide: PermissionsService, useValue: permissionsService }],
+      providers: [
+        { provide: PermissionsService, useValue: permissionsService },
+        { provide: UserPermissionsService, useValue: permissionsService },
+      ],
     }).compile();
 
     app = moduleRef.createNestApplication();

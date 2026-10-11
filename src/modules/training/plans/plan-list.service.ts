@@ -8,6 +8,7 @@ import type { GoalView } from '../interfaces/training-views.interface';
 import type { PlanListGroup, TrainingPlanStatus } from '../training.constants';
 import { PlanEditingService } from './plan-editing.service';
 import { PlanLifecycleService } from './plan-lifecycle.service';
+import { PlanStartOptionsService } from './plan-start-options.service';
 import { ActivePlanSummary, PlanStats, PlanStatsService } from './plan-stats.service';
 import { resolveGoalSummaryTitle, todayIsoInTz } from './plan-utils';
 
@@ -79,6 +80,7 @@ export class PlanListService {
     private readonly workoutModel: typeof Workout,
     private readonly editingService: PlanEditingService,
     private readonly lifecycleService: PlanLifecycleService,
+    private readonly startOptions: PlanStartOptionsService,
     private readonly statsService: PlanStatsService,
   ) {}
 
@@ -231,7 +233,7 @@ export class PlanListService {
       cancelledAt: plan.cancelledAt ? plan.cancelledAt.toISOString() : null,
       stats,
       sourcePlanId: plan.sourcePlanId,
-      metricsStale: plan.status === 'draft' ? this.lifecycleService.isMetricsStale(plan) : undefined,
+      metricsStale: plan.status === 'draft' ? this.startOptions.isMetricsStale(plan) : undefined,
       currentWeek,
       progress: currentWeek !== undefined && plan.weeks.length > 0 ? currentWeek / plan.weeks.length : undefined,
       updatedAt: plan.updatedAt.toISOString(),

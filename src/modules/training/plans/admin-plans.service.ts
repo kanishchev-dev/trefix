@@ -1,7 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 import { UsersService } from '@/modules/users/users.service';
 
 import { CreateManualPlanDto, PreviewManualPlanDto } from '../dto/create-manual-plan.dto';
@@ -17,15 +20,15 @@ import { RebuildPreviewRequestDto, RebuildRequestDto } from '../dto/plan-rebuild
 import { TrainingPlan } from '../entities/training-plan.entity';
 import { AdminPlanAction, AdminPlanActionEvent } from '../events/admin-plan-action.event';
 import { PlanListGroup } from '../training.constants';
-import { TrainingService } from '../training.service';
 import { CurrentMetrics } from './athlete-metrics.service';
 import { PlanEditingService, PlanPreviewResult } from './plan-editing.service';
-import { PlanLifecycleService, StartOptionsResult } from './plan-lifecycle.service';
+import { PlanLifecycleService } from './plan-lifecycle.service';
+import type { StartOptionsResult } from './plan-lifecycle.types';
 import { PlanDetails, PlanListResult, PlanListService } from './plan-list.service';
 import { PlanRebuildService, RebuildPrefillResult, RebuildPreviewResult } from './plan-rebuild.service';
+import { PlanStartOptionsService } from './plan-start-options.service';
 
 /** Event name of the admin audit trail for plans. */
-export const ADMIN_PLAN_ACTION_EVENT = 'training.plan.admin_action';
 
 /**
  * Admin-panel management of any user's training plans.
@@ -40,10 +43,12 @@ export const ADMIN_PLAN_ACTION_EVENT = 'training.plan.admin_action';
 export class AdminPlansService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly trainingService: TrainingService,
+    private readonly athletesService: AthletesService,
+    private readonly planGenerationService: PlanGenerationService,
     private readonly listService: PlanListService,
     private readonly editingService: PlanEditingService,
     private readonly lifecycleService: PlanLifecycleService,
+    private readonly startOptionsService: PlanStartOptionsService,
     private readonly rebuildService: PlanRebuildService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -69,7 +74,7 @@ export class AdminPlansService {
   /** Current metrics estimate used to prefill the creation wizard. */
   async currentMetrics(userId: string): Promise<CurrentMetrics> {
     await this.ensureAthlete(userId);
-    return this.trainingService.getCurrentMetrics(userId);
+    return this.athletesService.getCurrentMetrics(userId);
   }
 
   async startOptions(
@@ -80,7 +85,7 @@ export class AdminPlansService {
   ): Promise<StartOptionsResult> {
     await this.usersService.findOne(userId);
     await this.editingService.loadOwnedPlan(planId, userId);
-    return this.lifecycleService.getStartOptions(planId, timezone, goalTargetDate);
+    return this.startOptionsService.getStartOptions(planId, timezone, goalTargetDate);
   }
 
   async previewChanges(userId: string, planId: string, dto: PlanChangesDto): Promise<PlanPreviewResult> {
@@ -100,7 +105,7 @@ export class AdminPlansService {
 
   async previewManualPlan(userId: string, dto: PreviewManualPlanDto): Promise<ManualPlanPreviewResponseDto> {
     await this.ensureAthlete(userId);
-    return this.trainingService.previewManualPlan(userId, dto);
+    return this.planGenerationService.previewManualPlan(userId, dto);
   }
 
   // ------------------------------------------------------------------ writes
@@ -108,7 +113,7 @@ export class AdminPlansService {
   /** Creates a plan for the user from the manual wizard; a draft unless a start block is given. */
   async createManualPlan(actorUserId: string, userId: string, dto: CreateManualPlanDto): Promise<PlanDetails> {
     await this.ensureAthlete(userId);
-    const created = await this.trainingService.createManualPlan(userId, dto);
+    const created = await this.planGenerationService.createManualPlan(userId, dto);
     this.audit(actorUserId, userId, created.id, 'created');
     return this.listService.getDetails(created.id, userId);
   }
@@ -186,15 +191,14 @@ export class AdminPlansService {
     await this.usersService.findOne(userId);
     const athlete = await this.editingService.loadAthleteByUserId(userId);
     if (!athlete) {
-      throw new DomainException(
-        'ATHLETE_NOT_FOUND',
-        `Athlete profile of user ${userId} not found`,
-        HttpStatus.NOT_FOUND,
-      );
+      throw new DomainNotFoundException('ATHLETE_NOT_FOUND', `Athlete profile of user ${userId} not found`);
     }
   }
 
   private audit(actorUserId: string, userId: string, planId: string, action: AdminPlanAction): void {
-    this.eventEmitter.emit(ADMIN_PLAN_ACTION_EVENT, new AdminPlanActionEvent(actorUserId, userId, planId, action));
+    this.eventEmitter.emit(
+      TRAINING_EVENTS.PLAN_ADMIN_ACTION,
+      new AdminPlanActionEvent(actorUserId, userId, planId, action),
+    );
   }
 }

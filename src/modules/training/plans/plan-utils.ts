@@ -1,6 +1,4 @@
-import { HttpStatus } from '@nestjs/common';
-
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException } from '@/common/exceptions/domain-exceptions';
 
 import type { GoalView } from '../interfaces/training-views.interface';
 import { PLAN_START_MAX_DAYS_AHEAD } from '../training.constants';
@@ -32,11 +30,11 @@ export function resolveTimezone(timezone?: string | null): string {
 /** Validates an ISO date string, returning the normalized YYYY-MM-DD form. */
 export function parseIsoDate(value: string, code = 'PLAN_START_DATE_INVALID'): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new DomainException(code, `Invalid date: ${value}`, HttpStatus.BAD_REQUEST);
+    throw new DomainBadRequestException(code, `Invalid date: ${value}`);
   }
   const date = new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
-    throw new DomainException(code, `Invalid date: ${value}`, HttpStatus.BAD_REQUEST);
+    throw new DomainBadRequestException(code, `Invalid date: ${value}`);
   }
   return value;
 }
@@ -55,10 +53,9 @@ export function ensureStartDateAllowed(startDate: string, timezone?: string | nu
   const today = todayIsoInTz(timezone);
   const maxDate = addDaysIso(today, PLAN_START_MAX_DAYS_AHEAD);
   if (startDate < today || startDate > maxDate) {
-    throw new DomainException(
+    throw new DomainBadRequestException(
       'PLAN_START_DATE_INVALID',
       `Start date must be between ${today} and ${maxDate}`,
-      HttpStatus.BAD_REQUEST,
     );
   }
 }
@@ -69,11 +66,7 @@ export function ensureStartDateAllowed(startDate: string, timezone?: string | nu
  */
 export function ensureGoalTargetDateAllowed(startDate: string, goalTargetDate: string): void {
   if (goalTargetDate < startDate) {
-    throw new DomainException(
-      'PLAN_START_DATE_INVALID',
-      'Goal target date cannot be before the start date',
-      HttpStatus.BAD_REQUEST,
-    );
+    throw new DomainBadRequestException('PLAN_START_DATE_INVALID', 'Goal target date cannot be before the start date');
   }
 }
 

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 
 import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
 
@@ -9,7 +9,7 @@ import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
 export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private permissionsService: PermissionsService,
+    private userPermissionsService: UserPermissionsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -29,7 +29,7 @@ export class PermissionsGuard implements CanActivate {
       return false;
     }
 
-    const userPermissions = await this.permissionsService.getEffectivePermissions(user.id);
+    const userPermissions = await this.userPermissionsService.getEffectivePermissions(user.id);
 
     return requiredPermissions.every((permission) => userPermissions.includes(permission));
   }

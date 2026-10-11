@@ -2,8 +2,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { Permission } from '@/modules/permissions/entities/permission.entity';
-import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
+import { PermissionsService } from '@/modules/permissions/permissions.service';
 
 import { AppSetting } from './entities/app-setting.entity';
 import { DEFAULT_APP_SETTINGS, SETTINGS_KEY_DEFAULT_GROUPS, SETTINGS_KEY_THEME } from './settings.constants';
@@ -33,15 +32,10 @@ describe('SettingsService', () => {
           useValue: appSettingModel,
         },
         {
-          provide: getModelToken(PermissionGroup),
+          provide: PermissionsService,
           useValue: {
-            findAll: jest.fn().mockResolvedValue([]),
-          },
-        },
-        {
-          provide: getModelToken(Permission),
-          useValue: {
-            findAll: jest.fn().mockResolvedValue([]),
+            findMissingGroupIds: jest.fn().mockResolvedValue([]),
+            findMissingPermissionIds: jest.fn().mockResolvedValue([]),
           },
         },
         {

@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { RealtimeService } from '@/modules/realtime/realtime.service';
+import { USERS_EVENTS } from '@/modules/users/users.events';
 
 import { UserCreatedEvent } from '../events/user-created.event';
 
@@ -15,7 +16,7 @@ export class UserCreatedListener {
     private readonly realtimeService: RealtimeService,
   ) {}
 
-  @OnEvent('user.created')
+  @OnEvent(USERS_EVENTS.USER_CREATED)
   async handleUserCreatedEvent(event: UserCreatedEvent): Promise<void> {
     this.logger.log(`Handling user.created event for user: ${event.email}`);
 

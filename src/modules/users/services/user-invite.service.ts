@@ -1,14 +1,15 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
-import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createHash, randomInt } from 'crypto';
 import Redis from 'ioredis';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainConflictException, DomainUnavailableException } from '@/common/exceptions/domain-exceptions';
+import { RedisService } from '@/common/redis/redis.service';
 import appConfig from '@/config/app.config';
 import { MailerService } from '@/modules/mailer/mailer.service';
 import { User } from '@/modules/users/entities/user.entity';
+import { USERS_EVENTS } from '@/modules/users/users.events';
 
 import { UserInvitedEvent } from '../events/user-invited.event';
 import {
@@ -45,19 +46,11 @@ export class UserInviteService {
    */
   async inviteUser(user: User): Promise<void> {
     if (user.passwordHash) {
-      throw new DomainException(
-        'user.ERRORS.USER_INVITE_NOT_ALLOWED',
-        'User already has a password and cannot be invited',
-        HttpStatus.CONFLICT,
-      );
+      throw new DomainConflictException('USER_INVITE_NOT_ALLOWED', 'User already has a password and cannot be invited');
     }
 
     if (!this.redis) {
-      throw new DomainException(
-        'user.ERRORS.USER_INVITE_UNAVAILABLE',
-        'Invite storage is unavailable',
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
+      throw new DomainUnavailableException('USER_INVITE_UNAVAILABLE', 'Invite storage is unavailable');
     }
 
     const code = this.generateNumericCode(USER_INVITE_CODE_LENGTH);
@@ -81,7 +74,7 @@ export class UserInviteService {
       },
     });
 
-    this.eventEmitter.emit('user.invited', new UserInvitedEvent(user.id, user.email));
+    this.eventEmitter.emit(USERS_EVENTS.USER_INVITED, new UserInvitedEvent(user.id, user.email));
     this.logger.log(`Invite sent to ${user.email}`);
   }
 

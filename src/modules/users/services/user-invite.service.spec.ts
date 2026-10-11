@@ -1,7 +1,7 @@
-import { RedisService } from '@liaoliaots/nestjs-redis';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { RedisService } from '@/common/redis/redis.service';
 import appConfig from '@/config/app.config';
 import { MailerService } from '@/modules/mailer/mailer.service';
 

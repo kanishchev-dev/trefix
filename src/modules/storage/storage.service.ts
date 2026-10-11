@@ -225,6 +225,18 @@ export class StorageService {
    * Used when replacing an avatar: the previous file must not survive, but a
    * storage hiccup must not fail the upload that already succeeded.
    */
+  /** Removes every file the user uploaded, including soft-deleted ones; used when an account is purged. */
+  async deleteAllUploadedBy(userId: string): Promise<void> {
+    const files = await this.storageFileModel.findAll({
+      where: { uploaderUserId: userId },
+      attributes: ['id'],
+      paranoid: false,
+    });
+    for (const file of files) {
+      await this.deleteFileQuietly(file.id);
+    }
+  }
+
   async deleteFileQuietly(id: string): Promise<void> {
     try {
       await this.deleteFile(id, {});

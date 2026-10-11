@@ -1,16 +1,17 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, QueryTypes, Transaction } from 'sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainConflictException, DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
+import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { Athlete } from '../entities/athlete.entity';
 import { Gear } from '../entities/gear.entity';
 import { Workout } from '../entities/workout.entity';
 import { GearReplaceSoonEvent, GearUpdatedEvent } from '../events/gear.events';
 import { GEAR_REPLACE_THRESHOLD, type GearStatus, type WorkoutType } from '../training.constants';
-import { TrainingService } from '../training.service';
 import { CreateGearDto, GearListResponseDto, GearResponseDto, UpdateGearDto } from './dto/gear.dto';
 
 interface GearUsage {
@@ -44,12 +45,12 @@ export class GearService {
     private readonly workoutModel: typeof Workout,
     @InjectModel(Athlete)
     private readonly athleteModel: typeof Athlete,
-    private readonly trainingService: TrainingService,
+    private readonly athletesService: AthletesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async list(userId: string, status: GearStatus = 'active'): Promise<GearListResponseDto> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const items = await this.gearModel.findAll({
       where: { athleteId: athlete.id, retiredAt: status === 'active' ? null : { [Op.ne]: null } },
       order: status === 'active' ? [['createdAt', 'DESC']] : [['retiredAt', 'DESC']],
@@ -65,7 +66,7 @@ export class GearService {
   }
 
   async create(userId: string, dto: CreateGearDto): Promise<GearResponseDto> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const gear = await this.db.transaction(async (transaction) => {
       const created = await this.gearModel.create(
         {
@@ -93,7 +94,7 @@ export class GearService {
   async update(userId: string, gearId: string, dto: UpdateGearDto): Promise<GearResponseDto> {
     const gear = await this.loadOwned(userId, gearId);
     if (gear.retiredAt && dto.defaultWorkoutTypes && dto.defaultWorkoutTypes.length > 0) {
-      throw new DomainException('GEAR_RETIRED', 'Retired gear cannot be a default for workouts', HttpStatus.CONFLICT);
+      throw new DomainConflictException('GEAR_RETIRED', 'Retired gear cannot be a default for workouts');
     }
     await this.db.transaction(async (transaction) => {
       if (dto.type !== undefined) gear.type = dto.type;
@@ -154,10 +155,10 @@ export class GearService {
     workoutId: string,
     gearId: string | null,
   ): Promise<{ workoutId: string; gearId: string | null }> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const workout = await this.workoutModel.findOne({ where: { id: workoutId, athleteId: athlete.id } });
     if (!workout) {
-      throw new DomainException('WORKOUT_NOT_FOUND', 'Workout not found', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('WORKOUT_NOT_FOUND', 'Workout not found');
     }
     if (gearId) {
       await this.loadOwned(userId, gearId);
@@ -276,7 +277,7 @@ export class GearService {
       return;
     }
     this.eventEmitter.emit(
-      'training.gear.replace_soon',
+      TRAINING_EVENTS.GEAR_REPLACE_SOON,
       new GearReplaceSoonEvent(
         userId,
         gear.athleteId,
@@ -340,16 +341,16 @@ export class GearService {
   }
 
   private async loadOwned(userId: string, gearId: string): Promise<Gear> {
-    const athlete = await this.trainingService.getOrCreateAthlete(userId);
+    const athlete = await this.athletesService.getOrCreateAthlete(userId);
     const gear = await this.gearModel.findOne({ where: { id: gearId, athleteId: athlete.id } });
     if (!gear) {
-      throw new DomainException('GEAR_NOT_FOUND', 'Gear not found', HttpStatus.NOT_FOUND);
+      throw new DomainNotFoundException('GEAR_NOT_FOUND', 'Gear not found');
     }
     return gear;
   }
 
   private emitUpdated(userId: string, athleteId: string, gearId: string | null): void {
-    this.eventEmitter.emit('training.gear.updated', new GearUpdatedEvent(userId, athleteId, gearId));
+    this.eventEmitter.emit(TRAINING_EVENTS.GEAR_UPDATED, new GearUpdatedEvent(userId, athleteId, gearId));
   }
 
   private toResponse(gear: Gear, usage?: GearUsage): GearResponseDto {

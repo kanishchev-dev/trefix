@@ -13,7 +13,7 @@ import {
 import { Server, Socket } from 'socket.io';
 
 import { AuthRedisService } from '@/modules/auth/services/auth-redis.service';
-import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 
 import {
   REALTIME_INBOUND_AUTH_EVENT,
@@ -63,7 +63,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     private readonly realtimeService: RealtimeService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly permissionsService: PermissionsService,
+    private readonly userPermissionsService: UserPermissionsService,
     private readonly authRedisService: AuthRedisService,
     private readonly presenceService: RealtimePresenceService,
   ) {}
@@ -254,7 +254,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
    */
   private async resolvePermissions(userId: string): Promise<string[]> {
     try {
-      return await this.permissionsService.getEffectivePermissions(userId);
+      return await this.userPermissionsService.getEffectivePermissions(userId);
     } catch (error) {
       this.logger.warn(`Failed to resolve realtime permissions for user ${userId}: ${(error as Error).message}`);
       return [];

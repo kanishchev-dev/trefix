@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
+import { AUTH_EVENTS } from '@/modules/auth/auth.events';
 import { AuthSessionRevokedEvent } from '@/modules/auth/events/auth-session-revoked.event';
 
 import { RealtimeService } from '../realtime.service';
@@ -18,7 +19,7 @@ export class SessionRevokedListener {
 
   constructor(private readonly realtimeService: RealtimeService) {}
 
-  @OnEvent('auth.session.revoked')
+  @OnEvent(AUTH_EVENTS.SESSION_REVOKED)
   handleSessionRevoked(event: AuthSessionRevokedEvent): void {
     const disconnected = this.realtimeService.disconnectSession(event.sessionId);
 

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { TrainingService } from '@/modules/training/training.service';
+import { provideTrainingServicesMock } from '@/modules/training/testing/training-service-providers';
 
 import { CoachToolRunner } from './coach.tool-runner';
 
@@ -31,13 +31,7 @@ describe('CoachToolRunner', () => {
     trainingService.analyzeWorkout.mockResolvedValue({ id: 'analysis-1' });
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CoachToolRunner,
-        {
-          provide: TrainingService,
-          useValue: trainingService,
-        },
-      ],
+      providers: [CoachToolRunner, ...provideTrainingServicesMock(trainingService)],
     }).compile();
 
     runner = module.get(CoachToolRunner);

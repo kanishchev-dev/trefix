@@ -1,4 +1,4 @@
-import { RedisModule } from '@liaoliaots/nestjs-redis';
+import KeyvRedis from '@keyv/redis';
 import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -7,7 +7,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { redisStore } from 'cache-manager-redis-yet';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
 import * as path from 'path';
@@ -19,6 +18,7 @@ import {
   REQUEST_ID_HEADER,
   resolveRequestId,
 } from './common/middleware/correlation-id.middleware';
+import { RedisModule } from './common/redis/redis.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import trainingConfig from './config/training.config';
@@ -105,36 +105,18 @@ const LOG_REDACTED_PATHS = [
         synchronize: configService.get<string>('NODE_ENV') === 'test',
       }),
     }),
-    RedisModule.forRootAsync(
-      {
-        imports: [ConfigModule],
-        inject: [ConfigService],
-        useFactory: (...args: unknown[]) => {
-          const configService = args[0] as ConfigService;
-
-          return {
-            closeClient: true,
-            config: {
-              host: configService.get<string>('REDIS_HOST') || 'localhost',
-              port: configService.get<number>('REDIS_PORT') || 6379,
-            },
-          };
-        },
-      },
-      true,
-    ),
+    RedisModule,
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        store: await redisStore({
-          socket: {
-            host: configService.get<string>('REDIS_HOST'),
-            port: configService.get<number>('REDIS_PORT'),
-          },
-          ttl: CACHE_DEFAULT_TTL_MS,
-        }),
+      useFactory: (configService: ConfigService) => ({
+        stores: [
+          new KeyvRedis(
+            `redis://${configService.get<string>('REDIS_HOST') || 'localhost'}:${configService.get<number>('REDIS_PORT') || 6379}`,
+          ),
+        ],
+        ttl: CACHE_DEFAULT_TTL_MS,
       }),
     }),
     EventEmitterModule.forRoot(),
@@ -179,6 +161,6 @@ const LOG_REDACTED_PATHS = [
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    consumer.apply(CorrelationIdMiddleware).forRoutes('{*path}');
   }
 }

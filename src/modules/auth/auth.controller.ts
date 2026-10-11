@@ -33,6 +33,9 @@ import { AuthSocialFlowInvalidException } from './exceptions/auth-social-flow-in
 import { AuthSocialProvider } from './interfaces/auth-social-provider.interface';
 import { AuthTokenResult } from './interfaces/auth-token-result.interface';
 import { AuthUserContext } from './interfaces/auth-user-context.interface';
+import { AuthCodeService } from './services/auth-code.service';
+import { AuthSessionService } from './services/auth-session.service';
+import { AuthSocialFlowService } from './services/auth-social-flow.service';
 
 @ApiTags('Auth')
 @Controller({
@@ -40,7 +43,12 @@ import { AuthUserContext } from './interfaces/auth-user-context.interface';
   version: '1',
 })
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authSessionService: AuthSessionService,
+    private readonly authCodeService: AuthCodeService,
+    private readonly authSocialFlowService: AuthSocialFlowService,
+  ) {}
 
   @Public()
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
@@ -69,7 +77,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh the access token' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
   refresh(@Body() dto: RefreshTokenDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authService.refresh(dto));
+    return this.toTokensResponse(this.authSessionService.refresh(dto));
   }
 
   @Public()
@@ -78,7 +86,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify email address with a one-time code' })
   @ApiResponse({ status: 200, type: AuthVerificationResponseDto })
   verifyEmail(@Body() dto: VerifyEmailDto): Promise<AuthVerificationResponseDto> {
-    return this.authService.verifyEmail(dto);
+    return this.authCodeService.verifyEmail(dto);
   }
 
   @Public()
@@ -87,7 +95,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Request an email OTP code' })
   @ApiResponse({ status: 200, type: EmailOtpChallengeResponseDto })
   requestEmailOtpCode(@Body() dto: EmailOtpRequestDto): Promise<EmailOtpChallengeResponseDto> {
-    return this.authService.requestEmailOtpCode(dto);
+    return this.authCodeService.requestEmailOtpCode(dto);
   }
 
   @Public()
@@ -96,7 +104,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify the email OTP code' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
   verifyEmailOtpCode(@Body() dto: EmailOtpVerifyDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authService.verifyEmailOtpCode(dto));
+    return this.toTokensResponse(this.authCodeService.verifyEmailOtpCode(dto));
   }
 
   @Public()
@@ -108,7 +116,7 @@ export class AuthController {
     @Query('redirectUri') redirectUri: string,
     @Res() response: Response,
   ): Promise<void> {
-    const startUrl = await this.authService.buildSocialStartUrl(provider, redirectUri);
+    const startUrl = await this.authSocialFlowService.buildSocialStartUrl(provider, redirectUri);
     response.redirect(302, startUrl);
   }
 
@@ -130,7 +138,7 @@ export class AuthController {
       throw new AuthSocialFlowInvalidException('Missing authorization data');
     }
 
-    const redirectUri = await this.authService.completeSocialCallback(provider, code, state);
+    const redirectUri = await this.authSocialFlowService.completeSocialCallback(provider, code, state);
     response.redirect(302, redirectUri);
   }
 
@@ -140,7 +148,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange a social handoff code for tokens' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
   exchangeSocialCode(@Body() dto: SocialExchangeDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authService.exchangeSocialCode(dto));
+    return this.toTokensResponse(this.authSocialFlowService.exchangeSocialCode(dto));
   }
 
   @Public()
@@ -149,7 +157,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange a native Apple sign-in authorization code for tokens' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
   exchangeNativeAppleCode(@Body() dto: AppleNativeExchangeDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authService.exchangeNativeAppleCode(dto));
+    return this.toTokensResponse(this.authSocialFlowService.exchangeNativeAppleCode(dto));
   }
 
   @Public()
@@ -158,7 +166,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange a native Google sign-in ID token for tokens' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
   exchangeNativeGoogleCode(@Body() dto: GoogleNativeExchangeDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authService.exchangeNativeGoogleCode(dto));
+    return this.toTokensResponse(this.authSocialFlowService.exchangeNativeGoogleCode(dto));
   }
 
   @Public()
@@ -168,7 +176,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Resend the email verification code' })
   @ApiNoContentResponse({ description: 'Verification code resent' })
   resendVerification(@Body() dto: ResendVerificationDto): Promise<void> {
-    return this.authService.resendVerification(dto);
+    return this.authCodeService.resendVerification(dto);
   }
 
   @Public()
@@ -178,7 +186,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Request a password reset code' })
   @ApiNoContentResponse({ description: 'Password reset code requested' })
   requestPasswordReset(@Body() dto: PasswordResetRequestDto): Promise<void> {
-    return this.authService.requestPasswordReset(dto);
+    return this.authCodeService.requestPasswordReset(dto);
   }
 
   @Public()
@@ -188,7 +196,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Confirm password reset with code' })
   @ApiNoContentResponse({ description: 'Password reset completed' })
   confirmPasswordReset(@Body() dto: PasswordResetConfirmDto): Promise<void> {
-    return this.authService.confirmPasswordReset(dto);
+    return this.authCodeService.confirmPasswordReset(dto);
   }
 
   @Public()
@@ -238,7 +246,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Log out the current session' })
   @ApiNoContentResponse({ description: 'Current session revoked' })
   logout(@CurrentUser() user: AuthUserContext): Promise<void> {
-    return this.authService.logout(user);
+    return this.authSessionService.logout(user);
   }
 
   @Post('logout-all')
@@ -247,7 +255,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Log out all active sessions' })
   @ApiNoContentResponse({ description: 'All sessions revoked' })
   logoutAll(@CurrentUser() user: AuthUserContext): Promise<void> {
-    return this.authService.logoutAll(user.id);
+    return this.authSessionService.logoutAll(user.id);
   }
 
   @Post('password/change')

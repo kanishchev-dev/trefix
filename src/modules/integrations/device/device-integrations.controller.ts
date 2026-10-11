@@ -16,11 +16,13 @@ import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+import { DeviceConnectionsService } from '@/modules/integrations/device/device-connections.service';
+import { DeviceProfileMetricsService } from '@/modules/integrations/device/device-profile-metrics.service';
+import { DeviceSyncService } from '@/modules/integrations/device/device-sync.service';
 
 import { AuthUserContext } from '../../auth/interfaces/auth-user-context.interface';
 import { DEVICE_PROVIDERS, DEVICE_SYNC_RATE_LIMIT } from '../constants/integrations.constants';
 import { IntegrationItemResponseDto } from '../dto/integration-response.dto';
-import { DeviceIntegrationsService } from './device-integrations.service';
 import { DeviceConnectionDto, UpdateDeviceConnectionDto } from './dto/device-connection.dto';
 import { DeviceProfileMetricsDto, DeviceProfileMetricsResultDto } from './dto/device-profile-metrics.dto';
 import { DeviceSyncBatchAcceptedDto, DeviceSyncBatchDto } from './dto/device-sync-batch.dto';
@@ -36,7 +38,11 @@ const providerParam = { name: 'provider', enum: DEVICE_PROVIDERS };
 @ApiBearerAuth()
 @Controller('integrations')
 export class DeviceIntegrationsController {
-  constructor(private readonly deviceService: DeviceIntegrationsService) {}
+  constructor(
+    private readonly deviceConnections: DeviceConnectionsService,
+    private readonly deviceProfileMetrics: DeviceProfileMetricsService,
+    private readonly deviceSync: DeviceSyncService,
+  ) {}
 
   @Get('workouts/:workoutId/sources')
   @RequirePermissions('integrations.read')
@@ -46,7 +52,7 @@ export class DeviceIntegrationsController {
     @CurrentUser() user: AuthUserContext,
     @Param('workoutId', ParseUUIDPipe) workoutId: string,
   ): Promise<WorkoutSourcesResponseDto> {
-    return this.deviceService.listWorkoutSources(user.id, workoutId);
+    return this.deviceConnections.listWorkoutSources(user.id, workoutId);
   }
 
   @Put(':provider/connection')
@@ -59,7 +65,7 @@ export class DeviceIntegrationsController {
     @Param('provider') provider: string,
     @Body() dto: DeviceConnectionDto,
   ): Promise<IntegrationItemResponseDto> {
-    return this.deviceService.connect(user.id, provider, dto);
+    return this.deviceConnections.connect(user.id, provider, dto);
   }
 
   @Patch(':provider/connection')
@@ -72,7 +78,7 @@ export class DeviceIntegrationsController {
     @Param('provider') provider: string,
     @Body() dto: UpdateDeviceConnectionDto,
   ): Promise<IntegrationItemResponseDto> {
-    return this.deviceService.updateConnection(user.id, provider, dto);
+    return this.deviceConnections.updateConnection(user.id, provider, dto);
   }
 
   @Delete(':provider')
@@ -83,7 +89,7 @@ export class DeviceIntegrationsController {
   })
   @ApiOkResponse({ schema: { example: { success: true } } })
   disconnect(@CurrentUser() user: AuthUserContext, @Param('provider') provider: string): Promise<{ success: boolean }> {
-    return this.deviceService.disconnect(user.id, provider);
+    return this.deviceConnections.disconnect(user.id, provider);
   }
 
   @Post(':provider/sync-batches')
@@ -103,7 +109,7 @@ export class DeviceIntegrationsController {
     @Param('provider') provider: string,
     @Body() dto: DeviceSyncBatchDto,
   ): Promise<DeviceSyncBatchAcceptedDto> {
-    return this.deviceService.acceptBatch(user.id, provider, dto);
+    return this.deviceSync.acceptBatch(user.id, provider, dto);
   }
 
   @Get(':provider/sync')
@@ -115,7 +121,7 @@ export class DeviceIntegrationsController {
     @CurrentUser() user: AuthUserContext,
     @Param('provider') provider: string,
   ): Promise<DeviceSyncStatusResponseDto> {
-    return this.deviceService.getSyncStatus(user.id, provider);
+    return this.deviceSync.getSyncStatus(user.id, provider);
   }
 
   @Post(':provider/profile-metrics')
@@ -132,6 +138,6 @@ export class DeviceIntegrationsController {
     @Param('provider') provider: string,
     @Body() dto: DeviceProfileMetricsDto,
   ): Promise<DeviceProfileMetricsResultDto> {
-    return this.deviceService.applyProfileMetrics(user.id, provider, dto);
+    return this.deviceProfileMetrics.applyProfileMetrics(user.id, provider, dto);
   }
 }

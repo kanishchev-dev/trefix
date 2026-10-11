@@ -1,6 +1,4 @@
-import { HttpStatus } from '@nestjs/common';
-
-import { DomainException } from '@/common/exceptions/domain.exception';
+import { DomainBadRequestException } from '@/common/exceptions/domain-exceptions';
 
 import type { WorkoutView } from '../interfaces/training-views.interface';
 import type { RelativeWeek, RelativeWorkout, TrainingEngine } from '../training.engine';
@@ -51,8 +49,8 @@ export function applyRelativeOverrides(
   options: ApplyOverridesOptions,
 ): RelativeWeek[] {
   const weeks = JSON.parse(JSON.stringify(source)) as RelativeWeek[];
-  const invalid = (message: string): DomainException =>
-    new DomainException(options.errorCode, message, HttpStatus.BAD_REQUEST);
+  const invalid = (message: string): DomainBadRequestException =>
+    new DomainBadRequestException(options.errorCode, message);
 
   for (const override of overrides) {
     const week = weeks.find((entry) => entry.weekNumber === override.weekNumber);

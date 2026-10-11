@@ -1,10 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 
-import { DomainException } from '@/common/exceptions/domain.exception';
-import { Permission } from '@/modules/permissions/entities/permission.entity';
-import { PermissionGroup } from '@/modules/permissions/entities/permission-group.entity';
+import { DomainUnprocessableException } from '@/common/exceptions/domain-exceptions';
+import { PermissionsService } from '@/modules/permissions/permissions.service';
+import { SETTINGS_EVENTS } from '@/modules/settings/settings.events';
 
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { AppSetting } from './entities/app-setting.entity';
@@ -30,10 +30,7 @@ export class SettingsService {
   constructor(
     @InjectModel(AppSetting)
     private readonly appSettingModel: typeof AppSetting,
-    @InjectModel(PermissionGroup)
-    private readonly permissionGroupModel: typeof PermissionGroup,
-    @InjectModel(Permission)
-    private readonly permissionModel: typeof Permission,
+    private readonly permissionsService: PermissionsService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -98,7 +95,7 @@ export class SettingsService {
 
     const settings = await this.getSettings();
 
-    this.eventEmitter.emit('settings.updated', new SettingsUpdatedEvent(settings));
+    this.eventEmitter.emit(SETTINGS_EVENTS.UPDATED, new SettingsUpdatedEvent(settings));
 
     return settings;
   }
@@ -115,31 +112,16 @@ export class SettingsService {
   }
 
   private async assertGroupsExist(groupIds: string[]): Promise<void> {
-    const groups = await this.permissionGroupModel.findAll({
-      where: { id: groupIds },
-      paranoid: false,
-    });
-
-    if (groups.length !== new Set(groupIds).size) {
-      throw new DomainException(
-        'settings.ERRORS.SETTINGS_GROUP_NOT_FOUND',
-        'One or more default groups do not exist',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+    if ((await this.permissionsService.findMissingGroupIds(groupIds)).length > 0) {
+      throw new DomainUnprocessableException('SETTINGS_GROUP_NOT_FOUND', 'One or more default groups do not exist');
     }
   }
 
   private async assertPermissionsExist(permissionIds: string[]): Promise<void> {
-    const permissions = await this.permissionModel.findAll({
-      where: { id: permissionIds },
-      paranoid: false,
-    });
-
-    if (permissions.length !== new Set(permissionIds).size) {
-      throw new DomainException(
-        'settings.ERRORS.SETTINGS_PERMISSION_NOT_FOUND',
+    if ((await this.permissionsService.findMissingPermissionIds(permissionIds)).length > 0) {
+      throw new DomainUnprocessableException(
+        'SETTINGS_PERMISSION_NOT_FOUND',
         'One or more default permissions do not exist',
-        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
   }

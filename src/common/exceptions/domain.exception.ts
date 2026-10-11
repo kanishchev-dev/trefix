@@ -11,6 +11,8 @@ export class DomainException extends HttpException {
     message: string,
     status: HttpStatus = HttpStatus.BAD_REQUEST,
     public readonly details?: Record<string, unknown>,
+    /** Values for placeholders of the translated message (`{id}`); never sent to the client as is. */
+    public readonly messageArgs?: Record<string, unknown>,
   ) {
     super({ message, code, details }, status);
   }
