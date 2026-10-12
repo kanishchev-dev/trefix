@@ -172,7 +172,12 @@ export class AdminWorkoutResponseDto {
   @ApiProperty({ format: 'uuid' })
   athleteId!: string;
 
-  @ApiPropertyOptional({ format: 'uuid', nullable: true, description: 'Owning plan; null for standalone workouts' })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    format: 'uuid',
+    description: 'Owning plan; null for standalone workouts',
+  })
   planId!: string | null;
 
   @ApiProperty({ type: String, format: 'date-time' })
@@ -193,16 +198,20 @@ export class AdminWorkoutResponseDto {
   @ApiProperty({ example: 6 })
   distanceKm!: number;
 
-  @ApiPropertyOptional({ nullable: true, description: 'Title shown in the athlete calendar' })
+  @ApiProperty({ type: String, nullable: true, description: 'Title shown in the athlete calendar' })
   title!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, description: 'Where the workout came from: plan, manual, strava, admin…' })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Where the workout came from: plan, manual, strava, admin…',
+  })
   source!: string | null;
 
   @ApiProperty({ description: 'Whether the workout carries an actual result (immutable history)' })
   hasActual!: boolean;
 
-  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   completedAt!: Date | null;
 
   @ApiProperty({ type: String, format: 'date-time' })
@@ -229,6 +238,20 @@ export class AdminCalendarDayResponseDto {
   hasAthleteProfile!: boolean;
 }
 
+export class WorkoutStatusCountsDto implements Record<WorkoutStatus, number> {
+  @ApiProperty({ example: 1 })
+  planned!: number;
+
+  @ApiProperty({ example: 1 })
+  completed!: number;
+
+  @ApiProperty({ example: 0 })
+  skipped!: number;
+
+  @ApiProperty({ example: 0 })
+  cancelled!: number;
+}
+
 export class AdminCalendarSummaryDayDto {
   @ApiProperty({ example: '2026-10-06', description: 'Local calendar day' })
   date!: string;
@@ -236,10 +259,7 @@ export class AdminCalendarSummaryDayDto {
   @ApiProperty({ example: 2 })
   total!: number;
 
-  @ApiProperty({
-    example: { planned: 1, completed: 1, skipped: 0, cancelled: 0 },
-    description: 'Workout count per status',
-  })
+  @ApiProperty({ type: WorkoutStatusCountsDto, description: 'Workout count per status' })
   statuses!: Record<WorkoutStatus, number>;
 }
 

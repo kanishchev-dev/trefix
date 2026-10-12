@@ -15,10 +15,10 @@ export class DeviceSyncCountersDto {
 }
 
 export class DeviceSyncStatusResponseDto extends IntegrationSyncStatusResponseDto {
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   lastSyncId!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 'foreground' })
+  @ApiProperty({ type: String, nullable: true, example: 'foreground' })
   lastSyncType!: string | null;
 
   @ApiProperty({ example: 0, description: 'Accepted batches not processed yet' })
@@ -35,10 +35,10 @@ export class WorkoutSourceItemDto {
   @ApiProperty()
   isPrimary!: boolean;
 
-  @ApiPropertyOptional({ nullable: true, example: 'Apple Watch' })
+  @ApiPropertyOptional({ type: String, nullable: true, example: 'Apple Watch' })
   originDevice!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 'com.apple.health' })
+  @ApiPropertyOptional({ type: String, nullable: true, example: 'com.apple.health' })
   originAppId!: string | null;
 
   @ApiProperty({ example: '2026-10-08T04:12:03.000Z' })

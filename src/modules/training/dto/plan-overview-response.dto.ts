@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { PlanConfigDto } from './plan-shapes.dto';
+
 export class PlanGoalDto {
   @ApiPropertyOptional()
   title?: string;
@@ -42,13 +44,13 @@ export class PlanOverviewDataDto {
   @ApiPropertyOptional()
   startDate?: string;
 
-  @ApiPropertyOptional({ nullable: true })
-  notes?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  notes!: string | null;
 
   @ApiProperty({ description: 'Version to pass as expectedVersion when editing the plan' })
   version!: number;
 
-  @ApiProperty({ type: Object, description: 'Goal, schedule and structure the plan was built from' })
+  @ApiProperty({ type: PlanConfigDto, description: 'Goal, schedule and structure the plan was built from' })
   config!: Record<string, unknown>;
 }
 

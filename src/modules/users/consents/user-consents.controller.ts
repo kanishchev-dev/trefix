@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+import { SuccessResponseDto } from '@/common/dto/status-response.dto';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { ConsentResponseDto, ConsentsListResponseDto, GiveConsentDto, RevokeConsentParamsDto } from './dto/consent.dto';
@@ -33,7 +34,7 @@ export class UserConsentsController {
   @Delete(':type')
   @RequirePermissions('account.update')
   @ApiOperation({ summary: 'Revoke a consent; revoking health data disconnects Apple Health and Health Connect' })
-  @ApiOkResponse({ schema: { example: { success: true } } })
+  @ApiOkResponse({ type: SuccessResponseDto })
   revoke(@CurrentUser() user: AuthUserContext, @Param() params: RevokeConsentParamsDto): Promise<{ success: true }> {
     return this.consentsService.revoke(user.id, params.type);
   }

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -23,6 +23,7 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { ManualPlanPreviewResponseDto } from './dto/manual-plan-preview-response.dto';
 import { PlanOverviewResponseDto } from './dto/plan-overview-response.dto';
+import { CurrentMetricsDto } from './dto/plan-shapes.dto';
 import { RegeneratePlanDto } from './dto/regenerate-plan.dto';
 import {
   TrainingAdaptationResponseDto,
@@ -213,6 +214,9 @@ export class TrainingController {
     description: 'Workouts list',
     type: [TrainingWorkoutResponseDto],
   })
+  @ApiQuery({ name: 'from', required: false, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'includeCancelled', required: false, enum: ['true', 'false'] })
   getWorkouts(
     @CurrentUser() user: AuthUserContext,
     @Query('from') from?: string,
@@ -225,10 +229,7 @@ export class TrainingController {
   @Get('athletes/me/current-metrics')
   @RequirePermissions('training.athletes.read')
   @ApiOperation({ summary: 'Current metrics estimate with per-field sources, for the plan creation prefill' })
-  @ApiOkResponse({
-    description:
-      'Each field is `{ value, source }`; source is profile | strava | manual_workouts | athlete_state | none',
-  })
+  @ApiOkResponse({ type: CurrentMetricsDto })
   getCurrentMetrics(@CurrentUser() user: AuthUserContext): Promise<CurrentMetrics> {
     return this.athletesService.getCurrentMetrics(user.id);
   }

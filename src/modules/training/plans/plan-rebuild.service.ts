@@ -63,7 +63,8 @@ export interface RebuildPrefillResult {
 export interface RebuildPreviewResult {
   mode: 'rebased' | 'regenerated';
   weeks: RelativeWeek[];
-  preview: DatedPreview;
+  /** Dated preview with the frequency and volume the rebuilt plan will be stored with. */
+  preview: DatedPreview & { trainingFrequency: number; weeklyTargetKm: number };
   diff: PlanDiff;
   warnings: string[];
   startOptions: StartOptionsResult;
@@ -180,7 +181,12 @@ export class PlanRebuildService {
     return {
       mode: structureChanged ? 'regenerated' : 'rebased',
       weeks,
-      preview: relativeToPreview(this.engine, weeks, recommendedStart),
+      preview: {
+        ...relativeToPreview(this.engine, weeks, recommendedStart),
+        // The same values the rebuilt plan is stored with.
+        trainingFrequency: input.structure.sessionsPerWeek,
+        weeklyTargetKm: input.metrics.weeklyMileageKm ?? plan.weeklyTargetKm,
+      },
       diff: this.engine.diffPlans(base, weeks, plan.metricsSnapshot ?? undefined, input.metrics, adjustments),
       warnings,
       startOptions,

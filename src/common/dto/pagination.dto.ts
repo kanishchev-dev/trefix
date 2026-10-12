@@ -40,7 +40,7 @@ export class PaginationMetaDto {
 }
 
 export class PaginatedResponseDto<T> {
-  @ApiProperty({ isArray: true, description: 'Paginated records' })
+  @ApiProperty({ type: 'array', items: {}, description: 'Paginated records; typed per endpoint' })
   data: T[];
 
   @ApiProperty({ type: () => PaginationMetaDto })

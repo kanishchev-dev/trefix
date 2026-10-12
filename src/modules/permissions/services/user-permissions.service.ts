@@ -26,14 +26,14 @@ const CATALOG_VERSION_TTL_MS = 24 * 60 * 60 * 1000;
 export interface UserAccessGroup {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   systemKey: string | null;
   isSystem: boolean;
 }
 
 export interface UserAccessSummary {
   groups: UserAccessGroup[];
-  individualPermissions: Array<{ name: string; description?: string }>;
+  individualPermissions: Array<{ name: string; description: string | null }>;
   effectivePermissions: string[];
 }
 
@@ -164,13 +164,13 @@ export class UserPermissionsService {
       groups: groups.map((group) => ({
         id: group.id,
         name: group.name,
-        description: group.description,
+        description: group.description ?? null,
         systemKey: group.systemKey,
         isSystem: group.isSystem,
       })),
       individualPermissions: individual.map((permission) => ({
         name: permission.name,
-        description: permission.description,
+        description: permission.description ?? null,
       })),
       effectivePermissions: [...effective],
     };

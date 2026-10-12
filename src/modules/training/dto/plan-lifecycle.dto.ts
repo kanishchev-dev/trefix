@@ -21,6 +21,8 @@ import {
 
 import { PaginationDto } from '@/common/dto/pagination.dto';
 
+import type { PlanGoalSummary, PlanListItem } from '../plans/plan-list.service';
+import type { PlanStats } from '../plans/plan-stats.service';
 import {
   MANUAL_PLAN_MAX_DISTANCE_KM,
   MANUAL_PLAN_MAX_DURATION_MINUTES,
@@ -31,9 +33,12 @@ import {
   PLAN_NAME_MAX_LENGTH,
   PLAN_NOTES_MAX_LENGTH,
   PlanListGroup,
+  TRAINING_PLAN_STATUSES,
+  type TrainingPlanStatus,
   WORKOUT_OPERATION_KINDS,
   WORKOUT_TYPES,
 } from '../training.constants';
+import { PlanDiffDto, PlanListMetaDto } from './plan-shapes.dto';
 
 // --------------------------------------------------------------------- list
 
@@ -51,18 +56,18 @@ export class PlanListQueryDto extends PaginationDto {
   limit?: number = 20;
 }
 
-export class PlanGoalSummaryDto {
-  @ApiPropertyOptional()
-  type?: string | null;
+export class PlanGoalSummaryDto implements PlanGoalSummary {
+  @ApiProperty({ type: String, nullable: true })
+  type!: string | null;
 
-  @ApiPropertyOptional()
-  title?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  title!: string | null;
 
-  @ApiPropertyOptional()
-  targetDate?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  targetDate!: string | null;
 }
 
-export class PlanStatsDto {
+export class PlanStatsDto implements PlanStats {
   @ApiProperty()
   completedWorkouts!: number;
 
@@ -76,15 +81,15 @@ export class PlanStatsDto {
   totalDistanceKm!: number;
 }
 
-export class PlanListItemDto {
+export class PlanListItemDto implements PlanListItem {
   @ApiProperty()
   id!: string;
 
   @ApiProperty()
   name!: string;
 
-  @ApiProperty()
-  status!: string;
+  @ApiProperty({ enum: TRAINING_PLAN_STATUSES })
+  status!: TrainingPlanStatus;
 
   @ApiProperty()
   creationSource!: string;
@@ -95,26 +100,26 @@ export class PlanListItemDto {
   @ApiProperty()
   totalWeeks!: number;
 
-  @ApiPropertyOptional()
-  sessionsPerWeek?: number | null;
+  @ApiProperty({ type: Number, nullable: true })
+  sessionsPerWeek!: number | null;
 
-  @ApiPropertyOptional()
-  startDate?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  startDate!: string | null;
 
-  @ApiPropertyOptional()
-  endDate?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  endDate!: string | null;
 
-  @ApiPropertyOptional()
-  cancelledAt?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  cancelledAt!: string | null;
 
-  @ApiPropertyOptional({ type: PlanStatsDto })
-  stats?: PlanStatsDto | null;
+  @ApiProperty({ type: PlanStatsDto, nullable: true })
+  stats!: PlanStatsDto | null;
 
-  @ApiPropertyOptional()
-  notesPreview?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  notesPreview!: string | null;
 
-  @ApiPropertyOptional()
-  sourcePlanId?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  sourcePlanId!: string | null;
 
   @ApiPropertyOptional()
   metricsStale?: boolean;
@@ -133,8 +138,8 @@ export class PlanListResponseDto {
   @ApiProperty({ type: [PlanListItemDto] })
   items!: PlanListItemDto[];
 
-  @ApiProperty()
-  meta!: { page: number; limit: number; total: number; hasNext: boolean };
+  @ApiProperty({ type: PlanListMetaDto })
+  meta!: PlanListMetaDto;
 }
 
 export class PlanCountsResponseDto {
@@ -159,7 +164,7 @@ export class UpdatePlanMetaDto {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
   @IsString()
   @MaxLength(PLAN_NOTES_MAX_LENGTH)
   @IsOptional()
@@ -446,14 +451,14 @@ export class PlanChangesDto {
 }
 
 export class PlanChangesPreviewResponseDto {
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: PlanDiffDto })
   diff!: Record<string, unknown>;
 
   @ApiProperty({ type: [String] })
   warnings!: string[];
 
-  @ApiPropertyOptional()
-  resultingEndDate?: string | null;
+  @ApiProperty({ type: String, nullable: true })
+  resultingEndDate!: string | null;
 
   @ApiProperty()
   version!: number;
@@ -468,10 +473,10 @@ export class ActivePlanSummaryDto {
   @ApiProperty()
   name!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   startDate!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   endDate!: string | null;
 
   @ApiProperty()
@@ -488,7 +493,7 @@ export class ActivePlanSummaryDto {
 }
 
 export class ActivePlanResponseDto {
-  @ApiPropertyOptional({ type: ActivePlanSummaryDto, nullable: true })
+  @ApiProperty({ type: ActivePlanSummaryDto, nullable: true })
   plan!: ActivePlanSummaryDto | null;
 }
 
@@ -531,7 +536,7 @@ export class StartOptionsResponseDto {
   @ApiProperty()
   metricsStale!: boolean;
 
-  @ApiPropertyOptional({ type: ActivePlanSummaryDto, nullable: true })
+  @ApiProperty({ type: ActivePlanSummaryDto, nullable: true })
   activePlan!: ActivePlanSummaryDto | null;
 }
 
@@ -542,7 +547,7 @@ export class PlanMetaResponseDto {
   @ApiProperty()
   name!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   notes!: string | null;
 
   @ApiProperty()

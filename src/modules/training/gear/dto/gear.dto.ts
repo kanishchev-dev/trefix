@@ -56,7 +56,7 @@ export class CreateGearDto {
   @MaxLength(GEAR_MODEL_MAX_LENGTH)
   model!: string;
 
-  @ApiPropertyOptional({ example: 'Daily trainer', nullable: true, maxLength: GEAR_NICKNAME_MAX_LENGTH })
+  @ApiPropertyOptional({ type: String, nullable: true, example: 'Daily trainer', maxLength: GEAR_NICKNAME_MAX_LENGTH })
   @IsOptional()
   @Transform(trim)
   @IsString()
@@ -79,7 +79,12 @@ export class CreateGearDto {
   @Max(GEAR_LIMIT_KM_RANGE.max)
   limitKm?: number;
 
-  @ApiPropertyOptional({ example: '2026-08-01', nullable: true, description: 'When the pair went into use' })
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    example: '2026-08-01',
+    description: 'When the pair went into use',
+  })
   @IsOptional()
   @IsISO8601({ strict: true })
   startedAt?: string | null;
@@ -107,7 +112,7 @@ export class GearListQueryDto {
 }
 
 export class AssignWorkoutGearDto {
-  @ApiProperty({ nullable: true, example: '01929b5e-6f1d-7c3a-9a55-3b4f1e2d9c10' })
+  @ApiProperty({ type: String, nullable: true, example: '01929b5e-6f1d-7c3a-9a55-3b4f1e2d9c10' })
   @IsOptional()
   @IsUUID()
   gearId!: string | null;
@@ -126,7 +131,7 @@ export class GearResponseDto {
   @ApiProperty({ example: 'Pegasus 41' })
   model!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   nickname!: string | null;
 
   @ApiProperty({ example: 0 })
@@ -135,10 +140,10 @@ export class GearResponseDto {
   @ApiProperty({ example: 700 })
   limitKm!: number;
 
-  @ApiPropertyOptional({ nullable: true, example: '2026-08-01' })
+  @ApiProperty({ type: String, nullable: true, example: '2026-08-01' })
   startedAt!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   retiredAt!: Date | null;
 
   @ApiProperty({ enum: GEAR_STATUSES })
@@ -178,4 +183,12 @@ export class GearResponseDto {
 export class GearListResponseDto {
   @ApiProperty({ type: [GearResponseDto] })
   items!: GearResponseDto[];
+}
+
+export class WorkoutGearAssignmentDto {
+  @ApiProperty()
+  workoutId!: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  gearId!: string | null;
 }

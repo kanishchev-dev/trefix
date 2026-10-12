@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 
 import type {
   AdaptationEventView,
@@ -9,7 +9,17 @@ import type {
   WorkoutAnalysisView,
   WorkoutView,
 } from '../interfaces/training-views.interface';
-import { ADAPTATION_EVENT_STATUSES, HR_ZONES_METHODS, TIMES_OF_DAY } from '../training.constants';
+import {
+  ADAPTATION_EVENT_STATUSES,
+  ATHLETE_GOAL_STATUSES,
+  ATHLETE_SEX_VALUES,
+  FIELD_SOURCES,
+  HR_ZONES_METHODS,
+  TIMES_OF_DAY,
+  TRAINING_PLAN_STATUSES,
+  WORKOUT_STATUSES,
+  WORKOUT_TYPES,
+} from '../training.constants';
 
 export class TrainingWorkoutAnalysisResponseDto implements WorkoutAnalysisView {
   @ApiProperty()
@@ -34,6 +44,16 @@ export class TrainingWorkoutAnalysisResponseDto implements WorkoutAnalysisView {
   analysisVersion!: string;
 }
 
+/** Where a profile field value came from. */
+export class FieldSourceDto {
+  @ApiProperty({ enum: FIELD_SOURCES })
+  source!: (typeof FIELD_SOURCES)[number];
+
+  @ApiProperty()
+  updatedAt!: string;
+}
+
+@ApiExtraModels(FieldSourceDto)
 export class TrainingAthleteResponseDto implements AthleteView {
   @ApiProperty()
   id!: string;
@@ -41,22 +61,22 @@ export class TrainingAthleteResponseDto implements AthleteView {
   @ApiProperty()
   userId!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   age!: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ enum: ATHLETE_SEX_VALUES, nullable: true })
   sex!: AthleteView['sex'];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   heightCm!: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   weightKg!: number | null;
 
   @ApiProperty()
   experienceLevel!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   weeklyMileageKm!: number | null;
 
   @ApiProperty()
@@ -71,44 +91,49 @@ export class TrainingAthleteResponseDto implements AthleteView {
   @ApiProperty({ type: [String] })
   availableTrainingDays!: string[];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   preferredWorkoutDurationMinutes!: number | null;
 
-  @ApiPropertyOptional({ nullable: true, example: '1992-03-14' })
+  @ApiProperty({ type: String, nullable: true, example: '1992-03-14' })
   birthDate!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 52 })
+  @ApiProperty({ type: Number, nullable: true, example: 52 })
   restingHeartRate!: number | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 189 })
+  @ApiProperty({ type: Number, nullable: true, example: 189 })
   maxHeartRate!: number | null;
 
-  @ApiPropertyOptional({ nullable: true, example: null })
+  @ApiProperty({ type: Number, nullable: true, example: null })
   thresholdHeartRate!: number | null;
 
   @ApiProperty({ enum: HR_ZONES_METHODS, example: 'max_hr' })
   hrZonesMethod!: AthleteView['hrZonesMethod'];
 
-  @ApiPropertyOptional({ type: [Number], nullable: true })
+  @ApiProperty({ type: [Number], nullable: true })
   hrZonesCustom!: number[] | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 2021 })
+  @ApiProperty({ type: Number, nullable: true, example: 2021 })
   runningSinceYear!: number | null;
 
-  @ApiPropertyOptional({ nullable: true, description: '`null` — not answered, empty string — no limitations' })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: '`null` — not answered, empty string — no limitations',
+  })
   limitations!: string | null;
 
   @ApiProperty({ enum: TIMES_OF_DAY, example: 'morning' })
   preferredTimeOfDay!: AthleteView['preferredTimeOfDay'];
 
-  @ApiPropertyOptional({ nullable: true, example: 'saturday' })
+  @ApiProperty({ type: String, nullable: true, example: 'saturday' })
   longRunDay!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 120 })
+  @ApiProperty({ type: Number, nullable: true, example: 120 })
   longRunMaxDurationMinutes!: number | null;
 
   @ApiProperty({
-    type: Object,
+    type: 'object',
+    additionalProperties: { $ref: getSchemaPath(FieldSourceDto) },
     example: { weightKg: { source: 'strava', updatedAt: '2026-10-05T07:12:00Z' } },
     description: 'Provenance of fields an external source may fill in; manual values are never overwritten',
   })
@@ -137,13 +162,13 @@ export class TrainingStateResponseDto implements AthleteStateView {
   @ApiProperty()
   form!: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   thresholdPaceSecondsPerKm!: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   thresholdHeartRate!: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   vo2max!: number | null;
 
   @ApiProperty()
@@ -155,7 +180,7 @@ export class TrainingStateResponseDto implements AthleteStateView {
   @ApiProperty()
   chronicLoad!: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: Number, nullable: true })
   recoveryScore!: number | null;
 
   @ApiProperty()
@@ -171,6 +196,17 @@ export class TrainingStateResponseDto implements AthleteStateView {
   updatedAt!: Date;
 }
 
+export class GoalPayloadResponseDto {
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  current?: Record<string, unknown>;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  target?: Record<string, unknown>;
+
+  @ApiPropertyOptional()
+  description?: string;
+}
+
 export class TrainingGoalResponseDto implements GoalView {
   @ApiProperty()
   id!: string;
@@ -181,29 +217,25 @@ export class TrainingGoalResponseDto implements GoalView {
   @ApiProperty({ description: 'Universal goal type discriminator' })
   type!: string;
 
-  @ApiPropertyOptional({
-    nullable: true,
-    type: Object,
-    description: 'Type-specific metric payload { current?, target?, description? }',
-  })
+  @ApiPropertyOptional({ type: GoalPayloadResponseDto, nullable: true, description: 'Type-specific metric payload' })
   payload!: GoalView['payload'];
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   raceDistance!: GoalView['raceDistance'];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true })
   targetTimeSeconds!: number | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   targetDate!: string | null;
 
   @ApiProperty()
   priority!: number;
 
-  @ApiProperty()
+  @ApiProperty({ enum: ATHLETE_GOAL_STATUSES })
   status!: GoalView['status'];
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   notes!: string | null;
 
   @ApiProperty()
@@ -220,10 +252,10 @@ export class TrainingWorkoutResponseDto implements WorkoutView {
   @ApiProperty()
   athleteId!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   goalId!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   planId!: string | null;
 
   @ApiProperty()
@@ -232,13 +264,13 @@ export class TrainingWorkoutResponseDto implements WorkoutView {
   @ApiProperty()
   scheduledAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ enum: WORKOUT_TYPES })
   type!: WorkoutView['type'];
 
   @ApiProperty()
   phase!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: WORKOUT_STATUSES })
   status!: WorkoutView['status'];
 
   @ApiProperty()
@@ -250,22 +282,22 @@ export class TrainingWorkoutResponseDto implements WorkoutView {
   @ApiProperty()
   distanceKm!: number;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   target!: Record<string, unknown>;
 
   @ApiProperty({ type: [Object] })
   steps!: Array<Record<string, unknown>>;
 
-  @ApiPropertyOptional({ type: Object, nullable: true })
+  @ApiProperty({ type: 'object', additionalProperties: true, nullable: true })
   actual!: Record<string, unknown> | null;
 
-  @ApiPropertyOptional({ type: TrainingWorkoutAnalysisResponseDto, nullable: true })
+  @ApiProperty({ type: TrainingWorkoutAnalysisResponseDto, nullable: true })
   analysis!: WorkoutAnalysisView | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   completedAt!: Date | null;
 
-  @ApiPropertyOptional({ nullable: true, description: 'Gear (shoes) used for the workout' })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Gear (shoes) used for the workout' })
   gearId?: string | null;
 
   @ApiProperty()
@@ -296,22 +328,22 @@ export class TrainingPlanResponseDto implements TrainingPlanView {
   @ApiProperty()
   athleteId!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   goalId!: string | null;
 
   @ApiProperty()
   name!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   notes!: string | null;
 
   @ApiProperty({ description: 'Version to pass as expectedVersion when editing the plan' })
   version!: number;
 
-  @ApiPropertyOptional({ nullable: true, description: 'Null for drafts' })
+  @ApiProperty({ type: String, nullable: true, description: 'Null for drafts' })
   startDate!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, description: 'Null for drafts' })
+  @ApiProperty({ type: String, nullable: true, description: 'Null for drafts' })
   endDate!: string | null;
 
   @ApiProperty()
@@ -320,7 +352,7 @@ export class TrainingPlanResponseDto implements TrainingPlanView {
   @ApiProperty()
   weeklyTargetKm!: number;
 
-  @ApiProperty()
+  @ApiProperty({ enum: TRAINING_PLAN_STATUSES })
   status!: TrainingPlanView['status'];
 
   @ApiProperty()
@@ -346,19 +378,19 @@ export class TrainingAdaptationResponseDto implements AdaptationEventView {
   @ApiProperty()
   athleteId!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   planId!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   workoutId!: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   type!: AdaptationEventView['type'];
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   input!: Record<string, unknown>;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   decision!: Record<string, unknown>;
 
   @ApiProperty()
@@ -372,6 +404,11 @@ export class TrainingAdaptationResponseDto implements AdaptationEventView {
 
   @ApiProperty()
   createdAt!: Date;
+}
+
+export class TrainingAdaptationListResponseDto {
+  @ApiProperty({ type: [TrainingAdaptationResponseDto] })
+  items!: TrainingAdaptationResponseDto[];
 }
 
 export class TrainingWorkoutCompletionResponseDto {

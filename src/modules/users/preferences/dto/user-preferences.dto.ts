@@ -93,16 +93,16 @@ export class UserPreferencesResponseDto {
   @ApiProperty({ enum: COACH_ADAPTATION_MODES, example: 'confirm' })
   coachAdaptationMode!: CoachAdaptationMode;
 
-  @ApiPropertyOptional({ type: QuietHoursDto, nullable: true, example: { from: '22:00', to: '08:00' } })
+  @ApiProperty({ type: QuietHoursDto, nullable: true, example: { from: '22:00', to: '08:00' } })
   coachQuietHours!: QuietHoursDto | null;
 
   @ApiProperty({ example: true })
   stravaProfileSync!: boolean;
 
-  @ApiPropertyOptional({ nullable: true, example: 'Europe/Moscow' })
+  @ApiProperty({ type: String, nullable: true, example: 'Europe/Moscow' })
   timezone!: string | null;
 
-  @ApiPropertyOptional({ enum: PREFERENCE_LANGUAGES, nullable: true, example: 'ru' })
+  @ApiProperty({ enum: PREFERENCE_LANGUAGES, nullable: true, example: 'ru' })
   language!: PreferenceLanguage | null;
 
   @ApiProperty()

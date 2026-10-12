@@ -66,6 +66,7 @@ export class UsersService {
       user = await this.userModel.create({
         ...createUserDto,
         email: normalizedEmail,
+        referralCode: this.normalizeReferralCode(createUserDto.referralCode) ?? null,
         passwordHash: createUserDto.passwordHash ?? null,
         emailVerified: createUserDto.emailVerified ?? false,
         emailVerifiedAt: createUserDto.emailVerified ? new Date() : null,
@@ -73,7 +74,7 @@ export class UsersService {
       });
     } catch (error) {
       if (error instanceof UniqueConstraintError) {
-        throw new EntityAlreadyExistsException('User', 'email', normalizedEmail);
+        throw this.uniqueConflict(error, normalizedEmail, createUserDto.referralCode);
       }
 
       throw error;
@@ -88,6 +89,25 @@ export class UsersService {
     );
 
     return user;
+  }
+
+  /** An empty referral code means "none": stored as null, so it never collides with other users. */
+  private normalizeReferralCode(code: string | null | undefined): string | null | undefined {
+    if (code === undefined) return undefined;
+    const trimmed = code?.trim();
+    return trimmed ? trimmed : null;
+  }
+
+  /** Names the unique column that was hit: email or referral code. */
+  private uniqueConflict(
+    error: UniqueConstraintError,
+    email: string,
+    referralCode: string | null | undefined,
+  ): EntityAlreadyExistsException {
+    if (error.fields && 'referral_code' in error.fields) {
+      return new EntityAlreadyExistsException('User', 'referralCode', String(referralCode));
+    }
+    return new EntityAlreadyExistsException('User', 'email', email);
   }
 
   /**
@@ -146,12 +166,13 @@ export class UsersService {
     try {
       await user.update({
         ...dto,
+        ...(dto.referralCode !== undefined ? { referralCode: this.normalizeReferralCode(dto.referralCode) } : {}),
         emailVerified,
         emailVerifiedAt: emailVerified ? (emailChanged ? new Date() : user.emailVerifiedAt) : null,
       });
     } catch (error) {
       if (error instanceof UniqueConstraintError) {
-        throw new EntityAlreadyExistsException('User', 'email', String(dto.email));
+        throw this.uniqueConflict(error, dto.email ?? user.email, dto.referralCode);
       }
 
       throw error;

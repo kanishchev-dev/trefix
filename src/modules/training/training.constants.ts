@@ -197,15 +197,24 @@ export const PROGRESS_METRICS_MIN_WORKOUTS = 6;
 export const ADAPTATION_EVENT_STATUSES = ['applied', 'proposed', 'suggested', 'dismissed'] as const;
 
 export type AthleteExperienceLevel = (typeof ATHLETE_EXPERIENCE_LEVELS)[number];
+/** Where a metrics value came from, reported per field to the client. */
+export const PLAN_METRICS_SOURCES = [
+  'user_input',
+  'profile',
+  'athlete_state',
+  'strava',
+  'health',
+  'manual_workouts',
+  'none',
+] as const;
+
 export type AthleteSexValue = (typeof ATHLETE_SEX_VALUES)[number];
 export type AthleteGoalDistance = (typeof ATHLETE_GOAL_DISTANCES)[number];
 export type AthleteGoalStatus = (typeof ATHLETE_GOAL_STATUSES)[number];
 export type TrainingPlanStatus = (typeof TRAINING_PLAN_STATUSES)[number];
 export type PlanListGroup = (typeof PLAN_LIST_GROUPS)[number];
 export type PlanCancelReason = (typeof PLAN_CANCEL_REASONS)[number];
-/** Where a metrics value came from, reported per field to the client. */
-export type PlanMetricsSource =
-  'user_input' | 'profile' | 'athlete_state' | 'strava' | 'health' | 'manual_workouts' | 'none';
+export type PlanMetricsSource = (typeof PLAN_METRICS_SOURCES)[number];
 export type PlanCreationSource = (typeof PLAN_CREATION_SOURCES)[number];
 export type ManualPlanFocusType = (typeof MANUAL_PLAN_FOCUS_TYPES)[number];
 export type WorkoutStatus = (typeof WORKOUT_STATUSES)[number];

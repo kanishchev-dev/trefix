@@ -213,54 +213,58 @@ export class RecordedActivityDto {
   @Max(RECORDING_LIMITS.maxDistanceM)
   distanceM!: number;
 
-  @ApiPropertyOptional({ example: 10040, description: 'Distance the phone measured before the correction' })
+  @ApiPropertyOptional({
+    example: 10040,
+    description: 'Distance the phone measured before the correction',
+    nullable: true,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(RECORDING_LIMITS.maxDistanceM)
   measuredDistanceM?: number | null;
 
-  @ApiPropertyOptional({ example: 64 })
+  @ApiPropertyOptional({ example: 64, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(20_000)
   elevationGainM?: number | null;
 
-  @ApiPropertyOptional({ example: 61 })
+  @ApiPropertyOptional({ example: 61, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(20_000)
   elevationLossM?: number | null;
 
-  @ApiPropertyOptional({ example: 300 })
+  @ApiPropertyOptional({ example: 300, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(0)
   avgPaceSecPerKm?: number | null;
 
-  @ApiPropertyOptional({ example: 271 })
+  @ApiPropertyOptional({ example: 271, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(0)
   bestPaceSecPerKm?: number | null;
 
-  @ApiPropertyOptional({ example: 148 })
+  @ApiPropertyOptional({ example: 148, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(30)
   @Max(250)
   avgHeartRate?: number | null;
 
-  @ApiPropertyOptional({ example: 171 })
+  @ApiPropertyOptional({ example: 171, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(30)
   @Max(250)
   maxHeartRate?: number | null;
 
-  @ApiPropertyOptional({ example: 172 })
+  @ApiPropertyOptional({ example: 172, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -291,19 +295,19 @@ export class RecordedActivityDto {
   @Type(() => RecordedPauseDto)
   pauses?: RecordedPauseDto[];
 
-  @ApiPropertyOptional({ description: 'Encoded polyline (precision 5), up to 500 points' })
+  @ApiPropertyOptional({ description: 'Encoded polyline (precision 5), up to 500 points', nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(RECORDING_LIMITS.maxRouteLineLength)
   routeLine?: string | null;
 
-  @ApiPropertyOptional({ type: RouteBoundsDto })
+  @ApiPropertyOptional({ type: RouteBoundsDto, nullable: true })
   @IsOptional()
   @ValidateNested()
   @Type(() => RouteBoundsDto)
   routeBounds?: RouteBoundsDto | null;
 
-  @ApiPropertyOptional({ type: RoutePointDto })
+  @ApiPropertyOptional({ type: RoutePointDto, nullable: true })
   @IsOptional()
   @ValidateNested()
   @Type(() => RoutePointDto)
@@ -314,21 +318,21 @@ export class RecordedActivityDto {
   @IsUUID()
   gearId?: string | null;
 
-  @ApiPropertyOptional({ example: 4, minimum: 1, maximum: 5 })
+  @ApiPropertyOptional({ example: 4, minimum: 1, maximum: 5, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
   feeling?: number | null;
 
-  @ApiPropertyOptional({ example: 6, minimum: 1, maximum: 10 })
+  @ApiPropertyOptional({ example: 6, minimum: 1, maximum: 10, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(1)
   @Max(10)
   rpe?: number | null;
 
-  @ApiPropertyOptional({ maxLength: RECORDING_LIMITS.maxNotesLength })
+  @ApiPropertyOptional({ maxLength: RECORDING_LIMITS.maxNotesLength, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(RECORDING_LIMITS.maxNotesLength)

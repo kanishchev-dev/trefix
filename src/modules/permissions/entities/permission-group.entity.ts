@@ -54,4 +54,11 @@ export class PermissionGroup extends Model {
 
   @BelongsToMany(() => User, () => UserPermissionGroup)
   users!: User[];
+
+  /** Soft-deleted rows are never served, so the marker is always null in responses. */
+  override toJSON(): Record<string, unknown> {
+    const values = { ...this.get() } as Record<string, unknown>;
+    delete values.deletedAt;
+    return values;
+  }
 }

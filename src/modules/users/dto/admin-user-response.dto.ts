@@ -7,11 +7,11 @@ export class AdminUserGroupDto {
   @ApiProperty({ example: 'Администраторы' })
   name!: string;
 
-  @ApiPropertyOptional({ example: 'System group with full access' })
-  description?: string;
+  @ApiProperty({ type: String, nullable: true, example: 'System group with full access' })
+  description!: string | null;
 
-  @ApiProperty({ example: 'system.administrators' })
-  systemKey?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: 'system.administrators' })
+  systemKey!: string | null;
 
   @ApiProperty({ example: false })
   isSystem!: boolean;
@@ -21,8 +21,8 @@ export class AdminUserPermissionDto {
   @ApiProperty({ example: 'users.read' })
   name!: string;
 
-  @ApiPropertyOptional({ example: 'Read user profiles and lists' })
-  description?: string;
+  @ApiProperty({ type: String, nullable: true, example: 'Read user profiles and lists' })
+  description!: string | null;
 }
 
 export class AdminUserResponseDto {
@@ -38,23 +38,27 @@ export class AdminUserResponseDto {
   @ApiProperty({ example: 'Doe' })
   lastName!: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg' })
-  avatarUrl?: string | null;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'https://example.com/avatar.jpg',
+  })
+  avatarUrl!: string | null;
 
-  @ApiPropertyOptional({ example: 'REF123' })
-  referralCode?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: 'REF123' })
+  referralCode!: string | null;
 
   @ApiProperty({ example: false })
   emailVerified!: boolean;
 
-  @ApiPropertyOptional({ example: '2026-09-10T12:00:00.000Z' })
-  emailVerifiedAt?: Date | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true, example: '2026-09-10T12:00:00.000Z' })
+  emailVerifiedAt!: Date | null;
 
   @ApiProperty({ example: false })
   isSystem!: boolean;
 
-  @ApiPropertyOptional({ example: 'system.admin' })
-  systemKey?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: 'system.admin' })
+  systemKey!: string | null;
 
   @ApiProperty({ example: '2026-09-10T12:00:00.000Z' })
   createdAt!: Date;
@@ -62,8 +66,8 @@ export class AdminUserResponseDto {
   @ApiProperty({ example: '2026-09-10T12:00:00.000Z' })
   updatedAt!: Date;
 
-  @ApiPropertyOptional({ example: '2026-09-11T12:00:00.000Z' })
-  passwordChangedAt?: Date | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true, example: '2026-09-11T12:00:00.000Z' })
+  passwordChangedAt!: Date | null;
 
   @ApiProperty({ type: [AdminUserGroupDto] })
   groups!: AdminUserGroupDto[];

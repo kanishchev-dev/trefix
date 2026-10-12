@@ -26,7 +26,11 @@ export class StravaWebhookEventDto {
   @IsNumber()
   event_time!: number;
 
-  @ApiPropertyOptional({ example: { title: 'New Run Name' } })
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: true,
+    example: { title: 'New Run Name' },
+  })
   @IsOptional()
   @IsObject()
   updates?: Record<string, unknown>;

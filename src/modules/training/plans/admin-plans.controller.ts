@@ -55,6 +55,7 @@ import {
   RebuildPreviewResponseDto,
   RebuildRequestDto,
 } from '../dto/plan-rebuild.dto';
+import { CurrentMetricsDto } from '../dto/plan-shapes.dto';
 import { AdminPlansService } from './admin-plans.service';
 import { CurrentMetrics } from './athlete-metrics.service';
 import { PLAN_CREATE_THROTTLE } from './plan-create-throttle';
@@ -99,7 +100,7 @@ export class AdminPlansController {
   @Get('current-metrics')
   @RequirePermissions('training.userplans.read')
   @ApiOperation({ summary: 'Current metrics estimate of the athlete, for the creation wizard prefill' })
-  @ApiOkResponse({ description: 'Each field is `{ value, source }`' })
+  @ApiOkResponse({ type: CurrentMetricsDto })
   currentMetrics(@Param('userId', ParseUUIDPipe) userId: string): Promise<CurrentMetrics> {
     return this.adminPlansService.currentMetrics(userId);
   }

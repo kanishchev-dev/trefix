@@ -99,6 +99,7 @@
     "UNAUTHORIZED": "Please sign in",
     "UNSUPPORTED_MEDIA_TYPE": "Unsupported content type",
     "USER_EMAIL_ALREADY_EXISTS": "User with this email already exists",
+    "USER_REFERRAL_CODE_ALREADY_EXISTS": "This referral code is already taken",
     "USER_INVITE_NOT_ALLOWED": "User already has a password and cannot be invited",
     "USER_INVITE_UNAVAILABLE": "Invite storage is unavailable, try again later",
     "USER_NOT_FOUND": "User with ID {id} not found",

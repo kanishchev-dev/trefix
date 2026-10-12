@@ -6,6 +6,7 @@ import { Response } from 'express';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+import { QueuedResponseDto, SuccessResponseDto } from '@/common/dto/status-response.dto';
 import { escapeHtml } from '@/common/utils/html.util';
 import { secureCompare } from '@/common/utils/secure-compare.util';
 import { IntegrationsService } from '@/modules/integrations/integrations.service';
@@ -149,7 +150,7 @@ export class IntegrationsController {
     summary: 'Sync weight, sex and shoes from Strava now',
     description: 'Errors: STRAVA_NOT_CONNECTED, STRAVA_PROFILE_ACCESS_REQUIRED',
   })
-  @ApiResponse({ status: 202, schema: { example: { status: 'queued' } } })
+  @ApiResponse({ status: 202, type: QueuedResponseDto })
   triggerStravaProfileSync(@CurrentUser() user: AuthUserContext): Promise<{ status: 'queued' }> {
     return this.stravaProfileSync.triggerStravaProfileSync(user.id);
   }
@@ -157,7 +158,7 @@ export class IntegrationsController {
   @Delete('strava')
   @RequirePermissions('integrations.delete')
   @ApiOperation({ summary: 'Disconnect Strava integration' })
-  @ApiResponse({ status: 200, schema: { example: { success: true } } })
+  @ApiResponse({ status: 200, type: SuccessResponseDto })
   async disconnectStrava(@CurrentUser() user: AuthUserContext): Promise<{ success: boolean }> {
     return this.stravaConnection.disconnectStrava(user.id);
   }

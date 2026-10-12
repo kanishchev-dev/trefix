@@ -56,10 +56,7 @@ export class ManualPlanGoalDto extends AthleteGoalPayloadDto {
 }
 
 export class ManualPlanScheduleDto {
-  @ApiProperty({
-    description: 'Preferred training days as weekday indexes (0 = Monday)',
-    type: [Number],
-  })
+  @ApiProperty({ description: 'Preferred training days as weekday indexes (0 = Monday)', type: [Number] })
   @IsArray()
   @ArrayMaxSize(7)
   @IsInt({ each: true })
@@ -200,10 +197,7 @@ export class ManualPlanWeekOverrideDto {
 }
 
 export class PreviewManualPlanDto {
-  @ApiPropertyOptional({
-    type: AthleteMetricsDto,
-    description: 'User-entered current metrics (optional step)',
-  })
+  @ApiPropertyOptional({ type: AthleteMetricsDto, description: 'User-entered current metrics (optional step)' })
   @ValidateNested()
   @Type(() => AthleteMetricsDto)
   @IsOptional()
@@ -250,7 +244,7 @@ export class CreateManualPlanDto extends PreviewManualPlanDto {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
   @IsString()
   @MaxLength(PLAN_NOTES_MAX_LENGTH)
   @IsOptional()

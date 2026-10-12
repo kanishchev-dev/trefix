@@ -36,7 +36,7 @@ const lowerCaseArray = ({ value }: { value: unknown }): unknown =>
  * Ranges are checked by the service so errors carry `ATHLETE_*` codes.
  */
 export class UpdateAthleteProfileDto {
-  @ApiPropertyOptional({ example: '1992-03-14', nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true, example: '1992-03-14' })
   @IsOptional()
   @IsISO8601({ strict: true })
   birthDate?: string | null;
@@ -46,31 +46,36 @@ export class UpdateAthleteProfileDto {
   @IsIn(ATHLETE_SEX_VALUES)
   sex?: AthleteSexValue | null;
 
-  @ApiPropertyOptional({ example: 181, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 181 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   heightCm?: number | null;
 
-  @ApiPropertyOptional({ example: 72.4, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 72.4 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 1 })
   weightKg?: number | null;
 
-  @ApiPropertyOptional({ example: 52, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 52 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   restingHeartRate?: number | null;
 
-  @ApiPropertyOptional({ example: 189, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 189 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   maxHeartRate?: number | null;
 
-  @ApiPropertyOptional({ example: 172, nullable: true, description: 'Lactate threshold heart rate (LTHR)' })
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    example: 172,
+    description: 'Lactate threshold heart rate (LTHR)',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -97,15 +102,16 @@ export class UpdateAthleteProfileDto {
   @IsIn(ATHLETE_EXPERIENCE_LEVELS)
   experienceLevel?: AthleteExperienceLevel;
 
-  @ApiPropertyOptional({ example: 2021, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 2021 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   runningSinceYear?: number | null;
 
   @ApiPropertyOptional({
-    example: '',
+    type: String,
     nullable: true,
+    example: '',
     maxLength: ATHLETE_LIMITATIONS_MAX_LENGTH,
     description: 'Injuries and limitations; empty string means "no limitations"',
   })
@@ -138,19 +144,19 @@ export class UpdateAthleteProfileDto {
   @IsIn(TRAINING_WEEKDAY_ORDER)
   longRunDay?: TrainingWeekday | null;
 
-  @ApiPropertyOptional({ example: 60, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 60 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   preferredWorkoutDurationMinutes?: number | null;
 
-  @ApiPropertyOptional({ example: 120, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 120 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   longRunMaxDurationMinutes?: number | null;
 
-  @ApiPropertyOptional({ example: 30, nullable: true })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 30 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 1 })

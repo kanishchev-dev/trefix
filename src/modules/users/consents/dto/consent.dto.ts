@@ -56,17 +56,22 @@ export class ConsentResponseDto {
   @ApiProperty({ example: '2026-10-09T10:00:00.000Z' })
   acceptedAt!: Date;
 
-  @ApiProperty({ nullable: true, example: null })
+  @ApiProperty({ type: String, format: 'date-time', nullable: true, example: null })
   revokedAt!: Date | null;
 
   @ApiProperty({ description: 'Active and matches the current text version' })
   isCurrent!: boolean;
 }
 
+export class ConsentVersionsDto implements Record<ConsentType, string> {
+  @ApiProperty({ example: '2026-10' })
+  health_data!: string;
+}
+
 export class ConsentsListResponseDto {
   @ApiProperty({ type: [ConsentResponseDto], description: 'Latest record of every consent type' })
   items!: ConsentResponseDto[];
 
-  @ApiProperty({ example: { health_data: '2026-10' }, description: 'Current text version per consent type' })
+  @ApiProperty({ type: ConsentVersionsDto, description: 'Current text version per consent type' })
   currentVersions!: Record<ConsentType, string>;
 }

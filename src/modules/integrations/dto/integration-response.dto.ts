@@ -7,14 +7,14 @@ export class IntegrationItemResponseDto {
   @ApiProperty({ example: 'connected' })
   status!: string;
 
-  @ApiPropertyOptional({ example: '2026-09-24T10:00:00.000Z' })
-  connectedAt?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: '2026-09-24T10:00:00.000Z' })
+  connectedAt!: string | null;
 
-  @ApiPropertyOptional({ example: '2026-09-24T10:30:00.000Z' })
-  lastSyncedAt?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: '2026-09-24T10:30:00.000Z' })
+  lastSyncedAt!: string | null;
 
-  @ApiPropertyOptional({ example: '12345678' })
-  externalUserId?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: '12345678' })
+  externalUserId!: string | null;
 
   @ApiPropertyOptional({ example: 42 })
   importedActivitiesCount?: number;
@@ -22,18 +22,19 @@ export class IntegrationItemResponseDto {
   @ApiPropertyOptional({ example: true, description: 'Strava shares weight, sex and shoes (profile:read_all)' })
   profileAccess?: boolean;
 
-  @ApiPropertyOptional({ example: '2026-10-09T04:00:00.000Z', nullable: true })
-  lastProfileSyncAt?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: '2026-10-09T04:00:00.000Z' })
+  lastProfileSyncAt!: string | null;
 
   @ApiPropertyOptional({ example: true, description: 'The provider can be connected in this environment' })
   available?: boolean;
 
-  @ApiPropertyOptional({
-    example: true,
+  @ApiProperty({
+    type: Boolean,
     nullable: true,
+    example: true,
     description: 'Device providers: profile metrics sync from Health is on',
   })
-  profileSync?: boolean | null;
+  profileSync!: boolean | null;
 
   @ApiPropertyOptional({ example: 0, description: 'Device providers: accepted batches not processed yet' })
   pendingBatches?: number;

@@ -33,7 +33,7 @@ export class AuthUserResponseDto {
   @ApiProperty({ example: '2026-09-10T12:00:00.000Z' })
   createdAt!: Date;
 
-  @ApiPropertyOptional({ isArray: true, example: ['users.read', 'users.update'] })
+  @ApiPropertyOptional({ type: [String], example: ['users.read', 'users.update'] })
   permissions?: string[];
 
   @ApiProperty({ type: AuthUserFeaturesDto })

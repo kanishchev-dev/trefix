@@ -14,10 +14,20 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import type { RebuildPreviewResult } from '../plans/plan-rebuild.service';
 import { PLAN_NAME_MAX_LENGTH, PLAN_NOTES_MAX_LENGTH } from '../training.constants';
 import { ManualPlanGoalDto, ManualPlanScheduleDto, ManualPlanStructureDto } from './create-manual-plan.dto';
-import { DraftWeekOverrideDto } from './plan-lifecycle.dto';
+import { DatedPlanPreviewDto } from './manual-plan-preview-response.dto';
+import { DraftWeekOverrideDto, StartOptionsResponseDto } from './plan-lifecycle.dto';
 import { AthleteMetricsDto, PlanStartBlockDto } from './plan-metrics.dto';
+import {
+  CurrentMetricsDto,
+  GoalSuggestionDto,
+  MetricsSnapshotDto,
+  PlanConfigDto,
+  PlanDiffDto,
+  RelativeWeekDto,
+} from './plan-shapes.dto';
 
 export const REBUILD_TARGETS = ['new_draft', 'in_place'] as const;
 
@@ -86,7 +96,7 @@ export class RebuildRequestDto extends RebuildPreviewRequestDto {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
   @IsString()
   @MaxLength(PLAN_NOTES_MAX_LENGTH)
   @IsOptional()
@@ -105,42 +115,49 @@ export class RebuildRequestDto extends RebuildPreviewRequestDto {
   start?: PlanStartBlockDto;
 }
 
-export class RebuildPreviewResponseDto {
+export class RebuildPreviewResponseDto implements RebuildPreviewResult {
   @ApiProperty({ enum: ['rebased', 'regenerated'] })
   mode!: 'rebased' | 'regenerated';
 
-  @ApiProperty({ type: [Object], description: 'Relative weeks (week number, weekday) with stable workout keys' })
-  weeks!: Array<Record<string, unknown>>;
+  @ApiProperty({
+    type: [RelativeWeekDto],
+    description: 'Relative weeks (week number, weekday) with stable workout keys',
+  })
+  weeks!: RelativeWeekDto[];
 
   @ApiProperty({
-    type: Object,
+    type: DatedPlanPreviewDto,
     description: 'Dated preview in the manual preview format, starting at the recommended date',
   })
-  preview!: Record<string, unknown>;
+  preview!: DatedPlanPreviewDto;
 
-  @ApiProperty({ type: Object })
-  diff!: Record<string, unknown>;
+  @ApiProperty({ type: PlanDiffDto })
+  diff!: PlanDiffDto;
 
   @ApiProperty({ type: [String] })
   warnings!: string[];
 
-  @ApiProperty({ type: Object })
-  startOptions!: Record<string, unknown>;
+  @ApiProperty({ type: StartOptionsResponseDto })
+  startOptions!: StartOptionsResponseDto;
 }
 
 export class RebuildPrefillMetricsDto {
-  @ApiPropertyOptional({ type: Object, nullable: true, description: 'Metrics captured at the source plan start' })
-  previous?: Record<string, unknown> | null;
+  @ApiProperty({
+    type: MetricsSnapshotDto,
+    nullable: true,
+    description: 'Metrics captured at the source plan start',
+  })
+  previous!: Record<string, unknown> | null;
 
-  @ApiProperty({ type: Object, description: 'Current metrics estimate with per-field sources' })
+  @ApiProperty({ type: CurrentMetricsDto, description: 'Current metrics estimate with per-field sources' })
   current!: Record<string, unknown>;
 }
 
 export class RebuildPrefillResponseDto {
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: PlanConfigDto })
   config!: Record<string, unknown>;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: GoalSuggestionDto })
   goalSuggestion!: Record<string, unknown>;
 
   @ApiProperty({ type: RebuildPrefillMetricsDto })

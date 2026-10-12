@@ -11,7 +11,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
@@ -20,6 +27,14 @@ import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.int
 
 import { PROGRESS_METRICS, type ProgressMetric, RECORD_DISTANCES, type RecordDistance } from '../training.constants';
 import { CreateResultDto, ProgressPeriodQueryDto, RecordsExclusionDto } from './dto/progress.dto';
+import {
+  ProgressMetricResponseDto,
+  ProgressOverviewResponseDto,
+  ProgressRecordsResponseDto,
+  RaceResultResponseDto,
+  RecordHistoryResponseDto,
+  RecordsExclusionResponseDto,
+} from './dto/progress-response.dto';
 import { ProgressService } from './progress.service';
 import {
   type ProgressMetricView,
@@ -74,7 +89,7 @@ export class ProgressController {
   @ApiOperation({
     summary: 'Computed progress: goal forecast, form, metrics, capabilities, records, dynamics, achievements',
   })
-  @ApiOkResponse({ schema: { example: OVERVIEW_EXAMPLE } })
+  @ApiOkResponse({ type: ProgressOverviewResponseDto, schema: { example: OVERVIEW_EXAMPLE } })
   overview(
     @CurrentUser() user: AuthUserContext,
     @Query() query: ProgressPeriodQueryDto,
@@ -87,6 +102,7 @@ export class ProgressController {
   @ApiOperation({
     summary: 'One computed metric (threshold pace or VO2max): history, accuracy, training paces, key workouts',
   })
+  @ApiOkResponse({ type: ProgressMetricResponseDto })
   metric(
     @CurrentUser() user: AuthUserContext,
     @Param('metric') metric: string,
@@ -101,6 +117,7 @@ export class ProgressController {
   @Get('progress/records')
   @RequirePermissions('training.progress.read')
   @ApiOperation({ summary: 'Best results per distance with the VDOT prediction' })
+  @ApiOkResponse({ type: ProgressRecordsResponseDto })
   records(@CurrentUser() user: AuthUserContext): Promise<{ items: RecordView[] }> {
     return this.progressService.records(user.id);
   }
@@ -108,6 +125,7 @@ export class ProgressController {
   @Get('progress/records/:distance')
   @RequirePermissions('training.progress.read')
   @ApiOperation({ summary: 'Every attempt on a record distance, newest first' })
+  @ApiOkResponse({ type: RecordHistoryResponseDto })
   recordHistory(@CurrentUser() user: AuthUserContext, @Param('distance') distance: string): Promise<RecordHistoryView> {
     if (!(distance in RECORD_DISTANCES)) {
       throw new DomainBadRequestException('PROGRESS_DISTANCE_UNKNOWN', 'Unknown record distance');
@@ -121,6 +139,7 @@ export class ProgressController {
     summary: 'Add a result by hand (race, test or a workout without a track)',
     description: 'Errors: RESULT_INVALID',
   })
+  @ApiCreatedResponse({ type: RaceResultResponseDto })
   addResult(@CurrentUser() user: AuthUserContext, @Body() dto: CreateResultDto): Promise<RaceResultView> {
     return this.progressService.addResult(user.id, dto);
   }
@@ -137,6 +156,7 @@ export class ProgressController {
   @Patch('workouts/:id/records')
   @RequirePermissions('training.progress.manage')
   @ApiOperation({ summary: 'Exclude a workout (e.g. a broken track) from records and VDOT, or include it back' })
+  @ApiOkResponse({ type: RecordsExclusionResponseDto })
   setRecordsExcluded(
     @CurrentUser() user: AuthUserContext,
     @Param('id', ParseUUIDPipe) id: string,

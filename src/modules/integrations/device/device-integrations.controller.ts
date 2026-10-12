@@ -16,6 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
+import { SuccessResponseDto } from '@/common/dto/status-response.dto';
 import { DeviceConnectionsService } from '@/modules/integrations/device/device-connections.service';
 import { DeviceProfileMetricsService } from '@/modules/integrations/device/device-profile-metrics.service';
 import { DeviceSyncService } from '@/modules/integrations/device/device-sync.service';
@@ -87,7 +88,7 @@ export class DeviceIntegrationsController {
   @ApiOperation({
     summary: 'Disconnect; imported workouts stay, device access is revoked by the user in system settings',
   })
-  @ApiOkResponse({ schema: { example: { success: true } } })
+  @ApiOkResponse({ type: SuccessResponseDto })
   disconnect(@CurrentUser() user: AuthUserContext, @Param('provider') provider: string): Promise<{ success: boolean }> {
     return this.deviceConnections.disconnect(user.id, provider);
   }

@@ -99,6 +99,7 @@
     "UNAUTHORIZED": "Войдите в аккаунт",
     "UNSUPPORTED_MEDIA_TYPE": "Неподдерживаемый тип содержимого",
     "USER_EMAIL_ALREADY_EXISTS": "Пользователь с таким email уже существует",
+    "USER_REFERRAL_CODE_ALREADY_EXISTS": "Этот реферальный код уже занят",
     "USER_INVITE_NOT_ALLOWED": "У пользователя уже есть пароль, приглашение не может быть отправлено",
     "USER_INVITE_UNAVAILABLE": "Хранилище приглашений недоступно. Попробуйте позже",
     "USER_NOT_FOUND": "Пользователь с ID {id} не найден",

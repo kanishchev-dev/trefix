@@ -150,7 +150,7 @@ export class PlanSaveFieldsDto {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: PLAN_NOTES_MAX_LENGTH })
   @IsString()
   @MaxLength(PLAN_NOTES_MAX_LENGTH)
   @IsOptional()

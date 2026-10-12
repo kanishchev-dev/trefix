@@ -1,6 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
+import { UniqueConstraintError } from 'sequelize';
 
 import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 import { SettingsService } from '@/modules/settings/settings.service';
@@ -83,6 +84,22 @@ describe('UsersService', () => {
       );
       expect(eventEmitter.emit).toHaveBeenCalledWith('user.created', expect.anything());
       expect(result).toEqual(mockUser);
+    });
+
+    it('stores an empty referral code as none, so users do not collide on it', async () => {
+      await service.create({ email: 'a@example.com', firstName: 'A', lastName: 'B', referralCode: '  ' });
+
+      expect(model.create).toHaveBeenCalledWith(expect.objectContaining({ referralCode: null }));
+    });
+
+    it('names the referral code when it is the duplicated column', async () => {
+      jest
+        .mocked(model.create)
+        .mockRejectedValueOnce(new UniqueConstraintError({ fields: { referral_code: 'RUN' } }));
+
+      await expect(
+        service.create({ email: 'a@example.com', firstName: 'A', lastName: 'B', referralCode: 'RUN' }),
+      ).rejects.toMatchObject({ message: expect.stringContaining('referralCode') });
     });
   });
 

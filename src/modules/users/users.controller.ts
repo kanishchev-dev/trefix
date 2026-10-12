@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiQuery, ApiRespons
 
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
+import { ApiPaginatedResponse } from '@/common/swagger/api-paginated-response.decorator';
 import { RealtimePresenceService } from '@/modules/realtime/services/realtime-presence.service';
 
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
@@ -23,6 +24,7 @@ import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 import { UserPresenceQueryDto } from './dto/user-presence-query.dto';
 import { UserPresenceResponseDto } from './dto/user-presence-response.dto';
 import { UserQueryDto } from './dto/user-query.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
 import { AdminUsersService } from './services/admin-users.service';
 import { UsersService } from './users.service';
@@ -41,7 +43,7 @@ export class UsersController {
   @Post()
   @RequirePermissions('users.create')
   @ApiOperation({ summary: 'Create a user from the admin panel' })
-  @ApiResponse({ status: 201, type: User })
+  @ApiResponse({ status: 201, type: UserResponseDto })
   create(@Body() dto: AdminCreateUserDto): Promise<User> {
     return this.adminUsersService.createFromAdmin(dto);
   }
@@ -53,7 +55,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortOrder', required: false, type: String, example: 'DESC' })
-  @ApiResponse({ status: 200, type: PaginatedResponseDto })
+  @ApiPaginatedResponse(UserResponseDto)
   findAll(@Query() query: UserQueryDto = new UserQueryDto()): Promise<PaginatedResponseDto<User>> {
     return this.usersService.findAll(query);
   }

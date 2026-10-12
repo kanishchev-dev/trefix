@@ -117,6 +117,8 @@ export class User extends Model {
   override toJSON(): Record<string, unknown> {
     const values = { ...this.get() } as Record<string, unknown>;
     delete values.passwordHash;
+    // Soft-deleted users are never served, so the marker is always null.
+    delete values.deletedAt;
     return values;
   }
 }

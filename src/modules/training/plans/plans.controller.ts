@@ -46,7 +46,7 @@ import {
   RebuildPreviewResponseDto,
   RebuildRequestDto,
 } from '../dto/plan-rebuild.dto';
-import { TrainingAdaptationResponseDto } from '../dto/training-response.dto';
+import { TrainingAdaptationListResponseDto, TrainingAdaptationResponseDto } from '../dto/training-response.dto';
 import type { AdaptationEventView } from '../interfaces/training-views.interface';
 import { PLAN_CREATE_THROTTLE } from './plan-create-throttle';
 import { PlanEditingService, PlanPreviewResult } from './plan-editing.service';
@@ -105,8 +105,8 @@ export class PlansController {
     description:
       '`proposed` waits for apply/dismiss (coach mode "confirm"); `suggested` is advice only (mode "suggest")',
   })
-  @ApiOkResponse({ type: [TrainingAdaptationResponseDto] })
-  async listAdaptations(@CurrentUser() user: AuthUserContext): Promise<{ items: AdaptationEventView[] }> {
+  @ApiOkResponse({ type: TrainingAdaptationListResponseDto })
+  async listAdaptations(@CurrentUser() user: AuthUserContext): Promise<TrainingAdaptationListResponseDto> {
     return { items: await this.adaptationsService.listPendingAdaptations(user.id) };
   }
 

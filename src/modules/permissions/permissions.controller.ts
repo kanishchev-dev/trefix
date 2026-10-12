@@ -15,10 +15,12 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@ne
 
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
+import { ApiPaginatedResponse } from '@/common/swagger/api-paginated-response.decorator';
 
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { CreatePermissionGroupDto } from './dto/create-permission-group.dto';
 import { PermissionQueryDto } from './dto/permission-query.dto';
+import { PermissionGroupResponseDto, PermissionResponseDto } from './dto/permission-response.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { UpdatePermissionGroupDto } from './dto/update-permission-group.dto';
 import { Permission } from './entities/permission.entity';
@@ -47,7 +49,7 @@ export class PermissionsController {
   @Post()
   @RequirePermissions('permissions.manage')
   @ApiOperation({ summary: 'Create permission' })
-  @ApiResponse({ status: 201, type: Permission })
+  @ApiResponse({ status: 201, type: PermissionResponseDto })
   createPermission(@Body() dto: CreatePermissionDto): Promise<Permission> {
     return this.permissionsService.createPermission(dto);
   }
@@ -58,7 +60,7 @@ export class PermissionsController {
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiResponse({ status: 200, type: PaginatedResponseDto })
+  @ApiPaginatedResponse(PermissionResponseDto)
   findAllPermissions(
     @Query() query: PermissionQueryDto = new PermissionQueryDto(),
   ): Promise<PaginatedResponseDto<Permission>> {
@@ -68,7 +70,7 @@ export class PermissionsController {
   @Get('catalog')
   @RequirePermissions('permissions.read')
   @ApiOperation({ summary: 'Get the full permission catalog, unpaginated' })
-  @ApiResponse({ status: 200, type: [Permission] })
+  @ApiResponse({ status: 200, type: [PermissionResponseDto] })
   findPermissionCatalog(): Promise<Permission[]> {
     return this.permissionsService.findPermissionCatalog();
   }
@@ -78,7 +80,7 @@ export class PermissionsController {
   @Post('groups')
   @RequirePermissions('permissions.manage')
   @ApiOperation({ summary: 'Create permission group' })
-  @ApiResponse({ status: 201, type: PermissionGroup })
+  @ApiResponse({ status: 201, type: PermissionGroupResponseDto })
   createGroup(@Body() dto: CreatePermissionGroupDto): Promise<PermissionGroup> {
     return this.permissionsService.createGroup(dto);
   }
@@ -89,7 +91,7 @@ export class PermissionsController {
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiResponse({ status: 200, type: PaginatedResponseDto })
+  @ApiPaginatedResponse(PermissionGroupResponseDto)
   findAllGroups(
     @Query() query: PermissionQueryDto = new PermissionQueryDto(),
   ): Promise<PaginatedResponseDto<PermissionGroup>> {
@@ -99,7 +101,7 @@ export class PermissionsController {
   @Get('groups/:id')
   @RequirePermissions('permissions.read')
   @ApiOperation({ summary: 'Get group by id' })
-  @ApiResponse({ status: 200, type: PermissionGroup })
+  @ApiResponse({ status: 200, type: PermissionGroupResponseDto })
   findGroup(@Param('id', ParseUUIDPipe) id: string): Promise<PermissionGroup> {
     return this.permissionsService.findGroup(id);
   }
@@ -109,7 +111,7 @@ export class PermissionsController {
   @Get(':id')
   @RequirePermissions('permissions.read')
   @ApiOperation({ summary: 'Get permission by id' })
-  @ApiResponse({ status: 200, type: Permission })
+  @ApiResponse({ status: 200, type: PermissionResponseDto })
   findPermission(@Param('id', ParseUUIDPipe) id: string): Promise<Permission> {
     return this.permissionsService.findPermission(id);
   }
@@ -117,7 +119,7 @@ export class PermissionsController {
   @Patch(':id')
   @RequirePermissions('permissions.manage')
   @ApiOperation({ summary: 'Update permission' })
-  @ApiResponse({ status: 200, type: Permission })
+  @ApiResponse({ status: 200, type: PermissionResponseDto })
   updatePermission(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePermissionDto): Promise<Permission> {
     return this.permissionsService.updatePermission(id, dto);
   }
@@ -135,7 +137,7 @@ export class PermissionsController {
   @Patch('groups/:id')
   @RequirePermissions('permissions.manage')
   @ApiOperation({ summary: 'Update group' })
-  @ApiResponse({ status: 200, type: PermissionGroup })
+  @ApiResponse({ status: 200, type: PermissionGroupResponseDto })
   updateGroup(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePermissionGroupDto): Promise<PermissionGroup> {
     return this.permissionsService.updateGroup(id, dto);
   }

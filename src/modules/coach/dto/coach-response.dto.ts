@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import type { CoachMessageRole, CoachToolName } from '../coach.constants';
+import { COACH_MESSAGE_ROLES, COACH_TOOL_NAMES } from '../coach.constants';
 
 export class CoachSessionResponseDto {
   @ApiProperty()
@@ -12,16 +13,16 @@ export class CoachSessionResponseDto {
   @ApiProperty()
   athleteId!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   title!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   summary!: string | null;
 
   @ApiProperty()
   model!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
   lastMessageAt!: Date | null;
 
   @ApiProperty()
@@ -38,7 +39,7 @@ export class CoachMessageResponseDto {
   @ApiProperty()
   sessionId!: string;
 
-  @ApiProperty({ enum: ['user', 'assistant', 'tool'] })
+  @ApiProperty({ enum: COACH_MESSAGE_ROLES })
   role!: CoachMessageRole;
 
   @ApiProperty()
@@ -46,24 +47,14 @@ export class CoachMessageResponseDto {
 
   @ApiPropertyOptional({
     nullable: true,
-    enum: [
-      'getAthleteState',
-      'getCurrentPlan',
-      'getRecentWorkouts',
-      'getGoal',
-      'getWorkout',
-      'analyzeWorkout',
-      'moveWorkout',
-      'replaceWorkout',
-      'adjustPlan',
-    ],
+    enum: COACH_TOOL_NAMES,
   })
   toolName!: CoachToolName | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   toolCallId!: string | null;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   metadata!: Record<string, unknown>;
 
   @ApiProperty()
@@ -77,10 +68,10 @@ export class CoachToolResultResponseDto {
   @ApiProperty()
   name!: string;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   input!: Record<string, unknown>;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   output!: Record<string, unknown>;
 }
 

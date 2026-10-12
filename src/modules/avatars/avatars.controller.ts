@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseUUIDPipe, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -11,6 +11,7 @@ import { StorageUploadedFile } from '@/modules/storage/interfaces/storage-upload
 
 import { AvatarService } from './avatar.service';
 import { AVATAR_MAX_SIZE_BYTES } from './constants/avatar.constants';
+import { AvatarUploadResponseDto } from './dto/avatar-upload-response.dto';
 
 @ApiTags('Avatars')
 @Controller({ path: 'avatars', version: '1' })
@@ -41,6 +42,7 @@ export class AvatarsController {
     }),
   )
   @ApiOperation({ summary: 'Upload the own avatar' })
+  @ApiCreatedResponse({ type: AvatarUploadResponseDto })
   async uploadOwnAvatar(
     @UploadedFile() file: StorageUploadedFile | undefined,
     @CurrentUser() user: AuthUserContext,
@@ -79,6 +81,7 @@ export class AvatarsController {
     }),
   )
   @ApiOperation({ summary: 'Upload the avatar of a user' })
+  @ApiCreatedResponse({ type: AvatarUploadResponseDto })
   async uploadUserAvatar(
     @UploadedFile() file: StorageUploadedFile | undefined,
     @Param('userId', ParseUUIDPipe) userId: string,

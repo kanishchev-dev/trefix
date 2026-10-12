@@ -34,7 +34,8 @@ export class CreatePlanDto extends PlanSaveFieldsDto {
   metrics?: AthleteMetricsDto;
 
   @ApiPropertyOptional({
-    type: Object,
+    type: 'object',
+    additionalProperties: true,
     description: 'Schedule the plan was configured with, stored in the plan config',
   })
   @IsObject()
@@ -42,7 +43,8 @@ export class CreatePlanDto extends PlanSaveFieldsDto {
   scheduleSnapshot?: Record<string, unknown>;
 
   @ApiPropertyOptional({
-    type: Object,
+    type: 'object',
+    additionalProperties: true,
     description: 'Structure the plan was configured with, stored in the plan config',
   })
   @IsObject()

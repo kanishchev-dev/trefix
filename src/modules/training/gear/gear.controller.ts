@@ -31,6 +31,7 @@ import {
   GearListResponseDto,
   GearResponseDto,
   UpdateGearDto,
+  WorkoutGearAssignmentDto,
 } from './dto/gear.dto';
 import { GearService } from './gear.service';
 
@@ -129,7 +130,7 @@ export class GearController {
   @Patch('workouts/:id/gear')
   @RequirePermissions('training.gear.manage')
   @ApiOperation({ summary: 'Set or clear the shoes of a workout' })
-  @ApiOkResponse({ schema: { example: { workoutId: '01929b5e-…', gearId: GEAR_EXAMPLE.id } } })
+  @ApiOkResponse({ type: WorkoutGearAssignmentDto })
   assign(
     @CurrentUser() user: AuthUserContext,
     @Param('id', ParseUUIDPipe) id: string,

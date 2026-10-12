@@ -20,21 +20,17 @@ import { ATHLETE_GOAL_TYPES } from '../goal-taxonomy';
  * validation (allowed keys, ranges) runs in the domain layer (goal-taxonomy),
  * because the allowed set depends on the goal type.
  */
-export class GoalMetricsDto implements Record<string, unknown> {
-  [key: string]: unknown;
-}
-
 export class AthleteGoalPayloadDto {
   @ApiProperty({ enum: ATHLETE_GOAL_TYPES })
   @IsIn(ATHLETE_GOAL_TYPES as unknown as string[])
   type!: (typeof ATHLETE_GOAL_TYPES)[number];
 
-  @ApiPropertyOptional({ type: GoalMetricsDto, description: 'Optional current metrics' })
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true, description: 'Optional current metrics' })
   @IsObject()
   @IsOptional()
   current?: Record<string, unknown>;
 
-  @ApiPropertyOptional({ type: GoalMetricsDto, description: 'Target metrics of the goal type' })
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true, description: 'Target metrics of the goal type' })
   @IsObject()
   @IsOptional()
   target?: Record<string, unknown>;

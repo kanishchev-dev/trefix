@@ -1,7 +1,7 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { I18nService } from 'nestjs-i18n';
 import { Logger } from 'nestjs-pino';
@@ -9,6 +9,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { ValidationException } from './common/exceptions/validation.exception';
 import { DomainExceptionFilter } from './common/filters/domain-exception.filter';
+import { buildSwaggerDocument } from './openapi/swagger-document';
 
 const SWAGGER_PATH = 'docs';
 
@@ -41,13 +42,7 @@ async function bootstrap(): Promise<void> {
   // The schema describes every endpoint, including admin ones, so it is off in production.
   const swaggerEnabled = configService.getOrThrow<boolean>('app.swaggerEnabled');
   if (swaggerEnabled) {
-    const config = new DocumentBuilder()
-      .setTitle('Trefix API')
-      .setDescription('The Trefix project API documentation')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
-    SwaggerModule.setup(SWAGGER_PATH, app, SwaggerModule.createDocument(app, config));
+    SwaggerModule.setup(SWAGGER_PATH, app, buildSwaggerDocument(app));
   }
 
   // Closes the Sequelize pool and lets BullMQ workers finish their current jobs on SIGTERM.
