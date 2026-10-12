@@ -1,17 +1,36 @@
-# workspace frontend
+# Trefix frontend
 
-Monorepo frontend scaffold for:
+Монорепо на pnpm + Turborepo.
 
-- `Next.js` app in `apps/web`
-- `React Native` mobile app placeholder in `apps/mobile`
-- shared packages in `packages/*`
+| Путь | Что это |
+|---|---|
+| `apps/web` | Админка на Next.js (порт 3001) |
+| `apps/mobile` | Мобильное приложение на Expo / React Native |
+| `packages/api-client` | Контракт API и клиент — см. [packages/api-client/README.md](packages/api-client/README.md) |
+| `packages/tokens` | Дизайн-токены (общие для web и mobile) |
+| `packages/ui`, `packages/ui-native` | UI-компоненты web (shadcn) и mobile |
+| `packages/utils` | Общие утилиты |
+| `packages/config`, `packages/eslint-config` | Общие настройки TS и ESLint |
 
-## Design system
+## Команды (из корня `frontend`)
 
-The web design system is expected to be initialized and maintained only through the `shadcn` CLI using preset `beqC8BzE`.
+| Команда | Что делает |
+|---|---|
+| `pnpm install` | Установить зависимости |
+| `pnpm dev:web` / `pnpm dev:mobile` | Запустить web / mobile |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` | Проверки по всему монорепо через Turborepo |
+| `pnpm build` | Сборка |
 
-## Next steps
+Сборка web: `NODE_ENV` в окружении шелла не должен быть выставлен в `development`, иначе `next build` падает.
 
-1. Install dependencies with `pnpm install`.
-2. Run `pnpm dlx shadcn@latest init -t next --monorepo --preset beqC8BzE` from `frontend`.
-3. Add or refresh components from `apps/web` with `pnpm dlx shadcn@latest add <component>`.
+## API
+
+Типы и схемы ответов бэкенда генерируются из OpenAPI. После любых изменений API на бэкенде обновите контракт по инструкции в [packages/api-client/README.md](packages/api-client/README.md).
+
+## Design system (web)
+
+Компоненты web добавляются только через shadcn CLI (пресет `beqC8BzE`), из `apps/web`: `pnpm dlx shadcn@latest add <component>`.
+
+## E2E
+
+Не настроены. Для mobile нужен симулятор (Detox или Maestro), для web — Playwright против запущенного бэкенда.

@@ -1,7 +1,10 @@
-import { type CompleteWorkoutInput } from "@workspace/api-client";
+import {
+  type CompleteWorkoutInput,
+  type WorkoutStatus,
+} from "@workspace/api-client";
 
 type WorkoutLike = {
-  status: string;
+  status: WorkoutStatus;
   type: string;
   planId?: string | null;
 };
@@ -19,11 +22,6 @@ export type WorkoutActions = {
   canRecord: boolean;
 };
 
-/** Missed workouts come from the backend as `skipped`. */
-export function isMissedStatus(status: string): boolean {
-  return status === "missed" || status === "skipped";
-}
-
 export function getWorkoutActions(
   workout: WorkoutLike,
   workoutDate: string,
@@ -34,8 +32,7 @@ export function getWorkoutActions(
   const isCancelled = workout.status === "cancelled";
   const isActivePlanWorkout =
     Boolean(workout.planId) && workout.planId === activePlanId;
-  const isPending =
-    workout.status === "planned" || workout.status === "modified";
+  const isPending = workout.status === "planned";
   const isEditable = isActivePlanWorkout && isPending && workoutDate >= today;
 
   return {
@@ -44,7 +41,7 @@ export function getWorkoutActions(
     isEditable,
     isLocked: isActivePlanWorkout && !isEditable && !isCancelled,
     canComplete:
-      (isPending || isMissedStatus(workout.status)) && workoutDate <= today,
+      (isPending || workout.status === "skipped") && workoutDate <= today,
     canRecord:
       isPending &&
       workoutDate === today &&

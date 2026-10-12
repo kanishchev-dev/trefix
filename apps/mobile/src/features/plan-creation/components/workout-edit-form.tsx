@@ -16,6 +16,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
+import { type WorkoutType } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Ruler } from "@workspace/ui-native";
 
@@ -30,7 +31,7 @@ import {
 } from "./plan-creation-ui";
 
 export type WorkoutChanges = {
-  type?: string;
+  type?: WorkoutType;
   dayOfWeek?: number;
   distanceKm?: number;
   durationMinutes?: number;
@@ -87,7 +88,7 @@ export function shortDayNamesFor(language: AppLanguage): readonly string[] {
 /** Minimal workout shape the editor works with (preview, draft or dated workout). */
 export type EditableWorkout = {
   id: string;
-  type: string;
+  type: WorkoutType;
   dayOfWeek: number;
   distanceKm: number;
   durationMinutes: number;
@@ -141,7 +142,7 @@ export function WorkoutEditForm({
     language === "ru" ? SHORT_DAY_NAMES_RU : SHORT_DAY_NAMES_EN;
 
   const initial = {
-    type: workout?.type ?? "easy",
+    type: workout?.type ?? ("easy" as WorkoutType),
     dayOfWeek: workout?.dayOfWeek ?? defaultDayOfWeek ?? 0,
     distanceKm: workout ? roundKm(workout.distanceKm) : 5,
     durationMinutes: workout?.durationMinutes ?? 30,

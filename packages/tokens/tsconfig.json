@@ -3,8 +3,17 @@
   "compilerOptions": {
     "composite": true,
     "incremental": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "scripts/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

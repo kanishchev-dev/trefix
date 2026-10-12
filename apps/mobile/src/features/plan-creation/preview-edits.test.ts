@@ -7,6 +7,7 @@ import {
   toManualWeekOverrides,
   withWorkoutChanges,
   withWorkoutRemoved,
+  type PreviewEdits,
 } from "./preview-edits";
 
 const workout = (
@@ -57,6 +58,7 @@ describe("preview edits", () => {
           type: "tempo",
           dayOfWeek: 4,
           distanceKm: 10,
+          durationMinutes: 30,
         },
       ],
     };
@@ -74,9 +76,17 @@ describe("preview edits", () => {
   });
 
   it("edits and removes an addition by its local id without touching overrides", () => {
-    let edits = {
+    let edits: PreviewEdits = {
       ...EMPTY_PREVIEW_EDITS,
-      additions: [{ localId: "3", weekNumber: 1, type: "easy", dayOfWeek: 2 }],
+      additions: [
+        {
+          localId: "3",
+          weekNumber: 1,
+          type: "easy",
+          dayOfWeek: 2,
+          durationMinutes: 30,
+        },
+      ],
     };
     edits = withWorkoutChanges(edits, "new:3", 1, { distanceKm: 4 });
     expect(edits.additions[0]).toMatchObject({ distanceKm: 4 });

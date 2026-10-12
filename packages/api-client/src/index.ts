@@ -1,3 +1,4 @@
+import * as contract from "./generated/zod.gen";
 import { z } from "zod";
 
 export { z };
@@ -5,6 +6,15 @@ export { z };
 export interface ApiClientOptions {
   baseUrl: string;
 }
+
+// --- Shared enums (from the generated contract) ---
+
+export const workoutTypeSchema =
+  contract.zTrainingWorkoutResponseDto.shape.type;
+export const workoutStatusSchema =
+  contract.zTrainingWorkoutResponseDto.shape.status;
+export const WORKOUT_TYPES = workoutTypeSchema.options;
+export const WORKOUT_STATUSES = workoutStatusSchema.options;
 
 export const authUserSchema = z.object({
   id: z.string(),
@@ -25,14 +35,7 @@ export const authUserSchema = z.object({
     .default({ showReferral: false }),
 });
 
-export const authTokensSchema = z.object({
-  tokenType: z.string(),
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  sessionId: z.string(),
-  accessTokenExpiresIn: z.number(),
-  user: authUserSchema,
-});
+export const authTokensSchema = contract.zAuthTokensResponseDto;
 
 /**
  * A session as the web app's browser code sees it: the BFF keeps both tokens
@@ -93,9 +96,7 @@ export const changePasswordSchema = z.object({
  * Answer of the avatar upload endpoint. The URL is absolute and carries the
  * file id as a version parameter, so it changes on every replacement.
  */
-export const avatarUploadSchema = z.object({
-  avatarUrl: z.string().url(),
-});
+export const avatarUploadSchema = contract.zAvatarUploadResponseDto;
 
 export const mobileAuthEmailRequestSchema = z.object({
   email: z.string().email(),
@@ -106,11 +107,7 @@ export const mobileAuthEmailVerifySchema = z.object({
   code: z.string().regex(/^\d{4}$/),
 });
 
-export const mobileAuthChallengeSchema = z.object({
-  email: z.string().email(),
-  expiresInSeconds: z.number().int().positive(),
-  resendAfterSeconds: z.number().int().positive(),
-});
+export const mobileAuthChallengeSchema = contract.zEmailOtpChallengeResponseDto;
 
 export const mobileAuthSocialProviderSchema = z.enum(["google", "apple"]);
 
@@ -178,43 +175,7 @@ export interface ApiErrorShape {
 
 // --- Training ---
 
-export const trainingAthleteSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  age: z.number().nullable(),
-  sex: z.string().nullable(),
-  heightCm: z.number().nullable(),
-  weightKg: z.number().nullable(),
-  experienceLevel: z.string(),
-  weeklyMileageKm: z.number().nullable(),
-  sessionsPerWeek: z.number(),
-  recentRaceResults: z.array(z.record(z.string(), z.unknown())),
-  preferredTrainingDays: z.array(z.string()),
-  availableTrainingDays: z.array(z.string()),
-  preferredWorkoutDurationMinutes: z.number().nullable(),
-  birthDate: z.string().nullable().optional(),
-  restingHeartRate: z.number().nullable().optional(),
-  maxHeartRate: z.number().nullable().optional(),
-  thresholdHeartRate: z.number().nullable().optional(),
-  hrZonesMethod: z.enum(["threshold", "max_hr", "custom"]).optional(),
-  hrZonesCustom: z.array(z.number()).nullable().optional(),
-  runningSinceYear: z.number().nullable().optional(),
-  limitations: z.string().nullable().optional(),
-  preferredTimeOfDay: z.enum(["morning", "day", "evening", "any"]).optional(),
-  longRunDay: z.string().nullable().optional(),
-  longRunMaxDurationMinutes: z.number().nullable().optional(),
-  fieldSources: z
-    .record(
-      z.string(),
-      z.object({
-        source: z.enum(["manual", "strava", "apple_health", "health_connect"]),
-        updatedAt: z.string(),
-      }),
-    )
-    .optional(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
+export const trainingAthleteSchema = contract.zTrainingAthleteResponseDto;
 
 export const hrZonesMethodSchema = z.enum(["threshold", "max_hr", "custom"]);
 export const timeOfDaySchema = z.enum(["morning", "day", "evening", "any"]);
@@ -239,31 +200,13 @@ export const trainingWeekdaySchema = z.enum([
   "sunday",
 ]);
 
-export const hrZoneSchema = z.object({
-  zone: z.number(),
-  min: z.number().nullable(),
-  max: z.number().nullable(),
-});
+export const hrZoneSchema = contract.zHrZoneResponseDto;
 
-export const profileCompletenessSchema = z.object({
-  percent: z.number(),
-  missing: z.array(z.string()),
-});
+export const profileCompletenessSchema =
+  contract.zProfileCompletenessResponseDto;
 
 /** `GET/PATCH /athletes/me`: stored inputs plus values the server derives from them. */
-export const athleteProfileSchema = trainingAthleteSchema.extend({
-  maxHeartRateEstimate: z.number().nullable().optional(),
-  hrZones: z.array(hrZoneSchema).nullable().optional(),
-  hrZonesUnavailableReason: z
-    .enum(["threshold_missing", "max_missing", "custom_missing"])
-    .nullable()
-    .optional(),
-  weeklyMileageSuggestion: z
-    .object({ valueKm: z.number(), source: z.string(), windowDays: z.number() })
-    .nullable()
-    .optional(),
-  completeness: profileCompletenessSchema.optional(),
-});
+export const athleteProfileSchema = contract.zAthleteProfileResponseDto;
 
 /** Partial profile update; `null` clears a field. */
 export const athleteProfileUpdateSchema = z
@@ -305,30 +248,9 @@ export type AthleteProfileUpdate = z.infer<typeof athleteProfileUpdateSchema>;
 
 export const gearStatusSchema = z.enum(["active", "retired"]);
 
-export const gearSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  brand: z.string(),
-  model: z.string(),
-  nickname: z.string().nullable(),
-  initialDistanceKm: z.number(),
-  limitKm: z.number(),
-  startedAt: z.string().nullable(),
-  retiredAt: z.string().nullable(),
-  status: gearStatusSchema,
-  defaultWorkoutTypes: z.array(z.string()),
-  replaceReminder: z.boolean(),
-  source: z.enum(["manual", "strava"]),
-  distanceKm: z.number(),
-  workoutsCount: z.number(),
-  remainingKm: z.number(),
-  wearPercent: z.number(),
-  replaceSoon: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const gearSchema = contract.zGearResponseDto;
 
-export const gearListSchema = z.object({ items: z.array(gearSchema) });
+export const gearListSchema = contract.zGearListResponseDto;
 
 export const gearInputSchema = z.object({
   brand: z.string().trim().min(1).max(60),
@@ -337,7 +259,7 @@ export const gearInputSchema = z.object({
   initialDistanceKm: z.number().min(0).max(10000).optional(),
   limitKm: z.number().int().min(100).max(2000).optional(),
   startedAt: z.string().nullable().optional(),
-  defaultWorkoutTypes: z.array(z.string()).optional(),
+  defaultWorkoutTypes: z.array(workoutTypeSchema).optional(),
   replaceReminder: z.boolean().optional(),
 });
 
@@ -350,126 +272,33 @@ export type GearInput = z.infer<typeof gearInputSchema>;
 
 export const coachAdaptationModeSchema = z.enum(["auto", "confirm", "suggest"]);
 
-export const quietHoursSchema = z.object({ from: z.string(), to: z.string() });
+export const quietHoursSchema = contract.zQuietHoursDto;
 
-export const userPreferencesSchema = z.object({
-  units: z.enum(["metric", "imperial"]),
-  weekStart: z.enum(["mon", "sun"]),
-  timeFormat: z.enum(["24h", "12h"]),
-  coachEnabled: z.boolean(),
-  coachAdaptationMode: coachAdaptationModeSchema,
-  coachQuietHours: quietHoursSchema.nullable(),
-  stravaProfileSync: z.boolean(),
-  timezone: z.string().nullable().optional(),
-  /** App language; the coach and emails write in it. `null` until the app reports it. */
-  language: z.enum(["ru", "en"]).nullable().optional(),
-  updatedAt: z.string().optional(),
-});
+export const userPreferencesSchema = contract.zUserPreferencesResponseDto;
 
-export const userPreferencesUpdateSchema = userPreferencesSchema
-  .omit({ updatedAt: true })
-  .extend({ timezone: z.string() })
-  .partial();
+export const userPreferencesUpdateSchema = contract.zUpdateUserPreferencesDto;
 
 export type CoachAdaptationMode = z.infer<typeof coachAdaptationModeSchema>;
 
 /** Adaptation of the active plan waiting for the user (`proposed`) or shown as advice (`suggested`). */
-export const pendingAdaptationSchema = z.object({
-  id: z.string(),
-  planId: z.string().nullable(),
-  workoutId: z.string().nullable(),
-  type: z.string(),
-  reason: z.string(),
-  status: z.enum(["applied", "proposed", "suggested", "dismissed"]).optional(),
-  decision: z.record(z.string(), z.unknown()),
-  createdAt: z.string(),
-});
-export const pendingAdaptationListSchema = z.object({
-  items: z.array(pendingAdaptationSchema),
-});
+export const pendingAdaptationSchema = contract.zTrainingAdaptationResponseDto;
+export const pendingAdaptationListSchema =
+  contract.zTrainingAdaptationListResponseDto;
 export type PendingAdaptation = z.infer<typeof pendingAdaptationSchema>;
 export type QuietHours = z.infer<typeof quietHoursSchema>;
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 export type UserPreferencesUpdate = z.infer<typeof userPreferencesUpdateSchema>;
 
-export const trainingStateSchema = z.object({
-  id: z.string(),
-  athleteId: z.string(),
-  fitness: z.number(),
-  fatigue: z.number(),
-  form: z.number(),
-  thresholdPaceSecondsPerKm: z.number().nullable(),
-  thresholdHeartRate: z.number().nullable(),
-  vo2max: z.number().nullable(),
-  weeklyLoad: z.number(),
-  acuteLoad: z.number(),
-  chronicLoad: z.number(),
-  recoveryScore: z.number().nullable(),
-  confidence: z.number(),
-  source: z.string(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
+export const trainingStateSchema = contract.zTrainingStateResponseDto;
 
-export const trainingWorkoutAnalysisSchema = z.object({
-  completion: z.number(),
-  performanceDelta: z.number(),
-  load: z.number(),
-  expectedLoad: z.number(),
-  fatigueImpact: z.enum(["low", "moderate", "high"]),
-  confidence: z.number(),
-  analysisVersion: z.string(),
-});
+export const trainingWorkoutAnalysisSchema =
+  contract.zTrainingWorkoutAnalysisResponseDto;
 
-export const trainingWorkoutSchema = z.object({
-  id: z.string(),
-  athleteId: z.string(),
-  goalId: z.string().nullable(),
-  planId: z.string().nullable(),
-  weekNumber: z.number(),
-  scheduledAt: z.string().or(z.date()),
-  type: z.string(),
-  phase: z.string(),
-  status: z.string(),
-  orderInWeek: z.number(),
-  durationMinutes: z.number(),
-  distanceKm: z.number(),
-  target: z.record(z.string(), z.unknown()),
-  steps: z.array(z.record(z.string(), z.unknown())),
-  actual: z.record(z.string(), z.unknown()).nullable(),
-  analysis: trainingWorkoutAnalysisSchema.nullable(),
-  completedAt: z.string().or(z.date()).nullable(),
-  gearId: z.string().nullable().optional(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
+export const trainingWorkoutSchema = contract.zTrainingWorkoutResponseDto;
 
-export const trainingPlanWeekSchema = z.object({
-  weekNumber: z.number(),
-  phase: z.string(),
-  weeklyLoadTarget: z.number(),
-  workoutIds: z.array(z.string()),
-});
+export const trainingPlanWeekSchema = contract.zTrainingPlanWeekResponseDto;
 
-export const trainingPlanSchema = z.object({
-  id: z.string(),
-  athleteId: z.string(),
-  goalId: z.string().nullable(),
-  name: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
-  version: z.number().optional(),
-  // Drafts have no dates until they are started.
-  startDate: z.string().nullable(),
-  endDate: z.string().nullable(),
-  trainingFrequency: z.number(),
-  weeklyTargetKm: z.number(),
-  status: z.string(),
-  algorithmVersion: z.string(),
-  weeks: z.array(trainingPlanWeekSchema),
-  workouts: z.array(trainingWorkoutSchema),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
+export const trainingPlanSchema = contract.zTrainingPlanResponseDto;
 
 export type TrainingAthlete = z.infer<typeof trainingAthleteSchema>;
 export type TrainingState = z.infer<typeof trainingStateSchema>;
@@ -481,7 +310,7 @@ export type TrainingWorkoutAnalysis = z.infer<
 
 export const createWorkoutSchema = z.object({
   scheduledAt: z.string(),
-  type: z.string().optional(),
+  type: workoutTypeSchema.optional(),
   title: z.string().optional(),
   description: z.string().optional(),
   durationMinutes: z.number().optional(),
@@ -853,9 +682,9 @@ export const athleteGoalCategorySchema = z.enum(ATHLETE_GOAL_CATEGORIES);
 
 export const athleteGoalPayloadSchema = z.object({
   type: athleteGoalTypeSchema,
-  current: z.record(z.string(), z.unknown()).nullable().optional(),
-  target: z.record(z.string(), z.unknown()).nullable().optional(),
-  description: z.string().max(2000).nullable().optional(),
+  current: z.record(z.string(), z.unknown()).optional(),
+  target: z.record(z.string(), z.unknown()).optional(),
+  description: z.string().max(2000).optional(),
   targetDate: z.string().optional(),
   priority: z.number().int().min(1).max(10).optional(),
 });
@@ -940,16 +769,7 @@ export const PLAN_METRIC_RANGES = {
   restingHeartRate: { min: 30, max: 100 },
 } as const;
 
-export const activePlanSummarySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  startDate: z.string().nullable(),
-  endDate: z.string().nullable(),
-  currentWeek: z.number(),
-  totalWeeks: z.number(),
-  completedWorkouts: z.number(),
-  futurePlannedWorkouts: z.number(),
-});
+export const activePlanSummarySchema = contract.zActivePlanSummaryDto;
 
 export const planStartOptionKindSchema = z.enum([
   "today",
@@ -957,24 +777,9 @@ export const planStartOptionKindSchema = z.enum([
   "race_aligned",
 ]);
 
-export const planStartOptionSchema = z.object({
-  kind: planStartOptionKindSchema,
-  startDate: z.string(),
-  endDate: z.string(),
-  goalTargetDate: z.string().optional(),
-  fits: z.boolean().optional(),
-  weeksAvailable: z.number().optional(),
-  reason: z.literal("target_date_passed").optional(),
-});
+export const planStartOptionSchema = contract.zStartOptionDto;
 
-export const planStartOptionsSchema = z.object({
-  today: z.string(),
-  totalWeeks: z.number(),
-  options: z.array(planStartOptionSchema),
-  recommended: planStartOptionKindSchema,
-  metricsStale: z.boolean(),
-  activePlan: activePlanSummarySchema.nullable(),
-});
+export const planStartOptionsSchema = contract.zStartOptionsResponseDto;
 
 export const planStartBlockSchema = z.object({
   startDate: z.string(),
@@ -983,11 +788,7 @@ export const planStartBlockSchema = z.object({
   timezone: z.string().optional(),
 });
 
-export const recentResultSchema = z.object({
-  distance: z.string(),
-  timeSeconds: z.number(),
-  date: z.string(),
-});
+export const recentResultSchema = contract.zRecentResultDto;
 
 /** Metrics entered by the user; every field is optional. */
 export const athleteMetricsSchema = z.object({
@@ -1001,44 +802,11 @@ export const athleteMetricsSchema = z.object({
 });
 
 /** Metrics captured when a plan started; the "before" side of rebuild diffs. */
-export const metricsSnapshotSchema = z.object({
-  capturedAt: z.string().optional(),
-  thresholdPaceSecondsPerKm: z.number().nullable().optional(),
-  thresholdHeartRate: z.number().nullable().optional(),
-  maxHeartRate: z.number().nullable().optional(),
-  restingHeartRate: z.number().nullable().optional(),
-  weeklyMileageKm: z.number().nullable().optional(),
-  longestRunKm: z.number().nullable().optional(),
-  recentResult: recentResultSchema.nullable().optional(),
-  source: z.string().optional(),
-});
+export const metricsSnapshotSchema = contract.zMetricsSnapshotDto;
 
-export const metricsSourceSchema = z.enum([
-  "profile",
-  "strava",
-  "health",
-  "manual_workouts",
-  "athlete_state",
-  "none",
-]);
+export const metricsSourceSchema = contract.zSourcedNumberDto.shape.source;
 
-const sourcedNumberSchema = z.object({
-  value: z.number().nullable(),
-  source: metricsSourceSchema,
-});
-
-export const currentMetricsSchema = z.object({
-  thresholdPaceSecondsPerKm: sourcedNumberSchema,
-  thresholdHeartRate: sourcedNumberSchema,
-  maxHeartRate: sourcedNumberSchema,
-  restingHeartRate: sourcedNumberSchema,
-  weeklyMileageKm: sourcedNumberSchema,
-  longestRunKm: sourcedNumberSchema,
-  recentResult: z.object({
-    value: recentResultSchema.nullable(),
-    source: metricsSourceSchema,
-  }),
-});
+export const currentMetricsSchema = contract.zCurrentMetricsDto;
 
 export type ActivePlanSummary = z.infer<typeof activePlanSummarySchema>;
 export type PlanStartOptionKind = z.infer<typeof planStartOptionKindSchema>;
@@ -1054,10 +822,10 @@ export type CurrentMetrics = z.infer<typeof currentMetricsSchema>;
 // --- Manual Plan Creation ---
 
 export const manualPlanGoalSchema = z.object({
-  type: athleteGoalTypeSchema.optional(),
-  current: z.record(z.string(), z.unknown()).nullable().optional(),
-  target: z.record(z.string(), z.unknown()).nullable().optional(),
-  description: z.string().max(2000).nullable().optional(),
+  type: athleteGoalTypeSchema,
+  current: z.record(z.string(), z.unknown()).optional(),
+  target: z.record(z.string(), z.unknown()).optional(),
+  description: z.string().max(2000).optional(),
   targetDate: z.string().optional(),
   priority: z.number().int().min(1).max(10).optional(),
   // Legacy fields kept for backward compatibility
@@ -1074,58 +842,31 @@ export const manualPlanScheduleSchema = z.object({
 });
 
 export const manualPlanStructureSchema = z.object({
-  totalWeeks: z.number().int().min(1).max(52),
+  totalWeeks: z.number().int().min(4).max(16),
   sessionsPerWeek: z.number().int().min(1).max(7),
-  focus: z.array(z.string()).optional(),
+  focus: contract.zManualPlanStructureDto.shape.focus,
 });
 
-export const manualPlanPreviewWorkoutSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  phase: z.string(),
-  weekNumber: z.number(),
-  dayOfWeek: z.number(),
-  scheduledAt: z.string(),
-  orderInWeek: z.number(),
-  durationMinutes: z.number(),
-  distanceKm: z.number(),
-  target: z.record(z.string(), z.unknown()),
-  steps: z.array(z.record(z.string(), z.unknown())),
-});
+export const manualPlanPreviewWorkoutSchema =
+  contract.zManualPlanPreviewWorkoutDto;
 
-export const manualPlanPreviewWeekSchema = z.object({
-  weekNumber: z.number(),
-  phase: z.string(),
-  title: z.string(),
-  plannedWorkoutsCount: z.number(),
-  plannedDistance: z.number(),
-  plannedLoad: z.number(),
-  workouts: z.array(manualPlanPreviewWorkoutSchema),
-});
+export const manualPlanPreviewWeekSchema = contract.zManualPlanPreviewWeekDto;
 
-export const manualPlanPreviewSchema = z.object({
-  startDate: z.string(),
-  endDate: z.string(),
-  totalWeeks: z.number(),
-  trainingFrequency: z.number(),
-  weeklyTargetKm: z.number(),
-  weeks: z.array(manualPlanPreviewWeekSchema),
-  startOptions: planStartOptionsSchema.optional(),
-});
+export const manualPlanPreviewSchema = contract.zManualPlanPreviewResponseDto;
 
 export const manualPlanWorkoutOverrideSchema = z.object({
   id: z.string(),
-  type: z.string().optional(),
+  type: workoutTypeSchema.optional(),
   dayOfWeek: z.number().int().min(0).max(6).optional(),
   distanceKm: z.number().positive().optional(),
   durationMinutes: z.number().int().positive().optional(),
 });
 
 export const manualPlanNewWorkoutSchema = z.object({
-  type: z.string(),
+  type: workoutTypeSchema,
   dayOfWeek: z.number().int().min(0).max(6),
   distanceKm: z.number().positive().optional(),
-  durationMinutes: z.number().int().positive().optional(),
+  durationMinutes: z.number().int().positive(),
 });
 
 export const manualPlanWeekOverridesSchema = z.object({
@@ -1167,6 +908,28 @@ export type ManualPlanPreviewWorkout = z.infer<
   typeof manualPlanPreviewWorkoutSchema
 >;
 export type ManualPlanPreviewWeek = z.infer<typeof manualPlanPreviewWeekSchema>;
+
+/**
+ * Relative plan structures keep the engine phase as a plain lowercase string;
+ * the dated preview types it (weeks in upper case, as the backend renders them).
+ */
+export function previewWorkoutPhase(
+  phase: string,
+): ManualPlanPreviewWorkout["phase"] {
+  const parsed = manualPlanPreviewWorkoutSchema.shape.phase.safeParse(
+    phase.toLowerCase(),
+  );
+  return parsed.success ? parsed.data : "base";
+}
+
+export function previewWeekPhase(
+  phase: string,
+): ManualPlanPreviewWeek["phase"] {
+  const parsed = manualPlanPreviewWeekSchema.shape.phase.safeParse(
+    phase.toUpperCase(),
+  );
+  return parsed.success ? parsed.data : "BASE";
+}
 export type ManualPlanPreview = z.infer<typeof manualPlanPreviewSchema>;
 export type ManualPlanWorkoutOverride = z.infer<
   typeof manualPlanWorkoutOverrideSchema
@@ -1197,25 +960,9 @@ export const planWeekStatusSchema = z.enum([
   "upcoming",
 ]);
 
-export const planWeekSchema = z.object({
-  id: z.string(),
-  weekNumber: z.number(),
-  phase: planPhaseSchema,
-  title: z.string(),
-  status: planWeekStatusSchema,
-  plannedWorkoutsCount: z.number().optional(),
-  plannedDistance: z.number().optional(),
-  plannedLoad: z.number().optional(),
-  summaryText: z.string().optional(),
-  intent: z.string().optional(),
-  keySessions: z.array(z.string()).optional(),
-});
+export const planWeekSchema = contract.zPlanWeekDto;
 
-export const currentWeekContextSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  focusItems: z.array(z.string()).optional(),
-});
+export const currentWeekContextSchema = contract.zCurrentWeekContextDto;
 
 export const planAdaptationTypeSchema = z.enum([
   "HIGH_FATIGUE",
@@ -1227,22 +974,9 @@ export const planAdaptationTypeSchema = z.enum([
   "GOAL_CHANGE",
 ]);
 
-export const planAdaptationSchema = z.object({
-  id: z.string(),
-  weekId: z.string().optional(),
-  weekNumber: z.number().optional(),
-  type: planAdaptationTypeSchema,
-  title: z.string(),
-  description: z.string().optional(),
-  createdAt: z.string(),
-});
+export const planAdaptationSchema = contract.zPlanAdaptationDto;
 
-export const planGoalSchema = z.object({
-  title: z.string().optional(),
-  distance: z.string(),
-  targetTime: z.string().optional(),
-  targetDate: z.string().optional(),
-});
+export const planGoalSchema = contract.zPlanGoalDto;
 
 export const planStatusSchema = z.enum([
   "not_started",
@@ -1252,43 +986,9 @@ export const planStatusSchema = z.enum([
 ]);
 
 /** Creation parameters of a plan; AI plans may store only part of them. */
-export const planConfigSchema = z.object({
-  goal: z.record(z.string(), z.unknown()).default({}),
-  schedule: z
-    .object({
-      trainingDays: z.array(z.number()).optional(),
-      preferredLongRunDay: z.number().nullable().optional(),
-      workoutDurationMinutes: z.number().nullable().optional(),
-    })
-    .default({}),
-  structure: z
-    .object({
-      totalWeeks: z.number().optional(),
-      sessionsPerWeek: z.number().optional(),
-      focus: z.array(z.string()).optional(),
-    })
-    .default({}),
-});
+export const planConfigSchema = contract.zPlanConfigDto;
 
-export const planOverviewSchema = z.object({
-  plan: z.object({
-    id: z.string(),
-    name: z.string().optional(),
-    goal: planGoalSchema,
-    status: planStatusSchema,
-    currentWeek: z.number(),
-    totalWeeks: z.number(),
-    progress: z.number(),
-    currentPhase: planPhaseSchema,
-    startDate: z.string().optional(),
-    notes: z.string().nullable().optional(),
-    version: z.number().optional(),
-    config: planConfigSchema.partial().optional(),
-  }),
-  weeks: z.array(planWeekSchema),
-  currentWeekContext: currentWeekContextSchema.optional(),
-  adaptations: z.array(planAdaptationSchema),
-});
+export const planOverviewSchema = contract.zPlanOverviewResponseDto;
 
 export type PlanPhase = z.infer<typeof planPhaseSchema>;
 export type PlanWeekStatus = z.infer<typeof planWeekStatusSchema>;
@@ -1312,138 +1012,35 @@ export const planLifecycleStatusSchema = z.enum([
 ]);
 export const planListGroupSchema = z.enum(["draft", "active", "history"]);
 
-export const planGoalSummarySchema = z.object({
-  type: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  targetDate: z.string().nullable().optional(),
-});
+export const planGoalSummarySchema = contract.zPlanGoalSummaryDto;
 
-export const planStatsSchema = z.object({
-  completedWorkouts: z.number(),
-  plannedWorkouts: z.number(),
-  completionRate: z.number(),
-  totalDistanceKm: z.number(),
-});
+export const planStatsSchema = contract.zPlanStatsDto;
 
-const planSummaryShape = {
-  id: z.string(),
-  name: z.string(),
-  status: planLifecycleStatusSchema,
-  creationSource: z.string(),
-  goal: planGoalSummarySchema,
-  totalWeeks: z.number(),
-  sessionsPerWeek: z.number().nullable().optional(),
-  startDate: z.string().nullable().optional(),
-  endDate: z.string().nullable().optional(),
-  cancelledAt: z.string().nullable().optional(),
-  stats: planStatsSchema.nullable().optional(),
-  sourcePlanId: z.string().nullable().optional(),
-  metricsStale: z.boolean().optional(),
-  currentWeek: z.number().optional(),
-  progress: z.number().optional(),
-  updatedAt: z.string(),
-};
+export const planListItemSchema = contract.zPlanListItemDto;
 
-export const planListItemSchema = z.object({
-  ...planSummaryShape,
-  notesPreview: z.string().nullable().optional(),
-});
+export const planListResponseSchema = contract.zPlanListResponseDto;
 
-export const planListResponseSchema = z.object({
-  items: z.array(planListItemSchema),
-  meta: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    hasNext: z.boolean(),
-  }),
-});
+export const planCountsSchema = contract.zPlanCountsResponseDto;
 
-export const planCountsSchema = z.object({
-  draft: z.number(),
-  active: z.number(),
-  history: z.number(),
-});
-
-export const activePlanResponseSchema = z.object({
-  plan: activePlanSummarySchema.nullable(),
-});
+export const activePlanResponseSchema = contract.zActivePlanResponseDto;
 
 /** Workout of a relative (undated) draft week; `dayOfWeek`: 0 = Monday. */
-export const relativeWorkoutSchema = z.object({
-  key: z.string(),
-  dayOfWeek: z.number(),
-  orderInWeek: z.number(),
-  type: z.string(),
-  phase: z.string(),
-  title: z.string().optional(),
-  durationMinutes: z.number(),
-  distanceKm: z.number(),
-  target: z.record(z.string(), z.unknown()),
-  steps: z.array(z.record(z.string(), z.unknown())),
-});
+export const relativeWorkoutSchema = contract.zRelativeWorkoutDto;
 
-export const relativeWeekSchema = z.object({
-  weekNumber: z.number(),
-  phase: z.string(),
-  title: z.string().nullable().optional(),
-  intent: z.string().nullable().optional(),
-  weeklyLoadTarget: z.number().nullable().optional(),
-  workouts: z.array(relativeWorkoutSchema),
-});
+export const relativeWeekSchema = contract.zRelativeWeekDto;
 
 /** Week record of a plan: relative on drafts, dated (workoutIds) otherwise. */
-export const planDetailsWeekSchema = z.object({
-  weekNumber: z.number(),
-  phase: z.string(),
-  title: z.string().nullable().optional(),
-  intent: z.string().nullable().optional(),
-  weeklyLoadTarget: z.number().nullable().optional(),
-  workouts: z.array(relativeWorkoutSchema).optional(),
-  workoutIds: z.array(z.string()).optional(),
-});
+export const planDetailsWeekSchema = contract.zPlanDetailsWeekDto;
 
-export const planWorkoutItemSchema = z.object({
-  id: z.string(),
-  weekNumber: z.number(),
-  orderInWeek: z.number(),
-  scheduledAt: z.string(),
-  type: z.string(),
-  status: z.string(),
-  durationMinutes: z.number(),
-  distanceKm: z.number(),
-  target: z.record(z.string(), z.unknown()),
-  actual: z.record(z.string(), z.unknown()).nullable(),
-});
+export const planWorkoutItemSchema = contract.zPlanWorkoutItemDto;
 
-export const planDetailsSchema = z.object({
-  ...planSummaryShape,
-  cancelReason: z.string().nullable().optional(),
-  notes: z.string().nullable(),
-  version: z.number(),
-  config: planConfigSchema,
-  metricsSnapshot: metricsSnapshotSchema.nullable(),
-  replacedByPlanId: z.string().nullable().optional(),
-  weeks: z.array(planDetailsWeekSchema),
-  workouts: z.array(planWorkoutItemSchema),
-});
+export const planDetailsSchema = contract.zPlanDetailsDto;
 
-export const planMetaResponseSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  notes: z.string().nullable(),
-  version: z.number(),
-});
+export const planMetaResponseSchema = contract.zPlanMetaResponseDto;
 
-export const planVersionResponseSchema = z.object({
-  version: z.number(),
-});
+export const planVersionResponseSchema = contract.zPlanVersionResponseDto;
 
-export const cancelPlanResponseSchema = z.object({
-  id: z.string(),
-  status: z.string(),
-  cancelledWorkouts: z.number(),
-});
+export const cancelPlanResponseSchema = contract.zCancelPlanResponseDto;
 
 export const updatePlanMetaSchema = z.object({
   name: z.string().trim().min(1).max(PLAN_NAME_MAX_LENGTH).optional(),
@@ -1454,7 +1051,7 @@ export const updatePlanMetaSchema = z.object({
 /** Draft structure edits; workouts are addressed by their relative key. */
 export const draftWorkoutOverrideSchema = z.object({
   key: z.string(),
-  type: z.string().optional(),
+  type: workoutTypeSchema.optional(),
   dayOfWeek: z.number().int().min(0).max(6).optional(),
   distanceKm: z.number().min(0).optional(),
   durationMinutes: z.number().int().optional(),
@@ -1478,7 +1075,7 @@ export const planWorkoutOperationSchema = z.object({
   op: z.enum(["update", "move", "remove", "add"]),
   workoutId: z.string().optional(),
   date: z.string().optional(),
-  type: z.string().optional(),
+  type: workoutTypeSchema.optional(),
   distanceKm: z.number().optional(),
   durationMinutes: z.number().int().optional(),
 });
@@ -1511,67 +1108,19 @@ export const planChangeRequestSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
-export const planDiffAdjustmentSchema = z.object({
-  code: z.string(),
-  params: z.record(z.string(), z.unknown()).optional(),
-});
+export const planDiffAdjustmentSchema = contract.zPlanDiffAdjustmentDto;
 
-export const planDiffWorkoutSchema = z.object({
-  key: z.string(),
-  change: z.enum(["added", "removed", "modified"]),
-  fields: z.record(z.string(), z.tuple([z.unknown(), z.unknown()])).optional(),
-  reason: z.string().optional(),
-});
+export const planDiffWorkoutSchema = contract.zPlanDiffWorkoutDto;
 
-export const planDiffWeekSchema = z.object({
-  weekNumber: z.number(),
-  change: z.enum(["added", "removed", "modified"]),
-  workouts: z.array(planDiffWorkoutSchema),
-});
+export const planDiffWeekSchema = contract.zPlanDiffWeekDto;
 
-const beforeAfterNumber = z.object({
-  before: z.number().nullable(),
-  after: z.number().nullable(),
-});
+export const planDiffSchema = contract.zPlanDiffDto;
 
-export const planDiffSchema = z.object({
-  summary: z.object({
-    weeklyVolumeKm: z.object({
-      before: z.array(z.number()),
-      after: z.array(z.number()),
-    }),
-    peakWeekKm: beforeAfterNumber,
-    longestRunKm: beforeAfterNumber,
-    thresholdPace: beforeAfterNumber,
-    totalWeeks: beforeAfterNumber,
-    adjustments: z.array(planDiffAdjustmentSchema),
-  }),
-  weeks: z.array(planDiffWeekSchema),
-});
-
-export const planChangePreviewSchema = z.object({
-  diff: planDiffSchema,
-  warnings: z.array(z.string()),
-  resultingEndDate: z.string().nullable().optional(),
-  version: z.number(),
-});
+export const planChangePreviewSchema = contract.zPlanChangesPreviewResponseDto;
 
 // "Prepare again" (rebuild)
 
-export const rebuildPrefillSchema = z.object({
-  config: planConfigSchema,
-  goalSuggestion: z.object({
-    targetDate: z.string().nullable(),
-    previousTargetDate: z.string().nullable(),
-    previousResult: z
-      .object({ timeSeconds: z.number(), workoutId: z.string() })
-      .nullable(),
-  }),
-  metrics: z.object({
-    previous: metricsSnapshotSchema.nullable().optional(),
-    current: currentMetricsSchema,
-  }),
-});
+export const rebuildPrefillSchema = contract.zRebuildPrefillResponseDto;
 
 export const rebuildTargetSchema = z.enum(["new_draft", "in_place"]);
 
@@ -1591,14 +1140,7 @@ export const rebuildRequestSchema = rebuildPreviewRequestSchema
   })
   .extend(planSaveFieldsSchema.shape);
 
-export const rebuildPreviewSchema = z.object({
-  mode: z.enum(["rebased", "regenerated"]),
-  weeks: z.array(relativeWeekSchema),
-  preview: manualPlanPreviewSchema,
-  diff: planDiffSchema,
-  warnings: z.array(z.string()),
-  startOptions: planStartOptionsSchema,
-});
+export const rebuildPreviewSchema = contract.zRebuildPreviewResponseDto;
 
 export const startPlanSchema = planStartBlockSchema;
 
@@ -1640,17 +1182,7 @@ export type StartPlanInput = z.infer<typeof startPlanSchema>;
 
 // --- Coach ---
 
-export const coachSessionSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  athleteId: z.string(),
-  title: z.string().nullable().optional(),
-  summary: z.string().nullable().optional(),
-  model: z.string(),
-  lastMessageAt: z.string().or(z.date()).nullable().optional(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
+export const coachSessionSchema = contract.zCoachSessionResponseDto;
 
 export const coachMessageSchema = z.object({
   id: z.string(),
@@ -1668,24 +1200,9 @@ export const coachMessageSchema = z.object({
   updatedAt: z.string().or(z.date()),
 });
 
-export const coachChatResponseSchema = z.object({
-  session: coachSessionSchema,
-  assistantMessage: coachMessageSchema,
-  reply: z.string(),
-  coachSummary: z.string(),
-  toolResults: z.array(
-    z.object({
-      name: z.string(),
-      input: z.record(z.string(), z.unknown()),
-      output: z.record(z.string(), z.unknown()),
-    }),
-  ),
-});
+export const coachChatResponseSchema = contract.zCoachChatResponseDto;
 
-export const coachSessionDetailSchema = z.object({
-  session: coachSessionSchema,
-  messages: z.array(coachMessageSchema),
-});
+export const coachSessionDetailSchema = contract.zCoachSessionDetailResponseDto;
 
 export const createCoachSessionSchema = z.object({
   athleteId: z.string(),
@@ -1722,176 +1239,21 @@ export const capabilityTypeSchema = z.enum([
 ]);
 export const trendSchema = z.enum(["up", "down", "stable"]);
 
-const secondsPointSchema = z.object({ date: z.string(), seconds: z.number() });
+export const progressGoalSchema = contract.zGoalProgressDto;
 
-export const progressGoalSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  date: z.string().nullable(),
-  weeksLeft: z.number().nullable(),
-  distanceKm: z.number().nullable(),
-  targetSeconds: z.number().nullable(),
-  forecastSeconds: z.number().nullable(),
-  status: z.enum(["achieved", "on_track", "behind", "no_data", "no_forecast"]),
-  series: z.array(secondsPointSchema),
-  projection: z.array(secondsPointSchema),
-  planName: z.string().nullable(),
-});
+export const recordBestSchema = contract.zRecordBestDto;
 
-export const recordBestSchema = z.object({
-  seconds: z.number(),
-  date: z.string(),
-  source: z.enum(["workout", "result"]),
-  kind: z.enum(["race", "workout", "test"]),
-  provider: z.string().nullable(),
-  name: z.string().nullable(),
-  isNew: z.boolean(),
-  workoutId: z.string().nullable(),
-  resultId: z.string().nullable(),
-});
+export const progressRecordSchema = contract.zRecordDto;
 
-export const progressRecordSchema = z.object({
-  distance: recordDistanceSchema,
-  best: recordBestSchema.nullable(),
-  predictionSeconds: z.number().nullable().optional(),
-});
+export const progressOverviewSchema = contract.zProgressOverviewResponseDto;
 
-const dynamicsSeriesSchema = z.object({
-  average: z.number().nullable(),
-  changePercent: z.number().nullable(),
-  points: z.array(
-    z.object({ start: z.string(), value: z.number().nullable() }),
-  ),
-});
+export const progressMetricSchema = contract.zProgressMetricResponseDto;
 
-export const progressOverviewSchema = z.object({
-  period: z.object({
-    key: progressPeriodKeySchema,
-    from: z.string(),
-    to: z.string(),
-  }),
-  metricsUnlock: z.object({
-    required: z.number(),
-    completed: z.number(),
-    unlocked: z.boolean(),
-  }),
-  goal: progressGoalSchema.nullable(),
-  predictions: z.array(
-    z.object({ distance: recordDistanceSchema, seconds: z.number() }),
-  ),
-  predictionBasis: z.number(),
-  form: z
-    .object({
-      fitness: z.number(),
-      fatigue: z.number(),
-      form: z.number(),
-      fitnessChange: z.number(),
-      changeWeeks: z.number(),
-    })
-    .nullable(),
-  metrics: z.object({
-    thresholdPace: z
-      .object({ value: z.number(), change: z.number().nullable() })
-      .nullable(),
-    vo2max: z
-      .object({ value: z.number(), change: z.number().nullable() })
-      .nullable(),
-    thresholdHeartRate: z
-      .object({ value: z.number(), estimated: z.boolean() })
-      .nullable(),
-  }),
-  capabilities: z
-    .array(
-      z.object({
-        type: capabilityTypeSchema,
-        value: z.number().nullable(),
-        trend: trendSchema,
-      }),
-    )
-    .nullable(),
-  records: z.array(progressRecordSchema),
-  dynamics: z.object({
-    bucket: z.enum(["week", "month"]),
-    metrics: z.object({
-      distance: dynamicsSeriesSchema,
-      pace: dynamicsSeriesSchema,
-      heartRate: dynamicsSeriesSchema,
-      load: dynamicsSeriesSchema,
-    }),
-    profileVolumeHint: z
-      .object({ profileKm: z.number(), actualKm: z.number() })
-      .nullable(),
-  }),
-  achievements: z.array(
-    z.object({
-      kind: z.enum(["longest_run", "streak", "new_record", "total_distance"]),
-      value: z.number(),
-      date: z.string().nullable(),
-      distance: recordDistanceSchema.optional(),
-    }),
-  ),
-});
+export const progressRecordsSchema = contract.zProgressRecordsResponseDto;
 
-export const progressMetricSchema = z.object({
-  metric: z.enum(["threshold_pace", "vo2max"]),
-  value: z.number().nullable(),
-  change: z.number().nullable(),
-  updatedAt: z.string().nullable(),
-  series: z.array(z.object({ date: z.string(), value: z.number() })),
-  accuracy: z.object({
-    level: z.enum(["high", "medium", "low"]),
-    efforts: z.number(),
-  }),
-  zones: z
-    .object({
-      method: z.string(),
-      maxHeartRate: z.number().nullable(),
-      thresholdHeartRate: z.number().nullable(),
-    })
-    .optional(),
-  paces: z
-    .object({
-      easy: z.tuple([z.number(), z.number()]),
-      tempo: z.tuple([z.number(), z.number()]),
-      interval: z.tuple([z.number(), z.number()]),
-    })
-    .optional(),
-  topEfforts: z
-    .array(
-      z.object({
-        id: z.string(),
-        workoutId: z.string().nullable(),
-        resultId: z.string().nullable(),
-        title: z.string().nullable(),
-        workoutType: z.string().nullable(),
-        date: z.string(),
-        distanceKm: z.number(),
-        paceSecondsPerKm: z.number(),
-      }),
-    )
-    .optional(),
-});
+export const recordAttemptSchema = contract.zRecordAttemptDto;
 
-export const progressRecordsSchema = z.object({
-  items: z.array(progressRecordSchema),
-});
-
-export const recordAttemptSchema = z.object({
-  id: z.string(),
-  source: z.enum(["workout", "result"]),
-  kind: z.enum(["race", "workout", "test"]),
-  provider: z.string().nullable(),
-  name: z.string().nullable(),
-  date: z.string(),
-  seconds: z.number(),
-  workoutId: z.string().nullable(),
-  resultId: z.string().nullable(),
-});
-
-export const recordHistorySchema = z.object({
-  distance: recordDistanceSchema,
-  attempts: z.array(recordAttemptSchema),
-});
+export const recordHistorySchema = contract.zRecordHistoryResponseDto;
 
 export const raceResultInputSchema = z.object({
   distanceM: z.number().int().min(400).max(100000),
@@ -1930,46 +1292,18 @@ export const integrationStatusSchema = z.enum([
   "disconnected",
 ]);
 
-export const integrationItemSchema = z.object({
-  provider: z.string(),
-  status: z.string(),
-  connectedAt: z.string().nullable().optional(),
-  lastSyncedAt: z.string().nullable().optional(),
-  externalUserId: z.string().nullable().optional(),
-  importedActivitiesCount: z.number().optional(),
-  profileAccess: z.boolean().optional(),
-  lastProfileSyncAt: z.string().nullable().optional(),
-  available: z.boolean().optional(),
-  profileSync: z.boolean().nullable().optional(),
-  pendingBatches: z.number().optional(),
-  scopes: z.array(z.string()).optional(),
-});
+export const integrationItemSchema = contract.zIntegrationItemResponseDto;
 
-export const stravaProfileAccessSchema = z.object({
-  authorizeUrl: z.string(),
-  state: z.string(),
-});
+export const stravaProfileAccessSchema =
+  contract.zStravaProfileAccessResponseDto;
 export type StravaProfileAccess = z.infer<typeof stravaProfileAccessSchema>;
 
-export const integrationsListSchema = z.object({
-  items: z.array(integrationItemSchema),
-});
+export const integrationsListSchema = contract.zIntegrationsListResponseDto;
 
-export const stravaConnectResponseSchema = z.object({
-  authUrl: z.string(),
-  state: z.string(),
-});
+export const stravaConnectResponseSchema = contract.zStravaConnectResponseDto;
 
-export const integrationSyncStatusSchema = z.object({
-  status: z.string(),
-  processed: z.number(),
-  imported: z.number(),
-  failed: z.number(),
-  startedAt: z.string().nullable().optional(),
-  completedAt: z.string().nullable().optional(),
-  estimatedCompletion: z.string().nullable().optional(),
-  error: z.string().nullable().optional(),
-});
+export const integrationSyncStatusSchema =
+  contract.zIntegrationSyncStatusResponseDto;
 
 export type IntegrationProvider = z.infer<typeof integrationProviderSchema>;
 export type IntegrationStatus = z.infer<typeof integrationStatusSchema>;
@@ -2052,37 +1386,16 @@ export type DeviceSyncBatchRequest = {
   deletedSourceActivityIds: string[];
 };
 
-export const deviceSyncBatchAcceptedSchema = z.object({
-  syncId: z.string(),
-  batchId: z.string(),
-  accepted: z.number(),
-  rejected: z.array(
-    z.object({ sourceActivityId: z.string(), code: z.string() }),
-  ),
-});
+export const deviceSyncBatchAcceptedSchema =
+  contract.zDeviceSyncBatchAcceptedDto;
 export type DeviceSyncBatchAccepted = z.infer<
   typeof deviceSyncBatchAcceptedSchema
 >;
 
-export const deviceSyncCountersSchema = z.object({
-  created: z.number(),
-  updated: z.number(),
-  merged: z.number(),
-  matchedPlanned: z.number(),
-  matchedManual: z.number(),
-  skipped: z.number(),
-  rejected: z.number(),
-  deleted: z.number(),
-  failed: z.number(),
-});
+export const deviceSyncCountersSchema = contract.zDeviceSyncCountersDto;
 export type DeviceSyncCounters = z.infer<typeof deviceSyncCountersSchema>;
 
-export const deviceSyncStatusSchema = integrationSyncStatusSchema.extend({
-  lastSyncId: z.string().nullable().optional(),
-  lastSyncType: z.string().nullable().optional(),
-  pendingBatches: z.number(),
-  counters: deviceSyncCountersSchema,
-});
+export const deviceSyncStatusSchema = contract.zDeviceSyncStatusResponseDto;
 export type DeviceSyncStatus = z.infer<typeof deviceSyncStatusSchema>;
 
 export type DeviceProfileMetricsRequest = {
@@ -2094,38 +1407,13 @@ export type DeviceProfileMetricsRequest = {
   restingHeartRate?: Array<{ date: string; bpm: number }>;
 };
 
-export const deviceProfileMetricsResultSchema = z.object({
-  applied: z.array(
-    z.enum(["weightKg", "heightCm", "sex", "birthDate", "restingHeartRate"]),
-  ),
-  skipped: z.array(
-    z.object({
-      field: z.enum([
-        "weightKg",
-        "heightCm",
-        "sex",
-        "birthDate",
-        "restingHeartRate",
-      ]),
-      reason: z.string(),
-    }),
-  ),
-});
+export const deviceProfileMetricsResultSchema =
+  contract.zDeviceProfileMetricsResultDto;
 export type DeviceProfileMetricsResult = z.infer<
   typeof deviceProfileMetricsResultSchema
 >;
 
-export const workoutSourcesSchema = z.object({
-  items: z.array(
-    z.object({
-      provider: z.string(),
-      isPrimary: z.boolean(),
-      originDevice: z.string().nullable().optional(),
-      originAppId: z.string().nullable().optional(),
-      startedAt: z.string().or(z.date()),
-    }),
-  ),
-});
+export const workoutSourcesSchema = contract.zWorkoutSourcesResponseDto;
 export type WorkoutSources = z.infer<typeof workoutSourcesSchema>;
 
 // --- Consents ---
@@ -2133,74 +1421,25 @@ export type WorkoutSources = z.infer<typeof workoutSourcesSchema>;
 export const consentTypeSchema = z.enum(["health_data"]);
 export type ConsentType = z.infer<typeof consentTypeSchema>;
 
-export const consentSchema = z.object({
-  type: consentTypeSchema,
-  version: z.string(),
-  acceptedAt: z.string().or(z.date()),
-  revokedAt: z.string().or(z.date()).nullable(),
-  isCurrent: z.boolean(),
-});
+export const consentSchema = contract.zConsentResponseDto;
 export type Consent = z.infer<typeof consentSchema>;
 
-export const consentsListSchema = z.object({
-  items: z.array(consentSchema),
-  currentVersions: z.record(z.string(), z.string()),
-});
+export const consentsListSchema = contract.zConsentsListResponseDto;
 export type ConsentsList = z.infer<typeof consentsListSchema>;
 
 // --- Admin: shared ---
 
-export const paginationMetaSchema = z.object({
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
-  hasNextPage: z.boolean(),
-  hasPreviousPage: z.boolean(),
-});
+export const paginationMetaSchema = contract.zPaginationMetaDto;
 
-export const adminUserSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  avatarUrl: z.string().nullable().optional(),
-  referralCode: z.string().nullable().optional(),
-  emailVerified: z.boolean(),
-  emailVerifiedAt: z.string().or(z.date()).nullable().optional(),
-  isSystem: z.boolean(),
-  systemKey: z.string().nullable().optional(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-  passwordChangedAt: z.string().or(z.date()).nullable().optional(),
-});
+export const adminUserSchema = contract.zUserResponseDto;
 
-export const adminUserGroupSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  systemKey: z.string().nullable().optional(),
-  isSystem: z.boolean(),
-});
+export const adminUserGroupSchema = contract.zAdminUserGroupDto;
 
-export const adminUserPermissionSchema = z.object({
-  name: z.string(),
-  description: z.string().nullable().optional(),
-});
+export const adminUserPermissionSchema = contract.zAdminUserPermissionDto;
 
-export const adminUserDetailSchema = adminUserSchema.extend({
-  groups: z.array(adminUserGroupSchema).default([]),
-  individualPermissions: z.array(adminUserPermissionSchema).default([]),
-  effectivePermissions: z.array(z.string()).default([]),
-});
+export const adminUserDetailSchema = contract.zAdminUserResponseDto;
 
-export const permissionSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  createdAt: z.string().or(z.date()).optional(),
-  updatedAt: z.string().or(z.date()).optional(),
-});
+export const permissionSchema = contract.zPermissionResponseDto;
 
 /** The complete, unpaginated permission catalog. */
 export const permissionCatalogSchema = z.array(permissionSchema);
@@ -2211,32 +1450,11 @@ export const permissionCatalogSchema = z.array(permissionSchema);
  * `lastName`, `email`, `isSystem`), so this intentionally does not reuse
  * `adminUserSchema`, which models the full admin user resource.
  */
-export const permissionGroupMemberSchema = z.object({
-  id: z.string(),
-  firstName: z.string().nullable().optional(),
-  lastName: z.string().nullable().optional(),
-  email: z.string(),
-  isSystem: z.boolean().optional(),
-});
+export const permissionGroupMemberSchema = contract.zPermissionGroupMemberDto;
 
-export const permissionGroupSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  systemKey: z.string().nullable().optional(),
-  isSystem: z.boolean().default(false),
-  permissions: z.array(permissionSchema).optional(),
-  users: z.array(permissionGroupMemberSchema).optional(),
-  createdAt: z.string().or(z.date()).optional(),
-  updatedAt: z.string().or(z.date()).optional(),
-});
+export const permissionGroupSchema = contract.zPermissionGroupResponseDto;
 
-export const appSettingsSchema = z.object({
-  defaultGroups: z.array(z.string()).default([]),
-  defaultPermissions: z.array(z.string()).default([]),
-  theme: z.enum(["light", "dark", "system"]).default("system"),
-  locale: z.enum(["ru", "en"]).default("en"),
-});
+export const appSettingsSchema = contract.zSettingsResponseDto;
 
 export const adminCreateUserSchema = z.object({
   email: z.string().email(),
@@ -2282,9 +1500,7 @@ export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
  * A subset of what was asked for, never a full list of everybody online — the
  * caller only ever asks about rows it is already allowed to see.
  */
-export const userPresenceSchema = z.object({
-  onlineUserIds: z.array(z.string()),
-});
+export const userPresenceSchema = contract.zUserPresenceResponseDto;
 export type UserPresence = z.infer<typeof userPresenceSchema>;
 
 export type AdminUser = z.infer<typeof adminUserSchema>;
@@ -2307,24 +1523,6 @@ export interface PaginatedResponse<T> {
 
 // --- Admin: user training calendar ---
 
-export const WORKOUT_TYPES = [
-  "recovery",
-  "easy",
-  "long_run",
-  "tempo",
-  "threshold",
-  "interval",
-  "hill",
-  "race",
-  "rest",
-] as const;
-export const WORKOUT_STATUSES = [
-  "planned",
-  "completed",
-  "skipped",
-  "cancelled",
-] as const;
-
 /**
  * Statuses the admin panel may set. Completing a workout needs an actual
  * result and load recalculation, and cancelling is a plan lifecycle outcome,
@@ -2342,54 +1540,22 @@ export const ADMIN_WORKOUT_LIMITS = {
 /** Longest range the month summary endpoint accepts, in days. */
 export const ADMIN_CALENDAR_SUMMARY_MAX_DAYS = 62;
 
-export const workoutTypeSchema = z.enum(WORKOUT_TYPES);
-export const workoutStatusSchema = z.enum(WORKOUT_STATUSES);
 export const adminWorkoutEditableStatusSchema = z.enum(
   ADMIN_WORKOUT_EDITABLE_STATUSES,
 );
 
-export const adminCalendarWorkoutSchema = z.object({
-  id: z.string(),
-  athleteId: z.string(),
-  planId: z.string().nullable(),
-  scheduledAt: z.string(),
-  type: workoutTypeSchema,
-  phase: z.string(),
-  status: workoutStatusSchema,
-  durationMinutes: z.number(),
-  distanceKm: z.number(),
-  title: z.string().nullable(),
-  source: z.string().nullable(),
-  hasActual: z.boolean(),
-  completedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const adminCalendarWorkoutSchema = contract.zAdminWorkoutResponseDto;
 
-export const adminCalendarDaySchema = z.object({
-  date: z.string(),
-  timezone: z.string(),
-  workouts: z.array(adminCalendarWorkoutSchema),
-  total: z.number(),
-  hasAthleteProfile: z.boolean(),
-});
+export const adminCalendarDaySchema = contract.zAdminCalendarDayResponseDto;
 
-export const adminCalendarSummaryDaySchema = z.object({
-  date: z.string(),
-  total: z.number(),
-  statuses: z.record(workoutStatusSchema, z.number()),
-});
+export const adminCalendarSummaryDaySchema =
+  contract.zAdminCalendarSummaryDayDto;
 
-export const adminCalendarSummarySchema = z.object({
-  from: z.string(),
-  to: z.string(),
-  timezone: z.string(),
-  days: z.array(adminCalendarSummaryDaySchema),
-});
+export const adminCalendarSummarySchema =
+  contract.zAdminCalendarSummaryResponseDto;
 
-export const adminWorkoutMutationSchema = z.object({
-  workout: adminCalendarWorkoutSchema,
-});
+export const adminWorkoutMutationSchema =
+  contract.zAdminWorkoutMutationResponseDto;
 
 const adminWorkoutTitleSchema = z
   .string()
@@ -2435,63 +1601,22 @@ export const distanceSourceSchema = z.enum([
 ]);
 export type DistanceSource = z.infer<typeof distanceSourceSchema>;
 
-export const executionStepSchema = z.object({
-  index: z.number(),
-  kind: z.enum(["warmup", "work", "recovery", "steady", "cooldown"]),
-  durationSec: z.number().nullable(),
-  distanceM: z.number().nullable(),
-  targetPace: z
-    .object({ minSecPerKm: z.number(), maxSecPerKm: z.number() })
-    .nullable(),
-  zone: z.string().nullable(),
-  repetition: z.object({ index: z.number(), total: z.number() }).nullable(),
-});
+export const executionStepSchema = contract.zExecutionStepDto;
 export type ExecutionStep = z.infer<typeof executionStepSchema>;
 
-export const workoutExecutionSchema = z.object({
-  workoutId: z.string(),
-  type: workoutTypeSchema,
-  steps: z.array(executionStepSchema),
-  totalDurationSec: z.number(),
-  totalDistanceM: z.number().nullable(),
-});
+export const workoutExecutionSchema = contract.zWorkoutExecutionResponseDto;
 export type WorkoutExecution = z.infer<typeof workoutExecutionSchema>;
 
-export const recordedSplitSchema = z.object({
-  km: z.number(),
-  durationSec: z.number(),
-  paceSecPerKm: z.number(),
-  elevationGainM: z.number().nullable().optional(),
-  avgHeartRate: z.number().nullable().optional(),
-  partial: z.boolean().optional(),
-});
+export const recordedSplitSchema = contract.zRecordedSplitDto;
 export type RecordedSplit = z.infer<typeof recordedSplitSchema>;
 
-export const recordedLapSchema = z.object({
-  index: z.number(),
-  kind: z.string(),
-  plannedSec: z.number().nullable().optional(),
-  plannedM: z.number().nullable().optional(),
-  actualSec: z.number(),
-  actualM: z.number(),
-  avgPaceSecPerKm: z.number().nullable().optional(),
-  inTarget: z.boolean().nullable().optional(),
-});
+export const recordedLapSchema = contract.zRecordedLapDto;
 export type RecordedLap = z.infer<typeof recordedLapSchema>;
 
-export const recordedPauseSchema = z.object({
-  startedAt: z.string(),
-  endedAt: z.string(),
-  auto: z.boolean(),
-});
+export const recordedPauseSchema = contract.zRecordedPauseDto;
 export type RecordedPause = z.infer<typeof recordedPauseSchema>;
 
-export const routeBoundsSchema = z.object({
-  minLat: z.number(),
-  minLng: z.number(),
-  maxLat: z.number(),
-  maxLng: z.number(),
-});
+export const routeBoundsSchema = contract.zRouteBoundsDto;
 export type RouteBounds = z.infer<typeof routeBoundsSchema>;
 
 /** Body of `POST /recorded-activities` (the `summary` part of the multipart request). */
@@ -2533,42 +1658,13 @@ export type RecordedActivityRequest = {
   };
 };
 
-export const recordedActivityAcceptedSchema = z.object({
-  recordedActivityId: z.string(),
-  workoutId: z.string(),
-  outcome: z.enum(["created", "completed_planned", "merged", "matched_manual"]),
-});
+export const recordedActivityAcceptedSchema =
+  contract.zRecordedActivityAcceptedDto;
 export type RecordedActivityAccepted = z.infer<
   typeof recordedActivityAcceptedSchema
 >;
 
-export const workoutRecordingSchema = z.object({
-  id: z.string(),
-  environment: recordingEnvironmentSchema,
-  distanceSource: distanceSourceSchema,
-  startedAt: z.string(),
-  endedAt: z.string(),
-  elapsedSec: z.number(),
-  movingSec: z.number(),
-  distanceM: z.number(),
-  measuredDistanceM: z.number().nullable(),
-  elevationGainM: z.number().nullable(),
-  elevationLossM: z.number().nullable(),
-  avgPaceSecPerKm: z.number().nullable(),
-  bestPaceSecPerKm: z.number().nullable(),
-  avgHeartRate: z.number().nullable(),
-  maxHeartRate: z.number().nullable(),
-  avgCadence: z.number().nullable(),
-  splits: z.array(recordedSplitSchema),
-  laps: z.array(recordedLapSchema),
-  pauses: z.array(recordedPauseSchema),
-  routeLine: z.string().nullable(),
-  routeBounds: routeBoundsSchema.nullable(),
-  trackFileId: z.string().nullable(),
-  feeling: z.number().nullable(),
-  rpe: z.number().nullable(),
-  notes: z.string().nullable(),
-});
+export const workoutRecordingSchema = contract.zWorkoutRecordingResponseDto;
 export type WorkoutRecording = z.infer<typeof workoutRecordingSchema>;
 export type WorkoutStatus = z.infer<typeof workoutStatusSchema>;
 export type AdminWorkoutEditableStatus = z.infer<

@@ -624,12 +624,14 @@
         "5k": "5K",
         "10k": "10K",
         "half_marathon": "Полумарафон",
-        "marathon": "Марафон"
+        "marathon": "Марафон",
+        "custom": "Другая дистанция"
       },
       "sources": {
         "strava": "Strava",
         "health": "Здоровье",
         "manual_workouts": "Тренировки",
+        "user_input": "Введено вручную",
         "athlete_state": "Оценка",
         "profile": "Профиль"
       }
@@ -907,6 +909,7 @@
   "errors": {
     "USER_NOT_FOUND": "Пользователь не найден",
     "USER_EMAIL_ALREADY_EXISTS": "Пользователь с таким email уже существует",
+    "USER_REFERRAL_CODE_ALREADY_EXISTS": "Этот реферальный код уже занят",
     "PERMISSION_NOT_FOUND": "Право не найдено",
     "PERMISSION_GROUP_NOT_FOUND": "Группа не найдена",
     "SYSTEM_ENTITY_DELETION_FORBIDDEN": "Системные сущности нельзя удалять",

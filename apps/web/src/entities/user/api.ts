@@ -71,15 +71,16 @@ export async function fetchUserPresence(
   return new Set(userPresenceSchema.parse(response).onlineUserIds);
 }
 
+/** The create endpoint answers with the plain user; access details come from `fetchUser`. */
 export async function createUser(
   input: AdminCreateUserInput,
-): Promise<AdminUserDetail> {
+): Promise<AdminUser> {
   const payload = adminCreateUserSchema.parse(input);
   const response = await apiRequest<unknown>(userPaths.list, {
     method: "POST",
     body: payload,
   });
-  return adminUserDetailSchema.parse(response);
+  return adminUserSchema.parse(response);
 }
 
 export async function updateUser(

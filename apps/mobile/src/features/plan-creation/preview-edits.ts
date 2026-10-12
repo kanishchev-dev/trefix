@@ -5,6 +5,7 @@ import {
   type ManualPlanNewWorkout,
   type ManualPlanWeekOverrides,
   type ManualPlanWorkoutOverride,
+  previewWorkoutPhase,
 } from "@workspace/api-client";
 
 /** Client-side addition. `localId` keeps it addressable for edit/remove before saving. */
@@ -213,15 +214,18 @@ export function resolvePreview(
   const additionsByWeek = new Map<number, ManualPlanPreviewWorkout[]>();
   edits.additions.forEach((addition, index) => {
     const list = additionsByWeek.get(addition.weekNumber) ?? [];
+    const week = preview.weeks.find(
+      (item) => item.weekNumber === addition.weekNumber,
+    );
     list.push({
       id: `${NEW_WORKOUT_ID_PREFIX}${addition.localId}`,
       type: addition.type,
-      phase: "",
+      phase: previewWorkoutPhase(week?.phase ?? "base"),
       weekNumber: addition.weekNumber,
       dayOfWeek: addition.dayOfWeek,
       scheduledAt: "",
       orderInWeek: 1000 + index,
-      durationMinutes: addition.durationMinutes ?? 30,
+      durationMinutes: addition.durationMinutes,
       distanceKm: addition.distanceKm ?? 0,
       target: {},
       steps: [],

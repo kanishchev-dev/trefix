@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
-import { type GearInput } from "@workspace/api-client";
+import { type GearInput, type WorkoutType } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { Ruler } from "@workspace/ui-native";
 
@@ -174,7 +174,7 @@ export function GearEditScreen({
     />
   );
 
-  const toggleType = (type: string) =>
+  const toggleType = (type: WorkoutType) =>
     set(
       "defaultWorkoutTypes",
       draft.defaultWorkoutTypes.includes(type)

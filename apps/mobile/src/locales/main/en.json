@@ -1518,6 +1518,7 @@
         "strava": "from Strava",
         "health": "from your health app workouts",
         "manual_workouts": "from the workouts you logged",
+        "user_input": "entered by you",
         "athlete_state": "from your profile",
         "none": "enter manually",
         "profile": "from your profile"
@@ -1540,7 +1541,8 @@
         "5k": "5K",
         "10k": "10K",
         "half_marathon": "Half",
-        "marathon": "Marathon"
+        "marathon": "Marathon",
+        "custom": "other distance"
       }
     },
     "rebuild": {

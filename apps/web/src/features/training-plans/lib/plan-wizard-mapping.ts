@@ -138,9 +138,9 @@ export function buildGoal(values: PlanWizardValues): ManualPlanGoalInput {
 
   return {
     type: values.goalType,
-    target: goal.target,
-    current: goal.current,
-    description: description.length > 0 ? description : null,
+    target: goal.target ?? undefined,
+    current: goal.current ?? undefined,
+    description: description.length > 0 ? description : undefined,
     targetDate: values.goalTargetDate || undefined,
   };
 }

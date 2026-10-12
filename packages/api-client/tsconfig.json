@@ -3,8 +3,18 @@
   "compilerOptions": {
     "composite": true,
     "incremental": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*",
+    "contract/**/*",
+    "test/**/*",
+    "*.config.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

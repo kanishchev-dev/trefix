@@ -7,13 +7,20 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "generate": "openapi-ts",
+    "contract:check": "tsx contract/check.ts"
   },
   "dependencies": {
     "zod": "4.6.1"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "@types/node": "24.5.2",
     "@workspace/eslint-config": "workspace:*",
-    "eslint": "9.35.0"
+    "eslint": "9.35.0",
+    "tsx": "4.20.5",
+    "vitest": "3.2.4"
   }
 }

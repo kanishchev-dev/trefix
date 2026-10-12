@@ -68,6 +68,9 @@ describe("permissionGroupSchema", () => {
     const result = permissionGroupSchema.safeParse({
       id: "6c9b1f7e-0f5e-4f2e-9a2b-8f4a5d6c7e8f",
       name: "Support",
+      description: null,
+      systemKey: null,
+      isSystem: false,
     });
 
     expect(result.success).toBe(true);

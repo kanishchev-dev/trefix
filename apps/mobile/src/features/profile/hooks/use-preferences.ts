@@ -13,6 +13,7 @@ import { queryKeys } from "../../../shared/lib/query-keys";
 
 export const preferencesQueryKey = queryKeys.preferences.all;
 
+/** Shown until the server answers; never written to the cache as server data. */
 export const DEFAULT_PREFERENCES: UserPreferences = {
   units: "metric",
   weekStart: "mon",
@@ -22,6 +23,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   coachQuietHours: null,
   stravaProfileSync: true,
   timezone: null,
+  language: null,
+  updatedAt: new Date(0).toISOString(),
 };
 
 export function usePreferences() {
@@ -45,10 +48,12 @@ export function useUpdatePreferences() {
       await queryClient.cancelQueries({ queryKey: preferencesQueryKey });
       const previous =
         queryClient.getQueryData<UserPreferences>(preferencesQueryKey);
-      queryClient.setQueryData<UserPreferences>(preferencesQueryKey, {
-        ...(previous ?? DEFAULT_PREFERENCES),
-        ...patch,
-      });
+      if (previous) {
+        queryClient.setQueryData<UserPreferences>(preferencesQueryKey, {
+          ...previous,
+          ...patch,
+        });
+      }
       return { previous };
     },
     onError: (_error, _patch, context) => {

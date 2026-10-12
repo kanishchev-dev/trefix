@@ -91,7 +91,7 @@ describe("plan wizard form", () => {
       goal: {
         type: "prepare_for_race",
         target: { distanceMeters: 10_000 },
-        current: null,
+        current: undefined,
       },
       schedule: { trainingDays: [0, 2, 5], workoutDurationMinutes: 45 },
       structure: { totalWeeks: 8, sessionsPerWeek: 3 },

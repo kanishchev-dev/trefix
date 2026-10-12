@@ -106,7 +106,7 @@ export function UserForm({
         firstName: values.firstName,
         lastName: values.lastName,
         emailVerified: values.emailVerified,
-        referralCode: values.referralCode,
+        referralCode: values.referralCode?.trim() || undefined,
         password: password && password.length > 0 ? password : undefined,
       },
       {

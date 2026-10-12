@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getWorkoutActions, parseCompletionForm } from "./workout-detail-rules";
 
 describe("getWorkoutActions", () => {
-  const planned = { status: "planned", type: "easy", planId: "p1" };
+  const planned = { status: "planned", type: "easy", planId: "p1" } as const;
 
   it("lets a future workout of the active plan be edited, not completed", () => {
     const actions = getWorkoutActions(

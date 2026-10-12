@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Calendar, Activity, Clock, Heart, Award } from "lucide-react-native";
 
+import { type WorkoutType } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
 import {
@@ -50,7 +51,7 @@ export function AddWorkoutSheet({
   const [dateStr, setDateStr] = useState(
     defaultDate || new Date().toISOString().split("T")[0],
   );
-  const [type, setType] = useState("easy");
+  const [type, setType] = useState<WorkoutType>("easy");
   const [title, setTitle] = useState("");
   const [distanceKm, setDistanceKm] = useState("5");
   const [durationMinutes, setDurationMinutes] = useState("30");

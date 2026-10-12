@@ -28,7 +28,7 @@ export function usePlannedWorkout(
     todays.data?.find(
       (workout) =>
         workoutLocalDate(workout.scheduledAt) === today &&
-        (workout.status === "planned" || workout.status === "modified") &&
+        workout.status === "planned" &&
         workout.type !== "rest",
     ) ?? null
   );

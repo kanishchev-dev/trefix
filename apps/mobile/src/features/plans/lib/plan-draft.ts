@@ -12,6 +12,10 @@ import {
   type PlanDetails,
   type RecentResult,
   type RelativeWeek,
+  type ManualPlanStructureInput,
+  manualPlanStructureSchema,
+  previewWeekPhase,
+  previewWorkoutPhase,
 } from "@workspace/api-client";
 
 import {
@@ -29,6 +33,12 @@ const asRecord = (value: unknown): Record<string, unknown> | undefined =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined;
+
+type PlanFocus = NonNullable<ManualPlanStructureInput["focus"]>[number];
+
+const isPlanFocus = (value: string): value is PlanFocus =>
+  manualPlanStructureSchema.shape.focus.unwrap().element.safeParse(value)
+    .success;
 
 const asNumber = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -53,8 +63,8 @@ export function draftFromConfig(
 ): PlanCreationDraft {
   const base = INITIAL_PLAN_CREATION_DRAFT;
   const goal = config.goal ?? {};
-  const schedule = config.schedule ?? {};
-  const structure = config.structure ?? {};
+  const schedule: Partial<PlanConfig["schedule"]> = config.schedule ?? {};
+  const structure: Partial<PlanConfig["structure"]> = config.structure ?? {};
 
   const goalType = isGoalType(goal.type) ? goal.type : base.goal.type;
   const targetDate =
@@ -105,7 +115,7 @@ export function draftFromConfig(
     structure: {
       totalWeeks: asNumber(structure.totalWeeks) ?? base.structure.totalWeeks,
       sessionsPerWeek: Math.max(1, sessionsPerWeek),
-      focus: structure.focus ?? base.structure.focus,
+      focus: structure.focus?.filter(isPlanFocus) ?? base.structure.focus,
     },
   };
 }
@@ -280,7 +290,7 @@ export function relativeWeeksToPreview(
       .map((workout) => ({
         id: workout.key,
         type: workout.type,
-        phase: workout.phase,
+        phase: previewWorkoutPhase(workout.phase),
         weekNumber: week.weekNumber,
         dayOfWeek: workout.dayOfWeek,
         scheduledAt: "",
@@ -292,7 +302,7 @@ export function relativeWeeksToPreview(
       }));
     return {
       weekNumber: week.weekNumber,
-      phase: week.phase,
+      phase: previewWeekPhase(week.phase),
       title: week.title ?? "",
       plannedWorkoutsCount: workouts.length,
       plannedDistance: workouts.reduce(

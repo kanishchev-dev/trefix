@@ -65,6 +65,10 @@ function DraftWorkoutContent({
   );
 
   const parsed = parsePlanWorkout(fields);
+  // A new workout needs a duration; an edit may keep the current one.
+  const canSubmit =
+    parsed !== null &&
+    (state.mode === "edit" || parsed.durationMinutes !== undefined);
 
   const save = (override: DraftWeekOverride, successKey: string) => {
     updateStructure.mutate(
@@ -92,6 +96,7 @@ function DraftWorkoutContent({
     const day = Number(dayOfWeek);
 
     if (state.mode === "add") {
+      if (parsed.durationMinutes === undefined) return;
       save(
         {
           weekNumber: state.weekNumber,
@@ -197,7 +202,7 @@ function DraftWorkoutContent({
             </Button>
             <Button
               type="button"
-              disabled={isPending || !parsed}
+              disabled={isPending || !canSubmit}
               onClick={submit}
             >
               {isPending ? <Spinner /> : null}

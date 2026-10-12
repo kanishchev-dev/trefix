@@ -2,6 +2,8 @@
 
 import type { ReactElement } from "react";
 
+import type { WorkoutType } from "@workspace/api-client";
+
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 
@@ -20,13 +22,13 @@ export const PLAN_EDITABLE_WORKOUT_TYPES = [
 ] as const;
 
 export type PlanWorkoutDraft = {
-  type: string;
+  type: WorkoutType;
   distanceKm: string;
   durationMinutes: string;
 };
 
 export type ParsedPlanWorkout = {
-  type: string;
+  type: WorkoutType;
   distanceKm?: number;
   durationMinutes?: number;
 };
@@ -70,7 +72,7 @@ export function parsePlanWorkout(
 }
 
 export function workoutDraftOf(workout: {
-  type: string;
+  type: WorkoutType;
   distanceKm: number;
   durationMinutes: number;
 }): PlanWorkoutDraft {
@@ -100,7 +102,7 @@ export function WorkoutFields({
   const { t } = useI18n();
   const invalid = parsePlanWorkout(value) === null;
   // Keep the current type selectable even when it is not in the editable list (e.g. a race placed by the engine).
-  const types = PLAN_EDITABLE_WORKOUT_TYPES.includes(
+  const types: readonly WorkoutType[] = PLAN_EDITABLE_WORKOUT_TYPES.includes(
     value.type as (typeof PLAN_EDITABLE_WORKOUT_TYPES)[number],
   )
     ? PLAN_EDITABLE_WORKOUT_TYPES

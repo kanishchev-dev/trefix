@@ -107,11 +107,8 @@ export function WorkoutDetailSheet({
     switch (workout.status) {
       case "completed":
         return statuses.completed;
-      case "missed":
       case "skipped":
         return statuses.missed;
-      case "modified":
-        return statuses.modified;
       default:
         return statuses.planned;
     }
@@ -155,10 +152,7 @@ export function WorkoutDetailSheet({
             type: workout.type,
             distanceKm: workout.distanceKm,
             durationMinutes: workout.durationMinutes,
-            scheduledAt:
-              typeof workout.scheduledAt === "string"
-                ? workout.scheduledAt
-                : workout.scheduledAt.toISOString(),
+            scheduledAt: workout.scheduledAt,
           }}
           onDone={onClose}
           onCancel={() => setEditMode(null)}

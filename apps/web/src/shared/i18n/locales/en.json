@@ -624,12 +624,14 @@
         "5k": "5K",
         "10k": "10K",
         "half_marathon": "Half marathon",
-        "marathon": "Marathon"
+        "marathon": "Marathon",
+        "custom": "Other distance"
       },
       "sources": {
         "strava": "Strava",
         "health": "Health",
         "manual_workouts": "Workouts",
+        "user_input": "Entered manually",
         "athlete_state": "Estimate",
         "profile": "Profile"
       }
@@ -907,6 +909,7 @@
   "errors": {
     "USER_NOT_FOUND": "User not found",
     "USER_EMAIL_ALREADY_EXISTS": "A user with this email already exists",
+    "USER_REFERRAL_CODE_ALREADY_EXISTS": "This referral code is already taken",
     "PERMISSION_NOT_FOUND": "Permission not found",
     "PERMISSION_GROUP_NOT_FOUND": "Group not found",
     "SYSTEM_ENTITY_DELETION_FORBIDDEN": "System entities cannot be deleted",

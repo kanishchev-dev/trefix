@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { PlanDetails } from "@workspace/api-client";
+import type {
+  PlanDetails,
+  PlanWorkoutItem,
+  RelativeWorkout,
+  WorkoutStatus,
+} from "@workspace/api-client";
 
 import { buildPlanWeeks, isDatedWorkoutEditable } from "./plan-weeks";
 
@@ -15,9 +20,21 @@ const base = {
   version: 1,
   config: { goal: {}, schedule: {}, structure: {} },
   metricsSnapshot: null,
+  sessionsPerWeek: null,
+  startDate: null,
+  endDate: null,
+  cancelledAt: null,
+  cancelReason: null,
+  sourcePlanId: null,
+  replacedByPlanId: null,
+  stats: null,
 } satisfies Partial<PlanDetails>;
 
-const relative = (key: string, dayOfWeek: number, distanceKm: number) => ({
+const relative = (
+  key: string,
+  dayOfWeek: number,
+  distanceKm: number,
+): RelativeWorkout => ({
   key,
   dayOfWeek,
   orderInWeek: 1,
@@ -33,8 +50,8 @@ const dated = (
   id: string,
   weekNumber: number,
   scheduledAt: string,
-  status = "planned",
-) => ({
+  status: WorkoutStatus = "planned",
+): PlanWorkoutItem => ({
   id,
   weekNumber,
   orderInWeek: 1,

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { type WorkoutType } from "@workspace/api-client";
 import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
 import { DateWheel } from "@workspace/ui-native";
 
@@ -38,7 +39,7 @@ export type PlanWorkoutEditMode = "edit" | "move" | "remove" | "add";
 
 export type PlanWorkoutRef = {
   id: string;
-  type: string;
+  type: WorkoutType;
   distanceKm: number;
   durationMinutes: number;
   scheduledAt: string;
