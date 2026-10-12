@@ -4,24 +4,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactElement } from "react";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@workspace/ui/components/tabs";
+} from "@trefix/ui/components/tabs";
 import { InfoIcon, PencilIcon, Trash2Icon } from "lucide-react";
 
-import type { Permission, PermissionGroup } from "@workspace/api-client";
+import type { Permission, PermissionGroup } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { getFriendlyApiMessage } from "@/lib/errors";

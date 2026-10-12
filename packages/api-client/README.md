@@ -1,4 +1,4 @@
-# @workspace/api-client
+# @trefix/api-client
 
 Общий клиент API для `apps/web` и `apps/mobile`: zod-схемы, типы, константы и `createApiClient`.
 

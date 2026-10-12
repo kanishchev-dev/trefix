@@ -2,11 +2,11 @@
 
 import type { ReactElement } from "react";
 
-import { Alert, AlertDescription } from "@workspace/ui/components/alert";
-import { Badge } from "@workspace/ui/components/badge";
+import { Alert, AlertDescription } from "@trefix/ui/components/alert";
+import { Badge } from "@trefix/ui/components/badge";
 import { TriangleAlertIcon } from "lucide-react";
 
-import type { PlanDiff } from "@workspace/api-client";
+import type { PlanDiff } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

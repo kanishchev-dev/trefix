@@ -62,7 +62,7 @@ import {
   type TrainingWorkout,
   type UpdatePlanMetaInput,
   type UpdatePlanStructureInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { request } from "./api-client";
 
 export async function getAthlete(athleteId: string): Promise<TrainingAthlete> {

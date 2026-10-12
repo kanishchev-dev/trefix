@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
-import type { ThemeTokens } from "@workspace/tokens";
+import type { ThemeTokens } from "@trefix/tokens";
 
 type Props = {
   theme: ThemeTokens;

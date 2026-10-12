@@ -22,7 +22,7 @@ import {
   type StravaConnectResponse,
   type StravaProfileAccess,
   type WorkoutSources,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { request } from "./api-client";
 import { logger } from "./logger";
 

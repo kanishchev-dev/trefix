@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlanOverview } from "../../../lib/training-api";
-import { ApiClientError } from "@workspace/api-client";
+import { ApiClientError } from "@trefix/api-client";
 import { queryKeys } from "../../../shared/lib/query-keys";
 
 export type PlanDisplayState =

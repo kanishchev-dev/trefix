@@ -2,8 +2,8 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Check, Moon, Sparkles, Trash2, X } from "lucide-react-native";
 
-import { type CoachAdaptationMode } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type CoachAdaptationMode } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { trackEvent } from "../../../lib/analytics";
 import { clearCoachHistory } from "../../../lib/coach-api";

@@ -8,8 +8,8 @@ import {
   type PlanDiff,
   type PlanStartBlock,
   type PlanStartOptions,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { formatDayMonth, type AppLanguage, type MainCopy } from "../../locales";
 import { BottomSheet, SheetButton } from "../../shared/ui/bottom-sheet";

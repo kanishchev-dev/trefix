@@ -2,7 +2,7 @@
 
 import type { ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@workspace/ui/components/dialog";
+} from "@trefix/ui/components/dialog";
 
 import { useI18n } from "@/shared/i18n";
 

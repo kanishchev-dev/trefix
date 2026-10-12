@@ -6,7 +6,7 @@ import {
   validateGoalPayload,
   type AthleteGoalType,
   type GoalMetricKey,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   formatDuration,

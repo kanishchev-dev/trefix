@@ -11,7 +11,7 @@ import {
   type RaceResultInput,
   type RecordDistance,
   type RecordHistory,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { request } from "./api-client";
 
 export async function getProgressOverview(

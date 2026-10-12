@@ -1,4 +1,4 @@
-import type { ThemeTokens } from "@workspace/tokens";
+import type { ThemeTokens } from "@trefix/tokens";
 
 /**
  * Soft edge for glass inputs: a faint highlight at rest and a slightly brighter one

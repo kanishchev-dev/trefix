@@ -61,19 +61,19 @@ importers:
       '@tanstack/react-query':
         specifier: 5.103.1
         version: 5.103.1(react@19.2.3)
-      '@workspace/api-client':
+      '@trefix/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@workspace/config':
+      '@trefix/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@workspace/tokens':
+      '@trefix/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
-      '@workspace/ui-native':
+      '@trefix/ui-native':
         specifier: workspace:*
         version: link:../../packages/ui-native
-      '@workspace/utils':
+      '@trefix/utils':
         specifier: workspace:*
         version: link:../../packages/utils
       expo:
@@ -200,7 +200,7 @@ importers:
       '@types/react':
         specifier: 19.2.18
         version: 19.2.18
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
       eslint:
@@ -221,19 +221,19 @@ importers:
       '@tanstack/react-query':
         specifier: 5.103.1
         version: 5.103.1(react@19.3.0)
-      '@workspace/api-client':
+      '@trefix/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@workspace/config':
+      '@trefix/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@workspace/tokens':
+      '@trefix/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
-      '@workspace/ui':
+      '@trefix/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@workspace/utils':
+      '@trefix/utils':
         specifier: workspace:*
         version: link:../../packages/utils
       lucide-react:
@@ -313,7 +313,7 @@ importers:
       '@types/node':
         specifier: 24.5.2
         version: 24.5.2
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       eslint:
@@ -328,7 +328,7 @@ importers:
 
   packages/config:
     devDependencies:
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       eslint:
@@ -358,7 +358,7 @@ importers:
       '@types/node':
         specifier: 24.5.2
         version: 24.5.2
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       eslint:
@@ -410,7 +410,7 @@ importers:
       '@types/react-dom':
         specifier: 19.1.9
         version: 19.1.9(@types/react@19.1.13)
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       eslint:
@@ -422,7 +422,7 @@ importers:
 
   packages/ui-native:
     dependencies:
-      '@workspace/tokens':
+      '@trefix/tokens':
         specifier: workspace:*
         version: link:../tokens
       expo-haptics:
@@ -447,7 +447,7 @@ importers:
       '@types/react':
         specifier: 19.2.18
         version: 19.2.18
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       eslint:
@@ -459,7 +459,7 @@ importers:
 
   packages/utils:
     devDependencies:
-      '@workspace/eslint-config':
+      '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       eslint:

@@ -14,7 +14,7 @@ import type {
   AdminUserDetail,
   PaginatedResponse,
   UserListQuery,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   createUser,

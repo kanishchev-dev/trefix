@@ -1,4 +1,4 @@
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { type MainCopy } from "../../../locales";
 import { TrefixChatScreen } from "../../trefix/trefix-chat";
 

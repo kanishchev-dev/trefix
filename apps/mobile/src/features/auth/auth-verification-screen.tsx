@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type MobileAuthChallenge } from "@workspace/api-client";
-import { isDarkTheme, type ThemeTokens } from "@workspace/tokens";
+import { type MobileAuthChallenge } from "@trefix/api-client";
+import { isDarkTheme, type ThemeTokens } from "@trefix/tokens";
 import { formatCountdown, type AuthCopy } from "../../locales";
 import { getErrorMessage } from "../../shared/lib/error-message";
 import { styles } from "./auth-verification-screen.styles";

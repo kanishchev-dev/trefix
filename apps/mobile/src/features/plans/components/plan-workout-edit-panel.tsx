@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { type WorkoutType } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { DateWheel } from "@workspace/ui-native";
+import { type WorkoutType } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { DateWheel } from "@trefix/ui-native";
 
 import {
   formatDayMonth,

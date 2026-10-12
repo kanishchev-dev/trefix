@@ -1,5 +1,5 @@
 import { Platform, TurboModuleRegistry } from "react-native";
-import type { DeviceProvider } from "@workspace/api-client";
+import type { DeviceProvider } from "@trefix/api-client";
 
 import type { DeviceHealthSource } from "../types";
 import { logger } from "../../../lib/logger";

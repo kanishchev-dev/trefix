@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { History, ListChecks, Target } from "lucide-react-native";
 
-import { type PlanCounts, type PlanListItem } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PlanCounts, type PlanListItem } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { PlanCard } from "../../plans/components/plan-card";

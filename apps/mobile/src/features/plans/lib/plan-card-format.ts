@@ -1,4 +1,4 @@
-import { type PlanCounts, type PlanListItem } from "@workspace/api-client";
+import { type PlanCounts, type PlanListItem } from "@trefix/api-client";
 
 import {
   fillTemplate,

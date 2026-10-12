@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as Location from "expo-location";
 
-import type { TrainingWorkout } from "@workspace/api-client";
+import type { TrainingWorkout } from "@trefix/api-client";
 
 import { useWorkouts } from "../main/hooks/use-workouts";
 import { useWorkout } from "../plans/hooks/use-workout";

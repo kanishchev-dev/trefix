@@ -2,7 +2,7 @@
 
 import { useState, type ReactElement, type ReactNode } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@workspace/ui/components/dialog";
-import { Spinner } from "@workspace/ui/components/spinner";
+} from "@trefix/ui/components/dialog";
+import { Spinner } from "@trefix/ui/components/spinner";
 
 import type {
   PlanChangePreview,
   PlanChangeRequest,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";

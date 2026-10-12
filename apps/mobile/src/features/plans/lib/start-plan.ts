@@ -5,7 +5,7 @@ import {
   type PlanStartOption,
   type PlanStartOptionKind,
   type PlanStartOptions,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { planEndDate } from "./plan-dates";
 

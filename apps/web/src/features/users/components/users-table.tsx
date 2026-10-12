@@ -8,17 +8,17 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@workspace/ui/components/avatar";
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+} from "@trefix/ui/components/avatar";
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/dropdown-menu";
+import { Input } from "@trefix/ui/components/input";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@workspace/ui/components/table";
+} from "@trefix/ui/components/table";
 import {
   CheckCircle2Icon,
   ChevronDownIcon,
@@ -40,7 +40,7 @@ import {
   XCircleIcon,
 } from "lucide-react";
 
-import type { AdminUser } from "@workspace/api-client";
+import type { AdminUser } from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";

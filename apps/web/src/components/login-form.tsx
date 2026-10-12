@@ -6,16 +6,16 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/card";
+import { Field, FieldGroup, FieldLabel } from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
 import { useAuth } from "@/components/auth-provider";
 import { authLoginSchema } from "@/lib/auth";

@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { styles } from "./plan-creation-ui.styles";
 
 export function FieldError({

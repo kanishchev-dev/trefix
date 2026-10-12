@@ -1,6 +1,6 @@
-import type { DeviceProvider } from "@workspace/api-client";
+import type { DeviceProvider } from "@trefix/api-client";
 
-import { type ThemeMode } from "@workspace/tokens";
+import { type ThemeMode } from "@trefix/tokens";
 
 import { IntegrationLogo } from "../../../shared/ui/integration-logo";
 

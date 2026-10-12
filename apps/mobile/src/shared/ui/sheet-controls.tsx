@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { styles } from "./bottom-sheet.styles";
 
 export function SheetButton({

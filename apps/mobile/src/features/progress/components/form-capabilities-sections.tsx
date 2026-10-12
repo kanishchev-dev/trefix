@@ -2,7 +2,7 @@ import { Text, View } from "react-native";
 import {
   type CapabilityType,
   type ProgressOverview,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { fillTemplate, pluralize } from "../../../locales";
 import { formatPace } from "../../../shared/lib/units";
 import { formatPaceDelta } from "../lib/progress-format";

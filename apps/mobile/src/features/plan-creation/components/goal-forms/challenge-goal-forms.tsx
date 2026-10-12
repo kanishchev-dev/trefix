@@ -5,7 +5,7 @@ import {
   GOAL_CHALLENGE_PERIODS,
   type GoalChallengeMetric,
   type GoalChallengePeriod,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { MultilineInputRow, OptionChip } from "../plan-creation-ui";
 import { styles } from "../goal-setup-step.styles";
 import { CHALLENGE_SCALES } from "../goal-setup-helpers";

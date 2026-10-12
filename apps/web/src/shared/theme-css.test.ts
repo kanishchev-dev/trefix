@@ -11,7 +11,7 @@ describe("admin theme", () => {
       __dirname,
       "../../../../packages/ui/src/styles/theme.css",
     );
-    // Out of date: run `pnpm --filter @workspace/tokens generate:web-css`.
+    // Out of date: run `pnpm --filter @trefix/tokens generate:web-css`.
     expect(readFileSync(path, "utf8")).toBe(renderWebThemeCss());
   });
 });

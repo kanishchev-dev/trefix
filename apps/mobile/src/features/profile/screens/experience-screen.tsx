@@ -4,9 +4,9 @@ import { StyleSheet, TextInput } from "react-native";
 import {
   type AthleteProfileUpdate,
   type ExperienceLevel,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Segmented } from "@workspace/ui-native";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Segmented } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import { type MainCopy } from "../../../locales";

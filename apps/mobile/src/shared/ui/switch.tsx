@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 type Props = {
   value: boolean;

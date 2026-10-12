@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { AppState, type AppStateStatus } from "react-native";
-import { type AuthTokens } from "@workspace/api-client";
+import { type AuthTokens } from "@trefix/api-client";
 import { getJwtExpirationMs, isJwtExpired } from "./jwt-utils";
 import { refreshAuthTokens } from "./auth-api";
 import { logger } from "./logger";

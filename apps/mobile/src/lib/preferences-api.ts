@@ -3,7 +3,7 @@ import {
   userPreferencesUpdateSchema,
   type UserPreferences,
   type UserPreferencesUpdate,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { request } from "./api-client";
 
 export async function getPreferences(): Promise<UserPreferences> {

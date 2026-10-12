@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 
-import { type ThemeMode } from "@workspace/tokens";
+import { type ThemeMode } from "@trefix/tokens";
 
 /**
  * Official partner artwork, used exactly as the partners ship it. Every brand

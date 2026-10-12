@@ -10,14 +10,14 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@workspace/ui/components/select";
+} from "@trefix/ui/components/select";
 
 import {
   ATHLETE_GOAL_CATEGORIES,
   ATHLETE_GOAL_TYPES,
   GOAL_TYPE_CATEGORY,
   type AthleteGoalType,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

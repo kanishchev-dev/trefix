@@ -3,7 +3,7 @@ import {
   type CancelPlanResponse,
   type PlanDetails,
   type StartPlanInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   cancelPlan,

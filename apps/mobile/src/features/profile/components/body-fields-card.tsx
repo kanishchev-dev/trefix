@@ -3,8 +3,8 @@ import { useState } from "react";
 import {
   type AthleteProfile,
   type AthleteProfileUpdate,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { syncStravaProfile } from "../../../lib/integrations-api";
 import { trackEvent } from "../../../lib/analytics";

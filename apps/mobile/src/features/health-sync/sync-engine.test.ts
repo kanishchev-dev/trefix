@@ -3,7 +3,7 @@ import type {
   DeviceActivity,
   DeviceProvider,
   DeviceSyncBatchRequest,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   PROFILE_METRICS_INTERVAL_MS,

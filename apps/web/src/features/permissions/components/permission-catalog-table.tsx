@@ -2,9 +2,9 @@
 
 import type { ReactElement } from "react";
 
-import { Switch } from "@workspace/ui/components/switch";
+import { Switch } from "@trefix/ui/components/switch";
 
-import type { Permission } from "@workspace/api-client";
+import type { Permission } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 import {

@@ -12,7 +12,7 @@ import {
   type PaginatedResponse,
   type UserListQuery,
   userPresenceSchema,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { apiRequest } from "@/lib/api";
 

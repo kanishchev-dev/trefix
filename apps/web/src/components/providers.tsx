@@ -3,8 +3,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactElement, type ReactNode } from "react";
 
-import { Toaster } from "@workspace/ui/components/toast";
-import { TooltipProvider } from "@workspace/ui/components/tooltip";
+import { Toaster } from "@trefix/ui/components/toast";
+import { TooltipProvider } from "@trefix/ui/components/tooltip";
 
 import { AuthProvider } from "@/components/auth-provider";
 import { RealtimeProvider } from "@/shared/api/realtime-provider";

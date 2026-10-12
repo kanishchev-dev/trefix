@@ -1,4 +1,4 @@
-import { resolveApiErrorMessage } from "@workspace/utils";
+import { resolveApiErrorMessage } from "@trefix/utils";
 
 export type ErrorCopy = {
   network: string;

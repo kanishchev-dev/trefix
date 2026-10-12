@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import { Sparkles } from "lucide-react-native";
 import { ThreadPrimitive } from "@assistant-ui/react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { type MainCopy } from "../../../locales";
 import { styles } from "../trefix-chat.styles";
 

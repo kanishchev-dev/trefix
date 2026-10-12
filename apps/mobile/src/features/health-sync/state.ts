@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
-import type { DeviceProvider } from "@workspace/api-client";
+import type { DeviceProvider } from "@trefix/api-client";
 
 import type { SyncStateStore } from "./sync-engine";
 import type { SyncCursor } from "./types";

@@ -5,7 +5,7 @@ import {
   adminUpdateUserSchema,
   updateSettingsSchema,
   userListQuerySchema,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 describe("admin user contract schemas", () => {
   describe("adminCreateUserSchema", () => {

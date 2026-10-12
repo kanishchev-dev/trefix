@@ -6,7 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import {
   HEADER_CONTENT_HEIGHT,
   BACKGROUND_TOP_OFFSET,

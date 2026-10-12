@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardAction,
@@ -11,11 +11,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Skeleton } from "@workspace/ui/components/skeleton";
+} from "@trefix/ui/components/card";
+import { Skeleton } from "@trefix/ui/components/skeleton";
 import { CalendarCheckIcon, InfoIcon, PlusIcon } from "lucide-react";
 
-import type { AdminCalendarWorkout } from "@workspace/api-client";
+import type { AdminCalendarWorkout } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/shared/i18n";

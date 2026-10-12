@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/api-client",
+  "name": "@trefix/api-client",
   "private": true,
   "type": "module",
   "exports": {
@@ -18,7 +18,7 @@
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
     "@types/node": "24.5.2",
-    "@workspace/eslint-config": "workspace:*",
+    "@trefix/eslint-config": "workspace:*",
     "eslint": "9.35.0",
     "tsx": "4.20.5",
     "vitest": "3.2.4"

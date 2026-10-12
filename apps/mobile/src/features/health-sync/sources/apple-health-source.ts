@@ -17,7 +17,7 @@ import type {
   DeviceActivity,
   DeviceProfileMetricsRequest,
   DeviceScope,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   mapAppleWorkout,

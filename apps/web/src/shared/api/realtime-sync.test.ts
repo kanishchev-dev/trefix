@@ -3,7 +3,7 @@ import type {
   AdminUser,
   AdminUserDetail,
   PaginatedResponse,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { describe, expect, it } from "vitest";
 
 import {

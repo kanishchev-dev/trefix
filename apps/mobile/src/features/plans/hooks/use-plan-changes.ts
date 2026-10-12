@@ -3,7 +3,7 @@ import {
   type PlanChangePreview,
   type PlanChangeRequest,
   type PlanDetails,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   applyPlanChange,

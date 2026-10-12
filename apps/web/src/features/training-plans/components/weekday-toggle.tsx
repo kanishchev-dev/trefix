@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@workspace/ui/components/toggle-group";
+} from "@trefix/ui/components/toggle-group";
 
 import { useI18n } from "@/shared/i18n";
 

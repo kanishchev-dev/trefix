@@ -9,12 +9,12 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@workspace/ui/components/toggle-group";
+} from "@trefix/ui/components/toggle-group";
 
 import { useI18n } from "@/shared/i18n";
 import { OptionSelect } from "@/widgets/option-select";

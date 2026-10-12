@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, type ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import { ArrowLeftIcon, InfoIcon } from "lucide-react";
 
-import { ApiClientError, type PlanDetails } from "@workspace/api-client";
+import { ApiClientError, type PlanDetails } from "@trefix/api-client";
 
 import { getBrowserTimezone } from "@/features/training-calendar/lib/calendar-dates";
 import { useUser } from "@/features/users/hooks/use-users";

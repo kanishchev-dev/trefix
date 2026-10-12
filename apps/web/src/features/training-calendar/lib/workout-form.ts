@@ -7,7 +7,7 @@ import {
   type AdminCalendarWorkout,
   type AdminCreateWorkoutInput,
   type AdminUpdateWorkoutInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   parseDateKey,

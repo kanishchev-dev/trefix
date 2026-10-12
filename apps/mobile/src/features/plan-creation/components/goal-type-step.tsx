@@ -7,8 +7,8 @@ import {
   GOAL_TYPE_CATEGORY,
   type AthleteGoalCategory,
   type AthleteGoalType,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { SheetBlock, SheetButton } from "../../../shared/ui/bottom-sheet";

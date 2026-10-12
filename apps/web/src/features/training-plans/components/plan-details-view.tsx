@@ -4,21 +4,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
+} from "@trefix/ui/components/dropdown-menu";
 import {
   ArrowLeftIcon,
   CalendarClockIcon,
@@ -31,7 +31,7 @@ import {
   XCircleIcon,
 } from "lucide-react";
 
-import type { PlanDetails } from "@workspace/api-client";
+import type { PlanDetails } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import {

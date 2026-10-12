@@ -1,4 +1,4 @@
-import type { ExecutionStep } from "@workspace/api-client";
+import type { ExecutionStep } from "@trefix/api-client";
 
 import type { Cue } from "./cues";
 

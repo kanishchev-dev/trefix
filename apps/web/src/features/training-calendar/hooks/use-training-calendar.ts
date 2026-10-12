@@ -13,7 +13,7 @@ import type {
   AdminCalendarSummary,
   AdminCreateWorkoutInput,
   AdminUpdateWorkoutInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   createCalendarWorkout,

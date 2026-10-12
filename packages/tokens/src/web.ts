@@ -22,7 +22,7 @@ const WEB_ONLY: Record<
 /**
  * shadcn CSS variables of the admin panel, built from the shared palette so the
  * admin and the app use the same colours. Changing a token changes the admin
- * after `pnpm --filter @workspace/tokens generate:web-css`.
+ * after `pnpm --filter @trefix/tokens generate:web-css`.
  */
 export function webThemeVariables(mode: ThemeMode): Record<string, string> {
   const c = mobileThemeTokens[mode].color;
@@ -81,7 +81,7 @@ export function renderWebThemeCss(): string {
     return `${selector} {\n${[...extra, ...lines].join("\n")}\n}\n`;
   };
   return [
-    "/* Generated from @workspace/tokens (packages/tokens/src/web.ts). Do not edit: run `pnpm --filter @workspace/tokens generate:web-css`. */\n",
+    "/* Generated from @trefix/tokens (packages/tokens/src/web.ts). Do not edit: run `pnpm --filter @trefix/tokens generate:web-css`. */\n",
     block(":root", "light", ["  --radius: 0.625rem;"]),
     block(".dark", "dark"),
   ].join("\n");

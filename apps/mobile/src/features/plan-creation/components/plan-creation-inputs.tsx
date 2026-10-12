@@ -1,7 +1,7 @@
 import { Text, TextInput, View } from "react-native";
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { formatTargetTime } from "../plan-creation-types";
-import { Ruler } from "@workspace/ui-native";
+import { Ruler } from "@trefix/ui-native";
 import { styles } from "./plan-creation-ui.styles";
 import { FieldError, InputRowHeader } from "./plan-creation-field";
 

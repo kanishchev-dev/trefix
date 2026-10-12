@@ -2,8 +2,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Activity, Clock, Heart, Award, Sparkles } from "lucide-react-native";
 
-import { type TrainingWorkout } from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type TrainingWorkout } from "@trefix/api-client";
+import { type ThemeTokens } from "@trefix/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
 import { SheetSectionLabel } from "../../../../shared/ui/bottom-sheet";
 import { type MainCopy } from "../../../../locales";

@@ -7,7 +7,7 @@ import {
   CircleHelp,
 } from "lucide-react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { trackEvent } from "../../../lib/analytics";
 import {

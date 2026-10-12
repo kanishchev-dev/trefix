@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BackHandler, View } from "react-native";
 
-import { type AthleteGoalType } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type AthleteGoalType } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../locales";
 import { trackEvent } from "../../lib/analytics";

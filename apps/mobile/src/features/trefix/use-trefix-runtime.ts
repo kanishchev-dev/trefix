@@ -5,7 +5,7 @@ import {
   type ThreadMessageLike,
 } from "@assistant-ui/react-native";
 import { createCoachSession, streamCoachMessage } from "../../lib/coach-api";
-import { resolveApiErrorMessage } from "@workspace/utils";
+import { resolveApiErrorMessage } from "@trefix/utils";
 
 import { logger } from "../../lib/logger";
 

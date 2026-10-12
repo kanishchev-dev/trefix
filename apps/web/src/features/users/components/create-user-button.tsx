@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import { PlusIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";

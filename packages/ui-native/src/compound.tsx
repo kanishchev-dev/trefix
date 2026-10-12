@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { resolveTheme } from "./theme";
 import { Wheel } from "./wheel";
 

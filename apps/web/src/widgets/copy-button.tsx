@@ -2,12 +2,12 @@
 
 import { useCallback, useRef, useState, type ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@workspace/ui/components/tooltip";
+} from "@trefix/ui/components/tooltip";
 import { CheckIcon, CopyIcon } from "lucide-react";
 
 import { notifyError, notifySuccess } from "@/lib/notifications";

@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SlidersHorizontal, Sparkles } from "lucide-react-native";
 
-import { type PlanAdaptation } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PlanAdaptation } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { Card } from "../../../shared/ui/card";

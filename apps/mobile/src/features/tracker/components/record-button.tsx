@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Circle, Play } from "lucide-react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import type { AppLanguage, MainCopy } from "../../../locales";
 import { pushSubScreen } from "../../main/main-routes";

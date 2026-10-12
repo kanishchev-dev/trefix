@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { SectionTitle } from "../../../shared/ui/list-card";
 import { type Formatter } from "../../profile/lib/profile-format";

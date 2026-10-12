@@ -8,9 +8,9 @@ import {
   View,
 } from "react-native";
 
-import { type RecordDistance } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Compound, DateWheel, Ruler, Segmented } from "@workspace/ui-native";
+import { type RecordDistance } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Compound, DateWheel, Ruler, Segmented } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import {

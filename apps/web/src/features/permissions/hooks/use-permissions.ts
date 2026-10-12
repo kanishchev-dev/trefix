@@ -11,7 +11,7 @@ import type {
   PaginatedResponse,
   Permission,
   PermissionGroup,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   assignPermissionToGroup,

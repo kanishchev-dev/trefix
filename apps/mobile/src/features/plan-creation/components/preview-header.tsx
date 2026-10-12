@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { ChevronLeft, Pencil, X } from "lucide-react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { styles } from "../plan-preview-screen.styles";

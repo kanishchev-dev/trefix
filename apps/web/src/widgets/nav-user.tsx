@@ -8,7 +8,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@workspace/ui/components/avatar";
+} from "@trefix/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,13 +20,13 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
+} from "@trefix/ui/components/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@workspace/ui/components/sidebar";
+} from "@trefix/ui/components/sidebar";
 import {
   CheckIcon,
   ChevronsUpDownIcon,

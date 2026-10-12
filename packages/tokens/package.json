@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/tokens",
+  "name": "@trefix/tokens",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@types/node": "24.5.2",
-    "@workspace/eslint-config": "workspace:*",
+    "@trefix/eslint-config": "workspace:*",
     "eslint": "9.35.0",
     "vitest": "3.2.4"
   }

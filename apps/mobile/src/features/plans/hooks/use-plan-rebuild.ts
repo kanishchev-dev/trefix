@@ -4,7 +4,7 @@ import {
   type RebuildInput,
   type RebuildPreview,
   type RebuildPreviewInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   getCurrentMetrics,

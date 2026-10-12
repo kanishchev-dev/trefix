@@ -3,9 +3,9 @@ import { View } from "react-native";
 import {
   type AthleteGoalPayloadInput,
   type AthleteGoalType,
-} from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
-import { Ruler } from "@workspace/ui-native";
+} from "@trefix/api-client";
+import { type ThemeTokens } from "@trefix/tokens";
+import { Ruler } from "@trefix/ui-native";
 import { type MainCopy } from "../../../locales";
 import { SheetBlock } from "../../../shared/ui/bottom-sheet";
 import { TargetDatePicker } from "./target-date-picker";

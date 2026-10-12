@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { MessagePrimitive, useAuiState } from "@assistant-ui/react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { styles, createMarkdownStyles } from "../trefix-chat.styles";
 
 export function UserMessage({ theme }: { theme: ThemeTokens }) {

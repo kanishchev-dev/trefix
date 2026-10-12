@@ -7,11 +7,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@workspace/ui/components/accordion";
-import { Button } from "@workspace/ui/components/button";
+} from "@trefix/ui/components/accordion";
+import { Button } from "@trefix/ui/components/button";
 import { PencilIcon, PlusIcon } from "lucide-react";
 
-import type { WorkoutStatus } from "@workspace/api-client";
+import type { WorkoutStatus } from "@trefix/api-client";
 
 import { WorkoutStatusBadge } from "@/features/training-calendar/components/workout-status-badge";
 import { useI18n } from "@/shared/i18n";

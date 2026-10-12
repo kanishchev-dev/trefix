@@ -3,7 +3,7 @@ import type {
   RecordedActivityRequest,
   RecordedSplit,
   WorkoutType,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { boundsOf, encodePolyline, simplifyTo } from "./geo";
 import type { EngineState, LocationSample, TimelineSample } from "./types";

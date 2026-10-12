@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/ui",
+  "name": "@trefix/ui",
   "private": true,
   "type": "module",
   "exports": {
@@ -20,7 +20,7 @@
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "typescript": "6.0.3",
-    "@workspace/eslint-config": "workspace:*",
+    "@trefix/eslint-config": "workspace:*",
     "eslint": "9.35.0"
   },
   "dependencies": {

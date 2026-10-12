@@ -1,4 +1,4 @@
-import type { ExecutionStep, RecordedLap } from "@workspace/api-client";
+import type { ExecutionStep, RecordedLap } from "@trefix/api-client";
 
 /** Seconds of slack around the target pace before the runner is off target. */
 export const PACE_TOLERANCE_SEC = 5;

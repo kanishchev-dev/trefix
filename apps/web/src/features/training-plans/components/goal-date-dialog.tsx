@@ -6,10 +6,10 @@ import {
   Field,
   FieldDescription,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
-import type { PlanChangeRequest, PlanDetails } from "@workspace/api-client";
+import type { PlanChangeRequest, PlanDetails } from "@trefix/api-client";
 
 import {
   getBrowserTimezone,

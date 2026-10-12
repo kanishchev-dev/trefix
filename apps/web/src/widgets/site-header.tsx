@@ -11,9 +11,9 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@workspace/ui/components/breadcrumb";
-import { Separator } from "@workspace/ui/components/separator";
-import { SidebarTrigger } from "@workspace/ui/components/sidebar";
+} from "@trefix/ui/components/breadcrumb";
+import { Separator } from "@trefix/ui/components/separator";
+import { SidebarTrigger } from "@trefix/ui/components/sidebar";
 
 import { useI18n } from "@/shared/i18n";
 

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { DateWheel } from "@workspace/ui-native";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { DateWheel } from "@trefix/ui-native";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import {

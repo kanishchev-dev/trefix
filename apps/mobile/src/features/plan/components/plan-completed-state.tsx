@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Trophy } from "lucide-react-native";
 
-import { type PlanOverview, type PlanWeek } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PlanOverview, type PlanWeek } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { PlanOverviewCard } from "./plan-overview-card";
 import { PlanTimeline } from "./plan-timeline";

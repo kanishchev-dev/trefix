@@ -6,17 +6,17 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-} from "@workspace/ui/components/alert";
-import { Checkbox } from "@workspace/ui/components/checkbox";
-import { Field, FieldLabel } from "@workspace/ui/components/field";
-import { Label } from "@workspace/ui/components/label";
+} from "@trefix/ui/components/alert";
+import { Checkbox } from "@trefix/ui/components/checkbox";
+import { Field, FieldLabel } from "@trefix/ui/components/field";
+import { Label } from "@trefix/ui/components/label";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@workspace/ui/components/radio-group";
+} from "@trefix/ui/components/radio-group";
 import { TriangleAlertIcon } from "lucide-react";
 
-import type { PlanStartOption, PlanStartOptions } from "@workspace/api-client";
+import type { PlanStartOption, PlanStartOptions } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

@@ -3,7 +3,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 type Props = {
   /** Total height from the bottom edge of the screen. */

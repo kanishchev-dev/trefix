@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { type AuthTokens } from "@workspace/api-client";
+import { type AuthTokens } from "@trefix/api-client";
 
 import {
   LANGUAGE_STORAGE_KEY,

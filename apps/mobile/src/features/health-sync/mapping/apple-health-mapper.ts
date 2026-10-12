@@ -1,4 +1,4 @@
-import type { DeviceActivity } from "@workspace/api-client";
+import type { DeviceActivity } from "@trefix/api-client";
 
 import { deviceOffsetMinutes, zoneOffsetMinutes } from "./time";
 import { positiveRound, toKilocalories, toMeters, toSeconds } from "./units";

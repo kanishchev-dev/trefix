@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { withAlpha, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { withAlpha, type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import {
   SHEET_SPRING_CONFIG,
   STACK_BG_SCALE,

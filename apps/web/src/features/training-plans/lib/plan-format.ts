@@ -1,11 +1,11 @@
-import type { PlanLifecycleStatus } from "@workspace/api-client";
+import type { PlanLifecycleStatus } from "@trefix/api-client";
 
 export {
   formatHoursMinutesSeconds as formatDuration,
   formatMinutesSeconds as formatPace,
   parseHoursMinutesSeconds as parseDuration,
   parseMinutesSeconds as parsePace,
-} from "@workspace/utils";
+} from "@trefix/utils";
 
 /** Calendar date (YYYY-MM-DD, interpreted as a local day) in the given locale. */
 export function formatPlanDate(

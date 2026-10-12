@@ -7,21 +7,21 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheckIcon } from "lucide-react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
 import { useAuth } from "@/components/auth-provider";
 import { authResetPasswordSchema } from "@/lib/auth";

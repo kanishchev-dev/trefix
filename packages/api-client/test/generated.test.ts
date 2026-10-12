@@ -28,7 +28,7 @@ describe("generated contract", () => {
     for (const file of files) {
       expect(
         readFileSync(join(fresh, file), "utf8"),
-        `${file} is stale: run \`pnpm --filter @workspace/api-client generate\``,
+        `${file} is stale: run \`pnpm --filter @trefix/api-client generate\``,
       ).toBe(readFileSync(join(committed, file), "utf8"));
     }
   }, 60_000);

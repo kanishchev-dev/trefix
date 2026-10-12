@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 type Props = {
   theme: ThemeTokens;

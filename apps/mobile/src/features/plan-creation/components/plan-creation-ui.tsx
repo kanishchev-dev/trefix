@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 
 import { SheetBlock } from "../../../shared/ui/bottom-sheet";
 import { PLAN_WEEKDAY_ORDER } from "../plan-creation-types";

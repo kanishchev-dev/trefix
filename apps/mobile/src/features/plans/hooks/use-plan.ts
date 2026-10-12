@@ -5,7 +5,7 @@ import {
   type PlanMetaResponse,
   type PlanOverview,
   type UpdatePlanStructureInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { type InfiniteData } from "@tanstack/react-query";
 
 import {

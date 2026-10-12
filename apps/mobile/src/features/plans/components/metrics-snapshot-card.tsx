@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { type MetricsSnapshot } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type MetricsSnapshot } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import {
   fillTemplate,

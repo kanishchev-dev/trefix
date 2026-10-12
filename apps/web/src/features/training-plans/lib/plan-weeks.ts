@@ -3,7 +3,7 @@ import type {
   PlanDetailsWeek,
   PlanWorkoutItem,
   RelativeWorkout,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 /** Workout of a draft: addressed by key, placed on a weekday. */
 export type DraftWorkoutView = RelativeWorkout & { kind: "relative" };

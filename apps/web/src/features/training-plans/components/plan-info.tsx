@@ -8,13 +8,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 
 import {
   GOAL_METRIC_KEYS,
   type GoalMetricKey,
   type PlanDetails,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

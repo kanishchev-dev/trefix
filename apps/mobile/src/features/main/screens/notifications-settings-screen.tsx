@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { Switch } from "../../../shared/ui/switch";
 import { HeaderBackButton, HeaderTitle } from "../components/header";

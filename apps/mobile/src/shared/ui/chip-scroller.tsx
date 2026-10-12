@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 /** Single-row horizontal list of chips running to the screen edge; never wraps into rows. */
 export function ChipScroller({

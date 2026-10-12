@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/eslint-config",
+  "name": "@trefix/eslint-config",
   "private": true,
   "type": "module",
   "exports": {

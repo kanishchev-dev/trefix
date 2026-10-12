@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Footprints } from "lucide-react-native";
 
-import { type Gear } from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type Gear } from "@trefix/api-client";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import {
   fillTemplate,

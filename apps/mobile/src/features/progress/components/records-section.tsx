@@ -3,7 +3,7 @@ import { Plus } from "lucide-react-native";
 import {
   type ProgressOverview,
   type RecordDistance,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { type MainCopy } from "../../../locales";
 import { ListCard, ListRow, Pill } from "../../../shared/ui/list-card";
 import {

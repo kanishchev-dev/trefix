@@ -1,5 +1,5 @@
 import { type QueryClient } from "@tanstack/react-query";
-import { type PlanListGroup } from "@workspace/api-client";
+import { type PlanListGroup } from "@trefix/api-client";
 
 export const planKeys = {
   all: ["plans"] as const,

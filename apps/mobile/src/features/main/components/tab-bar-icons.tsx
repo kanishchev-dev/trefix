@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Sparkles, type LucideIcon } from "lucide-react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { ICON_SIZE, styles } from "./tab-bar.styles";
 
 /** Line icon that crossfades from the muted to the active colour. */

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { type GearInput, type GearStatus } from "@workspace/api-client";
+import { type GearInput, type GearStatus } from "@trefix/api-client";
 
 import {
   createGear,

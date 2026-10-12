@@ -26,11 +26,11 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingRoot: join(directoryName, "../../"),
   transpilePackages: [
-    "@workspace/api-client",
-    "@workspace/config",
-    "@workspace/tokens",
-    "@workspace/ui",
-    "@workspace/utils",
+    "@trefix/api-client",
+    "@trefix/config",
+    "@trefix/tokens",
+    "@trefix/ui",
+    "@trefix/utils",
   ],
 };
 

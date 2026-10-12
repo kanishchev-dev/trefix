@@ -8,7 +8,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@workspace/ui/components/collapsible";
+} from "@trefix/ui/components/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -19,7 +19,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@workspace/ui/components/sidebar";
+} from "@trefix/ui/components/sidebar";
 import { ChevronRightIcon } from "lucide-react";
 
 export type NavMainItem = {

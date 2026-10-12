@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { View } from "react-native";
-import { type GoalChallengeMetric } from "@workspace/api-client";
+import { type GoalChallengeMetric } from "@trefix/api-client";
 
 export type Metrics = Record<string, unknown>;
 

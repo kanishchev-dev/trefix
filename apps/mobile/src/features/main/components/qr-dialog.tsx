@@ -2,7 +2,7 @@ import { Modal, Pressable, StyleSheet, Text, View, Image } from "react-native";
 import { BlurView } from "expo-blur";
 import { X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { type MainCopy } from "../../../locales";
 
 type QrDialogProps = {

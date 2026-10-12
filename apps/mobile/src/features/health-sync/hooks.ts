@@ -6,7 +6,7 @@ import {
   useQueryClient,
   type QueryClient,
 } from "@tanstack/react-query";
-import type { DeviceProvider, IntegrationItem } from "@workspace/api-client";
+import type { DeviceProvider, IntegrationItem } from "@trefix/api-client";
 
 import { trackEvent } from "../../lib/analytics";
 import { loadAuthSession } from "../../lib/auth-session";

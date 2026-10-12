@@ -1,4 +1,4 @@
-import type { RecordingEnvironment } from "@workspace/api-client";
+import type { RecordingEnvironment } from "@trefix/api-client";
 
 import type { PaceStatus, PlanState, StepProgress } from "./plan-progress";
 

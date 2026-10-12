@@ -1,5 +1,5 @@
-import { formatHoursMinutesSeconds } from "@workspace/utils";
-import { type RecordDistance } from "@workspace/api-client";
+import { formatHoursMinutesSeconds } from "@trefix/utils";
+import { type RecordDistance } from "@trefix/api-client";
 
 import { type MainCopy } from "../../../locales";
 

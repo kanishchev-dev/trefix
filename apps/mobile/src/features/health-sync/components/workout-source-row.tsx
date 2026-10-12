@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Link2 } from "lucide-react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import { useWorkoutSources } from "../../main/hooks/use-workouts";

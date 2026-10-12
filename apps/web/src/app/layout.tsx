@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import type { ReactElement, ReactNode } from "react";
 
-import { appName } from "@workspace/config";
+import { appName } from "@trefix/config";
 
 import { Providers } from "@/components/providers";
 import { DEFAULT_LOCALE } from "@/shared/i18n";

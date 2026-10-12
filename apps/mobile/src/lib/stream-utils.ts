@@ -1,4 +1,4 @@
-import { ApiClientError, type ApiErrorShape } from "@workspace/api-client";
+import { ApiClientError, type ApiErrorShape } from "@trefix/api-client";
 
 import { backendHeaders } from "./api-client";
 import { BACKEND_BASE_URL } from "./backend-url";

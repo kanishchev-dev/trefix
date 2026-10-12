@@ -13,8 +13,8 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@workspace/ui/components/avatar";
-import { Button } from "@workspace/ui/components/button";
+} from "@trefix/ui/components/avatar";
+import { Button } from "@trefix/ui/components/button";
 import {
   Dialog,
   DialogClose,
@@ -23,15 +23,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@workspace/ui/components/dialog";
-import { Label } from "@workspace/ui/components/label";
+} from "@trefix/ui/components/dialog";
+import { Label } from "@trefix/ui/components/label";
 import {
   Slider,
   SliderControl,
   SliderIndicator,
   SliderThumb,
   SliderTrack,
-} from "@workspace/ui/components/slider";
+} from "@trefix/ui/components/slider";
 import { UploadIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";

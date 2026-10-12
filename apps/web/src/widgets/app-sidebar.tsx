@@ -3,7 +3,7 @@
 import type { ReactElement } from "react";
 
 import { LayoutDashboardIcon, SettingsIcon, UsersIcon } from "lucide-react";
-import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Skeleton } from "@trefix/ui/components/skeleton";
 
 import { useAuth } from "@/components/auth-provider";
 import { BrandLogo } from "@/widgets/brand-logo";
@@ -20,7 +20,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@workspace/ui/components/sidebar";
+} from "@trefix/ui/components/sidebar";
 
 type NavigationNode = {
   titleKey: string;

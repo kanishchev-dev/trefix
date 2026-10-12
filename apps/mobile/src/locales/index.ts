@@ -298,4 +298,4 @@ export function formatDayMonth(
 }
 
 /** Pace in seconds per km as m:ss. */
-export { formatMinutesSeconds as formatPace } from "@workspace/utils";
+export { formatMinutesSeconds as formatPace } from "@trefix/utils";

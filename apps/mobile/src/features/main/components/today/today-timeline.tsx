@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type Day, type DayEvent, type CalendarMode } from "../../today-types";
 import { WorkoutCard, RecoveryCard, EmptyDayCard } from "./day-event-cards";
 import { AddWorkoutSection } from "./add-workout-section";

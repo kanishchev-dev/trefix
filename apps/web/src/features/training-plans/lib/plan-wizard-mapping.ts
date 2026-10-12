@@ -11,7 +11,7 @@ import {
   type RebuildPrefill,
   type RebuildPreviewInput,
   type RebuildTarget,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { formatGoalFields, parseGoal } from "./goal-fields";
 import {
   formatDuration,

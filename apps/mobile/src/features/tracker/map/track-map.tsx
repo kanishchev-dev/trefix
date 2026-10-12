@@ -17,7 +17,7 @@ import Mapbox, {
 } from "@rnmapbox/maps";
 import { LocateFixed } from "lucide-react-native";
 
-import { isDarkTheme, type ThemeTokens } from "@workspace/tokens";
+import { isDarkTheme, type ThemeTokens } from "@trefix/tokens";
 
 import { boundsOf, type LatLng } from "../engine/geo";
 import type { DistanceMarker, LngLat, TrackLines } from "../engine/track";

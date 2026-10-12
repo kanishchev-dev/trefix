@@ -10,7 +10,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { resolveTheme } from "./theme";
 import { type ValueControlProps } from "./value-control-types";
 

@@ -19,7 +19,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
-import { withAlpha, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { withAlpha, type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import {
   SCREEN_HEIGHT,
   SHEET_SPRING_CONFIG,

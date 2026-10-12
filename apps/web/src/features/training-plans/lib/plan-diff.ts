@@ -2,7 +2,7 @@ import type {
   PlanDiff,
   PlanDiffAdjustment,
   PlanDiffWorkout,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { formatPace } from "./plan-format";
 

@@ -7,7 +7,7 @@ import {
   type CoachSessionDetail,
   type CreateCoachSessionInput,
   type SendCoachMessageInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { request } from "./api-client";
 import { postSseStream } from "./stream-utils";
 
@@ -31,7 +31,7 @@ export async function getCoachSession(
   return coachSessionDetailSchema.parse(response);
 }
 
-import { ApiClientError } from "@workspace/api-client";
+import { ApiClientError } from "@trefix/api-client";
 import { logger } from "./logger";
 
 export async function getLatestCoachSession(): Promise<CoachSessionDetail | null> {

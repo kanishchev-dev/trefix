@@ -7,15 +7,15 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
+import { Label } from "@trefix/ui/components/label";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@workspace/ui/components/radio-group";
+} from "@trefix/ui/components/radio-group";
 
-import type { PlanChangeRequest, PlanDetails } from "@workspace/api-client";
+import type { PlanChangeRequest, PlanDetails } from "@trefix/api-client";
 
 import { getBrowserTimezone } from "@/features/training-calendar/lib/calendar-dates";
 import { useI18n } from "@/shared/i18n";

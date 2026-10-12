@@ -6,7 +6,7 @@ import type {
   ManualPlanPreview,
   PreviewManualPlanInput,
   TrainingPlan,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { invalidatePlanQueries } from "../../plans/hooks/plan-query-keys";
 
 /**

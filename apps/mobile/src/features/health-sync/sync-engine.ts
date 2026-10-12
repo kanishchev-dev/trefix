@@ -4,7 +4,7 @@ import type {
   DeviceProvider,
   DeviceSyncBatchRequest,
   DeviceSyncType,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import type { DeviceHealthSource, SyncCursor } from "./types";
 

@@ -2,11 +2,11 @@
 
 import type { ReactElement, ReactNode } from "react";
 
-import { Separator } from "@workspace/ui/components/separator";
+import { Separator } from "@trefix/ui/components/separator";
 import {
   SidebarInset,
   SidebarProvider,
-} from "@workspace/ui/components/sidebar";
+} from "@trefix/ui/components/sidebar";
 
 import { AppSidebar } from "@/widgets/app-sidebar";
 import { SiteHeader } from "@/widgets/site-header";

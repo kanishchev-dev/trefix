@@ -19,7 +19,7 @@ import {
   type AuthVerifyEmailInput,
   type ChangePasswordInput,
   type UpdateUserInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { authPaths } from "@/lib/auth";
 

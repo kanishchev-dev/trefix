@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Activity, ClipboardList, Sunrise } from "lucide-react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { resolveBackendMediaUrl } from "../../../lib/backend-url";
 import { BottomFade } from "../../../shared/ui/bottom-fade";
 import { useProfile } from "../hooks/use-profile";

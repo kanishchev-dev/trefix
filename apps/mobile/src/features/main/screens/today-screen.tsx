@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
-import { type TrainingWorkout } from "@workspace/api-client";
+import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
+import { type TrainingWorkout } from "@trefix/api-client";
 
 import {
   HeaderLogo,

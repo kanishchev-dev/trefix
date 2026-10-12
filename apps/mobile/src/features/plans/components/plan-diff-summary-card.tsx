@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { type PlanDiff } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PlanDiff } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { Card } from "../../../shared/ui/card";

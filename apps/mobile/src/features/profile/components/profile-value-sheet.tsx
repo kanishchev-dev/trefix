@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { DateWheel, Ruler } from "@workspace/ui-native";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { DateWheel, Ruler } from "@trefix/ui-native";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import {

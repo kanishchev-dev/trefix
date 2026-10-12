@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import { GlassView } from "expo-glass-effect";
-import { withAlpha, type ThemeTokens } from "@workspace/tokens";
+import { withAlpha, type ThemeTokens } from "@trefix/tokens";
 import { glassBorderColor } from "./components/glass-border";
 import { styles } from "./auth-verification-screen.styles";
 

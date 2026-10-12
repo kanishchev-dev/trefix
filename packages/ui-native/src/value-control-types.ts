@@ -1,4 +1,4 @@
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 export type ValueControlProps<T> = {
   value: T;

@@ -1,4 +1,4 @@
-import { ApiClientError, avatarUploadSchema } from "@workspace/api-client";
+import { ApiClientError, avatarUploadSchema } from "@trefix/api-client";
 
 export const avatarPaths = {
   /** Self-service upload of the own avatar. */

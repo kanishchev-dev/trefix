@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { type QuietHours } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Compound } from "@workspace/ui-native";
+import { type QuietHours } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Compound } from "@trefix/ui-native";
 
 import { type MainCopy } from "../../../locales";
 import {

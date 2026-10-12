@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
 
-import type { ThemeTokens } from "@workspace/tokens";
+import type { ThemeTokens } from "@trefix/tokens";
 
 import type { UnitSystem } from "../../../shared/lib/units";
 import { decodePolyline } from "../engine/geo";

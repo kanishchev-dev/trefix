@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { HeaderContext, type HeaderOptions } from "../context/header-context";
 import { Header } from "./header";

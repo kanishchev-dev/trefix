@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiClientError } from "@workspace/api-client";
+import { ApiClientError } from "@trefix/api-client";
 
 import { apiRequest as request } from "./api";
 

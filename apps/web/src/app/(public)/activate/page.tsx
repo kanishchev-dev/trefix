@@ -1,6 +1,6 @@
 import { Suspense, type ReactElement } from "react";
 
-import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Skeleton } from "@trefix/ui/components/skeleton";
 
 import { ActivateInviteForm } from "@/components/activate-invite-form";
 

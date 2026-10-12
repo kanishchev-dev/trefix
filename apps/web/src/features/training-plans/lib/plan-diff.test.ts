@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { PlanDiff } from "@workspace/api-client";
+import type { PlanDiff } from "@trefix/api-client";
 
 import {
   adjustmentText,

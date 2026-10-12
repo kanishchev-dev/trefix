@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type AthleteProfile,
   type AthleteProfileUpdate,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { getMyAthlete, updateMyAthlete } from "../../../lib/training-api";
 import { useRealtimeEvent } from "../../../lib/realtime";

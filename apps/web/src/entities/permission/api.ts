@@ -4,7 +4,7 @@ import {
   type PaginatedResponse,
   type Permission,
   type PermissionGroup,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { apiRequest } from "@/lib/api";
 

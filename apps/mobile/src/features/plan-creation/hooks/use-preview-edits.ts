@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import {
   type ManualPlanPreview,
   type ManualPlanPreviewWorkout,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   validateWorkoutChanges,

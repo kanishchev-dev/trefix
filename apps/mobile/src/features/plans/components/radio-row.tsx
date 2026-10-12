@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { plansUiStyles } from "./plans-ui";
 import { styles } from "./start-plan-sheet.styles";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, Pressable } from "react-native";
 import { Activity, Flame, Zap, Mountain, Trophy } from "lucide-react-native";
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
 import { type MainCopy } from "../../../../locales";
 

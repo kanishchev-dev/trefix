@@ -3,7 +3,7 @@ import {
   kmToDisplay,
   paceToDisplay,
   type UnitSystem,
-} from "@workspace/utils";
+} from "@trefix/utils";
 
 /** 0:42, 12:05, 1:03:17 */
 export function formatClock(ms: number): string {

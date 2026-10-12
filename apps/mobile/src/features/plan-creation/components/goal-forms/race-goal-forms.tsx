@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { View } from "react-native";
-import { Ruler } from "@workspace/ui-native";
+import { Ruler } from "@trefix/ui-native";
 import {
   GOAL_FIELD_DEFAULTS as D,
   RACE_DISTANCE_PRESETS_METERS,

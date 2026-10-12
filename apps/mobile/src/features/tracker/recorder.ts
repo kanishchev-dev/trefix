@@ -3,7 +3,7 @@ import * as Crypto from "expo-crypto";
 import * as Location from "expo-location";
 import { Pedometer } from "expo-sensors";
 
-import type { ExecutionStep } from "@workspace/api-client";
+import type { ExecutionStep } from "@trefix/api-client";
 
 import { RecordingEngine } from "./engine/recording-engine";
 import { buildRecording, type SummaryEdits } from "./engine/summary";

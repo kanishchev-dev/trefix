@@ -5,7 +5,7 @@ import type {
   PlanWorkoutItem,
   RelativeWorkout,
   WorkoutStatus,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { buildPlanWeeks, isDatedWorkoutEditable } from "./plan-weeks";
 

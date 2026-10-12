@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { StackActions } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { fillTemplate, type AppLanguage, type MainCopy } from "../../locales";
 import { trackEvent } from "../../lib/analytics";

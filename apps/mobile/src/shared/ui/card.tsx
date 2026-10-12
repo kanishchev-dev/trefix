@@ -10,7 +10,7 @@ import {
   mobileThemeTokens,
   type ThemeTokens,
   type ThemeMode,
-} from "@workspace/tokens";
+} from "@trefix/tokens";
 
 const fallbackTheme = mobileThemeTokens.light;
 

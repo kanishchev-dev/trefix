@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 export function createMarkdownStyles(theme: ThemeTokens) {
   return {

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { SectionLayout } from "../components/section-layout";

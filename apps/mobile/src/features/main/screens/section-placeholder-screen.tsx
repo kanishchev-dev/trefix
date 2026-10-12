@@ -1,6 +1,6 @@
 import { StyleSheet, Text } from "react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import {
   HeaderLogo,
   HeaderMenuButton,

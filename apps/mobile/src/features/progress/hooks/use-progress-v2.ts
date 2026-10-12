@@ -5,7 +5,7 @@ import {
   type ProgressPeriodKey,
   type RaceResultInput,
   type RecordDistance,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   addResult,

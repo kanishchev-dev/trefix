@@ -1,9 +1,9 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { type MetricsSnapshot } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Ruler, Segmented } from "@workspace/ui-native";
+import { type MetricsSnapshot } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Ruler, Segmented } from "@trefix/ui-native";
 
 import {
   fillTemplate,

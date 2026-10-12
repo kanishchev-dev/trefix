@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import { Card } from "../../../shared/ui/card";

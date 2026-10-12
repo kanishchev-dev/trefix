@@ -1,8 +1,8 @@
 import { StyleSheet, View } from "react-native";
 
-import { type UserPreferencesUpdate } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Segmented } from "@workspace/ui-native";
+import { type UserPreferencesUpdate } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Segmented } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import { type AppLanguage, type MainCopy } from "../../../locales";

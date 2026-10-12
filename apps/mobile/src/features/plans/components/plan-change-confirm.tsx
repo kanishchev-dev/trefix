@@ -1,7 +1,7 @@
 import { View, StyleSheet } from "react-native";
 
-import { type PlanChangePreview } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PlanChangePreview } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";

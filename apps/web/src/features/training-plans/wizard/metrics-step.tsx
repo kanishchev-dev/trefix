@@ -3,7 +3,7 @@
 import type { ReactElement } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
-import { Badge } from "@workspace/ui/components/badge";
+import { Badge } from "@trefix/ui/components/badge";
 import {
   Field,
   FieldDescription,
@@ -12,10 +12,10 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
-import type { CurrentMetrics, MetricsSource } from "@workspace/api-client";
+import type { CurrentMetrics, MetricsSource } from "@trefix/api-client";
 
 import { toDateKey } from "@/features/training-calendar/lib/calendar-dates";
 import { useI18n } from "@/shared/i18n";

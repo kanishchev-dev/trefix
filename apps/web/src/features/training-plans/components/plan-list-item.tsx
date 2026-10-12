@@ -3,10 +3,10 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
 
-import { Progress } from "@workspace/ui/components/progress";
+import { Progress } from "@trefix/ui/components/progress";
 import { ChevronRightIcon } from "lucide-react";
 
-import type { PlanListItem as PlanListItemData } from "@workspace/api-client";
+import type { PlanListItem as PlanListItemData } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

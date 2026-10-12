@@ -1,9 +1,9 @@
 {
-  "name": "@workspace/ui-native",
+  "name": "@trefix/ui-native",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@workspace/tokens": "workspace:*",
+    "@trefix/tokens": "workspace:*",
     "expo-haptics": "57.0.3",
     "lucide-react-native": "1.47.0",
     "react": "19.2.3",
@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/react": "19.2.18",
     "typescript": "6.0.3",
-    "@workspace/eslint-config": "workspace:*",
+    "@trefix/eslint-config": "workspace:*",
     "eslint": "9.35.0"
   },
   "exports": {

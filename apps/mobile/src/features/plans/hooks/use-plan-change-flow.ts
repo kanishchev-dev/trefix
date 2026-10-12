@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   type PlanChangePreview,
   type PlanChangeRequest,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { trackEvent } from "../../../lib/analytics";
 import { type MainCopy } from "../../../locales";

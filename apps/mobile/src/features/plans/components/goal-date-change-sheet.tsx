@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ScrollView, Text } from "react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { DateWheel } from "@workspace/ui-native";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { DateWheel } from "@trefix/ui-native";
 
 import { pluralize, type AppLanguage, type MainCopy } from "../../../locales";
 import {

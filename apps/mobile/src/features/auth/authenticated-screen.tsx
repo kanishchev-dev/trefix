@@ -1,8 +1,8 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 
-import { type AuthTokens } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type AuthTokens } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { type AuthCopy } from "../../locales";
 
 type Props = {

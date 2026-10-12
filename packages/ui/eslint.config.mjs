@@ -1,3 +1,3 @@
-import baseConfig from "@workspace/eslint-config";
+import baseConfig from "@trefix/eslint-config";
 
 export default baseConfig;

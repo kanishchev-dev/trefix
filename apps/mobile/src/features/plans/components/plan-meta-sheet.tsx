@@ -4,8 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   PLAN_NAME_MAX_LENGTH,
   PLAN_NOTES_MAX_LENGTH,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import {

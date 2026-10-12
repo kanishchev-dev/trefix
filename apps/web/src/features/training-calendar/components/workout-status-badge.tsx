@@ -2,9 +2,9 @@
 
 import type { ComponentProps, ReactElement } from "react";
 
-import { Badge } from "@workspace/ui/components/badge";
+import { Badge } from "@trefix/ui/components/badge";
 
-import type { WorkoutStatus } from "@workspace/api-client";
+import type { WorkoutStatus } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

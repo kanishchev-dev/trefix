@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { withAlpha, type ThemeTokens } from "@workspace/tokens";
+import { withAlpha, type ThemeTokens } from "@trefix/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import type { UnitSystem } from "../../../shared/lib/units";

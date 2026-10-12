@@ -5,16 +5,16 @@ import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+} from "@trefix/ui/components/card";
+import { Input } from "@trefix/ui/components/input";
+import { Label } from "@trefix/ui/components/label";
 import { formatDate, useI18n } from "@/shared/i18n";
 
 import { useAuth } from "@/components/auth-provider";

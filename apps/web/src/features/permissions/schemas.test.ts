@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { permissionGroupSchema } from "@workspace/api-client";
+import { permissionGroupSchema } from "@trefix/api-client";
 
 /**
  * `GET /admin/permissions/groups/:id` includes the group's members with a

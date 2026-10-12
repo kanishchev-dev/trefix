@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Calendar, Activity, Clock, Heart, Award } from "lucide-react-native";
 
-import { type WorkoutType } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type WorkoutType } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { GlassInput } from "../../../../shared/ui/glass-input";
 import {
   BottomSheet,

@@ -1,4 +1,4 @@
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { WorkoutDetailSheet } from "../../main/components/today/workout-detail-sheet";

@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { GlassView } from "expo-glass-effect";
 
-import { mobileAuthEmailRequestSchema } from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
+import { mobileAuthEmailRequestSchema } from "@trefix/api-client";
+import { type ThemeTokens } from "@trefix/tokens";
 import { type AuthCopy } from "../../../locales";
 import { glassBorderColor } from "./glass-border";
 

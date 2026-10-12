@@ -2,7 +2,7 @@ import {
   type AthleteProfile,
   type Gear,
   type UserPreferences,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   fillTemplate,

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AppLanguage, type MainCopy } from "../../../locales";
 import { useToast } from "../../../shared/ui/toast";

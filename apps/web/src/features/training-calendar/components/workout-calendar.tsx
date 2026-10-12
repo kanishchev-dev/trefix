@@ -3,7 +3,7 @@
 import type { ReactElement } from "react";
 import { enUS, ru } from "react-day-picker/locale";
 
-import { Calendar } from "@workspace/ui/components/calendar";
+import { Calendar } from "@trefix/ui/components/calendar";
 
 import type { Locale } from "@/shared/i18n";
 

@@ -12,8 +12,8 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { Camera, UserRound } from "lucide-react-native";
 
-import { updateUserSchema, type UpdateUserInput } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { updateUserSchema, type UpdateUserInput } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { SectionLayout } from "../components/section-layout";

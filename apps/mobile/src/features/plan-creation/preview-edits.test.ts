@@ -1,4 +1,4 @@
-import { type ManualPlanPreview } from "@workspace/api-client";
+import { type ManualPlanPreview } from "@trefix/api-client";
 import { describe, expect, it } from "vitest";
 
 import {

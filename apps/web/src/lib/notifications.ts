@@ -1,6 +1,6 @@
 "use client";
 
-import { toast } from "@workspace/ui/components/toast";
+import { toast } from "@trefix/ui/components/toast";
 
 export function notifySuccess(title: string, description?: string) {
   toast.add({

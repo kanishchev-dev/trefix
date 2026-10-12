@@ -7,7 +7,7 @@ import {
   type TextInputProps,
 } from "react-native";
 import { GlassView } from "expo-glass-effect";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 interface GlassInputProps extends TextInputProps {
   theme: ThemeTokens;

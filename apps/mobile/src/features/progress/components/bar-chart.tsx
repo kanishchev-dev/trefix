@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 type Props = {
   values: Array<number | null>;

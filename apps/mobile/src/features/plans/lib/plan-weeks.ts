@@ -4,7 +4,7 @@ import {
   type PlanPhase,
   type PlanWeek,
   type PlanWorkoutItem,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 

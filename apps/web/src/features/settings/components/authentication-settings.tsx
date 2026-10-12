@@ -2,19 +2,19 @@
 
 import { useState, type ReactElement } from "react";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Switch } from "@workspace/ui/components/switch";
+} from "@trefix/ui/components/card";
+import { Switch } from "@trefix/ui/components/switch";
 import { InfoIcon } from "lucide-react";
 
-import type { AppSettings, Permission } from "@workspace/api-client";
+import type { AppSettings, Permission } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { getFriendlyApiMessage } from "@/lib/errors";

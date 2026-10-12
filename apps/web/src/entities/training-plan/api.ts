@@ -39,7 +39,7 @@ import {
   type StartPlanInput,
   type UpdatePlanMetaInput,
   type UpdatePlanStructureInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { apiRequest } from "@/lib/api";
 

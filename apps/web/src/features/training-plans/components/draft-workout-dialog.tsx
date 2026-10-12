@@ -2,7 +2,7 @@
 
 import { useState, type ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@workspace/ui/components/dialog";
-import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
-import { Spinner } from "@workspace/ui/components/spinner";
+} from "@trefix/ui/components/dialog";
+import { Field, FieldGroup, FieldLabel } from "@trefix/ui/components/field";
+import { Spinner } from "@trefix/ui/components/spinner";
 import { Trash2Icon } from "lucide-react";
 
-import type { DraftWeekOverride, PlanDetails } from "@workspace/api-client";
+import type { DraftWeekOverride, PlanDetails } from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";

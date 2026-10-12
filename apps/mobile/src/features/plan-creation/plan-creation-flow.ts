@@ -3,7 +3,7 @@ import {
   type MetricsSnapshot,
   type PlanDetails,
   type RebuildPrefill,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { fillTemplate, type MainCopy } from "../../locales";
 import { todayIso } from "../plans/lib/plan-dates";

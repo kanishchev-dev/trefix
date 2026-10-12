@@ -7,23 +7,23 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { KeyRoundIcon } from "lucide-react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
-import { authActivateInviteSchema } from "@workspace/api-client";
+import { authActivateInviteSchema } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { notifyError } from "@/lib/notifications";

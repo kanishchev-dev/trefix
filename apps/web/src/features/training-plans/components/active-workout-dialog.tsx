@@ -2,19 +2,19 @@
 
 import { useState, type ReactElement } from "react";
 
-import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { Field, FieldGroup, FieldLabel } from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
+import { Label } from "@trefix/ui/components/label";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@workspace/ui/components/radio-group";
+} from "@trefix/ui/components/radio-group";
 
 import type {
   PlanChangeRequest,
   PlanDetails,
   PlanWorkoutOperation,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   getBrowserTimezone,

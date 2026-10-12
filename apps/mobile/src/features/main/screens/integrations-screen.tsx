@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";

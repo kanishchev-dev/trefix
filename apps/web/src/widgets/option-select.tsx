@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@workspace/ui/components/select";
+} from "@trefix/ui/components/select";
 
 export type SelectOption<TValue extends string> = {
   value: TValue;

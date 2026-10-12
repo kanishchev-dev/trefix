@@ -10,7 +10,7 @@ import {
 import { BlurTargetView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { Header } from "./header";
 

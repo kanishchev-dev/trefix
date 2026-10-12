@@ -24,7 +24,7 @@ import type {
   StartPlanInput,
   UpdatePlanMetaInput,
   UpdatePlanStructureInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   applyPlanChanges,

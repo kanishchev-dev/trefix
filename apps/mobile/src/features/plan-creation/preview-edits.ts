@@ -6,7 +6,7 @@ import {
   type ManualPlanWeekOverrides,
   type ManualPlanWorkoutOverride,
   previewWorkoutPhase,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 /** Client-side addition. `localId` keeps it addressable for edit/remove before saving. */
 export type PlanAddition = ManualPlanNewWorkout & {

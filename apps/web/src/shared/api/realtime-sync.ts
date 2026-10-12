@@ -17,7 +17,7 @@ import type {
   AdminUser,
   AdminUserDetail,
   PaginatedResponse,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 /** Fields `user.updated` can carry; mirrors `UserUpdatedEvent` on the backend. */
 const USER_EVENT_FIELDS = [

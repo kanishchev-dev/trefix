@@ -1,5 +1,5 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
-import { ApiClientError } from "@workspace/api-client";
+import { ApiClientError } from "@trefix/api-client";
 
 const DEFAULT_STALE_TIME_MS = 5 * 60 * 1000;
 

@@ -3,8 +3,8 @@ import { ChevronRight } from "lucide-react-native";
 import {
   type ManualPlanPreviewWorkout,
   type PlanDiff,
-} from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import { styles } from "../plan-preview-screen.styles";

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   type CreateWorkoutInput,
   type CompleteWorkoutInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { getWorkoutSources } from "../../../lib/integrations-api";
 import {
   getWorkouts,

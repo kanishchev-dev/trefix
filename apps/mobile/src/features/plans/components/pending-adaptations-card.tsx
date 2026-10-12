@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Sparkles } from "lucide-react-native";
 
-import { type PendingAdaptation } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PendingAdaptation } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { pluralize, type AppLanguage, type MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";

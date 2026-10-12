@@ -2,7 +2,7 @@ import {
   ApiClientError,
   activePlanSummarySchema,
   type ActivePlanSummary,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 /** Summary of the user's plan in progress attached to `409 ACTIVE_PLAN_EXISTS`. */
 export function activePlanFromError(error: unknown): ActivePlanSummary | null {

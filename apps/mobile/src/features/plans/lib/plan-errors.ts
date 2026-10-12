@@ -2,7 +2,7 @@ import {
   ApiClientError,
   activePlanSummarySchema,
   type ActivePlanSummary,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 

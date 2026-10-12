@@ -16,7 +16,7 @@ import {
   manualPlanStructureSchema,
   previewWeekPhase,
   previewWorkoutPhase,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   INITIAL_PLAN_CREATION_DRAFT,

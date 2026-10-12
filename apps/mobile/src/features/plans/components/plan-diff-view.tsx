@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { type PlanChangePreview } from "@workspace/api-client";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type PlanChangePreview } from "@trefix/api-client";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import {
   fillTemplate,

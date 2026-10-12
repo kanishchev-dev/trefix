@@ -4,7 +4,7 @@ import {
   ApiClientError,
   recordedActivityAcceptedSchema,
   type RecordedActivityAccepted,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { authorizedFetch, toApiError } from "../../../lib/api-client";
 import {

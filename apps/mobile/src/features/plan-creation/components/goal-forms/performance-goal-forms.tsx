@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { Text, View } from "react-native";
-import { Segmented } from "@workspace/ui-native";
+import { Segmented } from "@trefix/ui-native";
 import { GOAL_FIELD_DEFAULTS as D } from "../../plan-creation-types";
 import { PACE_RANGE, TimeRuler } from "../plan-creation-ui";
 import { styles } from "../goal-setup-step.styles";

@@ -7,7 +7,7 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { AppSettings, UpdateSettingsInput } from "@workspace/api-client";
+import type { AppSettings, UpdateSettingsInput } from "@trefix/api-client";
 
 import { fetchSettings, patchSettings } from "@/entities/settings/api";
 

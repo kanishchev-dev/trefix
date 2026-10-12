@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { type PlanListGroup } from "@workspace/api-client";
+import { type PlanListGroup } from "@trefix/api-client";
 
 import { getPlanCounts, listPlans } from "../../../lib/training-api";
 import { planKeys } from "./plan-query-keys";

@@ -1,1 +1,1 @@
-export { cn } from "@workspace/ui/lib/utils";
+export { cn } from "@trefix/ui/lib/utils";

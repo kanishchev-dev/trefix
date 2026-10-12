@@ -8,20 +8,20 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
+import { Label } from "@trefix/ui/components/label";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@workspace/ui/components/radio-group";
-import { Textarea } from "@workspace/ui/components/textarea";
+} from "@trefix/ui/components/radio-group";
+import { Textarea } from "@trefix/ui/components/textarea";
 
 import {
   PLAN_NAME_MAX_LENGTH,
   PLAN_NOTES_MAX_LENGTH,
   type PlanStartOptions,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardAction,
@@ -12,14 +12,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@workspace/ui/components/toggle-group";
+} from "@trefix/ui/components/toggle-group";
 import { PlusIcon } from "lucide-react";
 
-import { PLANS_LIMIT, type PlanListGroup } from "@workspace/api-client";
+import { PLANS_LIMIT, type PlanListGroup } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/shared/i18n";

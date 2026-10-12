@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 export type ChartPoint = { x: number; y: number };
 

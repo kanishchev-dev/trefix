@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Unplug,
 } from "lucide-react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 import { HeaderBackButton, HeaderTitle } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";

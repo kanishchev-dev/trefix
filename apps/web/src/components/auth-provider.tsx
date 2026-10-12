@@ -23,7 +23,7 @@ import type {
   AuthRequestEmailVerificationInput,
   ChangePasswordInput,
   UpdateUserInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   activateInvite,

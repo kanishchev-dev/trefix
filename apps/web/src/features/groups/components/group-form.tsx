@@ -6,13 +6,13 @@ import type { ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import { Textarea } from "@workspace/ui/components/textarea";
+import { Button } from "@trefix/ui/components/button";
+import { Input } from "@trefix/ui/components/input";
+import { Label } from "@trefix/ui/components/label";
+import { Textarea } from "@trefix/ui/components/textarea";
 import { InfoIcon } from "lucide-react";
 
-import type { PermissionGroup } from "@workspace/api-client";
+import type { PermissionGroup } from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";

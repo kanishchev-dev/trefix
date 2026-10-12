@@ -1,5 +1,5 @@
 import * as Crypto from "expo-crypto";
-import { ApiClientError, type DeviceSyncType } from "@workspace/api-client";
+import { ApiClientError, type DeviceSyncType } from "@trefix/api-client";
 
 import { loadAuthSession } from "../../lib/auth-session";
 import {

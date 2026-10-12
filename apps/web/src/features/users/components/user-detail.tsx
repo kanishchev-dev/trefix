@@ -7,28 +7,28 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@workspace/ui/components/avatar";
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+} from "@trefix/ui/components/avatar";
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Switch } from "@workspace/ui/components/switch";
+} from "@trefix/ui/components/card";
+import { Switch } from "@trefix/ui/components/switch";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@workspace/ui/components/tabs";
+} from "@trefix/ui/components/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@workspace/ui/components/tooltip";
+} from "@trefix/ui/components/tooltip";
 import {
   CheckCircle2Icon,
   InfoIcon,
@@ -42,7 +42,7 @@ import type {
   AdminUserDetail,
   AdminUserGroup,
   Permission,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { toInitials } from "@/entities/avatar/lib/initials";

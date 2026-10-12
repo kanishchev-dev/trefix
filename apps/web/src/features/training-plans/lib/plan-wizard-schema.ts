@@ -6,7 +6,7 @@ import {
   PLAN_NAME_MAX_LENGTH,
   PLAN_NOTES_MAX_LENGTH,
   type PlanStartOption,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { parseDateKey } from "@/features/training-calendar/lib/calendar-dates";
 

@@ -3,7 +3,7 @@ import {
   type PlanDiff,
   type PlanDiffAdjustment,
   type PlanDiffWorkout,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   fillTemplate,

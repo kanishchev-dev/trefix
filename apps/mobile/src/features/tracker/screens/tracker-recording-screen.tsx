@@ -11,7 +11,7 @@ import {
   SkipForward,
 } from "lucide-react-native";
 
-import { withAlpha, type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { withAlpha, type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import type { AppLanguage, MainCopy } from "../../../locales";
 import { replaceSubScreen } from "../../main/main-routes";

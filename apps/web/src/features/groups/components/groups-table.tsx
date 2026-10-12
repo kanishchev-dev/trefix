@@ -4,16 +4,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, type ReactElement } from "react";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { Input } from "@workspace/ui/components/input";
+} from "@trefix/ui/components/dropdown-menu";
+import { Input } from "@trefix/ui/components/input";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@workspace/ui/components/table";
+} from "@trefix/ui/components/table";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -31,7 +31,7 @@ import {
   Trash2Icon,
 } from "lucide-react";
 
-import type { PermissionGroup } from "@workspace/api-client";
+import type { PermissionGroup } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { getFriendlyApiMessage } from "@/lib/errors";

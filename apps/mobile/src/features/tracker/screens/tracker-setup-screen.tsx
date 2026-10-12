@@ -5,9 +5,9 @@ import type {
   RecordingEnvironment,
   TrainingWorkout,
   WorkoutType,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Segmented } from "@workspace/ui-native";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Segmented } from "@trefix/ui-native";
 
 import type { AppLanguage, MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";

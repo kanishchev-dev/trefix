@@ -1,7 +1,7 @@
 import {
   type CompleteWorkoutInput,
   type WorkoutStatus,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 type WorkoutLike = {
   status: WorkoutStatus;

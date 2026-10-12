@@ -4,8 +4,8 @@ import { Text, View } from "react-native";
 import {
   type ManualPlanPreviewWorkout,
   type PlanDiff,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";

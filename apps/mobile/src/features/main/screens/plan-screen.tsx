@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
-import { type PlanAdaptation, type PlanWeek } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type PlanAdaptation, type PlanWeek } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import {
   HeaderLogo,

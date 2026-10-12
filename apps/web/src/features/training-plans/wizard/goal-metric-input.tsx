@@ -2,10 +2,10 @@
 
 import type { ReactElement } from "react";
 
-import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+import { Field, FieldError, FieldLabel } from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
-import type { GoalMetricKey } from "@workspace/api-client";
+import type { GoalMetricKey } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 import { OptionSelect } from "@/widgets/option-select";

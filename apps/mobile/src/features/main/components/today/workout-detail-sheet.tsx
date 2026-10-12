@@ -8,8 +8,8 @@ import {
   Play,
 } from "lucide-react-native";
 
-import { type TrainingWorkout } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type TrainingWorkout } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import {
   BottomSheet,
   SheetButton,

@@ -6,9 +6,9 @@ import {
   kmToDisplay,
   paceToDisplay,
   type UnitSystem,
-} from "@workspace/utils";
+} from "@trefix/utils";
 
-/** Display conversion of metric values: conversions live in `@workspace/utils`, labels in the app copy. */
+/** Display conversion of metric values: conversions live in `@trefix/utils`, labels in the app copy. */
 export {
   displayToKg,
   displayToKm,
@@ -16,7 +16,7 @@ export {
   kgToDisplay,
   kmToDisplay,
   type UnitSystem,
-} from "@workspace/utils";
+} from "@trefix/utils";
 
 type Labels = {
   km: string;

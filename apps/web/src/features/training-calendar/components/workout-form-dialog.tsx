@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, type ReactElement } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -12,22 +12,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@workspace/ui/components/dialog";
+} from "@trefix/ui/components/dialog";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
-import { Spinner } from "@workspace/ui/components/spinner";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
+import { Spinner } from "@trefix/ui/components/spinner";
 
 import {
   ADMIN_WORKOUT_EDITABLE_STATUSES,
   ADMIN_WORKOUT_LIMITS,
   WORKOUT_TYPES,
   type AdminCalendarWorkout,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";

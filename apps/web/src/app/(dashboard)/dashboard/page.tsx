@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardAction,
@@ -11,7 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@trefix/ui/components/card";
 import {
   ArrowRightIcon,
   KeyRoundIcon,

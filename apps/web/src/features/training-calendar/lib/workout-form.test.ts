@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdminCalendarWorkout } from "@workspace/api-client";
+import type { AdminCalendarWorkout } from "@trefix/api-client";
 
 import {
   getCreateFormDefaults,

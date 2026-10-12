@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Ruler } from "@workspace/ui-native";
+import { Ruler } from "@trefix/ui-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import {
   BottomSheet,
   SheetBlock,

@@ -6,9 +6,9 @@ import {
   type PlanStartBlock,
   type PlanStartOption,
   type PlanStartOptions,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { DateWheel } from "@workspace/ui-native";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { DateWheel } from "@trefix/ui-native";
 
 import {
   fillTemplate,

@@ -6,8 +6,8 @@ import {
   type ManualPlanPreview,
   type MetricsSnapshot,
   type RebuildPreview,
-} from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+} from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { Card } from "../../../shared/ui/card";
 import {
   fillTemplate,
@@ -28,7 +28,7 @@ import {
   type PlanCreationDraft,
 } from "../plan-creation-types";
 import { CirclePicker, OptionChip, SectionBlock } from "./plan-creation-ui";
-import { Ruler } from "@workspace/ui-native";
+import { Ruler } from "@trefix/ui-native";
 import { GoalTypeStep } from "./goal-type-step";
 import { GoalSetupStep } from "./goal-setup-step";
 import { ScheduleStepFields } from "./schedule-step-fields";

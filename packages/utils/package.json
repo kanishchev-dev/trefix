@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/utils",
+  "name": "@trefix/utils",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
+    "@trefix/eslint-config": "workspace:*",
     "eslint": "9.35.0",
     "vitest": "3.2.4"
   }

@@ -5,29 +5,29 @@ import { useEffect, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@workspace/ui/components/dialog";
+} from "@trefix/ui/components/dialog";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
-import { Spinner } from "@workspace/ui/components/spinner";
-import { Textarea } from "@workspace/ui/components/textarea";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
+import { Spinner } from "@trefix/ui/components/spinner";
+import { Textarea } from "@trefix/ui/components/textarea";
 
 import {
   PLAN_NAME_MAX_LENGTH,
   PLAN_NOTES_MAX_LENGTH,
   type PlanDetails,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";

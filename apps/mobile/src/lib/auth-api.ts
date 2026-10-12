@@ -19,7 +19,7 @@ import {
   type MobileAuthEmailVerifyInput,
   type AppleNativeExchangeInput,
   type GoogleNativeExchangeInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { getGoogleSigninModule } from "./google-signin";
 import { loadAuthSession, saveAuthSession } from "./auth-session";

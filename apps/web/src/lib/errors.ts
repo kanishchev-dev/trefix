@@ -1,4 +1,4 @@
-import { isApiErrorLike, resolveApiErrorMessage } from "@workspace/utils";
+import { isApiErrorLike, resolveApiErrorMessage } from "@trefix/utils";
 
 export type TranslateFn = (
   key: string,

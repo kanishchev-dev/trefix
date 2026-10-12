@@ -8,7 +8,7 @@ import {
   Moon,
   ChevronRight,
 } from "lucide-react-native";
-import { type ThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type DayEvent } from "../../today-types";
 import {
   Card,

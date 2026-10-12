@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 import { type AuthCopy } from "../../../locales";
 
 type Props = {

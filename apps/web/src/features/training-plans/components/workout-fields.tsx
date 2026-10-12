@@ -2,10 +2,10 @@
 
 import type { ReactElement } from "react";
 
-import type { WorkoutType } from "@workspace/api-client";
+import type { WorkoutType } from "@trefix/api-client";
 
-import { Field, FieldLabel } from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
+import { Field, FieldLabel } from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
 
 import { useI18n } from "@/shared/i18n";
 import { OptionSelect } from "@/widgets/option-select";

@@ -3,7 +3,7 @@ import type {
   DeviceProfileMetricsRequest,
   DeviceProvider,
   DeviceScope,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 export type HealthAvailability =
   | "available"

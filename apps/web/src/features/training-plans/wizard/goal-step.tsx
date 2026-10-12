@@ -11,11 +11,11 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@workspace/ui/components/field";
-import { Input } from "@workspace/ui/components/input";
-import { Textarea } from "@workspace/ui/components/textarea";
+} from "@trefix/ui/components/field";
+import { Input } from "@trefix/ui/components/input";
+import { Textarea } from "@trefix/ui/components/textarea";
 
-import { GOAL_TYPE_CONFIG, type GoalMetricKey } from "@workspace/api-client";
+import { GOAL_TYPE_CONFIG, type GoalMetricKey } from "@trefix/api-client";
 
 import { toDateKey } from "@/features/training-calendar/lib/calendar-dates";
 import { useI18n } from "@/shared/i18n";

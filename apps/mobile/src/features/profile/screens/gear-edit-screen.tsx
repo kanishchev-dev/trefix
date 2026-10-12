@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
-import { type GearInput, type WorkoutType } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
-import { Ruler } from "@workspace/ui-native";
+import { type GearInput, type WorkoutType } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { Ruler } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import {

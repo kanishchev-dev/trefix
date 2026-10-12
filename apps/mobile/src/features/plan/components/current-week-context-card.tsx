@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Zap } from "lucide-react-native";
 
-import { type CurrentWeekContext } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type CurrentWeekContext } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { Card } from "../../../shared/ui/card";

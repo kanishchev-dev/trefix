@@ -8,8 +8,8 @@ import {
   Trash2,
 } from "lucide-react-native";
 
-import { type Gear } from "@workspace/api-client";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type Gear } from "@trefix/api-client";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import {
   requestStravaProfileAccess,

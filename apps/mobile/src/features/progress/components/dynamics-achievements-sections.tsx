@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Calendar, Medal, Route, Trophy } from "lucide-react-native";
-import { type ProgressOverview } from "@workspace/api-client";
+import { type ProgressOverview } from "@trefix/api-client";
 import { fillTemplate, pluralize } from "../../../locales";
 import { formatPace } from "../../../shared/lib/units";
 import { Chip, ChipScroller } from "../../../shared/ui/chip-scroller";

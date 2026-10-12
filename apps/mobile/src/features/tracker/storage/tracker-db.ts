@@ -2,7 +2,7 @@ import * as SQLite from "expo-sqlite";
 import type {
   RecordedActivityRequest,
   WorkoutType,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import type { EngineState, LocationSample } from "../engine/types";
 import type { TrackFile } from "../engine/summary";

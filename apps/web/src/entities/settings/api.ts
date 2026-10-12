@@ -3,7 +3,7 @@ import {
   updateSettingsSchema,
   type AppSettings,
   type UpdateSettingsInput,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { apiRequest } from "@/lib/api";
 

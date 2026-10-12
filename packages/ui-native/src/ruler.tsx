@@ -25,7 +25,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Minus, Plus } from "lucide-react-native";
-import { type ThemeMode } from "@workspace/tokens";
+import { type ThemeMode } from "@trefix/tokens";
 import { resolveTheme } from "./theme";
 import { type ValueControlProps } from "./value-control-types";
 

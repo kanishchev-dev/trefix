@@ -1,6 +1,6 @@
 import { Image, type ImageSourcePropType } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type AuthCopy } from "../../locales";
 import { AuthScreen } from "./auth-screen";

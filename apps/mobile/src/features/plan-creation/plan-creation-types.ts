@@ -6,8 +6,8 @@ import type {
   ManualPlanScheduleInput,
   ManualPlanStructureInput,
   ManualPlanWorkoutOverride,
-} from "@workspace/api-client";
-import { GOAL_TYPE_CONFIG } from "@workspace/api-client";
+} from "@trefix/api-client";
+import { GOAL_TYPE_CONFIG } from "@trefix/api-client";
 
 import { type MainCopy } from "../../locales";
 

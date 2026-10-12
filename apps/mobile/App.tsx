@@ -14,7 +14,7 @@ import {
   Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { getMobileThemeTokens, type ThemeMode } from "@workspace/tokens";
+import { getMobileThemeTokens, type ThemeMode } from "@trefix/tokens";
 
 import { useAppPreferences } from "./src/app/use-app-preferences";
 import { AuthNavigator } from "./src/features/auth/auth-navigator";

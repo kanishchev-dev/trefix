@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-import { authTokensSchema, type AuthTokens } from "@workspace/api-client";
+import { authTokensSchema, type AuthTokens } from "@trefix/api-client";
 import { logger } from "./logger";
 
 const AUTH_SESSION_KEY = "workspace.auth.session";

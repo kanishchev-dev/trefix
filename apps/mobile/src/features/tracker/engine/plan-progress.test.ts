@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ExecutionStep } from "@workspace/api-client";
+import type { ExecutionStep } from "@trefix/api-client";
 
 import {
   advancePlan,

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { type TrainingWorkout } from "@workspace/api-client";
+import { type TrainingWorkout } from "@trefix/api-client";
 
 import { type MainCopy } from "../../../locales";
 import { getErrorMessage } from "../../../shared/lib/error-message";

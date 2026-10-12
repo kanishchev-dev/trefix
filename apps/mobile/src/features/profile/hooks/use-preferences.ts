@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type UserPreferences,
   type UserPreferencesUpdate,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   getPreferences,

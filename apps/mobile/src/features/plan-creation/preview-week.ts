@@ -1,7 +1,7 @@
 import {
   type ManualPlanPreview,
   type ManualPlanPreviewWorkout,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 export type PreviewWeek = ManualPlanPreview["weeks"][number];
 

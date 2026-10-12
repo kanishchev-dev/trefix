@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { type ThemeTokens } from "@workspace/tokens";
+import { type ThemeTokens } from "@trefix/tokens";
 
 /** Group title above a card: sentence case, 12px medium, foreground at 70%. */
 export function SectionTitle({

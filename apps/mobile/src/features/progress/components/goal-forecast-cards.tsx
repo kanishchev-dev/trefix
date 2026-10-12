@@ -3,7 +3,7 @@ import { ChevronRight, Target } from "lucide-react-native";
 import {
   type ProgressOverview,
   type RecordDistance,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 import { fillTemplate, pluralize } from "../../../locales";
 import { IconCircle, Pill } from "../../../shared/ui/list-card";
 import {

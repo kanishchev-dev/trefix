@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { useToast } from "../../../shared/ui/toast";

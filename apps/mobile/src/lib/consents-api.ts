@@ -4,7 +4,7 @@ import {
   type Consent,
   type ConsentsList,
   type ConsentType,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { request } from "./api-client";
 

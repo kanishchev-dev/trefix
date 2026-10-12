@@ -5,7 +5,7 @@ import {
   ApiClientError,
   type AuthTokens,
   type MobileAuthChallenge,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   requestEmailOtp,

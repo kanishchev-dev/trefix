@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactElement, type ReactNode } from "react";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@trefix/ui/components/button";
 import { ServerCrashIcon, ShieldXIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";

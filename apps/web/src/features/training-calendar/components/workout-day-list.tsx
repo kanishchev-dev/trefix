@@ -2,16 +2,16 @@
 
 import type { ReactElement } from "react";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@workspace/ui/components/tooltip";
+} from "@trefix/ui/components/tooltip";
 import { LockIcon, PencilIcon } from "lucide-react";
 
-import type { AdminCalendarWorkout } from "@workspace/api-client";
+import type { AdminCalendarWorkout } from "@trefix/api-client";
 
 import { useI18n } from "@/shared/i18n";
 

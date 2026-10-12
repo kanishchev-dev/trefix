@@ -1,7 +1,7 @@
 import { Linking } from "react-native";
 import { Activity } from "lucide-react-native";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { requestStravaProfileAccess } from "../../../lib/integrations-api";
 import { trackEvent } from "../../../lib/analytics";

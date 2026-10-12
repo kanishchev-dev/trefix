@@ -4,7 +4,7 @@ import type {
   CurrentMetrics,
   PlanStartOption,
   RebuildPrefill,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import {
   buildMetrics,

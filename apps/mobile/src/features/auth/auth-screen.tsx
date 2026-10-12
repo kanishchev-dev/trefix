@@ -22,7 +22,7 @@ import {
   getMobileThemeTokens,
   type ThemeMode,
   type ThemeTokens,
-} from "@workspace/tokens";
+} from "@trefix/tokens";
 import { AuthSocialButtons } from "./components/auth-social-buttons";
 import { AuthDivider } from "./components/auth-divider";
 import { AuthEmailField } from "./components/auth-email-field";

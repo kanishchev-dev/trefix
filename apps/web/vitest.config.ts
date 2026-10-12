@@ -10,13 +10,13 @@ const viteConfig = defineConfig({
   resolve: {
     alias: [
       {
-        find: "@workspace/api-client",
+        find: "@trefix/api-client",
         replacement: fileURLToPath(
           new URL("../../packages/api-client/src/index.ts", import.meta.url),
         ),
       },
       {
-        find: /^@workspace\/ui(\/.*)?$/,
+        find: /^@trefix\/ui(\/.*)?$/,
         replacement: fileURLToPath(
           new URL("../../packages/ui/src$1", import.meta.url),
         ),

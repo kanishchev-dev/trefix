@@ -1,4 +1,4 @@
-import { ApiClientError } from "@workspace/api-client";
+import { ApiClientError } from "@trefix/api-client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const session = {

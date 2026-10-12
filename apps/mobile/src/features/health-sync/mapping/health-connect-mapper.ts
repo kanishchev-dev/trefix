@@ -1,4 +1,4 @@
-import type { DeviceActivity } from "@workspace/api-client";
+import type { DeviceActivity } from "@trefix/api-client";
 
 import { positiveRound } from "./units";
 

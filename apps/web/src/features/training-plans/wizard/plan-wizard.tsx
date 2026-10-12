@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
-import { Alert, AlertDescription } from "@workspace/ui/components/alert";
-import { Button } from "@workspace/ui/components/button";
+import { Alert, AlertDescription } from "@trefix/ui/components/alert";
+import { Button } from "@trefix/ui/components/button";
 import {
   Card,
   CardContent,
@@ -13,15 +13,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Label } from "@workspace/ui/components/label";
+} from "@trefix/ui/components/card";
+import { Label } from "@trefix/ui/components/label";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@workspace/ui/components/radio-group";
-import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Spinner } from "@workspace/ui/components/spinner";
-import { cn } from "@workspace/ui/lib/utils";
+} from "@trefix/ui/components/radio-group";
+import { Skeleton } from "@trefix/ui/components/skeleton";
+import { Spinner } from "@trefix/ui/components/spinner";
+import { cn } from "@trefix/ui/lib/utils";
 import { CheckIcon } from "lucide-react";
 
 import type {
@@ -30,7 +30,7 @@ import type {
   PlanDetails,
   RebuildPreview,
   RebuildTarget,
-} from "@workspace/api-client";
+} from "@trefix/api-client";
 
 import { getBrowserTimezone } from "@/features/training-calendar/lib/calendar-dates";
 import { getFriendlyApiMessage } from "@/lib/errors";

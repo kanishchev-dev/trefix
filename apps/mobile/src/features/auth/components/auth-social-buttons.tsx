@@ -10,7 +10,7 @@ import {
 import * as AppleAuthentication from "expo-apple-authentication";
 import { GlassView } from "expo-glass-effect";
 
-import { type ThemeMode, type ThemeTokens } from "@workspace/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { type AuthCopy } from "../../../locales";
 
 type Props = {
