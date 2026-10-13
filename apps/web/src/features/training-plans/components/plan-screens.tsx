@@ -24,6 +24,7 @@ import {
   metricsFromCurrent,
   valuesFromRebuildPrefill,
 } from "../lib/plan-wizard-form";
+import { planTitle } from "../lib/plan-texts";
 import { PlanWizard } from "../wizard/plan-wizard";
 import { PlanDetailsView } from "./plan-details-view";
 
@@ -149,7 +150,7 @@ export function PlanRebuildScreen({
   userId: string;
   planId: string;
 }): ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const timezone = useMemo(() => getBrowserTimezone(), []);
   const planQuery = usePlan(userId, planId);
@@ -186,7 +187,9 @@ export function PlanRebuildScreen({
       <ScreenHeader
         userId={userId}
         title={t("userPlans.rebuild.title")}
-        subtitle={t("userPlans.rebuild.subtitle", { name: plan.name })}
+        subtitle={t("userPlans.rebuild.subtitle", {
+          name: planTitle(plan, t, locale),
+        })}
       />
       <PlanWizard
         userId={userId}

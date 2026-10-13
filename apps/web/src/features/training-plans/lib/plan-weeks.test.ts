@@ -13,7 +13,7 @@ const base = {
   id: "plan-1",
   name: "Plan",
   creationSource: "manual",
-  goal: { type: null, title: null, targetDate: null },
+  goal: { type: null, target: null, description: null, targetDate: null },
   totalWeeks: 2,
   updatedAt: "2026-10-01T00:00:00.000Z",
   notes: null,

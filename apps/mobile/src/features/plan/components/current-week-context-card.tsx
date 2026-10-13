@@ -6,6 +6,11 @@ import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { Card } from "../../../shared/ui/card";
+import {
+  keySessionLabel,
+  phaseIntent,
+  phaseTitle,
+} from "../../plans/lib/plan-texts";
 
 type Props = {
   context: CurrentWeekContext;
@@ -16,6 +21,10 @@ type Props = {
 
 export function CurrentWeekContextCard({ context, theme, copy }: Props) {
   const planCopy = copy.plan;
+  const description = phaseIntent(context.phase, copy);
+  const focusItems = context.keySessions.map((session) =>
+    keySessionLabel(session, copy),
+  );
 
   return (
     <Card variant="glass" theme={theme} style={styles.card}>
@@ -44,11 +53,11 @@ export function CurrentWeekContextCard({ context, theme, copy }: Props) {
             },
           ]}
         >
-          {context.title}
+          {phaseTitle(context.phase, copy)}
         </Text>
       </View>
 
-      {context.description ? (
+      {description ? (
         <Text
           style={[
             styles.descriptionText,
@@ -58,13 +67,13 @@ export function CurrentWeekContextCard({ context, theme, copy }: Props) {
             },
           ]}
         >
-          {context.description}
+          {description}
         </Text>
       ) : null}
 
-      {context.focusItems && context.focusItems.length > 0 ? (
+      {focusItems.length > 0 ? (
         <View style={styles.bulletsSection}>
-          {context.focusItems.map((item, idx) => (
+          {focusItems.map((item, idx) => (
             <View key={idx} style={styles.bulletRow}>
               <View
                 style={[

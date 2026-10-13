@@ -125,12 +125,15 @@ export function buildPrefilledSetup(
       launch.mode === "draft-params" && launch.initialStep === "metrics"
         ? STEPS.length - 1
         : 0,
-    defaultName: isRebuild
-      ? fillTemplate(copy.plans.rebuild.defaultName, {
-          name: details.name,
-          year,
-        })
-      : details.name,
+    // A plan without a user-given name keeps none: the apps title it by its goal.
+    defaultName: details.name
+      ? isRebuild
+        ? fillTemplate(copy.plans.rebuild.defaultName, {
+            name: details.name,
+            year,
+          })
+        : details.name
+      : undefined,
     initialNotes: isRebuild ? null : details.notes,
     source: details,
   };

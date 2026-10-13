@@ -480,9 +480,23 @@ export type CoachChatDto = {
   message: string;
 };
 
+export type GoalTargetSummaryDto = {
+  distanceMeters: number | null;
+  finishTimeSec: number | null;
+  runsPerWeek: number | null;
+  weightKg: number | null;
+};
+
 export type PlanGoalSummaryDto = {
+  /**
+   * Goal type code
+   */
   type: string | null;
-  title: string | null;
+  target: GoalTargetSummaryDto | null;
+  /**
+   * User's own text of a custom goal
+   */
+  description: string | null;
   targetDate: string | null;
 };
 
@@ -495,7 +509,10 @@ export type PlanStatsDto = {
 
 export type PlanListItemDto = {
   id: string;
-  name: string;
+  /**
+   * User-given name; null means the app titles the plan by its goal
+   */
+  name: string | null;
   status: "draft" | "active" | "completed" | "paused" | "cancelled";
   creationSource: string;
   goal: PlanGoalSummaryDto;
@@ -533,7 +550,10 @@ export type PlanCountsResponseDto = {
 
 export type ActivePlanSummaryDto = {
   id: string;
-  name: string;
+  /**
+   * User-given name; null means the app titles the plan by its goal
+   */
+  name: string | null;
   startDate: string | null;
   endDate: string | null;
   currentWeek: number;
@@ -656,7 +676,6 @@ export type RelativeWorkoutDto = {
     | "race"
     | "rest";
   phase: string;
-  title?: string;
   durationMinutes: number;
   distanceKm: number;
   target: {
@@ -670,8 +689,6 @@ export type RelativeWorkoutDto = {
 export type PlanDetailsWeekDto = {
   weekNumber: number;
   phase: string;
-  title?: string | null;
-  intent?: string | null;
   weeklyLoadTarget?: number | null;
   /**
    * Drafts only
@@ -685,7 +702,10 @@ export type PlanDetailsWeekDto = {
 
 export type PlanDetailsDto = {
   id: string;
-  name: string;
+  /**
+   * User-given name; null means the app titles the plan by its goal
+   */
+  name: string | null;
   status: "draft" | "active" | "completed" | "paused" | "cancelled";
   creationSource: string;
   goal: PlanGoalSummaryDto;
@@ -730,7 +750,10 @@ export type UpdatePlanMetaDto = {
 
 export type PlanMetaResponseDto = {
   id: string;
-  name: string;
+  /**
+   * User-given name; null means the app titles the plan by its goal
+   */
+  name: string | null;
   notes: string | null;
   version: number;
 };
@@ -1129,8 +1152,6 @@ export type RebuildPreviewRequestDto = {
 export type RelativeWeekDto = {
   weekNumber: number;
   phase: string;
-  title?: string | null;
-  intent?: string | null;
   weeklyLoadTarget?: number | null;
   workouts: Array<RelativeWorkoutDto>;
 };
@@ -1174,7 +1195,6 @@ export type ManualPlanPreviewWorkoutDto = {
 export type ManualPlanPreviewWeekDto = {
   weekNumber: number;
   phase: "BASE" | "BUILD" | "RECOVERY" | "SPECIFIC" | "PEAK" | "TAPER" | "RACE";
-  title: string;
   plannedWorkoutsCount: number;
   plannedDistance: number;
   plannedLoad: number;
@@ -1243,7 +1263,7 @@ export type RebuildRequestDto = {
    */
   expectedVersion?: number;
   /**
-   * Defaults to "<source name> <year>"
+   * Defaults to "<source name> <year>" when the source plan has a name
    */
   name?: string;
   notes?: string | null;
@@ -1729,7 +1749,10 @@ export type TrainingPlanResponseDto = {
   id: string;
   athleteId: string;
   goalId: string | null;
-  name: string;
+  /**
+   * User-given name; null means the app titles the plan by its goal
+   */
+  name: string | null;
   notes: string | null;
   /**
    * Version to pass as expectedVersion when editing the plan
@@ -1789,17 +1812,13 @@ export type CreatePlanDto = {
   };
 };
 
-export type PlanGoalDto = {
-  title?: string;
-  distance: string;
-  targetTime?: string;
-  targetDate?: string;
-};
-
 export type PlanOverviewDataDto = {
   id: string;
-  name?: string;
-  goal: PlanGoalDto;
+  /**
+   * User-given name; null means the app titles the plan by its goal
+   */
+  name: string | null;
+  goal: PlanGoalSummaryDto;
   status: "not_started" | "active" | "completed" | "cancelled";
   currentWeek: number;
   totalWeeks: number;
@@ -1824,40 +1843,46 @@ export type PlanOverviewDataDto = {
   config: PlanConfigDto;
 };
 
+export type KeySessionDto = {
+  /**
+   * Workout type code
+   */
+  type: string;
+  distanceKm: number;
+};
+
 export type PlanWeekDto = {
   id: string;
   weekNumber: number;
   phase: "BASE" | "BUILD" | "RECOVERY" | "SPECIFIC" | "PEAK" | "TAPER" | "RACE";
-  title: string;
   status: "completed" | "current" | "upcoming";
   plannedWorkoutsCount?: number;
   plannedDistance?: number;
   plannedLoad?: number;
-  summaryText?: string;
-  intent?: string;
-  keySessions?: Array<string>;
+  /**
+   * Quality workouts of the week
+   */
+  keySessions: Array<KeySessionDto>;
 };
 
 export type CurrentWeekContextDto = {
-  title: string;
-  description?: string;
-  focusItems?: Array<string>;
+  weekNumber: number;
+  phase: "BASE" | "BUILD" | "RECOVERY" | "SPECIFIC" | "PEAK" | "TAPER" | "RACE";
+  keySessions: Array<KeySessionDto>;
 };
 
 export type PlanAdaptationDto = {
   id: string;
   weekId?: string;
   weekNumber?: number;
-  type:
-    | "HIGH_FATIGUE"
-    | "MISSED_WORKOUT"
-    | "POOR_PERFORMANCE"
-    | "EXCELLENT_PERFORMANCE"
-    | "LOW_RECOVERY"
-    | "SCHEDULE_CHANGE"
-    | "GOAL_CHANGE";
-  title: string;
-  description?: string;
+  /**
+   * Adaptation action code: ADD_RECOVERY, REDUCE_INTENSITY, REDUCE_VOLUME, MOVE, REPLACE, …
+   */
+  type: string;
+  /**
+   * Reason code (high_fatigue, low_recovery, heart_rate_zones_changed, …) or text written by the coach
+   */
+  reason?: string;
   createdAt: string;
 };
 
@@ -2476,7 +2501,7 @@ export type AdminWorkoutCreateDto = {
    */
   status?: "planned" | "skipped";
   /**
-   * Title shown in the athlete calendar; derived from the type when omitted
+   * Title shown in the athlete calendar; without it the apps name the workout by its type
    */
   title?: string;
 };

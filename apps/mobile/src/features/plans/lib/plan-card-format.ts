@@ -6,6 +6,7 @@ import {
   type AppLanguage,
   type MainCopy,
 } from "../../../locales";
+import { goalTitle } from "./plan-texts";
 
 export type PlansSegment = "draft" | "history";
 
@@ -24,7 +25,8 @@ export function planCardSubtitle(
 ): string {
   const cardCopy = copy.plans.card;
   const parts: string[] = [];
-  if (item.goal.title) parts.push(item.goal.title);
+  const goal = goalTitle(item.goal, copy, language);
+  if (goal) parts.push(goal);
   parts.push(fillTemplate(cardCopy.weeks, { count: item.totalWeeks }));
   if (item.sessionsPerWeek)
     parts.push(fillTemplate(cardCopy.perWeek, { count: item.sessionsPerWeek }));

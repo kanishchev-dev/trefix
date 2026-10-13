@@ -1,19 +1,23 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Trophy } from "lucide-react-native";
 
-import { type PlanOverview, type PlanWeek } from "@trefix/api-client";
+import { type PlanOverview } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { PlanOverviewCard } from "./plan-overview-card";
 import { PlanTimeline } from "./plan-timeline";
-import { type MainCopy } from "../../../locales";
+import { type PlanWeekView } from "../../plans/lib/plan-weeks";
+import { type AppLanguage, type MainCopy } from "../../../locales";
 
 type Props = {
   overview: PlanOverview;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-  onSelectWeek: (week: PlanWeek) => void;
+  language: AppLanguage;
+  onSelectWeek: (week: PlanWeekView) => void;
+  /** Overview weeks with texts in the app language. */
+  weeks: PlanWeekView[];
   onNewGoal: () => void;
   /** "Prepare again" from the completed plan. */
   onPrepareAgain: () => void;
@@ -25,7 +29,9 @@ export function PlanCompletedState({
   theme,
   themeMode,
   copy,
+  language,
   onSelectWeek,
+  weeks,
   onNewGoal,
   onPrepareAgain,
   onOpenPlans,
@@ -131,6 +137,7 @@ export function PlanCompletedState({
 
       <PlanOverviewCard
         copy={copy}
+        language={language}
         overview={overview}
         theme={theme}
         themeMode={themeMode}
@@ -141,7 +148,7 @@ export function PlanCompletedState({
         onSelectWeek={onSelectWeek}
         theme={theme}
         themeMode={themeMode}
-        weeks={overview.weeks}
+        weeks={weeks}
       />
     </View>
   );

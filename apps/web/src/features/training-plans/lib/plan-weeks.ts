@@ -14,7 +14,6 @@ export type DatedWorkoutView = PlanWorkoutItem & { kind: "dated" };
 export type PlanWeekView = {
   weekNumber: number;
   phase: string;
-  title: string | null;
   workouts: Array<DraftWorkoutView | DatedWorkoutView>;
   distanceKm: number;
 };
@@ -62,7 +61,7 @@ export function buildPlanWeeks(plan: PlanDetails): PlanWeekView[] {
     );
     const record = records.get(weekNumber);
     return {
-      ...(record ? weekMeta(record) : { weekNumber, phase: "", title: null }),
+      ...(record ? weekMeta(record) : { weekNumber, phase: "" }),
       workouts,
       distanceKm: sumDistance(workouts),
     };
@@ -71,11 +70,10 @@ export function buildPlanWeeks(plan: PlanDetails): PlanWeekView[] {
 
 function weekMeta(
   week: PlanDetailsWeek,
-): Pick<PlanWeekView, "weekNumber" | "phase" | "title"> {
+): Pick<PlanWeekView, "weekNumber" | "phase"> {
   return {
     weekNumber: week.weekNumber,
     phase: week.phase,
-    title: week.title ?? null,
   };
 }
 

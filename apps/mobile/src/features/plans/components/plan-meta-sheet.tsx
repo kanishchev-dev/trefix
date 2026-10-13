@@ -63,7 +63,8 @@ export function PlanMetaSheet({
 
   const handleSave = async () => {
     const trimmed = name.trim();
-    if (!trimmed) {
+    // A plan without a name may stay unnamed; a given name can't be cleared.
+    if (!trimmed && initialName.trim()) {
       setNameError(metaCopy.nameRequired);
       return;
     }

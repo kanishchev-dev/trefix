@@ -15,10 +15,7 @@ import {
   CardTitle,
 } from "@trefix/ui/components/card";
 import { Label } from "@trefix/ui/components/label";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@trefix/ui/components/radio-group";
+import { RadioGroup, RadioGroupItem } from "@trefix/ui/components/radio-group";
 import { Skeleton } from "@trefix/ui/components/skeleton";
 import { Spinner } from "@trefix/ui/components/spinner";
 import { cn } from "@trefix/ui/lib/utils";
@@ -77,7 +74,6 @@ function previewWeeks(result: PreviewResult): PlanWeekView[] {
     return weeks.map((week) => ({
       weekNumber: week.weekNumber,
       phase: week.phase,
-      title: week.title ?? null,
       workouts: week.workouts.map((workout) => ({
         ...workout,
         kind: "relative" as const,
@@ -95,7 +91,6 @@ function previewWeeks(result: PreviewResult): PlanWeekView[] {
   return manual.weeks.map((week) => ({
     weekNumber: week.weekNumber,
     phase: week.phase,
-    title: week.title,
     workouts: week.workouts.map((workout) => ({
       ...workout,
       key: workout.id,

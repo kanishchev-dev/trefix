@@ -11,6 +11,7 @@ import {
 } from "../../../locales";
 import { Card } from "../../../shared/ui/card";
 import { planCardStatus, planCardSubtitle } from "../lib/plan-card-format";
+import { planTitle } from "../lib/plan-texts";
 import { ProgressBar } from "./plans-ui";
 
 type Props = {
@@ -41,6 +42,7 @@ export function PlanCard({
   const plansCopy = copy.plans;
   const status = planCardStatus(plan, copy, language);
   const subtitle = planCardSubtitle(plan, copy, language);
+  const title = planTitle(plan, copy, language);
   const isActive = plan.status === "active";
   const regular = theme.typography.fontFamily.sans.regular;
   const medium = theme.typography.fontFamily.sans.medium;
@@ -58,7 +60,7 @@ export function PlanCard({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={fillTemplate(plansCopy.card.a11y, {
-          name: plan.name,
+          name: title,
           status,
         })}
         onPress={onPress}
@@ -76,7 +78,7 @@ export function PlanCard({
               },
             ]}
           >
-            {plan.name}
+            {title}
           </Text>
           {plan.creationSource === "ai" ? (
             <Badge label={plansCopy.badge.ai} theme={theme} />
@@ -144,7 +146,7 @@ export function PlanCard({
       {onOpenActions ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${plansCopy.card.moreActions}: ${plan.name}`}
+          accessibilityLabel={`${plansCopy.card.moreActions}: ${title}`}
           hitSlop={10}
           onPress={onOpenActions}
           style={({ pressed }) => [styles.more, pressed && styles.pressed]}

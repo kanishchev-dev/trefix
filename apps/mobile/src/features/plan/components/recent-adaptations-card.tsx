@@ -5,6 +5,7 @@ import { type PlanAdaptation } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { adaptationReason, adaptationTitle } from "../../plans/lib/plan-texts";
 import { Card } from "../../../shared/ui/card";
 
 type Props = {
@@ -124,7 +125,7 @@ export function RecentAdaptationsCard({
                     },
                   ]}
                 >
-                  {item.title}
+                  {adaptationTitle(item.type, copy)}
                 </Text>
                 {item.weekNumber ? (
                   <View
@@ -167,7 +168,7 @@ export function RecentAdaptationsCard({
               </Text>
             </View>
 
-            {item.description ? (
+            {adaptationReason(item.reason, copy) ? (
               <Text
                 numberOfLines={2}
                 style={[
@@ -178,7 +179,7 @@ export function RecentAdaptationsCard({
                   },
                 ]}
               >
-                {item.description}
+                {adaptationReason(item.reason, copy)}
               </Text>
             ) : null}
           </Pressable>

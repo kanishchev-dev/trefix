@@ -303,7 +303,6 @@ export function relativeWeeksToPreview(
     return {
       weekNumber: week.weekNumber,
       phase: previewWeekPhase(week.phase),
-      title: week.title ?? "",
       plannedWorkoutsCount: workouts.length,
       plannedDistance: workouts.reduce(
         (sum, workout) => sum + workout.distanceKm,
@@ -332,8 +331,6 @@ export function relativeWeeksOf(details: PlanDetails): RelativeWeek[] {
     .map((week) => ({
       weekNumber: week.weekNumber,
       phase: week.phase,
-      title: week.title,
-      intent: week.intent,
       weeklyLoadTarget: week.weeklyLoadTarget,
       workouts: week.workouts ?? [],
     }));

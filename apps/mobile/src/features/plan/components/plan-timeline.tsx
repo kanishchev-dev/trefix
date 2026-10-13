@@ -1,18 +1,18 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { type PlanWeek } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { PlanWeekItem } from "./plan-week-item";
 import { type MainCopy } from "../../../locales";
 import { type PlanTimelineMode } from "../../plans/lib/plan-weeks";
+import { type PlanWeekView } from "../../plans/lib/plan-weeks";
 
 type Props = {
-  weeks: PlanWeek[];
+  weeks: PlanWeekView[];
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-  onSelectWeek: (week: PlanWeek) => void;
+  onSelectWeek: (week: PlanWeekView) => void;
   /** `relative` — draft weeks without dates, `history` — a finished plan. */
   mode?: PlanTimelineMode;
 };

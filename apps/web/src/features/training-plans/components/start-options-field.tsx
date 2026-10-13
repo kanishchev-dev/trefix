@@ -10,10 +10,7 @@ import {
 import { Checkbox } from "@trefix/ui/components/checkbox";
 import { Field, FieldLabel } from "@trefix/ui/components/field";
 import { Label } from "@trefix/ui/components/label";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@trefix/ui/components/radio-group";
+import { RadioGroup, RadioGroupItem } from "@trefix/ui/components/radio-group";
 import { TriangleAlertIcon } from "lucide-react";
 
 import type { PlanStartOption, PlanStartOptions } from "@trefix/api-client";
@@ -114,7 +111,7 @@ export function StartOptionsField({
           <TriangleAlertIcon />
           <AlertTitle>
             {t("userPlans.start.activeTitle", {
-              name: options.activePlan.name,
+              name: options.activePlan.name ?? t("userPlans.untitled"),
             })}
           </AlertTitle>
           <AlertDescription className="flex flex-col gap-3">

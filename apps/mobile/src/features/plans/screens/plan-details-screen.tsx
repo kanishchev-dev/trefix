@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type PlanDetails, type PlanWeek } from "@trefix/api-client";
+import { type PlanDetails } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import {
@@ -41,10 +41,12 @@ import { usePlanDetails } from "../hooks/use-plan";
 import { completionPercent } from "../lib/plan-card-format";
 import { mondayBasedWeekday, workoutLocalDate } from "../lib/plan-dates";
 import { isNotFound } from "../lib/plan-errors";
+import { goalTitle, planTitle } from "../lib/plan-texts";
 import {
   planWeeksForTimeline,
   weekWorkoutRows,
   type PlanTimelineMode,
+  type PlanWeekView,
 } from "../lib/plan-weeks";
 import { usePlansNavigation } from "../plans-navigation";
 
@@ -69,7 +71,7 @@ export function PlanDetailsScreen({
   const insets = useSafeAreaInsets();
   const detailsQuery = usePlanDetails(planId);
   const details = detailsQuery.data;
-  const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<PlanWeekView | null>(null);
   // The week sheet is a modal: close it first, or it would cover the pushed screen.
   const openWorkout = useCallback((workoutId: string) => {
     setSelectedWeek(null);
@@ -227,9 +229,12 @@ export function PlanDetailsScreen({
               },
             ]}
           >
-            {[details.goal.title, raceResult(details, copy)]
+            {[
+              goalTitle(details.goal, copy, language),
+              raceResult(details, copy),
+            ]
               .filter(Boolean)
-              .join(" · ") || details.name}
+              .join(" · ") || planTitle(details, copy, language)}
           </Text>
           {details.goal.targetDate ? (
             <Text style={[styles.cardText, mutedStyle]}>
@@ -325,7 +330,7 @@ export function PlanDetailsScreen({
           onPress={() =>
             isDraft
               ? navigation.startDraft(
-                  { id: details.id, name: details.name },
+                  { id: details.id, name: planTitle(details, copy, language) },
                   "plan_details",
                 )
               : navigation.openCreation({
@@ -352,7 +357,11 @@ export function PlanDetailsScreen({
       />
 
       <PlanCardActionsSheet
-        plan={{ id: details.id, name: details.name, status: details.status }}
+        plan={{
+          id: details.id,
+          name: planTitle(details, copy, language),
+          status: details.status,
+        }}
         visible={actionsOpen}
         onClose={() => setActionsOpen(false)}
         onDeleted={navigation.back}

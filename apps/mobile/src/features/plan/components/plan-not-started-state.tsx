@@ -1,19 +1,27 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Clock } from "lucide-react-native";
 
-import { type PlanOverview, type PlanWeek } from "@trefix/api-client";
+import { type PlanOverview } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { PlanOverviewCard } from "./plan-overview-card";
 import { PlanTimeline } from "./plan-timeline";
-import { type MainCopy } from "../../../locales";
+import { type PlanWeekView } from "../../plans/lib/plan-weeks";
+import {
+  formatDateLong,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 
 type Props = {
   overview: PlanOverview;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-  onSelectWeek: (week: PlanWeek) => void;
+  language: AppLanguage;
+  onSelectWeek: (week: PlanWeekView) => void;
+  /** Overview weeks with texts in the app language. */
+  weeks: PlanWeekView[];
 };
 
 export function PlanNotStartedState({
@@ -21,14 +29,13 @@ export function PlanNotStartedState({
   theme,
   themeMode,
   copy,
+  language,
   onSelectWeek,
+  weeks,
 }: Props) {
   const notStartedCopy = copy.plan.notStartedState;
   const formattedStartDate = overview.plan.startDate
-    ? new Date(overview.plan.startDate).toLocaleDateString(
-        themeMode === "dark" ? "ru-RU" : "en-US",
-        { day: "numeric", month: "long" },
-      )
+    ? formatDateLong(new Date(overview.plan.startDate), language)
     : "";
 
   return (
@@ -86,6 +93,7 @@ export function PlanNotStartedState({
       {/* Plan Goal Overview */}
       <PlanOverviewCard
         copy={copy}
+        language={language}
         overview={overview}
         theme={theme}
         themeMode={themeMode}
@@ -97,7 +105,7 @@ export function PlanNotStartedState({
         onSelectWeek={onSelectWeek}
         theme={theme}
         themeMode={themeMode}
-        weeks={overview.weeks}
+        weeks={weeks}
       />
     </View>
   );

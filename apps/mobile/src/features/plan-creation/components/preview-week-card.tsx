@@ -48,8 +48,8 @@ export function PreviewWeekCard({
     week.phase,
   ).toUpperCase() as keyof typeof previewCopy.phases;
   const phaseLabel = previewCopy.phases[phaseKey] ?? week.phase;
-  // Backend titles are English placeholders; the title is derived from the phase here.
-  const weekTitle = previewCopy.phaseTitles[phaseKey] ?? week.title;
+  const weekTitle =
+    previewCopy.phaseTitles[phaseKey] ?? previewCopy.phaseTitles.BASE;
 
   return (
     <Card size="sm" theme={theme} themeMode={themeMode} style={styles.weekCard}>

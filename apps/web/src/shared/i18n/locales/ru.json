@@ -601,6 +601,12 @@
           "this_year": "В этом году",
           "custom": "К определенной дате"
         }
+      },
+      "summary": {
+        "distanceTime": "{distance} км · {time}",
+        "distance": "{distance} км",
+        "runsPerWeek": "{count} трен./нед.",
+        "weight": "Цель {weight} кг"
       }
     },
     "metrics": {
@@ -712,7 +718,8 @@
     "errors": {
       "versionConflict": "План изменился в другом месте (пользователем или тренером). Данные обновлены — повторите изменение.",
       "notFound": "План не найден"
-    }
+    },
+    "untitled": "План тренировок"
   },
   "groups": {
     "title": "Группы пользователей",

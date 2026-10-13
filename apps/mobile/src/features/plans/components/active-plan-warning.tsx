@@ -44,7 +44,7 @@ export function ActivePlanWarning({
       tone="warning"
       theme={theme}
       title={fillTemplate(warningCopy.title, {
-        name: activePlan.name,
+        name: activePlan.name ?? copy.plans.untitled,
         current: activePlan.currentWeek,
         total: activePlan.totalWeeks,
       })}

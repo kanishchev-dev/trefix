@@ -35,7 +35,7 @@ export function PlanMetaEditor({
         if (!details) return;
         await updateMeta.mutateAsync({
           planId: details.id,
-          name: name !== details.name ? name : undefined,
+          name: name && name !== details.name ? name : undefined,
           notes: notes !== details.notes ? notes : undefined,
           expectedVersion: details.version,
         });

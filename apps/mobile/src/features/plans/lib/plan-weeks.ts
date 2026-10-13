@@ -1,5 +1,4 @@
 import {
-  planPhaseSchema,
   type PlanDetails,
   type PlanPhase,
   type PlanWeek,
@@ -7,9 +6,24 @@ import {
 } from "@trefix/api-client";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
+import {
+  keySessionLabel,
+  phaseIntent,
+  phaseTitle,
+  toPlanPhase,
+} from "./plan-texts";
 
 /** Mode of a plan timeline: the plan in progress, a draft (relative weeks) or history. */
 export type PlanTimelineMode = "active" | "relative" | "history";
+
+/** A plan week with its texts built in the app language. */
+export type PlanWeekView = Omit<PlanWeek, "keySessions" | "phase"> & {
+  phase: PlanPhase;
+  title: string;
+  intent: string;
+  summaryText: string;
+  keySessions: string[];
+};
 
 const KEY_WORKOUT_TYPES = new Set([
   "interval",
@@ -19,26 +33,21 @@ const KEY_WORKOUT_TYPES = new Set([
   "race",
 ]);
 
-function toPhase(value: string): PlanPhase {
-  const parsed = planPhaseSchema.safeParse(value.toUpperCase());
-  return parsed.success ? parsed.data : "BASE";
-}
-
-function weekTitle(
-  phase: PlanPhase,
-  fallback: string | null | undefined,
-  copy: MainCopy,
-  weekNumber: number,
-): string {
-  const titles = copy.plan.creation.preview.phaseTitles as Record<
-    string,
-    string
-  >;
-  return (
-    titles[phase] ??
-    fallback ??
-    fillTemplate(copy.plan.creation.preview.weekLabel, { number: weekNumber })
-  );
+/** Week of the plan overview as shown on the plan screen. */
+export function overviewWeekView(week: PlanWeek, copy: MainCopy): PlanWeekView {
+  return {
+    ...week,
+    phase: toPlanPhase(week.phase),
+    title: phaseTitle(week.phase, copy),
+    intent: phaseIntent(week.phase, copy),
+    summaryText: fillTemplate(copy.plans.details.weekWorkouts, {
+      count: week.plannedWorkoutsCount ?? 0,
+      km: Math.round(week.plannedDistance ?? 0),
+    }),
+    keySessions: week.keySessions.map((session) =>
+      keySessionLabel(session, copy),
+    ),
+  };
 }
 
 const round = (value: number) => Math.round(value);
@@ -55,12 +64,9 @@ export function planWeeksForTimeline(
   details: PlanDetails,
   copy: MainCopy,
   mode: PlanTimelineMode,
-): PlanWeek[] {
-  const typeLabels = copy.plan.creation.workoutTypes as Record<string, string>;
-  const km = copy.plan.creation.units.km;
-
+): PlanWeekView[] {
   return details.weeks.map((week) => {
-    const phase = toPhase(week.phase);
+    const phase = toPlanPhase(week.phase);
     const dated = details.workouts.filter(
       (workout) => workout.weekNumber === week.weekNumber,
     );
@@ -89,22 +95,24 @@ export function planWeeksForTimeline(
 
     const keySessions = sessions
       .filter((workout) => KEY_WORKOUT_TYPES.has(workout.type))
-      .map(
-        (workout) =>
-          `${typeLabels[workout.type] ?? workout.type} ${round(workout.distanceKm)} ${km}`,
+      .map((workout) =>
+        keySessionLabel(
+          { type: workout.type, distanceKm: workout.distanceKm },
+          copy,
+        ),
       );
 
     return {
       id: `week-${details.id}-${week.weekNumber}`,
       weekNumber: week.weekNumber,
       phase,
-      title: weekTitle(phase, week.title, copy, week.weekNumber),
+      title: phaseTitle(phase, copy),
       status: mode === "history" ? "completed" : "upcoming",
       plannedWorkoutsCount: sessions.length,
       plannedDistance: round(planned),
       plannedLoad: round(week.weeklyLoadTarget ?? 0),
       summaryText,
-      intent: week.intent ?? undefined,
+      intent: phaseIntent(phase, copy),
       keySessions,
     };
   });

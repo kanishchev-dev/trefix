@@ -8851,16 +8851,54 @@
           "message"
         ]
       },
+      "GoalTargetSummaryDto": {
+        "type": "object",
+        "properties": {
+          "distanceMeters": {
+            "type": "number",
+            "nullable": true
+          },
+          "finishTimeSec": {
+            "type": "number",
+            "nullable": true
+          },
+          "runsPerWeek": {
+            "type": "number",
+            "nullable": true
+          },
+          "weightKg": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "distanceMeters",
+          "finishTimeSec",
+          "runsPerWeek",
+          "weightKg"
+        ]
+      },
       "PlanGoalSummaryDto": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Goal type code"
           },
-          "title": {
+          "target": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoalTargetSummaryDto"
+              }
+            ]
+          },
+          "description": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "User's own text of a custom goal"
           },
           "targetDate": {
             "type": "string",
@@ -8869,7 +8907,8 @@
         },
         "required": [
           "type",
-          "title",
+          "target",
+          "description",
           "targetDate"
         ]
       },
@@ -8903,7 +8942,9 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "User-given name; null means the app titles the plan by its goal"
           },
           "status": {
             "type": "string",
@@ -9054,7 +9095,9 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "User-given name; null means the app titles the plan by its goal"
           },
           "startDate": {
             "type": "string",
@@ -9402,9 +9445,6 @@
           "phase": {
             "type": "string"
           },
-          "title": {
-            "type": "string"
-          },
           "durationMinutes": {
             "type": "number"
           },
@@ -9444,14 +9484,6 @@
           "phase": {
             "type": "string"
           },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "intent": {
-            "type": "string",
-            "nullable": true
-          },
           "weeklyLoadTarget": {
             "type": "number",
             "nullable": true
@@ -9483,7 +9515,9 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "User-given name; null means the app titles the plan by its goal"
           },
           "status": {
             "type": "string",
@@ -9640,7 +9674,9 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "User-given name; null means the app titles the plan by its goal"
           },
           "notes": {
             "type": "string",
@@ -10649,14 +10685,6 @@
           "phase": {
             "type": "string"
           },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "intent": {
-            "type": "string",
-            "nullable": true
-          },
           "weeklyLoadTarget": {
             "type": "number",
             "nullable": true
@@ -10770,9 +10798,6 @@
               "RACE"
             ]
           },
-          "title": {
-            "type": "string"
-          },
           "plannedWorkoutsCount": {
             "type": "number"
           },
@@ -10792,7 +10817,6 @@
         "required": [
           "weekNumber",
           "phase",
-          "title",
           "plannedWorkoutsCount",
           "plannedDistance",
           "plannedLoad",
@@ -10949,7 +10973,7 @@
           "name": {
             "type": "string",
             "maxLength": 80,
-            "description": "Defaults to \"<source name> <year>\""
+            "description": "Defaults to \"<source name> <year>\" when the source plan has a name"
           },
           "notes": {
             "type": "string",
@@ -12426,7 +12450,9 @@
             "nullable": true
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "User-given name; null means the app titles the plan by its goal"
           },
           "notes": {
             "type": "string",
@@ -12569,26 +12595,6 @@
           "goalId"
         ]
       },
-      "PlanGoalDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "distance": {
-            "type": "string"
-          },
-          "targetTime": {
-            "type": "string"
-          },
-          "targetDate": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "distance"
-        ]
-      },
       "PlanOverviewDataDto": {
         "type": "object",
         "properties": {
@@ -12596,10 +12602,12 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "User-given name; null means the app titles the plan by its goal"
           },
           "goal": {
-            "$ref": "#/components/schemas/PlanGoalDto"
+            "$ref": "#/components/schemas/PlanGoalSummaryDto"
           },
           "status": {
             "type": "string",
@@ -12653,6 +12661,7 @@
         },
         "required": [
           "id",
+          "name",
           "goal",
           "status",
           "currentWeek",
@@ -12662,6 +12671,22 @@
           "notes",
           "version",
           "config"
+        ]
+      },
+      "KeySessionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Workout type code"
+          },
+          "distanceKm": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "distanceKm"
         ]
       },
       "PlanWeekDto": {
@@ -12685,9 +12710,6 @@
               "RACE"
             ]
           },
-          "title": {
-            "type": "string"
-          },
           "status": {
             "type": "string",
             "enum": [
@@ -12705,16 +12727,11 @@
           "plannedLoad": {
             "type": "number"
           },
-          "summaryText": {
-            "type": "string"
-          },
-          "intent": {
-            "type": "string"
-          },
           "keySessions": {
+            "description": "Quality workouts of the week",
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/KeySessionDto"
             }
           }
         },
@@ -12722,28 +12739,39 @@
           "id",
           "weekNumber",
           "phase",
-          "title",
-          "status"
+          "status",
+          "keySessions"
         ]
       },
       "CurrentWeekContextDto": {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string"
+          "weekNumber": {
+            "type": "number"
           },
-          "description": {
-            "type": "string"
+          "phase": {
+            "type": "string",
+            "enum": [
+              "BASE",
+              "BUILD",
+              "RECOVERY",
+              "SPECIFIC",
+              "PEAK",
+              "TAPER",
+              "RACE"
+            ]
           },
-          "focusItems": {
+          "keySessions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/KeySessionDto"
             }
           }
         },
         "required": [
-          "title"
+          "weekNumber",
+          "phase",
+          "keySessions"
         ]
       },
       "PlanAdaptationDto": {
@@ -12760,21 +12788,11 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "HIGH_FATIGUE",
-              "MISSED_WORKOUT",
-              "POOR_PERFORMANCE",
-              "EXCELLENT_PERFORMANCE",
-              "LOW_RECOVERY",
-              "SCHEDULE_CHANGE",
-              "GOAL_CHANGE"
-            ]
+            "description": "Adaptation action code: ADD_RECOVERY, REDUCE_INTENSITY, REDUCE_VOLUME, MOVE, REPLACE, …"
           },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
+          "reason": {
+            "type": "string",
+            "description": "Reason code (high_fatigue, low_recovery, heart_rate_zones_changed, …) or text written by the coach"
           },
           "createdAt": {
             "type": "string"
@@ -12783,7 +12801,6 @@
         "required": [
           "id",
           "type",
-          "title",
           "createdAt"
         ]
       },
@@ -14771,7 +14788,7 @@
           "title": {
             "type": "string",
             "maxLength": 120,
-            "description": "Title shown in the athlete calendar; derived from the type when omitted"
+            "description": "Title shown in the athlete calendar; without it the apps name the workout by its type"
           }
         },
         "required": [

@@ -8,7 +8,7 @@ import {
   Sparkles,
 } from "lucide-react-native";
 
-import { type PlanAdaptation, type PlanWeek } from "@trefix/api-client";
+import { type PlanAdaptation } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
@@ -22,9 +22,11 @@ import {
 } from "../../plans/lib/plan-weeks";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 import { styles } from "./plan-week-details-sheet.styles";
+import { adaptationReason, adaptationTitle } from "../../plans/lib/plan-texts";
+import { type PlanWeekView } from "../../plans/lib/plan-weeks";
 
 type Props = {
-  week: PlanWeek | null;
+  week: PlanWeekView | null;
   adaptations?: PlanAdaptation[];
   visible: boolean;
   /** Called after the sheet has slid away. */
@@ -436,9 +438,9 @@ export function PlanWeekDetailsSheet({
                         },
                       ]}
                     >
-                      {a.title}
+                      {adaptationTitle(a.type, copy)}
                     </Text>
-                    {a.description ? (
+                    {adaptationReason(a.reason, copy) ? (
                       <Text
                         style={[
                           styles.adaptationDesc,
@@ -449,7 +451,7 @@ export function PlanWeekDetailsSheet({
                           },
                         ]}
                       >
-                        {a.description}
+                        {adaptationReason(a.reason, copy)}
                       </Text>
                     ) : null}
                   </View>

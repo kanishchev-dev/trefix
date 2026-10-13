@@ -24,6 +24,7 @@ import { ErrorState } from "@/widgets/data-state";
 
 import { useStartOptions, useStartPlan } from "../hooks/use-user-plans";
 import { activePlanFromError } from "../lib/plan-errors";
+import { planTitle } from "../lib/plan-texts";
 import { resolveStartOption, StartOptionsField } from "./start-options-field";
 
 /** Starts a draft: picks the start date and, when needed, replaces the plan in progress. */
@@ -38,7 +39,7 @@ function PlanStartContent({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }): ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const timezone = getBrowserTimezone();
   const optionsQuery = useStartOptions(userId, plan.id, timezone, open);
   const startPlan = useStartPlan(userId, plan.id);
@@ -93,7 +94,9 @@ function PlanStartContent({
         <DialogHeader>
           <DialogTitle>{t("userPlans.start.title")}</DialogTitle>
           <DialogDescription>
-            {t("userPlans.start.description", { name: plan.name })}
+            {t("userPlans.start.description", {
+              name: planTitle(plan, t, locale),
+            })}
           </DialogDescription>
         </DialogHeader>
 

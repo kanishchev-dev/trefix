@@ -4,14 +4,20 @@ import { Calendar, MoreHorizontal, Target } from "lucide-react-native";
 import { type PlanOverview } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
-import { type MainCopy } from "../../../locales";
+import {
+  formatDateLong,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { Card } from "../../../shared/ui/card";
+import { goalTitle } from "../../plans/lib/plan-texts";
 
 type Props = {
   overview: PlanOverview;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
+  language: AppLanguage;
   /** Opens the actions of the plan in progress. */
   onOpenActions?: () => void;
 };
@@ -19,8 +25,8 @@ type Props = {
 export function PlanOverviewCard({
   overview,
   theme,
-  themeMode,
   copy,
+  language,
   onOpenActions,
 }: Props) {
   const { plan } = overview;
@@ -38,12 +44,13 @@ export function PlanOverviewCard({
   }
 
   // Format target date nicely
-  const formattedDate = plan.goal.targetDate
-    ? new Date(plan.goal.targetDate).toLocaleDateString(
-        themeMode === "dark" ? "ru-RU" : "en-US",
-        { day: "numeric", month: "long", year: "numeric" },
-      )
+  const targetDate = plan.goal.targetDate
+    ? new Date(plan.goal.targetDate)
     : null;
+  const formattedDate = targetDate
+    ? `${formatDateLong(targetDate, language)} ${targetDate.getFullYear()}`
+    : null;
+  const goalText = goalTitle(plan.goal, copy, language);
 
   const phaseLabel = planCopy.phases[plan.currentPhase] || plan.currentPhase;
 
@@ -59,28 +66,17 @@ export function PlanOverviewCard({
         <View style={styles.goalSection}>
           <View style={styles.goalBadgeRow}>
             <Target color={theme.color.accent} size={16} />
-            <Text
-              style={[
-                styles.goalDistance,
-                {
-                  color: theme.color.accent,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
-                },
-              ]}
-            >
-              {plan.goal.distance}
-            </Text>
-            {plan.goal.targetTime ? (
+            {goalText ? (
               <Text
                 style={[
-                  styles.goalTime,
+                  styles.goalDistance,
                   {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.extrabold,
+                    color: theme.color.accent,
+                    fontFamily: theme.typography.fontFamily.sans.bold,
                   },
                 ]}
               >
-                {plan.goal.targetTime}
+                {goalText}
               </Text>
             ) : null}
           </View>
@@ -279,10 +275,6 @@ const styles = StyleSheet.create({
   goalDistance: {
     fontSize: 18,
     lineHeight: 24,
-  },
-  goalTime: {
-    fontSize: 20,
-    lineHeight: 26,
   },
   planName: {
     fontSize: 13,

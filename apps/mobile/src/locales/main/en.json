@@ -167,7 +167,30 @@
       "onTrack": "Your plan is on track",
       "daysAgo": "{{days}}d ago",
       "hoursAgo": "{{hours}}h ago",
-      "justNow": "Just now"
+      "justNow": "Just now",
+      "types": {
+        "ADD_RECOVERY": "Recovery added",
+        "REDUCE_INTENSITY": "Intensity reduced",
+        "REDUCE_VOLUME": "Volume reduced",
+        "INCREASE_VOLUME": "Volume increased",
+        "INCREASE_INTENSITY": "Intensity increased",
+        "MOVE": "Workout moved",
+        "REPLACE": "Workout replaced",
+        "REGENERATE_PLAN": "Plan rebuilt",
+        "UPDATE_HEART_RATE": "Heart rate targets updated",
+        "default": "Plan adjusted"
+      },
+      "reasons": {
+        "high_fatigue": "Fatigue has built up",
+        "poor_performance": "The workout was harder than planned",
+        "low_recovery": "Not enough recovery",
+        "excellent_performance": "Training is going great",
+        "strong_adaptation": "Your body is adapting well",
+        "workout_replacement": "The workout had to be replaced",
+        "stable_load": "The load is stable",
+        "conservative_progression": "Increasing the load carefully",
+        "heart_rate_zones_changed": "Heart rate zones changed"
+      }
     },
     "weekDetails": {
       "title": "Week {{number}} Details",
@@ -403,6 +426,15 @@
           "PEAK": "Peak preparation",
           "TAPER": "Reducing load before the race",
           "RACE": "Race week"
+        },
+        "phaseIntents": {
+          "BASE": "Establish a steady running routine and a comfortable aerobic base.",
+          "BUILD": "Build aerobic strength while recovering between quality sessions.",
+          "RECOVERY": "Let your body adapt to the previous load while keeping the routine.",
+          "SPECIFIC": "Develop target race pace efficiency and rhythm.",
+          "PEAK": "Run the final key race simulation before reducing volume.",
+          "TAPER": "Shed residual fatigue while staying sharp.",
+          "RACE": "Rest, hydrate, carb load and run your goal race."
         }
       },
       "goalForm": {
@@ -1628,7 +1660,19 @@
         "UPDATE_HEART_RATE": "Update heart rate to the new zones",
         "default": "Adjust the plan"
       }
-    }
+    },
+    "goalTitle": {
+      "distanceTime": "{{distance}} km · {{time}}",
+      "distance": "{{distance}} km",
+      "runsPerWeek": {
+        "one": "{{count}} run a week",
+        "few": "{{count}} runs a week",
+        "many": "{{count}} runs a week",
+        "other": "{{count}} runs a week"
+      },
+      "weight": "Target {{weight}} kg"
+    },
+    "untitled": "Training plan"
   },
   "tracker": {
     "record": "Start workout",

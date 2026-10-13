@@ -351,9 +351,17 @@ export const zCoachChatDto = z.object({
   message: z.string().min(1).max(4000),
 });
 
+export const zGoalTargetSummaryDto = z.object({
+  distanceMeters: z.number().nullable(),
+  finishTimeSec: z.number().nullable(),
+  runsPerWeek: z.number().nullable(),
+  weightKg: z.number().nullable(),
+});
+
 export const zPlanGoalSummaryDto = z.object({
   type: z.string().nullable(),
-  title: z.string().nullable(),
+  target: zGoalTargetSummaryDto.nullable(),
+  description: z.string().nullable(),
   targetDate: z.string().nullable(),
 });
 
@@ -366,7 +374,7 @@ export const zPlanStatsDto = z.object({
 
 export const zPlanListItemDto = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().nullable(),
   status: z.enum(["draft", "active", "completed", "paused", "cancelled"]),
   creationSource: z.string(),
   goal: zPlanGoalSummaryDto,
@@ -404,7 +412,7 @@ export const zPlanCountsResponseDto = z.object({
 
 export const zActivePlanSummaryDto = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   currentWeek: z.number(),
@@ -510,7 +518,6 @@ export const zRelativeWorkoutDto = z.object({
     "rest",
   ]),
   phase: z.string(),
-  title: z.string().optional(),
   durationMinutes: z.number(),
   distanceKm: z.number(),
   target: z.record(z.string(), z.unknown()),
@@ -520,8 +527,6 @@ export const zRelativeWorkoutDto = z.object({
 export const zPlanDetailsWeekDto = z.object({
   weekNumber: z.number(),
   phase: z.string(),
-  title: z.string().nullish(),
-  intent: z.string().nullish(),
   weeklyLoadTarget: z.number().nullish(),
   workouts: z.array(zRelativeWorkoutDto).optional(),
   workoutIds: z.array(z.string()).optional(),
@@ -529,7 +534,7 @@ export const zPlanDetailsWeekDto = z.object({
 
 export const zPlanDetailsDto = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().nullable(),
   status: z.enum(["draft", "active", "completed", "paused", "cancelled"]),
   creationSource: z.string(),
   goal: zPlanGoalSummaryDto,
@@ -562,7 +567,7 @@ export const zUpdatePlanMetaDto = z.object({
 
 export const zPlanMetaResponseDto = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().nullable(),
   notes: z.string().nullable(),
   version: z.number(),
 });
@@ -871,8 +876,6 @@ export const zRebuildPreviewRequestDto = z.object({
 export const zRelativeWeekDto = z.object({
   weekNumber: z.number(),
   phase: z.string(),
-  title: z.string().nullish(),
-  intent: z.string().nullish(),
   weeklyLoadTarget: z.number().nullish(),
   workouts: z.array(zRelativeWorkoutDto),
 });
@@ -920,7 +923,6 @@ export const zManualPlanPreviewWeekDto = z.object({
     "TAPER",
     "RACE",
   ]),
-  title: z.string(),
   plannedWorkoutsCount: z.number(),
   plannedDistance: z.number(),
   plannedLoad: z.number(),
@@ -1347,7 +1349,7 @@ export const zTrainingPlanResponseDto = z.object({
   id: z.string(),
   athleteId: z.string(),
   goalId: z.string().nullable(),
-  name: z.string(),
+  name: z.string().nullable(),
   notes: z.string().nullable(),
   version: z.number(),
   startDate: z.string().nullable(),
@@ -1376,17 +1378,10 @@ export const zCreatePlanDto = z.object({
   structureSnapshot: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const zPlanGoalDto = z.object({
-  title: z.string().optional(),
-  distance: z.string(),
-  targetTime: z.string().optional(),
-  targetDate: z.string().optional(),
-});
-
 export const zPlanOverviewDataDto = z.object({
   id: z.string(),
-  name: z.string().optional(),
-  goal: zPlanGoalDto,
+  name: z.string().nullable(),
+  goal: zPlanGoalSummaryDto,
   status: z.enum(["not_started", "active", "completed", "cancelled"]),
   currentWeek: z.number(),
   totalWeeks: z.number(),
@@ -1406,6 +1401,11 @@ export const zPlanOverviewDataDto = z.object({
   config: zPlanConfigDto,
 });
 
+export const zKeySessionDto = z.object({
+  type: z.string(),
+  distanceKm: z.number(),
+});
+
 export const zPlanWeekDto = z.object({
   id: z.string(),
   weekNumber: z.number(),
@@ -1418,37 +1418,33 @@ export const zPlanWeekDto = z.object({
     "TAPER",
     "RACE",
   ]),
-  title: z.string(),
   status: z.enum(["completed", "current", "upcoming"]),
   plannedWorkoutsCount: z.number().optional(),
   plannedDistance: z.number().optional(),
   plannedLoad: z.number().optional(),
-  summaryText: z.string().optional(),
-  intent: z.string().optional(),
-  keySessions: z.array(z.string()).optional(),
+  keySessions: z.array(zKeySessionDto),
 });
 
 export const zCurrentWeekContextDto = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  focusItems: z.array(z.string()).optional(),
+  weekNumber: z.number(),
+  phase: z.enum([
+    "BASE",
+    "BUILD",
+    "RECOVERY",
+    "SPECIFIC",
+    "PEAK",
+    "TAPER",
+    "RACE",
+  ]),
+  keySessions: z.array(zKeySessionDto),
 });
 
 export const zPlanAdaptationDto = z.object({
   id: z.string(),
   weekId: z.string().optional(),
   weekNumber: z.number().optional(),
-  type: z.enum([
-    "HIGH_FATIGUE",
-    "MISSED_WORKOUT",
-    "POOR_PERFORMANCE",
-    "EXCELLENT_PERFORMANCE",
-    "LOW_RECOVERY",
-    "SCHEDULE_CHANGE",
-    "GOAL_CHANGE",
-  ]),
-  title: z.string(),
-  description: z.string().optional(),
+  type: z.string(),
+  reason: z.string().optional(),
   createdAt: z.string(),
 });
 

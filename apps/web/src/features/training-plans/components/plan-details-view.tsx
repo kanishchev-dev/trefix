@@ -45,6 +45,7 @@ import { ConfirmDialog } from "@/widgets/confirm-dialog";
 
 import { useCancelPlan, useDeletePlan } from "../hooks/use-user-plans";
 import { formatNumber, formatPlanDate } from "../lib/plan-format";
+import { planTitle } from "../lib/plan-texts";
 import {
   buildPlanWeeks,
   isDatedWorkoutEditable,
@@ -86,6 +87,7 @@ export function PlanDetailsView({
   plan: PlanDetails;
 }): ReactElement {
   const { t, locale } = useI18n();
+  const title = planTitle(plan, t, locale);
   const router = useRouter();
   const { hasPermission } = useAuth();
   const canManage = hasPermission("training.userplans.manage");
@@ -141,9 +143,7 @@ export function PlanDetailsView({
             {t("userPlans.actions.backToPlans")}
           </Button>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {plan.name}
-            </h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
             <PlanStatusBadge status={plan.status} />
           </div>
           <p className="text-sm text-muted-foreground">
@@ -358,7 +358,7 @@ export function PlanDetailsView({
             open={dialog === "cancel"}
             onOpenChange={(open) => setDialog(open ? "cancel" : null)}
             title={t("userPlans.cancel.title")}
-            description={t("userPlans.cancel.description", { name: plan.name })}
+            description={t("userPlans.cancel.description", { name: title })}
             confirmLabel={t("userPlans.actions.cancel")}
             isPending={cancelPlan.isPending}
             onConfirm={() =>
@@ -379,7 +379,7 @@ export function PlanDetailsView({
             open={dialog === "delete"}
             onOpenChange={(open) => setDialog(open ? "delete" : null)}
             title={t("userPlans.delete.title")}
-            description={t("userPlans.delete.description", { name: plan.name })}
+            description={t("userPlans.delete.description", { name: title })}
             confirmLabel={t("common.actions.delete")}
             isPending={deletePlan.isPending}
             onConfirm={() =>

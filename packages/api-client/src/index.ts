@@ -980,7 +980,10 @@ export const planAdaptationTypeSchema = z.enum([
 
 export const planAdaptationSchema = contract.zPlanAdaptationDto;
 
-export const planGoalSchema = contract.zPlanGoalDto;
+/** Goal as codes and numbers; the apps build its title in the app language. */
+export const planGoalSchema = contract.zPlanGoalSummaryDto;
+
+export const planKeySessionSchema = contract.zKeySessionDto;
 
 export const planStatusSchema = z.enum([
   "not_started",
@@ -1001,6 +1004,8 @@ export type CurrentWeekContext = z.infer<typeof currentWeekContextSchema>;
 export type PlanAdaptationType = z.infer<typeof planAdaptationTypeSchema>;
 export type PlanAdaptation = z.infer<typeof planAdaptationSchema>;
 export type PlanGoal = z.infer<typeof planGoalSchema>;
+export type PlanGoalTarget = NonNullable<PlanGoal["target"]>;
+export type PlanKeySession = z.infer<typeof planKeySessionSchema>;
 export type PlanStatus = z.infer<typeof planStatusSchema>;
 export type PlanOverview = z.infer<typeof planOverviewSchema>;
 export type PlanConfig = z.infer<typeof planConfigSchema>;

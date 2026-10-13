@@ -35,6 +35,7 @@ import {
 import { plansUiStyles, SectionCaption } from "../components/plans-ui";
 import { usePlanCounts, usePlansList } from "../hooks/use-plans";
 import { defaultSegment, type PlansSegment } from "../lib/plan-card-format";
+import { planTitle } from "../lib/plan-texts";
 import { usePlansNavigation } from "../plans-navigation";
 
 type Props = {
@@ -129,7 +130,11 @@ export function PlansScreen({
       highlighted={item.id === highlightPlanId}
       onPress={() => navigation.openPlanDetails(item.id)}
       onOpenActions={() =>
-        setActionsTarget({ id: item.id, name: item.name, status: item.status })
+        setActionsTarget({
+          id: item.id,
+          name: planTitle(item, copy, language),
+          status: item.status,
+        })
       }
       theme={theme}
       themeMode={themeMode}

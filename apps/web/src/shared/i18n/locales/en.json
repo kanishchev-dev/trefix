@@ -601,6 +601,12 @@
           "this_year": "This year",
           "custom": "Custom deadline"
         }
+      },
+      "summary": {
+        "distanceTime": "{distance} km · {time}",
+        "distance": "{distance} km",
+        "runsPerWeek": "{count} runs/week",
+        "weight": "Target {weight} kg"
       }
     },
     "metrics": {
@@ -712,7 +718,8 @@
     "errors": {
       "versionConflict": "The plan was changed elsewhere (by the user or the coach). The data is refreshed — repeat the change.",
       "notFound": "Plan not found"
-    }
+    },
+    "untitled": "Training plan"
   },
   "groups": {
     "title": "User groups",

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { type PlanAdaptation, type PlanWeek } from "@trefix/api-client";
+import { type PlanAdaptation } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import {
@@ -34,7 +34,12 @@ import {
   todayIso,
   workoutLocalDate,
 } from "../../plans/lib/plan-dates";
-import { weekWorkoutRows } from "../../plans/lib/plan-weeks";
+import { planTitle } from "../../plans/lib/plan-texts";
+import {
+  overviewWeekView,
+  weekWorkoutRows,
+  type PlanWeekView,
+} from "../../plans/lib/plan-weeks";
 import { pushSubScreen } from "../main-routes";
 import { usePlansNavigation } from "../../plans/plans-navigation";
 import {
@@ -62,8 +67,12 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
   const planId = data && !isEmpty ? data.plan.id : null;
   const detailsQuery = usePlanDetails(planId);
   const details = detailsQuery.data;
+  const weeks = useMemo(
+    () => data?.weeks.map((week) => overviewWeekView(week, copy)) ?? [],
+    [copy, data?.weeks],
+  );
 
-  const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<PlanWeekView | null>(null);
   const [selectedAdaptation, setSelectedAdaptation] =
     useState<PlanAdaptation | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -127,7 +136,7 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
   }, [dayNames, details, language, selectedWeek]);
 
   // Workouts can be added to the current and future weeks of the plan in progress.
-  const addWorkoutTo = (week: PlanWeek): (() => void) | undefined => {
+  const addWorkoutTo = (week: PlanWeekView): (() => void) | undefined => {
     if (
       displayState !== "active" ||
       !details?.startDate ||
@@ -183,14 +192,21 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
               source: "plan_tab_empty",
             })
           }
-          onStartDraft={(plan) => navigation.startDraft(plan, "plan_tab_empty")}
+          onStartDraft={(plan) =>
+            navigation.startDraft(
+              { id: plan.id, name: planTitle(plan, copy, language) },
+              "plan_tab_empty",
+            )
+          }
           theme={theme}
           themeMode={themeMode}
         />
       ) : displayState === "not_started" ? (
         <PlanNotStartedState
           copy={copy}
+          language={language}
           onSelectWeek={setSelectedWeek}
+          weeks={weeks}
           overview={data}
           theme={theme}
           themeMode={themeMode}
@@ -212,6 +228,8 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
             })
           }
           onSelectWeek={setSelectedWeek}
+          weeks={weeks}
+          language={language}
           overview={data}
           theme={theme}
           themeMode={themeMode}
@@ -222,6 +240,7 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
           {/* Plan Goal Overview */}
           <PlanOverviewCard
             copy={copy}
+            language={language}
             overview={data}
             onOpenActions={() => setActionsOpen(true)}
             theme={theme}
@@ -241,7 +260,7 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
             onSelectWeek={setSelectedWeek}
             theme={theme}
             themeMode={themeMode}
-            weeks={data.weeks}
+            weeks={weeks}
           />
 
           {/* Current Week Context */}

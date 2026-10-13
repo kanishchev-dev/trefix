@@ -5,6 +5,7 @@ import { type PlanAdaptation } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
+import { adaptationReason, adaptationTitle } from "../../plans/lib/plan-texts";
 import {
   BottomSheet,
   SheetSectionLabel,
@@ -63,13 +64,13 @@ export function PlanAdaptationDetailsSheet({
               },
             ]}
           >
-            {adaptation.title}
+            {adaptationTitle(adaptation.type, copy)}
           </Text>
         </View>
       )}
     >
       {/* What Changed / Description */}
-      {adaptation.description ? (
+      {adaptationReason(adaptation.reason, copy) ? (
         <View style={styles.section}>
           <SheetSectionLabel
             text={planCopy.adaptationDetails.whatChanged.toUpperCase()}
@@ -84,7 +85,7 @@ export function PlanAdaptationDetailsSheet({
               },
             ]}
           >
-            {adaptation.description}
+            {adaptationReason(adaptation.reason, copy)}
           </Text>
         </View>
       ) : null}

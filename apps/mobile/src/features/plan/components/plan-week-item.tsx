@@ -1,19 +1,19 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 
-import { type PlanWeek } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import { type MainCopy } from "../../../locales";
 import { type PlanTimelineMode } from "../../plans/lib/plan-weeks";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
+import { type PlanWeekView } from "../../plans/lib/plan-weeks";
 
 type Props = {
-  week: PlanWeek;
+  week: PlanWeekView;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-  onPress: (week: PlanWeek) => void;
+  onPress: (week: PlanWeekView) => void;
   mode?: PlanTimelineMode;
 };
 

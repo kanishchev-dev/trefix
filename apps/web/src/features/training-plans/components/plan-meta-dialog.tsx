@@ -37,10 +37,10 @@ import { useUpdatePlanMeta } from "../hooks/use-user-plans";
 import { isVersionConflict } from "../lib/plan-errors";
 
 const metaSchema = z.object({
+  // Empty keeps an unnamed plan unnamed; a given name can't be cleared.
   name: z
     .string()
     .trim()
-    .min(1, "userPlans.meta.errors.name")
     .max(PLAN_NAME_MAX_LENGTH, "userPlans.meta.errors.name"),
   notes: z.string().max(PLAN_NOTES_MAX_LENGTH, "userPlans.meta.errors.notes"),
 });
@@ -63,20 +63,25 @@ export function PlanMetaDialog({
   const updateMeta = useUpdatePlanMeta(userId, plan.id);
   const form = useForm<MetaValues>({
     resolver: zodResolver(metaSchema),
-    defaultValues: { name: plan.name, notes: plan.notes ?? "" },
+    defaultValues: { name: plan.name ?? "", notes: plan.notes ?? "" },
   });
 
   useEffect(() => {
     if (open) {
-      form.reset({ name: plan.name, notes: plan.notes ?? "" });
+      form.reset({ name: plan.name ?? "", notes: plan.notes ?? "" });
     }
   }, [open, plan.name, plan.notes, form]);
 
   const onSubmit = form.handleSubmit((values) => {
     const notes = values.notes.trim();
+    const name = values.name.trim();
+    if (!name && plan.name) {
+      form.setError("name", { message: "userPlans.meta.errors.name" });
+      return;
+    }
     updateMeta.mutate(
       {
-        name: values.name.trim(),
+        name: name.length > 0 ? name : undefined,
         notes: notes.length > 0 ? notes : null,
         expectedVersion: plan.version,
       },

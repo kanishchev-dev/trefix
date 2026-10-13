@@ -92,7 +92,7 @@ export function metricsFromCurrent(current: CurrentMetrics): PlanWizardMetrics {
  */
 export function valuesFromRebuildPrefill(
   prefill: RebuildPrefill,
-  planName: string,
+  planName: string | null,
 ): PlanWizardValues {
   const defaults = getDefaultWizardValues();
   const goal = prefill.config.goal as Partial<ManualPlanGoalInput> &
@@ -121,7 +121,8 @@ export function valuesFromRebuildPrefill(
     sessionsPerWeek: structure.sessionsPerWeek ?? defaults.sessionsPerWeek,
     focus: (structure.focus ?? []).filter(isFocusType),
     metrics: metricsFromCurrent(prefill.metrics.current),
-    name: planName,
+    // An unnamed plan stays unnamed: the apps title it by its goal.
+    name: planName ?? "",
   };
 }
 
