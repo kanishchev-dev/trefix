@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { AlertTriangle, ChevronRight, Info } from "lucide-react-native";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+} from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
@@ -333,6 +338,45 @@ export function SheetActionsColumn({ children }: { children: ReactNode }) {
   return <View style={styles.actionsColumn}>{children}</View>;
 }
 
+/** Bottom space the scroll content leaves for `SheetActionBar`. */
+export const SHEET_ACTION_BAR_SPACE = 84;
+
+/**
+ * Action row pinned to the sheet bottom, as in the plan creation steps: an
+ * optional round back button, then the sheet buttons sharing the rest.
+ */
+export function SheetActionBar({
+  theme,
+  onBack,
+  backLabel,
+  children,
+}: {
+  theme: ThemeTokens;
+  onBack?: () => void;
+  backLabel?: string;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.actionBar}>
+      {onBack ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={backLabel}
+          onPress={onBack}
+          style={({ pressed }) => [
+            styles.actionBarBack,
+            { backgroundColor: theme.color.controlSecondary },
+            pressed && styles.pressed,
+          ]}
+        >
+          <ChevronLeft color={theme.color.foreground} size={22} />
+        </Pressable>
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
 export const plansUiStyles = StyleSheet.create({
   sheetScroll: {
     width: "100%",
@@ -436,6 +480,24 @@ const styles = StyleSheet.create({
   },
   actionsColumn: {
     gap: 10,
+  },
+  actionBar: {
+    flexDirection: "row",
+    gap: 12,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  actionBarBack: {
+    width: 52,
+    height: 52,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
   },
   pressed: {
     opacity: 0.7,

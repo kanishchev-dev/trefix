@@ -4,7 +4,8 @@ import { type ThemeTokens } from "@trefix/tokens";
 
 const SIZES = {
   /** Corner of a Today card. */
-  card: { width: 22, gap: 10, heights: [64, 98, 132], right: 22, bottom: -34 },
+  // Sits a bit lower than the step heights suggest so the tallest one clears the status box.
+  card: { width: 22, gap: 10, heights: [64, 98, 132], right: 22, bottom: -40 },
   /** Top block of the workout screen. */
   hero: {
     width: 34,

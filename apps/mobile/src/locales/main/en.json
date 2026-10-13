@@ -113,7 +113,19 @@
       "manual": {
         "saved": "Workout updated",
         "removed": "Workout removed",
-        "removeBody": "The workout will be removed from your calendar."
+        "removeBody": "The workout will be deleted permanently. Are you sure you want to delete it?"
+      },
+      "menu": {
+        "title": "Workout actions",
+        "moveHint": "Pick another day",
+        "editHint": "Type, distance and time",
+        "removeHint": "Take it off your calendar"
+      },
+      "sheets": {
+        "moveTitle": "Change workout date",
+        "editTitle": "Edit workout",
+        "removeTitle": "Delete workout",
+        "removeBody": "The workout will be deleted permanently. Are you sure you want to delete it?"
       }
     }
   },

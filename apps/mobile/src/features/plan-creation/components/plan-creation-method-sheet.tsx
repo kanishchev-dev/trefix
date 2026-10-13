@@ -39,7 +39,8 @@ export function PlanCreationMethodSheet({
   const methodCardStyle = ({ pressed }: { pressed: boolean }) => [
     styles.methodCard,
     {
-      backgroundColor: theme.color.control,
+      // `control` equals the sheet colour on dark; one step off the sheet reads on both themes.
+      backgroundColor: theme.color.secondary,
       borderWidth: 0,
     },
     pressed && styles.pressed,
@@ -72,7 +73,7 @@ export function PlanCreationMethodSheet({
                 style={[
                   styles.methodIcon,
                   {
-                    backgroundColor: theme.color.iconSurface,
+                    backgroundColor: theme.color.sheet,
                   },
                 ]}
               >
@@ -114,7 +115,7 @@ export function PlanCreationMethodSheet({
                 style={[
                   styles.methodIcon,
                   {
-                    backgroundColor: theme.color.iconSurface,
+                    backgroundColor: theme.color.sheet,
                   },
                 ]}
               >

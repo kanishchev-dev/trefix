@@ -278,9 +278,13 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
     marginHorizontal: 16,
+    // Trying cards without an edge: on the grey screen the fill alone separates them.
+    borderWidth: 0,
   },
+  // Compact: the card is about the volume and the scale, not padding.
   workoutCard: {
-    paddingTop: 18,
+    paddingTop: 14,
+    paddingBottom: 16,
     gap: 0,
   },
   workoutTopRow: {
@@ -295,13 +299,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   workoutTitle: {
-    marginTop: 6,
+    marginTop: 2,
     maxWidth: 230,
     fontSize: 16,
     lineHeight: 21,
   },
   workoutVolume: {
-    marginTop: 18,
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "baseline",
     gap: 8,
@@ -317,7 +321,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   workoutMeta: {
-    marginTop: 6,
+    marginTop: 4,
     maxWidth: 230,
     fontSize: 13,
     lineHeight: 18,

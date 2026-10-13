@@ -53,10 +53,13 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
       return insets.top + baseHeader + calendarHeight;
     }, [insets.top]);
 
-    const minDayHeight = useMemo(() => {
-      const tabBarHeight = 64;
-      return windowHeight - headerOffset - insets.bottom - tabBarHeight;
-    }, [windowHeight, insets.bottom, headerOffset]);
+    // Room left for the day under the header and above the floating buttons, so
+    // the "add workout" block pinned to the bottom of an empty day stays clear of them.
+    const bottomSpace = floatingActionsBottom + FLOATING_ACTION_HEIGHT + 24;
+    const minDayHeight = useMemo(
+      () => windowHeight - (headerOffset + 16) - bottomSpace,
+      [windowHeight, headerOffset, bottomSpace],
+    );
 
     useImperativeHandle(ref, () => ({
       scrollToTop: (animated = true) => {
@@ -77,28 +80,25 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
         showsVerticalScrollIndicator={false}
         alwaysBounceVertical={false}
         style={[styles.scrollView, { paddingTop: headerOffset + 16 }]}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingBottom: floatingActionsBottom + FLOATING_ACTION_HEIGHT + 24,
-          },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}
       >
         <View style={[styles.dayContainer, { minHeight: minDayHeight }]}>
           <View style={styles.populatedInner}>
             <View>
-              <Text
-                accessibilityRole="header"
-                style={[
-                  styles.sectionTitle,
-                  {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {copy.today.workoutsSectionTitle}
-              </Text>
+              {day.events.length > 0 ? (
+                <Text
+                  accessibilityRole="header"
+                  style={[
+                    styles.sectionTitle,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {copy.today.workoutsSectionTitle}
+                </Text>
+              ) : null}
               {day.events.length > 0 ? (
                 day.events.map((event) => {
                   if (event.type === "workout") {

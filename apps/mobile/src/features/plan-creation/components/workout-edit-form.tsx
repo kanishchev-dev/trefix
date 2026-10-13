@@ -112,6 +112,12 @@ type WorkoutEditFormProps = {
   onSave: (changes: WorkoutChanges) => void;
   onRemove?: () => void;
   onClose: () => void;
+  /**
+   * Closes the whole flow (the back button only steps back). When set, the
+   * actions are Back | Cancel | Save instead of Back | Delete | Save.
+   */
+  onCancel?: () => void;
+  cancelLabel?: string;
 };
 
 /**
@@ -135,6 +141,8 @@ export function WorkoutEditForm({
   onSave,
   onRemove,
   onClose,
+  onCancel,
+  cancelLabel,
 }: WorkoutEditFormProps) {
   const creationCopy = copy.plan.creation;
   const editorCopy = creationCopy.workoutEditor;
@@ -286,7 +294,26 @@ export function WorkoutEditForm({
           >
             <ChevronLeft color={theme.color.foreground} size={22} />
           </Pressable>
-          {workout && onRemove ? (
+          {onCancel ? (
+            <>
+              <SheetButton
+                label={cancelLabel ?? creationCopy.common.cancel}
+                onPress={onCancel}
+                variant="secondary"
+                disabled={pending}
+                theme={theme}
+                themeMode={themeMode}
+              />
+              <SheetButton
+                label={editorCopy.save}
+                onPress={() => onSave(changes)}
+                disabled={!hasChanges}
+                pending={pending}
+                theme={theme}
+                themeMode={themeMode}
+              />
+            </>
+          ) : workout && onRemove ? (
             <SplitActions
               showSecond={hasChanges}
               first={{ label: editorCopy.removeButton, onPress: onRemove }}

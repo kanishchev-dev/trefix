@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView, Pressable } from "react-native";
 import { Activity, Flame, Zap, Mountain, Trophy } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
+import { WorkoutTypeArt } from "./workout-type-art";
 import { type MainCopy } from "../../../../locales";
 
 type Props = {
@@ -59,13 +60,12 @@ export const AddWorkoutSection = React.memo(
                 onPress={() => onSelectType(key)}
                 style={({ pressed }) => [
                   styles.card,
-                  {
-                    backgroundColor: theme.color.card,
-                    borderColor: theme.color.cardBorder,
-                  },
+                  { backgroundColor: theme.color.card },
                   pressed && styles.cardPressed,
                 ]}
               >
+                <WorkoutTypeArt type={key} color={theme.color.foreground} />
+
                 <View
                   style={[
                     styles.iconContainer,
@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
   card: {
     width: 120,
     height: 110,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 24,
+    overflow: "hidden",
     padding: 14,
     justifyContent: "space-between",
   },

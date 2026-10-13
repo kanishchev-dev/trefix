@@ -187,6 +187,9 @@ importers:
       react-native-screens:
         specifier: 4.26.0
         version: 4.26.0(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      react-native-svg:
+        specifier: 15.15.5
+        version: 15.15.5(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       react-native-worklets:
         specifier: 0.10.1
         version: 0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -194,15 +197,15 @@ importers:
         specifier: 4.8.3
         version: 4.8.3
     devDependencies:
+      '@trefix/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
       '@types/pako':
         specifier: 2.0.3
         version: 2.0.3
       '@types/react':
         specifier: 19.2.18
         version: 19.2.18
-      '@trefix/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
       eslint:
         specifier: 9.35.0
         version: 9.35.0(jiti@2.7.0)
@@ -310,12 +313,12 @@ importers:
       '@hey-api/openapi-ts':
         specifier: 0.99.0
         version: 0.99.0(typescript@6.0.3)
-      '@types/node':
-        specifier: 24.5.2
-        version: 24.5.2
       '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@types/node':
+        specifier: 24.5.2
+        version: 24.5.2
       eslint:
         specifier: 9.35.0
         version: 9.35.0(jiti@2.7.0)
@@ -355,12 +358,12 @@ importers:
 
   packages/tokens:
     devDependencies:
-      '@types/node':
-        specifier: 24.5.2
-        version: 24.5.2
       '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@types/node':
+        specifier: 24.5.2
+        version: 24.5.2
       eslint:
         specifier: 9.35.0
         version: 9.35.0(jiti@2.7.0)
@@ -404,15 +407,15 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
     devDependencies:
+      '@trefix/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@types/react':
         specifier: 19.1.13
         version: 19.1.13
       '@types/react-dom':
         specifier: 19.1.9
         version: 19.1.9(@types/react@19.1.13)
-      '@trefix/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
       eslint:
         specifier: 9.35.0
         version: 9.35.0(jiti@2.7.0)
@@ -444,12 +447,12 @@ importers:
         specifier: 4.5.1
         version: 4.5.1(react-native-worklets@0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
     devDependencies:
-      '@types/react':
-        specifier: 19.2.18
-        version: 19.2.18
       '@trefix/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@types/react':
+        specifier: 19.2.18
+        version: 19.2.18
       eslint:
         specifier: 9.35.0
         version: 9.35.0(jiti@2.7.0)
@@ -8030,9 +8033,7 @@ snapshots:
       metro-runtime: 0.84.6
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.86.3': {}
 
@@ -9669,7 +9670,7 @@ snapshots:
       eslint: 9.35.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.35.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.35.0(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@9.35.0(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@9.35.0(jiti@2.7.0))
@@ -9702,7 +9703,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.35.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -9716,7 +9717,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.35.0(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0)))(eslint@9.35.0(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0

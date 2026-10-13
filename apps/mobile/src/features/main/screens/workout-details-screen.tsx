@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarDays, Check, Pencil, Play, Trash2 } from "lucide-react-native";
 
@@ -13,7 +13,7 @@ import {
 } from "../../../locales";
 import { workoutTargetText } from "../../../shared/lib/workout-target";
 import { BottomSheet } from "../../../shared/ui/bottom-sheet";
-import { SheetButton } from "../../../shared/ui/sheet-controls";
+import { SheetBlock, SheetButton } from "../../../shared/ui/sheet-controls";
 import {
   PlanWorkoutEditPanel,
   type PlanWorkoutEditMode,
@@ -28,6 +28,10 @@ import {
 import { usePreferences } from "../../profile/hooks/use-preferences";
 import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 import { recorder } from "../../tracker/recorder";
+import {
+  SHEET_ACTION_BAR_SPACE,
+  SheetActionBar,
+} from "../../plans/components/plans-ui";
 import { WorkoutCoachNote } from "../../trefix/components/workout-coach-note";
 import {
   HeaderBackButton,
@@ -62,7 +66,9 @@ type Props = {
   onBack: () => void;
 };
 
-type SheetState = "menu" | PlanWorkoutEditMode | null;
+type WorkoutAction = Exclude<PlanWorkoutEditMode, "add">;
+/** What opens once the sheet on screen has finished sliding away. */
+type NextSheet = "menu" | WorkoutAction | "closeScreen" | null;
 
 /**
  * One workout on its own screen. The top block is open (no card) and carries
@@ -83,7 +89,11 @@ export function WorkoutDetailsScreen({
   const activePlanQuery = useActivePlan({ enabled: Boolean(workout?.planId) });
   const format = useUnitFormat(copy, language);
   const { preferences } = usePreferences();
-  const [sheet, setSheet] = useState<SheetState>(null);
+  // One sheet at a time: the open one slides away first, then the next opens.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [action, setAction] = useState<WorkoutAction | null>(null);
+  const [actionOpen, setActionOpen] = useState(false);
+  const nextSheet = useRef<NextSheet>(null);
   const completion = useWorkoutCompletion(copy, () => completion.reset());
 
   const t = copy.today.details;
@@ -134,7 +144,7 @@ export function WorkoutDetailsScreen({
         <HeaderOptionsButton
           theme={theme}
           themeMode={themeMode}
-          onPress={() => setSheet("menu")}
+          onPress={() => setMenuOpen(true)}
         />
       ) : null,
       variant: "default",
@@ -236,28 +246,64 @@ export function WorkoutDetailsScreen({
   const startWorkout = () =>
     pushSubScreen({ kind: "tracker-setup", plannedWorkoutId: workout.id });
 
-  const closeSheet = () => setSheet(null);
-  const editMode = sheet && sheet !== "menu" ? sheet : null;
+  const openAction = (next: WorkoutAction) => {
+    nextSheet.current = next;
+    setMenuOpen(false);
+  };
+  const onMenuClosed = () => {
+    setMenuOpen(false);
+    const next = nextSheet.current;
+    nextSheet.current = null;
+    if (next && next !== "menu" && next !== "closeScreen") {
+      setAction(next);
+      setActionOpen(true);
+    }
+  };
+  const backToMenu = () => {
+    nextSheet.current = "menu";
+    setActionOpen(false);
+  };
+  const closeAction = (then: NextSheet = null) => {
+    nextSheet.current = then;
+    setActionOpen(false);
+  };
+  const onActionClosed = () => {
+    setActionOpen(false);
+    setAction(null);
+    const next = nextSheet.current;
+    nextSheet.current = null;
+    if (next === "menu") setMenuOpen(true);
+    if (next === "closeScreen") onBack();
+  };
+  const actionTitle =
+    action === "move"
+      ? t.sheets.moveTitle
+      : action === "edit"
+        ? t.sheets.editTitle
+        : t.sheets.removeTitle;
+  // Same cards as the plan creation method sheet: icon circle, title, one-line hint.
   const menu: Array<{
-    key: PlanWorkoutEditMode;
+    key: WorkoutAction;
     label: string;
+    hint: string;
     icon: React.ReactNode;
-    destructive?: boolean;
   }> = [
     {
       key: "move",
       label: planCopy.move,
-      icon: <CalendarDays size={20} color={theme.color.foreground} />,
+      hint: t.menu.moveHint,
+      icon: <CalendarDays size={20} color={theme.color.accent} />,
     },
     {
       key: "edit",
       label: planCopy.edit,
-      icon: <Pencil size={20} color={theme.color.foreground} />,
+      hint: t.menu.editHint,
+      icon: <Pencil size={20} color={theme.color.accent} />,
     },
     {
       key: "remove",
       label: planCopy.remove,
-      destructive: true,
+      hint: t.menu.removeHint,
       icon: <Trash2 size={20} color={theme.color.danger} />,
     },
   ];
@@ -480,49 +526,81 @@ export function WorkoutDetailsScreen({
       </SectionLayout>
 
       <BottomSheet
-        visible={sheet !== null && (isManualEditable || Boolean(activePlanId))}
-        onClose={closeSheet}
+        visible={menuOpen}
+        animatedHide
+        onClose={onMenuClosed}
         theme={theme}
         themeMode={themeMode}
-        title={title}
+        title={t.menu.title}
       >
-        {sheet === "menu" ? (
-          <View>
-            {menu.map((item, index) => (
-              <Pressable
-                key={item.key}
-                accessibilityRole="button"
-                onPress={() => setSheet(item.key)}
-                style={({ pressed }) => [
-                  styles.menuRow,
-                  index > 0 && {
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    borderTopColor: theme.color.separator,
-                  },
-                  pressed && styles.pressed,
-                ]}
-              >
-                {item.icon}
-                <Text
-                  style={[
-                    styles.menuLabel,
-                    {
-                      color: item.destructive
-                        ? theme.color.danger
-                        : theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
+        <ScrollView
+          style={styles.menuScroll}
+          contentContainerStyle={styles.menuContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <SheetBlock theme={theme}>
+            <View style={styles.menuCards}>
+              {menu.map((item) => (
+                <Pressable
+                  key={item.key}
+                  accessibilityRole="button"
+                  onPress={() => openAction(item.key)}
+                  style={({ pressed }) => [
+                    styles.menuCard,
+                    // `control` equals the sheet colour on dark; one step off the sheet reads on both themes.
+                    { backgroundColor: theme.color.secondary },
+                    pressed && styles.pressed,
                   ]}
                 >
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-        {editMode && editMode !== "add" && isManualEditable ? (
+                  <View
+                    style={[
+                      styles.menuIcon,
+                      { backgroundColor: theme.color.sheet },
+                    ]}
+                  >
+                    {item.icon}
+                  </View>
+                  <View style={styles.menuText}>
+                    <Text
+                      style={[
+                        styles.menuTitle,
+                        {
+                          color: theme.color.foreground,
+                          fontFamily: theme.typography.fontFamily.sans.medium,
+                        },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.menuHint, muted]}>{item.hint}</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          </SheetBlock>
+        </ScrollView>
+        <SheetActionBar theme={theme}>
+          <SheetButton
+            label={planCopy.cancel}
+            onPress={() => setMenuOpen(false)}
+            variant="secondary"
+            theme={theme}
+            themeMode={themeMode}
+          />
+        </SheetActionBar>
+      </BottomSheet>
+
+      <BottomSheet
+        visible={actionOpen}
+        animatedHide
+        onClose={onActionClosed}
+        theme={theme}
+        themeMode={themeMode}
+        title={actionTitle}
+      >
+        {action && isManualEditable ? (
           <ManualWorkoutEditPanel
-            mode={editMode}
+            mode={action}
             workout={{
               id: workout.id,
               type: workout.type,
@@ -530,21 +608,19 @@ export function WorkoutDetailsScreen({
               durationMinutes: workout.durationMinutes,
               scheduledAt: workout.scheduledAt,
             }}
-            onDone={(removed) => {
-              closeSheet();
-              if (removed) onBack();
-            }}
-            onCancel={() => setSheet("menu")}
+            onDone={(removed) => closeAction(removed ? "closeScreen" : null)}
+            onBack={backToMenu}
+            onCancel={() => closeAction()}
             theme={theme}
             themeMode={themeMode}
             copy={copy}
             language={language}
           />
         ) : null}
-        {editMode && isPlanEditable && activePlanId ? (
+        {action && isPlanEditable && activePlanId ? (
           <PlanWorkoutEditPanel
             planId={activePlanId}
-            mode={editMode}
+            mode={action}
             workout={{
               id: workout.id,
               type: workout.type,
@@ -552,11 +628,12 @@ export function WorkoutDetailsScreen({
               durationMinutes: workout.durationMinutes,
               scheduledAt: workout.scheduledAt,
             }}
-            onDone={() => {
-              closeSheet();
-              if (editMode === "remove") onBack();
-            }}
-            onCancel={() => setSheet("menu")}
+            onDone={() =>
+              closeAction(action === "remove" ? "closeScreen" : null)
+            }
+            onCancel={backToMenu}
+            onDismiss={() => closeAction()}
+            removeBody={t.sheets.removeBody}
             theme={theme}
             themeMode={themeMode}
             copy={copy}
@@ -682,14 +759,42 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  menuRow: {
+  // Sheet content starts under the floating sheet header, like plansUiStyles.sheetContent.
+  menuScroll: {
+    width: "100%",
+  },
+  menuContent: {
+    gap: 16,
+    paddingTop: 72,
+    paddingBottom: SHEET_ACTION_BAR_SPACE,
+  },
+  menuCards: {
+    gap: 8,
+  },
+  menuCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    paddingVertical: 16,
+    padding: 16,
+    borderRadius: 24,
   },
-  menuLabel: {
-    fontSize: 16,
-    lineHeight: 22,
+  menuIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menuText: {
+    flex: 1,
+    gap: 2,
+  },
+  menuTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  menuHint: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

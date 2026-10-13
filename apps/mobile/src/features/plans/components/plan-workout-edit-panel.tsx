@@ -32,7 +32,8 @@ import {
   InlineError,
   Notice,
   plansUiStyles,
-  SheetActionsColumn,
+  SHEET_ACTION_BAR_SPACE,
+  SheetActionBar,
 } from "./plans-ui";
 
 export type PlanWorkoutEditMode = "edit" | "move" | "remove" | "add";
@@ -56,6 +57,13 @@ type Props = {
   onDone: () => void;
   /** Back to the host view without changes. */
   onCancel: () => void;
+  /**
+   * Closes the whole flow when the host has a separate Back (onCancel). Adds a
+   * Cancel button and drops Delete from the edit form.
+   */
+  onDismiss?: () => void;
+  /** Overrides the confirmation text of a removal. */
+  removeBody?: string;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
@@ -74,6 +82,8 @@ export function PlanWorkoutEditPanel({
   defaultDate,
   onDone,
   onCancel,
+  onDismiss,
+  removeBody,
   theme,
   themeMode,
   copy,
@@ -226,8 +236,10 @@ export function PlanWorkoutEditPanel({
               { workoutIds: [workout.id], addedCount: 0 },
             );
           }}
-          onRemove={() => setActiveMode("remove")}
+          onRemove={onDismiss ? undefined : () => setActiveMode("remove")}
           onClose={onCancel}
+          onCancel={onDismiss}
+          cancelLabel={editCopy.cancel}
         />
       </View>
     );
@@ -289,85 +301,109 @@ export function PlanWorkoutEditPanel({
     : "";
 
   return (
-    <ScrollView
-      style={plansUiStyles.sheetScroll}
-      contentContainerStyle={plansUiStyles.sheetContent}
-      showsVerticalScrollIndicator={false}
-    >
-      {workout ? (
-        <SheetBlock theme={theme}>
-          <Text
-            style={[
-              plansUiStyles.bodyText,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-            ]}
-          >
-            {`${dayNames[mondayBasedWeekday(workoutLocalDate(workout.scheduledAt))]} ${formatDayMonth(
-              workoutLocalDate(workout.scheduledAt),
-              language,
-            )} · ${typeLabel}`}
-          </Text>
-          {!isMove ? (
+    <View style={styles.fill}>
+      <ScrollView
+        style={plansUiStyles.sheetScroll}
+        contentContainerStyle={[
+          plansUiStyles.sheetContent,
+          { paddingBottom: SHEET_ACTION_BAR_SPACE },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {workout ? (
+          <SheetBlock theme={theme}>
             <Text
               style={[
                 plansUiStyles.bodyText,
                 {
-                  color: theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
                 },
               ]}
             >
-              {editCopy.removeBody}
+              {`${dayNames[mondayBasedWeekday(workoutLocalDate(workout.scheduledAt))]} ${formatDayMonth(
+                workoutLocalDate(workout.scheduledAt),
+                language,
+              )} · ${typeLabel}`}
             </Text>
-          ) : null}
-        </SheetBlock>
-      ) : null}
-      {isMove ? dateWheel(editCopy.dateLabel) : null}
-      {status}
-      <SheetBlock theme={theme}>
-        <SheetActionsColumn>
-          <SheetButton
-            label={isMove ? editCopy.save : editCopy.remove}
-            variant={isMove ? "primary" : "destructive"}
-            pending={flow.busy}
-            disabled={
-              !workout ||
-              (isMove && date === workoutLocalDate(workout.scheduledAt))
-            }
-            onPress={() => {
-              if (!workout) return;
-              void flow.submit(
-                isMove
-                  ? {
-                      kind: "workouts",
-                      operations: [{ op: "move", workoutId: workout.id, date }],
-                    }
-                  : {
-                      kind: "workouts",
-                      operations: [{ op: "remove", workoutId: workout.id }],
-                    },
-                { workoutIds: [workout.id], addedCount: 0 },
-              );
-            }}
-            theme={theme}
-            themeMode={themeMode}
-            style={plansUiStyles.columnButton}
-          />
+            {!isMove ? (
+              <Text
+                style={[
+                  plansUiStyles.bodyText,
+                  {
+                    color: theme.color.mutedForeground,
+                    fontFamily: theme.typography.fontFamily.sans.regular,
+                  },
+                ]}
+              >
+                {removeBody ?? editCopy.removeBody}
+              </Text>
+            ) : null}
+          </SheetBlock>
+        ) : null}
+        {isMove ? (
+          onDismiss ? (
+            // Hosted with its own sheet title ("change date"): no caption above the wheel.
+            <SheetBlock theme={theme}>
+              <DateWheel
+                value={date}
+                onChange={(next) => setDate(clampIso(next, today, planEnd))}
+                minDate={today}
+                monthNames={copy.plan.creation.datePicker.months}
+                accessibilityLabel={editCopy.dateLabel}
+                theme={theme}
+                themeMode={themeMode}
+              />
+            </SheetBlock>
+          ) : (
+            dateWheel(editCopy.dateLabel)
+          )
+        ) : null}
+        {status}
+      </ScrollView>
+      <SheetActionBar
+        theme={theme}
+        onBack={onCancel}
+        backLabel={copy.plan.creation.common.back}
+      >
+        {onDismiss ? (
           <SheetButton
             label={editCopy.cancel}
             variant="secondary"
-            onPress={onCancel}
+            onPress={onDismiss}
             disabled={flow.busy}
             theme={theme}
             themeMode={themeMode}
-            style={plansUiStyles.columnButton}
           />
-        </SheetActionsColumn>
-      </SheetBlock>
-    </ScrollView>
+        ) : null}
+        <SheetButton
+          label={isMove ? editCopy.save : editCopy.remove}
+          variant={isMove ? "primary" : "destructive"}
+          pending={flow.busy}
+          disabled={
+            !workout ||
+            (isMove && date === workoutLocalDate(workout.scheduledAt))
+          }
+          onPress={() => {
+            if (!workout) return;
+            void flow.submit(
+              isMove
+                ? {
+                    kind: "workouts",
+                    operations: [{ op: "move", workoutId: workout.id, date }],
+                  }
+                : {
+                    kind: "workouts",
+                    operations: [{ op: "remove", workoutId: workout.id }],
+                  },
+              { workoutIds: [workout.id], addedCount: 0 },
+            );
+          }}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      </SheetActionBar>
+    </View>
   );
 }
 
