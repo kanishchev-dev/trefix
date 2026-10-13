@@ -60,7 +60,10 @@ export function MainTabsScreen({
       initialRouteName="today"
       screenOptions={{
         headerShown: false,
-        animation: "fade",
+        // No cross-fade: it animates the opacity of the whole scene, and UIKit glass
+        // views (the header and its buttons) stop rendering once an ancestor has
+        // been translucent — they stay blank when you come back to the tab.
+        animation: "none",
         freezeOnBlur: true,
         sceneStyle: { backgroundColor: theme.color.background },
       }}
