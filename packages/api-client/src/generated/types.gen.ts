@@ -394,6 +394,19 @@ export type AvatarUploadResponseDto = {
   avatarUrl: string;
 };
 
+export type CoachWorkoutNoteResponseDto = {
+  workoutId: string;
+  /**
+   * `ready` — `content` holds the note; `pending` — it is being written, the client gets `coach.workout_note.ready` over realtime and fetches again; `disabled` — the coach is off.
+   */
+  status: "ready" | "pending" | "disabled";
+  /**
+   * Note text in the user language
+   */
+  content: string | null;
+  generatedAt: string | null;
+};
+
 export type CreateCoachSessionDto = {
   athleteId: string;
   title?: string;
@@ -3837,6 +3850,25 @@ export type AvatarsControllerUploadUserAvatarV1Responses = {
 
 export type AvatarsControllerUploadUserAvatarV1Response =
   AvatarsControllerUploadUserAvatarV1Responses[keyof AvatarsControllerUploadUserAvatarV1Responses];
+
+export type CoachControllerGetWorkoutNoteV1Data = {
+  body?: never;
+  path: {
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/coach/workouts/{workoutId}/note";
+};
+
+export type CoachControllerGetWorkoutNoteV1Responses = {
+  /**
+   * Note, or its generation status
+   */
+  200: CoachWorkoutNoteResponseDto;
+};
+
+export type CoachControllerGetWorkoutNoteV1Response =
+  CoachControllerGetWorkoutNoteV1Responses[keyof CoachControllerGetWorkoutNoteV1Responses];
 
 export type CoachControllerClearHistoryV1Data = {
   body?: never;

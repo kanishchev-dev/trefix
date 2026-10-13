@@ -48,7 +48,7 @@ export function PlanDraftEditScreen({
   if (!details || !view) {
     return (
       <View
-        style={[styles.loading, { backgroundColor: theme.color.background }]}
+        style={[styles.loading, { backgroundColor: theme.color.screen }]}
       >
         <ActivityIndicator color={theme.color.foreground} />
       </View>

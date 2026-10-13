@@ -119,7 +119,7 @@ export function Header({
                 style={[
                   StyleSheet.absoluteFill,
                   {
-                    backgroundColor: theme.color.background,
+                    backgroundColor: theme.color.screen,
                     opacity: themeMode === "dark" ? 0.72 : 0.62,
                   },
                 ]}

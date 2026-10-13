@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { type PlanAdaptation, type PlanWeek } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
@@ -26,7 +26,6 @@ import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-fo
 import { PendingAdaptationsCard } from "../../plans/components/pending-adaptations-card";
 import { PlanActionsMenu } from "../../plans/components/plan-actions-menu";
 import { PlanWorkoutAddSheet } from "../../plans/components/plan-workout-add-sheet";
-import { PlanWorkoutSheet } from "../../plans/components/plan-workout-sheet";
 import { usePlanDetails } from "../../plans/hooks/use-plan";
 import { usePlanCounts, usePlansList } from "../../plans/hooks/use-plans";
 import {
@@ -36,6 +35,7 @@ import {
   workoutLocalDate,
 } from "../../plans/lib/plan-dates";
 import { weekWorkoutRows } from "../../plans/lib/plan-weeks";
+import { pushSubScreen } from "../main-routes";
 import { usePlansNavigation } from "../../plans/plans-navigation";
 import {
   formatDayMonth,
@@ -67,7 +67,11 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
   const [selectedAdaptation, setSelectedAdaptation] =
     useState<PlanAdaptation | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [workoutId, setWorkoutId] = useState<string | null>(null);
+  // The week sheet is a modal: close it first, or it would cover the pushed screen.
+  const openWorkout = useCallback((workoutId: string) => {
+    setSelectedWeek(null);
+    pushSubScreen({ kind: "workout-details", workoutId });
+  }, []);
   const [addTarget, setAddTarget] = useState<{
     planId: string;
     date: string;
@@ -268,7 +272,7 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
         mode={displayState === "completed" ? "history" : "active"}
         week={selectedWeek}
         workouts={weekRows}
-        onSelectWorkout={setWorkoutId}
+        onSelectWorkout={openWorkout}
         onAddWorkout={selectedWeek ? addWorkoutTo(selectedWeek) : undefined}
         onClose={() => setSelectedWeek(null)}
         theme={theme}
@@ -297,15 +301,6 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
           language={language}
         />
       ) : null}
-
-      <PlanWorkoutSheet
-        workoutId={workoutId}
-        onClose={() => setWorkoutId(null)}
-        theme={theme}
-        themeMode={themeMode}
-        copy={copy}
-        language={language}
-      />
 
       <PlanWorkoutAddSheet
         visible={addTarget !== null}

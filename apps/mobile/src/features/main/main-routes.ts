@@ -18,6 +18,7 @@ export type SubScreen =
   | { kind: "plan-details"; planId: string }
   | { kind: "progress-records" }
   | { kind: "progress-metric"; metric: "threshold_pace" | "vo2max" }
+  | { kind: "workout-details"; workoutId: string }
   | { kind: "tracker-setup"; plannedWorkoutId?: string | null }
   | { kind: "tracker-recording" }
   | { kind: "tracker-summary" }

@@ -63,7 +63,7 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
   if (!snapshot)
     return (
       <View
-        style={[styles.root, { backgroundColor: theme.color.background }]}
+        style={[styles.root, { backgroundColor: theme.color.screen }]}
       />
     );
 
@@ -131,7 +131,7 @@ export function TrackerRecordingScreen({ theme, copy, language }: Props) {
       style={[
         styles.root,
         {
-          backgroundColor: theme.color.background,
+          backgroundColor: theme.color.screen,
           paddingTop: insets.top + 12,
           paddingBottom: insets.bottom + 16,
         },

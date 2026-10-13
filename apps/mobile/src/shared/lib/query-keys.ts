@@ -11,6 +11,8 @@ export const queryKeys = {
   },
   coach: {
     all: ["coach"] as const,
+    workoutNote: (workoutId: string) =>
+      ["coach", "workout-note", workoutId] as const,
   },
   consents: {
     all: ["consents"] as const,

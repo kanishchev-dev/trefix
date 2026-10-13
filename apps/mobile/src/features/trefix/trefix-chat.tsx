@@ -82,7 +82,7 @@ export function TrefixChatScreen({ theme, themeMode, copy, onBack }: Props) {
         style={[
           styles.root,
           {
-            backgroundColor: theme.color.background,
+            backgroundColor: theme.color.screen,
             justifyContent: "center",
             alignItems: "center",
           },
@@ -94,7 +94,7 @@ export function TrefixChatScreen({ theme, themeMode, copy, onBack }: Props) {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+    <View style={[styles.root, { backgroundColor: theme.color.screen }]}>
       <Header
         leftAction={
           <HeaderBackButton

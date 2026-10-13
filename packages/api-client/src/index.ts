@@ -1213,7 +1213,10 @@ export const sendCoachMessageSchema = z.object({
   message: z.string(),
 });
 
+export const coachWorkoutNoteSchema = contract.zCoachWorkoutNoteResponseDto;
+
 export type CoachSession = z.infer<typeof coachSessionSchema>;
+export type CoachWorkoutNote = z.infer<typeof coachWorkoutNoteSchema>;
 export type CoachMessage = z.infer<typeof coachMessageSchema>;
 export type CoachChatResponse = z.infer<typeof coachChatResponseSchema>;
 export type CoachSessionDetail = z.infer<typeof coachSessionDetailSchema>;

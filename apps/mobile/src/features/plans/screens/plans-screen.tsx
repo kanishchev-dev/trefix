@@ -213,7 +213,7 @@ export function PlansScreen({
   );
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+    <View style={[styles.root, { backgroundColor: theme.color.screen }]}>
       <FlatList
         data={isError ? [] : items}
         keyExtractor={(item) => item.id}

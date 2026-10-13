@@ -66,6 +66,7 @@ import {
   type ThemePreference,
 } from "./screens/theme-settings-screen";
 import { TrefixScreen } from "./screens/trefix-screen";
+import { WorkoutDetailsScreen } from "./screens/workout-details-screen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -508,6 +509,22 @@ function MainStackHost({
                     copy={copy}
                     language={language}
                     onClose={goBack}
+                  />,
+                )
+              }
+            </Stack.Screen>
+
+            <Stack.Screen name="workout-details">
+              {({ route }) =>
+                frame(
+                  <WorkoutDetailsScreen
+                    key={route.params?.workoutId}
+                    workoutId={route.params?.workoutId ?? ""}
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
                   />,
                 )
               }

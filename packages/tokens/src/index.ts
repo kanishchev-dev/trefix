@@ -3,6 +3,11 @@ export type ThemeMode = "light" | "dark";
 export type ThemeTokens = {
   color: {
     background: string;
+    /**
+     * Page background of the signed-in app's screens. Grey under white cards on
+     * light so cards read as surfaces; equal to `background` on dark.
+     */
+    screen: string;
     surface: string;
     surfaceElevated: string;
     foreground: string;
@@ -129,6 +134,7 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
   light: {
     color: {
       background: "#ffffff",
+      screen: "#f4f4f5",
       surface: "#ffffff",
       surfaceElevated: "#ffffff",
       foreground: "#09090b",
@@ -184,6 +190,7 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
   dark: {
     color: {
       background: "#09090b",
+      screen: "#09090b",
       surface: "#18181b",
       surfaceElevated: "#27272a",
       foreground: "#fafafa",

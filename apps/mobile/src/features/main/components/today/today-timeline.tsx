@@ -27,7 +27,6 @@ type Props = {
   copy: MainCopy;
   calendarMode: CalendarMode;
   onEventPress?: (event: DayEvent) => void;
-  onEventAction?: (event: DayEvent) => void;
   onSelectWorkoutType?: (type: ManualWorkoutType) => void;
 };
 
@@ -36,18 +35,7 @@ export type TodayTimelineRef = {
 };
 
 export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
-  (
-    {
-      theme,
-      themeMode,
-      day,
-      copy,
-      onEventPress,
-      onEventAction,
-      onSelectWorkoutType,
-    },
-    ref,
-  ) => {
+  ({ theme, themeMode, day, copy, onEventPress, onSelectWorkoutType }, ref) => {
     const scrollRef = useRef<ScrollView>(null);
     const { height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
@@ -101,7 +89,6 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
                         event={event}
                         copy={copy}
                         onPress={onEventPress}
-                        onAction={onEventAction}
                       />
                     );
                   }

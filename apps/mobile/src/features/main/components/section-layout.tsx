@@ -53,7 +53,7 @@ export function SectionLayout({
   const blurTargetRef = useRef<View | null>(null);
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+    <View style={[styles.root, { backgroundColor: theme.color.screen }]}>
       {backgroundContent ? (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           {backgroundContent}

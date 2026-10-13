@@ -48,11 +48,6 @@
         "completed": "Completed",
         "missed": "Missed",
         "modified": "Modified by Trefix"
-      },
-      "actions": {
-        "start": "Start workout",
-        "view": "View result",
-        "why": "Why?"
       }
     },
     "recovery": {
@@ -82,21 +77,27 @@
       "invalidDuration": "Please enter a valid duration"
     },
     "detailSheet": {
-      "workoutPlan": "WORKOUT PLAN",
-      "result": "RESULT",
-      "distance": "Distance",
-      "duration": "Duration",
+      "result": "Result",
       "actualDistance": "Actual Distance",
       "actualDuration": "Actual Time",
       "avgHeartRate": "Average Heart Rate",
       "rpeRating": "RPE Rating",
       "analysisTitle": "Execution Analysis",
       "loadLabel": "Training Load",
-      "trimp": "TRIMP",
       "plannedLoad": "planned",
-      "completingHeader": "ENTER ACTUAL METRICS",
-      "completeButton": "Complete Workout",
+      "completingHeader": "Enter actual metrics",
       "saveResultButton": "Save Result"
+    },
+    "details": {
+      "session": "Session",
+      "description": "Description",
+      "start": "Start",
+      "complete": "Mark done",
+      "coachNote": {
+        "author": "Tref",
+        "role": "Your coach",
+        "writing": "Writing a note…"
+      }
     }
   },
   "plan": {
@@ -1601,7 +1602,7 @@
     }
   },
   "tracker": {
-    "record": "Record",
+    "record": "Start workout",
     "setupTitle": "New workout",
     "where": "Where you run",
     "environments": {

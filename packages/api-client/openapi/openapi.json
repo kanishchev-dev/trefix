@@ -2001,6 +2001,42 @@
         ]
       }
     },
+    "/v1/coach/workouts/{workoutId}/note": {
+      "get": {
+        "operationId": "CoachController_getWorkoutNote_v1",
+        "parameters": [
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note, or its generation status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachWorkoutNoteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the coach's note to a workout",
+        "tags": [
+          "Coach"
+        ]
+      }
+    },
     "/v1/coach/sessions": {
       "post": {
         "operationId": "CoachController_createSession_v1",
@@ -8487,6 +8523,39 @@
         },
         "required": [
           "avatarUrl"
+        ]
+      },
+      "CoachWorkoutNoteResponseDto": {
+        "type": "object",
+        "properties": {
+          "workoutId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "pending",
+              "disabled"
+            ],
+            "description": "`ready` — `content` holds the note; `pending` — it is being written, the client gets `coach.workout_note.ready` over realtime and fetches again; `disabled` — the coach is off."
+          },
+          "content": {
+            "type": "string",
+            "nullable": true,
+            "description": "Note text in the user language"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "workoutId",
+          "status",
+          "content",
+          "generatedAt"
         ]
       },
       "CreateCoachSessionDto": {

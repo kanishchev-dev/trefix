@@ -19,7 +19,7 @@ export function PushedScreen({ theme, themeMode, children }: Props) {
 
   return (
     <HeaderContext.Provider value={context}>
-      <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+      <View style={[styles.root, { backgroundColor: theme.color.screen }]}>
         <Header
           theme={theme}
           themeMode={themeMode}

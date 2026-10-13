@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,6 +20,7 @@ import {
   HeaderTitle,
 } from "../../main/components/header";
 import { SectionLayout } from "../../main/components/section-layout";
+import { pushSubScreen } from "../../main/main-routes";
 import { useHeaderOptions } from "../../main/context/header-context";
 import { PlanErrorState } from "../../plan/components/plan-error-state";
 import { PlanSkeleton } from "../../plan/components/plan-skeleton";
@@ -30,7 +31,6 @@ import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-fo
 import { MetricsSnapshotCard } from "../components/metrics-snapshot-card";
 import { PlanCardActionsSheet } from "../components/plan-card-actions-sheet";
 import { PlanMetaEditor } from "../components/plan-meta-editor";
-import { PlanWorkoutSheet } from "../components/plan-workout-sheet";
 import {
   Notice,
   plansUiStyles,
@@ -70,7 +70,11 @@ export function PlanDetailsScreen({
   const detailsQuery = usePlanDetails(planId);
   const details = detailsQuery.data;
   const [selectedWeek, setSelectedWeek] = useState<PlanWeek | null>(null);
-  const [workoutId, setWorkoutId] = useState<string | null>(null);
+  // The week sheet is a modal: close it first, or it would cover the pushed screen.
+  const openWorkout = useCallback((workoutId: string) => {
+    setSelectedWeek(null);
+    pushSubScreen({ kind: "workout-details", workoutId });
+  }, []);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [metaOpen, setMetaOpen] = useState(false);
 
@@ -342,18 +346,9 @@ export function PlanDetailsScreen({
         workouts={weekRows}
         visible={selectedWeek !== null}
         onClose={() => setSelectedWeek(null)}
-        onSelectWorkout={isDraft ? undefined : setWorkoutId}
+        onSelectWorkout={isDraft ? undefined : openWorkout}
         theme={theme}
         themeMode={themeMode}
-      />
-
-      <PlanWorkoutSheet
-        workoutId={workoutId}
-        onClose={() => setWorkoutId(null)}
-        theme={theme}
-        themeMode={themeMode}
-        copy={copy}
-        language={language}
       />
 
       <PlanCardActionsSheet

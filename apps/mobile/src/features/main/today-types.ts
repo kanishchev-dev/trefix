@@ -7,6 +7,10 @@ export type DayEvent = {
   type: DayEventType;
   status: DayEventStatus;
   title: string;
+  /** Localized workout type ("Лёгкая", "Интервалы"). */
+  typeLabel?: string;
+  /** Localized date ("18 сент"). */
+  dateLabel?: string;
   startAt?: string;
   duration?: string;
   distance?: string;

@@ -1,4 +1,6 @@
+import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Circle, Play } from "lucide-react-native";
 
@@ -13,15 +15,32 @@ import { useRecorder } from "../hooks";
 /** Height of the glass tab bar; the button floats just above it. */
 const TAB_BAR_HEIGHT = 64;
 
+/** Distance from the screen bottom to the floating buttons above the tab bar. */
+export function useFloatingActionsBottom(): number {
+  const insets = useSafeAreaInsets();
+  return Math.max(insets.bottom - 18, 4) + TAB_BAR_HEIGHT + 14;
+}
+
+/**
+ * Row of floating buttons above the tab bar. Buttons share it instead of being
+ * positioned on their own, so one appearing pushes the other aside.
+ */
+export function FloatingActions({ children }: { children: ReactNode }) {
+  const bottom = useFloatingActionsBottom();
+  return (
+    <View pointerEvents="box-none" style={[styles.host, { bottom }]}>
+      {children}
+    </View>
+  );
+}
+
 type Props = { theme: ThemeTokens; copy: MainCopy; language: AppLanguage };
 
-/** "Record" on Today; while a run is recorded it shows the run and leads back to it. */
+/** "Start workout" on Today; while a run is recorded it shows the run and leads back to it. */
 export function RecordButton({ theme, copy, language }: Props) {
-  const insets = useSafeAreaInsets();
   const snapshot = useRecorder();
   const format = useUnitFormat(copy, language);
   const t = copy.tracker;
-  const bottom = Math.max(insets.bottom - 18, 4) + TAB_BAR_HEIGHT + 14;
 
   const live = snapshot !== null;
   const label = live
@@ -33,7 +52,7 @@ export function RecordButton({ theme, copy, language }: Props) {
     : t.record;
 
   return (
-    <View pointerEvents="box-none" style={[styles.host, { bottom }]}>
+    <Animated.View layout={LinearTransition.duration(220)}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -70,19 +89,26 @@ export function RecordButton({ theme, copy, language }: Props) {
             styles.label,
             {
               color: theme.color.primaryForeground,
-              fontFamily: theme.typography.fontFamily.sans.semibold,
+              fontFamily: theme.typography.fontFamily.sans.medium,
             },
           ]}
         >
           {label}
         </Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  host: { position: "absolute", left: 0, right: 0, alignItems: "center" },
+  host: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+  },
   button: {
     height: 48,
     paddingHorizontal: 22,

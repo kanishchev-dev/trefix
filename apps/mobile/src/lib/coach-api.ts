@@ -2,9 +2,11 @@ import {
   coachChatResponseSchema,
   coachSessionDetailSchema,
   coachSessionSchema,
+  coachWorkoutNoteSchema,
   type CoachChatResponse,
   type CoachSession,
   type CoachSessionDetail,
+  type CoachWorkoutNote,
   type CreateCoachSessionInput,
   type SendCoachMessageInput,
 } from "@trefix/api-client";
@@ -80,4 +82,14 @@ export async function streamCoachMessage(
 /** Clears the chat history with the coach; plans and workouts stay. */
 export async function clearCoachHistory(): Promise<void> {
   await request<void>("/coach/sessions", { method: "DELETE", useAuth: true });
+}
+
+/** The coach's note to a workout; `pending` while the backend is writing it. */
+export async function getWorkoutCoachNote(
+  workoutId: string,
+): Promise<CoachWorkoutNote> {
+  const response = await request<unknown>(`/coach/workouts/${workoutId}/note`, {
+    useAuth: true,
+  });
+  return coachWorkoutNoteSchema.parse(response);
 }

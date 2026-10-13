@@ -275,6 +275,13 @@ export const zAvatarUploadResponseDto = z.object({
   avatarUrl: z.string(),
 });
 
+export const zCoachWorkoutNoteResponseDto = z.object({
+  workoutId: z.string(),
+  status: z.enum(["ready", "pending", "disabled"]),
+  content: z.string().nullable(),
+  generatedAt: z.iso.datetime().nullable(),
+});
+
 export const zCreateCoachSessionDto = z.object({
   athleteId: z.string(),
   title: z.string().optional(),
@@ -2722,6 +2729,16 @@ export const zAvatarsControllerUploadUserAvatarV1Path = z.object({
 
 export const zAvatarsControllerUploadUserAvatarV1Response =
   zAvatarUploadResponseDto;
+
+export const zCoachControllerGetWorkoutNoteV1Path = z.object({
+  workoutId: z.string(),
+});
+
+/**
+ * Note, or its generation status
+ */
+export const zCoachControllerGetWorkoutNoteV1Response =
+  zCoachWorkoutNoteResponseDto;
 
 /**
  * All coaching sessions and messages removed

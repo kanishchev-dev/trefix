@@ -48,11 +48,6 @@
         "completed": "Выполнено",
         "missed": "Пропущено",
         "modified": "Изменено Трефиксом"
-      },
-      "actions": {
-        "start": "Старт тренировки",
-        "view": "Результат",
-        "why": "Почему?"
       }
     },
     "recovery": {
@@ -82,21 +77,27 @@
       "invalidDuration": "Укажите корректную продолжительность"
     },
     "detailSheet": {
-      "workoutPlan": "ПЛАН ТРЕНИРОВКИ",
-      "result": "РЕЗУЛЬТАТ",
-      "distance": "Дистанция",
-      "duration": "Продолжительность",
+      "result": "Результат",
       "actualDistance": "Факт дистанция",
       "actualDuration": "Факт время",
       "avgHeartRate": "Средний пульс",
       "rpeRating": "Оценка усилия RPE",
       "analysisTitle": "Анализ выполнения",
       "loadLabel": "Нагрузка",
-      "trimp": "TRIMP",
       "plannedLoad": "план",
-      "completingHeader": "ВВЕДИТЕ ФАКТИЧЕСКИЕ ДАННЫЕ",
-      "completeButton": "Завершить тренировку",
+      "completingHeader": "Введите фактические данные",
       "saveResultButton": "Сохранить результат"
+    },
+    "details": {
+      "session": "Структура",
+      "description": "Описание",
+      "start": "Начать",
+      "complete": "Выполнено",
+      "coachNote": {
+        "author": "Треф",
+        "role": "Ваш тренер",
+        "writing": "Пишет комментарий…"
+      }
     }
   },
   "plan": {
@@ -1615,7 +1616,7 @@
     }
   },
   "tracker": {
-    "record": "Записать",
+    "record": "Начать тренировку",
     "setupTitle": "Новая тренировка",
     "where": "Где бежим",
     "environments": {

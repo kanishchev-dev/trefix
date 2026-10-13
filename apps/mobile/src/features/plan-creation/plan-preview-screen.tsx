@@ -265,7 +265,7 @@ export function PlanPreviewScreen({
     : null;
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+    <View style={[styles.root, { backgroundColor: theme.color.screen }]}>
       <PreviewHeader
         theme={theme}
         copy={copy}

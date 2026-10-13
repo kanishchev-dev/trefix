@@ -8,7 +8,6 @@ import { ProfileScreen } from "../profile/screens/profile-screen";
 import { ProgressScreen } from "../progress/screens/progress-screen";
 import { PushedScreen } from "./components/pushed-screen";
 import { TabBar } from "./components/tab-bar";
-import { RecordButton } from "../tracker/components/record-button";
 import {
   openStackScreen,
   useMainShell,
@@ -65,7 +64,7 @@ export function MainTabsScreen({
         // been translucent — they stay blank when you come back to the tab.
         animation: "none",
         freezeOnBlur: true,
-        sceneStyle: { backgroundColor: theme.color.background },
+        sceneStyle: { backgroundColor: theme.color.screen },
       }}
       tabBar={({ state, navigation }) => (
         <TabBar
@@ -83,7 +82,6 @@ export function MainTabsScreen({
         {() => (
           <PushedScreen theme={theme} themeMode={themeMode}>
             <TodayScreen theme={theme} themeMode={themeMode} copy={copy} />
-            <RecordButton theme={theme} copy={copy} language={userLanguage} />
           </PushedScreen>
         )}
       </Tabs.Screen>

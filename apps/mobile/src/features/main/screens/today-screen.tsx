@@ -1,8 +1,13 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+} from "react-native-reanimated";
 import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type TrainingWorkout } from "@trefix/api-client";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   HeaderLogo,
@@ -11,19 +16,28 @@ import {
 } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
-import { type MainCopy, getAppLanguage } from "../../../locales";
+import {
+  formatDayMonth,
+  getAppLanguage,
+  type MainCopy,
+} from "../../../locales";
 import { TodayCalendarHeader } from "../components/today/today-calendar-header";
 import {
   TodayTimeline,
   type TodayTimelineRef,
 } from "../components/today/today-timeline";
 import { AddWorkoutSheet } from "../components/today/add-workout-sheet";
-import { WorkoutDetailSheet } from "../components/today/workout-detail-sheet";
 import {
   WorkoutGoalSheet,
   type ManualWorkoutType,
 } from "../components/today/workout-goal-sheet";
 import { useWorkouts } from "../hooks/use-workouts";
+import { pushSubScreen } from "../main-routes";
+import {
+  FloatingActions,
+  RecordButton,
+} from "../../tracker/components/record-button";
+import { queryKeys } from "../../../shared/lib/query-keys";
 import {
   type DayEvent,
   type DayEventStatus,
@@ -49,8 +63,8 @@ type Props = {
 export function TodayScreen({ theme, themeMode, copy }: Props) {
   const language = getAppLanguage();
   const format = useUnitFormat(copy, language);
-  const insets = useSafeAreaInsets();
   const timelineRef = useRef<TodayTimelineRef>(null);
+  const queryClient = useQueryClient();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [visibleDate, setVisibleDate] = useState(toIsoDate(new Date()));
@@ -61,9 +75,6 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const [goalSheetVisible, setGoalSheetVisible] = useState(false);
   const [selectedWorkoutType, setSelectedWorkoutType] =
     useState<ManualWorkoutType>("easy");
-  const [selectedWorkout, setSelectedWorkout] =
-    useState<TrainingWorkout | null>(null);
-  const [detailSheetVisible, setDetailSheetVisible] = useState(false);
 
   // Compute 60-day query range around selectedDate
   const { fromStr, toStr } = useMemo(() => {
@@ -76,6 +87,11 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       toStr: toIsoDate(to),
     };
   }, [selectedDate]);
+
+  const workoutTypeLabels = copy.plan.creation.workoutTypes as Record<
+    string,
+    string | undefined
+  >;
 
   // Fetch real workouts from backend
   const { data: workoutsData = [] } = useWorkouts(fromStr, toStr);
@@ -98,17 +114,19 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
         status: toDayEventStatus(workout.status),
         title:
           workoutTargetText(workout.target, "title") ||
-          `${workout.type.toUpperCase()} Run`,
-        duration: `${Math.round(workout.durationMinutes)} min`,
+          workoutTypeLabels[workout.type] ||
+          workout.type,
+        typeLabel: workoutTypeLabels[workout.type],
+        dateLabel: formatDayMonth(dateStr, language),
+        duration: format.minutes(Math.round(workout.durationMinutes)),
         distance: format.distance(workout.distanceKm),
-        description: workoutTargetText(workout.target, "description") || "",
       });
 
       map.set(dateStr, existing);
     }
 
     return { daysMap: map, workoutById: byId };
-  }, [workoutsData, format]);
+  }, [workoutsData, format, workoutTypeLabels, language]);
 
   const eventDates = useMemo(() => Array.from(daysMap.keys()), [daysMap]);
 
@@ -136,11 +154,15 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
     (event: DayEvent) => {
       const workout = workoutById.get(event.id);
       if (workout) {
-        setSelectedWorkout(workout);
-        setDetailSheetVisible(true);
+        // The list already has it: the details screen opens without a loading state.
+        queryClient.setQueryData(
+          queryKeys.workouts.detail(workout.id),
+          workout,
+        );
+        pushSubScreen({ kind: "workout-details", workoutId: workout.id });
       }
     },
-    [workoutById],
+    [queryClient, workoutById],
   );
 
   const isShowingToday = useMemo(() => {
@@ -219,36 +241,44 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
           copy={copy}
           calendarMode={calendarMode}
           onEventPress={handleEventPress}
-          onEventAction={handleEventPress}
           onSelectWorkoutType={handleSelectWorkoutType}
         />
 
-        {/* Back to Today Floating Button */}
-        {!isShowingToday && (
-          <Pressable
-            onPress={handleBackToToday}
-            style={[
-              styles.todayButton,
-              {
-                backgroundColor: theme.color.primary,
-                bottom: 84 + insets.bottom,
-                shadowColor: "#000",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.todayButtonText,
-                {
-                  color: theme.color.primaryForeground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
-                },
-              ]}
+        <FloatingActions>
+          {!isShowingToday && (
+            <Animated.View
+              entering={FadeIn.duration(180)}
+              exiting={FadeOut.duration(120)}
+              layout={LinearTransition.duration(220)}
             >
-              {copy.today.backToToday.toUpperCase()}
-            </Text>
-          </Pressable>
-        )}
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleBackToToday}
+                style={({ pressed }) => [
+                  styles.todayButton,
+                  {
+                    backgroundColor: theme.color.control,
+                    borderColor: theme.color.controlBorder,
+                  },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.todayButtonText,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {copy.today.backToToday}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
+          <RecordButton theme={theme} copy={copy} language={language} />
+        </FloatingActions>
       </View>
 
       {/* Add Workout Modal Sheet */}
@@ -271,17 +301,6 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
         visible={goalSheetVisible}
         workoutType={selectedWorkoutType}
       />
-
-      {/* Workout Details Modal Sheet */}
-      <WorkoutDetailSheet
-        copy={copy}
-        language={language}
-        onClose={() => setDetailSheetVisible(false)}
-        theme={theme}
-        themeMode={themeMode}
-        visible={detailSheetVisible}
-        workout={selectedWorkout}
-      />
     </SectionLayout>
   );
 }
@@ -293,19 +312,25 @@ const styles = StyleSheet.create({
   timelineContainer: {
     flex: 1,
   },
+  // Same size as the record button next to it, secondary look.
   todayButton: {
-    position: "absolute",
-    alignSelf: "center",
+    height: 48,
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 999,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
   todayButtonText: {
-    fontSize: 12,
-    letterSpacing: 1,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

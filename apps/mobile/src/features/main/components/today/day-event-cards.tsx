@@ -1,21 +1,9 @@
 import React from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import {
-  Activity,
-  CheckCircle2,
-  XCircle,
-  Sparkles,
-  Moon,
-  ChevronRight,
-} from "lucide-react-native";
+import { Check, Moon, X } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type DayEvent } from "../../today-types";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "../../../../shared/ui/card";
+import { Card } from "../../../../shared/ui/card";
 import { type MainCopy } from "../../../../locales";
 
 type CardProps = {
@@ -23,189 +11,116 @@ type CardProps = {
   themeMode: ThemeMode;
   event: DayEvent;
   onPress?: (event: DayEvent) => void;
-  onAction?: (event: DayEvent) => void;
   copy: MainCopy;
 };
 
-export const WorkoutCard = React.memo(
-  ({ theme, themeMode, event, onPress, onAction, copy }: CardProps) => {
-    const statusLabels = copy.today.workout.statuses;
-    const actionLabels = copy.today.workout.actions;
+/** Read-only completion mark: filled check when done, a cross when missed, an empty box otherwise. */
+function StatusBox({
+  theme,
+  status,
+  label,
+}: {
+  theme: ThemeTokens;
+  status: DayEvent["status"];
+  label: string;
+}) {
+  const isCompleted = status === "completed";
 
-    const renderStatusIcon = () => {
-      switch (event.status) {
-        case "completed":
-          return <CheckCircle2 size={16} color={theme.color.primary} />;
-        case "missed":
-          return <XCircle size={16} color={theme.color.mutedForeground} />;
-        case "modified":
-          return <Sparkles size={16} color={theme.color.ai} />;
-        default:
-          return <Activity size={16} color={theme.color.primary} />;
-      }
-    };
+  return (
+    <View
+      accessible
+      accessibilityLabel={label}
+      style={[
+        styles.statusBox,
+        isCompleted
+          ? { backgroundColor: theme.color.primary }
+          : { borderColor: theme.color.controlBorder, borderWidth: 1.5 },
+      ]}
+    >
+      {isCompleted ? (
+        <Check
+          size={16}
+          strokeWidth={2.5}
+          color={theme.color.primaryForeground}
+        />
+      ) : status === "missed" ? (
+        <X size={16} strokeWidth={2.5} color={theme.color.mutedForeground} />
+      ) : null}
+    </View>
+  );
+}
+
+/** Workout of the day: what, when, how much. Tapping it opens the details. */
+export const WorkoutCard = React.memo(
+  ({ theme, themeMode, event, onPress, copy }: CardProps) => {
+    const statusLabel =
+      copy.today.workout.statuses[event.status] ?? event.status;
+    const isMissed = event.status === "missed";
+    const subtitle = [event.dateLabel, event.duration]
+      .filter(Boolean)
+      .join(" · ");
+    const meta = [event.typeLabel, event.distance].filter(Boolean).join(" · ");
 
     return (
       <Pressable
+        accessibilityRole="button"
         onPress={() => onPress?.(event)}
         style={({ pressed }) => [pressed && styles.cardPressed]}
       >
-        <Card
-          variant="glass"
-          theme={theme}
-          themeMode={themeMode}
-          style={styles.card}
-        >
-          <CardHeader style={styles.cardHeader}>
-            <View style={styles.titleContainer}>
-              {renderStatusIcon()}
+        <Card theme={theme} themeMode={themeMode} style={styles.card}>
+          <View style={styles.workoutRow}>
+            <View style={styles.workoutText}>
               <Text
+                numberOfLines={2}
                 style={[
-                  styles.cardTitle,
+                  styles.workoutTitle,
                   {
-                    color: theme.color.foreground,
+                    color: isMissed
+                      ? theme.color.mutedForeground
+                      : theme.color.foreground,
                     fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                  event.status === "completed" && {
-                    color: theme.color.foreground,
                   },
                 ]}
               >
-                {event.status === "completed" && "✓ "}
                 {event.title}
               </Text>
-            </View>
-            <ChevronRight size={16} color={theme.color.mutedForeground} />
-          </CardHeader>
-
-          <CardContent style={styles.cardBody}>
-            {event.status === "modified" && (
-              <Text
-                style={[
-                  styles.modifiedLabel,
-                  {
-                    color: theme.color.ai,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {statusLabels.modified}
-              </Text>
-            )}
-
-            {event.status === "missed" && (
-              <Text
-                style={[
-                  styles.missedLabel,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {statusLabels.missed}
-              </Text>
-            )}
-
-            <View style={styles.metricsContainer}>
-              {event.distance && (
+              {subtitle ? (
                 <Text
+                  numberOfLines={1}
                   style={[
-                    styles.metric,
+                    styles.workoutSubtitle,
                     {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.regular,
                     },
                   ]}
                 >
-                  {event.distance}
+                  {subtitle}
                 </Text>
-              )}
-              {event.distance && event.duration && (
-                <Text style={{ color: theme.color.mutedForeground }}> · </Text>
-              )}
-              {event.duration && (
+              ) : null}
+              {meta ? (
                 <Text
+                  numberOfLines={1}
                   style={[
-                    styles.metric,
+                    styles.workoutMeta,
                     {
-                      color: theme.color.mutedForeground,
+                      color: isMissed
+                        ? theme.color.mutedForeground
+                        : theme.color.foreground,
                       fontFamily: theme.typography.fontFamily.sans.medium,
                     },
                   ]}
                 >
-                  {event.duration}
+                  {meta}
                 </Text>
-              )}
+              ) : null}
             </View>
-
-            {event.description && (
-              <Text
-                style={[
-                  styles.description,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.regular,
-                  },
-                ]}
-              >
-                {event.description}
-              </Text>
-            )}
-          </CardContent>
-
-          <CardFooter style={styles.cardFooter}>
-            {event.status === "planned" && (
-              <Pressable
-                onPress={() => onAction?.(event)}
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: theme.color.primary },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.actionButtonText,
-                    {
-                      color: theme.color.primaryForeground,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  {actionLabels.start}
-                </Text>
-                <ChevronRight size={14} color={theme.color.primaryForeground} />
-              </Pressable>
-            )}
-
-            {event.status === "completed" && (
-              <Text
-                style={[
-                  styles.footerText,
-                  {
-                    color: theme.color.primary,
-                    fontFamily: theme.typography.fontFamily.sans.semibold,
-                  },
-                ]}
-              >
-                {actionLabels.view} →
-              </Text>
-            )}
-
-            {event.status === "modified" && (
-              <Text
-                style={[
-                  styles.footerText,
-                  {
-                    color: theme.color.ai,
-                    fontFamily: theme.typography.fontFamily.sans.semibold,
-                  },
-                ]}
-              >
-                {actionLabels.why} →
-              </Text>
-            )}
-          </CardFooter>
+            <StatusBox
+              theme={theme}
+              status={event.status}
+              label={statusLabel}
+            />
+          </View>
         </Card>
       </Pressable>
     );
@@ -332,14 +247,38 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginHorizontal: 16,
   },
+  workoutRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  workoutText: {
+    flex: 1,
+    gap: 4,
+  },
+  workoutTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+  },
+  workoutSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  workoutMeta: {
+    fontSize: 15,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  statusBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
-  },
-  cardHeader: {
-    marginBottom: 8,
-    paddingHorizontal: 0,
-    paddingTop: 0,
   },
   titleContainer: {
     flexDirection: "row",
@@ -347,54 +286,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardTitle: {
-    fontSize: 18,
-    lineHeight: 22,
-  },
-  cardBody: {
-    paddingHorizontal: 0,
-    marginBottom: 12,
-  },
-  modifiedLabel: {
-    fontSize: 13,
-    marginBottom: 4,
-    textTransform: "uppercase",
-  },
-  missedLabel: {
-    fontSize: 13,
-    marginBottom: 4,
-    textTransform: "uppercase",
-  },
-  metricsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  metric: {
     fontSize: 16,
+    lineHeight: 21,
   },
   description: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  cardFooter: {
-    paddingHorizontal: 0,
-    paddingBottom: 0,
-    flexDirection: "row",
-    justifyContent: "flex-start",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-    gap: 4,
-  },
-  actionButtonText: {
-    fontSize: 14,
-  },
-  footerText: {
-    fontSize: 14,
+    fontSize: 13,
+    lineHeight: 18,
   },
   emptyContainer: {
     alignItems: "center",
@@ -403,7 +300,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 15,
+    lineHeight: 20,
     textAlign: "center",
     opacity: 0.8,
   },
