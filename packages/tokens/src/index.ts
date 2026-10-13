@@ -38,6 +38,14 @@ export type ThemeTokens = {
     iconSurface: string;
     /** Hairline between rows inside a card. */
     separator: string;
+    /**
+     * Workout intensity scale (Today cards): three steps from the faintest to the
+     * strongest, plus the colour of a step that is not reached. Greys only.
+     */
+    intensity1: string;
+    intensity2: string;
+    intensity3: string;
+    intensityOff: string;
     /** Attention: missing values, wear warnings. */
     warning: string;
     /** Border of option tiles, chips and bottom sheets. */
@@ -157,6 +165,10 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       sheet: "#ffffff",
       iconSurface: "#f4f4f5",
       separator: "#e4e4e7",
+      intensity1: "#d4d4d8",
+      intensity2: "#71717b",
+      intensity3: "#09090b",
+      intensityOff: "#f4f4f5",
       warning: "#d97706",
       controlBorder: "#e4e4e7",
       inputBorder: "rgba(0, 0, 0, 0.06)",
@@ -213,6 +225,10 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       sheet: "#18181b",
       iconSurface: "#27272a",
       separator: "rgba(255, 255, 255, 0.1)",
+      intensity1: "#3f3f46",
+      intensity2: "#9f9fa9",
+      intensity3: "#fafafa",
+      intensityOff: "rgba(255, 255, 255, 0.05)",
       warning: "#fbbf24",
       controlBorder: "rgba(255, 255, 255, 0.15)",
       inputBorder: "rgba(255, 255, 255, 0.1)",

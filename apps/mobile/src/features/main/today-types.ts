@@ -2,6 +2,10 @@ export type DayEventType = "workout" | "recovery" | "race" | "note" | "insight";
 
 export type DayEventStatus = "planned" | "completed" | "missed" | "modified";
 
+import { type WorkoutIntensity } from "./lib/workout-intensity";
+
+export type { WorkoutIntensity };
+
 export type DayEvent = {
   id: string;
   type: DayEventType;
@@ -9,8 +13,9 @@ export type DayEvent = {
   title: string;
   /** Localized workout type ("Лёгкая", "Интервалы"). */
   typeLabel?: string;
-  /** Localized date ("18 сент"). */
+  /** Localized date ("18 сент") or "Сегодня". */
   dateLabel?: string;
+  intensity?: WorkoutIntensity;
   startAt?: string;
   duration?: string;
   distance?: string;

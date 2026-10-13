@@ -40,6 +40,8 @@ export type PlanRow = {
   label: string;
   detail: string;
   pace: string | null;
+  /** The execution steps folded into this row. */
+  steps: ExecutionStep[];
 };
 
 /**
@@ -81,6 +83,7 @@ export function planRows(
             })
           : `${step.repetition.total} × ${work}`,
         pace: formatTargetPace(step, units, paceUnit),
+        steps: steps.slice(i, j),
       });
       i = j;
       continue;
@@ -90,6 +93,7 @@ export function planRows(
       label: t.stepKinds[step.kind],
       detail: formatStepSize(step, t) ?? "",
       pace: formatTargetPace(step, units, paceUnit),
+      steps: [step],
     });
     i += 1;
   }

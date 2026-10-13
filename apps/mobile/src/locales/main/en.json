@@ -15,6 +15,7 @@
     "noEvents": "No planned events",
     "backToToday": "Today",
     "addSectionTitle": "Add workout",
+    "workoutsSectionTitle": "Workouts",
     "types": {
       "easy": "Easy Run",
       "tempo": "Tempo Run",
@@ -48,6 +49,11 @@
         "completed": "Completed",
         "missed": "Missed",
         "modified": "Modified by Trefix"
+      },
+      "intensity": {
+        "1": "low intensity",
+        "2": "moderate intensity",
+        "3": "high intensity"
       }
     },
     "recovery": {
@@ -91,12 +97,18 @@
     "details": {
       "session": "Session",
       "description": "Description",
-      "start": "Start",
-      "complete": "Mark done",
+      "start": "Start workout",
       "coachNote": {
         "author": "Tref",
         "role": "Your coach",
         "writing": "Writing a note…"
+      },
+      "markDone": "Mark as done",
+      "planned": "plan {{distance}} in {{duration}}",
+      "chartLevels": {
+        "1": "Low",
+        "2": "Moderate",
+        "3": "High"
       }
     }
   },

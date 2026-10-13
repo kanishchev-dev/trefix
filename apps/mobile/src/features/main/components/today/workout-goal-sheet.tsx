@@ -57,13 +57,13 @@ export function WorkoutGoalSheet({
     }
   }, [visible]);
 
-  // Date validation check (today or future date)
+  // The backend plans manual workouts from tomorrow on; today is logged as done instead.
   const isFutureOrToday = useMemo(() => {
     if (!date) return true;
     const target = new Date(`${date}T00:00:00.000`);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return target.getTime() >= today.getTime();
+    return target.getTime() > today.getTime();
   }, [date]);
 
   const parsedValue = useMemo(() => {

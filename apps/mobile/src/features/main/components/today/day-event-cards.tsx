@@ -4,6 +4,7 @@ import { Check, Moon, X } from "lucide-react-native";
 import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type DayEvent } from "../../today-types";
 import { Card } from "../../../../shared/ui/card";
+import { IntensityScale } from "../intensity-scale";
 import { type MainCopy } from "../../../../locales";
 
 type CardProps = {
@@ -15,7 +16,7 @@ type CardProps = {
 };
 
 /** Read-only completion mark: filled check when done, a cross when missed, an empty box otherwise. */
-function StatusBox({
+export function StatusBox({
   theme,
   status,
   label,
@@ -50,77 +51,108 @@ function StatusBox({
   );
 }
 
-/** Workout of the day: what, when, how much. Tapping it opens the details. */
+/** Workout of the day: when, what, how much and how hard. Tapping it opens the details. */
 export const WorkoutCard = React.memo(
   ({ theme, themeMode, event, onPress, copy }: CardProps) => {
     const statusLabel =
       copy.today.workout.statuses[event.status] ?? event.status;
     const isMissed = event.status === "missed";
-    const subtitle = [event.dateLabel, event.duration]
-      .filter(Boolean)
-      .join(" · ");
-    const meta = [event.typeLabel, event.distance].filter(Boolean).join(" · ");
+    const level = event.intensity ?? 1;
+    const intensityLabel = copy.today.workout.intensity[level];
+    const meta = [event.typeLabel, intensityLabel].filter(Boolean).join(" · ");
+    const strongColor = isMissed
+      ? theme.color.mutedForeground
+      : theme.color.foreground;
+    const muted = {
+      color: theme.color.mutedForeground,
+      fontFamily: theme.typography.fontFamily.sans.regular,
+    };
 
     return (
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel={[
+          event.title,
+          event.dateLabel,
+          event.distance,
+          event.duration,
+          meta,
+          statusLabel,
+        ]
+          .filter(Boolean)
+          .join(", ")}
         onPress={() => onPress?.(event)}
         style={({ pressed }) => [pressed && styles.cardPressed]}
       >
-        <Card theme={theme} themeMode={themeMode} style={styles.card}>
-          <View style={styles.workoutRow}>
-            <View style={styles.workoutText}>
-              <Text
-                numberOfLines={2}
-                style={[
-                  styles.workoutTitle,
-                  {
-                    color: isMissed
-                      ? theme.color.mutedForeground
-                      : theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {event.title}
-              </Text>
-              {subtitle ? (
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.workoutSubtitle,
-                    {
-                      color: theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.regular,
-                    },
-                  ]}
-                >
-                  {subtitle}
-                </Text>
-              ) : null}
-              {meta ? (
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.workoutMeta,
-                    {
-                      color: isMissed
-                        ? theme.color.mutedForeground
-                        : theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {meta}
-                </Text>
-              ) : null}
-            </View>
+        <Card
+          theme={theme}
+          themeMode={themeMode}
+          style={[styles.card, styles.workoutCard]}
+        >
+          <IntensityScale
+            theme={theme}
+            level={level}
+            size="card"
+            dimmed={isMissed}
+          />
+
+          <View style={styles.workoutTopRow}>
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.workoutKicker,
+                muted,
+                { fontFamily: theme.typography.fontFamily.sans.medium },
+              ]}
+            >
+              {event.dateLabel}
+            </Text>
             <StatusBox
               theme={theme}
               status={event.status}
               label={statusLabel}
             />
           </View>
+
+          <Text
+            numberOfLines={2}
+            style={[
+              styles.workoutTitle,
+              {
+                color: strongColor,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {event.title}
+          </Text>
+
+          <View style={styles.workoutVolume}>
+            {event.distance ? (
+              <Text
+                style={[
+                  styles.workoutValue,
+                  {
+                    color: strongColor,
+                    fontFamily: theme.typography.fontFamily.sans.medium,
+                  },
+                ]}
+              >
+                {event.distance}
+              </Text>
+            ) : null}
+            {event.duration ? (
+              <Text style={[styles.workoutDuration, muted]}>
+                {event.duration}
+              </Text>
+            ) : null}
+          </View>
+
+          {meta ? (
+            <Text numberOfLines={1} style={[styles.workoutMeta, muted]}>
+              {meta}
+            </Text>
+          ) : null}
         </Card>
       </Pressable>
     );
@@ -247,27 +279,48 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginHorizontal: 16,
   },
-  workoutRow: {
+  workoutCard: {
+    paddingTop: 18,
+    gap: 0,
+  },
+  workoutTopRow: {
     flexDirection: "row",
     alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: 12,
   },
-  workoutText: {
+  workoutKicker: {
     flex: 1,
-    gap: 4,
-  },
-  workoutTitle: {
-    fontSize: 16,
-    lineHeight: 21,
-  },
-  workoutSubtitle: {
     fontSize: 13,
     lineHeight: 18,
   },
-  workoutMeta: {
+  workoutTitle: {
+    marginTop: 6,
+    maxWidth: 230,
+    fontSize: 16,
+    lineHeight: 21,
+  },
+  workoutVolume: {
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
+  },
+  workoutValue: {
+    fontSize: 30,
+    lineHeight: 34,
+    letterSpacing: -0.6,
+    fontVariant: ["tabular-nums"],
+  },
+  workoutDuration: {
     fontSize: 15,
     lineHeight: 20,
-    marginTop: 8,
+  },
+  workoutMeta: {
+    marginTop: 6,
+    maxWidth: 230,
+    fontSize: 13,
+    lineHeight: 18,
   },
   statusBox: {
     width: 28,

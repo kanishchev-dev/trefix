@@ -15,6 +15,9 @@ import { useRecorder } from "../hooks";
 /** Height of the glass tab bar; the button floats just above it. */
 const TAB_BAR_HEIGHT = 64;
 
+/** Height of a floating button; scrollable content leaves room for it. */
+export const FLOATING_ACTION_HEIGHT = 48;
+
 /** Distance from the screen bottom to the floating buttons above the tab bar. */
 export function useFloatingActionsBottom(): number {
   const insets = useSafeAreaInsets();
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   button: {
-    height: 48,
+    height: FLOATING_ACTION_HEIGHT,
     paddingHorizontal: 22,
     borderRadius: 24,
     flexDirection: "row",

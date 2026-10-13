@@ -32,6 +32,7 @@ import {
   type ManualWorkoutType,
 } from "../components/today/workout-goal-sheet";
 import { useWorkouts } from "../hooks/use-workouts";
+import { workoutIntensity } from "../lib/workout-intensity";
 import { pushSubScreen } from "../main-routes";
 import {
   FloatingActions,
@@ -100,6 +101,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const { daysMap, workoutById } = useMemo(() => {
     const map = new Map<string, DayEvent[]>();
     const byId = new Map<string, TrainingWorkout>();
+    const todayStr = toIsoDate(new Date());
 
     for (const workout of workoutsData) {
       byId.set(workout.id, workout);
@@ -117,7 +119,11 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
           workoutTypeLabels[workout.type] ||
           workout.type,
         typeLabel: workoutTypeLabels[workout.type],
-        dateLabel: formatDayMonth(dateStr, language),
+        dateLabel:
+          dateStr === todayStr
+            ? copy.today.today
+            : formatDayMonth(dateStr, language),
+        intensity: workoutIntensity(workout.type),
         duration: format.minutes(Math.round(workout.durationMinutes)),
         distance: format.distance(workout.distanceKm),
       });
@@ -126,7 +132,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
     }
 
     return { daysMap: map, workoutById: byId };
-  }, [workoutsData, format, workoutTypeLabels, language]);
+  }, [workoutsData, format, workoutTypeLabels, language, copy.today.today]);
 
   const eventDates = useMemo(() => Array.from(daysMap.keys()), [daysMap]);
 

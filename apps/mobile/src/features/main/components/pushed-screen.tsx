@@ -27,6 +27,7 @@ export function PushedScreen({ theme, themeMode, children }: Props) {
           centerContent={options.centerContent}
           rightAction={options.rightAction}
           variant={options.variant}
+          tone={options.tone}
           bottomContent={options.bottomContent}
         />
         <View style={styles.content}>{children}</View>

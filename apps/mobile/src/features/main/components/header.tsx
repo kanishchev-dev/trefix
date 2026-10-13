@@ -40,6 +40,7 @@ type HeaderProps = {
   contentHeight?: number;
   variant?: "default" | "calendar";
   bottomContent?: ReactNode;
+  tone?: "screen" | "surface";
 };
 
 export function Header({
@@ -51,6 +52,7 @@ export function Header({
   rightAction,
   variant = "default",
   bottomContent,
+  tone = "screen",
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const isCalendar = variant === "calendar";
@@ -119,7 +121,10 @@ export function Header({
                 style={[
                   StyleSheet.absoluteFill,
                   {
-                    backgroundColor: theme.color.screen,
+                    backgroundColor:
+                      tone === "surface"
+                        ? theme.color.card
+                        : theme.color.screen,
                     opacity: themeMode === "dark" ? 0.72 : 0.62,
                   },
                 ]}

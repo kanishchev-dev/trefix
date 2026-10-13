@@ -8,6 +8,7 @@ import React, {
 import {
   ScrollView,
   StyleSheet,
+  Text,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -16,6 +17,10 @@ import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type Day, type DayEvent, type CalendarMode } from "../../today-types";
 import { WorkoutCard, RecoveryCard, EmptyDayCard } from "./day-event-cards";
 import { AddWorkoutSection } from "./add-workout-section";
+import {
+  FLOATING_ACTION_HEIGHT,
+  useFloatingActionsBottom,
+} from "../../../tracker/components/record-button";
 import { type ManualWorkoutType } from "./workout-goal-sheet";
 import { type AppLanguage, type MainCopy } from "../../../../locales";
 
@@ -39,6 +44,8 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
     const scrollRef = useRef<ScrollView>(null);
     const { height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
+    // The last cards must scroll clear of "Today" / "Start workout" floating above the tab bar.
+    const floatingActionsBottom = useFloatingActionsBottom();
 
     const headerOffset = useMemo(() => {
       const baseHeader = 88; // Header content height
@@ -72,12 +79,26 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
         style={[styles.scrollView, { paddingTop: headerOffset + 16 }]}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: insets.bottom + 40 },
+          {
+            paddingBottom: floatingActionsBottom + FLOATING_ACTION_HEIGHT + 24,
+          },
         ]}
       >
         <View style={[styles.dayContainer, { minHeight: minDayHeight }]}>
           <View style={styles.populatedInner}>
             <View>
+              <Text
+                accessibilityRole="header"
+                style={[
+                  styles.sectionTitle,
+                  {
+                    color: theme.color.foreground,
+                    fontFamily: theme.typography.fontFamily.sans.medium,
+                  },
+                ]}
+              >
+                {copy.today.workoutsSectionTitle}
+              </Text>
               {day.events.length > 0 ? (
                 day.events.map((event) => {
                   if (event.type === "workout") {
@@ -127,6 +148,13 @@ export const TodayTimeline = forwardRef<TodayTimelineRef, Props>(
 );
 
 const styles = StyleSheet.create({
+  // Same as the "Add workout" section title below.
+  sectionTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
   scrollView: {
     flex: 1,
   },

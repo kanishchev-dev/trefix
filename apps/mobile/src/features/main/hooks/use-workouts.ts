@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   type CreateWorkoutInput,
   type CompleteWorkoutInput,
+  type TrainingWorkout,
 } from "@trefix/api-client";
 import { getWorkoutSources } from "../../../lib/integrations-api";
 import {
@@ -12,6 +13,7 @@ import {
   getWorkoutRecording,
 } from "../../../lib/training-api";
 import { queryKeys } from "../../../shared/lib/query-keys";
+import { workoutLocalDate } from "../../plans/lib/plan-dates";
 
 export function useWorkouts(from?: string, to?: string) {
   return useQuery({
@@ -26,7 +28,28 @@ export function useCreateWorkout() {
 
   return useMutation({
     mutationFn: (dto: CreateWorkoutInput) => createWorkout(dto),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      // Show it right away in every loaded range that covers its day; the refetch
+      // below then brings the server's view, but the screen must not wait for it.
+      const day = workoutLocalDate(created.scheduledAt);
+      for (const [key, current] of queryClient.getQueriesData<
+        TrainingWorkout[]
+      >({ queryKey: queryKeys.workouts.all })) {
+        const range =
+          typeof key[1] === "object" && key[1] !== null
+            ? (key[1] as { from?: string; to?: string })
+            : null;
+        if (
+          !Array.isArray(current) ||
+          !range ||
+          (range.from && day < range.from) ||
+          (range.to && day > range.to) ||
+          current.some((workout) => workout.id === created.id)
+        ) {
+          continue;
+        }
+        queryClient.setQueryData<TrainingWorkout[]>(key, [...current, created]);
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.plan.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.plans.all });

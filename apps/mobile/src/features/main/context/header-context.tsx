@@ -6,6 +6,8 @@ export type HeaderOptions = {
   rightAction?: ReactNode;
   variant?: "default" | "calendar";
   bottomContent?: ReactNode;
+  /** `surface`: the screen starts with a card-coloured block, the header blends into it. */
+  tone?: "screen" | "surface";
 };
 
 type HeaderContextValue = {
