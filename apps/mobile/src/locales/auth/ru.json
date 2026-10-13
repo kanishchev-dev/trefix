@@ -17,11 +17,12 @@
     "privacy": "Политикой конфиденциальности"
   },
   "verification": {
-    "title": "Подтвердите вход",
     "subtitlePrefix": "Мы отправили четырёхзначный код на",
     "resendCountdownPrefix": "Отправить код повторно можно через",
-    "resendButton": "Отправить код снова",
-    "resendButtonBusy": "Отправляем...",
+    "resendPrompt": "Код не пришёл? Проверьте папку «Спам» или",
+    "resendLink": "отправьте код повторно",
+    "resendSuffix": ".",
+    "resendBusy": "отправляем…",
     "codeAccessibilityLabel": "Код подтверждения",
     "resendFailed": "Не удалось отправить новый код. Попробуйте еще раз.",
     "back": "Назад"

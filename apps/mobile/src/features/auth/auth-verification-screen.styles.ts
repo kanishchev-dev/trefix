@@ -49,12 +49,6 @@ export const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 24,
   },
-  title: {
-    fontSize: 26,
-    lineHeight: 30,
-    letterSpacing: -0.4,
-    textAlign: "center",
-  },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
@@ -80,10 +74,18 @@ export const styles = StyleSheet.create({
     maxWidth: 56,
     aspectRatio: 1,
     borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+  },
+  codeCellSuccess: {
+    transform: [{ scale: 1.02 }],
+  },
+  codeCellChrome: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 20,
+    // A full point, not a hairline: the focused cell has to read at a glance.
+    borderWidth: 1,
   },
   codeDigit: {
     fontSize: 26,
@@ -94,12 +96,6 @@ export const styles = StyleSheet.create({
     width: 2,
     height: 26,
     borderRadius: 999,
-  },
-  errorText: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    marginTop: 12,
   },
   hiddenInput: {
     position: "absolute",
@@ -122,24 +118,11 @@ export const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: "center",
   },
-  resendButton: {
-    width: "100%",
-    height: 56,
-    borderRadius: 9999,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  resendButtonBusy: {
-    opacity: 0.72,
-  },
-  resendLabel: {
-    fontSize: 16,
+  resendPrompt: {
+    fontSize: 14,
     lineHeight: 20,
-  },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.88,
+    textAlign: "center",
+    maxWidth: 320,
+    paddingTop: 8,
   },
 });

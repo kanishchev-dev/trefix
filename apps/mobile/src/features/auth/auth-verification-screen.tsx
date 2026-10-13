@@ -9,11 +9,19 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 import { type MobileAuthChallenge } from "@trefix/api-client";
 import { isDarkTheme, type ThemeTokens } from "@trefix/tokens";
 import { formatCountdown, type AuthCopy } from "../../locales";
 import { getErrorMessage } from "../../shared/lib/error-message";
+import { useToast } from "../../shared/ui/toast";
 import { styles } from "./auth-verification-screen.styles";
 import { CodeCell, type HighlightState } from "./code-cell";
 
@@ -28,8 +36,11 @@ type Props = {
 };
 
 const CODE_LENGTH = 4;
-/** A wrong code stays red this long, then the cells clear for the next try. */
-const ERROR_CLEAR_MS = 700;
+/** Step between cells as a wrong code turns red, right to left. */
+const ERROR_STAGGER_MS = 30;
+/** Passcode-style shake of the row on a wrong code: offsets in px, 40 ms per step. */
+const SHAKE_OFFSETS = [-8, 8, -6, 6, -3, 0];
+const SHAKE_STEP_MS = 40;
 
 export function AuthVerificationScreen({
   theme,
@@ -43,7 +54,6 @@ export function AuthVerificationScreen({
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const resendTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSubmittedCode = useRef<string | null>(null);
 
   const [code, setCode] = useState("");
@@ -53,7 +63,11 @@ export function AuthVerificationScreen({
   const [isResending, setIsResending] = useState(false);
   const [highlightState, setHighlightState] =
     useState<HighlightState>("normal");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { showToast } = useToast();
+  const shakeX = useSharedValue(0);
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
 
   const normalizedCode = useMemo(
     () => code.replace(/\D/g, "").slice(0, CODE_LENGTH),
@@ -69,7 +83,6 @@ export function AuthVerificationScreen({
     setCode("");
     setSecondsRemaining(challenge.resendAfterSeconds);
     setHighlightState("normal");
-    setErrorMessage(null);
     lastSubmittedCode.current = null;
     inputRef.current?.focus();
   }, [challenge]);
@@ -87,21 +100,31 @@ export function AuthVerificationScreen({
           setHighlightState("success");
         } catch (error) {
           setHighlightState("error");
-          setErrorMessage(
+          shakeX.value = withSequence(
+            ...SHAKE_OFFSETS.map((offset) =>
+              withTiming(offset, { duration: SHAKE_STEP_MS }),
+            ),
+          );
+          void Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Error,
+          );
+          showToast(
             getErrorMessage(error, copy.errors, copy.errors.verificationFailed),
           );
-          // Keep the keyboard up: clear the wrong code and let the user type again.
-          if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
-          errorTimeoutRef.current = setTimeout(() => {
-            setCode("");
-            lastSubmittedCode.current = null;
-            inputRef.current?.focus();
-          }, ERROR_CLEAR_MS);
+          // The wrong code stays in the cells: often it's one digit off, so the
+          // user fixes it instead of retyping everything. Editing clears the error.
         }
       }
     }
     void triggerSubmit();
-  }, [normalizedCode, isSubmitting, onSubmitCode, copy.errors]);
+  }, [
+    normalizedCode,
+    isSubmitting,
+    onSubmitCode,
+    copy.errors,
+    showToast,
+    shakeX,
+  ]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -116,9 +139,6 @@ export function AuthVerificationScreen({
       if (resendTimeoutRef.current) {
         clearTimeout(resendTimeoutRef.current);
       }
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
     },
     [],
   );
@@ -126,13 +146,8 @@ export function AuthVerificationScreen({
   function handleChangeText(nextValue: string): void {
     // While the code is checked the input stays focused (no keyboard flicker) but ignores typing.
     if (isSubmitting || highlightState === "success") return;
-    if (errorTimeoutRef.current) {
-      clearTimeout(errorTimeoutRef.current);
-      errorTimeoutRef.current = null;
-    }
     if (highlightState === "error") {
       setHighlightState("normal");
-      setErrorMessage(null);
       lastSubmittedCode.current = null;
     }
     setCode(nextValue.replace(/\D/g, "").slice(0, CODE_LENGTH));
@@ -160,7 +175,6 @@ export function AuthVerificationScreen({
     void onResendCode()
       .then((nextChallenge) => {
         setCode("");
-        setErrorMessage(null);
         setHighlightState("normal");
         setSecondsRemaining(nextChallenge.resendAfterSeconds);
         inputRef.current?.focus();
@@ -216,18 +230,6 @@ export function AuthVerificationScreen({
           <View style={styles.centerStack}>
             <Text
               style={[
-                styles.title,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.medium,
-                },
-              ]}
-            >
-              {copy.verification.title}
-            </Text>
-
-            <Text
-              style={[
                 styles.subtitle,
                 {
                   color: theme.color.mutedForeground,
@@ -250,7 +252,7 @@ export function AuthVerificationScreen({
               onPress={() => inputRef.current?.focus()}
               style={styles.codeArea}
             >
-              <View style={styles.codeRow}>
+              <Animated.View style={[styles.codeRow, shakeStyle]}>
                 {Array.from({ length: CODE_LENGTH }).map((_, index) => {
                   const digit = normalizedCode[index] ?? "";
                   const isFocused =
@@ -267,11 +269,15 @@ export function AuthVerificationScreen({
                       theme={theme}
                       value={digit}
                       isActive={isActive}
+                      isDisabled={isSubmitting}
                       highlightState={highlightState}
+                      errorDelayMs={
+                        (CODE_LENGTH - 1 - index) * ERROR_STAGGER_MS
+                      }
                     />
                   );
                 })}
-              </View>
+              </Animated.View>
             </Pressable>
 
             <TextInput
@@ -288,21 +294,6 @@ export function AuthVerificationScreen({
               textContentType="oneTimeCode"
               value={code}
             />
-
-            {errorMessage ? (
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[
-                  styles.errorText,
-                  {
-                    color: theme.color.danger,
-                    fontFamily: theme.typography.fontFamily.sans.regular,
-                  },
-                ]}
-              >
-                {errorMessage}
-              </Text>
-            ) : null}
 
             {secondsRemaining > 0 ? (
               <View style={styles.resendBlock}>
@@ -330,35 +321,38 @@ export function AuthVerificationScreen({
                 </Text>
               </View>
             ) : (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={copy.verification.resendButton}
-                disabled={isResending || isSubmitting}
-                onPress={handleResend}
-                style={({ pressed }) => [
-                  styles.resendButton,
+              <Text
+                style={[
+                  styles.resendPrompt,
                   {
-                    borderColor: theme.color.border,
-                    backgroundColor: theme.color.surface,
+                    color: theme.color.mutedForeground,
+                    fontFamily: theme.typography.fontFamily.sans.regular,
                   },
-                  pressed && !isResending && !isSubmitting && styles.pressed,
-                  (isResending || isSubmitting) && styles.resendButtonBusy,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.resendLabel,
-                    {
+                {copy.verification.resendPrompt}{" "}
+                {isResending || isSubmitting ? (
+                  <Text
+                    style={{
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    }}
+                  >
+                    {copy.verification.resendBusy}
+                  </Text>
+                ) : (
+                  <Text
+                    accessibilityRole="link"
+                    onPress={handleResend}
+                    style={{
                       color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.semibold,
-                    },
-                  ]}
-                >
-                  {isResending
-                    ? copy.verification.resendButtonBusy
-                    : copy.verification.resendButton}
-                </Text>
-              </Pressable>
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    }}
+                  >
+                    {copy.verification.resendLink}
+                  </Text>
+                )}
+                {copy.verification.resendSuffix}
+              </Text>
             )}
           </View>
         </View>

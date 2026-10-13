@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type ThemeTokens } from "@trefix/tokens";
+import { isDarkTheme, type ThemeTokens } from "@trefix/tokens";
 
 type ToastApi = {
   showToast: (message: string) => void;
@@ -68,18 +68,26 @@ export function ToastProvider({
   }));
 
   const api = useMemo(() => ({ showToast }), [showToast]);
+  // Always a light pill: near-white on the dark theme, white with a hairline edge
+  // and a soft shadow on the light one, so it lifts off a white screen.
+  const isDark = isDarkTheme(theme);
 
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <View
-        pointerEvents="none"
-        style={[styles.host, { top: insets.top + 64 }]}
-      >
+      <View pointerEvents="none" style={[styles.host, { top: insets.top + 8 }]}>
         <Animated.View
           style={[
             styles.toast,
-            { backgroundColor: theme.color.primary },
+            isDark
+              ? { backgroundColor: theme.color.primary }
+              : [
+                  styles.toastLight,
+                  {
+                    backgroundColor: theme.color.surface,
+                    borderColor: theme.color.cardBorder,
+                  },
+                ],
             animatedStyle,
           ]}
         >
@@ -89,7 +97,9 @@ export function ToastProvider({
               style={[
                 styles.text,
                 {
-                  color: theme.color.primaryForeground,
+                  color: isDark
+                    ? theme.color.primaryForeground
+                    : theme.color.foreground,
                   fontFamily: theme.typography.fontFamily.sans.medium,
                 },
               ]}
@@ -120,6 +130,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     maxWidth: "100%",
+  },
+  toastLight: {
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowColor: "#000000",
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   text: {
     fontSize: 14,

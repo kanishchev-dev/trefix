@@ -17,11 +17,12 @@
     "privacy": "Privacy Policy"
   },
   "verification": {
-    "title": "Confirm sign-in",
     "subtitlePrefix": "We sent a 4-digit code to",
     "resendCountdownPrefix": "You can request another code in",
-    "resendButton": "Send code again",
-    "resendButtonBusy": "Sending...",
+    "resendPrompt": "Didn't get the code? Check your spam folder or",
+    "resendLink": "resend the code",
+    "resendSuffix": ".",
+    "resendBusy": "sending…",
     "codeAccessibilityLabel": "Verification code",
     "resendFailed": "Could not send a new code. Please try again.",
     "back": "Back"

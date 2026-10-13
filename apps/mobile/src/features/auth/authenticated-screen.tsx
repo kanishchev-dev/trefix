@@ -118,7 +118,7 @@ export function AuthenticatedScreen({
                 styles.logoutLabel,
                 {
                   color: theme.color.background,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
                 },
               ]}
             >
