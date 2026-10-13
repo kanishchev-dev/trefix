@@ -1,17 +1,27 @@
+import { useState } from "react";
 import {
+  Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
-  Image,
-  Platform,
   type ImageSourcePropType,
+  type ImageStyle,
+  type StyleProp,
 } from "react-native";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { GlassView } from "expo-glass-effect";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  type SharedValue,
+} from "react-native-reanimated";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { type AuthCopy } from "../../../locales";
+
+type Provider = "google" | "apple";
 
 type Props = {
   theme: ThemeTokens;
@@ -23,6 +33,14 @@ type Props = {
   showAppleButton?: boolean;
   onGooglePress?: () => void;
   onApplePress?: () => void;
+  /**
+   * Collapses the buttons. The glass is dematerialized natively: UIKit visual
+   * effect views stop rendering if any ancestor gets opacity < 1, so callers must
+   * not fade a parent of these buttons.
+   */
+  isHidden?: boolean;
+  /** 0 → fully shown, 1 → fully hidden. Drives the fade of the button contents. */
+  hideProgress?: SharedValue<number>;
 };
 
 export function AuthSocialButtons({
@@ -35,83 +53,152 @@ export function AuthSocialButtons({
   showAppleButton = false,
   onGooglePress,
   onApplePress,
+  isHidden = false,
+  hideProgress,
 }: Props) {
+  const [lastPressed, setLastPressed] = useState<Provider | null>(null);
+
   const googleIconSource: ImageSourcePropType =
     themeMode === "dark"
       ? require("../../../../assets/google-icon-dark.png")
       : require("../../../../assets/google-icon-light.png");
 
+  const handlePress = (provider: Provider, onPress?: () => void) => () => {
+    setLastPressed(provider);
+    onPress?.();
+  };
+
+  const isProviderLoading = (provider: Provider) =>
+    isLoading && lastPressed === provider;
+
   return (
     <View style={styles.root}>
       {showGoogleButton ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.socialButtons.google}
-          disabled={isLoading || isDisabled}
-          onPress={onGooglePress}
-          style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
-        >
-          <GlassView
-            isInteractive
-            glassEffectStyle="regular"
-            tintColor={theme.color.glassTint}
-            style={[
-              styles.button,
-              {
-                borderColor: theme.color.glassBorder,
-                backgroundColor: theme.color.glassBackground,
-              },
-            ]}
-          >
-            <Image
-              source={googleIconSource}
-              style={styles.googleIcon}
-              resizeMode="contain"
-            />
-            <Text
-              style={[
-                styles.label,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
-              ]}
-            >
-              {isLoading
-                ? copy.socialButtons.loading
-                : copy.socialButtons.google}
-            </Text>
-          </GlassView>
-        </Pressable>
+        <SocialButton
+          theme={theme}
+          label={copy.socialButtons.google}
+          loadingLabel={copy.socialButtons.loading}
+          iconSource={googleIconSource}
+          isLoading={isProviderLoading("google")}
+          isDisabled={isLoading || isDisabled}
+          isHidden={isHidden}
+          hideProgress={hideProgress}
+          onPress={handlePress("google", onGooglePress)}
+        />
       ) : null}
 
       {showAppleButton && Platform.OS === "ios" ? (
-        <View style={styles.appleButtonWrap}>
-          <AppleAuthentication.AppleAuthenticationButton
-            buttonType={
-              AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
-            }
-            buttonStyle={
-              themeMode === "dark"
-                ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-            }
-            cornerRadius={20}
-            onPress={() => {
-              if (isLoading || isDisabled) {
-                return;
-              }
-
-              onApplePress?.();
-            }}
-            style={[
-              styles.appleButton,
-              (isLoading || isDisabled) && styles.appleButtonDisabled,
-            ]}
-          />
-        </View>
+        <SocialButton
+          theme={theme}
+          label={copy.socialButtons.apple}
+          loadingLabel={copy.socialButtons.loading}
+          iconSource={require("../../../../assets/apple-icon.png")}
+          iconStyle={{ tintColor: theme.color.foreground }}
+          isLoading={isProviderLoading("apple")}
+          isDisabled={isLoading || isDisabled}
+          isHidden={isHidden}
+          hideProgress={hideProgress}
+          onPress={handlePress("apple", onApplePress)}
+        />
       ) : null}
     </View>
+  );
+}
+
+type SocialButtonProps = {
+  theme: ThemeTokens;
+  label: string;
+  loadingLabel: string;
+  iconSource: ImageSourcePropType;
+  iconStyle?: StyleProp<ImageStyle>;
+  isLoading: boolean;
+  isDisabled: boolean;
+  isHidden: boolean;
+  hideProgress?: SharedValue<number>;
+  onPress: () => void;
+};
+
+/** Share of the keyboard travel after which the buttons are fully faded out. */
+export const BUTTON_FADE_END = 0.25;
+const GLASS_ANIMATION_DURATION = 0.15;
+
+function SocialButton({
+  theme,
+  label,
+  loadingLabel,
+  iconSource,
+  iconStyle,
+  isLoading,
+  isDisabled,
+  isHidden,
+  hideProgress,
+  onPress,
+}: SocialButtonProps) {
+  const fadeStyle = useAnimatedStyle(() => {
+    if (!hideProgress) {
+      return { opacity: isHidden ? 0 : 1 };
+    }
+
+    return {
+      opacity: interpolate(
+        hideProgress.value,
+        [0, BUTTON_FADE_END],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+    };
+  });
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled, busy: isLoading }}
+      disabled={isDisabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+    >
+      <GlassView
+        isInteractive
+        glassEffectStyle={{
+          style: isHidden ? "none" : "regular",
+          animate: true,
+          animationDuration: GLASS_ANIMATION_DURATION,
+        }}
+        tintColor={theme.color.glassTint}
+        style={styles.button}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.chrome,
+            {
+              borderColor: theme.color.glassBorder,
+              backgroundColor: theme.color.glassBackground,
+            },
+            fadeStyle,
+          ]}
+        />
+        <Animated.View style={[styles.content, fadeStyle]}>
+          <Image
+            source={iconSource}
+            style={[styles.icon, iconStyle]}
+            resizeMode="contain"
+          />
+          <Text
+          style={[
+            styles.label,
+            {
+              color: theme.color.foreground,
+              fontFamily: theme.typography.fontFamily.sans.medium,
+            },
+          ]}
+        >
+            {isLoading ? loadingLabel : label}
+          </Text>
+        </Animated.View>
+      </GlassView>
+    </Pressable>
   );
 }
 
@@ -128,28 +215,24 @@ const styles = StyleSheet.create({
   button: {
     minHeight: 56,
     borderRadius: 9999,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  chrome: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 9999,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  content: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 18,
     gap: 12,
-    overflow: "hidden",
   },
-  googleIcon: {
+  icon: {
     width: 18,
     height: 18,
-  },
-  appleButtonWrap: {
-    alignSelf: "stretch",
-    height: 56,
-  },
-  appleButton: {
-    width: "100%",
-    height: "100%",
-  },
-  appleButtonDisabled: {
-    opacity: 0.5,
   },
   label: {
     fontSize: 16,

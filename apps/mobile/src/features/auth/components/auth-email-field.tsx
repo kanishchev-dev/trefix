@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   View,
 } from "react-native";
@@ -39,6 +40,9 @@ export function AuthEmailField({
     [normalizedEmail],
   );
   const showAction = normalizedEmail.length > 0;
+  // Rendered as an overlay instead of the native placeholder: with centred text
+  // iOS puts the caret at the start of the native placeholder until it's cleared.
+  const showPlaceholder = !isFocused && value.length === 0;
 
   function handleSubmit(): void {
     if (!isValidEmail) {
@@ -69,8 +73,6 @@ export function AuthEmailField({
         editable={!isSubmitting}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder={isFocused ? "" : copy.email.placeholder}
-        placeholderTextColor={theme.color.mutedForeground}
         onChangeText={onChangeText}
         onSubmitEditing={handleSubmit}
         returnKeyType="send"
@@ -85,6 +87,28 @@ export function AuthEmailField({
         ]}
         value={value}
       />
+
+      {showPlaceholder ? (
+        <View
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={styles.placeholderWrap}
+        >
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.placeholder,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {copy.email.placeholder}
+          </Text>
+        </View>
+      ) : null}
 
       {showAction ? (
         <Pressable
@@ -153,6 +177,16 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     textAlign: "center",
     textAlignVertical: "center",
+    includeFontPadding: false,
+  },
+  placeholderWrap: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: "center",
+    paddingHorizontal: 44,
+  },
+  placeholder: {
+    fontSize: 16,
+    textAlign: "center",
     includeFontPadding: false,
   },
   submitButton: {

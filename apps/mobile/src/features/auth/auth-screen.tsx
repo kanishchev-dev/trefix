@@ -4,14 +4,22 @@ import {
   Platform,
   StyleSheet,
   View,
-  KeyboardAvoidingView,
   Keyboard,
-  LayoutAnimation,
-  UIManager,
   Linking,
   Text,
   TouchableWithoutFeedback,
+  type LayoutChangeEvent,
 } from "react-native";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  KeyboardState,
+  useAnimatedKeyboard,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+} from "react-native-reanimated";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,17 +31,13 @@ import {
   type ThemeMode,
   type ThemeTokens,
 } from "@trefix/tokens";
-import { AuthSocialButtons } from "./components/auth-social-buttons";
+import {
+  AuthSocialButtons,
+  BUTTON_FADE_END,
+} from "./components/auth-social-buttons";
 import { AuthDivider } from "./components/auth-divider";
 import { AuthEmailField } from "./components/auth-email-field";
 import { type AuthCopy } from "../../locales";
-
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 type Props = {
   /** Ignored: the screen is always dark, see `SCREEN_THEME`. */
@@ -59,6 +63,12 @@ type Props = {
  */
 const SCREEN_MODE: ThemeMode = "dark";
 const SCREEN_THEME = getMobileThemeTokens(SCREEN_MODE);
+
+const LEGAL_ZONE_MARGIN_TOP = 12;
+/** Gap between the email field and the top edge of the keyboard. */
+const KEYBOARD_GAP = 16;
+/** Used until the keyboard has been fully opened once and its real height is known. */
+const FALLBACK_KEYBOARD_HEIGHT = 300;
 
 export function AuthScreen({
   copy,
@@ -109,34 +119,86 @@ export function AuthScreen({
     const hideEvent =
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
-    const showSubscription = Keyboard.addListener(showEvent, () => {
-      LayoutAnimation.configureNext({
-        duration: 0,
-        update: { type: LayoutAnimation.Types.keyboard },
-        delete: {
-          type: LayoutAnimation.Types.keyboard,
-          property: LayoutAnimation.Properties.opacity,
-        },
-      });
-      setKeyboardVisible(true);
-    });
-    const hideSubscription = Keyboard.addListener(hideEvent, () => {
-      LayoutAnimation.configureNext({
-        duration: 100,
-        update: { type: LayoutAnimation.Types.keyboard },
-        create: {
-          type: LayoutAnimation.Types.keyboard,
-          property: LayoutAnimation.Properties.opacity,
-        },
-      });
-      setKeyboardVisible(false);
-    });
+    const showSubscription = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true),
+    );
+    const hideSubscription = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false),
+    );
 
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
     };
   }, []);
+
+  // Everything below is driven frame-by-frame by the keyboard itself, so the field
+  // follows the keyboard exactly instead of jumping after it.
+  const keyboard = useAnimatedKeyboard();
+  const fullKeyboardHeight = useSharedValue(FALLBACK_KEYBOARD_HEIGHT);
+  const legalZoneHeight = useSharedValue(0);
+  const contentPaddingBottom = insets.bottom + 24;
+
+  useAnimatedReaction(
+    () => ({ state: keyboard.state.value, height: keyboard.height.value }),
+    ({ state, height }) => {
+      if (state === KeyboardState.OPEN && height > 0) {
+        fullKeyboardHeight.value = height;
+      }
+    },
+  );
+
+  const inputGroupStyle = useAnimatedStyle(() => {
+    // Distance from the bottom of the field group to the screen edge at rest.
+    const restOffset =
+      contentPaddingBottom + legalZoneHeight.value + LEGAL_ZONE_MARGIN_TOP;
+    const lift = Math.max(
+      0,
+      keyboard.height.value + KEYBOARD_GAP - restOffset,
+    );
+
+    return { transform: [{ translateY: -lift }] };
+  });
+
+  const keyboardProgress = useDerivedValue(() =>
+    interpolate(
+      keyboard.height.value,
+      [0, fullKeyboardHeight.value],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  );
+
+  // No opacity here: the social buttons are glass views, and UIKit stops rendering
+  // them once an ancestor is translucent. They fade themselves via `hideProgress`.
+  const socialBlockStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: interpolate(keyboardProgress.value, [0, 1], [0, -12]) },
+      { scale: interpolate(keyboardProgress.value, [0, 1], [1, 0.97]) },
+    ],
+  }));
+
+  const dividerStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      keyboardProgress.value,
+      [0, BUTTON_FADE_END],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const legalZoneStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      keyboardProgress.value,
+      [0, 0.3],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const handleLegalZoneLayout = (event: LayoutChangeEvent) => {
+    legalZoneHeight.value = event.nativeEvent.layout.height;
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.color.background }]}>
@@ -158,10 +220,9 @@ export function AuthScreen({
         <View
           style={[
             styles.content,
-            { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 },
+            { paddingTop: insets.top + 16, paddingBottom: contentPaddingBottom },
           ]}
         >
-          {/* Header - Static */}
           <View style={styles.logoContainer}>
             <Image
               source={logoSource}
@@ -170,21 +231,18 @@ export function AuthScreen({
             />
           </View>
 
-          {/* Center - Keyboard Avoiding Area */}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
-            style={styles.inputZone}
-          >
+          <View style={styles.inputZone}>
             <View style={styles.spacer} />
-            <View
-              style={[
-                styles.inputWrapper,
-                isKeyboardVisible && styles.inputWrapperKeyboard,
-              ]}
-            >
-              {!isKeyboardVisible && hasSocialAuth && (
-                <>
+            <Animated.View style={[styles.inputWrapper, inputGroupStyle]}>
+              {hasSocialAuth && (
+                <Animated.View
+                  style={[styles.inputWrapper, socialBlockStyle]}
+                  pointerEvents={isKeyboardVisible ? "none" : "auto"}
+                  accessibilityElementsHidden={isKeyboardVisible}
+                  importantForAccessibility={
+                    isKeyboardVisible ? "no-hide-descendants" : "auto"
+                  }
+                >
                   <AuthSocialButtons
                     theme={theme}
                     themeMode={themeMode}
@@ -195,9 +253,13 @@ export function AuthScreen({
                     showAppleButton={showAppleButton}
                     onGooglePress={onGooglePress}
                     onApplePress={onApplePress}
+                    isHidden={isKeyboardVisible}
+                    hideProgress={keyboardProgress}
                   />
-                  <AuthDivider theme={theme} copy={copy} />
-                </>
+                  <Animated.View style={dividerStyle}>
+                    <AuthDivider theme={theme} copy={copy} />
+                  </Animated.View>
+                </Animated.View>
               )}
               <AuthEmailField
                 theme={theme}
@@ -210,11 +272,13 @@ export function AuthScreen({
                   onSubmitEmail(submittedEmail);
                 }}
               />
-            </View>
-          </KeyboardAvoidingView>
+            </Animated.View>
+          </View>
 
-          {/* Footer - Static */}
-          <View style={styles.legalZone}>
+          <Animated.View
+            style={[styles.legalZone, legalZoneStyle]}
+            onLayout={handleLegalZoneLayout}
+          >
             <Text
               style={[
                 styles.legalText,
@@ -250,7 +314,7 @@ export function AuthScreen({
               </Text>
               .
             </Text>
-          </View>
+          </Animated.View>
         </View>
       </TouchableWithoutFeedback>
     </View>
@@ -289,12 +353,9 @@ const styles = StyleSheet.create({
   inputWrapper: {
     gap: 12,
   },
-  inputWrapperKeyboard: {
-    paddingBottom: 0,
-  },
   legalZone: {
     alignItems: "center",
-    marginTop: 12,
+    marginTop: LEGAL_ZONE_MARGIN_TOP,
   },
   legalText: {
     fontSize: 12,
