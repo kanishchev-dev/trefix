@@ -1493,6 +1493,25 @@ export const zCreateWorkoutDto = z.object({
   source: z.string().optional(),
 });
 
+export const zUpdateWorkoutDto = z.object({
+  scheduledAt: z.string().optional(),
+  type: z
+    .enum([
+      "recovery",
+      "easy",
+      "long_run",
+      "tempo",
+      "threshold",
+      "interval",
+      "hill",
+      "race",
+      "rest",
+    ])
+    .optional(),
+  durationMinutes: z.number().gte(1).lte(600).optional(),
+  distanceKm: z.number().gte(0.1).lte(300).optional(),
+});
+
 export const zCompleteWorkoutDto = z.object({
   actualDurationMinutes: z.number().gte(0),
   actualDistanceKm: z.number().gte(0),
@@ -3054,6 +3073,15 @@ export const zTrainingControllerCreateWorkoutV1Response =
 export const zTrainingControllerGetCurrentMetricsV1Response =
   zCurrentMetricsDto;
 
+export const zTrainingControllerDeleteWorkoutV1Path = z.object({
+  id: z.string(),
+});
+
+/**
+ * Workout removed
+ */
+export const zTrainingControllerDeleteWorkoutV1Response = z.void();
+
 export const zTrainingControllerGetWorkoutV1Path = z.object({
   id: z.string(),
 });
@@ -3062,6 +3090,18 @@ export const zTrainingControllerGetWorkoutV1Path = z.object({
  * Workout
  */
 export const zTrainingControllerGetWorkoutV1Response =
+  zTrainingWorkoutResponseDto;
+
+export const zTrainingControllerUpdateWorkoutV1Body = zUpdateWorkoutDto;
+
+export const zTrainingControllerUpdateWorkoutV1Path = z.object({
+  id: z.string(),
+});
+
+/**
+ * Updated workout
+ */
+export const zTrainingControllerUpdateWorkoutV1Response =
   zTrainingWorkoutResponseDto;
 
 export const zTrainingControllerCompleteWorkoutV1Body = zCompleteWorkoutDto;

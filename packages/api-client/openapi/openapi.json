@@ -4226,6 +4226,77 @@
         "tags": [
           "Training"
         ]
+      },
+      "patch": {
+        "operationId": "TrainingController_updateWorkout_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated workout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWorkoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a workout added by hand (date, type, volume); plan workouts change via the plan",
+        "tags": [
+          "Training"
+        ]
+      },
+      "delete": {
+        "operationId": "TrainingController_deleteWorkout_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Workout removed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a planned workout added by hand",
+        "tags": [
+          "Training"
+        ]
       }
     },
     "/v1/workouts/{id}/complete": {
@@ -12830,6 +12901,40 @@
         "required": [
           "scheduledAt"
         ]
+      },
+      "UpdateWorkoutDto": {
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-10-20T09:00:00.000Z",
+            "description": "New day; tomorrow or later"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "recovery",
+              "easy",
+              "long_run",
+              "tempo",
+              "threshold",
+              "interval",
+              "hill",
+              "race",
+              "rest"
+            ]
+          },
+          "durationMinutes": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 600
+          },
+          "distanceKm": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 300
+          }
+        }
       },
       "CompleteWorkoutDto": {
         "type": "object",

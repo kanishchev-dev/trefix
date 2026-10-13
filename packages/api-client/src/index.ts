@@ -296,6 +296,10 @@ export const trainingWorkoutAnalysisSchema =
 
 export const trainingWorkoutSchema = contract.zTrainingWorkoutResponseDto;
 
+/** Body of `PATCH /workouts/:id`: a workout added by hand (plan workouts change via the plan). */
+export const updateWorkoutSchema = contract.zUpdateWorkoutDto;
+export type UpdateWorkoutInput = z.infer<typeof updateWorkoutSchema>;
+
 export const trainingPlanWeekSchema = contract.zTrainingPlanWeekResponseDto;
 
 export const trainingPlanSchema = contract.zTrainingPlanResponseDto;

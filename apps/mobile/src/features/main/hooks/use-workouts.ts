@@ -3,12 +3,15 @@ import {
   type CreateWorkoutInput,
   type CompleteWorkoutInput,
   type TrainingWorkout,
+  type UpdateWorkoutInput,
 } from "@trefix/api-client";
 import { getWorkoutSources } from "../../../lib/integrations-api";
 import {
   getWorkouts,
   createWorkout,
   completeWorkout,
+  deleteWorkout,
+  updateWorkout,
   getWorkoutExecution,
   getWorkoutRecording,
 } from "../../../lib/training-api";
@@ -54,6 +57,52 @@ export function useCreateWorkout() {
       queryClient.invalidateQueries({ queryKey: queryKeys.plan.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.plans.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
+    },
+  });
+}
+
+/** Change of a workout added by hand; the details screen gets the new version at once. */
+export function useUpdateWorkout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      workoutId,
+      dto,
+    }: {
+      workoutId: string;
+      dto: UpdateWorkoutInput;
+    }) => updateWorkout(workoutId, dto),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(queryKeys.workouts.detail(updated.id), updated);
+      queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.coach.all });
+    },
+  });
+}
+
+/** Removal of a planned workout added by hand. */
+export function useDeleteWorkout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (workoutId: string) => deleteWorkout(workoutId),
+    onSuccess: (_, workoutId) => {
+      queryClient.removeQueries({
+        queryKey: queryKeys.workouts.detail(workoutId),
+      });
+      // Drop it from loaded day lists right away, the refetch confirms.
+      for (const [key, current] of queryClient.getQueriesData<
+        TrainingWorkout[]
+      >({ queryKey: queryKeys.workouts.all })) {
+        if (Array.isArray(current)) {
+          queryClient.setQueryData<TrainingWorkout[]>(
+            key,
+            current.filter((workout) => workout.id !== workoutId),
+          );
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all });
     },
   });
 }

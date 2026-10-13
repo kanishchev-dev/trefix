@@ -39,6 +39,7 @@ import {
   type CompleteWorkoutInput,
   type CreateManualPlanInput,
   type CreateWorkoutInput,
+  type UpdateWorkoutInput,
   type CurrentMetrics,
   type ManualPlanPreview,
   type PlanChangePreview,
@@ -200,6 +201,27 @@ export async function createWorkout(
   });
 
   return trainingWorkoutSchema.parse(response);
+}
+
+/** Changes a workout the user added by hand. */
+export async function updateWorkout(
+  workoutId: string,
+  dto: UpdateWorkoutInput,
+): Promise<TrainingWorkout> {
+  const response = await request<unknown>(`/workouts/${workoutId}`, {
+    method: "PATCH",
+    body: dto,
+    useAuth: true,
+  });
+  return trainingWorkoutSchema.parse(response);
+}
+
+/** Removes a planned workout the user added by hand. */
+export async function deleteWorkout(workoutId: string): Promise<void> {
+  await request<void>(`/workouts/${workoutId}`, {
+    method: "DELETE",
+    useAuth: true,
+  });
 }
 
 export async function completeWorkout(

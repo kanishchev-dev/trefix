@@ -41,6 +41,7 @@ import {
   WorkoutCompletionForm,
   WorkoutResultSection,
 } from "../components/today/workout-detail-sections";
+import { ManualWorkoutEditPanel } from "../components/workout-details/manual-workout-edit-panel";
 import { WorkoutStructure } from "../components/workout-details/workout-structure";
 import { useHeaderOptions } from "../context/header-context";
 import { useWorkoutCompletion } from "../hooks/use-workout-completion";
@@ -98,7 +99,16 @@ export function WorkoutDetailsScreen({
         Boolean(recorder.active),
       )
     : null;
-  const isEditable = Boolean(actions?.isEditable);
+  // Plan workouts change through the plan; workouts added by hand directly,
+  // while they are planned for a future day (the backend applies the same rule).
+  const isPlanEditable = Boolean(actions?.isEditable);
+  const isManualEditable = Boolean(
+    workout &&
+      !workout.planId &&
+      workout.status === "planned" &&
+      workoutDate > todayIso(),
+  );
+  const isEditable = isPlanEditable || isManualEditable;
 
   const hasSession = Boolean(
     workout && workout.status !== "completed" && workout.type !== "rest",
@@ -470,7 +480,7 @@ export function WorkoutDetailsScreen({
       </SectionLayout>
 
       <BottomSheet
-        visible={sheet !== null && Boolean(activePlanId)}
+        visible={sheet !== null && (isManualEditable || Boolean(activePlanId))}
         onClose={closeSheet}
         theme={theme}
         themeMode={themeMode}
@@ -510,7 +520,28 @@ export function WorkoutDetailsScreen({
             ))}
           </View>
         ) : null}
-        {editMode && activePlanId ? (
+        {editMode && editMode !== "add" && isManualEditable ? (
+          <ManualWorkoutEditPanel
+            mode={editMode}
+            workout={{
+              id: workout.id,
+              type: workout.type,
+              distanceKm: workout.distanceKm,
+              durationMinutes: workout.durationMinutes,
+              scheduledAt: workout.scheduledAt,
+            }}
+            onDone={(removed) => {
+              closeSheet();
+              if (removed) onBack();
+            }}
+            onCancel={() => setSheet("menu")}
+            theme={theme}
+            themeMode={themeMode}
+            copy={copy}
+            language={language}
+          />
+        ) : null}
+        {editMode && isPlanEditable && activePlanId ? (
           <PlanWorkoutEditPanel
             planId={activePlanId}
             mode={editMode}

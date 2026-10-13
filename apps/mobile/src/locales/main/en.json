@@ -109,6 +109,11 @@
         "1": "Low",
         "2": "Moderate",
         "3": "High"
+      },
+      "manual": {
+        "saved": "Workout updated",
+        "removed": "Workout removed",
+        "removeBody": "The workout will be removed from your calendar."
       }
     }
   },

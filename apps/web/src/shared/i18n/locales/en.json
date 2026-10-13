@@ -861,7 +861,8 @@
         "workouts": {
           "read": "View the workout list for a period and individual workouts",
           "create": "Create or log a workout manually",
-          "update": "Complete a workout and record its actual result"
+          "update": "Complete a workout and record its actual result; change a workout added by hand",
+          "delete": "Remove a planned workout added by hand"
         },
         "analyze": "Run a detailed AI analysis of a completed workout",
         "adapt": "Adapt the current training plan to the athlete state and recovery",

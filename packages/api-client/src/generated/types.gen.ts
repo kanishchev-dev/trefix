@@ -1898,6 +1898,25 @@ export type CreateWorkoutDto = {
   source?: string;
 };
 
+export type UpdateWorkoutDto = {
+  /**
+   * New day; tomorrow or later
+   */
+  scheduledAt?: string;
+  type?:
+    | "recovery"
+    | "easy"
+    | "long_run"
+    | "tempo"
+    | "threshold"
+    | "interval"
+    | "hill"
+    | "race"
+    | "rest";
+  durationMinutes?: number;
+  distanceKm?: number;
+};
+
 export type CompleteWorkoutDto = {
   actualDurationMinutes: number;
   actualDistanceKm: number;
@@ -4570,6 +4589,25 @@ export type TrainingControllerGetCurrentMetricsV1Responses = {
 export type TrainingControllerGetCurrentMetricsV1Response =
   TrainingControllerGetCurrentMetricsV1Responses[keyof TrainingControllerGetCurrentMetricsV1Responses];
 
+export type TrainingControllerDeleteWorkoutV1Data = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/workouts/{id}";
+};
+
+export type TrainingControllerDeleteWorkoutV1Responses = {
+  /**
+   * Workout removed
+   */
+  204: void;
+};
+
+export type TrainingControllerDeleteWorkoutV1Response =
+  TrainingControllerDeleteWorkoutV1Responses[keyof TrainingControllerDeleteWorkoutV1Responses];
+
 export type TrainingControllerGetWorkoutV1Data = {
   body?: never;
   path: {
@@ -4588,6 +4626,25 @@ export type TrainingControllerGetWorkoutV1Responses = {
 
 export type TrainingControllerGetWorkoutV1Response =
   TrainingControllerGetWorkoutV1Responses[keyof TrainingControllerGetWorkoutV1Responses];
+
+export type TrainingControllerUpdateWorkoutV1Data = {
+  body: UpdateWorkoutDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/workouts/{id}";
+};
+
+export type TrainingControllerUpdateWorkoutV1Responses = {
+  /**
+   * Updated workout
+   */
+  200: TrainingWorkoutResponseDto;
+};
+
+export type TrainingControllerUpdateWorkoutV1Response =
+  TrainingControllerUpdateWorkoutV1Responses[keyof TrainingControllerUpdateWorkoutV1Responses];
 
 export type TrainingControllerCompleteWorkoutV1Data = {
   body: CompleteWorkoutDto;
