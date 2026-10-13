@@ -8,11 +8,13 @@ import {
   Linking,
   Text,
   TouchableWithoutFeedback,
+  useColorScheme,
   type LayoutChangeEvent,
 } from "react-native";
 import Animated, {
   Extrapolation,
   interpolate,
+  interpolateColor,
   KeyboardState,
   useAnimatedKeyboard,
   useAnimatedReaction,
@@ -31,13 +33,11 @@ import {
   type ThemeMode,
   type ThemeTokens,
 } from "@trefix/tokens";
-import {
-  AuthSocialButtons,
-  BUTTON_FADE_END,
-} from "./components/auth-social-buttons";
+import { AuthSocialButtons } from "./components/auth-social-buttons";
 import { AuthDivider } from "./components/auth-divider";
 import { AuthEmailField } from "./components/auth-email-field";
 import { type AuthCopy } from "../../locales";
+import { useAuthIntro } from "./use-auth-intro";
 
 type Props = {
   /** Ignored: the screen is always dark, see `SCREEN_THEME`. */
@@ -65,6 +65,16 @@ const SCREEN_MODE: ThemeMode = "dark";
 const SCREEN_THEME = getMobileThemeTokens(SCREEN_MODE);
 
 const LEGAL_ZONE_MARGIN_TOP = 12;
+/** Share of the keyboard travel after which the social buttons are fully faded out. */
+const BUTTON_FADE_END = 0.25;
+
+/** Must match the `expo-splash-screen` config in app.json: same size, centred on screen. */
+const LOGO_WIDTH = 220;
+const LOGO_HEIGHT = 72;
+const LOGO_TOP_MARGIN = 16;
+const SPLASH_LIGHT_BACKGROUND = "#ffffff";
+/** Distance the field group rises from while fading in. */
+const CONTENT_INTRO_OFFSET = 20;
 /** Gap between the email field and the top edge of the keyboard. */
 const KEYBOARD_GAP = 16;
 /** Used until the keyboard has been fully opened once and its real height is known. */
@@ -99,10 +109,15 @@ export function AuthScreen({
     },
   );
 
-  const logoSource =
-    themeMode === "dark"
-      ? require("../../../assets/trefix-logo-light.png")
-      : require("../../../assets/trefix-logo-dark.png");
+  const logoSource = require("../../../assets/trefix-logo-light.png");
+  const splashLogoSource = require("../../../assets/trefix-logo-dark.png");
+
+  const intro = useAuthIntro();
+  // The native splash follows the system appearance: on a light system it's white
+  // with the dark logo, and the intro has to start from exactly that.
+  const systemColorScheme = useColorScheme();
+  const startsFromLightSplash =
+    intro.isAnimated && systemColorScheme !== "dark";
 
   useEffect(() => {
     if (isFocused) {
@@ -152,12 +167,11 @@ export function AuthScreen({
     // Distance from the bottom of the field group to the screen edge at rest.
     const restOffset =
       contentPaddingBottom + legalZoneHeight.value + LEGAL_ZONE_MARGIN_TOP;
-    const lift = Math.max(
-      0,
-      keyboard.height.value + KEYBOARD_GAP - restOffset,
-    );
+    const lift = Math.max(0, keyboard.height.value + KEYBOARD_GAP - restOffset);
+    const introOffset =
+      (1 - intro.contentProgress.value) * CONTENT_INTRO_OFFSET;
 
-    return { transform: [{ translateY: -lift }] };
+    return { transform: [{ translateY: introOffset - lift }] };
   });
 
   const keyboardProgress = useDerivedValue(() =>
@@ -178,30 +192,80 @@ export function AuthScreen({
     ],
   }));
 
+  const socialVisibility = useDerivedValue(() =>
+    Math.min(
+      intro.contentProgress.value,
+      interpolate(
+        keyboardProgress.value,
+        [0, BUTTON_FADE_END],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+    ),
+  );
+
   const dividerStyle = useAnimatedStyle(() => ({
+    opacity: socialVisibility.value,
+  }));
+
+  const legalZoneStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(
+      intro.contentProgress.value,
+      interpolate(
+        keyboardProgress.value,
+        [0, 0.3],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+    ),
+  }));
+
+  // From the centre of the screen, where the native splash draws it, to its slot.
+  const logoStartOffset =
+    intro.rootHeight === null
+      ? 0
+      : intro.rootHeight / 2 - LOGO_HEIGHT / 2 - (insets.top + LOGO_TOP_MARGIN);
+
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: (1 - intro.logoProgress.value) * logoStartOffset },
+    ],
+  }));
+
+  const splashLogoStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
-      keyboardProgress.value,
-      [0, BUTTON_FADE_END],
+      intro.logoProgress.value,
+      [0, 0.6],
       [1, 0],
       Extrapolation.CLAMP,
     ),
   }));
 
-  const legalZoneStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      keyboardProgress.value,
-      [0, 0.3],
-      [1, 0],
-      Extrapolation.CLAMP,
-    ),
+  // Starts opaque (the splash) and thins out to reveal the background video.
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(intro.logoProgress.value, [0, 1], [1, 0.9]),
+    backgroundColor: startsFromLightSplash
+      ? interpolateColor(
+          intro.logoProgress.value,
+          [0, 0.6],
+          [SPLASH_LIGHT_BACKGROUND, theme.color.background],
+        )
+      : theme.color.background,
   }));
+
+  const handleRootLayout = (event: LayoutChangeEvent) => {
+    intro.setRootHeight(event.nativeEvent.layout.height);
+  };
 
   const handleLegalZoneLayout = (event: LayoutChangeEvent) => {
     legalZoneHeight.value = event.nativeEvent.layout.height;
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.color.background }]}>
+    <View
+      style={[styles.root, { backgroundColor: theme.color.background }]}
+      onLayout={handleRootLayout}
+    >
       {isFocused ? <StatusBar style="light" /> : null}
       <VideoView
         style={styles.video}
@@ -211,27 +275,42 @@ export function AuthScreen({
         surfaceType={Platform.OS === "android" ? "textureView" : undefined}
         pointerEvents="none"
       />
-      <View
+      <Animated.View
         pointerEvents="none"
-        style={[styles.overlay, { backgroundColor: theme.color.background }]}
+        style={[styles.overlay, overlayStyle]}
       />
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View
           style={[
             styles.content,
-            { paddingTop: insets.top + 16, paddingBottom: contentPaddingBottom },
+            {
+              paddingTop: insets.top + LOGO_TOP_MARGIN,
+              paddingBottom: contentPaddingBottom,
+            },
           ]}
         >
-          <View style={styles.logoContainer}>
+          <Animated.View style={[styles.logoContainer, logoStyle]}>
             <Image
               source={logoSource}
               style={styles.logo}
               resizeMode="contain"
+              onLoad={startsFromLightSplash ? undefined : intro.onLogoLoad}
             />
-          </View>
+            {startsFromLightSplash ? (
+              <Animated.Image
+                source={splashLogoSource}
+                style={[styles.logo, styles.splashLogo, splashLogoStyle]}
+                resizeMode="contain"
+                onLoad={intro.onLogoLoad}
+              />
+            ) : null}
+          </Animated.View>
 
-          <View style={styles.inputZone}>
+          <View
+            style={styles.inputZone}
+            pointerEvents={intro.isDone ? "auto" : "none"}
+          >
             <View style={styles.spacer} />
             <Animated.View style={[styles.inputWrapper, inputGroupStyle]}>
               {hasSocialAuth && (
@@ -253,8 +332,8 @@ export function AuthScreen({
                     showAppleButton={showAppleButton}
                     onGooglePress={onGooglePress}
                     onApplePress={onApplePress}
-                    isHidden={isKeyboardVisible}
-                    hideProgress={keyboardProgress}
+                    isHidden={isKeyboardVisible || !intro.isGlassShown}
+                    visibility={socialVisibility}
                   />
                   <Animated.View style={dividerStyle}>
                     <AuthDivider theme={theme} copy={copy} />
@@ -266,6 +345,8 @@ export function AuthScreen({
                 copy={copy}
                 value={email}
                 isSubmitting={isEmailSubmitting}
+                isHidden={!intro.isGlassShown}
+                visibility={intro.contentProgress}
                 onChangeText={onEmailChange}
                 onSubmit={(submittedEmail) => {
                   onEmailChange(submittedEmail);
@@ -278,6 +359,7 @@ export function AuthScreen({
           <Animated.View
             style={[styles.legalZone, legalZoneStyle]}
             onLayout={handleLegalZoneLayout}
+            pointerEvents={intro.isDone ? "auto" : "none"}
           >
             <Text
               style={[
@@ -331,7 +413,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFill,
-    opacity: 0.9,
   },
   content: {
     flex: 1,
@@ -341,8 +422,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: 220,
-    height: 72,
+    width: LOGO_WIDTH,
+    height: LOGO_HEIGHT,
+  },
+  splashLogo: {
+    position: "absolute",
   },
   inputZone: {
     flex: 1,

@@ -12,8 +12,6 @@ import {
 } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import Animated, {
-  Extrapolation,
-  interpolate,
   useAnimatedStyle,
   type SharedValue,
 } from "react-native-reanimated";
@@ -39,8 +37,8 @@ type Props = {
    * not fade a parent of these buttons.
    */
   isHidden?: boolean;
-  /** 0 → fully shown, 1 → fully hidden. Drives the fade of the button contents. */
-  hideProgress?: SharedValue<number>;
+  /** 1 → fully shown, 0 → fully hidden. Drives the fade of the button contents. */
+  visibility?: SharedValue<number>;
 };
 
 export function AuthSocialButtons({
@@ -54,7 +52,7 @@ export function AuthSocialButtons({
   onGooglePress,
   onApplePress,
   isHidden = false,
-  hideProgress,
+  visibility,
 }: Props) {
   const [lastPressed, setLastPressed] = useState<Provider | null>(null);
 
@@ -82,7 +80,7 @@ export function AuthSocialButtons({
           isLoading={isProviderLoading("google")}
           isDisabled={isLoading || isDisabled}
           isHidden={isHidden}
-          hideProgress={hideProgress}
+          visibility={visibility}
           onPress={handlePress("google", onGooglePress)}
         />
       ) : null}
@@ -97,7 +95,7 @@ export function AuthSocialButtons({
           isLoading={isProviderLoading("apple")}
           isDisabled={isLoading || isDisabled}
           isHidden={isHidden}
-          hideProgress={hideProgress}
+          visibility={visibility}
           onPress={handlePress("apple", onApplePress)}
         />
       ) : null}
@@ -114,12 +112,10 @@ type SocialButtonProps = {
   isLoading: boolean;
   isDisabled: boolean;
   isHidden: boolean;
-  hideProgress?: SharedValue<number>;
+  visibility?: SharedValue<number>;
   onPress: () => void;
 };
 
-/** Share of the keyboard travel after which the buttons are fully faded out. */
-export const BUTTON_FADE_END = 0.25;
 const GLASS_ANIMATION_DURATION = 0.15;
 
 function SocialButton({
@@ -131,23 +127,12 @@ function SocialButton({
   isLoading,
   isDisabled,
   isHidden,
-  hideProgress,
+  visibility,
   onPress,
 }: SocialButtonProps) {
-  const fadeStyle = useAnimatedStyle(() => {
-    if (!hideProgress) {
-      return { opacity: isHidden ? 0 : 1 };
-    }
-
-    return {
-      opacity: interpolate(
-        hideProgress.value,
-        [0, BUTTON_FADE_END],
-        [1, 0],
-        Extrapolation.CLAMP,
-      ),
-    };
-  });
+  const fadeStyle = useAnimatedStyle(() => ({
+    opacity: visibility ? visibility.value : isHidden ? 0 : 1,
+  }));
 
   return (
     <Pressable
@@ -186,14 +171,14 @@ function SocialButton({
             resizeMode="contain"
           />
           <Text
-          style={[
-            styles.label,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.medium,
-            },
-          ]}
-        >
+            style={[
+              styles.label,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
             {isLoading ? loadingLabel : label}
           </Text>
         </Animated.View>

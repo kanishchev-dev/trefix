@@ -46,11 +46,15 @@ export default function App() {
   });
   const isReady = Boolean(fontsLoaded || fontError) && !session.isHydrating;
 
+  const hasSession = Boolean(session.session);
+
   useEffect(() => {
-    if (isReady) {
+    // Signed out: the auth screen hides the splash itself, once its first frame
+    // matches the splash, and animates out of it.
+    if (isReady && hasSession) {
       void SplashScreen.hideAsync();
     }
-  }, [isReady]);
+  }, [isReady, hasSession]);
 
   if (!isReady) {
     return null;
