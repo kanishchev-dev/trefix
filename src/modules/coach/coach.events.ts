@@ -7,6 +7,7 @@
 export const COACH_EVENTS = {
   REPLY_GENERATED: 'coach.reply.generated',
   SESSION_CREATED: 'coach.session.created',
+  WORKOUT_NOTE_GENERATED: 'coach.workout_note.generated',
 } as const;
 
 export type CoachEventName = (typeof COACH_EVENTS)[keyof typeof COACH_EVENTS];

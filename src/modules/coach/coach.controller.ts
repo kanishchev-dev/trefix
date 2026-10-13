@@ -8,6 +8,7 @@ import {
   HttpStatus,
   MessageEvent,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   Res,
@@ -34,8 +35,10 @@ import { CoachService } from './coach.service';
 import { CoachStreamService, writeEventStream } from './coach-stream.service';
 import { CoachChatDto } from './dto/coach-chat.dto';
 import { CoachChatResponseDto, CoachSessionDetailResponseDto, CoachSessionResponseDto } from './dto/coach-response.dto';
+import { CoachWorkoutNoteResponseDto } from './dto/coach-workout-note-response.dto';
 import { CreateCoachSessionDto } from './dto/create-coach-session.dto';
 import { SendCoachMessageDto } from './dto/send-coach-message.dto';
+import { CoachWorkoutNotesService } from './workout-notes/workout-notes.service';
 
 @ApiTags('Coach')
 @ApiBearerAuth()
@@ -47,7 +50,24 @@ export class CoachController {
   constructor(
     private readonly coachService: CoachService,
     private readonly coachStreamService: CoachStreamService,
+    private readonly workoutNotesService: CoachWorkoutNotesService,
   ) {}
+
+  /**
+   * The coach's note to a workout. Answers right away: with the text when it is
+   * written, or `pending` while a job writes it (then `coach.workout_note.ready`
+   * arrives over realtime with the `workoutId`).
+   */
+  @Get('workouts/:workoutId/note')
+  @RequirePermissions('coach.sessions.read')
+  @ApiOperation({ summary: "Get the coach's note to a workout" })
+  @ApiOkResponse({ description: 'Note, or its generation status', type: CoachWorkoutNoteResponseDto })
+  getWorkoutNote(
+    @CurrentUser() user: AuthUserContext,
+    @Param('workoutId', ParseUUIDPipe) workoutId: string,
+  ): Promise<CoachWorkoutNoteResponseDto> {
+    return this.workoutNotesService.getNote(user.id, workoutId);
+  }
 
   @Post('sessions')
   @RequirePermissions('coach.sessions.create')

@@ -22,15 +22,20 @@ import { COACH_PROACTIVE_QUEUE } from './proactive/coach-proactive.constants';
 import { CoachProactiveListener } from './proactive/coach-proactive.listener';
 import { CoachProactiveProcessor } from './proactive/coach-proactive.processor';
 import { CoachProactiveService } from './proactive/coach-proactive.service';
+import { CoachWorkoutNote } from './workout-notes/workout-note.entity';
+import { COACH_WORKOUT_NOTE_QUEUE } from './workout-notes/workout-notes.constants';
+import { CoachWorkoutNotesProcessor } from './workout-notes/workout-notes.processor';
+import { CoachWorkoutNotesService } from './workout-notes/workout-notes.service';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([CoachSession, CoachMessage]),
+    SequelizeModule.forFeature([CoachSession, CoachMessage, CoachWorkoutNote]),
     TrainingModule,
     OpenAiModule,
     RealtimeModule,
     PreferencesModule,
     BullModule.registerQueue({ name: COACH_PROACTIVE_QUEUE, defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS }),
+    BullModule.registerQueue({ name: COACH_WORKOUT_NOTE_QUEUE, defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS }),
   ],
   controllers: [CoachController],
   providers: [
@@ -44,6 +49,8 @@ import { CoachProactiveService } from './proactive/coach-proactive.service';
     CoachMessageTexts,
     CoachProactiveProcessor,
     CoachProactiveListener,
+    CoachWorkoutNotesService,
+    CoachWorkoutNotesProcessor,
   ],
   exports: [CoachService],
 })
