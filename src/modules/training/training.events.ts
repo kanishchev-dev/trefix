@@ -27,6 +27,7 @@ export const TRAINING_EVENTS = {
   WORKOUT_COMPLETED: 'training.workout.completed',
   WORKOUT_CREATED: 'training.workout.created',
   WORKOUT_UPDATED: 'training.workout.updated',
+  WORKOUT_DELETED: 'training.workout.deleted',
 } as const;
 
 export type TrainingEventName = (typeof TRAINING_EVENTS)[keyof typeof TRAINING_EVENTS];

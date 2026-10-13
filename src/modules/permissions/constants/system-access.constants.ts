@@ -318,7 +318,14 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     module: 'training',
     resource: 'workouts',
     action: 'update',
-    description: 'Complete a workout and record its actual result',
+    description: 'Complete a workout and record its actual result; change a workout added by hand',
+  },
+  {
+    key: 'training.workouts.delete',
+    module: 'training',
+    resource: 'workouts',
+    action: 'delete',
+    description: 'Remove a planned workout added by hand',
   },
   {
     key: 'training.calendar.read',

@@ -58,6 +58,7 @@ import { TrainingEngine } from './training.engine';
 import { TrainingListener } from './training.listener';
 import { TrainingLookupService } from './training-lookup.service';
 import { ImportedWorkoutLookupService } from './workouts/imported-workout-lookup.service';
+import { ManualWorkoutsService } from './workouts/manual-workouts.service';
 import { WorkoutImportService } from './workouts/workout-import.service';
 import { WorkoutsService } from './workouts/workouts.service';
 
@@ -106,6 +107,7 @@ import { WorkoutsService } from './workouts/workouts.service';
     PlanGenerationService,
     PlanRegenerationService,
     WorkoutsService,
+    ManualWorkoutsService,
     WorkoutImportService,
     ImportedWorkoutLookupService,
     PlanAdaptationApplier,

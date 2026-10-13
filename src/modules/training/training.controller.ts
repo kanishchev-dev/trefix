@@ -1,5 +1,25 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -11,6 +31,7 @@ import { GoalsService } from '@/modules/training/goals/goals.service';
 import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
 import { PlanQueryService } from '@/modules/training/plans/plan-query.service';
 import { PlanRegenerationService } from '@/modules/training/plans/plan-regeneration.service';
+import { ManualWorkoutsService } from '@/modules/training/workouts/manual-workouts.service';
 import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 
 import { AdaptPlanDto } from './dto/adapt-plan.dto';
@@ -35,6 +56,7 @@ import {
   TrainingWorkoutCompletionResponseDto,
   TrainingWorkoutResponseDto,
 } from './dto/training-response.dto';
+import { UpdateWorkoutDto } from './dto/update-workout.dto';
 import { CurrentMetrics } from './plans/athlete-metrics.service';
 import { PLAN_CREATE_THROTTLE } from './plans/plan-create-throttle';
 import {
@@ -62,6 +84,7 @@ export class TrainingController {
     private readonly planRegenerationService: PlanRegenerationService,
     private readonly planQueryService: PlanQueryService,
     private readonly workoutsService: WorkoutsService,
+    private readonly manualWorkoutsService: ManualWorkoutsService,
   ) {}
 
   @Post('athletes')
@@ -258,6 +281,27 @@ export class TrainingController {
   })
   getWorkout(@CurrentUser() user: AuthUserContext, @Param('id') id: string): Promise<TrainingWorkoutResponseDto> {
     return this.workoutsService.getWorkout(id, user.id);
+  }
+
+  @Patch('workouts/:id')
+  @RequirePermissions('training.workouts.update')
+  @ApiOperation({ summary: 'Change a workout added by hand (date, type, volume); plan workouts change via the plan' })
+  @ApiOkResponse({ description: 'Updated workout', type: TrainingWorkoutResponseDto })
+  updateWorkout(
+    @CurrentUser() user: AuthUserContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateWorkoutDto,
+  ): Promise<TrainingWorkoutResponseDto> {
+    return this.manualWorkoutsService.updateWorkout(user.id, id, dto);
+  }
+
+  @Delete('workouts/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermissions('training.workouts.delete')
+  @ApiOperation({ summary: 'Remove a planned workout added by hand' })
+  @ApiNoContentResponse({ description: 'Workout removed' })
+  async deleteWorkout(@CurrentUser() user: AuthUserContext, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.manualWorkoutsService.deleteWorkout(user.id, id);
   }
 
   @Post('workouts/:id/complete')

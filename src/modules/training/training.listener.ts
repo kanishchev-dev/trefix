@@ -21,6 +21,7 @@ import { PlanUpdatedEvent } from './events/plan-updated.event';
 import { AthleteStateUpdatedEvent } from './events/state-updated.event';
 import { WorkoutCompletedEvent } from './events/workout-completed.event';
 import { WorkoutCreatedEvent } from './events/workout-created.event';
+import { WorkoutDeletedEvent } from './events/workout-deleted.event';
 import { WorkoutUpdatedEvent } from './events/workout-updated.event';
 
 @Injectable()
@@ -115,6 +116,11 @@ export class TrainingListener {
     await this.emitWorkoutsChanged(event.athleteId, 'updated', event.workoutId, event.planId);
   }
 
+  @OnEvent(TRAINING_EVENTS.WORKOUT_DELETED)
+  async handleWorkoutDeleted(event: WorkoutDeletedEvent): Promise<void> {
+    await this.emitWorkoutsChanged(event.athleteId, 'deleted', event.workoutId, event.planId);
+  }
+
   /**
    * Audit trail of admin-panel plan changes. The plan's own domain events
    * already refresh the athlete's clients; this one only records the actor.
@@ -160,7 +166,7 @@ export class TrainingListener {
    */
   private async emitWorkoutsChanged(
     athleteId: string,
-    reason: 'created' | 'updated',
+    reason: 'created' | 'updated' | 'deleted',
     workoutId: string,
     planId: string | null,
   ): Promise<void> {
