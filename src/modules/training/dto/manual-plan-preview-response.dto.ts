@@ -47,9 +47,6 @@ export class ManualPlanPreviewWeekDto {
   phase!: string;
 
   @ApiProperty()
-  title!: string;
-
-  @ApiProperty()
   plannedWorkoutsCount!: number;
 
   @ApiProperty()

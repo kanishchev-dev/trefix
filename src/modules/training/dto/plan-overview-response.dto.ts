@@ -1,30 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { PlanGoalSummaryDto } from './plan-lifecycle.dto';
 import { PlanConfigDto } from './plan-shapes.dto';
-
-export class PlanGoalDto {
-  @ApiPropertyOptional()
-  title?: string;
-
-  @ApiProperty()
-  distance!: string;
-
-  @ApiPropertyOptional()
-  targetTime?: string;
-
-  @ApiPropertyOptional()
-  targetDate?: string;
-}
 
 export class PlanOverviewDataDto {
   @ApiProperty()
   id!: string;
 
-  @ApiPropertyOptional()
-  name?: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'User-given name; null means the app titles the plan by its goal',
+  })
+  name!: string | null;
 
-  @ApiProperty({ type: PlanGoalDto })
-  goal!: PlanGoalDto;
+  @ApiProperty({ type: PlanGoalSummaryDto })
+  goal!: PlanGoalSummaryDto;
 
   @ApiProperty({ enum: ['not_started', 'active', 'completed', 'cancelled'] })
   status!: 'not_started' | 'active' | 'completed' | 'cancelled';
@@ -64,9 +55,6 @@ export class PlanWeekDto {
   @ApiProperty({ enum: ['BASE', 'BUILD', 'RECOVERY', 'SPECIFIC', 'PEAK', 'TAPER', 'RACE'] })
   phase!: string;
 
-  @ApiProperty()
-  title!: string;
-
   @ApiProperty({ enum: ['completed', 'current', 'upcoming'] })
   status!: 'completed' | 'current' | 'upcoming';
 
@@ -79,25 +67,27 @@ export class PlanWeekDto {
   @ApiPropertyOptional()
   plannedLoad?: number;
 
-  @ApiPropertyOptional()
-  summaryText?: string;
+  @ApiProperty({ type: () => [KeySessionDto], description: 'Quality workouts of the week' })
+  keySessions!: KeySessionDto[];
+}
 
-  @ApiPropertyOptional()
-  intent?: string;
+export class KeySessionDto {
+  @ApiProperty({ description: 'Workout type code' })
+  type!: string;
 
-  @ApiPropertyOptional({ type: [String] })
-  keySessions?: string[];
+  @ApiProperty()
+  distanceKm!: number;
 }
 
 export class CurrentWeekContextDto {
   @ApiProperty()
-  title!: string;
+  weekNumber!: number;
 
-  @ApiPropertyOptional()
-  description?: string;
+  @ApiProperty({ enum: ['BASE', 'BUILD', 'RECOVERY', 'SPECIFIC', 'PEAK', 'TAPER', 'RACE'] })
+  phase!: string;
 
-  @ApiPropertyOptional({ type: [String] })
-  focusItems?: string[];
+  @ApiProperty({ type: () => [KeySessionDto] })
+  keySessions!: KeySessionDto[];
 }
 
 export class PlanAdaptationDto {
@@ -111,23 +101,14 @@ export class PlanAdaptationDto {
   weekNumber?: number;
 
   @ApiProperty({
-    enum: [
-      'HIGH_FATIGUE',
-      'MISSED_WORKOUT',
-      'POOR_PERFORMANCE',
-      'EXCELLENT_PERFORMANCE',
-      'LOW_RECOVERY',
-      'SCHEDULE_CHANGE',
-      'GOAL_CHANGE',
-    ],
+    description: 'Adaptation action code: ADD_RECOVERY, REDUCE_INTENSITY, REDUCE_VOLUME, MOVE, REPLACE, …',
   })
   type!: string;
 
-  @ApiProperty()
-  title!: string;
-
-  @ApiPropertyOptional()
-  description?: string;
+  @ApiPropertyOptional({
+    description: 'Reason code (high_fatigue, low_recovery, heart_rate_zones_changed, …) or text written by the coach',
+  })
+  reason?: string;
 
   @ApiProperty()
   createdAt!: string;

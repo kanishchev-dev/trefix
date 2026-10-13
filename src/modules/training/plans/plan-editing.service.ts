@@ -218,8 +218,6 @@ export class PlanEditingService {
       weekNumber: week.weekNumber,
       phase: week.phase,
       weeklyLoadTarget: week.weeklyLoadTarget ?? 0,
-      title: week.title,
-      intent: week.intent,
     })) ?? [...stored.values()];
 
     plan.weeks = meta.map((week) => {

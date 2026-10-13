@@ -180,7 +180,6 @@ export interface DatedPreview {
   weeks: Array<{
     weekNumber: number;
     phase: string;
-    title: string;
     plannedWorkoutsCount: number;
     plannedDistance: number;
     plannedLoad: number;
@@ -215,7 +214,6 @@ export function relativeToPreview(engine: TrainingEngine, weeks: RelativeWeek[],
       return {
         weekNumber: week.weekNumber,
         phase: week.phase.toUpperCase(),
-        title: week.title ?? `Week ${week.weekNumber}`,
         plannedWorkoutsCount: workouts.length,
         plannedDistance: Math.round(workouts.reduce((sum, workout) => sum + workout.distanceKm, 0)),
         plannedLoad: Math.round(Number(week.weeklyLoadTarget ?? 0)),

@@ -19,7 +19,8 @@ import { PlanAdaptationApplier } from './plan-adaptation-applier';
 
 type AdaptationStatus = 'applied' | 'proposed' | 'suggested';
 
-const HEART_RATE_ADAPTATION_REASON = 'Heart rate zones changed';
+// Reason code, translated by the clients like the engine reasons.
+const HEART_RATE_ADAPTATION_REASON = 'heart_rate_zones_changed';
 
 /** Keeps heart-rate targets of the active plan in line with the athlete's zones. */
 @Injectable()

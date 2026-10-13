@@ -15,7 +15,7 @@ export interface PlanStats {
 /** Snapshot of the plan in work shown in confirmations and the active endpoint. */
 export interface ActivePlanSummary {
   id: string;
-  name: string;
+  name: string | null;
   startDate: string | null;
   endDate: string | null;
   currentWeek: number;

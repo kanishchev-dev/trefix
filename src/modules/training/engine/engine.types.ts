@@ -92,7 +92,6 @@ export interface RelativeWorkout {
   orderInWeek: number;
   type: WorkoutView['type'];
   phase: string;
-  title?: string;
   durationMinutes: number;
   distanceKm: number;
   target: Record<string, unknown>;
@@ -103,8 +102,6 @@ export interface RelativeWorkout {
 export interface RelativeWeek {
   weekNumber: number;
   phase: string;
-  title?: string;
-  intent?: string;
   weeklyLoadTarget?: number;
   workouts: RelativeWorkout[];
 }

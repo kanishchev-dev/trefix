@@ -12,9 +12,6 @@ import {
   addDays,
   cyclicDistance,
   formatDate,
-  getWeekIntent,
-  getWeekTitle,
-  getWorkoutTitle,
   resolvePhase,
   resolveWeekdayDate,
   resolveWeekdayIndex,
@@ -71,7 +68,6 @@ export function extractFinalVersion(
           orderInWeek: index + 1,
           type: workout.type as WorkoutView['type'],
           phase: workout.phase,
-          title: getWorkoutTitle(workout.type as WorkoutView['type']),
           durationMinutes: workout.durationMinutes,
           distanceKm: workout.distanceKm,
           target: workout.target,
@@ -82,8 +78,6 @@ export function extractFinalVersion(
       return {
         weekNumber,
         phase,
-        title: getWeekTitle(phase, weekNumber),
-        intent: getWeekIntent(phase, weekNumber),
         workouts: weekWorkouts,
       };
     });
@@ -152,8 +146,6 @@ export function materializeWeeks(
     weekNumber: week.weekNumber,
     phase: week.phase,
     weeklyLoadTarget: week.weeklyLoadTarget ?? 0,
-    title: week.title ?? getWeekTitle(week.phase, week.weekNumber),
-    intent: week.intent ?? getWeekIntent(week.phase, week.weekNumber),
     workoutIds: materialized.filter((workout) => workout.weekNumber === week.weekNumber).map((workout) => workout.key),
   }));
 

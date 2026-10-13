@@ -41,7 +41,6 @@ import { toManualPreview } from './plan-presentation';
 import { PlanQueryService } from './plan-query.service';
 import { PlanStartOptionsService } from './plan-start-options.service';
 import { applyRelativeOverrides, RelativeWeekOverride } from './plan-structure';
-import { resolveGoalSummaryTitle } from './plan-utils';
 
 /** How a create request wants the new plan saved. */
 interface ResolvedStart {
@@ -93,7 +92,7 @@ export class PlanGenerationService {
     const plan = await this.planLifecycle.createPlan(
       {
         athleteId: athlete.id,
-        name: dto.name ?? resolveGoalSummaryTitle(toGoalView(goal)),
+        name: dto.name ?? null,
         notes: dto.notes ?? null,
         config: this.buildPlanConfig(goal, dto.scheduleSnapshot, {
           totalWeeks: generated.weeks.length,
@@ -192,7 +191,7 @@ export class PlanGenerationService {
     const plan = await this.planLifecycle.createPlan(
       {
         athleteId: athlete.id,
-        name: dto.name ?? resolveGoalSummaryTitle(buildManualGoalView(athlete.id, dto)),
+        name: dto.name ?? null,
         notes: dto.notes ?? null,
         config: {
           goal: {

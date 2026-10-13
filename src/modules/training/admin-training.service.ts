@@ -37,7 +37,7 @@ import {
   AdminWorkoutMutationView,
   AdminWorkoutView,
 } from './interfaces/admin-calendar-views.interface';
-import { WORKOUT_STATUSES, WorkoutStatus, WorkoutType } from './training.constants';
+import { WORKOUT_STATUSES, WorkoutStatus } from './training.constants';
 
 const DEFAULT_TIMEZONE = 'UTC';
 
@@ -145,7 +145,8 @@ export class AdminTrainingService {
       orderInWeek: 1,
       durationMinutes: dto.durationMinutes ?? ADMIN_WORKOUT_DEFAULTS.durationMinutes,
       distanceKm: dto.distanceKm ?? ADMIN_WORKOUT_DEFAULTS.distanceKm,
-      target: { title: dto.title ?? this.defaultTitle(dto.type), source: ADMIN_WORKOUT_SOURCE },
+      // Without a title the clients name the workout by its type in the app language.
+      target: { ...(dto.title ? { title: dto.title } : {}), source: ADMIN_WORKOUT_SOURCE },
       steps: [],
       actual: null,
       analysis: null,
@@ -253,12 +254,6 @@ export class AdminTrainingService {
 
   private emptyStatusCounts(): Record<WorkoutStatus, number> {
     return Object.fromEntries(WORKOUT_STATUSES.map((status) => [status, 0])) as Record<WorkoutStatus, number>;
-  }
-
-  /** Same default as the self-service flow, so admin-created workouts look native in the app. */
-  private defaultTitle(type: WorkoutType): string {
-    const words = type.split('_').join(' ');
-    return `${words.charAt(0).toUpperCase()}${words.slice(1)} Run`;
   }
 
   private readTitle(workout: Workout): string | null {

@@ -8,19 +8,17 @@ import type { GoalView } from '../interfaces/training-views.interface';
 import type { PlanListGroup, TrainingPlanStatus } from '../training.constants';
 import { PlanEditingService } from './plan-editing.service';
 import { PlanLifecycleService } from './plan-lifecycle.service';
+import { GoalSummary, toGoalSummary } from './plan-presentation';
 import { PlanStartOptionsService } from './plan-start-options.service';
 import { ActivePlanSummary, PlanStats, PlanStatsService } from './plan-stats.service';
-import { resolveGoalSummaryTitle, todayIsoInTz } from './plan-utils';
+import { todayIsoInTz } from './plan-utils';
 
-export interface PlanGoalSummary {
-  type: string | null;
-  title: string | null;
-  targetDate: string | null;
-}
+export type PlanGoalSummary = GoalSummary;
 
 export interface PlanListItem {
   id: string;
-  name: string;
+  /** User-given name; null means the clients title the plan by its goal. */
+  name: string | null;
   status: TrainingPlanStatus;
   creationSource: string;
   goal: PlanGoalSummary;
@@ -221,11 +219,7 @@ export class PlanListService {
       name: plan.name,
       status: plan.status,
       creationSource: plan.creationSource,
-      goal: {
-        type: goalView?.type ?? null,
-        title: goalView ? resolveGoalSummaryTitle(goalView) : null,
-        targetDate: goalView?.targetDate ?? null,
-      },
+      goal: toGoalSummary(goalView),
       totalWeeks: plan.weeks.length,
       sessionsPerWeek: (plan.config?.structure as { sessionsPerWeek?: number } | undefined)?.sessionsPerWeek ?? null,
       startDate: plan.startDate,

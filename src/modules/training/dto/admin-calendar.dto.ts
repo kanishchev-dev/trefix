@@ -108,7 +108,7 @@ export class AdminWorkoutCreateDto {
 
   @ApiPropertyOptional({
     maxLength: ADMIN_WORKOUT_FIELD_RANGES.titleMaxLength,
-    description: 'Title shown in the athlete calendar; derived from the type when omitted',
+    description: 'Title shown in the athlete calendar; without it the apps name the workout by its type',
   })
   @IsOptional()
   @Transform(trimString)

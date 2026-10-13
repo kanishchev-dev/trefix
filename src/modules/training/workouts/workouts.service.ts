@@ -150,9 +150,11 @@ export class WorkoutsService {
           orderInWeek: 1,
           durationMinutes,
           distanceKm,
+          // No generated title or description: clients name the workout by its
+          // type in the app language; only text provided by the caller is kept.
           target: {
-            title: dto.title || `${workoutType.charAt(0).toUpperCase() + workoutType.slice(1)} Run`,
-            description: dto.description || `${distanceKm} km at target pace`,
+            ...(dto.title ? { title: dto.title } : {}),
+            ...(dto.description ? { description: dto.description } : {}),
             source,
           },
           steps: [],

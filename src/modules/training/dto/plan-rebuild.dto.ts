@@ -88,7 +88,10 @@ export class RebuildRequestDto extends RebuildPreviewRequestDto {
   @IsOptional()
   expectedVersion?: number;
 
-  @ApiPropertyOptional({ maxLength: PLAN_NAME_MAX_LENGTH, description: 'Defaults to "<source name> <year>"' })
+  @ApiPropertyOptional({
+    maxLength: PLAN_NAME_MAX_LENGTH,
+    description: 'Defaults to "<source name> <year>" when the source plan has a name',
+  })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()

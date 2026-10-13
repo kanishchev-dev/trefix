@@ -5,90 +5,51 @@ import { PlanBuildResult } from '../training.engine';
 import { mondayIndex } from './plan-utils';
 
 /*
- * Texts and shapes of plan screens: week titles, intents, the manual plan
- * preview. Pure functions over engine output; no persistence.
+ * Shapes of plan screens: the goal summary and the manual plan preview.
+ * No user-facing text: clients translate types, phases and goal targets.
+ * Pure functions over engine output; no persistence.
  */
 
-const WEEK_TITLES: Readonly<Record<string, string>> = {
-  base: 'Building consistency',
-  build: 'Increasing training load',
-  specific: 'Race-specific work',
-  peak: 'Peak preparation',
-  taper: 'Reducing load',
-  race: 'Race week',
-  recovery: 'Volume recovery',
-};
-
-const WEEK_INTENTS: Readonly<Record<string, string>> = {
-  base: 'Establish steady running routine and comfortable easy effort aerobic base.',
-  build: 'Build aerobic strength while maintaining recovery between quality sessions.',
-  specific: 'Develop target race pace efficiency and rhythm.',
-  peak: 'Execute final key race simulation session before reducing volume.',
-  taper: 'Shed residual fatigue while preserving neural sharpness.',
-  race: 'Rest, hydrate, carb load and execute your goal race.',
-  recovery: 'Allow body to adapt to previous load while maintaining frequency.',
-};
-const DEFAULT_WEEK_INTENT = 'Focus on consistent training and proper recovery.';
-
-const ADAPTATION_TITLES: Readonly<Record<string, string>> = {
-  ADD_RECOVERY: 'Recovery added',
-  REDUCE_INTENSITY: 'Intensity reduced',
-  REDUCE_VOLUME: 'Volume reduced',
-  MOVE: 'Workout moved',
-  REPLACE: 'Workout replaced',
-  REGENERATE_PLAN: 'Plan adjusted',
-};
-const DEFAULT_ADAPTATION_TITLE = 'Plan adaptation';
-
-export function weekTitle(phase: string, weekNumber: number): string {
-  return WEEK_TITLES[phase.toLowerCase()] ?? `Week ${weekNumber} focus`;
-}
-
-export function weekIntent(phase: string): string {
-  return WEEK_INTENTS[phase.toLowerCase()] ?? DEFAULT_WEEK_INTENT;
-}
-
-export function adaptationTitle(type: string): string {
-  return ADAPTATION_TITLES[type] ?? DEFAULT_ADAPTATION_TITLE;
+/** Numeric goal target the clients format in the app language. */
+export interface GoalTargetSummary {
+  distanceMeters: number | null;
+  finishTimeSec: number | null;
+  runsPerWeek: number | null;
+  weightKg: number | null;
 }
 
 /**
- * Goal summary of the plan overview. Universal goals must not assume a race:
- * the summary follows the goal type, custom goals keep the user's text.
+ * Goal as plan screens show it. Only codes and numbers: the clients build the
+ * text in the app language; `description` is the user's own text of a custom goal.
  */
-export function overviewGoalTitle(goal: GoalView | AthleteGoal): string {
-  if (goal.type === 'custom' && goal.payload?.description) {
-    return goal.payload.description;
-  }
+export interface GoalSummary {
+  type: string | null;
+  target: GoalTargetSummary | null;
+  description: string | null;
+  targetDate: string | null;
+}
 
-  const target = goal.payload?.target ?? {};
-  const formatTime = (secs: number): string => {
-    const mins = Math.floor(secs / 60);
-    const s = Math.abs(Math.round(secs % 60));
-    return `${mins}:${String(s).padStart(2, '0')}`;
+const numberOrNull = (value: unknown): number | null => (typeof value === 'number' ? value : null);
+
+export function toGoalSummary(goal: GoalView | AthleteGoal | null | undefined): GoalSummary {
+  if (!goal) {
+    return { type: null, target: null, description: null, targetDate: null };
+  }
+  const target = (goal.payload?.target ?? {}) as Record<string, unknown>;
+  const summary: GoalTargetSummary = {
+    distanceMeters: numberOrNull(target.distanceMeters),
+    finishTimeSec: numberOrNull(target.finishTimeSec),
+    runsPerWeek: numberOrNull(target.runsPerWeek),
+    weightKg: numberOrNull(target.weightKg),
   };
-
-  const distanceMeters = typeof target.distanceMeters === 'number' ? target.distanceMeters : null;
-  const finishTimeSec = typeof target.finishTimeSec === 'number' ? target.finishTimeSec : null;
-  if (distanceMeters) {
-    const distanceKm = Math.round(distanceMeters / 100) / 10;
-    return finishTimeSec ? `${distanceKm} km · ${formatTime(finishTimeSec)}` : `${distanceKm} km goal`;
-  }
-
-  const runsPerWeek = typeof target.runsPerWeek === 'number' ? target.runsPerWeek : null;
-  if (runsPerWeek) {
-    return `${runsPerWeek} runs/week`;
-  }
-
-  const weightKg = typeof target.weightKg === 'number' ? target.weightKg : null;
-  if (weightKg) {
-    return `${weightKg} kg goal`;
-  }
-
-  return goal.type
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+  const hasTarget = Object.values(summary).some((value) => value !== null);
+  const description = goal.payload?.description;
+  return {
+    type: goal.type,
+    target: hasTarget ? summary : null,
+    description: typeof description === 'string' && description.length > 0 ? description : null,
+    targetDate: goal.targetDate ?? null,
+  };
 }
 
 /** Engine build result as the manual plan preview; workout ids are `{week}-{order}`. */
@@ -101,7 +62,6 @@ export function toManualPreview(generatedPlan: PlanBuildResult): ManualPlanPrevi
     return {
       weekNumber,
       phase: phase.toUpperCase(),
-      title: weekTitle(phase, weekNumber),
       plannedWorkoutsCount: weekWorkouts.length,
       plannedDistance: Math.round(weekWorkouts.reduce((sum, workout) => sum + workout.distanceKm, 0)),
       plannedLoad: Math.round(Number(week.weeklyLoadTarget || 0)),

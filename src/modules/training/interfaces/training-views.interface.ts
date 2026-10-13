@@ -132,7 +132,7 @@ export interface TrainingPlanView {
   id: string;
   athleteId: string;
   goalId: string | null;
-  name: string;
+  name: string | null;
   notes: string | null;
   version: number;
   /** Drafts have no dates. */

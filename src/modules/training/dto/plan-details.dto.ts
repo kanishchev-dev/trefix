@@ -10,8 +10,12 @@ export class PlanDetailsDto implements PlanDetails {
   @ApiProperty()
   id!: string;
 
-  @ApiProperty()
-  name!: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'User-given name; null means the app titles the plan by its goal',
+  })
+  name!: string | null;
 
   @ApiProperty({ enum: TRAINING_PLAN_STATUSES })
   status!: TrainingPlanStatus;

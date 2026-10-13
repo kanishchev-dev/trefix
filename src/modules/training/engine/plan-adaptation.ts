@@ -68,7 +68,7 @@ export function adaptPlan(
 
   if (action === 'KEEP') {
     changes.push({
-      note: 'No plan changes were necessary.',
+      noChanges: true,
     });
   }
 

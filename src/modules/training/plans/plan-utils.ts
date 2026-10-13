@@ -1,6 +1,5 @@
 import { DomainBadRequestException } from '@/common/exceptions/domain-exceptions';
 
-import type { GoalView } from '../interfaces/training-views.interface';
 import { PLAN_START_MAX_DAYS_AHEAD } from '../training.constants';
 
 /** Extracts the local calendar date (YYYY-MM-DD) for an instant and timezone. */
@@ -68,46 +67,6 @@ export function ensureGoalTargetDateAllowed(startDate: string, goalTargetDate: s
   if (goalTargetDate < startDate) {
     throw new DomainBadRequestException('PLAN_START_DATE_INVALID', 'Goal target date cannot be before the start date');
   }
-}
-
-/** Human-readable goal summary used as the default plan name. */
-export function resolveGoalSummaryTitle(goal: GoalView | null | undefined): string {
-  if (!goal) {
-    return 'Training Plan';
-  }
-
-  if (goal.type === 'custom' && goal.payload?.description) {
-    return goal.payload.description;
-  }
-
-  const target = goal.payload?.target ?? {};
-  const formatTime = (secs: number): string => {
-    const mins = Math.floor(secs / 60);
-    const s = Math.abs(Math.round(secs % 60));
-    return `${mins}:${String(s).padStart(2, '0')}`;
-  };
-
-  const distanceMeters = typeof target.distanceMeters === 'number' ? target.distanceMeters : null;
-  const finishTimeSec = typeof target.finishTimeSec === 'number' ? target.finishTimeSec : null;
-  if (distanceMeters) {
-    const distanceKm = Math.round(distanceMeters / 100) / 10;
-    return finishTimeSec ? `${distanceKm} km · ${formatTime(finishTimeSec)}` : `${distanceKm} km goal`;
-  }
-
-  const runsPerWeek = typeof target.runsPerWeek === 'number' ? target.runsPerWeek : null;
-  if (runsPerWeek) {
-    return `${runsPerWeek} runs/week`;
-  }
-
-  const weightKg = typeof target.weightKg === 'number' ? target.weightKg : null;
-  if (weightKg) {
-    return `${weightKg} kg goal`;
-  }
-
-  return goal.type
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
 }
 
 /** Monday-first weekday index of a Date. */

@@ -155,7 +155,7 @@ describe('AdminTrainingService', () => {
           status: 'planned',
           durationMinutes: 30,
           distanceKm: 5,
-          target: { title: 'Long run Run', source: 'admin' },
+          target: { source: 'admin' },
           sourceProvider: 'admin',
           completedAt: null,
         }),

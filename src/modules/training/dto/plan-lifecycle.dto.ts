@@ -22,6 +22,7 @@ import {
 import { PaginationDto } from '@/common/dto/pagination.dto';
 
 import type { PlanGoalSummary, PlanListItem } from '../plans/plan-list.service';
+import type { GoalTargetSummary } from '../plans/plan-presentation';
 import type { PlanStats } from '../plans/plan-stats.service';
 import {
   MANUAL_PLAN_MAX_DISTANCE_KM,
@@ -56,12 +57,30 @@ export class PlanListQueryDto extends PaginationDto {
   limit?: number = 20;
 }
 
+export class GoalTargetSummaryDto implements GoalTargetSummary {
+  @ApiProperty({ type: Number, nullable: true })
+  distanceMeters!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  finishTimeSec!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  runsPerWeek!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  weightKg!: number | null;
+}
+
+/** Goal as codes and numbers; the apps build its title in the app language. */
 export class PlanGoalSummaryDto implements PlanGoalSummary {
-  @ApiProperty({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true, description: 'Goal type code' })
   type!: string | null;
 
-  @ApiProperty({ type: String, nullable: true })
-  title!: string | null;
+  @ApiProperty({ type: GoalTargetSummaryDto, nullable: true })
+  target!: GoalTargetSummaryDto | null;
+
+  @ApiProperty({ type: String, nullable: true, description: "User's own text of a custom goal" })
+  description!: string | null;
 
   @ApiProperty({ type: String, nullable: true })
   targetDate!: string | null;
@@ -85,8 +104,12 @@ export class PlanListItemDto implements PlanListItem {
   @ApiProperty()
   id!: string;
 
-  @ApiProperty()
-  name!: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'User-given name; null means the app titles the plan by its goal',
+  })
+  name!: string | null;
 
   @ApiProperty({ enum: TRAINING_PLAN_STATUSES })
   status!: TrainingPlanStatus;
@@ -470,8 +493,12 @@ export class ActivePlanSummaryDto {
   @ApiProperty()
   id!: string;
 
-  @ApiProperty()
-  name!: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'User-given name; null means the app titles the plan by its goal',
+  })
+  name!: string | null;
 
   @ApiProperty({ type: String, nullable: true })
   startDate!: string | null;
@@ -544,8 +571,12 @@ export class PlanMetaResponseDto {
   @ApiProperty()
   id!: string;
 
-  @ApiProperty()
-  name!: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'User-given name; null means the app titles the plan by its goal',
+  })
+  name!: string | null;
 
   @ApiProperty({ type: String, nullable: true })
   notes!: string | null;

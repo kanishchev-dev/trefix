@@ -46,8 +46,6 @@ export abstract class PlanChangeSupport {
         ? {
             ...week,
             phase: String(meta.phase ?? week.phase),
-            title: (meta.title as string | undefined) ?? week.title,
-            intent: (meta.intent as string | undefined) ?? week.intent,
             weeklyLoadTarget: Number(meta.weeklyLoadTarget ?? 0),
           }
         : week;

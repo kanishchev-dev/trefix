@@ -227,7 +227,7 @@ export class PlanRebuildService {
     return this.lifecycleService.createPlan(
       {
         athleteId: source.athleteId,
-        name: input.name ?? `${source.name} ${startYear}`,
+        name: input.name ?? (source.name ? `${source.name} ${startYear}` : null),
         notes: input.notes ?? null,
         config,
         creationSource: source.creationSource,

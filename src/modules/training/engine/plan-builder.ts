@@ -16,15 +16,7 @@ import {
   TrainingStateComputation,
   WorkoutBuildResult,
 } from './engine.types';
-import {
-  addDays,
-  formatDate,
-  getWeekIntent,
-  getWeekTitle,
-  getWorkoutTitle,
-  resolvePhase,
-  resolveWeekdayIndex,
-} from './engine-utils';
+import { addDays, formatDate, resolvePhase, resolveWeekdayIndex } from './engine-utils';
 import { buildWorkout } from './workout-prescription';
 
 /*
@@ -274,7 +266,6 @@ export function toRelativeWeeks(generated: PlanBuildResult): RelativeWeek[] {
         orderInWeek: workout.orderInWeek,
         type: workout.type,
         phase: workout.phase,
-        title: getWorkoutTitle(workout.type),
         durationMinutes: workout.durationMinutes,
         distanceKm: workout.distanceKm,
         target: workout.target,
@@ -286,8 +277,6 @@ export function toRelativeWeeks(generated: PlanBuildResult): RelativeWeek[] {
       weekNumber,
       phase,
       weeklyLoadTarget: Number(week.weeklyLoadTarget ?? 0),
-      title: getWeekTitle(phase, weekNumber),
-      intent: getWeekIntent(phase, weekNumber),
       workouts: weekWorkouts,
     };
   });

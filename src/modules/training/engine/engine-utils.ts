@@ -71,40 +71,6 @@ export function renumberWeeks(weeks: RelativeWeek[]): RelativeWeek[] {
   return weeks.map((week, index) => ({ ...week, weekNumber: index + 1 }));
 }
 
-export function getWeekTitle(phase: string, weekNumber: number): string {
-  const p = phase.toLowerCase();
-  if (p === 'base') return 'Building consistency';
-  if (p === 'build') return 'Increasing training load';
-  if (p === 'specific') return 'Race-specific work';
-  if (p === 'peak') return 'Peak preparation';
-  if (p === 'taper') return 'Reducing load';
-  if (p === 'race') return 'Race week';
-  if (p === 'recovery') return 'Volume recovery';
-  return `Week ${weekNumber} focus`;
-}
-
-// The optional week number keeps the signature aligned with getWeekTitle;
-// intents today depend on the phase only.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function getWeekIntent(phase: string, _weekNumber?: number): string {
-  const p = phase.toLowerCase();
-  if (p === 'base') return 'Establish steady running routine and comfortable easy effort aerobic base.';
-  if (p === 'build') return 'Build aerobic strength while maintaining recovery between quality sessions.';
-  if (p === 'specific') return 'Develop target race pace efficiency and rhythm.';
-  if (p === 'peak') return 'Execute final key race simulation session before reducing volume.';
-  if (p === 'taper') return 'Shed residual fatigue while preserving neural sharpness.';
-  if (p === 'race') return 'Rest, hydrate, carb load and execute your goal race.';
-  if (p === 'recovery') return 'Allow body to adapt to previous load while maintaining frequency.';
-  return 'Focus on consistent training and proper recovery.';
-}
-
-export function getWorkoutTitle(type: WorkoutView['type']): string {
-  return type
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
 export function toUtcMidnight(date: Date): Date {
   if (!Number.isNaN(date.getUTCFullYear())) {
     return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));

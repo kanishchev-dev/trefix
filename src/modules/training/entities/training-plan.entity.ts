@@ -89,12 +89,12 @@ export class TrainingPlan extends Model {
   })
   endDate!: string | null;
 
-  /** Display name, defaults to the goal summary title. */
+  /** User-given name; null means the clients title the plan by its goal in the app language. */
   @Column({
     type: DataType.STRING(80),
-    allowNull: false,
+    allowNull: true,
   })
-  name!: string;
+  name!: string | null;
 
   @Column({
     type: DataType.TEXT,

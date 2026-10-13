@@ -13,7 +13,7 @@ import { ADAPTATION_TYPE_USER_EDIT } from '../training.constants';
 import { toAdaptationEventView, toPlanView } from '../training.mappers';
 import { TrainingLookupService } from '../training-lookup.service';
 import { PlanLifecycleService } from './plan-lifecycle.service';
-import { adaptationTitle, overviewGoalTitle, weekIntent, weekTitle } from './plan-presentation';
+import { toGoalSummary } from './plan-presentation';
 
 /** Days a completed plan is still shown as the current one. */
 const CURRENT_PLAN_COMPLETED_GRACE_DAYS = 14;
@@ -107,41 +107,27 @@ export class PlanQueryService {
         id: `week-${plan.id}-${weekNumber}`,
         weekNumber,
         phase: phase.toUpperCase(),
-        title: weekTitle(phase, weekNumber),
         status: this.weekStatus(weekNumber, currentWeekNumber),
         plannedWorkoutsCount: weekWorkouts.length,
         plannedDistance: Math.round(totalDistance),
         plannedLoad: Math.round(Number(week.weeklyLoadTarget ?? 0)),
-        summaryText: `${weekWorkouts.length} workouts · ${Math.round(totalDistance)} km`,
-        intent: weekIntent(phase),
         keySessions: weekWorkouts
           .filter((workout) => KEY_SESSION_TYPES.includes(workout.type))
-          .map(
-            (workout) =>
-              `${workout.type.charAt(0).toUpperCase() + workout.type.slice(1)} ${Math.round(workout.distanceKm)}km`,
-          ),
+          .map((workout) => ({ type: workout.type, distanceKm: Math.round(workout.distanceKm) })),
       };
     });
 
     const currentPhase = weeks.find((week) => week.status === 'current')?.phase || weeks[0]?.phase || 'BASE';
     const currentWeek = currentWeekNumber > 0 ? weeks[currentWeekNumber - 1] : undefined;
     const currentWeekContext: CurrentWeekContextDto | undefined = currentWeek
-      ? { title: currentWeek.title, description: currentWeek.intent, focusItems: currentWeek.keySessions }
+      ? { weekNumber: currentWeek.weekNumber, phase: currentWeek.phase, keySessions: currentWeek.keySessions }
       : undefined;
-    const goalTitle = goal ? overviewGoalTitle(goal) : undefined;
 
     return {
       plan: {
         id: plan.id,
-        name: plan.name || goalTitle || 'Training Plan',
-        goal: {
-          title: goalTitle,
-          distance: goal?.raceDistance || 'Unknown',
-          targetTime: goal?.targetTimeSeconds
-            ? `${Math.floor(goal.targetTimeSeconds / 3600)}h ${Math.floor((goal.targetTimeSeconds % 3600) / 60)}m`
-            : undefined,
-          targetDate: goal?.targetDate ?? undefined,
-        },
+        name: plan.name,
+        goal: toGoalSummary(goal),
         status: OVERVIEW_STATUS[plan.status] || 'active',
         currentWeek: currentWeekNumber,
         totalWeeks: plan.weeks.length,
@@ -158,8 +144,7 @@ export class PlanQueryService {
         id: adaptation.id,
         weekNumber: workouts.find((workout) => workout.id === adaptation.workoutId)?.weekNumber,
         type: adaptation.type,
-        title: adaptationTitle(adaptation.type),
-        description: adaptation.reason,
+        reason: adaptation.reason,
         createdAt: adaptation.createdAt.toISOString(),
       })),
     };

@@ -75,7 +75,7 @@ export class PlanLifecycleService {
         {
           athleteId: input.athleteId,
           goalId: null,
-          name: input.name.trim().slice(0, 80),
+          name: input.name?.trim().slice(0, 80) || null,
           notes: input.notes ?? null,
           status: 'draft',
           config: input.config,

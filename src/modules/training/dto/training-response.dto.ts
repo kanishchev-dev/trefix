@@ -331,8 +331,12 @@ export class TrainingPlanResponseDto implements TrainingPlanView {
   @ApiProperty({ type: String, nullable: true })
   goalId!: string | null;
 
-  @ApiProperty()
-  name!: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'User-given name; null means the app titles the plan by its goal',
+  })
+  name!: string | null;
 
   @ApiProperty({ type: String, nullable: true })
   notes!: string | null;

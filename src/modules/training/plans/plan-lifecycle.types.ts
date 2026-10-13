@@ -21,7 +21,8 @@ export interface PlanStartBehavior {
 
 export interface CreatePlanInput {
   athleteId: string;
-  name: string;
+  /** Null lets the clients title the plan by its goal. */
+  name: string | null;
   notes?: string | null;
   config: TrainingPlanConfig;
   creationSource: PlanCreationSource;

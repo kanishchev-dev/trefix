@@ -279,9 +279,6 @@ export class RelativeWorkoutDto implements RelativeWorkout {
   @ApiProperty()
   phase!: string;
 
-  @ApiPropertyOptional()
-  title?: string;
-
   @ApiProperty()
   durationMinutes!: number;
 
@@ -303,12 +300,6 @@ export class RelativeWeekDto implements RelativeWeek {
   @ApiProperty()
   phase!: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
-  title?: string;
-
-  @ApiPropertyOptional({ type: String, nullable: true })
-  intent?: string;
-
   @ApiPropertyOptional({ type: Number, nullable: true })
   weeklyLoadTarget?: number;
 
@@ -323,12 +314,6 @@ export class PlanDetailsWeekDto {
 
   @ApiProperty()
   phase!: string;
-
-  @ApiPropertyOptional({ type: String, nullable: true })
-  title?: string | null;
-
-  @ApiPropertyOptional({ type: String, nullable: true })
-  intent?: string | null;
 
   @ApiPropertyOptional({ type: Number, nullable: true })
   weeklyLoadTarget?: number | null;
