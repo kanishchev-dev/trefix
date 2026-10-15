@@ -76,7 +76,11 @@ export function goBack(): void {
 
 /** Closes every pushed screen and shows the tabs. */
 export function popToTabs(): void {
-  if (mainNavigationRef.isReady() && mainNavigationRef.canGoBack()) {
+  // `canGoBack` also counts the tab history, so check the root stack itself.
+  if (
+    mainNavigationRef.isReady() &&
+    (mainNavigationRef.getRootState()?.routes.length ?? 0) > 1
+  ) {
     mainNavigationRef.dispatch(StackActions.popToTop());
   }
 }

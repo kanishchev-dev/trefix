@@ -4967,6 +4967,45 @@
         ]
       }
     },
+    "/v1/progress/summary": {
+      "get": {
+        "description": "Local days, weeks (Monday first) and months are resolved in `timezone`.",
+        "operationId": "ProgressController_summary_v1",
+        "parameters": [
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone used for local days, weeks and months; UTC when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressSummaryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "History on facts: totals by week, month, year and all time, comparisons, plan completion, trends",
+        "tags": [
+          "Progress"
+        ]
+      }
+    },
     "/v1/progress/overview": {
       "get": {
         "operationId": "ProgressController_overview_v1",
@@ -13392,6 +13431,758 @@
         "required": [
           "workoutId",
           "gearId"
+        ]
+      },
+      "SummaryWorkoutDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null for a missed plan workout"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-10-15",
+            "description": "Local calendar day"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "recovery",
+              "easy",
+              "long_run",
+              "tempo",
+              "threshold",
+              "interval",
+              "hill",
+              "race"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "plan",
+              "free",
+              "missed"
+            ],
+            "description": "plan — done within a plan, free — outside a plan, missed"
+          },
+          "distanceKm": {
+            "type": "number",
+            "description": "Actual distance; the planned one for a missed workout"
+          },
+          "durationMin": {
+            "type": "number",
+            "nullable": true
+          },
+          "avgHeartRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "elevationM": {
+            "type": "number",
+            "nullable": true,
+            "description": "Elevation gain, metres; null when not measured"
+          },
+          "recordDistanceKm": {
+            "type": "number",
+            "nullable": true,
+            "description": "Record distance (km) this workout holds"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "type",
+          "status",
+          "distanceKm",
+          "durationMin",
+          "avgHeartRate",
+          "elevationM",
+          "recordDistanceKm"
+        ]
+      },
+      "SummaryMonthDto": {
+        "type": "object",
+        "properties": {
+          "distanceKm": {
+            "type": "number"
+          },
+          "durationMin": {
+            "type": "number"
+          },
+          "elevationM": {
+            "type": "number",
+            "nullable": true,
+            "description": "Null when no workout carries elevation"
+          },
+          "count": {
+            "type": "number"
+          },
+          "year": {
+            "type": "number"
+          },
+          "month": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 11
+          }
+        },
+        "required": [
+          "distanceKm",
+          "durationMin",
+          "elevationM",
+          "count",
+          "year",
+          "month"
+        ]
+      },
+      "SummaryYearDto": {
+        "type": "object",
+        "properties": {
+          "distanceKm": {
+            "type": "number"
+          },
+          "durationMin": {
+            "type": "number"
+          },
+          "elevationM": {
+            "type": "number",
+            "nullable": true,
+            "description": "Null when no workout carries elevation"
+          },
+          "count": {
+            "type": "number"
+          },
+          "year": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "distanceKm",
+          "durationMin",
+          "elevationM",
+          "count",
+          "year"
+        ]
+      },
+      "SummaryTotalsDto": {
+        "type": "object",
+        "properties": {
+          "distanceKm": {
+            "type": "number"
+          },
+          "durationMin": {
+            "type": "number"
+          },
+          "elevationM": {
+            "type": "number",
+            "nullable": true,
+            "description": "Null when no workout carries elevation"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "distanceKm",
+          "durationMin",
+          "elevationM",
+          "count"
+        ]
+      },
+      "SummaryComparisonDto": {
+        "type": "object",
+        "properties": {
+          "totals": {
+            "$ref": "#/components/schemas/SummaryTotalsDto"
+          },
+          "longestKm": {
+            "type": "number"
+          },
+          "avgHeartRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "avgPaceSecPerKm": {
+            "type": "number",
+            "description": "Seconds per km; 0 without timed workouts"
+          }
+        },
+        "required": [
+          "totals",
+          "longestKm",
+          "avgHeartRate",
+          "avgPaceSecPerKm"
+        ]
+      },
+      "SummaryComparisonsDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "description": "The same days of the previous week",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryComparisonDto"
+              }
+            ]
+          },
+          "month": {
+            "description": "The same days of the previous month",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryComparisonDto"
+              }
+            ]
+          },
+          "year": {
+            "description": "The previous year up to the same date",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryComparisonDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "week",
+          "month",
+          "year"
+        ]
+      },
+      "SummaryLongestRunDto": {
+        "type": "object",
+        "properties": {
+          "distanceKm": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "previousKm": {
+            "type": "number",
+            "nullable": true,
+            "description": "Longest run before this year"
+          }
+        },
+        "required": [
+          "distanceKm",
+          "date",
+          "previousKm"
+        ]
+      },
+      "SummaryGoalBestDto": {
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "seconds",
+          "date"
+        ]
+      },
+      "SummaryGoalDto": {
+        "type": "object",
+        "properties": {
+          "distanceKm": {
+            "type": "number"
+          },
+          "targetSec": {
+            "type": "number"
+          },
+          "raceDate": {
+            "type": "string"
+          },
+          "best": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryGoalBestDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "distanceKm",
+          "targetSec",
+          "raceDate",
+          "best"
+        ]
+      },
+      "SummaryPlanExecutionDto": {
+        "type": "object",
+        "properties": {
+          "done": {
+            "type": "number"
+          },
+          "due": {
+            "type": "number",
+            "description": "Plan workouts whose day has passed or that are already done"
+          },
+          "upcoming": {
+            "type": "number"
+          },
+          "plannedKm": {
+            "type": "number"
+          },
+          "actualKm": {
+            "type": "number"
+          },
+          "offPlanKm": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "done",
+          "due",
+          "upcoming",
+          "plannedKm",
+          "actualKm",
+          "offPlanKm"
+        ]
+      },
+      "SummaryPlanExecutionScopesDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "$ref": "#/components/schemas/SummaryPlanExecutionDto"
+          },
+          "month": {
+            "$ref": "#/components/schemas/SummaryPlanExecutionDto"
+          },
+          "sinceStart": {
+            "$ref": "#/components/schemas/SummaryPlanExecutionDto"
+          }
+        },
+        "required": [
+          "week",
+          "month",
+          "sinceStart"
+        ]
+      },
+      "SummaryPlanDto": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string"
+          },
+          "currentWeek": {
+            "type": "number"
+          },
+          "totalWeeks": {
+            "type": "number"
+          },
+          "execution": {
+            "$ref": "#/components/schemas/SummaryPlanExecutionScopesDto"
+          }
+        },
+        "required": [
+          "startDate",
+          "currentWeek",
+          "totalWeeks",
+          "execution"
+        ]
+      },
+      "SummaryFormPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "seconds"
+        ]
+      },
+      "SummaryFormDto": {
+        "type": "object",
+        "properties": {
+          "5": {
+            "description": "5 km races and time trials, oldest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryFormPointDto"
+            }
+          },
+          "10": {
+            "description": "10 km races and time trials, oldest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryFormPointDto"
+            }
+          }
+        },
+        "required": [
+          "5",
+          "10"
+        ]
+      },
+      "SummaryPacePointDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 11
+          },
+          "secPerKm": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "month",
+          "secPerKm"
+        ]
+      },
+      "SummaryPaceDto": {
+        "type": "object",
+        "properties": {
+          "easy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryPacePointDto"
+            }
+          },
+          "tempo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryPacePointDto"
+            }
+          },
+          "interval": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryPacePointDto"
+            }
+          }
+        },
+        "required": [
+          "easy",
+          "tempo",
+          "interval"
+        ]
+      },
+      "SummaryWeekKmDto": {
+        "type": "object",
+        "properties": {
+          "weekStart": {
+            "type": "string"
+          },
+          "km": {
+            "type": "number"
+          },
+          "partial": {
+            "type": "boolean",
+            "description": "The current, unfinished week"
+          }
+        },
+        "required": [
+          "weekStart",
+          "km",
+          "partial"
+        ]
+      },
+      "SummaryRegularityWeekDto": {
+        "type": "object",
+        "properties": {
+          "weekStart": {
+            "type": "string"
+          },
+          "days": {
+            "type": "array",
+            "description": "Monday first",
+            "items": {
+              "type": "string",
+              "enum": [
+                "run",
+                "rest",
+                "missed",
+                "future"
+              ]
+            }
+          }
+        },
+        "required": [
+          "weekStart",
+          "days"
+        ]
+      },
+      "SummaryPlannedTargetDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "distance",
+              "pace"
+            ]
+          },
+          "km": {
+            "type": "number"
+          },
+          "fromSec": {
+            "type": "number",
+            "description": "Fastest pace of the range, sec/km"
+          },
+          "toSec": {
+            "type": "number",
+            "description": "Slowest pace of the range, sec/km"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "SummaryActualValueDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "distance",
+              "pace"
+            ]
+          },
+          "km": {
+            "type": "number"
+          },
+          "sec": {
+            "type": "number",
+            "description": "Actual pace, sec/km"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "SummaryPlanKeyWorkoutDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "recovery",
+              "easy",
+              "long_run",
+              "tempo",
+              "threshold",
+              "interval",
+              "hill",
+              "race"
+            ]
+          },
+          "date": {
+            "type": "string"
+          },
+          "planned": {
+            "$ref": "#/components/schemas/SummaryPlannedTargetDto"
+          },
+          "actual": {
+            "nullable": true,
+            "description": "Null for a missed workout",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryActualValueDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "date",
+          "planned",
+          "actual"
+        ]
+      },
+      "SummaryInsightDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "easy_pace_faster",
+              "volume_steady"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Values for the text"
+          },
+          "usesHeartRate": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "params",
+          "usesHeartRate"
+        ]
+      },
+      "SummaryAnalyticsDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "False until there are enough recent workouts"
+          },
+          "form": {
+            "$ref": "#/components/schemas/SummaryFormDto"
+          },
+          "pace": {
+            "description": "Average pace by month for each workout type group",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryPaceDto"
+              }
+            ]
+          },
+          "heartRateZones": {
+            "nullable": true,
+            "description": "Share of time in Z1–Z5 this month, percent; by the average HR of each workout",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "avgHeartRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "weeklyKm": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryWeekKmDto"
+            }
+          },
+          "regularity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryRegularityWeekDto"
+            }
+          },
+          "planKeyWorkouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryPlanKeyWorkoutDto"
+            }
+          },
+          "insights": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryInsightDto"
+            }
+          }
+        },
+        "required": [
+          "available",
+          "form",
+          "pace",
+          "heartRateZones",
+          "avgHeartRate",
+          "weeklyKm",
+          "regularity",
+          "planKeyWorkouts",
+          "insights"
+        ]
+      },
+      "ProgressSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "description": "Today in the requested timezone"
+          },
+          "workouts": {
+            "description": "From the start of this month or week, newest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryWorkoutDto"
+            }
+          },
+          "months": {
+            "description": "Months of this year before the current one",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryMonthDto"
+            }
+          },
+          "years": {
+            "description": "Years before the current one",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SummaryYearDto"
+            }
+          },
+          "firstWorkoutDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/SummaryComparisonsDto"
+          },
+          "longestRun": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryLongestRunDto"
+              }
+            ]
+          },
+          "recordsThisYear": {
+            "type": "number"
+          },
+          "goal": {
+            "nullable": true,
+            "description": "Race goal of the active plan",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryGoalDto"
+              }
+            ]
+          },
+          "plan": {
+            "nullable": true,
+            "description": "The active plan",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SummaryPlanDto"
+              }
+            ]
+          },
+          "analytics": {
+            "$ref": "#/components/schemas/SummaryAnalyticsDto"
+          }
+        },
+        "required": [
+          "asOf",
+          "workouts",
+          "months",
+          "years",
+          "firstWorkoutDate",
+          "comparison",
+          "longestRun",
+          "recordsThisYear",
+          "goal",
+          "plan",
+          "analytics"
         ]
       },
       "ProgressPeriodDto": {

@@ -2,12 +2,14 @@ import {
   progressMetricSchema,
   progressOverviewSchema,
   progressRecordsSchema,
+  progressSummarySchema,
   raceResultInputSchema,
   recordHistorySchema,
   type ProgressMetricDetail,
   type ProgressOverview,
   type ProgressPeriodKey,
   type ProgressRecord,
+  type ProgressSummary,
   type RaceResultInput,
   type RecordDistance,
   type RecordHistory,
@@ -22,6 +24,17 @@ export async function getProgressOverview(
     { useAuth: true },
   );
   return progressOverviewSchema.parse(response);
+}
+
+/** History on facts for the Progress tab; days and months are local to `timezone`. */
+export async function getProgressSummary(
+  timezone?: string,
+): Promise<ProgressSummary> {
+  const query = timezone ? `?timezone=${encodeURIComponent(timezone)}` : "";
+  const response = await request<unknown>(`/progress/summary${query}`, {
+    useAuth: true,
+  });
+  return progressSummarySchema.parse(response);
 }
 
 export async function getProgressMetric(

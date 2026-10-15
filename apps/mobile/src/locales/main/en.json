@@ -1954,5 +1954,236 @@
     "completeWorkoutFailed": "Could not complete the workout.",
     "photoPermissionTitle": "No access to photos",
     "photoPermission": "Allow access to photos to change your avatar."
+  },
+  "progressOverview": {
+    "tabs": {
+      "overview": "Overview",
+      "analytics": "Analytics"
+    },
+    "records": "Records",
+    "periods": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "all": "All"
+    },
+    "metrics": {
+      "distance": "Distance",
+      "time": "Time",
+      "elevation": "Elevation"
+    },
+    "monthsIn": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "headline": {
+      "week": {
+        "one": "{{count}} workout this week",
+        "other": "{{count}} workouts this week"
+      },
+      "month": {
+        "one": "{{count}} workout in {{month}}",
+        "other": "{{count}} workouts in {{month}}"
+      },
+      "year": {
+        "one": "{{count}} workout in {{year}}",
+        "other": "{{count}} workouts in {{year}}"
+      },
+      "all": {
+        "one": "{{count}} workout in total",
+        "other": "{{count}} workouts in total"
+      }
+    },
+    "compare": {
+      "distance": {
+        "more": "You ran {{value}} more than {{scope}}",
+        "less": "You ran {{value}} less than {{scope}}"
+      },
+      "time": {
+        "more": "You ran {{value}} longer than {{scope}}",
+        "less": "You ran {{value}} less than {{scope}}"
+      },
+      "elevation": {
+        "more": "You climbed {{value}} more than {{scope}}",
+        "less": "You climbed {{value}} less than {{scope}}"
+      },
+      "scope": {
+        "week": "on the same days last week",
+        "month": "on {{range}}",
+        "year": "by this time in {{year}}"
+      },
+      "since": "All workouts since {{date}}",
+      "unavailable": "No comparison available"
+    },
+    "chart": {
+      "future": "ahead",
+      "noWorkouts": "no workouts",
+      "noElevationTitle": "No elevation data",
+      "noElevationText": "Workouts were recorded without elevation — that's missing data, not zero"
+    },
+    "goal": {
+      "kicker": "Goal",
+      "title": "{{distance}} in {{time}}",
+      "race": {
+        "one": "Race on {{date}} · in {{count}} day",
+        "other": "Race on {{date}} · in {{count}} days"
+      },
+      "best": "Best result",
+      "bestNone": "None yet",
+      "bestNoneHint": "Needs a race or a time trial",
+      "target": "Goal",
+      "remaining": "{{value}} to go",
+      "achieved": "goal reached",
+      "program": "Programme",
+      "programWeek": "Week {{current}} of {{total}}",
+      "programNote": "Programme progress is not a result forecast"
+    },
+    "highlights": {
+      "title": {
+        "week": "This week's highlight",
+        "month": "Highlight of {{month}}",
+        "year": "Highlight of {{year}}",
+        "all": "All-time highlight"
+      },
+      "paceFaster": "Average pace is {{value}} faster",
+      "paceSlower": "Average pace is {{value}} slower",
+      "volumeMore": "Volume is up by {{value}}",
+      "volumeLess": "Volume is down by {{value}}",
+      "volumeTotal": "That's how far you've run since {{year}}",
+      "longest": "Longest run",
+      "heartRate": "Average HR",
+      "record": "{{distance}} record",
+      "records": "Records",
+      "recordsSub": "this year",
+      "was": "was {{value}}",
+      "seconds": {
+        "one": "{{count}} second",
+        "other": "{{count}} seconds"
+      }
+    },
+    "plan": {
+      "title": "Plan completion",
+      "scope": {
+        "week": "this week",
+        "month": "{{range}}",
+        "sinceStart": "since the plan start, {{date}}"
+      },
+      "workouts": "workouts",
+      "nothingDue": "No past workouts yet",
+      "distance": "Distance",
+      "kmValue": "{{actual}} of {{planned}}",
+      "upcoming": {
+        "one": "{{count}} more workout ahead",
+        "other": "{{count}} more workouts ahead"
+      },
+      "missed": {
+        "one": "{{count}} missed",
+        "other": "{{count}} missed"
+      },
+      "offPlan": "plus {{value}} off plan"
+    },
+    "workouts": {
+      "title": "Workouts",
+      "missed": "Missed · {{distance}} planned",
+      "offPlan": "Off plan",
+      "record": "{{distance}} record",
+      "statusPlan": "As planned",
+      "statusMissed": "Missed",
+      "types": {
+        "recovery": "Recovery run",
+        "easy": "Easy run",
+        "long_run": "Long run",
+        "tempo": "Tempo",
+        "threshold": "Threshold",
+        "interval": "Intervals",
+        "hill": "Hills",
+        "race": "Race"
+      }
+    },
+    "analytics": {
+      "demo": "Demo data",
+      "form": {
+        "title": "Running form",
+        "hint": "time trials and races",
+        "faster": "{{value}} faster since {{date}}",
+        "slower": "{{value}} slower than on {{date}}",
+        "note": "Only time trials and races on the same distance are compared. No VO₂max without a valid method",
+        "empty": "No time trials on this distance yet"
+      },
+      "pace": {
+        "title": "Pace and speed",
+        "hint": "by workout type",
+        "types": {
+          "easy": "Easy",
+          "tempo": "Tempo",
+          "interval": "Intervals"
+        },
+        "faster": "{{type}}: {{value}} s/km faster than in {{month}}",
+        "slower": "{{type}}: {{value}} s/km slower than in {{month}}",
+        "note": "Different workout types are not compared directly. A taller bar means a faster pace"
+      },
+      "heartRate": {
+        "title": "Heart rate",
+        "avg": "bpm on average",
+        "zones": "Time in zones",
+        "note": "No medical conclusions are drawn from heart rate",
+        "noneTitle": "No heart rate data",
+        "noneText": "Workouts were recorded without heart rate. Connect a sensor or a watch and zones will appear"
+      },
+      "load": {
+        "title": "Training load",
+        "average": "{{value}} a week on average",
+        "note": "The current week isn't over — it's dashed"
+      },
+      "regularity": {
+        "title": "Consistency",
+        "hint": "last 4 weeks",
+        "perWeek": "Per week",
+        "perWeekValue": "{{value}} runs",
+        "runDays": "Run days",
+        "ofValue": "{{a}} of {{b}}",
+        "onPlan": "On plan",
+        "weeksValue": "{{a}} of {{b}} wk",
+        "legendRun": "workout",
+        "legendRest": "rest",
+        "legendMissed": "missed",
+        "note": "Rest days are part of training. Streaks without rest are not rewarded"
+      },
+      "planAnalysis": {
+        "title": "Plan analysis",
+        "kicker": "Key workouts",
+        "planned": "plan",
+        "actual": "actual",
+        "missed": "missed"
+      },
+      "insights": {
+        "title": "Coach insights",
+        "easy_pace_faster": "Easy runs got {{seconds}} s/km faster.",
+        "easy_pace_faster_hr": "Easy runs got {{seconds}} s/km faster at the same heart rate.",
+        "easy_pace_faster_basis": "Based on {{workouts}} easy workouts over 4 months",
+        "volume_steady": "Volume grows steadily: {{min}}–{{max}}% a week, no jumps.",
+        "volume_steady_basis": "Based on the last {{weeks}} weeks of distance"
+      }
+    },
+    "empty": {
+      "title": "No workouts yet",
+      "text": "Distance, time, records and plan completion will show up here",
+      "record": "Record your first workout",
+      "import": "Import history"
+    },
+    "units": {
+      "m": "m",
+      "ft": "ft"
+    }
   }
 }

@@ -45,6 +45,7 @@ export const queryKeys = {
   progress: {
     all: ["progress"] as const,
     overview: (period: string) => ["progress", "overview", period] as const,
+    summary: () => ["progress", "summary"] as const,
     metric: (metric: string, period: string) =>
       ["progress", "metric", metric, period] as const,
     records: () => ["progress", "records"] as const,

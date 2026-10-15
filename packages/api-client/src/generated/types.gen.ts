@@ -2101,6 +2101,296 @@ export type WorkoutGearAssignmentDto = {
   gearId: string | null;
 };
 
+export type SummaryWorkoutDto = {
+  /**
+   * Null for a missed plan workout
+   */
+  id: string | null;
+  /**
+   * Local calendar day
+   */
+  date: string;
+  type:
+    | "recovery"
+    | "easy"
+    | "long_run"
+    | "tempo"
+    | "threshold"
+    | "interval"
+    | "hill"
+    | "race";
+  /**
+   * plan — done within a plan, free — outside a plan, missed
+   */
+  status: "plan" | "free" | "missed";
+  /**
+   * Actual distance; the planned one for a missed workout
+   */
+  distanceKm: number;
+  durationMin: number | null;
+  avgHeartRate: number | null;
+  /**
+   * Elevation gain, metres; null when not measured
+   */
+  elevationM: number | null;
+  /**
+   * Record distance (km) this workout holds
+   */
+  recordDistanceKm: number | null;
+};
+
+export type SummaryMonthDto = {
+  distanceKm: number;
+  durationMin: number;
+  /**
+   * Null when no workout carries elevation
+   */
+  elevationM: number | null;
+  count: number;
+  year: number;
+  month: number;
+};
+
+export type SummaryYearDto = {
+  distanceKm: number;
+  durationMin: number;
+  /**
+   * Null when no workout carries elevation
+   */
+  elevationM: number | null;
+  count: number;
+  year: number;
+};
+
+export type SummaryTotalsDto = {
+  distanceKm: number;
+  durationMin: number;
+  /**
+   * Null when no workout carries elevation
+   */
+  elevationM: number | null;
+  count: number;
+};
+
+export type SummaryComparisonDto = {
+  totals: SummaryTotalsDto;
+  longestKm: number;
+  avgHeartRate: number | null;
+  /**
+   * Seconds per km; 0 without timed workouts
+   */
+  avgPaceSecPerKm: number;
+};
+
+export type SummaryComparisonsDto = {
+  /**
+   * The same days of the previous week
+   */
+  week: SummaryComparisonDto;
+  /**
+   * The same days of the previous month
+   */
+  month: SummaryComparisonDto;
+  /**
+   * The previous year up to the same date
+   */
+  year: SummaryComparisonDto;
+};
+
+export type SummaryLongestRunDto = {
+  distanceKm: number;
+  date: string;
+  /**
+   * Longest run before this year
+   */
+  previousKm: number | null;
+};
+
+export type SummaryGoalBestDto = {
+  seconds: number;
+  date: string;
+};
+
+export type SummaryGoalDto = {
+  distanceKm: number;
+  targetSec: number;
+  raceDate: string;
+  best: SummaryGoalBestDto | null;
+};
+
+export type SummaryPlanExecutionDto = {
+  done: number;
+  /**
+   * Plan workouts whose day has passed or that are already done
+   */
+  due: number;
+  upcoming: number;
+  plannedKm: number;
+  actualKm: number;
+  offPlanKm: number;
+};
+
+export type SummaryPlanExecutionScopesDto = {
+  week: SummaryPlanExecutionDto;
+  month: SummaryPlanExecutionDto;
+  sinceStart: SummaryPlanExecutionDto;
+};
+
+export type SummaryPlanDto = {
+  startDate: string;
+  currentWeek: number;
+  totalWeeks: number;
+  execution: SummaryPlanExecutionScopesDto;
+};
+
+export type SummaryFormPointDto = {
+  date: string;
+  seconds: number;
+};
+
+export type SummaryFormDto = {
+  /**
+   * 5 km races and time trials, oldest first
+   */
+  5: Array<SummaryFormPointDto>;
+  /**
+   * 10 km races and time trials, oldest first
+   */
+  10: Array<SummaryFormPointDto>;
+};
+
+export type SummaryPacePointDto = {
+  month: number;
+  secPerKm: number;
+};
+
+export type SummaryPaceDto = {
+  easy: Array<SummaryPacePointDto>;
+  tempo: Array<SummaryPacePointDto>;
+  interval: Array<SummaryPacePointDto>;
+};
+
+export type SummaryWeekKmDto = {
+  weekStart: string;
+  km: number;
+  /**
+   * The current, unfinished week
+   */
+  partial: boolean;
+};
+
+export type SummaryRegularityWeekDto = {
+  weekStart: string;
+  /**
+   * Monday first
+   */
+  days: Array<"run" | "rest" | "missed" | "future">;
+};
+
+export type SummaryPlannedTargetDto = {
+  kind: "distance" | "pace";
+  km?: number;
+  /**
+   * Fastest pace of the range, sec/km
+   */
+  fromSec?: number;
+  /**
+   * Slowest pace of the range, sec/km
+   */
+  toSec?: number;
+};
+
+export type SummaryActualValueDto = {
+  kind: "distance" | "pace";
+  km?: number;
+  /**
+   * Actual pace, sec/km
+   */
+  sec?: number;
+};
+
+export type SummaryPlanKeyWorkoutDto = {
+  type:
+    | "recovery"
+    | "easy"
+    | "long_run"
+    | "tempo"
+    | "threshold"
+    | "interval"
+    | "hill"
+    | "race";
+  date: string;
+  planned: SummaryPlannedTargetDto;
+  /**
+   * Null for a missed workout
+   */
+  actual: SummaryActualValueDto | null;
+};
+
+export type SummaryInsightDto = {
+  code: "easy_pace_faster" | "volume_steady";
+  /**
+   * Values for the text
+   */
+  params: {
+    [key: string]: number;
+  };
+  usesHeartRate: boolean;
+};
+
+export type SummaryAnalyticsDto = {
+  /**
+   * False until there are enough recent workouts
+   */
+  available: boolean;
+  form: SummaryFormDto;
+  /**
+   * Average pace by month for each workout type group
+   */
+  pace: SummaryPaceDto;
+  /**
+   * Share of time in Z1–Z5 this month, percent; by the average HR of each workout
+   */
+  heartRateZones: Array<number> | null;
+  avgHeartRate: number | null;
+  weeklyKm: Array<SummaryWeekKmDto>;
+  regularity: Array<SummaryRegularityWeekDto>;
+  planKeyWorkouts: Array<SummaryPlanKeyWorkoutDto>;
+  insights: Array<SummaryInsightDto>;
+};
+
+export type ProgressSummaryResponseDto = {
+  /**
+   * Today in the requested timezone
+   */
+  asOf: string;
+  /**
+   * From the start of this month or week, newest first
+   */
+  workouts: Array<SummaryWorkoutDto>;
+  /**
+   * Months of this year before the current one
+   */
+  months: Array<SummaryMonthDto>;
+  /**
+   * Years before the current one
+   */
+  years: Array<SummaryYearDto>;
+  firstWorkoutDate: string | null;
+  comparison: SummaryComparisonsDto;
+  longestRun: SummaryLongestRunDto | null;
+  recordsThisYear: number;
+  /**
+   * Race goal of the active plan
+   */
+  goal: SummaryGoalDto | null;
+  /**
+   * The active plan
+   */
+  plan: SummaryPlanDto | null;
+  analytics: SummaryAnalyticsDto;
+};
+
 export type ProgressPeriodDto = {
   key: "4W" | "8W" | "3M" | "6M" | "1Y";
   from: string;
@@ -4849,6 +5139,25 @@ export type GearControllerAssignV1Responses = {
 
 export type GearControllerAssignV1Response =
   GearControllerAssignV1Responses[keyof GearControllerAssignV1Responses];
+
+export type ProgressControllerSummaryV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * IANA timezone used for local days, weeks and months; UTC when omitted
+     */
+    timezone?: string;
+  };
+  url: "/v1/progress/summary";
+};
+
+export type ProgressControllerSummaryV1Responses = {
+  200: ProgressSummaryResponseDto;
+};
+
+export type ProgressControllerSummaryV1Response =
+  ProgressControllerSummaryV1Responses[keyof ProgressControllerSummaryV1Responses];
 
 export type ProgressControllerOverviewV1Data = {
   body?: never;

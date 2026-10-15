@@ -1263,6 +1263,8 @@ export const progressMetricSchema = contract.zProgressMetricResponseDto;
 
 export const progressRecordsSchema = contract.zProgressRecordsResponseDto;
 
+export const progressSummarySchema = contract.zProgressSummaryResponseDto;
+
 export const recordAttemptSchema = contract.zRecordAttemptDto;
 
 export const recordHistorySchema = contract.zRecordHistoryResponseDto;
@@ -1282,6 +1284,7 @@ export type ProgressGoal = z.infer<typeof progressGoalSchema>;
 export type ProgressRecord = z.infer<typeof progressRecordSchema>;
 export type ProgressOverview = z.infer<typeof progressOverviewSchema>;
 export type ProgressMetricDetail = z.infer<typeof progressMetricSchema>;
+export type ProgressSummary = z.infer<typeof progressSummarySchema>;
 export type RecordAttempt = z.infer<typeof recordAttemptSchema>;
 export type RecordHistory = z.infer<typeof recordHistorySchema>;
 export type RaceResultInput = z.infer<typeof raceResultInputSchema>;

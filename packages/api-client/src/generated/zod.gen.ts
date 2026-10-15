@@ -1653,6 +1653,197 @@ export const zWorkoutGearAssignmentDto = z.object({
   gearId: z.string().nullable(),
 });
 
+export const zSummaryWorkoutDto = z.object({
+  id: z.string().nullable(),
+  date: z.string(),
+  type: z.enum([
+    "recovery",
+    "easy",
+    "long_run",
+    "tempo",
+    "threshold",
+    "interval",
+    "hill",
+    "race",
+  ]),
+  status: z.enum(["plan", "free", "missed"]),
+  distanceKm: z.number(),
+  durationMin: z.number().nullable(),
+  avgHeartRate: z.number().nullable(),
+  elevationM: z.number().nullable(),
+  recordDistanceKm: z.number().nullable(),
+});
+
+export const zSummaryMonthDto = z.object({
+  distanceKm: z.number(),
+  durationMin: z.number(),
+  elevationM: z.number().nullable(),
+  count: z.number(),
+  year: z.number(),
+  month: z.number().gte(0).lte(11),
+});
+
+export const zSummaryYearDto = z.object({
+  distanceKm: z.number(),
+  durationMin: z.number(),
+  elevationM: z.number().nullable(),
+  count: z.number(),
+  year: z.number(),
+});
+
+export const zSummaryTotalsDto = z.object({
+  distanceKm: z.number(),
+  durationMin: z.number(),
+  elevationM: z.number().nullable(),
+  count: z.number(),
+});
+
+export const zSummaryComparisonDto = z.object({
+  totals: zSummaryTotalsDto,
+  longestKm: z.number(),
+  avgHeartRate: z.number().nullable(),
+  avgPaceSecPerKm: z.number(),
+});
+
+export const zSummaryComparisonsDto = z.object({
+  week: zSummaryComparisonDto,
+  month: zSummaryComparisonDto,
+  year: zSummaryComparisonDto,
+});
+
+export const zSummaryLongestRunDto = z.object({
+  distanceKm: z.number(),
+  date: z.string(),
+  previousKm: z.number().nullable(),
+});
+
+export const zSummaryGoalBestDto = z.object({
+  seconds: z.number(),
+  date: z.string(),
+});
+
+export const zSummaryGoalDto = z.object({
+  distanceKm: z.number(),
+  targetSec: z.number(),
+  raceDate: z.string(),
+  best: zSummaryGoalBestDto.nullable(),
+});
+
+export const zSummaryPlanExecutionDto = z.object({
+  done: z.number(),
+  due: z.number(),
+  upcoming: z.number(),
+  plannedKm: z.number(),
+  actualKm: z.number(),
+  offPlanKm: z.number(),
+});
+
+export const zSummaryPlanExecutionScopesDto = z.object({
+  week: zSummaryPlanExecutionDto,
+  month: zSummaryPlanExecutionDto,
+  sinceStart: zSummaryPlanExecutionDto,
+});
+
+export const zSummaryPlanDto = z.object({
+  startDate: z.string(),
+  currentWeek: z.number(),
+  totalWeeks: z.number(),
+  execution: zSummaryPlanExecutionScopesDto,
+});
+
+export const zSummaryFormPointDto = z.object({
+  date: z.string(),
+  seconds: z.number(),
+});
+
+export const zSummaryFormDto = z.object({
+  5: z.array(zSummaryFormPointDto),
+  10: z.array(zSummaryFormPointDto),
+});
+
+export const zSummaryPacePointDto = z.object({
+  month: z.number().gte(0).lte(11),
+  secPerKm: z.number(),
+});
+
+export const zSummaryPaceDto = z.object({
+  easy: z.array(zSummaryPacePointDto),
+  tempo: z.array(zSummaryPacePointDto),
+  interval: z.array(zSummaryPacePointDto),
+});
+
+export const zSummaryWeekKmDto = z.object({
+  weekStart: z.string(),
+  km: z.number(),
+  partial: z.boolean(),
+});
+
+export const zSummaryRegularityWeekDto = z.object({
+  weekStart: z.string(),
+  days: z.array(z.enum(["run", "rest", "missed", "future"])),
+});
+
+export const zSummaryPlannedTargetDto = z.object({
+  kind: z.enum(["distance", "pace"]),
+  km: z.number().optional(),
+  fromSec: z.number().optional(),
+  toSec: z.number().optional(),
+});
+
+export const zSummaryActualValueDto = z.object({
+  kind: z.enum(["distance", "pace"]),
+  km: z.number().optional(),
+  sec: z.number().optional(),
+});
+
+export const zSummaryPlanKeyWorkoutDto = z.object({
+  type: z.enum([
+    "recovery",
+    "easy",
+    "long_run",
+    "tempo",
+    "threshold",
+    "interval",
+    "hill",
+    "race",
+  ]),
+  date: z.string(),
+  planned: zSummaryPlannedTargetDto,
+  actual: zSummaryActualValueDto.nullable(),
+});
+
+export const zSummaryInsightDto = z.object({
+  code: z.enum(["easy_pace_faster", "volume_steady"]),
+  params: z.record(z.string(), z.number()),
+  usesHeartRate: z.boolean(),
+});
+
+export const zSummaryAnalyticsDto = z.object({
+  available: z.boolean(),
+  form: zSummaryFormDto,
+  pace: zSummaryPaceDto,
+  heartRateZones: z.array(z.number()).nullable(),
+  avgHeartRate: z.number().nullable(),
+  weeklyKm: z.array(zSummaryWeekKmDto),
+  regularity: z.array(zSummaryRegularityWeekDto),
+  planKeyWorkouts: z.array(zSummaryPlanKeyWorkoutDto),
+  insights: z.array(zSummaryInsightDto),
+});
+
+export const zProgressSummaryResponseDto = z.object({
+  asOf: z.string(),
+  workouts: z.array(zSummaryWorkoutDto),
+  months: z.array(zSummaryMonthDto),
+  years: z.array(zSummaryYearDto),
+  firstWorkoutDate: z.string().nullable(),
+  comparison: zSummaryComparisonsDto,
+  longestRun: zSummaryLongestRunDto.nullable(),
+  recordsThisYear: z.number(),
+  goal: zSummaryGoalDto.nullable(),
+  plan: zSummaryPlanDto.nullable(),
+  analytics: zSummaryAnalyticsDto,
+});
+
 export const zProgressPeriodDto = z.object({
   key: z.enum(["4W", "8W", "3M", "6M", "1Y"]),
   from: z.string(),
@@ -3177,6 +3368,12 @@ export const zGearControllerAssignV1Path = z.object({
 });
 
 export const zGearControllerAssignV1Response = zWorkoutGearAssignmentDto;
+
+export const zProgressControllerSummaryV1Query = z.object({
+  timezone: z.string().optional(),
+});
+
+export const zProgressControllerSummaryV1Response = zProgressSummaryResponseDto;
 
 export const zProgressControllerOverviewV1Query = z.object({
   period: z.enum(["4W", "8W", "3M", "6M", "1Y"]).optional().default("3M"),

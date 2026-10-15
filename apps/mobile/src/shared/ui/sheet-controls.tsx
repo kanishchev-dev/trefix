@@ -148,11 +148,14 @@ export function SheetTabs<T extends string>({
   value,
   onChange,
   theme,
+  trackColor,
 }: {
   tabs: Array<{ key: T; label: string }>;
   value: T;
   onChange: (key: T) => void;
   theme: ThemeTokens;
+  /** Track behind the tabs; defaults to `surface`, which suits sheets. */
+  trackColor?: string;
 }) {
   const [tabsWidth, setTabsWidth] = useState(0);
   const activeIndex = Math.max(
@@ -177,8 +180,8 @@ export function SheetTabs<T extends string>({
         {
           translateX: interpolate(
             activeTabX.value,
-            [0, tabs.length - 1],
-            [4, 4 + tabWidth],
+            [0, Math.max(1, tabs.length - 1)],
+            [4, 4 + tabWidth * Math.max(1, tabs.length - 1)],
           ),
         },
       ],
@@ -188,7 +191,10 @@ export function SheetTabs<T extends string>({
   return (
     <View
       onLayout={(e) => setTabsWidth(e.nativeEvent.layout.width)}
-      style={[styles.tabsContainer, { backgroundColor: theme.color.surface }]}
+      style={[
+        styles.tabsContainer,
+        { backgroundColor: trackColor ?? theme.color.surface },
+      ]}
     >
       <Animated.View
         style={[
@@ -203,6 +209,8 @@ export function SheetTabs<T extends string>({
         return (
           <Pressable
             key={tab.key}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
             onPress={() => onChange(tab.key)}
             style={styles.tab}
           >
@@ -213,7 +221,7 @@ export function SheetTabs<T extends string>({
                   color: isActive
                     ? theme.color.primaryForeground
                     : theme.color.mutedForeground,
-                  fontFamily: theme.typography.fontFamily.sans.bold,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
                 },
               ]}
             >

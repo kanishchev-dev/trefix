@@ -682,6 +682,12 @@ async function main(): Promise<void> {
         { query: { period: "3M" } },
       );
       await call(
+        "ProgressController_summary_v1",
+        "GET",
+        "/v1/progress/summary",
+        { query: { timezone: "Europe/Moscow" } },
+      );
+      await call(
         "ProgressController_metric_v1",
         "GET",
         "/v1/progress/metrics/threshold_pace",
