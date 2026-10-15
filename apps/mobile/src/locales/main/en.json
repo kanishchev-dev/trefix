@@ -570,6 +570,118 @@
       "title": "We couldn't load your plan",
       "description": "Check your connection and try again.",
       "retryButton": "Try again"
+    },
+    "screen": {
+      "phaseNames": {
+        "BASE": "Base",
+        "BUILD": "Build",
+        "RECOVERY": "Recovery",
+        "SPECIFIC": "Specific",
+        "PEAK": "Peak",
+        "TAPER": "Taper",
+        "RACE": "Race"
+      },
+      "hero": {
+        "kicker": "Current plan · week {{current}} of {{total}}",
+        "startIn": {
+          "one": "Race {{date}} · in {{count}} day",
+          "other": "Race {{date}} · in {{count}} days"
+        },
+        "startToday": "Race {{date}} · today",
+        "planEnd": "Last week of the plan ends {{date}}",
+        "raceOn": "Race {{date}}"
+      },
+      "thisWeek": {
+        "kicker": "This week · {{phase}}",
+        "today": "today",
+        "rest": "rest",
+        "keySessions": "Key sessions: {{list}}",
+        "a11yDay": "{{day}}: {{state}}",
+        "openWeek": "Open the current week"
+      },
+      "todayTitle": "Today",
+      "coach": {
+        "weekTitle": "Tref adjusted week {{number}}",
+        "planTitle": "Tref adjusted the plan"
+      },
+      "weeks": {
+        "title": "Weeks",
+        "phaseRange": "{{phase}} · weeks {{from}}–{{to}}",
+        "phaseSingle": "{{phase}} · week {{number}}",
+        "weekTitle": "Week {{number}} · {{distance}}",
+        "workouts": {
+          "one": "{{count}} workout",
+          "other": "{{count}} workouts"
+        },
+        "allDone": "all done",
+        "missed": {
+          "one": "{{count}} missed",
+          "other": "{{count}} missed"
+        },
+        "goal": "Goal · {{value}}",
+        "goalFallback": "Plan goal"
+      },
+      "weekSheet": {
+        "kicker": "{{phase}} · week {{number}} of {{total}}",
+        "kickerShort": "{{phase}} · week {{number}}",
+        "title": "Week {{number}}",
+        "volume": "volume",
+        "done": "done",
+        "doneValue": "{{done}} of {{total}}",
+        "workouts": "workouts",
+        "keySessions": "key",
+        "workoutsTitle": "Workouts",
+        "changesTitle": "Changes by Tref",
+        "close": "Close"
+      },
+      "empty": {
+        "title": "Ready to start training?",
+        "description": "Choose how to build your training plan and move towards your goal",
+        "coachTitle": "Plan with Tref",
+        "coachHint": "A smart plan for your goal",
+        "manualTitle": "Your own plan",
+        "manualHint": "Workouts on your terms",
+        "howTitle": "How it works with the AI coach",
+        "howCount": "3 steps",
+        "step": "Step {{number}}",
+        "steps": [
+          {
+            "title": "Set your goal",
+            "description": "Choose the distance, the result you want and the race date. Tref takes them into account when building the plan."
+          },
+          {
+            "title": "Set up your schedule",
+            "description": "Pick how many workouts a week, which days suit you and the volume you want."
+          },
+          {
+            "title": "Start training",
+            "description": "Tref builds the plan week by week, analyses your results and adapts the training to your progress."
+          }
+        ],
+        "previewRace": "Half marathon",
+        "previewTime": "1:45:00",
+        "previewDistance": "21.1 km",
+        "coachBadge": "Tref",
+        "drafts": "Drafts · {{count}}",
+        "start": "Start",
+        "allPlans": "All plans and history",
+        "weeksCount": {
+          "one": "{{count}} week",
+          "other": "{{count}} weeks"
+        },
+        "perWeek": "{{count}}/wk"
+      },
+      "details": {
+        "draftKicker": "Draft · {{weeks}}",
+        "completedKicker": "Plan completed",
+        "cancelledKicker": "Plan cancelled",
+        "range": "{{kicker}} · {{range}}",
+        "resultDone": "done",
+        "resultDistance": "run",
+        "resultRate": "completion",
+        "resultTime": "race result",
+        "longRun": "long run on {{day}}"
+      }
     }
   },
   "trefix": {
@@ -1426,7 +1538,10 @@
       "started": "Plan “{{name}}” started",
       "draftSaved": "Draft saved",
       "loadFailed": "Couldn't load start dates",
-      "failed": "Couldn't start the plan"
+      "failed": "Couldn't start the plan",
+      "titleUnnamed": "Start the plan?",
+      "startedUnnamed": "Plan started",
+      "nameHint": "You can leave it empty — the plan is named after its goal"
     },
     "warning": {
       "title": "“{{name}}” is in progress (week {{current}} of {{total}})",

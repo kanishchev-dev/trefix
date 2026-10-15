@@ -160,7 +160,8 @@ export function PlanPreviewScreen({
     );
   }, [draft.goal, copy, language]);
 
-  const [name, setName] = useState(initialName ?? goalSummary);
+  // The user names the plan; an unnamed plan is titled by its goal.
+  const [name, setName] = useState(initialName ?? "");
   const [notes, setNotes] = useState<string | null>(initialNotes ?? null);
 
   const diffByKey = useMemo(() => {
@@ -462,6 +463,7 @@ export function PlanPreviewScreen({
           visible={startSheetVisible}
           mode="creation"
           planName={name}
+          onChangeName={setName}
           options={startOptions ?? preview.startOptions ?? null}
           entry={mode === "rebuild" ? "rebuild" : "creation"}
           onStart={(start: PlanStartBlock) => submit({ kind: "start", start })}

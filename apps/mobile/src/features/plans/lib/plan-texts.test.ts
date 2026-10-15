@@ -6,6 +6,7 @@ vi.mock("expo-localization", () => ({
 
 const { getMainCopy } = await import("../../../locales");
 const {
+  planHeading,
   adaptationReason,
   adaptationTitle,
   goalTitle,
@@ -98,5 +99,20 @@ describe("plan codes", () => {
       "Легче после болезни",
     );
     expect(adaptationReason("unknown_code", ru)).toBeNull();
+  });
+});
+
+describe("planHeading", () => {
+  it("prefers the name, then the user's goal text, then the goal type", () => {
+    expect(planHeading({ name: "Москва 2027", goal: goal({}) }, ru)).toBe(
+      "Москва 2027",
+    );
+    expect(
+      planHeading(
+        { name: null, goal: goal({ description: "Пробежать 10" }) },
+        ru,
+      ),
+    ).toBe("Пробежать 10");
+    expect(planHeading({ name: null, goal: goal({}) }, ru)).not.toMatch(/\d/);
   });
 });

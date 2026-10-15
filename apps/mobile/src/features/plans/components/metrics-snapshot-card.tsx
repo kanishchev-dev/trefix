@@ -10,7 +10,6 @@ import {
   type AppLanguage,
   type MainCopy,
 } from "../../../locales";
-import { Card } from "../../../shared/ui/card";
 import { formatTargetTime } from "../../plan-creation/plan-creation-types";
 
 type Props = {
@@ -22,104 +21,154 @@ type Props = {
   language: AppLanguage;
 };
 
-/** Metrics a plan was built from: threshold pace, volume, longest run, heart rate. */
+/** Metrics a plan was built from: a section title and a card of label/value rows. */
 export function MetricsSnapshotCard({
   snapshot,
   title,
   theme,
-  themeMode,
   copy,
   language,
 }: Props) {
   if (!snapshot) return null;
   const metricsCopy = copy.plans.metrics;
+  const distances = metricsCopy.distances as Record<string, string>;
 
-  const parts = [
-    snapshot.thresholdPaceSecondsPerKm
-      ? `${metricsCopy.threshold} ${formatPace(snapshot.thresholdPaceSecondsPerKm)} ${metricsCopy.paceUnit}`
-      : snapshot.recentResult
-        ? `${(metricsCopy.distances as Record<string, string>)[snapshot.recentResult.distance] ?? snapshot.recentResult.distance} ${formatTargetTime(snapshot.recentResult.timeSeconds)}`
-        : null,
-    snapshot.weeklyMileageKm !== null && snapshot.weeklyMileageKm !== undefined
-      ? fillTemplate(metricsCopy.weeklyShort, {
-          km: Math.round(snapshot.weeklyMileageKm),
-        })
-      : null,
-    snapshot.longestRunKm
-      ? fillTemplate(metricsCopy.longestShort, { km: snapshot.longestRunKm })
-      : null,
-    snapshot.maxHeartRate || snapshot.restingHeartRate
-      ? fillTemplate(metricsCopy.hrShort, {
-          max: snapshot.maxHeartRate ?? "—",
-          rest: snapshot.restingHeartRate ?? "—",
-        })
-      : null,
-  ].filter(Boolean);
+  const rows: Array<{ label: string; value: string }> = [];
+  if (snapshot.thresholdPaceSecondsPerKm) {
+    rows.push({
+      label: metricsCopy.threshold,
+      value: `${formatPace(snapshot.thresholdPaceSecondsPerKm)} ${metricsCopy.paceUnit}`,
+    });
+  } else if (snapshot.recentResult) {
+    rows.push({
+      label: metricsCopy.recentResult,
+      value: `${distances[snapshot.recentResult.distance] ?? snapshot.recentResult.distance} · ${formatTargetTime(snapshot.recentResult.timeSeconds)}`,
+    });
+  }
+  if (
+    snapshot.weeklyMileageKm !== null &&
+    snapshot.weeklyMileageKm !== undefined
+  ) {
+    rows.push({
+      label: metricsCopy.weeklyKm,
+      value: String(Math.round(snapshot.weeklyMileageKm)),
+    });
+  }
+  if (snapshot.longestRunKm) {
+    rows.push({
+      label: metricsCopy.longestRun,
+      value: String(snapshot.longestRunKm),
+    });
+  }
+  if (snapshot.maxHeartRate) {
+    rows.push({
+      label: metricsCopy.hrMax,
+      value: `${snapshot.maxHeartRate} ${metricsCopy.bpm}`,
+    });
+  }
+  if (snapshot.restingHeartRate) {
+    rows.push({
+      label: metricsCopy.hrRest,
+      value: `${snapshot.restingHeartRate} ${metricsCopy.bpm}`,
+    });
+  }
 
-  if (parts.length === 0) return null;
+  if (rows.length === 0) return null;
+  const medium = theme.typography.fontFamily.sans.medium;
+  const regular = theme.typography.fontFamily.sans.regular;
 
   return (
-    <Card size="sm" theme={theme} themeMode={themeMode} style={styles.card}>
+    <View style={styles.root}>
       <Text
+        accessibilityRole="header"
         style={[
           styles.title,
-          {
-            color: theme.color.mutedForeground,
-            fontFamily: theme.typography.fontFamily.sans.medium,
-          },
+          { color: theme.color.foreground, fontFamily: medium },
         ]}
       >
         {title}
       </Text>
-      <View>
-        <Text
-          style={[
-            styles.value,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.regular,
-            },
-          ]}
-        >
-          {parts.join(" · ")}
-        </Text>
-        {snapshot.capturedAt ? (
-          <Text
+      <View style={[styles.card, { backgroundColor: theme.color.card }]}>
+        {rows.map((row, index) => (
+          <View
+            key={row.label}
+            accessible
             style={[
-              styles.meta,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
+              styles.row,
+              index > 0 && {
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderTopColor: theme.color.separator,
               },
             ]}
           >
-            {fillTemplate(copy.plans.details.capturedAt, {
-              date: formatShortDate(snapshot.capturedAt.slice(0, 10), language),
-            })}
-          </Text>
-        ) : null}
+            <Text
+              style={[
+                styles.label,
+                { color: theme.color.mutedForeground, fontFamily: regular },
+              ]}
+            >
+              {row.label}
+            </Text>
+            <Text
+              style={[
+                styles.value,
+                { color: theme.color.foreground, fontFamily: medium },
+              ]}
+            >
+              {row.value}
+            </Text>
+          </View>
+        ))}
       </View>
-    </Card>
+      {snapshot.capturedAt ? (
+        <Text
+          style={[
+            styles.meta,
+            { color: theme.color.mutedForeground, fontFamily: regular },
+          ]}
+        >
+          {fillTemplate(copy.plans.details.capturedAt, {
+            date: formatShortDate(snapshot.capturedAt.slice(0, 10), language),
+          })}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: 6,
-    borderRadius: 28,
-    padding: 18,
+  root: {
+    gap: 12,
   },
   title: {
-    fontSize: 12,
-    lineHeight: 16,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  card: {
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 2,
+  },
+  row: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  label: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
   value: {
     fontSize: 14,
     lineHeight: 20,
+    fontVariant: ["tabular-nums"],
   },
   meta: {
+    marginTop: -4,
+    paddingHorizontal: 2,
     fontSize: 12,
     lineHeight: 16,
   },

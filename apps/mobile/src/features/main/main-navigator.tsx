@@ -161,7 +161,9 @@ function MainStackHost({
       if (outcome.kind === "started") {
         openPlanTab();
         showToast(
-          fillTemplate(copy.plans.start.started, { name: outcome.name }),
+          outcome.name
+            ? fillTemplate(copy.plans.start.started, { name: outcome.name })
+            : copy.plans.start.startedUnnamed,
         );
       } else if (outcome.kind === "draft") {
         openPlans({
@@ -178,6 +180,7 @@ function MainStackHost({
       copy.plans.rebuild.updated,
       copy.plans.start.draftSaved,
       copy.plans.start.started,
+      copy.plans.start.startedUnnamed,
       openPlanTab,
       openPlans,
       showToast,

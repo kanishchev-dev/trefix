@@ -101,6 +101,20 @@ export function planTitle(
   );
 }
 
+/**
+ * Big title of a plan screen. The goal numbers already sit under it, so an
+ * unnamed plan is titled by the user's own goal text or the goal type.
+ */
+export function planHeading(
+  plan: { name: string | null; goal: PlanGoal | null | undefined },
+  copy: MainCopy,
+): string {
+  if (plan.name) return plan.name;
+  if (plan.goal?.description) return plan.goal.description;
+  const types = copy.plan.creation.goalTypes as Record<string, string>;
+  return (plan.goal?.type && types[plan.goal.type]) || copy.plans.untitled;
+}
+
 export function adaptationTitle(type: string, copy: MainCopy): string {
   const types = copy.plan.adaptations.types as Record<string, string>;
   return types[type] ?? types.default;

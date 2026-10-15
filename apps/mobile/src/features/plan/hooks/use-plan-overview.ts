@@ -48,9 +48,7 @@ export function usePlanOverview() {
 
   const displayState = getDisplayState();
 
-  const refresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
+  const refresh = useCallback(() => refetch(), [refetch]);
 
   return {
     displayState,

@@ -1,235 +1,445 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { History, ListChecks, Target } from "lucide-react-native";
+import { ChevronRight, PenLine, Sparkles } from "lucide-react-native";
+import Svg, { Circle } from "react-native-svg";
 
 import { type PlanCounts, type PlanListItem } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
-import { type AppLanguage, type MainCopy } from "../../../locales";
-import { PlanCard } from "../../plans/components/plan-card";
+import {
+  fillTemplate,
+  pluralize,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
+import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-form";
+import { goalTitle, planTitle } from "../../plans/lib/plan-texts";
+import { PlanHowItWorks } from "./plan-how-it-works";
+import { PlanMethodArt } from "./plan-method-art";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
   language: AppLanguage;
-  onCreatePlan: () => void;
-  /** Library badges; decide between the "drafts", "history" and empty variants. */
+  /** Library badges: drafts and history add their own blocks. */
   counts?: PlanCounts;
   /** Latest drafts (up to three) offered for a quick start. */
   drafts?: PlanListItem[];
+  onCreateWithCoach: () => void;
+  onCreateManually: () => void;
   onOpenPlans?: () => void;
   onOpenHistory?: () => void;
   onStartDraft?: (plan: PlanListItem) => void;
+  onOpenDraft?: (plan: PlanListItem) => void;
 };
 
-/** Plan tab without a plan in progress. */
+/**
+ * Plan tab without a plan in progress: an invitation, not an icon with text.
+ * Two ways to build a plan, how it works with the coach, then the drafts.
+ */
 export function PlanEmptyState({
   theme,
-  themeMode,
   copy,
   language,
-  onCreatePlan,
   counts,
   drafts = [],
+  onCreateWithCoach,
+  onCreateManually,
   onOpenPlans,
   onOpenHistory,
   onStartDraft,
+  onOpenDraft,
 }: Props) {
-  const emptyCopy = copy.plan.emptyState;
-  const tabCopy = copy.plans.tab;
-  const variant =
-    counts && counts.draft > 0
-      ? "drafts"
-      : counts && counts.history > 0
-        ? "history"
-        : "empty";
+  const t = copy.plan.screen.empty;
+  const dayNames = shortDayNamesFor(language);
+  const medium = theme.typography.fontFamily.sans.medium;
+  const regular = theme.typography.fontFamily.sans.regular;
+  const fg = theme.color.foreground;
+  const muted = theme.color.mutedForeground;
+  const draftCount = counts?.draft ?? drafts.length;
+  const hasHistory = (counts?.history ?? 0) > 0;
+  const shownDrafts = drafts.slice(0, 3);
 
-  const title =
-    variant === "drafts"
-      ? tabCopy.noActiveTitle
-      : variant === "history"
-        ? tabCopy.historyTitle
-        : emptyCopy.title;
-  const description =
-    variant === "drafts"
-      ? tabCopy.noActiveDescription
-      : variant === "history"
-        ? tabCopy.historyDescription
-        : emptyCopy.description;
-  const Icon =
-    variant === "drafts"
-      ? ListChecks
-      : variant === "history"
-        ? History
-        : Target;
+  const tiles = [
+    {
+      kind: "coach" as const,
+      title: t.coachTitle,
+      hint: t.coachHint,
+      onPress: onCreateWithCoach,
+      icon: <Sparkles size={20} color={theme.color.ai} />,
+      iconBackground: theme.color.aiSurface,
+    },
+    {
+      kind: "manual" as const,
+      title: t.manualTitle,
+      hint: t.manualHint,
+      onPress: onCreateManually,
+      icon: <PenLine size={20} color={theme.color.primary} />,
+      iconBackground: theme.color.iconSurface,
+    },
+  ];
 
-  const primary =
-    variant === "drafts"
-      ? { label: tabCopy.openPlans, onPress: onOpenPlans }
-      : variant === "history"
-        ? { label: tabCopy.prepareFromHistory, onPress: onOpenHistory }
-        : { label: emptyCopy.createButton, onPress: onCreatePlan };
+  const draftMeta = (draft: PlanListItem) =>
+    [
+      draft.name ? goalTitle(draft.goal, copy, language) : null,
+      pluralize(t.weeksCount, draft.totalWeeks, language),
+      draft.sessionsPerWeek
+        ? fillTemplate(t.perWeek, { count: draft.sessionsPerWeek })
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
   return (
-    <View style={styles.container}>
-      <View
-        style={[
-          styles.iconCircle,
-          {
-            backgroundColor: theme.color.surfaceElevated,
-            borderColor: theme.color.border,
-          },
-        ]}
-      >
-        <Icon color={theme.color.accent} size={32} />
-      </View>
-
-      <View style={styles.textGroup}>
-        <Text
-          style={[
-            styles.title,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.medium,
-            },
-          ]}
+    <View style={styles.root}>
+      <View style={styles.intro}>
+        <View
+          style={[styles.mark, { backgroundColor: theme.color.card }]}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         >
-          {title}
+          <Svg width={48} height={48} viewBox="0 0 24 24">
+            {[10.2, 7, 3.8].map((radius) => (
+              <Circle
+                key={radius}
+                cx={12}
+                cy={12}
+                r={radius}
+                fill="none"
+                stroke={fg}
+                strokeWidth={1.2}
+              />
+            ))}
+            <Circle cx={12} cy={12} r={1.3} fill={fg} />
+          </Svg>
+        </View>
+        <Text
+          accessibilityRole="header"
+          style={[styles.title, { color: fg, fontFamily: medium }]}
+        >
+          {t.title}
         </Text>
         <Text
-          style={[
-            styles.description,
-            {
-              color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.regular,
-            },
-          ]}
+          style={[styles.description, { color: muted, fontFamily: regular }]}
         >
-          {description}
+          {t.description}
         </Text>
       </View>
 
-      <View style={styles.buttons}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={primary.onPress}
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: theme.color.primary },
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text
-            style={[
-              styles.buttonText,
-              {
-                color: theme.color.primaryForeground,
-                fontFamily: theme.typography.fontFamily.sans.semibold,
-              },
-            ]}
-          >
-            {primary.label}
-          </Text>
-        </Pressable>
-
-        {variant !== "empty" ? (
+      <View style={styles.tiles}>
+        {tiles.map((tile) => (
           <Pressable
+            key={tile.kind}
             accessibilityRole="button"
-            onPress={onCreatePlan}
+            accessibilityLabel={`${tile.title}. ${tile.hint}`}
+            onPress={tile.onPress}
             style={({ pressed }) => [
-              styles.button,
-              { backgroundColor: theme.color.controlSecondary },
+              styles.tile,
+              { backgroundColor: theme.color.card },
               pressed && styles.pressed,
             ]}
           >
-            <Text
+            <PlanMethodArt kind={tile.kind} color={fg} dayNames={dayNames} />
+            <View
               style={[
-                styles.buttonText,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.semibold,
-                },
+                styles.tileIcon,
+                { backgroundColor: tile.iconBackground },
               ]}
             >
-              {tabCopy.createPlan}
-            </Text>
+              {tile.icon}
+            </View>
+            <View>
+              <Text
+                style={[styles.tileTitle, { color: fg, fontFamily: medium }]}
+              >
+                {tile.title}
+              </Text>
+              <Text
+                numberOfLines={2}
+                style={[styles.tileHint, { color: muted, fontFamily: regular }]}
+              >
+                {tile.hint}
+              </Text>
+            </View>
           </Pressable>
-        ) : null}
+        ))}
       </View>
 
-      {variant === "drafts" && drafts.length > 0 ? (
+      <PlanHowItWorks theme={theme} copy={copy} language={language} />
+
+      {shownDrafts.length > 0 ? (
         <View style={styles.drafts}>
-          {drafts.slice(0, 3).map((draft) => (
-            <PlanCard
-              key={draft.id}
-              plan={draft}
-              compact
-              onPress={() => onStartDraft?.(draft)}
-              theme={theme}
-              themeMode={themeMode}
-              copy={copy}
-              language={language}
-            />
-          ))}
+          <Text
+            style={[styles.sectionTitle, { color: fg, fontFamily: medium }]}
+          >
+            {fillTemplate(t.drafts, { count: draftCount })}
+          </Text>
+          {shownDrafts.map((draft) => {
+            const name = planTitle(draft, copy, language);
+            const meta = draftMeta(draft);
+            return (
+              <Pressable
+                key={draft.id}
+                accessibilityRole="button"
+                accessibilityLabel={`${name}. ${meta}`}
+                disabled={!onOpenDraft}
+                onPress={() => onOpenDraft?.(draft)}
+                style={({ pressed }) => [
+                  styles.draft,
+                  { backgroundColor: theme.color.card },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={styles.draftHead}>
+                  <View style={styles.draftName}>
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.draftTitle,
+                        { color: fg, fontFamily: medium },
+                      ]}
+                    >
+                      {name}
+                    </Text>
+                    {draft.creationSource === "ai" ? (
+                      <View
+                        style={[
+                          styles.badge,
+                          { backgroundColor: theme.color.aiSurface },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.badgeText,
+                            { color: theme.color.ai, fontFamily: medium },
+                          ]}
+                        >
+                          {t.coachBadge}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t.start}: ${name}`}
+                    hitSlop={6}
+                    onPress={() => onStartDraft?.(draft)}
+                    style={({ pressed }) => [
+                      styles.startButton,
+                      { backgroundColor: theme.color.primary },
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.startLabel,
+                        {
+                          color: theme.color.primaryForeground,
+                          fontFamily: medium,
+                        },
+                      ]}
+                    >
+                      {t.start}
+                    </Text>
+                  </Pressable>
+                </View>
+                {meta ? (
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.draftMeta,
+                      { color: muted, fontFamily: regular },
+                    ]}
+                  >
+                    {meta}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
         </View>
+      ) : null}
+
+      {hasHistory && draftCount === 0 && onOpenHistory ? (
+        <LinkRow
+          label={copy.plans.tab.prepareFromHistory}
+          onPress={onOpenHistory}
+          theme={theme}
+        />
+      ) : null}
+      {(draftCount > 0 || hasHistory) && onOpenPlans ? (
+        <LinkRow label={t.allPlans} onPress={onOpenPlans} theme={theme} />
       ) : null}
     </View>
   );
 }
 
+function LinkRow({
+  label,
+  onPress,
+  theme,
+}: {
+  label: string;
+  onPress: () => void;
+  theme: ThemeTokens;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.link, pressed && styles.linkPressed]}
+    >
+      <Text
+        style={[
+          styles.linkLabel,
+          {
+            color: theme.color.foreground,
+            fontFamily: theme.typography.fontFamily.sans.medium,
+          },
+        ]}
+      >
+        {label}
+      </Text>
+      <ChevronRight size={18} color={theme.color.mutedForeground} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 20,
-    paddingHorizontal: 16,
+  root: {
+    gap: 12,
   },
-  iconCircle: {
+  intro: {
+    alignItems: "center",
+    paddingTop: 8,
+    paddingBottom: 10,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  mark: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
-  },
-  textGroup: {
-    alignItems: "center",
-    gap: 8,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.3,
     textAlign: "center",
   },
   description: {
+    maxWidth: 300,
     fontSize: 15,
-    lineHeight: 22,
+    lineHeight: 21,
     textAlign: "center",
-    maxWidth: 280,
   },
-  buttons: {
-    alignSelf: "stretch",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 8,
+  tiles: {
+    flexDirection: "row",
+    gap: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
-  button: {
-    height: 50,
-    paddingHorizontal: 28,
-    borderRadius: 9999,
+  tile: {
+    flex: 1,
+    height: 150,
+    borderRadius: 24,
+    padding: 14,
+    overflow: "hidden",
+    justifyContent: "space-between",
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
+  },
+  tileIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
+  tileTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  tileHint: {
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
+  },
   drafts: {
-    alignSelf: "stretch",
+    marginTop: 8,
     gap: 12,
   },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
+  sectionTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    paddingHorizontal: 16,
   },
-  buttonText: {
+  draft: {
+    marginHorizontal: 16,
+    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    gap: 6,
+  },
+  draftHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  draftName: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  draftTitle: {
+    flexShrink: 1,
+    fontSize: 16,
+    lineHeight: 21,
+  },
+  badge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  badgeText: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  startButton: {
+    height: 36,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  startLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  draftMeta: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  link: {
+    marginHorizontal: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  linkPressed: {
+    opacity: 0.6,
+  },
+  linkLabel: {
     fontSize: 15,
     lineHeight: 20,
   },

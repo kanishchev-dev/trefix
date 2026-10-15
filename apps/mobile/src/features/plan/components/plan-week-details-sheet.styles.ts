@@ -5,104 +5,98 @@ export const styles = StyleSheet.create({
     flexShrink: 1,
     width: "100%",
   },
+  // Room for the floating sheet header on top and the action row below.
   scrollContent: {
-    gap: 20,
-    paddingVertical: 4,
+    paddingTop: 72,
+    paddingBottom: 84,
   },
-  section: {
-    gap: 6,
+  body: {
+    gap: 16,
   },
-  focusText: {
-    fontSize: 18,
-    lineHeight: 24,
-  },
-  bodyText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 4,
-  },
-  statBox: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  statValue: {
-    fontSize: 18,
-    lineHeight: 22,
-  },
-  statLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  sessionsList: {
-    gap: 8,
-    marginTop: 4,
-  },
-  sessionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  workoutText: {
-    flex: 1,
-    gap: 2,
-  },
-  sessionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  sessionText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  adaptationsList: {
-    gap: 8,
-    marginTop: 4,
-  },
-  adaptationCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  adaptationTextWrapper: {
-    flex: 1,
-    gap: 2,
-  },
-  adaptationTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  adaptationDesc: {
+  kicker: {
     fontSize: 13,
     lineHeight: 18,
   },
-  doneButton: {
-    height: 52,
-    borderRadius: 9999,
+  intent: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+  },
+  todayRow: {
+    borderRadius: 16,
+    marginHorizontal: -10,
+    paddingHorizontal: 10,
+  },
+  pressed: {
+    opacity: 0.6,
+  },
+  dayColumn: {
+    width: 36,
+    alignItems: "center",
+  },
+  dayName: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  dayNumber: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontVariant: ["tabular-nums"],
+  },
+  rowText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  rowTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  rowMeta: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  rowFact: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontVariant: ["tabular-nums"],
+  },
+  addCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
   },
-  doneButtonPressed: {
-    transform: [{ scale: 0.985 }],
+  changes: {
+    gap: 10,
   },
-  doneLabel: {
-    fontSize: 16,
-    lineHeight: 22,
+  change: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
 });

@@ -6,6 +6,7 @@ import {
 } from "@trefix/api-client";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
+import { mondayBasedWeekday, workoutLocalDate } from "./plan-dates";
 import {
   keySessionLabel,
   phaseIntent,
@@ -127,6 +128,10 @@ export type WeekWorkoutRow = {
   durationMinutes: number;
   status?: string;
   actualDistanceKm?: number | null;
+  /** Monday-based weekday (0 = Monday). */
+  weekday: number;
+  /** Calendar date of a dated workout. */
+  date?: string;
   /** Dated workouts open the workout sheet; draft workouts are read-only here. */
   selectable: boolean;
 };
@@ -149,6 +154,7 @@ export function weekWorkoutRows(
       .map((workout) => ({
         id: workout.key,
         dayLabel: dayNames[workout.dayOfWeek] ?? "",
+        weekday: workout.dayOfWeek,
         type: workout.type,
         distanceKm: workout.distanceKm,
         durationMinutes: workout.durationMinutes,
@@ -161,6 +167,8 @@ export function weekWorkoutRows(
     .map((workout) => ({
       id: workout.id,
       dayLabel: formatDate(workout.scheduledAt),
+      weekday: mondayBasedWeekday(workoutLocalDate(workout.scheduledAt)),
+      date: workoutLocalDate(workout.scheduledAt),
       type: workout.type,
       distanceKm: workout.distanceKm,
       durationMinutes: workout.durationMinutes,

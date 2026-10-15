@@ -570,6 +570,126 @@
       "title": "Не удалось загрузить план",
       "description": "Проверьте соединение с сетью и попробуйте снова.",
       "retryButton": "Попробовать снова"
+    },
+    "screen": {
+      "phaseNames": {
+        "BASE": "База",
+        "BUILD": "Развитие",
+        "RECOVERY": "Восстановление",
+        "SPECIFIC": "Специальная",
+        "PEAK": "Пик",
+        "TAPER": "Тейпер",
+        "RACE": "Забег"
+      },
+      "hero": {
+        "kicker": "Текущий план · неделя {{current}} из {{total}}",
+        "startIn": {
+          "one": "Старт {{date}} · через {{count}} день",
+          "few": "Старт {{date}} · через {{count}} дня",
+          "many": "Старт {{date}} · через {{count}} дней",
+          "other": "Старт {{date}} · через {{count}} дня"
+        },
+        "startToday": "Старт {{date}} · сегодня",
+        "planEnd": "Последняя неделя плана — до {{date}}",
+        "raceOn": "Забег {{date}}"
+      },
+      "thisWeek": {
+        "kicker": "Эта неделя · {{phase}}",
+        "today": "сегодня",
+        "rest": "отдых",
+        "keySessions": "Ключевые: {{list}}",
+        "a11yDay": "{{day}}: {{state}}",
+        "openWeek": "Открыть текущую неделю"
+      },
+      "todayTitle": "Сегодня",
+      "coach": {
+        "weekTitle": "Треф скорректировал неделю {{number}}",
+        "planTitle": "Треф скорректировал план"
+      },
+      "weeks": {
+        "title": "Недели",
+        "phaseRange": "{{phase}} · недели {{from}}–{{to}}",
+        "phaseSingle": "{{phase}} · неделя {{number}}",
+        "weekTitle": "Неделя {{number}} · {{distance}}",
+        "workouts": {
+          "one": "{{count}} тренировка",
+          "few": "{{count}} тренировки",
+          "many": "{{count}} тренировок",
+          "other": "{{count}} тренировки"
+        },
+        "allDone": "всё выполнено",
+        "missed": {
+          "one": "{{count}} пропущена",
+          "few": "{{count}} пропущены",
+          "many": "{{count}} пропущено",
+          "other": "{{count}} пропущено"
+        },
+        "goal": "Цель · {{value}}",
+        "goalFallback": "Цель плана"
+      },
+      "weekSheet": {
+        "kicker": "{{phase}} · неделя {{number}} из {{total}}",
+        "kickerShort": "{{phase}} · неделя {{number}}",
+        "title": "Неделя {{number}}",
+        "volume": "объём",
+        "done": "сделано",
+        "doneValue": "{{done}} из {{total}}",
+        "workouts": "тренировок",
+        "keySessions": "ключевых",
+        "workoutsTitle": "Тренировки",
+        "changesTitle": "Изменения от Трефа",
+        "close": "Закрыть"
+      },
+      "empty": {
+        "title": "Начнём подготовку?",
+        "description": "Выбери, как построить тренировочный план и двигаться к своей цели",
+        "coachTitle": "План с Трефом",
+        "coachHint": "Умный план под твою цель",
+        "manualTitle": "Свой план",
+        "manualHint": "Тренировки по твоим правилам",
+        "howTitle": "Как это работает с AI-тренером",
+        "howCount": "3 шага",
+        "step": "Шаг {{number}}",
+        "steps": [
+          {
+            "title": "Определи цель",
+            "description": "Выбери дистанцию, желаемый результат и дату старта. Треф учтёт их при подготовке плана."
+          },
+          {
+            "title": "Настрой расписание",
+            "description": "Укажи количество тренировок в неделю, удобные дни и желаемый объём."
+          },
+          {
+            "title": "Начни тренироваться",
+            "description": "Треф составит план по неделям, будет анализировать результаты и адаптировать подготовку под твой прогресс."
+          }
+        ],
+        "previewRace": "Полумарафон",
+        "previewTime": "1:45:00",
+        "previewDistance": "21,1 км",
+        "coachBadge": "Треф",
+        "drafts": "Черновики · {{count}}",
+        "start": "Начать",
+        "allPlans": "Все планы и история",
+        "weeksCount": {
+          "one": "{{count}} неделя",
+          "few": "{{count}} недели",
+          "many": "{{count}} недель",
+          "other": "{{count}} недели"
+        },
+        "perWeek": "{{count}} тр./нед"
+      },
+      "details": {
+        "draftKicker": "Черновик · {{weeks}}",
+        "completedKicker": "План завершён",
+        "cancelledKicker": "План отменён",
+        "range": "{{kicker}} · {{range}}",
+        "resultDone": "выполнено",
+        "resultDistance": "пробежано",
+        "resultRate": "выполнение",
+        "resultTime": "результат забега",
+        "longRun": "длительная — {{day}}"
+      }
     }
   },
   "trefix": {
@@ -1432,7 +1552,10 @@
       "started": "План «{{name}}» начат",
       "draftSaved": "Черновик сохранён",
       "loadFailed": "Не удалось загрузить даты старта",
-      "failed": "Не удалось начать план"
+      "failed": "Не удалось начать план",
+      "titleUnnamed": "Начать план?",
+      "startedUnnamed": "План начат",
+      "nameHint": "Можно оставить пустым — план будет назван по цели"
     },
     "warning": {
       "title": "Сейчас в работе «{{name}}» (неделя {{current}} из {{total}})",

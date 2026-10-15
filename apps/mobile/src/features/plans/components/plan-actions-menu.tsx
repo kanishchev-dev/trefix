@@ -13,7 +13,13 @@ import { PlanMetaEditor } from "./plan-meta-editor";
 import { ActionsSheet, type SheetAction } from "./plans-ui";
 import { ScheduleChangeSheet } from "./schedule-change-sheet";
 
-type ActionKey = "schedule" | "goalDate" | "meta" | "allPlans" | "cancel";
+type ActionKey =
+  | "createPlan"
+  | "schedule"
+  | "goalDate"
+  | "meta"
+  | "allPlans"
+  | "cancel";
 
 type Props = {
   visible: boolean;
@@ -41,11 +47,13 @@ export function PlanActionsMenu({
   const activeQuery = useActivePlan();
   const [openSheet, setOpenSheet] = useState<Exclude<
     ActionKey,
-    "allPlans"
+    "allPlans" | "createPlan"
   > | null>(null);
   const planId = overview.plan.id;
 
+  // The header button of the Plan tab opens this menu, so creating a plan lives here too.
   const actions: SheetAction<ActionKey>[] = [
+    { key: "createPlan", label: copy.plans.tab.createPlan },
     { key: "schedule", label: menuCopy.schedule },
     { key: "goalDate", label: menuCopy.goalDate },
     { key: "meta", label: menuCopy.meta },
@@ -66,6 +74,10 @@ export function PlanActionsMenu({
         onSelect={(key) => {
           if (key === "allPlans") {
             navigation.openPlans({ source: "plan_menu" });
+            return;
+          }
+          if (key === "createPlan") {
+            navigation.openCreationMethod();
             return;
           }
           if (key === "cancel") void activeQuery.refetch();

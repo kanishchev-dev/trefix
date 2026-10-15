@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import {
+  PLAN_NAME_MAX_LENGTH,
   type ActivePlanSummary,
   type PlanStartBlock,
   type PlanStartOption,
@@ -49,6 +50,7 @@ import {
   plansUiStyles,
   SheetActionsColumn,
 } from "./plans-ui";
+import { GlassInput } from "../../../shared/ui/glass-input";
 import { styles } from "./start-plan-sheet.styles";
 import { RadioRow } from "./radio-row";
 
@@ -61,6 +63,8 @@ type Props = {
   /** `draft` starts a stored draft; `creation` finishes the creation flow. */
   mode: "draft" | "creation";
   planName: string;
+  /** Creation mode: lets the user name the plan right before starting it. */
+  onChangeName?: (name: string) => void;
   /** Draft mode: start options are loaded for this plan. */
   planId?: string;
   /** Creation mode: start options that came with the preview. */
@@ -88,6 +92,7 @@ export function StartPlanSheet({
   onClose,
   mode,
   planName,
+  onChangeName,
   planId,
   options: creationOptions,
   entry,
@@ -266,7 +271,11 @@ export function StartPlanSheet({
 
   return (
     <BottomSheet
-      title={fillTemplate(startCopy.title, { name: planName })}
+      title={
+        planName.trim()
+          ? fillTemplate(startCopy.title, { name: planName.trim() })
+          : startCopy.titleUnnamed
+      }
       visible={open}
       animatedHide
       onClose={() => {
@@ -297,6 +306,31 @@ export function StartPlanSheet({
               language={language}
               theme={theme}
             />
+          </SheetBlock>
+        ) : null}
+
+        {onChangeName ? (
+          <SheetBlock theme={theme}>
+            <GlassInput
+              theme={theme}
+              label={copy.plans.meta.name}
+              value={planName}
+              onChangeText={onChangeName}
+              placeholder={copy.plans.meta.namePlaceholder}
+              maxLength={PLAN_NAME_MAX_LENGTH}
+              returnKeyType="done"
+            />
+            <Text
+              style={[
+                styles.muted,
+                {
+                  color: theme.color.mutedForeground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            >
+              {startCopy.nameHint}
+            </Text>
           </SheetBlock>
         ) : null}
 

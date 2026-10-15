@@ -1,48 +1,74 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { StyleSheet, Text, View } from "react-native";
+import { MoreHorizontal } from "lucide-react-native";
 
 import { type PlanAdaptation } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { formatHoursMinutesSeconds } from "@trefix/utils";
 
 import {
+  HeaderActionButton,
   HeaderLogo,
   HeaderPlusButton,
   HeaderTextButton,
 } from "../components/header";
+import { WorkoutCard } from "../components/today/day-event-cards";
+import { workoutIntensity } from "../lib/workout-intensity";
+import { type DayEvent } from "../today-types";
 import { useHeaderOptions } from "../context/header-context";
 import { SectionLayout } from "../components/section-layout";
-import { CurrentWeekContextCard } from "../../plan/components/current-week-context-card";
+import { PlanHero } from "../../plan/components/plan-hero";
+import { CoachAdaptationRow } from "../../plan/components/coach-adaptation-row";
 import { PlanAdaptationDetailsSheet } from "../../plan/components/plan-adaptation-details-sheet";
 import { PlanCompletedState } from "../../plan/components/plan-completed-state";
 import { PlanEmptyState } from "../../plan/components/plan-empty-state";
 import { PlanErrorState } from "../../plan/components/plan-error-state";
 import { PlanNotStartedState } from "../../plan/components/plan-not-started-state";
-import { PlanOverviewCard } from "../../plan/components/plan-overview-card";
 import { PlanSkeleton } from "../../plan/components/plan-skeleton";
+import { PlanPhaseWeeks } from "../../plan/components/plan-phase-weeks";
 import { PlanTimeline } from "../../plan/components/plan-timeline";
 import { PlanWeekDetailsSheet } from "../../plan/components/plan-week-details-sheet";
-import { RecentAdaptationsCard } from "../../plan/components/recent-adaptations-card";
+import { ThisWeekCard } from "../../plan/components/this-week-card";
 import { usePlanOverview } from "../../plan/hooks/use-plan-overview";
+import {
+  latestAdaptation,
+  phaseGroups,
+  planWeekStats,
+  weekDays,
+  weekStartDate,
+  workoutsOn,
+} from "../../plan/lib/active-plan-view";
 import { shortDayNamesFor } from "../../plan-creation/components/workout-edit-form";
 import { PendingAdaptationsCard } from "../../plans/components/pending-adaptations-card";
 import { PlanActionsMenu } from "../../plans/components/plan-actions-menu";
 import { PlanWorkoutAddSheet } from "../../plans/components/plan-workout-add-sheet";
 import { usePlanDetails } from "../../plans/hooks/use-plan";
 import { usePlanCounts, usePlansList } from "../../plans/hooks/use-plans";
+import { useUnitFormat } from "../../profile/hooks/use-unit-format";
 import {
   addDaysIso,
   mondayBasedWeekday,
+  parseIsoDate,
   todayIso,
   workoutLocalDate,
 } from "../../plans/lib/plan-dates";
-import { planTitle } from "../../plans/lib/plan-texts";
+import {
+  keySessionLabel,
+  planHeading,
+  planTitle,
+} from "../../plans/lib/plan-texts";
 import {
   overviewWeekView,
   weekWorkoutRows,
   type PlanWeekView,
 } from "../../plans/lib/plan-weeks";
-import { pushSubScreen } from "../main-routes";
+import { pushSubScreen, useMainShell } from "../main-routes";
+import { workoutTargetText } from "../../../shared/lib/workout-target";
 import { usePlansNavigation } from "../../plans/plans-navigation";
 import {
+  fillTemplate,
+  formatDateLong,
   formatDayMonth,
   type AppLanguage,
   type MainCopy,
@@ -55,14 +81,41 @@ type Props = {
   language: AppLanguage;
 };
 
+/** Backend status → card status; a skipped workout is shown as missed. */
+function toDayEventStatus(status: string): DayEvent["status"] {
+  if (status === "completed") return "completed";
+  if (status === "skipped") return "missed";
+  return "planned";
+}
+
 export function PlanScreen({ theme, themeMode, copy, language }: Props) {
   const navigation = usePlansNavigation();
-  const { displayState, data, refresh, isRefreshing } = usePlanOverview();
+  const { openTrefix } = useMainShell();
+  const format = useUnitFormat(copy, language);
+  const { displayState, data, refresh } = usePlanOverview();
+  // The spinner follows the user's pull only: a background refetch (tab focus,
+  // cache invalidation) must not open the pull-to-refresh gap and jump the screen.
+  const [pulling, setPulling] = useState(false);
   const isEmpty = displayState === "empty";
+  const isActive = displayState === "active" && data !== null;
   const countsQuery = usePlanCounts();
   const draftsQuery = usePlansList(
     "draft",
     isEmpty && (countsQuery.data?.draft ?? 0) > 0,
+  );
+  // A plan can be started from the library, the creation flow or the coach while
+  // this tab sits frozen in the background: check again each time it is opened.
+  const firstFocus = useRef(true);
+  const refetchCounts = countsQuery.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      void refresh();
+      void refetchCounts();
+    }, [refresh, refetchCounts]),
   );
   const planId = data && !isEmpty ? data.plan.id : null;
   const detailsQuery = usePlanDetails(planId);
@@ -71,6 +124,14 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
     () => data?.weeks.map((week) => overviewWeekView(week, copy)) ?? [],
     [copy, data?.weeks],
   );
+  const workouts = useMemo(() => details?.workouts ?? [], [details?.workouts]);
+  const weekStats = useMemo(
+    () => (data ? planWeekStats(data.weeks, workouts) : []),
+    [data, workouts],
+  );
+  const groups = useMemo(() => phaseGroups(weekStats), [weekStats]);
+  const startDate =
+    (details?.startDate ?? data?.plan.startDate)?.slice(0, 10) ?? null;
 
   const [selectedWeek, setSelectedWeek] = useState<PlanWeekView | null>(null);
   const [selectedAdaptation, setSelectedAdaptation] =
@@ -103,7 +164,22 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
         />
       ),
       centerContent: <HeaderLogo source={logoSource} />,
-      rightAction: (
+      // The plan in progress keeps its actions here; creating a plan is the first of them.
+      rightAction: isActive ? (
+        <HeaderActionButton
+          accessibilityLabel={copy.plans.card.moreActions}
+          icon={
+            <MoreHorizontal
+              color={theme.color.foreground}
+              size={20}
+              strokeWidth={2.2}
+            />
+          }
+          onPress={() => setActionsOpen(true)}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      ) : (
         <HeaderPlusButton
           onPress={navigation.openCreationMethod}
           theme={theme}
@@ -112,12 +188,15 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
       ),
       variant: "default",
       bottomContent: null,
+      tone: isActive ? "surface" : "screen",
     },
     [
       logoSource,
       copy.plans.tab.openPlans,
       copy.plans.tab.plansButton,
+      copy.plans.card.moreActions,
       navigation,
+      isActive,
     ],
   );
 
@@ -152,19 +231,76 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
       });
   };
 
+  const selectWeek = (weekNumber: number) =>
+    setSelectedWeek(
+      weeks.find((week) => week.weekNumber === weekNumber) ?? null,
+    );
+
   const handleRefresh = () => {
-    refresh();
-    void countsQuery.refetch();
+    setPulling(true);
+    void Promise.allSettled([refresh(), countsQuery.refetch()]).finally(() =>
+      setPulling(false),
+    );
   };
+
+  const currentStats = weekStats.find((week) => week.status === "current");
+  const currentDays =
+    startDate && data && currentStats
+      ? weekDays(weekStartDate(startDate, currentStats.weekNumber), workouts)
+      : [];
+  const workoutTypeLabels = copy.plan.creation.workoutTypes as Record<
+    string,
+    string | undefined
+  >;
+  const todayEvents: DayEvent[] = workoutsOn(workouts).map((workout) => ({
+    id: workout.id,
+    type: workout.type === "recovery" ? "recovery" : "workout",
+    status: toDayEventStatus(workout.status),
+    title:
+      workoutTargetText(workout.target, "title") ||
+      workoutTypeLabels[workout.type] ||
+      workout.type,
+    typeLabel: workoutTypeLabels[workout.type],
+    dateLabel: `${copy.today.today} · ${formatDateLong(new Date(), language)}`,
+    intensity: workoutIntensity(workout.type),
+    duration: format.minutes(Math.round(workout.durationMinutes)),
+    distance: format.distance(workout.distanceKm),
+  }));
+  const coachChange = latestAdaptation(data?.adaptations ?? []);
+
+  const goal = data?.plan.goal;
+  const goalValue = goal?.target?.finishTimeSec
+    ? formatHoursMinutesSeconds(goal.target.finishTimeSec)
+    : goal?.target?.distanceMeters
+      ? format.distance(goal.target.distanceMeters / 1000)
+      : null;
+  const goalRow = {
+    title: goalValue
+      ? fillTemplate(copy.plan.screen.weeks.goal, { value: goalValue })
+      : copy.plan.screen.weeks.goalFallback,
+    subtitle: data
+      ? [
+          planTitle(data.plan, copy, language),
+          goal?.targetDate
+            ? formatDateLong(parseIsoDate(goal.targetDate), language)
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : null,
+  };
+
+  const fullWidth = isActive || displayState === "empty";
 
   return (
     <SectionLayout
       hasHeader={false}
       scrollable
-      refreshing={isRefreshing}
+      refreshing={pulling}
       onRefresh={handleRefresh}
       theme={theme}
       themeMode={themeMode}
+      contentStyle={fullWidth ? styles.fullWidth : undefined}
     >
       {/* State Rendering */}
       {displayState === "loading" ? (
@@ -182,10 +318,9 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
           language={language}
           counts={countsQuery.data}
           drafts={draftsQuery.data?.pages[0]?.items}
-          onCreatePlan={navigation.openCreationMethod}
-          onOpenPlans={() =>
-            navigation.openPlans({ segment: "draft", source: "plan_tab_empty" })
-          }
+          onCreateWithCoach={openTrefix}
+          onCreateManually={() => navigation.openCreation({ mode: "create" })}
+          onOpenPlans={() => navigation.openPlans({ source: "plan_tab_empty" })}
           onOpenHistory={() =>
             navigation.openPlans({
               segment: "history",
@@ -198,6 +333,7 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
               "plan_tab_empty",
             )
           }
+          onOpenDraft={(plan) => navigation.openPlanDetails(plan.id)}
           theme={theme}
           themeMode={themeMode}
         />
@@ -237,14 +373,19 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
       ) : (
         /* Active Plan View */
         <>
-          {/* Plan Goal Overview */}
-          <PlanOverviewCard
+          <PlanHero
+            kicker={fillTemplate(copy.plan.screen.hero.kicker, {
+              current: data.plan.currentWeek,
+              total: data.plan.totalWeeks,
+            })}
+            title={planHeading(data.plan, copy)}
+            goal={data.plan.goal}
+            startDate={startDate}
+            totalWeeks={data.plan.totalWeeks}
+            weeks={weekStats}
+            theme={theme}
             copy={copy}
             language={language}
-            overview={data}
-            onOpenActions={() => setActionsOpen(true)}
-            theme={theme}
-            themeMode={themeMode}
           />
 
           <PendingAdaptationsCard
@@ -254,33 +395,76 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
             themeMode={themeMode}
           />
 
-          {/* Training Plan Timeline */}
-          <PlanTimeline
-            copy={copy}
-            onSelectWeek={setSelectedWeek}
-            theme={theme}
-            themeMode={themeMode}
-            weeks={weeks}
-          />
-
-          {/* Current Week Context */}
-          {data.currentWeekContext ? (
-            <CurrentWeekContextCard
-              context={data.currentWeekContext}
-              copy={copy}
+          {currentStats && currentDays.length > 0 ? (
+            <ThisWeekCard
+              week={currentStats}
+              days={currentDays}
+              keySessions={
+                data.currentWeekContext?.keySessions.map((session) =>
+                  keySessionLabel(session, copy),
+                ) ?? []
+              }
               theme={theme}
-              themeMode={themeMode}
+              copy={copy}
+              language={language}
+              onPress={() => selectWeek(currentStats.weekNumber)}
             />
           ) : null}
 
-          {/* Recent Adaptations */}
-          <RecentAdaptationsCard
-            adaptations={data.adaptations}
-            copy={copy}
-            onSelectAdaptation={setSelectedAdaptation}
-            theme={theme}
-            themeMode={themeMode}
-          />
+          {todayEvents.length > 0 ? (
+            <View>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  {
+                    color: theme.color.foreground,
+                    fontFamily: theme.typography.fontFamily.sans.medium,
+                  },
+                ]}
+              >
+                {copy.plan.screen.todayTitle}
+              </Text>
+              {todayEvents.map((event) => (
+                <WorkoutCard
+                  key={event.id}
+                  event={event}
+                  copy={copy}
+                  theme={theme}
+                  themeMode={themeMode}
+                  onPress={() => openWorkout(event.id)}
+                />
+              ))}
+            </View>
+          ) : null}
+
+          {coachChange ? (
+            <CoachAdaptationRow
+              adaptation={coachChange}
+              copy={copy}
+              theme={theme}
+              onPress={setSelectedAdaptation}
+            />
+          ) : null}
+
+          {groups.length > 0 ? (
+            <PlanPhaseWeeks
+              groups={groups}
+              goal={goalRow}
+              theme={theme}
+              copy={copy}
+              language={language}
+              onSelectWeek={selectWeek}
+              onPressGoal={() => setActionsOpen(true)}
+            />
+          ) : (
+            <PlanTimeline
+              copy={copy}
+              onSelectWeek={setSelectedWeek}
+              theme={theme}
+              themeMode={themeMode}
+              weeks={weeks}
+            />
+          )}
         </>
       )}
 
@@ -291,6 +475,12 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
         mode={displayState === "completed" ? "history" : "active"}
         week={selectedWeek}
         workouts={weekRows}
+        totalWeeks={data?.plan.totalWeeks}
+        weekStart={
+          startDate && selectedWeek
+            ? weekStartDate(startDate, selectedWeek.weekNumber)
+            : null
+        }
         onSelectWorkout={openWorkout}
         onAddWorkout={selectedWeek ? addWorkoutTo(selectedWeek) : undefined}
         onClose={() => setSelectedWeek(null)}
@@ -334,3 +524,18 @@ export function PlanScreen({ theme, themeMode, copy, language }: Props) {
     </SectionLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  // Blocks run edge to edge: the hero is full-bleed, cards keep their own 16 px.
+  fullWidth: {
+    paddingHorizontal: 0,
+    gap: 12,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+});
