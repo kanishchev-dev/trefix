@@ -400,7 +400,7 @@ export class ProgressService {
   }
 }
 
-function toWorkoutSample(workout: Workout, load: number): WorkoutSample {
+export function toWorkoutSample(workout: Workout, load: number): WorkoutSample {
   const actual = (workout.actual ?? {}) as Record<string, unknown>;
   const target = (workout.target ?? {}) as Record<string, unknown>;
   const num = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null);

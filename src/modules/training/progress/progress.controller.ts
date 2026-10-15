@@ -35,6 +35,7 @@ import {
   RecordHistoryResponseDto,
   RecordsExclusionResponseDto,
 } from './dto/progress-response.dto';
+import { ProgressSummaryQueryDto, ProgressSummaryResponseDto } from './dto/progress-summary.dto';
 import { ProgressService } from './progress.service';
 import {
   type ProgressMetricView,
@@ -44,6 +45,8 @@ import {
   type RecordsExclusionView,
   type RecordView,
 } from './progress.views';
+import { ProgressSummaryService } from './progress-summary.service';
+import { type ProgressSummaryView } from './progress-summary.views';
 
 const OVERVIEW_EXAMPLE = {
   period: { key: '3M', from: '2026-07-09', to: '2026-10-09' },
@@ -82,7 +85,21 @@ const OVERVIEW_EXAMPLE = {
 @ApiBearerAuth()
 @Controller({ path: '', version: '1' })
 export class ProgressController {
-  constructor(private readonly progressService: ProgressService) {}
+  constructor(
+    private readonly progressService: ProgressService,
+    private readonly summaryService: ProgressSummaryService,
+  ) {}
+
+  @Get('progress/summary')
+  @RequirePermissions('training.progress.read')
+  @ApiOperation({
+    summary: 'History on facts: totals by week, month, year and all time, comparisons, plan completion, trends',
+    description: 'Local days, weeks (Monday first) and months are resolved in `timezone`.',
+  })
+  @ApiOkResponse({ type: ProgressSummaryResponseDto })
+  summary(@CurrentUser() user: AuthUserContext, @Query() query: ProgressSummaryQueryDto): Promise<ProgressSummaryView> {
+    return this.summaryService.summary(user.id, query.timezone);
+  }
 
   @Get('progress/overview')
   @RequirePermissions('training.progress.read')

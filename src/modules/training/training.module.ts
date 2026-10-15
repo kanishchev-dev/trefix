@@ -53,6 +53,7 @@ import { PlansController } from './plans/plans.controller';
 import { ProgressController } from './progress/progress.controller';
 import { ProgressListener } from './progress/progress.listener';
 import { ProgressService } from './progress/progress.service';
+import { ProgressSummaryService } from './progress/progress-summary.service';
 import { TrainingController } from './training.controller';
 import { TrainingEngine } from './training.engine';
 import { TrainingListener } from './training.listener';
@@ -131,6 +132,7 @@ import { WorkoutsService } from './workouts/workouts.service';
     GearService,
     GearListener,
     ProgressService,
+    ProgressSummaryService,
     ProgressListener,
     WorkoutExecutionBuilder,
   ],
