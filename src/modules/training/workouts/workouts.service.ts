@@ -14,6 +14,7 @@ import { CompleteWorkoutDto } from '../dto/complete-workout.dto';
 import { CreateWorkoutDto } from '../dto/create-workout.dto';
 import { Workout } from '../entities/workout.entity';
 import { WorkoutCompletedEvent } from '../events/workout-completed.event';
+import { WorkoutCreatedEvent } from '../events/workout-created.event';
 import {
   AdaptationEventView,
   AthleteStateView,
@@ -164,6 +165,12 @@ export class WorkoutsService {
           sourceProvider: source,
         },
         { transaction },
+      );
+      emitAfterCommit(
+        this.eventEmitter,
+        transaction,
+        TRAINING_EVENTS.WORKOUT_CREATED,
+        new WorkoutCreatedEvent(athlete.id, workout.id, null, actorUserId),
       );
 
       if (!isCompleted) {

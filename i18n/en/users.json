@@ -1,0 +1,10 @@
+{
+  "MAILS": {
+    "ACCOUNT_BLOCKED": {
+      "SUBJECT": "Your Trefix account is blocked",
+      "TITLE": "Your account is blocked",
+      "MESSAGE": "Your Trefix account has been blocked by an administrator. If you think this is a mistake, reply to this email.",
+      "MESSAGE_UNTIL": "Your Trefix account has been blocked by an administrator until {until}. If you think this is a mistake, reply to this email."
+    }
+  }
+}

@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { USER_BLOCK_REASONS, USER_STATUSES, type UserBlockReason, type UserStatus } from '../user-status';
+
 export class AdminUserGroupDto {
   @ApiProperty({ example: 'b8c8d8e8-f8a8-48b8-88c8-d8e8f8a8b8c8' })
   id!: string;
@@ -68,6 +70,26 @@ export class AdminUserResponseDto {
 
   @ApiProperty({ type: String, format: 'date-time', nullable: true, example: '2026-09-11T12:00:00.000Z' })
   passwordChangedAt!: Date | null;
+
+  @ApiProperty({ enum: USER_STATUSES, example: 'active' })
+  status!: UserStatus;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  blockedAt!: Date | null;
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    description: 'Null with blockedAt set: until unblocked',
+  })
+  blockedUntil!: Date | null;
+
+  @ApiProperty({ enum: USER_BLOCK_REASONS, nullable: true })
+  blockedReason!: UserBlockReason | null;
+
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true, description: 'Set for a deleted account' })
+  deletedAt?: Date | null;
 
   @ApiProperty({ type: [AdminUserGroupDto] })
   groups!: AdminUserGroupDto[];

@@ -16,6 +16,8 @@ export interface SystemPermissionDefinition {
   readonly resource: string;
   readonly action: string;
   readonly description: string;
+  /** Admin-panel capability: never granted to ordinary accounts by default. */
+  readonly adminOnly?: true;
 }
 
 export interface SystemPermissionGroupDefinition {
@@ -35,6 +37,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   // ---------------------------------------------------------------- access
   {
     key: 'permissions.read',
+    adminOnly: true,
     module: 'permissions',
     resource: '',
     action: 'read',
@@ -42,6 +45,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'permissions.manage',
+    adminOnly: true,
     module: 'permissions',
     resource: '',
     action: 'manage',
@@ -58,6 +62,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'users.create',
+    adminOnly: true,
     module: 'users',
     resource: '',
     action: 'create',
@@ -65,6 +70,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'users.update',
+    adminOnly: true,
     module: 'users',
     resource: '',
     action: 'update',
@@ -72,6 +78,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'users.delete',
+    adminOnly: true,
     module: 'users',
     resource: '',
     action: 'delete',
@@ -79,10 +86,36 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'users.manage',
+    adminOnly: true,
     module: 'users',
     resource: '',
     action: 'manage',
     description: 'Manage user access: send activation invites, assign groups and individual rights',
+  },
+  {
+    key: 'users.activity.read',
+    adminOnly: true,
+    module: 'users',
+    resource: 'activity',
+    action: 'read',
+    description: 'View and export the action history of any user',
+  },
+  {
+    key: 'users.security.read',
+    adminOnly: true,
+    module: 'users',
+    resource: 'security',
+    action: 'read',
+    description: 'View account status, sessions, sign-in methods, consents and data exports of any user',
+  },
+  {
+    key: 'users.security.manage',
+    adminOnly: true,
+    module: 'users',
+    resource: 'security',
+    action: 'manage',
+    description:
+      'Block and unblock users, end sessions, change sign-in methods and email, request data exports, delete and restore accounts',
   },
 
   // -------------------------------------------------------------- settings
@@ -95,6 +128,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'settings.update',
+    adminOnly: true,
     module: 'settings',
     resource: '',
     action: 'update',
@@ -329,6 +363,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'training.calendar.read',
+    adminOnly: true,
     module: 'training',
     resource: 'calendar',
     action: 'read',
@@ -336,6 +371,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'training.calendar.manage',
+    adminOnly: true,
     module: 'training',
     resource: 'calendar',
     action: 'manage',
@@ -343,6 +379,7 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'training.userplans.read',
+    adminOnly: true,
     module: 'training',
     resource: 'userplans',
     action: 'read',
@@ -350,10 +387,59 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
   },
   {
     key: 'training.userplans.manage',
+    adminOnly: true,
     module: 'training',
     resource: 'userplans',
     action: 'manage',
     description: 'Create, edit, start, cancel, delete and rebuild training plans of any user from the admin panel',
+  },
+  {
+    key: 'training.userathletes.read',
+    adminOnly: true,
+    module: 'training',
+    resource: 'userathletes',
+    action: 'read',
+    description: 'View the athlete profile and zones of any user in the admin panel',
+  },
+  {
+    key: 'training.userathletes.manage',
+    adminOnly: true,
+    module: 'training',
+    resource: 'userathletes',
+    action: 'manage',
+    description: 'Edit the athlete profile, zones and availability of any user from the admin panel',
+  },
+  {
+    key: 'training.userprogress.read',
+    adminOnly: true,
+    module: 'training',
+    resource: 'userprogress',
+    action: 'read',
+    description: 'View progress, records and race results of any user in the admin panel',
+  },
+  {
+    key: 'training.userprogress.manage',
+    adminOnly: true,
+    module: 'training',
+    resource: 'userprogress',
+    action: 'manage',
+    description: 'Add and delete race results of any user from the admin panel',
+  },
+  {
+    key: 'training.usergear.read',
+    adminOnly: true,
+    module: 'training',
+    resource: 'usergear',
+    action: 'read',
+    description: 'View shoes and devices of any user in the admin panel',
+  },
+  {
+    key: 'training.usergear.manage',
+    adminOnly: true,
+    module: 'training',
+    resource: 'usergear',
+    action: 'manage',
+    description: 'Add, edit, archive and delete gear of any user from the admin panel',
   },
   {
     key: 'training.analyze',
@@ -369,6 +455,55 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     action: 'adapt',
     description: 'Adapt the current training plan to the athlete state and recovery',
   },
+  {
+    key: 'integrations.users.read',
+    adminOnly: true,
+    module: 'integrations',
+    resource: 'users',
+    action: 'read',
+    description: 'View integrations of any user in the admin panel',
+  },
+  {
+    key: 'integrations.users.manage',
+    adminOnly: true,
+    module: 'integrations',
+    resource: 'users',
+    action: 'manage',
+    description: 'Sync and disconnect integrations of any user from the admin panel',
+  },
+  {
+    key: 'coach.users.read',
+    adminOnly: true,
+    module: 'coach',
+    resource: 'users',
+    action: 'read',
+    description: 'View the AI coach session list and workout notes of any user',
+  },
+  {
+    key: 'coach.users.manage',
+    adminOnly: true,
+    module: 'coach',
+    resource: 'users',
+    action: 'manage',
+    description: 'Delete AI coach conversations and regenerate or delete workout notes of any user',
+  },
+  {
+    key: 'coach.conversations.read',
+    adminOnly: true,
+    module: 'coach',
+    resource: 'conversations',
+    action: 'read',
+    description: 'Read AI coach conversations of any user (debugging; every view is logged)',
+  },
+  // ----------------------------------------------------------------- audit
+  {
+    key: 'audit.read',
+    adminOnly: true,
+    module: 'audit',
+    resource: '',
+    action: 'read',
+    description: 'View and export the log of actions of all administrators and users',
+  },
 ] as const;
 
 export const SYSTEM_PERMISSION_KEYS = SYSTEM_PERMISSION_CATALOG.map((permission) => permission.key);
@@ -378,16 +513,11 @@ export const SYSTEM_PERMISSION_KEYS = SYSTEM_PERMISSION_CATALOG.map((permission)
  *
  * Covers the whole self-service surface used by the mobile app (athlete data,
  * plans, workouts, AI coach, integrations, files) plus the read-only settings
- * the application shell needs. Deliberately excluded: everything under
- * `permissions` and every privileged `users` action — those are admin-panel
- * capabilities and must be granted explicitly.
+ * the application shell needs. Everything marked `adminOnly` is excluded:
+ * admin-panel capabilities are granted explicitly.
  */
 export const DEFAULT_USER_PERMISSION_KEYS: readonly string[] = SYSTEM_PERMISSION_CATALOG.filter(
-  (permission) =>
-    !permission.key.startsWith('permissions.') &&
-    !permission.key.startsWith('training.calendar.') &&
-    !permission.key.startsWith('training.userplans.') &&
-    !['users.create', 'users.update', 'users.delete', 'users.manage', 'settings.update'].includes(permission.key),
+  (permission) => !permission.adminOnly,
 ).map((permission) => permission.key);
 
 /**

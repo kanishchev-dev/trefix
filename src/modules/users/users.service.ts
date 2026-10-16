@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
-import { col, fn, Op, UniqueConstraintError, where as sequelizeWhere } from 'sequelize';
+import { col, fn, Op, UniqueConstraintError, where as sequelizeWhere, type WhereOptions } from 'sequelize';
 
 import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
@@ -20,6 +20,7 @@ import { User } from './entities/user.entity';
 import { UserCreatedEvent } from './events/user-created.event';
 import { UserDeletedEvent } from './events/user-deleted.event';
 import { UserUpdatedEvent } from './events/user-updated.event';
+import { resolveUserStatus, type UserStatus } from './user-status';
 
 @Injectable()
 export class UsersService {
@@ -193,7 +194,7 @@ export class UsersService {
    * @returns Paginated list of user entities
    */
   async findAll(query: UserQueryDto = new UserQueryDto()): Promise<PaginatedResponseDto<User>> {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC', status } = query;
 
     const searchPattern = search ? `%${this.escapeLikePattern(search.toLowerCase())}%` : null;
 
@@ -207,14 +208,37 @@ export class UsersService {
         }
       : undefined;
 
+    const statusFilter = this.statusFilter(status);
+    const conditions = [searchFilter, statusFilter].filter((condition) => condition !== undefined);
+
     const { rows, count } = await this.userModel.findAndCountAll({
-      where: searchFilter,
+      where: conditions.length > 0 ? { [Op.and]: conditions } : undefined,
+      paranoid: status !== 'deleted',
       limit,
       offset: (page - 1) * limit,
       order: [[col(this.toColumnName(sortBy)), sortOrder]],
     });
 
     return new PaginatedResponseDto(rows, count, page, limit);
+  }
+
+  /** `isUserBlocked` expressed as a query; deleted accounts are only listed when asked for. */
+  private statusFilter(status: UserStatus | undefined): WhereOptions<User> | undefined {
+    const now = new Date();
+    const blocked: WhereOptions<User> = {
+      blockedAt: { [Op.ne]: null },
+      [Op.or]: [{ blockedUntil: null }, { blockedUntil: { [Op.gt]: now } }],
+    };
+    switch (status) {
+      case 'deleted':
+        return { deletedAt: { [Op.ne]: null } };
+      case 'blocked':
+        return blocked;
+      case 'active':
+        return { [Op.not]: blocked } as WhereOptions<User>;
+      default:
+        return undefined;
+    }
   }
 
   private toColumnName(field: string): string {
@@ -245,7 +269,11 @@ export class UsersService {
    * @throws EntityNotFoundException if user is not found
    */
   async findAdminDetail(id: string): Promise<AdminUserResponseDto> {
-    const user = await this.findOne(id);
+    // Deleted accounts stay visible to administrators until purged, so they can be restored.
+    const user = await this.userModel.findByPk(id, { paranoid: false });
+    if (!user) {
+      throw new EntityNotFoundException('User', id);
+    }
     const { groups, individualPermissions, effectivePermissions } = await this.userPermissionsService.getAccessSummary(
       user.id,
     );
@@ -264,6 +292,11 @@ export class UsersService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       passwordChangedAt: user.passwordChangedAt,
+      status: resolveUserStatus(user),
+      blockedAt: user.blockedAt,
+      blockedUntil: user.blockedUntil,
+      blockedReason: user.blockedReason,
+      deletedAt: user.deletedAt ?? null,
       groups,
       individualPermissions,
       effectivePermissions,
@@ -282,6 +315,25 @@ export class UsersService {
       throw new EntityNotFoundException('User', id);
     }
     return user;
+  }
+
+  /**
+   * Display names of the given users, including soft-deleted ones, for lists
+   * that reference people (activity history). Unknown ids are absent.
+   */
+  async findDisplayNames(ids: readonly string[]): Promise<Map<string, string>> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) {
+      return new Map();
+    }
+    const users = await this.userModel.findAll({
+      where: { id: { [Op.in]: unique } },
+      attributes: ['id', 'firstName', 'lastName', 'email'],
+      paranoid: false,
+    });
+    return new Map(
+      users.map((user) => [user.id, `${user.firstName} ${user.lastName}`.trim() || user.email] as [string, string]),
+    );
   }
 
   /**

@@ -123,6 +123,18 @@
     "WORKOUT_NOT_COMPLETED": "Тренировка ещё не завершена",
     "WORKOUT_NOT_FOUND": "Тренировка не найдена",
     "WORKOUT_NOT_PLANNED": "Так можно завершить только запланированную тренировку",
-    "WORKOUT_NOT_RUNNABLE": "В день отдыха нечего выполнять"
+    "WORKOUT_NOT_RUNNABLE": "В день отдыха нечего выполнять",
+    "ACTIVITY_CURSOR_INVALID": "Некорректный курсор страницы истории действий",
+    "ACCOUNT_DELETION_NOT_REQUESTED": "Аккаунт не удалён",
+    "EMAIL_TAKEN": "Этот email уже используется другим аккаунтом",
+    "USER_ALREADY_BLOCKED": "Аккаунт уже заблокирован",
+    "USER_BLOCKED": "Аккаунт заблокирован",
+    "USER_BLOCK_FORBIDDEN": "Нельзя заблокировать системный или собственный аккаунт",
+    "USER_BLOCK_UNTIL_INVALID": "Окончание блокировки должно быть в будущем",
+    "USER_NOT_BLOCKED": "Аккаунт не заблокирован",
+    "WORKOUT_HAS_SOURCES": "Результат получен из записи или интеграции, его нельзя сбросить",
+    "WORKOUT_BELONGS_TO_PLAN": "Тренировки плана меняются через план",
+    "WORKOUT_SOURCE_NOT_FOUND": "У тренировки нет записи от этого сервиса",
+    "INTEGRATION_PROVIDER_INVALID": "На устройстве синхронизируются только Apple Health и Health Connect"
   }
 }

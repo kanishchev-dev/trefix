@@ -25,9 +25,8 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AdminEndpoint } from '@/common/decorators/admin-endpoint.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
-import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import { CreateManualPlanDto, PreviewManualPlanDto } from '../dto/create-manual-plan.dto';
 import { ManualPlanPreviewResponseDto } from '../dto/manual-plan-preview-response.dto';
@@ -75,6 +74,7 @@ const DEFAULT_PAGE_LIMIT = 20;
 @ApiBearerAuth()
 @ApiParam({ name: 'userId', format: 'uuid', description: 'Owner of the plans' })
 @ApiNotFoundResponse({ description: 'USER_NOT_FOUND, ATHLETE_NOT_FOUND, TRAINING_PLAN_NOT_FOUND' })
+@AdminEndpoint()
 @Controller({ path: 'users/:userId/training', version: '1' })
 export class AdminPlansController {
   constructor(private readonly adminPlansService: AdminPlansService) {}
@@ -125,11 +125,10 @@ export class AdminPlansController {
   @ApiCreatedResponse({ type: PlanDetailsDto })
   @ApiConflictResponse({ description: 'ACTIVE_PLAN_EXISTS, PLANS_LIMIT_REACHED' })
   createManualPlan(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: CreateManualPlanDto,
   ): Promise<PlanDetails> {
-    return this.adminPlansService.createManualPlan(actor.id, userId, dto);
+    return this.adminPlansService.createManualPlan(userId, dto);
   }
 
   // ------------------------------------------------------------------ single plan
@@ -153,12 +152,11 @@ export class AdminPlansController {
   @ApiOkResponse({ type: PlanMetaResponseDto })
   @ApiConflictResponse({ description: 'PLAN_VERSION_CONFLICT' })
   async updateMeta(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
     @Body() dto: UpdatePlanMetaDto,
   ): Promise<PlanMetaResponseDto> {
-    const plan = await this.adminPlansService.updateMeta(actor.id, userId, planId, dto);
+    const plan = await this.adminPlansService.updateMeta(userId, planId, dto);
     return { id: plan.id, name: plan.name, notes: plan.notes, version: plan.version };
   }
 
@@ -170,11 +168,10 @@ export class AdminPlansController {
   @ApiNoContentResponse()
   @ApiConflictResponse({ description: 'PLAN_ACTIVE_CANNOT_DELETE' })
   async delete(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
   ): Promise<void> {
-    await this.adminPlansService.delete(actor.id, userId, planId);
+    await this.adminPlansService.delete(userId, planId);
   }
 
   @Put('plans/:planId/structure')
@@ -183,12 +180,11 @@ export class AdminPlansController {
   @ApiParam({ name: 'planId', format: 'uuid' })
   @ApiOkResponse({ type: PlanVersionResponseDto })
   async updateStructure(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
     @Body() dto: UpdatePlanStructureDto,
   ): Promise<PlanVersionResponseDto> {
-    const plan = await this.adminPlansService.updateStructure(actor.id, userId, planId, dto);
+    const plan = await this.adminPlansService.updateStructure(userId, planId, dto);
     return { version: plan.version };
   }
 
@@ -215,12 +211,11 @@ export class AdminPlansController {
   @ApiOkResponse({ type: PlanDetailsDto })
   @ApiConflictResponse({ description: 'ACTIVE_PLAN_EXISTS, PLAN_INVALID_STATUS' })
   start(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
     @Body() dto: StartPlanDto,
   ): Promise<PlanDetails> {
-    return this.adminPlansService.start(actor.id, userId, planId, dto);
+    return this.adminPlansService.start(userId, planId, dto);
   }
 
   @Post('plans/:planId/cancel')
@@ -229,12 +224,11 @@ export class AdminPlansController {
   @ApiParam({ name: 'planId', format: 'uuid' })
   @ApiOkResponse({ type: CancelPlanResponseDto })
   async cancel(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
     @Body() dto: CancelPlanDto,
   ): Promise<CancelPlanResponseDto> {
-    const result = await this.adminPlansService.cancel(actor.id, userId, planId, dto.timezone);
+    const result = await this.adminPlansService.cancel(userId, planId, dto.timezone);
     return { id: result.plan.id, status: result.plan.status, cancelledWorkouts: result.cancelledWorkouts };
   }
 
@@ -258,12 +252,11 @@ export class AdminPlansController {
   @ApiOkResponse({ type: PlanDetailsDto })
   @ApiConflictResponse({ description: 'PLAN_VERSION_CONFLICT, PLAN_CHANGE_INVALID, WORKOUT_LOCKED' })
   applyChanges(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
     @Body() dto: PlanChangesDto,
   ): Promise<PlanDetails> {
-    return this.adminPlansService.applyChanges(actor.id, userId, planId, dto);
+    return this.adminPlansService.applyChanges(userId, planId, dto);
   }
 
   // ------------------------------------------------------------------ rebuild
@@ -301,11 +294,10 @@ export class AdminPlansController {
   @ApiParam({ name: 'planId', format: 'uuid' })
   @ApiOkResponse({ type: PlanDetailsDto })
   rebuild(
-    @CurrentUser() actor: AuthUserContext,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('planId', ParseUUIDPipe) planId: string,
     @Body() dto: RebuildRequestDto,
   ): Promise<PlanDetails> {
-    return this.adminPlansService.rebuild(actor.id, userId, planId, dto);
+    return this.adminPlansService.rebuild(userId, planId, dto);
   }
 }

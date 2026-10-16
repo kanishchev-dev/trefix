@@ -70,6 +70,7 @@ export class CoachService {
       await this.messageModel.destroy({ where: { sessionId: sessionIds }, transaction });
       await this.sessionModel.destroy({ where: { id: sessionIds }, transaction });
     });
+    this.eventEmitter.emit(COACH_EVENTS.HISTORY_CLEARED, { userId, sessions: sessionIds.length });
   }
 
   /** Returns a coaching session and its message history. */

@@ -10,6 +10,8 @@ import { StorageModule } from '../storage/storage.module';
 import { TrainingModule } from '../training/training.module';
 import { ConsentsModule } from '../users/consents/consents.module';
 import { PreferencesModule } from '../users/preferences/preferences.module';
+import { AdminIntegrationsController } from './admin-integrations.controller';
+import { AdminIntegrationsService } from './admin-integrations.service';
 import integrationsConfig from './config/integrations.config';
 import { INTEGRATIONS_QUEUE_NAME } from './constants/integrations.constants';
 import { DeviceConnectionsService } from './device/device-connections.service';
@@ -63,7 +65,12 @@ import { StravaTokenService } from './strava/strava-token.service';
     StorageModule,
   ],
   // Order matters: static `strava/*` routes must be registered before `:provider/*`.
-  controllers: [IntegrationsController, DeviceIntegrationsController, RecordingsController],
+  controllers: [
+    IntegrationsController,
+    DeviceIntegrationsController,
+    RecordingsController,
+    AdminIntegrationsController,
+  ],
   providers: [
     StravaApiClient,
     StravaProvider,
@@ -84,6 +91,7 @@ import { StravaTokenService } from './strava/strava-token.service';
     DeviceIntegrationsListener,
     RecordingsService,
     OAuthStateStore,
+    AdminIntegrationsService,
   ],
   exports: [IntegrationsService],
 })

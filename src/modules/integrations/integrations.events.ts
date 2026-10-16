@@ -13,6 +13,8 @@ export const INTEGRATIONS_EVENTS = {
   DISCONNECTED: 'integrations.disconnected',
   SYNC_BATCH_PROCESSED: 'integrations.sync_batch_processed',
   SYNC_COMPLETED: 'integrations.sync_completed',
+  SOURCE_UNLINKED: 'integrations.source_unlinked',
+  SYNC_REQUESTED: 'integrations.sync_requested',
 } as const;
 
 export type IntegrationsEventName = (typeof INTEGRATIONS_EVENTS)[keyof typeof INTEGRATIONS_EVENTS];

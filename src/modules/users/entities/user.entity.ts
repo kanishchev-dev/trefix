@@ -7,6 +7,8 @@ import { PermissionGroup } from '@/modules/permissions/entities/permission-group
 import { UserPermission } from '@/modules/permissions/entities/user-permission.entity';
 import { UserPermissionGroup } from '@/modules/permissions/entities/user-permission-group.entity';
 
+import { resolveUserStatus, type UserBlockReason } from '../user-status';
+
 @Table({
   tableName: 'users',
   underscored: true,
@@ -105,6 +107,24 @@ export class User extends Model {
   })
   passwordChangedAt!: Date | null;
 
+  /** Set while the account is blocked by an administrator; see `isUserBlocked`. */
+  @Column({ type: DataType.DATE, allowNull: true, field: 'blocked_at' })
+  blockedAt!: Date | null;
+
+  /** End of a temporary block; null with `blockedAt` set means until unblocked. */
+  @Column({ type: DataType.DATE, allowNull: true, field: 'blocked_until' })
+  blockedUntil!: Date | null;
+
+  @Column({ type: DataType.STRING(32), allowNull: true, field: 'blocked_reason' })
+  blockedReason!: UserBlockReason | null;
+
+  /** Visible to administrators only. */
+  @Column({ type: DataType.STRING(500), allowNull: true, field: 'blocked_comment' })
+  blockedComment!: string | null;
+
+  @Column({ type: DataType.UUID, allowNull: true, field: 'blocked_by' })
+  blockedBy!: string | null;
+
   @Column(DataType.DATE)
   createdAt!: Date;
 
@@ -120,8 +140,14 @@ export class User extends Model {
   override toJSON(): Record<string, unknown> {
     const values = { ...this.get() } as Record<string, unknown>;
     delete values.passwordHash;
-    // Soft-deleted users are never served, so the marker is always null.
-    delete values.deletedAt;
+    // Who blocked the account and why is for administrators only (see the admin security endpoint).
+    delete values.blockedComment;
+    delete values.blockedBy;
+    values.status = resolveUserStatus(this);
+    // Only the admin panel serves soft-deleted users; for everyone else the marker is null.
+    if (!values.deletedAt) {
+      delete values.deletedAt;
+    }
     return values;
   }
 }

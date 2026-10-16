@@ -8,6 +8,8 @@ import { TrainingModule } from '@/modules/training/training.module';
 import { PreferencesModule } from '@/modules/users/preferences/preferences.module';
 
 import { OpenAiModule } from '../openai/openai.module';
+import { AdminCoachController } from './admin-coach.controller';
+import { AdminCoachService } from './admin-coach.service';
 import { CoachController } from './coach.controller';
 import { CoachListener } from './coach.listener';
 import { CoachPromptBuilder } from './coach.prompt';
@@ -37,7 +39,7 @@ import { CoachWorkoutNotesService } from './workout-notes/workout-notes.service'
     BullModule.registerQueue({ name: COACH_PROACTIVE_QUEUE, defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS }),
     BullModule.registerQueue({ name: COACH_WORKOUT_NOTE_QUEUE, defaultJobOptions: DEFAULT_QUEUE_JOB_OPTIONS }),
   ],
-  controllers: [CoachController],
+  controllers: [CoachController, AdminCoachController],
   providers: [
     CoachService,
     CoachConversationService,
@@ -51,6 +53,7 @@ import { CoachWorkoutNotesService } from './workout-notes/workout-notes.service'
     CoachProactiveListener,
     CoachWorkoutNotesService,
     CoachWorkoutNotesProcessor,
+    AdminCoachService,
   ],
   exports: [CoachService],
 })

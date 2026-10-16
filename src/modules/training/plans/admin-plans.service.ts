@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
 import { AthletesService } from '@/modules/training/athletes/athletes.service';
 import { PlanGenerationService } from '@/modules/training/plans/plan-generation.service';
-import { TRAINING_EVENTS } from '@/modules/training/training.events';
 import { UsersService } from '@/modules/users/users.service';
 
 import { CreateManualPlanDto, PreviewManualPlanDto } from '../dto/create-manual-plan.dto';
@@ -18,7 +16,6 @@ import {
 } from '../dto/plan-lifecycle.dto';
 import { RebuildPreviewRequestDto, RebuildRequestDto } from '../dto/plan-rebuild.dto';
 import { TrainingPlan } from '../entities/training-plan.entity';
-import { AdminPlanAction, AdminPlanActionEvent } from '../events/admin-plan-action.event';
 import { PlanListGroup } from '../training.constants';
 import { CurrentMetrics } from './athlete-metrics.service';
 import { PlanEditingService, PlanPreviewResult } from './plan-editing.service';
@@ -28,16 +25,15 @@ import { PlanDetails, PlanListResult, PlanListService } from './plan-list.servic
 import { PlanRebuildService, RebuildPrefillResult, RebuildPreviewResult } from './plan-rebuild.service';
 import { PlanStartOptionsService } from './plan-start-options.service';
 
-/** Event name of the admin audit trail for plans. */
-
 /**
  * Admin-panel management of any user's training plans.
  *
  * The plan services are keyed by the owner's user id, so the admin flow runs
  * the very same rules the athlete gets in the app — only with the target
  * user's id instead of the caller's. On top of that it checks the user and
- * athlete profile exist (an admin must not silently create a profile) and
- * records every mutation in the admin audit trail.
+ * athlete profile exist (an admin must not silently create a profile). The
+ * acting administrator reaches the activity history through the request
+ * context, not through this service.
  */
 @Injectable()
 export class AdminPlansService {
@@ -50,7 +46,6 @@ export class AdminPlansService {
     private readonly lifecycleService: PlanLifecycleService,
     private readonly startOptionsService: PlanStartOptionsService,
     private readonly rebuildService: PlanRebuildService,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ------------------------------------------------------------------ reads
@@ -111,51 +106,40 @@ export class AdminPlansService {
   // ------------------------------------------------------------------ writes
 
   /** Creates a plan for the user from the manual wizard; a draft unless a start block is given. */
-  async createManualPlan(actorUserId: string, userId: string, dto: CreateManualPlanDto): Promise<PlanDetails> {
+  async createManualPlan(userId: string, dto: CreateManualPlanDto): Promise<PlanDetails> {
     await this.ensureAthlete(userId);
     const created = await this.planGenerationService.createManualPlan(userId, dto);
-    this.audit(actorUserId, userId, created.id, 'created');
     return this.listService.getDetails(created.id, userId);
   }
 
-  async updateMeta(actorUserId: string, userId: string, planId: string, dto: UpdatePlanMetaDto): Promise<TrainingPlan> {
+  async updateMeta(userId: string, planId: string, dto: UpdatePlanMetaDto): Promise<TrainingPlan> {
     await this.usersService.findOne(userId);
     const plan = await this.editingService.updateMeta(planId, userId, dto);
-    this.audit(actorUserId, userId, plan.id, 'meta_updated');
     return plan;
   }
 
-  async updateStructure(
-    actorUserId: string,
-    userId: string,
-    planId: string,
-    dto: UpdatePlanStructureDto,
-  ): Promise<TrainingPlan> {
+  async updateStructure(userId: string, planId: string, dto: UpdatePlanStructureDto): Promise<TrainingPlan> {
     await this.usersService.findOne(userId);
     const plan = await this.editingService.updateDraftStructure(planId, userId, dto);
-    this.audit(actorUserId, userId, plan.id, 'structure_updated');
     return plan;
   }
 
-  async applyChanges(actorUserId: string, userId: string, planId: string, dto: PlanChangesDto): Promise<PlanDetails> {
+  async applyChanges(userId: string, planId: string, dto: PlanChangesDto): Promise<PlanDetails> {
     await this.usersService.findOne(userId);
     await this.editingService.applyChanges(planId, userId, dto);
-    this.audit(actorUserId, userId, planId, 'changes_applied');
     return this.listService.getDetails(planId, userId);
   }
 
   /** Starts a draft; replacing the user's active plan still requires `replaceActive`. */
-  async start(actorUserId: string, userId: string, planId: string, dto: StartPlanDto): Promise<PlanDetails> {
+  async start(userId: string, planId: string, dto: StartPlanDto): Promise<PlanDetails> {
     await this.usersService.findOne(userId);
     await this.editingService.loadOwnedPlan(planId, userId);
     await this.lifecycleService.startPlan(planId, dto);
-    this.audit(actorUserId, userId, planId, 'started');
     return this.listService.getDetails(planId, userId);
   }
 
   /** Cancels the active plan with the `admin` reason, so the history tells it apart from the athlete's own cancel. */
   async cancel(
-    actorUserId: string,
     userId: string,
     planId: string,
     timezone?: string,
@@ -163,21 +147,18 @@ export class AdminPlansService {
     await this.usersService.findOne(userId);
     await this.editingService.loadOwnedPlan(planId, userId);
     const result = await this.lifecycleService.cancelActivePlan(planId, 'admin', timezone);
-    this.audit(actorUserId, userId, planId, 'cancelled');
     return result;
   }
 
-  async delete(actorUserId: string, userId: string, planId: string): Promise<void> {
+  async delete(userId: string, planId: string): Promise<void> {
     await this.usersService.findOne(userId);
     await this.editingService.deletePlan(planId, userId);
-    this.audit(actorUserId, userId, planId, 'deleted');
   }
 
   /** "Prepare again": a history plan becomes a new plan, a draft is rebuilt in place. */
-  async rebuild(actorUserId: string, userId: string, planId: string, dto: RebuildRequestDto): Promise<PlanDetails> {
+  async rebuild(userId: string, planId: string, dto: RebuildRequestDto): Promise<PlanDetails> {
     await this.usersService.findOne(userId);
     const plan = await this.rebuildService.rebuild(planId, userId, dto);
-    this.audit(actorUserId, userId, plan.id, 'rebuilt');
     return this.listService.getDetails(plan.id, userId);
   }
 
@@ -193,12 +174,5 @@ export class AdminPlansService {
     if (!athlete) {
       throw new DomainNotFoundException('ATHLETE_NOT_FOUND', `Athlete profile of user ${userId} not found`);
     }
-  }
-
-  private audit(actorUserId: string, userId: string, planId: string, action: AdminPlanAction): void {
-    this.eventEmitter.emit(
-      TRAINING_EVENTS.PLAN_ADMIN_ACTION,
-      new AdminPlanActionEvent(actorUserId, userId, planId, action),
-    );
   }
 }

@@ -19,10 +19,13 @@ import {
   resolveRequestId,
 } from './common/middleware/correlation-id.middleware';
 import { RedisModule } from './common/redis/redis.module';
+import activityConfig from './config/activity.config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import trainingConfig from './config/training.config';
 import { validationSchema } from './config/validation.schema';
+import { ActivityModule } from './modules/activity/activity.module';
+import { AdminOverviewModule } from './modules/admin-overview/admin-overview.module';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './modules/auth/config/auth.config';
 import { CoachModule } from './modules/coach/coach.module';
@@ -38,6 +41,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { SystemSeedModule } from './modules/system-seed/system-seed.module';
 import { TrainingModule } from './modules/training/training.module';
 import { AccountDeletionModule } from './modules/users/account-deletion/account-deletion.module';
+import { AdminAccountModule } from './modules/users/admin-account/admin-account.module';
 import { ConsentsModule } from './modules/users/consents/consents.module';
 import { DataExportModule } from './modules/users/data-export/data-export.module';
 import { PreferencesModule } from './modules/users/preferences/preferences.module';
@@ -58,7 +62,16 @@ const LOG_REDACTED_PATHS = [
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, trainingConfig, storageConfig, mailerConfig, authConfig, integrationsConfig],
+      load: [
+        appConfig,
+        activityConfig,
+        databaseConfig,
+        trainingConfig,
+        storageConfig,
+        mailerConfig,
+        authConfig,
+        integrationsConfig,
+      ],
       validationSchema,
     }),
     HealthModule,
@@ -77,6 +90,9 @@ const LOG_REDACTED_PATHS = [
     ConsentsModule,
     AccountDeletionModule,
     DataExportModule,
+    ActivityModule,
+    AdminAccountModule,
+    AdminOverviewModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

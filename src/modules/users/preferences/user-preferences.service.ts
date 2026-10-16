@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 
+import { diffFields } from '@/common/utils/field-changes.util';
 import { USERS_EVENTS } from '@/modules/users/users.events';
 
 import {
@@ -34,6 +35,7 @@ export class UserPreferencesService {
 
   async update(userId: string, dto: UpdateUserPreferencesDto): Promise<UserPreferencesResponseDto> {
     const preferences = await this.getEntity(userId);
+    const before: Record<string, unknown> = { ...this.toResponse(preferences) };
     const changedFields: string[] = [];
     const assign = <K extends keyof UpdateUserPreferencesDto & keyof UserPreferences>(key: K): void => {
       const value = dto[key];
@@ -87,7 +89,11 @@ export class UserPreferencesService {
 
     if (changedFields.length > 0) {
       await preferences.save();
-      this.eventEmitter.emit(USERS_EVENTS.PREFERENCES_UPDATED, new PreferencesUpdatedEvent(userId, changedFields));
+      const after: Record<string, unknown> = { ...this.toResponse(preferences) };
+      this.eventEmitter.emit(
+        USERS_EVENTS.PREFERENCES_UPDATED,
+        new PreferencesUpdatedEvent(userId, changedFields, diffFields(before, after, changedFields)),
+      );
     }
     return this.toResponse(preferences);
   }

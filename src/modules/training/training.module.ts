@@ -10,8 +10,11 @@ import { UsersModule } from '@/modules/users/users.module';
 import { AdaptationsService } from './adaptations/adaptations.service';
 import { HeartRateTargetsService } from './adaptations/heart-rate-targets.service';
 import { PlanAdaptationApplier } from './adaptations/plan-adaptation-applier';
+import { AdminAthleteController } from './admin-athlete.controller';
 import { AdminTrainingController } from './admin-training.controller';
 import { AdminTrainingService } from './admin-training.service';
+import { AdminWorkoutsController } from './admin-workouts.controller';
+import { AdminWorkoutsService } from './admin-workouts.service';
 import { AthleteProfileListener } from './athletes/athlete-profile.listener';
 import { AthleteProfileService } from './athletes/athlete-profile.service';
 import { AthleteStateService } from './athletes/athlete-state.service';
@@ -96,10 +99,13 @@ import { WorkoutsService } from './workouts/workouts.service';
     ProgressController,
     WorkoutExecutionController,
     AdminTrainingController,
+    AdminWorkoutsController,
+    AdminAthleteController,
     AdminPlansController,
   ],
   providers: [
     AdminTrainingService,
+    AdminWorkoutsService,
     AdminPlansService,
     TrainingLookupService,
     AthleteStateService,

@@ -161,6 +161,22 @@ export class DataExportService {
     return { stream, fileName: file.originalName };
   }
 
+  /** Every export of the user, newest first, for the admin panel. */
+  async listForUser(userId: string): Promise<DataExportResponseDto[]> {
+    const records = await this.exportModel.findAll({ where: { userId }, order: [['createdAt', 'DESC']] });
+    return records.map((record) => this.toResponse(record));
+  }
+
+  /** The archive of a ready export of this user, without the emailed token; for administrators. */
+  async openForAdmin(userId: string, exportId: string): Promise<{ stream: Readable; fileName: string }> {
+    const record = await this.exportModel.findOne({ where: { id: exportId, userId } });
+    if (!record || record.status !== 'ready' || !record.fileId) {
+      throw new DomainNotFoundException('DATA_EXPORT_NOT_FOUND', 'The export is not available');
+    }
+    const { file, stream } = await this.storageService.getFile(record.fileId, { requesterUserId: record.userId });
+    return { stream, fileName: file.originalName };
+  }
+
   private findLatest(userId: string): Promise<DataExport | null> {
     return this.exportModel.findOne({ where: { userId }, order: [['createdAt', 'DESC']] });
   }

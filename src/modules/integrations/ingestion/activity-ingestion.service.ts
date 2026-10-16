@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, UniqueConstraintError } from 'sequelize';
 
+import { type ActivityContext, runWithActivityContext } from '@/common/context/activity-context';
 import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
 import { AthletesService } from '@/modules/training/athletes/athletes.service';
 import { GearAssignmentService } from '@/modules/training/gear/gear-assignment.service';
@@ -91,7 +92,20 @@ export class ActivityIngestionService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /**
+   * Data from an external provider is attributed to the integration in the
+   * activity history, even when the user's device delivered it.
+   */
   async ingest(activity: RunningActivity, options: IngestOptions = {}): Promise<IngestResult> {
+    if (activity.source === 'trefix') {
+      return this.ingestActivity(activity, options);
+    }
+    return runWithActivityContext(this.integrationContext(activity.source), () =>
+      this.ingestActivity(activity, options),
+    );
+  }
+
+  private async ingestActivity(activity: RunningActivity, options: IngestOptions): Promise<IngestResult> {
     const originSkip = await this.checkOrigin(activity);
     if (originSkip) {
       return { outcome: originSkip, workoutId: null };
@@ -167,6 +181,20 @@ export class ActivityIngestionService {
    * ad-hoc one is deleted.
    */
   async removeSource(athleteId: string, provider: string, sourceActivityId: string): Promise<RemoveSourceOutcome> {
+    return runWithActivityContext(this.integrationContext(provider), () =>
+      this.removeKnownSource(athleteId, provider, sourceActivityId),
+    );
+  }
+
+  private integrationContext(provider: string): ActivityContext {
+    return { actorType: 'integration', provider, source: 'webhook' };
+  }
+
+  private async removeKnownSource(
+    athleteId: string,
+    provider: string,
+    sourceActivityId: string,
+  ): Promise<RemoveSourceOutcome> {
     const source = await this.sourceModel.findOne({ where: { athleteId, provider, sourceActivityId } });
     if (!source) {
       return 'ignored';

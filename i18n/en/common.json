@@ -123,6 +123,18 @@
     "WORKOUT_NOT_COMPLETED": "The workout is not completed yet",
     "WORKOUT_NOT_FOUND": "Workout not found",
     "WORKOUT_NOT_PLANNED": "Only a planned workout can be completed this way",
-    "WORKOUT_NOT_RUNNABLE": "A rest day has nothing to run"
+    "WORKOUT_NOT_RUNNABLE": "A rest day has nothing to run",
+    "ACTIVITY_CURSOR_INVALID": "The activity page cursor is invalid",
+    "ACCOUNT_DELETION_NOT_REQUESTED": "The account is not deleted",
+    "EMAIL_TAKEN": "This email belongs to another account",
+    "USER_ALREADY_BLOCKED": "The account is already blocked",
+    "USER_BLOCKED": "The account is blocked",
+    "USER_BLOCK_FORBIDDEN": "System accounts and your own account cannot be blocked",
+    "USER_BLOCK_UNTIL_INVALID": "The end of the block must be in the future",
+    "USER_NOT_BLOCKED": "The account is not blocked",
+    "WORKOUT_HAS_SOURCES": "The result came from a recording or an integration and cannot be discarded",
+    "WORKOUT_BELONGS_TO_PLAN": "Plan workouts change through the plan",
+    "WORKOUT_SOURCE_NOT_FOUND": "The workout has no record from this provider",
+    "INTEGRATION_PROVIDER_INVALID": "Only Health providers sync on the device"
   }
 }

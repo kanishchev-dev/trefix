@@ -24,5 +24,6 @@ import { DataExportService } from './data-export.service';
   ],
   controllers: [DataExportController],
   providers: [DataExportService, DataExportCollector, DataExportProcessor],
+  exports: [DataExportService],
 })
 export class DataExportModule {}

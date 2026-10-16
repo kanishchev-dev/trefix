@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { DomainBadRequestException, DomainConflictException } from '@/common/exceptions/domain-exceptions';
+import { diffFields } from '@/common/utils/field-changes.util';
 
 import { UpdateWorkoutDto } from '../dto/update-workout.dto';
 import { Workout } from '../entities/workout.entity';
 import { WorkoutDeletedEvent } from '../events/workout-deleted.event';
-import { WorkoutUpdatedEvent, type WorkoutUpdatedField } from '../events/workout-updated.event';
+import { snapshotWorkoutFields, WorkoutUpdatedEvent, type WorkoutUpdatedField } from '../events/workout-updated.event';
 import { WorkoutView } from '../interfaces/training-views.interface';
 import { TRAINING_EVENTS } from '../training.events';
 import { toWorkoutView } from '../training.mappers';
@@ -34,6 +35,7 @@ export class ManualWorkoutsService {
   /** Writes only the fields that actually change; the event lists them. */
   async updateWorkout(actorUserId: string, workoutId: string, dto: UpdateWorkoutDto): Promise<WorkoutView> {
     const workout = await this.loadEditable(actorUserId, workoutId);
+    const before = snapshotWorkoutFields(workout);
     const changedFields: WorkoutUpdatedField[] = [];
 
     if (dto.scheduledAt !== undefined) {
@@ -69,7 +71,14 @@ export class ManualWorkoutsService {
     await workout.save();
     this.eventEmitter.emit(
       TRAINING_EVENTS.WORKOUT_UPDATED,
-      new WorkoutUpdatedEvent(workout.athleteId, workout.id, null, actorUserId, changedFields),
+      new WorkoutUpdatedEvent(
+        workout.athleteId,
+        workout.id,
+        null,
+        actorUserId,
+        changedFields,
+        diffFields(before, snapshotWorkoutFields(workout), changedFields),
+      ),
     );
     return toWorkoutView(workout);
   }

@@ -10,6 +10,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { AdminEndpoint } from '@/common/decorators/admin-endpoint.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
@@ -38,6 +39,7 @@ import {
 @ApiTags('Admin Training Calendar')
 @ApiBearerAuth()
 @ApiParam({ name: 'userId', format: 'uuid', description: 'User whose calendar is managed' })
+@AdminEndpoint()
 @Controller({ path: 'users/:userId/training', version: '1' })
 export class AdminTrainingController {
   constructor(private readonly adminTrainingService: AdminTrainingService) {}

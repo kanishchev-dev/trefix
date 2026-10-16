@@ -8,6 +8,8 @@ import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.ex
 import { AUTH_EVENTS } from '@/modules/auth/auth.events';
 import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
 import { User } from '@/modules/users/entities/user.entity';
+import { UserBlockedException } from '@/modules/users/exceptions/user-blocked.exception';
+import { isUserBlocked } from '@/modules/users/user-status';
 import { UsersService } from '@/modules/users/users.service';
 
 import { hashSecret } from '../auth.helpers';
@@ -97,6 +99,12 @@ export class AuthSessionService {
       throw error;
     }
 
+    if (isUserBlocked(user)) {
+      const revoked = await this.authRedisService.revokeSession(session.sessionId);
+      this.emitSessionRevokedEvents(revoked ? [revoked] : [], 'blocked');
+      throw new UserBlockedException(user.blockedUntil);
+    }
+
     const accessToken = await this.authTokenService.signAccessToken(user.id, session.sessionId);
 
     return {
@@ -133,6 +141,13 @@ export class AuthSessionService {
       .map((session) => toAuthSessionResponse(session, user.sessionId));
   }
 
+  /** The session of the user that refreshed its tokens last, or null when signed out everywhere. */
+  async latestSession(userId: string): Promise<AuthSessionResponseDto | null> {
+    const sessions = await this.authRedisService.listUserSessions(userId);
+    const latest = sessions.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+    return latest ? toAuthSessionResponse(latest, '') : null;
+  }
+
   /** Ends one of the user's sessions; the current one is ended with `logout` instead. */
   async revokeSession(user: AuthUserContext, sessionId: string): Promise<void> {
     const session = await this.authRedisService.getSession(sessionId);
@@ -154,6 +169,10 @@ export class AuthSessionService {
   }
 
   async createAuthenticatedSession(user: User, context: AuthClientContext): Promise<AuthenticatedUserResult> {
+    // Covers every sign-in path: password, email code, social, invite activation.
+    if (isUserBlocked(user)) {
+      throw new UserBlockedException(user.blockedUntil);
+    }
     const sessionId = randomUUID();
     const refreshToken = await this.authTokenService.signRefreshToken(user.id, sessionId);
     const refreshTokenHash = hashSecret(refreshToken);

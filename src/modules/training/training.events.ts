@@ -14,7 +14,7 @@ export const TRAINING_EVENTS = {
   GOAL_CREATED: 'training.goal.created',
   PLAN_ADAPTATION_PROPOSED: 'training.plan.adaptation_proposed',
   PLAN_ADAPTED: 'training.plan.adapted',
-  PLAN_ADMIN_ACTION: 'training.plan.admin_action',
+  PLAN_ADAPTATION_DISMISSED: 'training.plan.adaptation_dismissed',
   PLAN_CANCELLED: 'training.plan.cancelled',
   PLAN_COMPLETED: 'training.plan.completed',
   PLAN_CREATED: 'training.plan.created',

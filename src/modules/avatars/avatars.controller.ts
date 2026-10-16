@@ -23,6 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 
+import { AdminEndpoint } from '@/common/decorators/admin-endpoint.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
@@ -90,6 +91,7 @@ export class AvatarsController {
    * another user's record. `me` is declared first so the literal segment wins
    * over the parameterised one.
    */
+  @AdminEndpoint()
   @Post(':userId')
   @RequirePermissions('users.update')
   @ApiBearerAuth()

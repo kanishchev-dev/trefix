@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { AdminEndpoint } from '@/common/decorators/admin-endpoint.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { PaginatedResponseDto } from '@/common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '@/common/swagger/api-paginated-response.decorator';
@@ -32,6 +33,7 @@ import { UsersService } from './users.service';
 @ApiTags('Users')
 @ApiBearerAuth()
 @RequirePermissions('users.read')
+@AdminEndpoint()
 @Controller('users')
 export class UsersController {
   constructor(

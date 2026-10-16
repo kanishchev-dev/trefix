@@ -10,6 +10,7 @@ import { MailerModule } from '@/modules/mailer/mailer.module';
 import { PermissionsModule } from '@/modules/permissions/permissions.module';
 import { UsersModule } from '@/modules/users/users.module';
 
+import { AdminAuthController } from './admin-auth.controller';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthAccountController } from './auth-account.controller';
@@ -17,7 +18,9 @@ import { AuthRedisModule } from './auth-redis.module';
 import authConfig from './config/auth.config';
 import { UserIdentity } from './entities/user-identity.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { UserBlockedListener } from './listeners/user-blocked.listener';
 import { UserDeletedListener } from './listeners/user-deleted.listener';
+import { AdminAuthService } from './services/admin-auth.service';
 import { AuthCodeService } from './services/auth-code.service';
 import { AuthEmailChangeService } from './services/auth-email-change.service';
 import { AuthSessionService } from './services/auth-session.service';
@@ -39,7 +42,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     AuthRedisModule,
     SequelizeModule.forFeature([UserIdentity]),
   ],
-  controllers: [AuthController, AuthAccountController],
+  controllers: [AuthController, AuthAccountController, AdminAuthController],
   providers: [
     AuthService,
     AuthSessionService,
@@ -53,6 +56,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtStrategy,
     JwtAuthGuard,
     UserDeletedListener,
+    UserBlockedListener,
+    AdminAuthService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -63,6 +68,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useClass: PermissionsGuard,
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, AuthSessionService],
 })
 export class AuthModule {}

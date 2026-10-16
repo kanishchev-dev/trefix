@@ -1,6 +1,7 @@
 import { Body, Controller, ForbiddenException, Get, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { AdminEndpoint } from '@/common/decorators/admin-endpoint.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequirePermissions } from '@/common/decorators/require-permissions.decorator';
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
@@ -36,6 +37,7 @@ export class SettingsController {
    * dropdown. Defaults for new users are an access-control concern and
    * therefore require the `permissions.manage` permission.
    */
+  @AdminEndpoint()
   @Patch()
   @RequirePermissions('settings.update')
   @ApiOperation({ summary: 'Update global application settings' })

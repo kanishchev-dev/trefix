@@ -26,6 +26,7 @@ export const validationSchema = Joi.object({
   API_BASE_URL: requiredInProduction('http://localhost:3000', Joi.string().uri()),
   THROTTLE_LIMIT: Joi.number().default(300),
   THROTTLE_TTL: Joi.number().default(60000),
+  ACTIVITY_RETENTION_DAYS: Joi.number().integer().min(30).default(730),
   TRAINING_PLANS_PER_ATHLETE_LIMIT: Joi.number().integer().positive().default(100),
   TRAINING_PLAN_CREATE_RATE_LIMIT: Joi.number().integer().positive().default(30),
   DB_HOST: Joi.string().required(),

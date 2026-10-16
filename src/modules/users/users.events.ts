@@ -6,6 +6,7 @@
  */
 export const USERS_EVENTS = {
   ACCOUNT_DELETION_REQUESTED: 'account.deletion_requested',
+  ACCOUNT_PURGED: 'account.purged',
   DATA_EXPORT_REQUESTED: 'account.data_export_requested',
   DATA_EXPORT_READY: 'account.data_export_ready',
   PREFERENCES_UPDATED: 'preferences.updated',
@@ -13,6 +14,9 @@ export const USERS_EVENTS = {
   USER_DELETED: 'user.deleted',
   USER_INVITED: 'user.invited',
   USER_UPDATED: 'user.updated',
+  USER_BLOCKED: 'users.blocked',
+  USER_UNBLOCKED: 'users.unblocked',
+  USER_RESTORED: 'users.deletion_restored',
   CONSENT_GIVEN: 'users.consent_given',
   CONSENT_REVOKED: 'users.consent_revoked',
 } as const;

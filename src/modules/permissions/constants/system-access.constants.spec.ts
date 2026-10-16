@@ -142,7 +142,18 @@ describe('SYSTEM_PERMISSION_CATALOG', () => {
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.calendar.manage');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.userplans.read');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.userplans.manage');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('users.activity.read');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('audit.read');
     expect(DEFAULT_USER_PERMISSION_KEYS).toContain('training.plans.read');
+  });
+
+  it('derives the default user group from the admin-only flag', () => {
+    const adminOnly = SYSTEM_PERMISSION_CATALOG.filter((permission) => permission.adminOnly).map(
+      (permission) => permission.key,
+    );
+
+    expect(adminOnly.filter((key) => DEFAULT_USER_PERMISSION_KEYS.includes(key))).toEqual([]);
+    expect(DEFAULT_USER_PERMISSION_KEYS).toHaveLength(SYSTEM_PERMISSION_CATALOG.length - adminOnly.length);
   });
 
   it('gives the administrators group every permission in the catalog', () => {

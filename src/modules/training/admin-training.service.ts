@@ -8,6 +8,7 @@ import {
   DomainConflictException,
   DomainNotFoundException,
 } from '@/common/exceptions/domain-exceptions';
+import { diffFields } from '@/common/utils/field-changes.util';
 import { TRAINING_EVENTS } from '@/modules/training/training.events';
 import { UsersService } from '@/modules/users/users.service';
 
@@ -29,7 +30,7 @@ import {
 import { Athlete } from './entities/athlete.entity';
 import { Workout } from './entities/workout.entity';
 import { WorkoutCreatedEvent } from './events/workout-created.event';
-import { WorkoutUpdatedEvent, WorkoutUpdatedField } from './events/workout-updated.event';
+import { snapshotWorkoutFields, WorkoutUpdatedEvent, WorkoutUpdatedField } from './events/workout-updated.event';
 import {
   AdminCalendarDayView,
   AdminCalendarSummaryDay,
@@ -183,6 +184,7 @@ export class AdminTrainingService {
       );
     }
 
+    const before = snapshotWorkoutFields(workout);
     const changedFields: WorkoutUpdatedField[] = [];
 
     if (dto.scheduledAt !== undefined) {
@@ -222,7 +224,14 @@ export class AdminTrainingService {
 
     this.eventEmitter.emit(
       TRAINING_EVENTS.WORKOUT_UPDATED,
-      new WorkoutUpdatedEvent(athlete.id, workout.id, workout.planId, actorUserId, changedFields),
+      new WorkoutUpdatedEvent(
+        athlete.id,
+        workout.id,
+        workout.planId,
+        actorUserId,
+        changedFields,
+        diffFields(before, snapshotWorkoutFields(workout), changedFields),
+      ),
     );
 
     return { workout: this.toResponse(workout) };

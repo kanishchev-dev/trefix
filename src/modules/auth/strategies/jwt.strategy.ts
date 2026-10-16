@@ -4,6 +4,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
+import { UserBlockedException } from '@/modules/users/exceptions/user-blocked.exception';
+import { isUserBlocked } from '@/modules/users/user-status';
 import { UsersService } from '@/modules/users/users.service';
 
 import { AuthSessionNotFoundException } from '../exceptions/auth-session-not-found.exception';
@@ -46,6 +48,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
 
       throw error;
+    }
+
+    // Sessions kept on purpose when blocking (or left from before) stop working at once.
+    if (isUserBlocked(user)) {
+      throw new UserBlockedException(user.blockedUntil);
     }
 
     return {

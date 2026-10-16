@@ -194,7 +194,11 @@ describe('AdminTrainingService', () => {
       expect(workout.target).toEqual({ title: 'Recovery jog', source: 'manual' });
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'training.workout.updated',
-        new WorkoutUpdatedEvent(ATHLETE.id, workout.id, 'plan-1', ACTOR_ID, ['scheduledAt', 'distanceKm', 'title']),
+        new WorkoutUpdatedEvent(ATHLETE.id, workout.id, 'plan-1', ACTOR_ID, ['scheduledAt', 'distanceKm', 'title'], {
+          scheduledAt: { from: '2026-10-06T06:00:00.000Z', to: '2026-10-07T06:00:00.000Z' },
+          distanceKm: { from: 6, to: 8 },
+          title: { from: 'Easy Run', to: 'Recovery jog' },
+        }),
       );
       expect(result.workout).toMatchObject({ distanceKm: 8, title: 'Recovery jog', planId: 'plan-1' });
     });

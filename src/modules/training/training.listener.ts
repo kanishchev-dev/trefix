@@ -6,7 +6,6 @@ import { RealtimeService } from '@/modules/realtime/realtime.service';
 import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { Athlete } from './entities/athlete.entity';
-import { AdminPlanActionEvent } from './events/admin-plan-action.event';
 import { AthleteCreatedEvent } from './events/athlete-created.event';
 import { AthleteUpdatedEvent } from './events/athlete-updated.event';
 import { GoalCreatedEvent } from './events/goal-created.event';
@@ -119,17 +118,6 @@ export class TrainingListener {
   @OnEvent(TRAINING_EVENTS.WORKOUT_DELETED)
   async handleWorkoutDeleted(event: WorkoutDeletedEvent): Promise<void> {
     await this.emitWorkoutsChanged(event.athleteId, 'deleted', event.workoutId, event.planId);
-  }
-
-  /**
-   * Audit trail of admin-panel plan changes. The plan's own domain events
-   * already refresh the athlete's clients; this one only records the actor.
-   */
-  @OnEvent(TRAINING_EVENTS.PLAN_ADMIN_ACTION)
-  handleAdminPlanAction(event: AdminPlanActionEvent): void {
-    this.logger.log(
-      `training.plan.admin_action: ${event.action} plan ${event.planId} of user ${event.userId} by ${event.actorUserId}`,
-    );
   }
 
   @OnEvent(TRAINING_EVENTS.PLAN_ADAPTED)

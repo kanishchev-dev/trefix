@@ -15,7 +15,11 @@ import { AdaptationEvent } from '../entities/adaptation-event.entity';
 import { Athlete } from '../entities/athlete.entity';
 import { TrainingPlan } from '../entities/training-plan.entity';
 import { Workout } from '../entities/workout.entity';
-import { PlanAdaptationProposedEvent, PlanAdaptedEvent } from '../events/plan-adapted.event';
+import {
+  PlanAdaptationDismissedEvent,
+  PlanAdaptationProposedEvent,
+  PlanAdaptedEvent,
+} from '../events/plan-adapted.event';
 import { AdaptationEventView, AthleteStateView, WorkoutAnalysisView } from '../interfaces/training-views.interface';
 import { ADAPTATION_TYPE_HEART_RATE } from '../training.constants';
 import { TrainingEngine } from '../training.engine';
@@ -248,6 +252,10 @@ export class AdaptationsService {
     event.status = 'dismissed';
     event.resolvedAt = new Date();
     await event.save();
+    this.eventEmitter.emit(
+      TRAINING_EVENTS.PLAN_ADAPTATION_DISMISSED,
+      new PlanAdaptationDismissedEvent(event.athleteId, event.planId, event.id),
+    );
     return toAdaptationEventView(event);
   }
 

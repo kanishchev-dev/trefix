@@ -11,6 +11,7 @@ export class AuthSessionRevokedEvent {
       | 'password-reset'
       | 'password-change'
       | 'email-change'
-      | 'user-deleted',
+      | 'user-deleted'
+      | 'blocked',
   ) {}
 }

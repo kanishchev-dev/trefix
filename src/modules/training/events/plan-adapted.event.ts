@@ -6,6 +6,15 @@ export class PlanAdaptedEvent {
   ) {}
 }
 
+/** The user or an administrator declined a pending adaptation. */
+export class PlanAdaptationDismissedEvent {
+  constructor(
+    public readonly athleteId: string,
+    public readonly planId: string | null,
+    public readonly adaptationId: string,
+  ) {}
+}
+
 /** An automatic adaptation was kept as a proposal (`proposed`) or advice (`suggested`) instead of being applied. */
 export class PlanAdaptationProposedEvent {
   constructor(
