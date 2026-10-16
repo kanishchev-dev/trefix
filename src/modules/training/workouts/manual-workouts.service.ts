@@ -23,7 +23,8 @@ export const MANUAL_WORKOUT_ERROR_CODES = {
 
 /**
  * Edits and removal of workouts the user added by hand (no plan). Same rule as
- * creation: a planned manual workout lives on a future day.
+ * creation: a planned manual workout lives on today or a future day, so a
+ * missed one can be moved to today.
  */
 @Injectable()
 export class ManualWorkoutsService {
@@ -40,10 +41,10 @@ export class ManualWorkoutsService {
 
     if (dto.scheduledAt !== undefined) {
       const scheduledAt = new Date(dto.scheduledAt);
-      if (scheduledAt <= this.endOfToday()) {
+      if (scheduledAt < this.startOfToday()) {
         throw new DomainBadRequestException(
           MANUAL_WORKOUT_ERROR_CODES.invalidDate,
-          'A planned workout can only be moved to a future date',
+          'A planned workout can only be moved to today or a future date',
         );
       }
       if (scheduledAt.getTime() !== workout.scheduledAt.getTime()) {
@@ -111,8 +112,8 @@ export class ManualWorkoutsService {
     return workout;
   }
 
-  private endOfToday(): Date {
+  private startOfToday(): Date {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
 }

@@ -46,6 +46,15 @@ export class PlanQueryService {
     private readonly planLifecycle: PlanLifecycleService,
   ) {}
 
+  /** Users who run an active (or paused) plan; for notification audiences. */
+  async findUserIdsWithActivePlan(): Promise<Set<string>> {
+    const plans = await this.planModel.findAll({
+      where: { status: { [Op.in]: ['active', 'paused'] } },
+      attributes: ['athleteId'],
+    });
+    return this.athletes.userIdsOf(plans.map((plan) => plan.athleteId));
+  }
+
   /** A plan with its workouts; drafts have no workouts yet. */
   async planView(plan: TrainingPlan): Promise<TrainingPlanView> {
     const workouts = plan.status === 'draft' ? [] : await this.lookup.planWorkouts(plan.id);

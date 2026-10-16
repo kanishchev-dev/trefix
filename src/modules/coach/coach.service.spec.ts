@@ -161,7 +161,10 @@ describe('CoachService', () => {
         { provide: EventEmitter2, useValue: eventEmitter },
         {
           provide: CoachPolicyService,
-          useValue: { assertEnabled: jest.fn().mockResolvedValue(undefined), tone: jest.fn().mockResolvedValue('neutral') },
+          useValue: {
+            assertEnabled: jest.fn().mockResolvedValue(undefined),
+            tone: jest.fn().mockResolvedValue('neutral'),
+          },
         },
       ],
     }).compile();

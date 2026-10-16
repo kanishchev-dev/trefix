@@ -73,11 +73,28 @@ describe('ManualWorkoutsService', () => {
     expect(events.emit).not.toHaveBeenCalled();
   });
 
-  it('refuses to move a workout to today or the past', async () => {
+  it('refuses to move a workout to the past', async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
     const { service } = setup(makeWorkout());
     await expect(
-      service.updateWorkout('user-1', 'workout-1', { scheduledAt: new Date().toISOString() }),
+      service.updateWorkout('user-1', 'workout-1', { scheduledAt: yesterday.toISOString() }),
     ).rejects.toMatchObject({ code: 'INVALID_DATE' });
+  });
+
+  it('moves a missed workout to today', async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const workout = makeWorkout({ scheduledAt: yesterday });
+    const { service, events } = setup(workout);
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    await service.updateWorkout('user-1', 'workout-1', { scheduledAt: today.toISOString() });
+    expect(workout.scheduledAt).toEqual(today);
+    expect(events.emit).toHaveBeenCalledWith(
+      'training.workout.updated',
+      expect.objectContaining({ changedFields: ['scheduledAt'] }),
+    );
   });
 
   it('leaves plan workouts to the plan', async () => {

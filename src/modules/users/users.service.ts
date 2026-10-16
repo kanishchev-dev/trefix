@@ -318,6 +318,33 @@ export class UsersService {
   }
 
   /**
+   * Accounts that may receive notifications: not deleted, not blocked, not
+   * system. Filters narrow the set; `ids` limits it to the given users.
+   */
+  async findActiveRecipientIds(
+    filter: { ids?: readonly string[]; registeredFrom?: Date; registeredTo?: Date } = {},
+    now: Date = new Date(),
+  ): Promise<string[]> {
+    const createdAt: Record<symbol, Date> = {};
+    if (filter.registeredFrom) {
+      createdAt[Op.gte] = filter.registeredFrom;
+    }
+    if (filter.registeredTo) {
+      createdAt[Op.lte] = filter.registeredTo;
+    }
+    const users = await this.userModel.findAll({
+      where: {
+        isSystem: false,
+        ...(filter.ids ? { id: { [Op.in]: [...filter.ids] } } : {}),
+        ...(Object.getOwnPropertySymbols(createdAt).length > 0 ? { createdAt } : {}),
+        [Op.or]: [{ blockedAt: null }, { blockedUntil: { [Op.ne]: null, [Op.lte]: now } }],
+      },
+      attributes: ['id'],
+    });
+    return users.map((user) => user.id);
+  }
+
+  /**
    * Display names of the given users, including soft-deleted ones, for lists
    * that reference people (activity history). Unknown ids are absent.
    */

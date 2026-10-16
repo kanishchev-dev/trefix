@@ -27,6 +27,9 @@ export const validationSchema = Joi.object({
   THROTTLE_LIMIT: Joi.number().default(300),
   THROTTLE_TTL: Joi.number().default(60000),
   ACTIVITY_RETENTION_DAYS: Joi.number().integer().min(30).default(730),
+  // Expo access token; required only when "Enhanced push security" is on in the Expo project.
+  EXPO_ACCESS_TOKEN: Joi.string().allow('').optional(),
+  NOTIFICATIONS_PUSH_ENABLED: Joi.boolean().default(true),
   TRAINING_PLANS_PER_ATHLETE_LIMIT: Joi.number().integer().positive().default(100),
   TRAINING_PLAN_CREATE_RATE_LIMIT: Joi.number().integer().positive().default(30),
   DB_HOST: Joi.string().required(),

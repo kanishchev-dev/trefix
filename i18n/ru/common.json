@@ -135,6 +135,11 @@
     "WORKOUT_HAS_SOURCES": "Результат получен из записи или интеграции, его нельзя сбросить",
     "WORKOUT_BELONGS_TO_PLAN": "Тренировки плана меняются через план",
     "WORKOUT_SOURCE_NOT_FOUND": "У тренировки нет записи от этого сервиса",
-    "INTEGRATION_PROVIDER_INVALID": "На устройстве синхронизируются только Apple Health и Health Connect"
+    "INTEGRATION_PROVIDER_INVALID": "На устройстве синхронизируются только Apple Health и Health Connect",
+    "NOTIFICATION_NOT_FOUND": "Уведомление не найдено",
+    "NOTIFICATION_BROADCAST_NOT_FOUND": "Рассылка не найдена",
+    "NOTIFICATION_CONTENT_REQUIRED": "Напишите текст уведомления хотя бы на одном языке",
+    "NOTIFICATION_LINK_URL_REQUIRED": "Укажите адрес страницы, которую откроет уведомление",
+    "NOTIFICATION_AUDIENCE_EMPTY": "Под выбранных получателей не подходит ни один пользователь"
   }
 }

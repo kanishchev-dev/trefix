@@ -106,7 +106,7 @@ describe('RecordingsService', () => {
       type: 'run',
       durationSec: 3012,
     });
-    expect(options).toEqual({ plannedWorkoutId: null });
+    expect(options).toEqual({ plannedWorkoutId: null, matchPlanned: true });
     expect(workout).toMatchObject({
       type: 'long_run',
       excludeFromRecords: false,
@@ -150,7 +150,10 @@ describe('RecordingsService', () => {
       'user-1',
       summary({ plannedWorkoutId: '0192f0c4-0000-7000-8000-000000000001', workoutType: 'easy' }),
     );
-    expect(ingestion.ingest.mock.calls[0][1]).toEqual({ plannedWorkoutId: '0192f0c4-0000-7000-8000-000000000001' });
+    expect(ingestion.ingest.mock.calls[0][1]).toEqual({
+      plannedWorkoutId: '0192f0c4-0000-7000-8000-000000000001',
+      matchPlanned: true,
+    });
     expect(result.response.outcome).toBe('completed_planned');
     expect(workout.type).toBe('easy');
   });

@@ -175,6 +175,16 @@ export class RecordedActivityDto {
   @IsUUID()
   plannedWorkoutId?: string | null;
 
+  @ApiPropertyOptional({
+    default: true,
+    description:
+      'False keeps a free run separate: it is not matched to an unfinished planned workout of the same day. ' +
+      'Ignored when plannedWorkoutId is set.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  linkPlanned?: boolean;
+
   @ApiPropertyOptional({ enum: WORKOUT_TYPES, nullable: true, description: 'Type of a free run' })
   @IsOptional()
   @IsIn(WORKOUT_TYPES.filter((type) => type !== 'rest'))

@@ -124,6 +124,7 @@ export class RecordingsService {
     try {
       const result = await this.ingestion.ingest(this.toRunningActivity(athlete.id, dto), {
         plannedWorkoutId: dto.plannedWorkoutId ?? null,
+        matchPlanned: dto.linkPlanned !== false,
       });
       const outcome = OUTCOME_BY_INGEST[result.outcome];
       if (!result.workoutId || !outcome) {

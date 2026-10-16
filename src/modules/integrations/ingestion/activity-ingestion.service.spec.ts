@@ -278,6 +278,18 @@ describe('ActivityIngestionService', () => {
     expect(result).toEqual({ outcome: 'matched_planned', workoutId: 'w-1' });
   });
 
+  it('keeps a free run separate when the athlete turned the link off', async () => {
+    workoutModel.findAll.mockResolvedValue([]);
+
+    const result = await service.ingest(
+      activity({ source: 'trefix', sourceActivityId: 'session-1', originAppId: undefined }),
+      { matchPlanned: false },
+    );
+
+    expect(result.outcome).not.toBe('matched_planned');
+    expect(trainingService.completeWorkoutFromImport).not.toHaveBeenCalled();
+  });
+
   it("falls back to the user's timezone when the offset is unknown", async () => {
     await service.ingest(activity({ utcOffsetMinutes: undefined, startedAt: new Date('2026-10-07T21:30:00Z') }));
     const where = workoutModel.findAll.mock.calls[0][0].where;

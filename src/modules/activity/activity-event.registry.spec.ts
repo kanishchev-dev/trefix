@@ -1,6 +1,7 @@
 import { AUTH_EVENTS } from '@/modules/auth/auth.events';
 import { COACH_EVENTS } from '@/modules/coach/coach.events';
 import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
+import { NOTIFICATIONS_EVENTS } from '@/modules/notifications/notifications.events';
 import { PERMISSIONS_EVENTS } from '@/modules/permissions/permissions.events';
 import { SETTINGS_EVENTS } from '@/modules/settings/settings.events';
 import { STORAGE_EVENT_FILE_DELETED, STORAGE_EVENT_FILE_UPLOADED } from '@/modules/storage/storage.constants';
@@ -15,6 +16,7 @@ const ALL_DOMAIN_EVENTS: string[] = [
   ...Object.values(AUTH_EVENTS),
   ...Object.values(COACH_EVENTS),
   ...Object.values(INTEGRATIONS_EVENTS),
+  ...Object.values(NOTIFICATIONS_EVENTS),
   ...Object.values(PERMISSIONS_EVENTS),
   ...Object.values(SETTINGS_EVENTS),
   ...Object.values(TRAINING_EVENTS),

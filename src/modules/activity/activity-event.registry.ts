@@ -14,6 +14,8 @@ import type { ActivitySourceChangedEvent } from '@/modules/integrations/events/a
 import type { IntegrationConnectedEvent } from '@/modules/integrations/events/integration-connected.event';
 import type { WorkoutSourceUnlinkedEvent } from '@/modules/integrations/events/workout-source-unlinked.event';
 import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
+import type { BroadcastCreatedEvent, PushDeviceEvent } from '@/modules/notifications/events/notification.events';
+import { NOTIFICATIONS_EVENTS } from '@/modules/notifications/notifications.events';
 import type { PermissionCreatedEvent } from '@/modules/permissions/events/permission-created.event';
 import type { PermissionGroupUpdatedEvent } from '@/modules/permissions/events/permission-group-updated.event';
 import type { UserPermissionsUpdatedEvent } from '@/modules/permissions/events/user-permissions-updated.event';
@@ -433,6 +435,28 @@ export const ACTIVITY_EVENT_REGISTRY: Readonly<Record<string, AnyDescriptor>> = 
     entityId: (payload) => payload.resourceId,
     metadata: (payload) => ({ resource: payload.resource }),
   }),
+  // ------------------------------------------------------------ notifications
+  [NOTIFICATIONS_EVENTS.DEVICE_REGISTERED]: describe<PushDeviceEvent>({
+    domain: 'notifications',
+    entityType: 'push_device',
+    subject: byUser,
+    entityId: (payload) => payload.deviceId,
+    metadata: (payload) => ({ platform: payload.platform }),
+  }),
+  [NOTIFICATIONS_EVENTS.DEVICE_REMOVED]: describe<PushDeviceEvent>({
+    domain: 'notifications',
+    entityType: 'push_device',
+    subject: byUser,
+    entityId: (payload) => payload.deviceId,
+    metadata: (payload) => ({ platform: payload.platform, reason: payload.reason }),
+  }),
+  [NOTIFICATIONS_EVENTS.BROADCAST_CREATED]: describe<BroadcastCreatedEvent>({
+    domain: 'notifications',
+    entityType: 'notification_broadcast',
+    subject: (payload) => (payload.singleUserId ? { userId: payload.singleUserId } : null),
+    entityId: (payload) => payload.broadcastId,
+    metadata: (payload) => ({ audience: payload.audienceType, channels: payload.channels.join(',') }),
+  }),
 };
 
 /**
@@ -443,6 +467,11 @@ export const ACTIVITY_EVENT_REGISTRY: Readonly<Record<string, AnyDescriptor>> = 
 export const ACTIVITY_IGNORED_EVENTS: ReadonlySet<string> = new Set([
   AUTH_EVENTS.EMAIL_OTP_REQUESTED,
   COACH_EVENTS.REPLY_GENERATED,
+  COACH_EVENTS.PROACTIVE_MESSAGE_SENT,
+  NOTIFICATIONS_EVENTS.CREATED,
+  NOTIFICATIONS_EVENTS.READ,
+  NOTIFICATIONS_EVENTS.DELETED,
+  NOTIFICATIONS_EVENTS.BROADCAST_COMPLETED,
   INTEGRATIONS_EVENTS.SYNC_BATCH_PROCESSED,
   TRAINING_EVENTS.PROGRESS_UPDATED,
   TRAINING_EVENTS.STATE_UPDATED,

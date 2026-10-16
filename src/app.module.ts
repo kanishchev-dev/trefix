@@ -22,6 +22,7 @@ import { RedisModule } from './common/redis/redis.module';
 import activityConfig from './config/activity.config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
+import notificationsConfig from './config/notifications.config';
 import trainingConfig from './config/training.config';
 import { validationSchema } from './config/validation.schema';
 import { ActivityModule } from './modules/activity/activity.module';
@@ -33,6 +34,7 @@ import { HealthModule } from './modules/health/health.module';
 import integrationsConfig from './modules/integrations/config/integrations.config';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import mailerConfig from './modules/mailer/config/mailer.config';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -71,6 +73,7 @@ const LOG_REDACTED_PATHS = [
         mailerConfig,
         authConfig,
         integrationsConfig,
+        notificationsConfig,
       ],
       validationSchema,
     }),
@@ -93,6 +96,7 @@ const LOG_REDACTED_PATHS = [
     ActivityModule,
     AdminAccountModule,
     AdminOverviewModule,
+    NotificationsModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

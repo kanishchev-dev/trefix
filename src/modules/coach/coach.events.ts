@@ -6,6 +6,7 @@
  */
 export const COACH_EVENTS = {
   REPLY_GENERATED: 'coach.reply.generated',
+  PROACTIVE_MESSAGE_SENT: 'coach.proactive_message.sent',
   SESSION_CREATED: 'coach.session.created',
   WORKOUT_NOTE_GENERATED: 'coach.workout_note.generated',
   WORKOUT_NOTE_DELETED: 'coach.workout_note.deleted',

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
 
 import { diffFields } from '@/common/utils/field-changes.util';
 import { USERS_EVENTS } from '@/modules/users/users.events';
@@ -10,6 +11,7 @@ import {
   type CoachProactiveSettings,
   NOTIFICATION_DEFAULTS,
   type NotificationSettings,
+  type PreferenceLanguage,
 } from '../users.constants';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './dto/user-preferences.dto';
 import { PreferencesUpdatedEvent } from './events/preferences-updated.event';
@@ -23,6 +25,26 @@ export class UserPreferencesService {
     private readonly preferencesModel: typeof UserPreferences,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /**
+   * Users among `userIds` whose app language is one of `languages`. Users the
+   * app never reported a language for count as the fallback language.
+   */
+  async filterByLanguage(
+    userIds: readonly string[],
+    languages: readonly PreferenceLanguage[],
+    fallback: PreferenceLanguage,
+  ): Promise<string[]> {
+    if (userIds.length === 0 || languages.length === 0) {
+      return [];
+    }
+    const rows = await this.preferencesModel.findAll({
+      where: { userId: { [Op.in]: [...userIds] } },
+      attributes: ['userId', 'language'],
+    });
+    const languageOf = new Map(rows.map((row) => [row.userId, row.language]));
+    return userIds.filter((userId) => languages.includes(languageOf.get(userId) ?? fallback));
+  }
 
   async getEntity(userId: string): Promise<UserPreferences> {
     const [preferences] = await this.preferencesModel.findOrCreate({ where: { userId }, defaults: { userId } });

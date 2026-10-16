@@ -93,4 +93,37 @@ describe('WorkoutExecutionBuilder', () => {
     ]);
     expect(result.totalDistanceM).toBe(10000);
   });
+
+  describe('a workout added with one goal', () => {
+    const own = { id: 'w-2', type: 'easy' as const, steps: [] };
+
+    it('runs a duration goal as one timed step', () => {
+      const result = builder.build({ ...own, durationMinutes: 50, distanceKm: 0, target: { goal: 'duration' } });
+      expect(result.steps).toEqual([
+        expect.objectContaining({ kind: 'steady', durationSec: 3000, distanceM: null, targetPace: null }),
+      ]);
+    });
+
+    it('runs a distance goal with a time limit inside the pace corridor', () => {
+      const result = builder.build({
+        ...own,
+        durationMinutes: 50,
+        distanceKm: 8,
+        target: { goal: 'distance', timeLimitMin: 50 },
+      });
+      expect(result.steps).toEqual([
+        expect.objectContaining({
+          durationSec: null,
+          distanceM: 8000,
+          targetPace: { minSecPerKm: 370, maxSecPerKm: 380 },
+        }),
+      ]);
+      expect(result.totalDistanceM).toBe(8000);
+    });
+
+    it('has no steps without a goal', () => {
+      const result = builder.build({ ...own, durationMinutes: 0, distanceKm: 0, target: { goal: 'none' } });
+      expect(result.steps).toEqual([]);
+    });
+  });
 });

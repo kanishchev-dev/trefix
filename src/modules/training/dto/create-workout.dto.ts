@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsIn, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
-import { WORKOUT_TYPES, WorkoutType } from '../training.constants';
+import { WORKOUT_GOALS, WORKOUT_TYPES, WorkoutGoal, WorkoutType } from '../training.constants';
 
 export class CreateWorkoutDto {
   @ApiProperty({ example: '2026-09-23T10:00:00.000Z' })
@@ -37,6 +37,30 @@ export class CreateWorkoutDto {
   @Min(0)
   @IsOptional()
   distanceKm?: number;
+
+  @ApiProperty({
+    enum: WORKOUT_GOALS,
+    required: false,
+    description:
+      'Goal of the workout. When set, only the goal value is stored: `duration` keeps durationMinutes, ' +
+      '`distance` keeps distanceKm (and timeLimitMin as its duration), the other value stays 0.',
+  })
+  @IsIn(WORKOUT_GOALS)
+  @IsOptional()
+  goal?: WorkoutGoal;
+
+  @ApiProperty({
+    minimum: 1,
+    maximum: 600,
+    required: false,
+    description: 'Distance goal only: finish the distance within this many minutes (sets the target pace).',
+  })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(600)
+  @IsOptional()
+  timeLimitMin?: number;
 
   @ApiProperty({ enum: ['planned', 'completed'], required: false, default: 'planned' })
   @IsEnum(['planned', 'completed'])

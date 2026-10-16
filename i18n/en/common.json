@@ -135,6 +135,11 @@
     "WORKOUT_HAS_SOURCES": "The result came from a recording or an integration and cannot be discarded",
     "WORKOUT_BELONGS_TO_PLAN": "Plan workouts change through the plan",
     "WORKOUT_SOURCE_NOT_FOUND": "The workout has no record from this provider",
-    "INTEGRATION_PROVIDER_INVALID": "Only Health providers sync on the device"
+    "INTEGRATION_PROVIDER_INVALID": "Only Health providers sync on the device",
+    "NOTIFICATION_NOT_FOUND": "Notification not found",
+    "NOTIFICATION_BROADCAST_NOT_FOUND": "Notification broadcast not found",
+    "NOTIFICATION_CONTENT_REQUIRED": "Write the notification text in at least one language",
+    "NOTIFICATION_LINK_URL_REQUIRED": "Enter the address of the page the notification opens",
+    "NOTIFICATION_AUDIENCE_EMPTY": "Nobody matches the chosen recipients"
   }
 }

@@ -53,6 +53,11 @@ export const MANUAL_PLAN_MAX_DURATION_MINUTES = 300;
 export const MANUAL_PLAN_MAX_DISTANCE_KM = 100;
 export const MANUAL_PLAN_FOCUS_TYPES = ['easy', 'long_run', 'tempo', 'interval', 'hill'] as const;
 export const WORKOUT_STATUSES = ['planned', 'completed', 'skipped', 'cancelled'] as const;
+/** The one goal of a workout the athlete adds by hand: none, a time or a distance. */
+export const WORKOUT_GOALS = ['none', 'duration', 'distance'] as const;
+export type WorkoutGoal = (typeof WORKOUT_GOALS)[number];
+/** Half-width of the pace corridor built from a distance goal with a time limit, seconds per km. */
+export const WORKOUT_GOAL_PACE_CORRIDOR_SEC = 5;
 export const WORKOUT_TYPES = [
   'recovery',
   'easy',

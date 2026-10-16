@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
 
 import { EntityAlreadyExistsException } from '@/common/exceptions/entity-already-exists.exception';
 
@@ -33,6 +34,18 @@ export class AthletesService {
     private readonly athleteMetrics: AthleteMetricsService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /** Owners of the given athlete profiles. */
+  async userIdsOf(athleteIds: readonly string[]): Promise<Set<string>> {
+    if (athleteIds.length === 0) {
+      return new Set();
+    }
+    const athletes = await this.athleteModel.findAll({
+      where: { id: { [Op.in]: [...new Set(athleteIds)] } },
+      attributes: ['userId'],
+    });
+    return new Set(athletes.map((athlete) => athlete.userId));
+  }
 
   /** Creates the athlete profile of the authenticated user and its first state snapshot. */
   async createAthlete(actorUserId: string, dto: CreateAthleteDto): Promise<AthleteView> {

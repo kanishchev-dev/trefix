@@ -495,6 +495,45 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     action: 'read',
     description: 'Read AI coach conversations of any user (debugging; every view is logged)',
   },
+  // --------------------------------------------------------- notifications
+  {
+    key: 'notifications.read',
+    module: 'notifications',
+    resource: '',
+    action: 'read',
+    description: 'View own notifications and the number of unread ones',
+  },
+  {
+    key: 'notifications.manage',
+    module: 'notifications',
+    resource: '',
+    action: 'manage',
+    description: 'Mark own notifications as read, remove them and register the app for push notifications',
+  },
+  {
+    key: 'notifications.users.read',
+    adminOnly: true,
+    module: 'notifications',
+    resource: 'users',
+    action: 'read',
+    description: 'View notifications of any user with their delivery status, and the devices that receive pushes',
+  },
+  {
+    key: 'notifications.broadcasts.read',
+    adminOnly: true,
+    module: 'notifications',
+    resource: 'broadcasts',
+    action: 'read',
+    description: 'View notifications sent from the admin panel, their recipients and delivery stats',
+  },
+  {
+    key: 'notifications.broadcasts.send',
+    adminOnly: true,
+    module: 'notifications',
+    resource: 'broadcasts',
+    action: 'send',
+    description: 'Send notifications to a user, a group, a segment or all users by inbox, push and email',
+  },
   // ----------------------------------------------------------------- audit
   {
     key: 'audit.read',

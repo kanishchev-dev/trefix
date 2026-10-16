@@ -16,6 +16,16 @@ const SECTIONS: ReadonlyArray<{ name: string; sql: string }> = [
   { name: 'preferences', sql: `SELECT * FROM user_preferences WHERE user_id = :userId` },
   { name: 'consents', sql: `SELECT * FROM user_consents WHERE user_id = :userId` },
   {
+    name: 'notifications',
+    sql: `SELECT id, category, type, content, params, link, read_at, created_at
+            FROM notifications WHERE user_id = :userId ORDER BY created_at`,
+  },
+  {
+    name: 'push_devices',
+    sql: `SELECT platform, locale, app_version, device_name, last_seen_at, created_at
+            FROM push_devices WHERE user_id = :userId`,
+  },
+  {
     name: 'sign_in_methods',
     sql: `SELECT provider, email, created_at FROM user_identities WHERE user_id = :userId`,
   },

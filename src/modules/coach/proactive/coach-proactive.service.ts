@@ -11,6 +11,7 @@ import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.ser
 import { COACH_DEFAULT_TITLE } from '../coach.constants';
 import { CoachMessage } from '../entities/coach-message.entity';
 import { CoachSession } from '../entities/coach-session.entity';
+import { CoachProactiveMessageSentEvent } from '../events/coach-proactive-message-sent.event';
 import { CoachReplyGeneratedEvent } from '../events/coach-reply-generated.event';
 import {
   COACH_PROACTIVE_JOB,
@@ -96,6 +97,18 @@ export class CoachProactiveService {
     this.eventEmitter.emit(
       COACH_EVENTS.REPLY_GENERATED,
       new CoachReplyGeneratedEvent(message.userId, message.athleteId, session.id, created.id),
+    );
+    this.eventEmitter.emit(
+      COACH_EVENTS.PROACTIVE_MESSAGE_SENT,
+      new CoachProactiveMessageSentEvent(
+        message.userId,
+        message.athleteId,
+        session.id,
+        created.id,
+        message.kind,
+        message.content,
+        message.params,
+      ),
     );
     this.realtimeService.emitToUser(message.userId, 'coach.message.proactive', {
       sessionId: session.id,

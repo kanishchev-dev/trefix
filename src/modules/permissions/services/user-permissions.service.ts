@@ -57,6 +57,19 @@ export class UserPermissionsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /** Members of a permission group; throws when the group does not exist. */
+  async findGroupMemberIds(groupId: string): Promise<string[]> {
+    const group = await this.permissionGroupModel.findByPk(groupId, { attributes: ['id'] });
+    if (!group) {
+      throw new EntityNotFoundException('PermissionGroup', groupId);
+    }
+    const rows = await this.userPermissionGroupModel.findAll({
+      where: { permissionGroupId: groupId },
+      attributes: ['userId'],
+    });
+    return rows.map((row) => row.userId);
+  }
+
   /**
    * Union of individual grants and permissions of every group of the user.
    *

@@ -22,6 +22,7 @@ describe('CoachProactiveService', () => {
     messageModel: { create: jest.Mock };
     queue: { add: jest.Mock };
     realtime: { emitToUser: jest.Mock };
+    events: { emit: jest.Mock };
   };
 
   const setup = (window: { allowed: boolean; resumeAt: Date | null }): Setup => {
@@ -40,16 +41,20 @@ describe('CoachProactiveService', () => {
       realtime as unknown as RealtimeService,
       events as never,
     );
-    return { service, messageModel, queue, realtime };
+    return { service, messageModel, queue, realtime, events };
   };
 
   it('sends right away outside quiet hours', async () => {
-    const { service, messageModel, realtime, queue } = setup({ allowed: true, resumeAt: null });
+    const { service, messageModel, realtime, queue, events } = setup({ allowed: true, resumeAt: null });
     await expect(service.deliver(message)).resolves.toBe('sent');
     expect(messageModel.create).toHaveBeenCalledWith(
       expect.objectContaining({ role: 'assistant', metadata: expect.objectContaining({ proactive: true }) }),
     );
     expect(realtime.emitToUser).toHaveBeenCalledWith('user-1', 'coach.message.proactive', expect.any(Object));
+    expect(events.emit).toHaveBeenCalledWith(
+      'coach.proactive_message.sent',
+      expect.objectContaining({ userId: 'user-1', sessionId: 'session-1', messageId: 'message-1', kind: message.kind }),
+    );
     expect(queue.add).not.toHaveBeenCalled();
   });
 

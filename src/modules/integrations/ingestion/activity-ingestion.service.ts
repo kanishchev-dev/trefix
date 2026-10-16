@@ -42,6 +42,8 @@ export type IngestOutcome =
 export interface IngestOptions {
   /** The run was started from this planned workout: close it instead of guessing a match. */
   plannedWorkoutId?: string | null;
+  /** False: the athlete keeps this run separate from the day's unfinished planned workout. */
+  matchPlanned?: boolean;
 }
 
 export interface IngestResult {
@@ -135,7 +137,7 @@ export class ActivityIngestionService {
 
     const planned =
       (await this.findChosenPlanned(activity.athleteId, options.plannedWorkoutId, dayRange)) ??
-      (await this.findPlannedMatch(activity.athleteId, dayRange, record));
+      (options.matchPlanned === false ? null : await this.findPlannedMatch(activity.athleteId, dayRange, record));
     if (planned) {
       const source = await this.createSource(activity, planned.id, true);
       try {

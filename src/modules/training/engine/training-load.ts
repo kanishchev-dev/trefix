@@ -68,9 +68,17 @@ export function calculateTrainingLoad(
 
 export function analyzeWorkout(input: WorkoutAnalysisInput): WorkoutAnalysisResult {
   const planned = input.plannedWorkout;
-  const durationRatio = input.actualDurationMinutes / Math.max(planned.durationMinutes, 1);
-  const distanceRatio = input.actualDistanceKm / Math.max(planned.distanceKm, 0.1);
-  const completion = clamp((durationRatio + distanceRatio) / 2, 0, 1.5);
+  // A workout added with one goal keeps 0 for the value the athlete did not set:
+  // completion counts only the planned values, and none planned means done as is.
+  const ratios: number[] = [];
+  if (planned.durationMinutes > 0) {
+    ratios.push(input.actualDurationMinutes / Math.max(planned.durationMinutes, 1));
+  }
+  if (planned.distanceKm > 0) {
+    ratios.push(input.actualDistanceKm / Math.max(planned.distanceKm, 0.1));
+  }
+  const completion =
+    ratios.length > 0 ? clamp(ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length, 0, 1.5) : 1;
   const paceBaseline = resolveTargetPace(planned);
   const actualPace =
     input.actualAveragePaceSecondsPerKm ?? resolveActualPace(input.actualDurationMinutes, input.actualDistanceKm);
@@ -86,13 +94,19 @@ export function analyzeWorkout(input: WorkoutAnalysisInput): WorkoutAnalysisResu
     confidence: resolveAnalysisConfidence(completion, performanceDelta, input),
     analysisVersion: 'analysis-v1',
   };
-  const loadResult = calculateTrainingLoad(planned, actualView);
+  // Without a planned duration the load comes from the time actually run.
+  const hasPlannedDuration = planned.durationMinutes > 0;
+  const loadBase = hasPlannedDuration ? planned : { ...planned, durationMinutes: input.actualDurationMinutes };
+  const loadResult = calculateTrainingLoad(
+    loadBase,
+    hasPlannedDuration ? actualView : { ...actualView, completion: 1 },
+  );
 
   return {
     analysis: {
       ...actualView,
       load: loadResult.load,
-      expectedLoad: Math.round(planned.durationMinutes * resolveIntensityFactor(planned.type)),
+      expectedLoad: Math.round(loadBase.durationMinutes * resolveIntensityFactor(planned.type)),
     },
     trainingLoad: loadResult.load,
     intensityFactor: loadResult.intensityFactor,

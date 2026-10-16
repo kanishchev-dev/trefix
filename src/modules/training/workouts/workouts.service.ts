@@ -25,6 +25,7 @@ import { TrainingEngine } from '../training.engine';
 import { TRAINING_EVENTS } from '../training.events';
 import { toWorkoutAnalysisView, toWorkoutView } from '../training.mappers';
 import { TrainingLookupService } from '../training-lookup.service';
+import { resolveWorkoutGoal } from './workout-goal';
 
 export interface WorkoutCompletionResult {
   workout: WorkoutView;
@@ -120,21 +121,28 @@ export class WorkoutsService {
     return workouts.map((workout) => toWorkoutView(workout));
   }
 
-  /** Logs a workout outside any plan: planned for a future day, or already completed. */
+  /** Logs a workout outside any plan: planned for today or a future day, or already completed. */
   async createWorkout(actorUserId: string, dto: CreateWorkoutDto): Promise<WorkoutView> {
     const athlete = await this.lookup.athlete((await this.athletes.getOrCreateAthlete(actorUserId)).id);
 
     const scheduledDate = new Date(dto.scheduledAt);
     const isCompleted = dto.status === 'completed' || dto.actualDistanceKm !== undefined;
     const status = isCompleted ? 'completed' : dto.status || 'planned';
-    if (status === 'planned' && scheduledDate <= this.endOfToday()) {
-      throw new DomainBadRequestException('INVALID_DATE', 'A planned workout can only be added for a future date');
+    if (status === 'planned' && scheduledDate < this.startOfToday()) {
+      throw new DomainBadRequestException(
+        'INVALID_DATE',
+        'A planned workout can only be added for today or a future date',
+      );
     }
 
     const workoutType = dto.type || MANUAL_WORKOUT_DEFAULTS.type;
+    const goal = resolveWorkoutGoal(dto);
     const durationMinutes =
-      dto.durationMinutes ?? (dto.actualDurationMinutes || MANUAL_WORKOUT_DEFAULTS.durationMinutes);
-    const distanceKm = dto.distanceKm ?? (dto.actualDistanceKm || MANUAL_WORKOUT_DEFAULTS.distanceKm);
+      goal?.durationMinutes ??
+      dto.durationMinutes ??
+      (dto.actualDurationMinutes || MANUAL_WORKOUT_DEFAULTS.durationMinutes);
+    const distanceKm =
+      goal?.distanceKm ?? dto.distanceKm ?? (dto.actualDistanceKm || MANUAL_WORKOUT_DEFAULTS.distanceKm);
     const source = dto.source || MANUAL_WORKOUT_DEFAULTS.source;
 
     return this.workoutModel.sequelize!.transaction(async (transaction) => {
@@ -156,6 +164,7 @@ export class WorkoutsService {
           target: {
             ...(dto.title ? { title: dto.title } : {}),
             ...(dto.description ? { description: dto.description } : {}),
+            ...(goal ? goal.target : {}),
             source,
           },
           steps: [],
@@ -311,8 +320,8 @@ export class WorkoutsService {
     }
   }
 
-  private endOfToday(): Date {
+  private startOfToday(): Date {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
 }

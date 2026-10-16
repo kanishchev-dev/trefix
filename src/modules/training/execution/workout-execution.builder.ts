@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import type { WorkoutView } from '../interfaces/training-views.interface';
+import { WORKOUT_GOALS, type WorkoutGoal } from '../training.constants';
+import { goalPaceCorridor } from '../workouts/workout-goal';
 
 export const EXECUTION_STEP_KINDS = ['warmup', 'work', 'recovery', 'steady', 'cooldown'] as const;
 export type ExecutionStepKind = (typeof EXECUTION_STEP_KINDS)[number];
@@ -48,7 +50,13 @@ export class WorkoutExecutionBuilder {
   build(
     workout: Pick<WorkoutView, 'id' | 'type' | 'durationMinutes' | 'distanceKm' | 'target' | 'steps'>,
   ): WorkoutExecution {
-    const drafts = workout.type === 'race' ? this.raceSteps(workout) : this.planSteps(workout);
+    const goal = goalOf(workout.target);
+    const drafts =
+      goal !== null
+        ? this.goalSteps(workout, goal)
+        : workout.type === 'race'
+          ? this.raceSteps(workout)
+          : this.planSteps(workout);
     const steps = drafts.map((step, index) => ({ ...step, index }));
     const totalDurationSec = steps.reduce((sum, step) => sum + (step.durationSec ?? 0), 0);
     const distances = steps.map((step) => step.distanceM);
@@ -56,6 +64,44 @@ export class WorkoutExecutionBuilder {
       ? distances.reduce<number>((sum, value) => sum + (value ?? 0), 0)
       : null;
     return { workoutId: workout.id, type: workout.type, steps, totalDurationSec, totalDistanceM };
+  }
+
+  /**
+   * A workout the athlete added with one goal runs as one step: the time, or the
+   * distance (with the pace corridor when it has a time limit). Without a goal
+   * there is nothing to lead through, so there are no steps.
+   */
+  private goalSteps(
+    workout: Pick<WorkoutView, 'type' | 'durationMinutes' | 'distanceKm' | 'target'>,
+    goal: WorkoutGoal,
+  ): DraftStep[] {
+    const kind: ExecutionStepKind = QUALITY_TYPES.has(workout.type) ? 'work' : 'steady';
+    if (goal === 'duration' && workout.durationMinutes > 0) {
+      return [
+        {
+          kind,
+          durationSec: minutesToSec(workout.durationMinutes),
+          distanceM: null,
+          targetPace: null,
+          zone: null,
+          repetition: null,
+        },
+      ];
+    }
+    if (goal === 'distance' && workout.distanceKm > 0) {
+      const timeLimitMin = numberOf(workout.target?.timeLimitMin);
+      return [
+        {
+          kind,
+          durationSec: null,
+          distanceM: Math.round(workout.distanceKm * 1000),
+          targetPace: timeLimitMin !== null ? goalPaceCorridor(workout.distanceKm, timeLimitMin) : null,
+          zone: null,
+          repetition: null,
+        },
+      ];
+    }
+    return [];
   }
 
   private raceSteps(workout: Pick<WorkoutView, 'durationMinutes' | 'distanceKm'>): DraftStep[] {
@@ -152,6 +198,11 @@ export class WorkoutExecutionBuilder {
       repetition: null,
     };
   }
+}
+
+function goalOf(target: Record<string, unknown> | undefined | null): WorkoutGoal | null {
+  const goal = target?.goal;
+  return typeof goal === 'string' && (WORKOUT_GOALS as readonly string[]).includes(goal) ? (goal as WorkoutGoal) : null;
 }
 
 function numberOf(value: unknown): number | null {

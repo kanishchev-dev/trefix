@@ -10,6 +10,7 @@ export const ACTIVITY_DOMAINS = [
   'integrations',
   'coach',
   'preferences',
+  'notifications',
   'data_access',
   'settings',
 ] as const;
