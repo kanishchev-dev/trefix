@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
-import { DateWheel, Ruler } from "@trefix/ui-native";
+import { Compound, DateWheel, Wheel } from "@trefix/ui-native";
 
 import { fillTemplate, type MainCopy } from "../../../locales";
 import {
@@ -11,7 +11,6 @@ import {
   SheetBlock,
   SheetButton,
 } from "../../../shared/ui/bottom-sheet";
-import { ActionCard } from "../../../shared/ui/list-card";
 import {
   InlineError,
   SheetActionsColumn,
@@ -32,6 +31,15 @@ type Common = {
   provenance?: Provenance;
   /** Extra hint under the control. */
   hint?: string;
+  /** Text above the control, e.g. what the value means. */
+  description?: string;
+};
+
+/** "≈ 186 by age · Use" under a wheel: puts a computed value into the draft. */
+type Suggestion = {
+  text: string;
+  actionLabel: string;
+  value: number;
 };
 
 export type ValueSheetConfig =
@@ -47,6 +55,7 @@ export type ValueSheetConfig =
       labelEvery?: number;
       formatValue?: (value: number) => string;
       clearable?: boolean;
+      suggestion?: Suggestion;
       onSave: (value: number | null) => Promise<void>;
     })
   | (Common & {
@@ -65,6 +74,8 @@ export type ValueSheetConfig =
         label: string;
         description?: string;
         icon?: ReactNode;
+        disabled?: boolean;
+        destructive?: boolean;
       }>;
       onSave: (value: string) => Promise<void>;
     });
@@ -163,22 +174,54 @@ export function ProfileValueSheet({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {current.description ? (
+          <SheetBlock theme={theme}>
+            <Text style={[styles.description, muted]}>
+              {current.description}
+            </Text>
+          </SheetBlock>
+        ) : null}
+
         {current.kind === "number" ? (
-          <SheetBlock theme={theme} edgeToEdge>
-            <Ruler
+          <SheetBlock theme={theme}>
+            <NumberControl
+              config={current}
               value={typeof draft === "number" ? draft : current.fallback}
               onChange={(value) => setDraft(value)}
-              min={current.min}
-              max={current.max}
-              step={current.step ?? 1}
-              unit={current.unit}
-              majorEvery={current.majorEvery}
-              labelEvery={current.labelEvery}
-              formatValue={current.formatValue}
-              accessibilityLabel={current.title}
               theme={theme}
               themeMode={themeMode}
             />
+          </SheetBlock>
+        ) : null}
+
+        {current.kind === "number" && current.suggestion ? (
+          <SheetBlock theme={theme}>
+            <View style={styles.suggestion}>
+              <Text numberOfLines={1} style={[styles.suggestionText, muted]}>
+                {current.suggestion.text}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setDraft(current.suggestion!.value)}
+                style={({ pressed }) => [
+                  styles.pill,
+                  { backgroundColor: theme.color.iconSurface },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pillText,
+                    {
+                      color: theme.color.foreground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {current.suggestion.actionLabel}
+                </Text>
+              </Pressable>
+            </View>
           </SheetBlock>
         ) : null}
 
@@ -198,28 +241,13 @@ export function ProfileValueSheet({
 
         {current.kind === "options" ? (
           <SheetBlock theme={theme}>
-            <View style={styles.options}>
-              {current.options.map((option) => (
-                <ActionCard
-                  key={option.value}
-                  theme={theme}
-                  title={option.label}
-                  description={option.description}
-                  icon={option.icon}
-                  disabled={pending}
-                  trailing={
-                    option.value === current.value ? (
-                      <Check
-                        color={theme.color.foreground}
-                        size={18}
-                        strokeWidth={2.4}
-                      />
-                    ) : undefined
-                  }
-                  onPress={() => void run(() => current.onSave(option.value))}
-                />
-              ))}
-            </View>
+            <SheetOptionList
+              theme={theme}
+              options={current.options}
+              selected={current.value}
+              disabled={pending}
+              onSelect={(value) => void run(() => current.onSave(value))}
+            />
           </SheetBlock>
         ) : null}
 
@@ -287,14 +315,6 @@ export function ProfileValueSheet({
                 themeMode={themeMode}
               />
             ) : null}
-            <SheetButton
-              label={sheetCopy.cancel}
-              variant="secondary"
-              onPress={() => setOpen(false)}
-              disabled={pending}
-              theme={theme}
-              themeMode={themeMode}
-            />
           </SheetActionsColumn>
         </SheetBlock>
       </ScrollView>
@@ -302,7 +322,241 @@ export function ProfileValueSheet({
   );
 }
 
+/** Wheels for whole numbers, an integer + tenths pair for decimals; the unit sits to the right. */
+function NumberControl({
+  config,
+  value,
+  onChange,
+  theme,
+  themeMode,
+}: {
+  config: Extract<ValueSheetConfig, { kind: "number" }>;
+  value: number;
+  onChange: (value: number) => void;
+  theme: ThemeTokens;
+  themeMode: ThemeMode;
+}) {
+  const step = config.step ?? 1;
+  if (step < 1) {
+    const whole = Math.floor(value);
+    const tenths = Math.round((value - whole) * 10);
+    return (
+      <Compound
+        parts={[
+          {
+            label: "",
+            value: whole,
+            min: Math.floor(config.min),
+            max: Math.floor(config.max),
+          },
+          { label: "", value: tenths, min: 0, max: 9 },
+        ]}
+        onChangePart={(index, next) =>
+          onChange(index === 0 ? next + tenths / 10 : whole + next / 10)
+        }
+        separator=","
+        unit={config.unit}
+        theme={theme}
+        themeMode={themeMode}
+        accessibilityLabel={config.title}
+      />
+    );
+  }
+  return (
+    <View style={styles.wheelRow}>
+      <View style={styles.wheel}>
+        <Wheel
+          value={value}
+          onChange={onChange}
+          min={config.min}
+          max={config.max}
+          step={step}
+          formatValue={config.formatValue}
+          accessibilityLabel={config.title}
+          visibleItems={5}
+          theme={theme}
+          themeMode={themeMode}
+        />
+      </View>
+      {config.unit ? (
+        <Text
+          style={[
+            styles.unit,
+            {
+              color: theme.color.mutedForeground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
+            },
+          ]}
+        >
+          {config.unit}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** Grouped radio list on the sheet: rows on the page colour, a check on the chosen one. */
+export function SheetOptionList({
+  theme,
+  options,
+  selected,
+  disabled = false,
+  onSelect,
+}: {
+  theme: ThemeTokens;
+  options: Array<{
+    value: string;
+    label: string;
+    description?: string;
+    icon?: ReactNode;
+    disabled?: boolean;
+    destructive?: boolean;
+  }>;
+  selected: string | null;
+  disabled?: boolean;
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <View style={[styles.list, { backgroundColor: theme.color.screen }]}>
+      {options.map((option, index) => {
+        const color = option.destructive
+          ? theme.color.danger
+          : theme.color.foreground;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="radio"
+            accessibilityState={{
+              checked: option.value === selected,
+              disabled: disabled || option.disabled,
+            }}
+            disabled={disabled || option.disabled}
+            onPress={() => onSelect(option.value)}
+            style={({ pressed }) => [
+              styles.listRow,
+              index > 0 && {
+                borderTopWidth: 1,
+                borderTopColor: theme.color.sheet,
+              },
+              option.disabled && styles.listRowOff,
+              pressed && styles.pressed,
+            ]}
+          >
+            {option.icon}
+            <View style={styles.listText}>
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.listTitle,
+                  {
+                    color,
+                    fontFamily: theme.typography.fontFamily.sans.medium,
+                  },
+                ]}
+              >
+                {option.label}
+              </Text>
+              {option.description ? (
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.listDescription,
+                    {
+                      color: theme.color.mutedForeground,
+                      fontFamily: theme.typography.fontFamily.sans.regular,
+                    },
+                  ]}
+                >
+                  {option.description}
+                </Text>
+              ) : null}
+            </View>
+            {option.value === selected ? (
+              <Check
+                color={theme.color.foreground}
+                size={18}
+                strokeWidth={2.4}
+              />
+            ) : null}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  description: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  wheelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  wheel: {
+    flex: 1,
+  },
+  unit: {
+    position: "absolute",
+    right: 20,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  suggestion: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 4,
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  pill: {
+    height: 28,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pillText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  pressed: {
+    opacity: 0.82,
+  },
+  list: {
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  listRow: {
+    minHeight: 52,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  listRowOff: {
+    opacity: 0.35,
+  },
+  listText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  listTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  listDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   scroll: {
     width: "100%",
   },
@@ -310,9 +564,6 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingTop: 72,
     paddingBottom: 32,
-  },
-  options: {
-    gap: 8,
   },
   centered: {
     fontSize: 13,

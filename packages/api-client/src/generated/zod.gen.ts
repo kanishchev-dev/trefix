@@ -20,6 +20,7 @@ export const zAuthUserResponseDto = z.object({
   firstName: z.string(),
   lastName: z.string(),
   avatarUrl: z.string().optional(),
+  bio: z.string().nullable(),
   referralCode: z.string().optional(),
   emailVerified: z.boolean(),
   createdAt: z.iso.datetime(),
@@ -109,12 +110,54 @@ export const zActivateInviteDto = z.object({
 export const zUpdateUserDto = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  avatarUrl: z.string().optional(),
+  avatarUrl: z.string().nullish(),
+  bio: z.string().max(300).nullish(),
 });
 
 export const zChangePasswordDto = z.object({
   currentPassword: z.string(),
   newPassword: z.string(),
+});
+
+export const zAuthSessionResponseDto = z.object({
+  id: z.string(),
+  deviceName: z.string().nullable(),
+  platform: z.string().nullable(),
+  appVersion: z.string().nullable(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  createdAt: z.string(),
+  lastActiveAt: z.string(),
+  current: z.boolean(),
+});
+
+export const zAuthSessionListResponseDto = z.object({
+  items: z.array(zAuthSessionResponseDto),
+});
+
+export const zAuthIdentityResponseDto = z.object({
+  provider: z.enum(["apple", "google"]),
+  email: z.string().nullable(),
+  linkedAt: z.iso.datetime(),
+});
+
+export const zAuthIdentityListResponseDto = z.object({
+  items: z.array(zAuthIdentityResponseDto),
+});
+
+export const zEmailChangeRequestDto = z.object({
+  email: z.string(),
+});
+
+export const zEmailChangeChallengeResponseDto = z.object({
+  email: z.string(),
+  expiresInSeconds: z.number(),
+  resendAfterSeconds: z.number(),
+});
+
+export const zEmailChangeConfirmDto = z.object({
+  code: z.string(),
 });
 
 export const zAdminCreateUserDto = z.object({
@@ -1009,12 +1052,13 @@ export const zAthleteProfileResponseDto = z.object({
   id: z.string(),
   userId: z.string(),
   age: z.number().nullable(),
-  sex: z.enum(["female", "male", "other", "prefer_not_to_say"]).nullable(),
+  sex: z.enum(["female", "male"]).nullable(),
   heightCm: z.number().nullable(),
   weightKg: z.number().nullable(),
   experienceLevel: z.string(),
   weeklyMileageKm: z.number().nullable(),
   sessionsPerWeek: z.number(),
+  allowDoubles: z.boolean(),
   recentRaceResults: z.array(z.record(z.string(), z.unknown())),
   preferredTrainingDays: z.array(z.string()),
   availableTrainingDays: z.array(z.string()),
@@ -1044,7 +1088,7 @@ export const zAthleteProfileResponseDto = z.object({
 
 export const zUpdateAthleteProfileDto = z.object({
   birthDate: z.string().nullish(),
-  sex: z.enum(["female", "male", "other", "prefer_not_to_say"]).nullish(),
+  sex: z.enum(["female", "male"]).nullish(),
   heightCm: z.number().nullish(),
   weightKg: z.number().nullish(),
   restingHeartRate: z.number().nullish(),
@@ -1070,6 +1114,7 @@ export const zUpdateAthleteProfileDto = z.object({
     .optional(),
   preferredTimeOfDay: z.enum(["morning", "day", "evening", "any"]).optional(),
   sessionsPerWeek: z.number().optional(),
+  allowDoubles: z.boolean().optional(),
   longRunDay: z
     .enum([
       "monday",
@@ -1093,7 +1138,7 @@ export const zUpdateAthleteProfileDto = z.object({
 
 export const zCreateAthleteDto = z.object({
   age: z.number().gte(14).lte(100).optional(),
-  sex: z.enum(["female", "male", "other", "prefer_not_to_say"]).optional(),
+  sex: z.enum(["female", "male"]).optional(),
   heightCm: z.number().gte(120).optional(),
   weightKg: z.number().gte(30).optional(),
   experienceLevel: z.enum(["beginner", "intermediate", "advanced"]),
@@ -1115,12 +1160,13 @@ export const zTrainingAthleteResponseDto = z.object({
   id: z.string(),
   userId: z.string(),
   age: z.number().nullable(),
-  sex: z.enum(["female", "male", "other", "prefer_not_to_say"]).nullable(),
+  sex: z.enum(["female", "male"]).nullable(),
   heightCm: z.number().nullable(),
   weightKg: z.number().nullable(),
   experienceLevel: z.string(),
   weeklyMileageKm: z.number().nullable(),
   sessionsPerWeek: z.number(),
+  allowDoubles: z.boolean(),
   recentRaceResults: z.array(z.record(z.string(), z.unknown())),
   preferredTrainingDays: z.array(z.string()),
   availableTrainingDays: z.array(z.string()),
@@ -1341,6 +1387,7 @@ export const zTrainingWorkoutResponseDto = z.object({
   analysis: zTrainingWorkoutAnalysisResponseDto.nullable(),
   completedAt: z.iso.datetime().nullable(),
   gearId: z.string().nullish(),
+  deviceId: z.string().nullish(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -1555,12 +1602,12 @@ export const zAdaptPlanDto = z.object({
 
 export const zGearResponseDto = z.object({
   id: z.string(),
-  type: z.enum(["shoes"]),
+  type: z.enum(["shoes", "watch", "sensor"]),
   brand: z.string(),
   model: z.string(),
   nickname: z.string().nullable(),
   initialDistanceKm: z.number(),
-  limitKm: z.number(),
+  limitKm: z.number().nullable(),
   startedAt: z.string().nullable(),
   retiredAt: z.iso.datetime().nullable(),
   status: z.enum(["active", "retired"]),
@@ -1579,10 +1626,17 @@ export const zGearResponseDto = z.object({
   ),
   replaceReminder: z.boolean(),
   source: z.enum(["manual", "strava"]),
+  isDefault: z.boolean(),
+  isPrimary: z.boolean(),
+  dataSource: z
+    .enum(["strava", "garmin", "apple_health", "health_connect"])
+    .nullable(),
   distanceKm: z.number(),
   workoutsCount: z.number(),
-  remainingKm: z.number(),
-  wearPercent: z.number(),
+  averagePaceSecondsPerKm: z.number().nullable(),
+  weeklyKm: z.number(),
+  remainingKm: z.number().nullable(),
+  wearPercent: z.number().nullable(),
   replaceSoon: z.boolean(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -1593,7 +1647,7 @@ export const zGearListResponseDto = z.object({
 });
 
 export const zCreateGearDto = z.object({
-  type: z.enum(["shoes"]).optional().default("shoes"),
+  type: z.enum(["shoes", "watch", "sensor"]).optional().default("shoes"),
   brand: z.string().max(60),
   model: z.string().max(80),
   nickname: z.string().max(60).nullish(),
@@ -1616,10 +1670,14 @@ export const zCreateGearDto = z.object({
     )
     .optional(),
   replaceReminder: z.boolean().optional().default(true),
+  isDefault: z.boolean().optional().default(false),
+  isPrimary: z.boolean().optional().default(false),
+  dataSource: z
+    .enum(["strava", "garmin", "apple_health", "health_connect"])
+    .nullish(),
 });
 
 export const zUpdateGearDto = z.object({
-  type: z.enum(["shoes"]).optional(),
   brand: z.string().max(60).optional(),
   model: z.string().max(80).optional(),
   nickname: z.string().max(60).nullish(),
@@ -1642,6 +1700,11 @@ export const zUpdateGearDto = z.object({
     )
     .optional(),
   replaceReminder: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  isPrimary: z.boolean().optional(),
+  dataSource: z
+    .enum(["strava", "garmin", "apple_health", "health_connect"])
+    .nullish(),
 });
 
 export const zAssignWorkoutGearDto = z.object({
@@ -1651,6 +1714,15 @@ export const zAssignWorkoutGearDto = z.object({
 export const zWorkoutGearAssignmentDto = z.object({
   workoutId: z.string(),
   gearId: z.string().nullable(),
+});
+
+export const zAssignWorkoutDeviceDto = z.object({
+  deviceId: z.string().nullable(),
+});
+
+export const zWorkoutDeviceAssignmentDto = z.object({
+  workoutId: z.string(),
+  deviceId: z.string().nullable(),
 });
 
 export const zSummaryWorkoutDto = z.object({
@@ -2208,34 +2280,86 @@ export const zAdminWorkoutUpdateDto = z.object({
   title: z.string().max(120).optional(),
 });
 
+export const zCoachProactiveDto = z.object({
+  preWorkout: z.boolean(),
+  workoutReview: z.boolean(),
+  wellbeingCheck: z.boolean(),
+  weeklySummary: z.boolean(),
+  missedSupport: z.boolean(),
+});
+
 export const zQuietHoursDto = z.object({
   from: z.string(),
   to: z.string(),
 });
 
+export const zNotificationSettingsDto = z.object({
+  workoutReminder: z.boolean(),
+  workoutReminderTime: z.enum(["morning", "2h", "1h", "30m"]),
+  missedWorkout: z.boolean(),
+  planChanged: z.boolean(),
+  achievements: z.boolean(),
+  workoutSynced: z.boolean(),
+});
+
 export const zUserPreferencesResponseDto = z.object({
-  units: z.enum(["metric", "imperial"]),
+  distanceUnit: z.enum(["km", "mi"]),
+  weightUnit: z.enum(["kg", "lb"]),
+  heightUnit: z.enum(["cm", "ft"]),
+  temperatureUnit: z.enum(["c", "f"]),
   weekStart: z.enum(["mon", "sun"]),
   timeFormat: z.enum(["24h", "12h"]),
   coachEnabled: z.boolean(),
   coachAdaptationMode: z.enum(["auto", "confirm", "suggest"]),
+  coachTone: z.enum(["soft", "neutral", "strict"]),
+  coachProactive: zCoachProactiveDto,
   coachQuietHours: zQuietHoursDto.nullable(),
+  notifications: zNotificationSettingsDto,
   stravaProfileSync: z.boolean(),
+  stravaActivitiesSync: z.boolean(),
+  stravaGearSync: z.boolean(),
   timezone: z.string().nullable(),
   language: z.enum(["ru", "en"]).nullable(),
+  languageMode: z.enum(["system", "ru", "en"]),
   updatedAt: z.iso.datetime(),
 });
 
+export const zUpdateCoachProactiveDto = z.object({
+  preWorkout: z.boolean().optional(),
+  workoutReview: z.boolean().optional(),
+  wellbeingCheck: z.boolean().optional(),
+  weeklySummary: z.boolean().optional(),
+  missedSupport: z.boolean().optional(),
+});
+
+export const zUpdateNotificationSettingsDto = z.object({
+  workoutReminder: z.boolean().optional(),
+  workoutReminderTime: z.enum(["morning", "2h", "1h", "30m"]).optional(),
+  missedWorkout: z.boolean().optional(),
+  planChanged: z.boolean().optional(),
+  achievements: z.boolean().optional(),
+  workoutSynced: z.boolean().optional(),
+});
+
 export const zUpdateUserPreferencesDto = z.object({
-  units: z.enum(["metric", "imperial"]).optional(),
+  distanceUnit: z.enum(["km", "mi"]).optional(),
+  weightUnit: z.enum(["kg", "lb"]).optional(),
+  heightUnit: z.enum(["cm", "ft"]).optional(),
+  temperatureUnit: z.enum(["c", "f"]).optional(),
   weekStart: z.enum(["mon", "sun"]).optional(),
   timeFormat: z.enum(["24h", "12h"]).optional(),
   coachEnabled: z.boolean().optional(),
   coachAdaptationMode: z.enum(["auto", "confirm", "suggest"]).optional(),
+  coachTone: z.enum(["soft", "neutral", "strict"]).optional(),
+  coachProactive: zUpdateCoachProactiveDto.optional(),
   coachQuietHours: zQuietHoursDto.nullish(),
+  notifications: zUpdateNotificationSettingsDto.optional(),
   stravaProfileSync: z.boolean().optional(),
+  stravaActivitiesSync: z.boolean().optional(),
+  stravaGearSync: z.boolean().optional(),
   timezone: z.string().optional(),
   language: z.enum(["ru", "en"]).optional(),
+  languageMode: z.enum(["system", "ru", "en"]).optional(),
 });
 
 export const zIntegrationItemResponseDto = z.object({
@@ -2269,6 +2393,13 @@ export const zStravaProfileAccessResponseDto = z.object({
 
 export const zQueuedResponseDto = z.object({
   status: z.enum(["queued"]),
+});
+
+export const zGearImportResultDto = z.object({
+  created: z.number(),
+  updated: z.number(),
+  unchanged: z.number(),
+  items: z.array(zGearResponseDto),
 });
 
 export const zSuccessResponseDto = z.object({
@@ -2585,6 +2716,19 @@ export const zDeleteAccountDto = z.object({
   confirm: z.boolean(),
 });
 
+export const zDataExportResponseDto = z.object({
+  id: z.string(),
+  status: z.enum(["pending", "ready", "failed", "expired"]),
+  requestedAt: z.iso.datetime(),
+  readyAt: z.iso.datetime().nullable(),
+  expiresAt: z.iso.datetime().nullable(),
+  nextAvailableAt: z.iso.datetime(),
+});
+
+export const zDataExportStatusResponseDto = z.object({
+  latest: zDataExportResponseDto.nullable(),
+});
+
 export const zAuthControllerRegisterV1Body = zRegisterDto;
 
 export const zAuthControllerRegisterV1Response = zAuthRegisterResponseDto;
@@ -2686,6 +2830,47 @@ export const zAuthControllerLogoutAllV1Response = z.void();
 export const zAuthControllerChangePasswordV1Body = zChangePasswordDto;
 
 export const zAuthControllerChangePasswordV1Response = zAuthTokensResponseDto;
+
+export const zAuthAccountControllerListSessionsV1Response =
+  zAuthSessionListResponseDto;
+
+export const zAuthAccountControllerRevokeSessionV1Path = z.object({
+  id: z.string(),
+});
+
+export const zAuthAccountControllerRevokeSessionV1Response = z.void();
+
+export const zAuthAccountControllerLogoutOthersV1Response = z.void();
+
+export const zAuthAccountControllerListIdentitiesV1Response =
+  zAuthIdentityListResponseDto;
+
+export const zAuthAccountControllerLinkAppleV1Body = zAppleNativeExchangeDto;
+
+export const zAuthAccountControllerLinkAppleV1Response =
+  zAuthIdentityResponseDto;
+
+export const zAuthAccountControllerLinkGoogleV1Body = zGoogleNativeExchangeDto;
+
+export const zAuthAccountControllerLinkGoogleV1Response =
+  zAuthIdentityResponseDto;
+
+export const zAuthAccountControllerUnlinkV1Path = z.object({
+  provider: z.enum(["apple", "google"]),
+});
+
+export const zAuthAccountControllerUnlinkV1Response = z.void();
+
+export const zAuthAccountControllerRequestEmailChangeV1Body =
+  zEmailChangeRequestDto;
+
+export const zAuthAccountControllerRequestEmailChangeV1Response =
+  zEmailChangeChallengeResponseDto;
+
+export const zAuthAccountControllerConfirmEmailChangeV1Body =
+  zEmailChangeConfirmDto;
+
+export const zAuthAccountControllerConfirmEmailChangeV1Response = z.void();
 
 export const zUsersControllerFindAllV1Query = z.object({
   page: z.number().gte(1).optional().default(1),
@@ -3321,6 +3506,7 @@ export const zTrainingControllerAdaptPlanV1Response =
 
 export const zGearControllerListV1Query = z.object({
   status: z.enum(["active", "retired"]).optional().default("active"),
+  type: z.enum(["shoes", "watch", "sensor"]).optional(),
 });
 
 export const zGearControllerListV1Response = zGearListResponseDto;
@@ -3368,6 +3554,15 @@ export const zGearControllerAssignV1Path = z.object({
 });
 
 export const zGearControllerAssignV1Response = zWorkoutGearAssignmentDto;
+
+export const zGearControllerAssignDeviceV1Body = zAssignWorkoutDeviceDto;
+
+export const zGearControllerAssignDeviceV1Path = z.object({
+  id: z.string(),
+});
+
+export const zGearControllerAssignDeviceV1Response =
+  zWorkoutDeviceAssignmentDto;
 
 export const zProgressControllerSummaryV1Query = z.object({
   timezone: z.string().optional(),
@@ -3666,6 +3861,9 @@ export const zIntegrationsControllerRequestStravaProfileAccessV1Response =
 export const zIntegrationsControllerTriggerStravaProfileSyncV1Response =
   zQueuedResponseDto;
 
+export const zIntegrationsControllerImportStravaShoesV1Response =
+  zGearImportResultDto;
+
 export const zIntegrationsControllerGetStravaSyncStatusV1Response =
   zIntegrationSyncStatusResponseDto;
 
@@ -3764,3 +3962,16 @@ export const zUserConsentsControllerRevokeV1Path = z.object({
 });
 
 export const zUserConsentsControllerRevokeV1Response = zSuccessResponseDto;
+
+export const zDataExportControllerLatestV1Response =
+  zDataExportStatusResponseDto;
+
+export const zDataExportControllerRequestV1Response = zDataExportResponseDto;
+
+export const zDataExportControllerDownloadV1Path = z.object({
+  id: z.string(),
+});
+
+export const zDataExportControllerDownloadV1Query = z.object({
+  token: z.string(),
+});

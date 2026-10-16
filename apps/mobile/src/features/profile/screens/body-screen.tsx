@@ -1,5 +1,4 @@
 import { Linking } from "react-native";
-import { Activity } from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
@@ -63,22 +62,24 @@ export function BodyScreen({
       themeMode={themeMode}
     >
       {athlete ? (
-        <BodyFieldsCard
-          athlete={athlete}
-          copy={copy}
-          language={language}
-          theme={theme}
-          themeMode={themeMode}
-        />
+        <ProfileSection>
+          <BodyFieldsCard
+            athlete={athlete}
+            copy={copy}
+            language={language}
+            theme={theme}
+            themeMode={themeMode}
+          />
+          <Footnote text={copy.profile.bodyScreen.footnote} theme={theme} />
+        </ProfileSection>
       ) : null}
       {stravaConnected ? (
         <ProfileSection>
           <SectionTitle text={b.source} theme={theme} />
-          <ListCard theme={theme}>
+          <ListCard theme={theme} bare>
             {profileAccess ? (
               <ListRow
                 theme={theme}
-                icon={<Activity color={theme.color.foreground} size={20} />}
                 title={b.stravaSync}
                 description={b.stravaSyncDescription}
                 trailing={
@@ -95,7 +96,6 @@ export function BodyScreen({
             ) : (
               <ListRow
                 theme={theme}
-                icon={<Activity color={theme.color.foreground} size={20} />}
                 title={b.allowAccess}
                 description={b.allowAccessDescription}
                 onPress={() => void allowAccess()}

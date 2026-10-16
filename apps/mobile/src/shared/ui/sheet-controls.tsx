@@ -149,6 +149,9 @@ export function SheetTabs<T extends string>({
   onChange,
   theme,
   trackColor,
+  compact = false,
+  disabled = false,
+  accessibilityLabel,
 }: {
   tabs: Array<{ key: T; label: string }>;
   value: T;
@@ -156,12 +159,14 @@ export function SheetTabs<T extends string>({
   theme: ThemeTokens;
   /** Track behind the tabs; defaults to `surface`, which suits sheets. */
   trackColor?: string;
+  /** Narrow two-option switch at the end of a row (units, week start). */
+  compact?: boolean;
+  disabled?: boolean;
+  accessibilityLabel?: string;
 }) {
   const [tabsWidth, setTabsWidth] = useState(0);
-  const activeIndex = Math.max(
-    0,
-    tabs.findIndex((t) => t.key === value),
-  );
+  const matchedIndex = tabs.findIndex((t) => t.key === value);
+  const activeIndex = Math.max(0, matchedIndex);
   const activeTabX = useSharedValue(activeIndex);
 
   useEffect(() => {
@@ -190,16 +195,21 @@ export function SheetTabs<T extends string>({
 
   return (
     <View
+      accessibilityRole="tablist"
+      accessibilityLabel={accessibilityLabel}
       onLayout={(e) => setTabsWidth(e.nativeEvent.layout.width)}
       style={[
         styles.tabsContainer,
+        compact && styles.tabsCompact,
         { backgroundColor: trackColor ?? theme.color.surface },
+        disabled && { opacity: 0.5 },
       ]}
     >
       <Animated.View
         style={[
           styles.activeTabIndicator,
           { backgroundColor: theme.color.primary },
+          matchedIndex < 0 && { opacity: 0 },
           indicatorAnimatedStyle,
         ]}
       />
@@ -210,13 +220,16 @@ export function SheetTabs<T extends string>({
           <Pressable
             key={tab.key}
             accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
+            accessibilityState={{ selected: isActive, disabled }}
+            disabled={disabled}
             onPress={() => onChange(tab.key)}
-            style={styles.tab}
+            style={[styles.tab, compact && styles.tabCompact]}
           >
             <Text
+              numberOfLines={1}
               style={[
                 styles.tabText,
+                compact && styles.tabTextCompact,
                 {
                   color: isActive
                     ? theme.color.primaryForeground

@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getMe, updateMe, uploadAvatar } from "../../../lib/auth-api";
+import {
+  getMe,
+  removeAvatar,
+  updateMe,
+  uploadAvatar,
+} from "../../../lib/auth-api";
 import { queryKeys } from "../../../shared/lib/query-keys";
 
 export function useProfile() {
@@ -25,6 +30,16 @@ export function useUploadAvatar() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: uploadAvatar,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+    },
+  });
+}
+
+export function useRemoveAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeAvatar,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
     },

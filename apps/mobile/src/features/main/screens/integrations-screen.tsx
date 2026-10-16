@@ -1,103 +1,48 @@
-import { type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ChevronRight } from "lucide-react-native";
-import { type ThemeTokens } from "@trefix/tokens";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
-import { HeaderBackButton, HeaderTitle } from "../components/header";
-import { useHeaderOptions } from "../context/header-context";
-import { SectionLayout } from "../components/section-layout";
 import {
   fillTemplate,
   type AppLanguage,
   type MainCopy,
 } from "../../../locales";
-import {
-  useHealthAvailability,
-  useHealthProvider,
-} from "../../health-sync/hooks";
-import { healthStoreName } from "../../health-sync/health-integration-screen";
-import { getHealthSource } from "../../health-sync/sources";
-import { HealthLogo } from "../../health-sync/components/health-logo";
 import { IntegrationLogo } from "../../../shared/ui/integration-logo";
+import {
+  ListCard,
+  ListRow,
+  Pill,
+  SectionTitle,
+} from "../../../shared/ui/list-card";
+import { healthStoreName } from "../../health-sync/health-integration-screen";
+import { useHealthProvider } from "../../health-sync/hooks";
+import { getHealthSource } from "../../health-sync/sources";
+import {
+  Footnote,
+  ProfileSection,
+  ProfileSubScreen,
+} from "../../profile/components/profile-sub-screen";
 import { formatAgo } from "../../profile/lib/profile-format";
 import { useIntegrations } from "../hooks/use-integrations";
 
 type Props = {
   theme: ThemeTokens;
-  themeMode: "light" | "dark";
+  themeMode: ThemeMode;
   copy: MainCopy;
   userLanguage: AppLanguage;
   onBack: () => void;
   onOpenStrava: () => void;
   onOpenHealth: () => void;
+  onOpenGarmin: () => void;
 };
 
-type RowProps = {
-  theme: ThemeTokens;
+type Service = {
+  key: "strava" | "apple_health" | "health_connect" | "garmin";
   title: string;
-  subtitle: string;
-  icon?: ReactNode;
-  onPress?: () => void;
-  disabled?: boolean;
+  description: string;
+  connected: boolean;
+  onPress: () => void;
 };
 
-function IntegrationRow({
-  theme,
-  title,
-  subtitle,
-  icon,
-  onPress,
-  disabled = false,
-}: RowProps) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.row,
-        pressed && !disabled && styles.rowPressed,
-        disabled && styles.rowDisabled,
-      ]}
-    >
-      <View style={styles.rowContent}>
-        {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
-        <View style={styles.textWrap}>
-          <Text
-            style={[
-              styles.rowTitle,
-              {
-                color: theme.color.foreground,
-                fontFamily: theme.typography.fontFamily.sans.medium,
-              },
-            ]}
-          >
-            {title}
-          </Text>
-          <Text
-            style={[
-              styles.rowSubtitle,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {subtitle}
-          </Text>
-        </View>
-        {!disabled ? (
-          <ChevronRight
-            color={theme.color.mutedForeground}
-            size={18}
-            strokeWidth={2.2}
-          />
-        ) : null}
-      </View>
-    </Pressable>
-  );
-}
-
+/** Connected services and the ones that can be connected. */
 export function IntegrationsScreen({
   theme,
   themeMode,
@@ -105,219 +50,106 @@ export function IntegrationsScreen({
   onBack,
   onOpenStrava,
   onOpenHealth,
+  onOpenGarmin,
 }: Props) {
-  const { data: integrationsData, isLoading } = useIntegrations();
+  const { data } = useIntegrations();
   const healthProvider = useHealthProvider();
-  const healthItem = integrationsData?.items.find(
-    (i) => i.provider === healthProvider,
-  );
-  // `available` is false while the backend keeps the feature off.
-  const healthAvailable = !!healthProvider && healthItem?.available !== false;
-  const { data: healthAvailability } = useHealthAvailability();
-
-  const healthSubtitle = () => {
-    const h = copy.profile.integrations.health;
-    if (isLoading) return "...";
-    if (!getHealthSource()) return h.status.unsupported;
-    if (healthAvailability === "not_installed") return h.status.notInstalled;
-    if (healthAvailability === "update_required")
-      return h.status.updateRequired;
-    if (healthAvailability === "unsupported") return h.status.unsupported;
-    if (!healthItem || healthItem.status === "disconnected")
-      return h.status.disconnected;
-    if (healthItem.status === "error") return h.status.error;
-    if ((healthItem.pendingBatches ?? 0) > 0 || healthItem.status === "syncing")
-      return h.status.syncing;
-    if (healthItem.lastSyncedAt) {
-      return fillTemplate(h.status.syncedAgo, {
-        ago: formatAgo(healthItem.lastSyncedAt, copy),
-      });
-    }
-    return h.status.connected;
+  const v = copy.profile.services;
+  const items = data?.items ?? [];
+  const find = (provider: string) =>
+    items.find((item) => item.provider === provider);
+  const isOn = (provider: string) => {
+    const item = find(provider);
+    return Boolean(item && item.status !== "disconnected");
   };
 
-  const getStravaSubtitle = () => {
-    if (isLoading) return "...";
-    const strava = integrationsData?.items.find((i) => i.provider === "strava");
-    if (!strava || strava.status === "disconnected") {
-      return copy.profile.integrations.strava.disconnectedStatus;
-    }
-    if (strava.status === "connected" || strava.status === "syncing") {
-      return copy.profile.integrations.strava.connectedStatus;
-    }
-    if (strava.status === "reauthorization_required") {
-      return copy.profile.integrations.strava.reauthStatus;
-    }
-    return copy.profile.integrations.strava.errorStatus;
-  };
-
-  useHeaderOptions(
+  const strava = find("strava");
+  const services: Service[] = [
     {
-      leftAction: (
-        <HeaderBackButton
-          theme={theme}
-          themeMode={themeMode}
-          onPress={onBack}
-        />
-      ),
-      centerContent: (
-        <HeaderTitle theme={theme}>
-          {copy.profile.integrations.title}
-        </HeaderTitle>
-      ),
-      rightAction: null,
-      variant: "default",
-      bottomContent: null,
+      key: "strava",
+      title: "Strava",
+      description: strava?.lastSyncedAt
+        ? fillTemplate(v.syncedAgo, {
+            ago: formatAgo(strava.lastSyncedAt, copy),
+          })
+        : copy.profile.integrations.strava.description,
+      connected: isOn("strava"),
+      onPress: onOpenStrava,
     },
-    [theme, themeMode, onBack, copy.profile.integrations.title],
+  ];
+  const healthItem = healthProvider ? find(healthProvider) : undefined;
+  if (healthProvider && getHealthSource() && healthItem?.available !== false) {
+    services.push({
+      key: healthProvider,
+      title: healthStoreName(copy),
+      description: v.healthDescription,
+      connected: isOn(healthProvider),
+      onPress: onOpenHealth,
+    });
+  }
+  services.push({
+    key: "garmin",
+    title: copy.profile.gearScreen.sources.garmin,
+    description: v.garminDescription,
+    connected: isOn("garmin"),
+    onPress: onOpenGarmin,
+  });
+
+  const connected = services.filter((service) => service.connected);
+  const available = services.filter((service) => !service.connected);
+
+  const row = (service: Service) => (
+    <ListRow
+      key={service.key}
+      theme={theme}
+      icon={
+        <IntegrationLogo
+          provider={service.key}
+          themeMode={themeMode}
+          size={28}
+        />
+      }
+      title={service.title}
+      description={service.description}
+      trailing={
+        service.connected ? undefined : (
+          <Pill
+            theme={theme}
+            text={service.key === "garmin" ? v.soon : v.connect}
+          />
+        )
+      }
+      chevron={service.connected}
+      onPress={service.onPress}
+    />
   );
 
   return (
-    <SectionLayout
-      hasHeader={false}
-      scrollable
+    <ProfileSubScreen
+      title={v.title}
+      onBack={onBack}
       theme={theme}
       themeMode={themeMode}
     >
-      <View style={styles.stack}>
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.color.mutedForeground,
-              fontFamily: theme.typography.fontFamily.sans.medium,
-            },
-          ]}
-        >
-          {copy.profile.integrations.subtitle}
-        </Text>
-
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: theme.color.surfaceElevated,
-              borderColor: theme.color.border,
-            },
-          ]}
-        >
-          {healthProvider ? (
-            <>
-              <IntegrationRow
-                theme={theme}
-                title={healthStoreName(copy)}
-                subtitle={
-                  healthAvailable
-                    ? healthSubtitle()
-                    : copy.profile.integrations.comingSoon
-                }
-                icon={
-                  <HealthLogo
-                    provider={healthProvider}
-                    themeMode={themeMode}
-                    size={32}
-                  />
-                }
-                onPress={healthAvailable ? onOpenHealth : undefined}
-                disabled={!healthAvailable}
-              />
-              <View
-                style={[
-                  styles.separator,
-                  { backgroundColor: theme.color.border },
-                ]}
-              />
-            </>
-          ) : null}
-          <IntegrationRow
-            theme={theme}
-            title="Strava"
-            subtitle={getStravaSubtitle()}
-            icon={
-              <IntegrationLogo
-                provider="strava"
-                themeMode={themeMode}
-                size={32}
-              />
-            }
-            onPress={onOpenStrava}
-          />
-          <View
-            style={[styles.separator, { backgroundColor: theme.color.border }]}
-          />
-          <IntegrationRow
-            theme={theme}
-            title="Garmin Connect"
-            subtitle={copy.profile.integrations.comingSoon}
-            icon={
-              <IntegrationLogo
-                provider="garmin"
-                themeMode={themeMode}
-                size={32}
-              />
-            }
-            disabled
-          />
-        </View>
-      </View>
-    </SectionLayout>
+      {connected.length > 0 ? (
+        <ProfileSection>
+          <SectionTitle text={v.connected} theme={theme} />
+          <ListCard theme={theme} bare>
+            {connected.map(row)}
+          </ListCard>
+        </ProfileSection>
+      ) : null}
+      {available.length > 0 ? (
+        <ProfileSection>
+          <SectionTitle text={v.available} theme={theme} />
+          <ListCard theme={theme} bare>
+            {available.map(row)}
+          </ListCard>
+          <Footnote text={v.duplicatesHint} theme={theme} />
+        </ProfileSection>
+      ) : (
+        <Footnote text={v.duplicatesHint} theme={theme} />
+      )}
+    </ProfileSubScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  stack: {
-    gap: 12,
-    paddingTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    paddingHorizontal: 4,
-  },
-  card: {
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: "hidden",
-  },
-  row: {
-    minHeight: 60,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    justifyContent: "center",
-  },
-  rowPressed: {
-    opacity: 0.82,
-  },
-  rowDisabled: {
-    opacity: 0.5,
-  },
-  rowContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  rowTitle: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  rowSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 60,
-  },
-});

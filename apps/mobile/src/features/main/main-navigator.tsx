@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
+import { type LanguageMode } from "../../app/use-app-preferences";
 import { fillTemplate, type AppLanguage, type MainCopy } from "../../locales";
 import { trackEvent } from "../../lib/analytics";
 import { ToastProvider, useToast } from "../../shared/ui/toast";
@@ -30,13 +31,19 @@ import { useProfileRealtime } from "../profile/hooks/use-athlete-profile";
 import { usePreferences } from "../profile/hooks/use-preferences";
 import { BodyScreen } from "../profile/screens/body-screen";
 import { CoachSettingsScreen } from "../profile/screens/coach-settings-screen";
+import { AccountScreen } from "../profile/screens/account-screen";
+import { EmailChangeScreen } from "../profile/screens/email-change-screen";
 import { ExperienceScreen } from "../profile/screens/experience-screen";
+import { GearArchiveScreen } from "../profile/screens/gear-archive-screen";
+import { GearDetailScreen } from "../profile/screens/gear-detail-screen";
 import { GearEditScreen } from "../profile/screens/gear-edit-screen";
 import { GearScreen } from "../profile/screens/gear-screen";
 import { HeartScreen } from "../profile/screens/heart-screen";
 import { ProfileWizardScreen } from "../profile/screens/profile-wizard-screen";
+import { RunningProfileScreen } from "../profile/screens/running-profile-screen";
 import { ScheduleScreen } from "../profile/screens/schedule-screen";
 import { UnitsScreen } from "../profile/screens/units-screen";
+import { ZonesScreen } from "../profile/screens/zones-screen";
 import { useProgressRealtime } from "../progress/hooks/use-progress-v2";
 import { MetricScreen } from "../progress/screens/metric-screen";
 import { RecordsScreen } from "../progress/screens/records-screen";
@@ -56,6 +63,11 @@ import {
   type MainShell,
   type MainStackParamList,
 } from "./main-routes";
+import {
+  AppSettingsProvider,
+  type AppSettings,
+} from "./context/app-settings-context";
+import { GarminConnectScreen } from "./screens/connect-service-screen";
 import { IntegrationsScreen } from "./screens/integrations-screen";
 import { LanguageSettingsScreen } from "./screens/language-settings-screen";
 import { NotificationsSettingsScreen } from "./screens/notifications-settings-screen";
@@ -76,10 +88,11 @@ type Props = {
   copy: MainCopy;
   userEmail: string;
   language: AppLanguage;
+  languageMode: LanguageMode;
   userTheme: ThemePreference;
   onLogout: () => void;
   onAccountDeleted: () => void;
-  onSelectLanguage: (language: AppLanguage) => void;
+  onSelectLanguage: (mode: LanguageMode) => void;
   onSelectTheme: (theme: ThemePreference) => void;
 };
 
@@ -87,25 +100,38 @@ type StartTarget = { id: string; name: string; entry: string };
 
 /** Signed-in app: the tabs and every screen pushed over them, plus the plan sheets shown above all of them. */
 export function MainNavigator(props: Props) {
+  const settings = useMemo<AppSettings>(
+    () => ({
+      language: props.language,
+      languageMode: props.languageMode,
+      userTheme: props.userTheme,
+      userEmail: props.userEmail,
+      selectLanguage: props.onSelectLanguage,
+      selectTheme: props.onSelectTheme,
+      logout: props.onLogout,
+      accountDeleted: props.onAccountDeleted,
+    }),
+    [
+      props.language,
+      props.languageMode,
+      props.userTheme,
+      props.userEmail,
+      props.onSelectLanguage,
+      props.onSelectTheme,
+      props.onLogout,
+      props.onAccountDeleted,
+    ],
+  );
   return (
-    <ToastProvider theme={props.theme}>
-      <MainStackHost {...props} />
-    </ToastProvider>
+    <AppSettingsProvider value={settings}>
+      <ToastProvider theme={props.theme}>
+        <MainStackHost {...props} />
+      </ToastProvider>
+    </AppSettingsProvider>
   );
 }
 
-function MainStackHost({
-  theme,
-  themeMode,
-  copy,
-  userEmail,
-  language,
-  userTheme,
-  onLogout,
-  onAccountDeleted,
-  onSelectLanguage,
-  onSelectTheme,
-}: Props) {
+function MainStackHost({ theme, themeMode, copy, userEmail, language }: Props) {
   const [planCreationSheetVisible, setPlanCreationSheetVisible] =
     useState(false);
   const [creationLaunch, setCreationLaunch] =
@@ -227,57 +253,90 @@ function MainStackHost({
                   copy={copy}
                   userEmail={userEmail}
                   userLanguage={language}
-                  userTheme={userTheme}
-                  onLogout={onLogout}
-                  onAccountDeleted={onAccountDeleted}
                 />
               )}
             </Stack.Screen>
 
             {/* Account */}
             <Stack.Screen name="profileEdit">
-              {() => (
-                <ProfileEditScreen
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={copy}
-                  onBack={goBack}
-                />
-              )}
+              {() =>
+                frame(
+                  <ProfileEditScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="notificationsSettings">
-              {() => (
-                <NotificationsSettingsScreen
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={copy}
-                  onBack={goBack}
-                />
-              )}
+              {() =>
+                frame(
+                  <NotificationsSettingsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                    onOpenCoach={() =>
+                      pushSubScreen({ kind: "settings-coach" })
+                    }
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="languageSettings">
-              {() => (
-                <LanguageSettingsScreen
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={copy}
-                  selectedLanguage={language}
-                  onSelectLanguage={onSelectLanguage}
-                  onBack={goBack}
-                />
-              )}
+              {() =>
+                frame(
+                  <LanguageSettingsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="themeSettings">
-              {() => (
-                <ThemeSettingsScreen
-                  theme={theme}
-                  themeMode={themeMode}
-                  copy={copy}
-                  selectedTheme={userTheme}
-                  onSelectTheme={onSelectTheme}
-                  onBack={goBack}
-                />
-              )}
+              {() =>
+                frame(
+                  <ThemeSettingsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="settings-account">
+              {() =>
+                frame(
+                  <AccountScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                    onChangeEmail={() =>
+                      pushSubScreen({ kind: "settings-email" })
+                    }
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="settings-email">
+              {() =>
+                frame(
+                  <EmailChangeScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
             </Stack.Screen>
             <Stack.Screen name="trefix">
               {() => (
@@ -306,6 +365,12 @@ function MainStackHost({
                     onOpenHealth={() =>
                       pushSubScreen({ kind: "health-integration" })
                     }
+                    onOpenGarmin={() =>
+                      pushSubScreen({
+                        kind: "connect-service",
+                        service: "garmin",
+                      })
+                    }
                   />,
                 )
               }
@@ -320,6 +385,37 @@ function MainStackHost({
                     onBack={goBack}
                   />,
                 )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="connect-service">
+              {({ route }) =>
+                route.params?.service === "strava"
+                  ? frame(
+                      <StravaIntegrationScreen
+                        theme={theme}
+                        themeMode={themeMode}
+                        copy={copy}
+                        userLanguage={language}
+                        onBack={goBack}
+                      />,
+                    )
+                  : route.params?.service === "health"
+                    ? frame(
+                        <HealthIntegrationScreen
+                          theme={theme}
+                          themeMode={themeMode}
+                          copy={copy}
+                          onBack={goBack}
+                        />,
+                      )
+                    : frame(
+                        <GarminConnectScreen
+                          theme={theme}
+                          themeMode={themeMode}
+                          copy={copy}
+                          onBack={goBack}
+                        />,
+                      )
               }
             </Stack.Screen>
             <Stack.Screen name="strava-integration">
@@ -398,6 +494,69 @@ function MainStackHost({
             </Stack.Screen>
 
             {/* Profile */}
+            <Stack.Screen name="profile-running">
+              {() =>
+                frame(
+                  <RunningProfileScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                    onNavigate={pushSubScreen}
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="profile-zones">
+              {() =>
+                frame(
+                  <ZonesScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    onBack={goBack}
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="profile-gear-detail">
+              {({ route }) =>
+                frame(
+                  <GearDetailScreen
+                    key={route.params?.gearId}
+                    gearId={route.params?.gearId ?? ""}
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                    onEdit={() =>
+                      pushSubScreen({
+                        kind: "profile-gear-edit",
+                        gearId: route.params?.gearId,
+                      })
+                    }
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="profile-gear-archive">
+              {() =>
+                frame(
+                  <GearArchiveScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
+                    onOpen={(gearId) =>
+                      pushSubScreen({ kind: "profile-gear-detail", gearId })
+                    }
+                  />,
+                )
+              }
+            </Stack.Screen>
             <Stack.Screen name="profile-body">
               {() =>
                 frame(
@@ -419,6 +578,7 @@ function MainStackHost({
                     themeMode={themeMode}
                     copy={copy}
                     onBack={goBack}
+                    onOpenZones={() => pushSubScreen({ kind: "profile-zones" })}
                   />,
                 )
               }
@@ -466,8 +626,12 @@ function MainStackHost({
               {({ route }) =>
                 frame(
                   <GearEditScreen
-                    key={route.params?.gearId ?? "new"}
+                    key={
+                      route.params?.gearId ??
+                      `new-${route.params?.type ?? "shoes"}`
+                    }
                     gearId={route.params?.gearId}
+                    type={route.params?.type}
                     theme={theme}
                     themeMode={themeMode}
                     copy={copy}

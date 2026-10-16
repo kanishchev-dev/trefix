@@ -22,6 +22,7 @@ export const authUserSchema = z.object({
   firstName: z.string().default(""),
   lastName: z.string().default(""),
   avatarUrl: z.string().url().optional().nullable(),
+  bio: z.string().nullable().optional(),
   referralCode: z.string().optional().nullable(),
   emailVerified: z.boolean(),
   createdAt: z.string().or(z.date()).optional(),
@@ -76,10 +77,14 @@ export const authVerifyEmailSchema = z.object({
   code: z.string().min(1),
 });
 
+export const USER_BIO_MAX_LENGTH = 300;
+
 export const updateUserSchema = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  avatarUrl: z.string().url().optional(),
+  /** `null` removes the avatar. */
+  avatarUrl: z.string().url().nullable().optional(),
+  bio: z.string().max(USER_BIO_MAX_LENGTH).nullable().optional(),
 });
 
 /**
@@ -179,12 +184,7 @@ export const trainingAthleteSchema = contract.zTrainingAthleteResponseDto;
 
 export const hrZonesMethodSchema = z.enum(["threshold", "max_hr", "custom"]);
 export const timeOfDaySchema = z.enum(["morning", "day", "evening", "any"]);
-export const athleteSexSchema = z.enum([
-  "female",
-  "male",
-  "other",
-  "prefer_not_to_say",
-]);
+export const athleteSexSchema = z.enum(["female", "male"]);
 export const experienceLevelSchema = z.enum([
   "beginner",
   "intermediate",
@@ -226,6 +226,7 @@ export const athleteProfileUpdateSchema = z
     availableTrainingDays: z.array(trainingWeekdaySchema),
     preferredTimeOfDay: timeOfDaySchema,
     sessionsPerWeek: z.number().int(),
+    allowDoubles: z.boolean(),
     longRunDay: trainingWeekdaySchema.nullable(),
     preferredWorkoutDurationMinutes: z.number().int().nullable(),
     longRunMaxDurationMinutes: z.number().int().nullable(),
@@ -252,7 +253,16 @@ export const gearSchema = contract.zGearResponseDto;
 
 export const gearListSchema = contract.zGearListResponseDto;
 
+export const gearTypeSchema = z.enum(["shoes", "watch", "sensor"]);
+export const gearDataSourceSchema = z.enum([
+  "strava",
+  "garmin",
+  "apple_health",
+  "health_connect",
+]);
+
 export const gearInputSchema = z.object({
+  type: gearTypeSchema.optional(),
   brand: z.string().trim().min(1).max(60),
   model: z.string().trim().min(1).max(80),
   nickname: z.string().trim().max(60).nullable().optional(),
@@ -261,12 +271,36 @@ export const gearInputSchema = z.object({
   startedAt: z.string().nullable().optional(),
   defaultWorkoutTypes: z.array(workoutTypeSchema).optional(),
   replaceReminder: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  isPrimary: z.boolean().optional(),
+  dataSource: gearDataSourceSchema.nullable().optional(),
 });
 
+export const gearImportResultSchema = contract.zGearImportResultDto;
+
+export type GearType = z.infer<typeof gearTypeSchema>;
+export type GearDataSource = z.infer<typeof gearDataSourceSchema>;
+export type GearImportResult = z.infer<typeof gearImportResultSchema>;
 export type GearStatus = z.infer<typeof gearStatusSchema>;
 export type Gear = z.infer<typeof gearSchema>;
 export type GearList = z.infer<typeof gearListSchema>;
 export type GearInput = z.infer<typeof gearInputSchema>;
+
+// --- Account and security ---
+
+export const authSessionSchema = contract.zAuthSessionResponseDto;
+export const authSessionListSchema = contract.zAuthSessionListResponseDto;
+export const authIdentitySchema = contract.zAuthIdentityResponseDto;
+export const authIdentityListSchema = contract.zAuthIdentityListResponseDto;
+export const emailChangeChallengeSchema =
+  contract.zEmailChangeChallengeResponseDto;
+export const dataExportSchema = contract.zDataExportResponseDto;
+export const dataExportStatusSchema = contract.zDataExportStatusResponseDto;
+
+export type AuthSession = z.infer<typeof authSessionSchema>;
+export type AuthIdentity = z.infer<typeof authIdentitySchema>;
+export type EmailChangeChallenge = z.infer<typeof emailChangeChallengeSchema>;
+export type DataExport = z.infer<typeof dataExportSchema>;
 
 // --- User preferences ---
 

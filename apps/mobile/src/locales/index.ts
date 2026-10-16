@@ -218,6 +218,30 @@ export function formatDateLong(date: Date, language: AppLanguage): string {
   return language === "ru" ? `${day} ${month}` : `${month} ${day}`;
 }
 
+/** "12 марта 1990" / "March 12, 1990"; date-only strings are calendar dates. */
+export function formatLongDate(
+  value: string | Date,
+  language: AppLanguage,
+): string {
+  const date = parseDateInput(value);
+  const day = date.getDate();
+  const month = longMonthByLanguageGenitive[language][date.getMonth()];
+  const year = date.getFullYear();
+  return language === "ru"
+    ? `${day} ${month} ${year}`
+    : `${month} ${day}, ${year}`;
+}
+
+/** "марта 2026" / "March 2026" — after «с» / "since". */
+export function formatSinceMonthYear(
+  value: string | Date,
+  language: AppLanguage,
+): string {
+  const date = parseDateInput(value);
+  const month = longMonthByLanguageGenitive[language][date.getMonth()];
+  return `${month} ${date.getFullYear()}`;
+}
+
 /** Replaces `{{name}}` placeholders in a localized template. */
 export function fillTemplate(
   template: string,

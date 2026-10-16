@@ -7,11 +7,12 @@ import {
   View,
 } from "react-native";
 import {
+  ArrowLeftRight,
   CalendarClock,
-  Check,
   Download,
   HeartPulse,
   History,
+  Moon,
   RefreshCw,
   Settings2,
   ShieldAlert,
@@ -26,7 +27,6 @@ import { trackEvent } from "../../lib/analytics";
 import { fillTemplate, type MainCopy } from "../../locales";
 import { SheetButton } from "../../shared/ui/bottom-sheet";
 import {
-  IconCircle,
   ListCard,
   ListRow,
   SectionTitle,
@@ -55,6 +55,7 @@ import {
   useRequestHealthHistory,
   useSetHealthProfileSync,
 } from "./hooks";
+import { ConnectOnboarding } from "../main/components/connect-onboarding";
 import { HealthLogo } from "./components/health-logo";
 import { getHealthSource, platformHealthProvider } from "./sources";
 
@@ -187,81 +188,53 @@ export function HealthIntegrationScreen({
     );
   };
 
-  const renderDisconnected = () => (
-    <>
-      <View style={[styles.card, { backgroundColor: theme.color.card }]}>
-        <Text
-          style={[
-            styles.intro,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.regular,
-            },
-          ]}
-        >
-          {h.intro}
-        </Text>
-        <Text
-          style={[
-            styles.cardTitle,
-            {
-              color: theme.color.foreground,
-              fontFamily: theme.typography.fontFamily.sans.medium,
-            },
-          ]}
-        >
-          {h.whatTitle}
-        </Text>
-        {h.what.map((line) => (
-          <View key={line} style={styles.item}>
-            <IconCircle theme={theme} size={28}>
-              <Check
-                color={theme.color.foreground}
-                size={14}
-                strokeWidth={2.4}
-              />
-            </IconCircle>
-            <Text
-              style={[
-                styles.itemText,
-                {
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            >
-              {line}
-            </Text>
-          </View>
-        ))}
-      </View>
-      <Footnote text={h.privacy} theme={theme} />
-      {stravaConnected ? (
-        <Footnote
-          text={fillTemplate(h.stravaNote, { store: storeName })}
-          theme={theme}
-        />
-      ) : null}
-      {denied ? (
-        <HealthHintCard
-          title={h.deniedTitle}
-          body={h.deniedBody}
-          icon={<ShieldAlert color={theme.color.mutedForeground} size={18} />}
-          actionLabel={h.openSettings}
-          onAction={openSettings}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      ) : null}
-      <SheetButton
-        label={connect.isPending ? h.connecting : h.connect}
-        onPress={onConnectPress}
-        pending={connect.isPending}
+  const renderDisconnected = () => {
+    const c = copy.profile.connect.health;
+    return (
+      <ConnectOnboarding
         theme={theme}
         themeMode={themeMode}
-      />
-    </>
-  );
+        provider={platformHealthProvider() ?? "apple_health"}
+        title={fillTemplate(c.title, { store: storeName })}
+        lede={fillTemplate(c.lede, { store: storeName })}
+        chips={c.chips}
+        benefits={c.benefits.map((benefit) => ({
+          title: benefit.title,
+          description: fillTemplate(benefit.description, { store: storeName }),
+        }))}
+        benefitIcons={[HeartPulse, Moon, ArrowLeftRight]}
+        cta={
+          <SheetButton
+            label={connect.isPending ? h.connecting : c.cta}
+            onPress={onConnectPress}
+            pending={connect.isPending}
+            theme={theme}
+            themeMode={themeMode}
+            style={{ alignSelf: "stretch", flex: 0 }}
+          />
+        }
+        fine={c.fine}
+      >
+        {stravaConnected ? (
+          <Footnote
+            text={fillTemplate(h.stravaNote, { store: storeName })}
+            theme={theme}
+          />
+        ) : null}
+        {denied ? (
+          <HealthHintCard
+            title={h.deniedTitle}
+            body={h.deniedBody}
+            icon={<ShieldAlert color={theme.color.mutedForeground} size={18} />}
+            actionLabel={h.openSettings}
+            onAction={openSettings}
+            theme={theme}
+            themeMode={themeMode}
+          />
+        ) : null}
+      </ConnectOnboarding>
+    );
+  };
 
   const renderConnected = () => (
     <>

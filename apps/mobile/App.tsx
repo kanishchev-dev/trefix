@@ -89,6 +89,7 @@ export default function App() {
                   copy={getMainCopy(preferences.language)}
                   userEmail={session.session.user.email}
                   language={preferences.language}
+                  languageMode={preferences.languageMode}
                   userTheme={preferences.userTheme}
                   onLogout={session.signOut}
                   onAccountDeleted={() => void session.endDeletedAccount()}

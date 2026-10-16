@@ -5,6 +5,8 @@ import { type GearInput, type GearStatus } from "@trefix/api-client";
 import {
   createGear,
   deleteGear,
+  getGear,
+  importStravaGear,
   listGear,
   restoreGear,
   retireGear,
@@ -17,6 +19,25 @@ export function useGear(status: GearStatus = "active") {
     queryKey: queryKeys.gear.list(status),
     queryFn: () => listGear(status),
     staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useGearItem(gearId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.gear.detail(gearId ?? ""),
+    queryFn: () => getGear(gearId!),
+    enabled: Boolean(gearId),
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useImportStravaGear() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importStravaGear,
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gear.all });
+    },
   });
 }
 

@@ -46,6 +46,12 @@ export type ThemeTokens = {
     intensity2: string;
     intensity3: string;
     intensityOff: string;
+    /** Heart-rate zones Z1–Z5, from the faintest to the strongest. Greys only. */
+    zone1: string;
+    zone2: string;
+    zone3: string;
+    zone4: string;
+    zone5: string;
     /** Attention: missing values, wear warnings. */
     warning: string;
     /** Border of option tiles, chips and bottom sheets. */
@@ -169,6 +175,11 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       intensity2: "#71717b",
       intensity3: "#09090b",
       intensityOff: "#f4f4f5",
+      zone1: "#e4e4e7",
+      zone2: "#d4d4d8",
+      zone3: "#a1a1aa",
+      zone4: "#52525b",
+      zone5: "#09090b",
       warning: "#d97706",
       controlBorder: "#e4e4e7",
       inputBorder: "rgba(0, 0, 0, 0.06)",
@@ -229,6 +240,11 @@ export const mobileThemeTokens: Record<ThemeMode, ThemeTokens> = {
       intensity2: "#9f9fa9",
       intensity3: "#fafafa",
       intensityOff: "rgba(255, 255, 255, 0.05)",
+      zone1: "#27272a",
+      zone2: "#3f3f46",
+      zone3: "#71717b",
+      zone4: "#a1a1aa",
+      zone5: "#fafafa",
       warning: "#fbbf24",
       controlBorder: "rgba(255, 255, 255, 0.15)",
       inputBorder: "rgba(255, 255, 255, 0.1)",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 
 import {
   type AthleteProfile,
@@ -7,18 +7,20 @@ import {
   type TrainingWeekday,
 } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
-import { Segmented } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import {
   fillTemplate,
+  pluralize,
   type AppLanguage,
   type MainCopy,
 } from "../../../locales";
 import { displayToKm, kmToDisplay } from "../../../shared/lib/units";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
+import { SheetTabs } from "../../../shared/ui/sheet-controls";
+import { Switch } from "../../../shared/ui/switch";
 import { useToast } from "../../../shared/ui/toast";
-import { Notice, NoticeText } from "../../plans/components/plans-ui";
+import { CircleRow } from "../components/profile-ui";
 import {
   Footnote,
   ProfileSection,
@@ -28,21 +30,20 @@ import {
   ProfileValueSheet,
   type ValueSheetConfig,
 } from "../components/profile-value-sheet";
-import { Stepper } from "../components/stepper";
-import { WeekdayPicker } from "../components/weekday-picker";
 import {
   useAthleteProfile,
   useUpdateAthleteProfile,
 } from "../hooks/use-athlete-profile";
 import { usePreferences } from "../hooks/use-preferences";
+import { useUnitFormat } from "../hooks/use-unit-format";
 import {
-  createFormatter,
   orderedWeekdays,
   profileErrorMessage,
   WEEKDAYS,
   weekdayFull,
   weekdayShort,
 } from "../lib/profile-format";
+import { canDoubleUp, maxSessionsPerWeek } from "../lib/schedule-rules";
 
 type Props = {
   theme: ThemeTokens;
@@ -52,7 +53,10 @@ type Props = {
   onBack: () => void;
 };
 
-/** P4 — training days, preferred time, sessions per week, durations and usual weekly volume. */
+const USUAL_OPTIONS = ["30", "45", "60", "90", "none"] as const;
+const LONG_OPTIONS = ["90", "120", "150", "180", "none"] as const;
+
+/** Training days, workouts per week (with doubles for advanced athletes), time, durations and volume. */
 export function ScheduleScreen({
   theme,
   themeMode,
@@ -66,9 +70,8 @@ export function ScheduleScreen({
   const { showToast } = useToast();
   const [sheet, setSheet] = useState<ValueSheetConfig | null>(null);
   const s = copy.profile.schedule;
-  const format = createFormatter(copy, language, preferences);
-  const distanceUnit =
-    preferences.units === "imperial" ? format.labels.mi : format.labels.km;
+  const t = copy.profile.scheduleScreen;
+  const format = useUnitFormat(copy, language);
 
   const save = async (patch: AthleteProfileUpdate) => {
     await update.mutateAsync(patch);
@@ -77,15 +80,17 @@ export function ScheduleScreen({
       source: "manual",
     });
   };
-  const saveQuietly = (patch: AthleteProfileUpdate) =>
-    void save(patch).catch((error) =>
-      showToast(profileErrorMessage(error, copy)),
-    );
+  const saveQuietly = (patch: AthleteProfileUpdate, toast?: string) =>
+    void save(patch)
+      .then(() => {
+        if (toast) showToast(toast);
+      })
+      .catch((error) => showToast(profileErrorMessage(error, copy)));
 
   if (!athlete) {
     return (
       <ProfileSubScreen
-        title={s.title}
+        title={t.title}
         onBack={onBack}
         theme={theme}
         themeMode={themeMode}
@@ -96,6 +101,10 @@ export function ScheduleScreen({
   }
 
   const days = athlete.availableTrainingDays;
+  const doubles =
+    Boolean(athlete.allowDoubles) && canDoubleUp(athlete.experienceLevel);
+  const maxSessions = maxSessionsPerWeek(days.length, doubles);
+
   const toggleDay = (day: string) => {
     const next = days.includes(day)
       ? days.filter((entry) => entry !== day)
@@ -103,14 +112,30 @@ export function ScheduleScreen({
     if (next.length === 0) return;
     const ordered = WEEKDAYS.filter((entry) => next.includes(entry));
     const patch: AthleteProfileUpdate = { availableTrainingDays: ordered };
-    if (athlete.sessionsPerWeek > ordered.length)
-      patch.sessionsPerWeek = ordered.length;
+    const nextMax = maxSessionsPerWeek(ordered.length, doubles);
+    let toast: string | undefined;
+    if (athlete.sessionsPerWeek > nextMax) {
+      patch.sessionsPerWeek = nextMax;
+      toast = fillTemplate(t.lowered, { count: nextMax });
+    }
     if (
       athlete.longRunDay &&
       !ordered.includes(athlete.longRunDay as TrainingWeekday)
-    )
+    ) {
       patch.longRunDay = null;
-    saveQuietly(patch);
+    }
+    saveQuietly(patch, toast);
+  };
+
+  const toggleDoubles = (value: boolean) => {
+    const patch: AthleteProfileUpdate = { allowDoubles: value };
+    const nextMax = maxSessionsPerWeek(days.length, value);
+    let toast: string | undefined;
+    if (athlete.sessionsPerWeek > nextMax) {
+      patch.sessionsPerWeek = nextMax;
+      toast = fillTemplate(t.lowered, { count: nextMax });
+    }
+    saveQuietly(patch, toast);
   };
 
   const openLongRunDay = (profile: AthleteProfile) =>
@@ -118,194 +143,234 @@ export function ScheduleScreen({
       kind: "options",
       title: s.longRunDay,
       value: profile.longRunDay ?? null,
-      options: WEEKDAYS.filter((day) =>
-        profile.availableTrainingDays.includes(day),
-      ).map((day) => ({
+      hint: t.longRunDayHint,
+      options: orderedWeekdays(preferences.weekStart).map((day) => ({
         value: day,
         label: weekdayFull(copy, day),
+        disabled: !profile.availableTrainingDays.includes(day),
       })),
       onSave: (value) => save({ longRunDay: value as TrainingWeekday }),
     });
 
-  const openMinutes = (
+  const openDuration = (
     field: "preferredWorkoutDurationMinutes" | "longRunMaxDurationMinutes",
-    title: string,
-    range: { min: number; max: number; step: number; fallback: number },
-  ) =>
+  ) => {
+    const usual = field === "preferredWorkoutDurationMinutes";
+    const options = usual ? USUAL_OPTIONS : LONG_OPTIONS;
+    const labels = usual ? t.durations : t.longDurations;
+    const current = athlete[field];
     setSheet({
-      kind: "number",
-      title,
-      value: athlete[field] ?? null,
-      fallback: range.fallback,
-      min: range.min,
-      max: range.max,
-      step: range.step,
-      majorEvery: range.step * 3,
-      labelEvery: range.step * 6,
-      formatValue: format.minutes,
-      clearable: true,
-      onSave: (value) => save({ [field]: value }),
+      kind: "options",
+      title: usual ? s.usual : s.longRun,
+      description: usual ? t.durationHint : undefined,
+      value:
+        current === null || current === undefined ? "none" : String(current),
+      options: options.map((value) => ({
+        value,
+        label: (labels as Record<string, string>)[value],
+      })),
+      onSave: (value) =>
+        save({ [field]: value === "none" ? null : Number(value) }),
     });
+  };
 
   const openVolume = () =>
     setSheet({
       kind: "number",
       title: s.volume,
       value: athlete.weeklyMileageKm
-        ? Math.round(kmToDisplay(athlete.weeklyMileageKm, preferences.units))
+        ? Math.round(kmToDisplay(athlete.weeklyMileageKm, format.units))
         : null,
-      fallback: preferences.units === "imperial" ? 15 : 25,
+      fallback: format.units === "imperial" ? 15 : 25,
       min: 0,
-      max: preferences.units === "imperial" ? 180 : 300,
-      unit: distanceUnit,
-      majorEvery: 10,
-      labelEvery: 10,
+      max: format.units === "imperial" ? 180 : 300,
+      unit: format.units === "imperial" ? t.volumeUnitImperial : t.volumeUnit,
+      suggestion: suggestion
+        ? {
+            text: fillTemplate(s.suggestion, {
+              value: format.distance(suggestion.valueKm, 0),
+            }),
+            actionLabel: s.suggestionApply,
+            value: Math.round(kmToDisplay(suggestion.valueKm, format.units)),
+          }
+        : undefined,
       onSave: (value) =>
         save({
           weeklyMileageKm:
             value === null
               ? null
-              : Math.round(displayToKm(value, preferences.units) * 10) / 10,
+              : Math.round(displayToKm(value, format.units) * 10) / 10,
         }),
     });
 
   const suggestion = athlete.weeklyMileageSuggestion ?? null;
   const notSet = copy.profile.summary.notSet;
+  const durationValue = (minutes: number | null | undefined) =>
+    minutes
+      ? fillTemplate(s.upTo, { value: format.minutes(minutes) })
+      : t.noLimit;
+
+  const sessions = athlete.sessionsPerWeek;
+  const perWeekHint =
+    doubles && sessions > days.length
+      ? fillTemplate(t.doublesHint, {
+          sessions: pluralize(t.sessions, sessions, language),
+          days: pluralize(t.days, days.length, language),
+          doubles: pluralize(t.days, sessions - days.length, language),
+        })
+      : sessions < days.length
+        ? fillTemplate(t.pick, {
+            picked: pluralize(t.days, sessions, language),
+            days: days.length,
+          })
+        : t.everyDay;
 
   return (
     <ProfileSubScreen
-      title={s.title}
+      title={t.title}
       onBack={onBack}
       theme={theme}
       themeMode={themeMode}
     >
       <ProfileSection>
         <SectionTitle text={s.days} theme={theme} />
-        <WeekdayPicker
-          days={orderedWeekdays(preferences.weekStart).map((day) => ({
-            value: day,
-            label: weekdayShort(copy, day),
-          }))}
-          selected={days}
-          onToggle={toggleDay}
+        <CircleRow
           theme={theme}
+          idleColor={theme.color.card}
+          items={orderedWeekdays(preferences.weekStart).map((day) => ({
+            key: day,
+            label: weekdayShort(copy, day),
+            state: days.includes(day) ? "on" : "idle",
+          }))}
+          onPress={toggleDay}
         />
+      </ProfileSection>
+
+      <ProfileSection>
+        <SectionTitle text={s.perWeek} theme={theme} />
+        <CircleRow
+          theme={theme}
+          idleColor={theme.color.card}
+          items={[1, 2, 3, 4, 5, 6, 7].map((count) => ({
+            key: String(count),
+            label: String(count),
+            state:
+              count === sessions ? "on" : count > maxSessions ? "off" : "idle",
+          }))}
+          onPress={(key) => saveQuietly({ sessionsPerWeek: Number(key) })}
+        />
+        {canDoubleUp(athlete.experienceLevel) ? (
+          <ListCard theme={theme} bare>
+            <ListRow
+              theme={theme}
+              title={t.doubles}
+              description={t.doublesDescription}
+              trailing={
+                <Switch
+                  theme={theme}
+                  value={doubles}
+                  accessibilityLabel={t.doubles}
+                  onValueChange={toggleDoubles}
+                />
+              }
+            />
+          </ListCard>
+        ) : null}
+        <Footnote text={perWeekHint} theme={theme} />
       </ProfileSection>
 
       <ProfileSection>
         <SectionTitle text={s.time} theme={theme} />
-        <Segmented
-          segments={(["morning", "day", "evening", "any"] as const).map(
-            (value) => ({ value, label: s.times[value] }),
-          )}
+        <SheetTabs
+          tabs={(["morning", "day", "evening", "any"] as const).map((key) => ({
+            key,
+            label: s.times[key],
+          }))}
           value={athlete.preferredTimeOfDay ?? "any"}
           onChange={(value) => saveQuietly({ preferredTimeOfDay: value })}
           theme={theme}
-          themeMode={themeMode}
+          trackColor={theme.color.card}
+          accessibilityLabel={s.time}
         />
       </ProfileSection>
 
-      <ListCard theme={theme}>
-        <ListRow
-          theme={theme}
-          title={s.perWeek}
-          trailing={
-            <Stepper
-              value={athlete.sessionsPerWeek}
-              min={1}
-              max={Math.max(1, Math.min(7, days.length))}
-              onChange={(value) => saveQuietly({ sessionsPerWeek: value })}
-              theme={theme}
-              accessibilityLabel={s.perWeek}
-            />
-          }
-        />
-        <ListRow
-          theme={theme}
-          title={s.longRunDay}
-          value={
-            athlete.longRunDay ? weekdayFull(copy, athlete.longRunDay) : notSet
-          }
-          onPress={() => openLongRunDay(athlete)}
-        />
-        <ListRow
-          theme={theme}
-          title={s.usual}
-          value={
-            athlete.preferredWorkoutDurationMinutes
-              ? fillTemplate(s.upTo, {
-                  value: format.minutes(
-                    athlete.preferredWorkoutDurationMinutes,
-                  ),
-                })
-              : notSet
-          }
-          onPress={() =>
-            openMinutes("preferredWorkoutDurationMinutes", s.usual, {
-              min: 15,
-              max: 240,
-              step: 5,
-              fallback: 45,
-            })
-          }
-        />
-        <ListRow
-          theme={theme}
-          title={s.longRun}
-          value={
-            athlete.longRunMaxDurationMinutes
-              ? fillTemplate(s.upTo, {
-                  value: format.minutes(athlete.longRunMaxDurationMinutes),
-                })
-              : notSet
-          }
-          onPress={() =>
-            openMinutes("longRunMaxDurationMinutes", s.longRun, {
-              min: 30,
-              max: 360,
-              step: 15,
-              fallback: 90,
-            })
-          }
-        />
-      </ListCard>
-
       <ProfileSection>
-        <SectionTitle text={s.volume} theme={theme} />
-        <ListCard theme={theme}>
+        <SectionTitle text={t.durationVolume} theme={theme} />
+        <ListCard theme={theme} bare>
+          <ListRow
+            theme={theme}
+            title={s.longRunDay}
+            value={
+              athlete.longRunDay
+                ? weekdayShort(copy, athlete.longRunDay)
+                : notSet
+            }
+            chevron={false}
+            onPress={() => openLongRunDay(athlete)}
+          />
+          <ListRow
+            theme={theme}
+            title={s.usual}
+            value={durationValue(athlete.preferredWorkoutDurationMinutes)}
+            chevron={false}
+            onPress={() => openDuration("preferredWorkoutDurationMinutes")}
+          />
+          <ListRow
+            theme={theme}
+            title={s.longRun}
+            value={durationValue(athlete.longRunMaxDurationMinutes)}
+            chevron={false}
+            onPress={() => openDuration("longRunMaxDurationMinutes")}
+          />
           <ListRow
             theme={theme}
             title={s.volume}
+            description={
+              suggestion
+                ? fillTemplate(s.suggestion, {
+                    value: format.distance(suggestion.valueKm, 0),
+                  })
+                : undefined
+            }
             value={
               athlete.weeklyMileageKm
-                ? fillTemplate(s.volumeValue, {
-                    value: format.distance(athlete.weeklyMileageKm, 0),
-                  })
+                ? `~${format.distance(athlete.weeklyMileageKm, 0)}`
                 : notSet
             }
+            trailing={
+              suggestion ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() =>
+                    saveQuietly({ weeklyMileageKm: suggestion.valueKm })
+                  }
+                  style={[
+                    styles.pill,
+                    { backgroundColor: theme.color.iconSurface },
+                  ]}
+                  hitSlop={6}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      {
+                        color: theme.color.foreground,
+                        fontFamily: theme.typography.fontFamily.sans.medium,
+                      },
+                    ]}
+                  >
+                    {s.suggestionApply}
+                  </Text>
+                </Pressable>
+              ) : undefined
+            }
+            chevron={false}
             onPress={openVolume}
           />
         </ListCard>
-        {suggestion ? (
-          <Notice
-            theme={theme}
-            action={{
-              label: s.suggestionApply,
-              onPress: () =>
-                saveQuietly({ weeklyMileageKm: suggestion.valueKm }),
-            }}
-          >
-            <NoticeText theme={theme}>
-              {fillTemplate(s.suggestion, {
-                value: format.distance(suggestion.valueKm, 0),
-              })}
-            </NoticeText>
-          </Notice>
-        ) : null}
         <Footnote text={s.footnote} theme={theme} />
       </ProfileSection>
 
-      <View />
       <ProfileValueSheet
         config={sheet}
         onClose={() => setSheet(null)}
@@ -316,3 +381,17 @@ export function ScheduleScreen({
     </ProfileSubScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  pill: {
+    height: 24,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pillText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+});

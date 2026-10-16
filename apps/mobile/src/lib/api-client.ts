@@ -1,5 +1,6 @@
 import { ApiClientError, type ApiErrorShape } from "@trefix/api-client";
 
+import { clientDeviceHeaders } from "./client-device";
 import { loadAuthSession } from "./auth-session";
 import { BACKEND_BASE_URL } from "./backend-url";
 import { logger } from "./logger";
@@ -31,7 +32,7 @@ export function setRequestLanguage(language: string | null): void {
 export async function backendHeaders(
   useAuth: boolean,
 ): Promise<Record<string, string>> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = clientDeviceHeaders();
   if (requestLanguage) {
     headers["Accept-Language"] = requestLanguage;
   }

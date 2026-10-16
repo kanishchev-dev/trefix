@@ -44,47 +44,54 @@ export function SectionTitle({
 
 /** Rows of a plain list sit flush with the page edge instead of the card padding. */
 const PlainListContext = createContext(false);
+/** Row icons drawn without the round surface (profile and settings). */
+const BareIconsContext = createContext(false);
 
 /**
- * Rows separated by hairlines: on a card, or `plain` — straight on the page,
- * flush with the section title.
+ * Rows separated by lines in the page background colour: on a card, or
+ * `plain` — straight on the page, flush with the section title. `bare` drops
+ * the round surface behind row icons and runs the lines edge to edge.
  */
 export function ListCard({
   theme,
   children,
   style,
   plain = false,
+  bare = false,
 }: {
   theme: ThemeTokens;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   plain?: boolean;
+  bare?: boolean;
 }) {
   const rows = Children.toArray(children).filter(isValidElement);
   return (
-    <PlainListContext.Provider value={plain}>
-      <View
-        style={[
-          plain ? null : [styles.card, { backgroundColor: theme.color.card }],
-          style,
-        ]}
-      >
-        {rows.map((row, index) => (
-          <Fragment key={row.key ?? index}>
-            {index > 0 ? (
-              <View
-                style={[
-                  styles.separator,
-                  plain && styles.separatorPlain,
-                  { backgroundColor: theme.color.separator },
-                ]}
-              />
-            ) : null}
-            {row}
-          </Fragment>
-        ))}
-      </View>
-    </PlainListContext.Provider>
+    <BareIconsContext.Provider value={bare}>
+      <PlainListContext.Provider value={plain}>
+        <View
+          style={[
+            plain ? null : [styles.card, { backgroundColor: theme.color.card }],
+            style,
+          ]}
+        >
+          {rows.map((row, index) => (
+            <Fragment key={row.key ?? index}>
+              {index > 0 ? (
+                <View
+                  style={[
+                    styles.separator,
+                    (plain || bare) && styles.separatorPlain,
+                    { backgroundColor: theme.color.screen },
+                  ]}
+                />
+              ) : null}
+              {row}
+            </Fragment>
+          ))}
+        </View>
+      </PlainListContext.Provider>
+    </BareIconsContext.Provider>
   );
 }
 
@@ -152,11 +159,18 @@ export function ListRow({
   accessibilityLabel,
 }: ListRowProps) {
   const plain = useContext(PlainListContext);
+  const bare = useContext(BareIconsContext);
   const showChevron = chevron ?? Boolean(onPress);
   const titleColor = destructive ? theme.color.danger : theme.color.foreground;
   const content = (
-    <View style={styles.rowContent}>
-      {icon ? <IconCircle theme={theme}>{icon}</IconCircle> : null}
+    <View style={[styles.rowContent, bare && styles.rowContentBare]}>
+      {icon ? (
+        bare ? (
+          icon
+        ) : (
+          <IconCircle theme={theme}>{icon}</IconCircle>
+        )
+      ) : null}
       <View style={styles.rowText}>
         <Text
           numberOfLines={1}
@@ -215,7 +229,11 @@ export function ListRow({
 
   if (!onPress) {
     return (
-      <View style={[styles.row, plain && styles.rowPlain]}>{content}</View>
+      <View
+        style={[styles.row, bare && styles.rowBare, plain && styles.rowPlain]}
+      >
+        {content}
+      </View>
     );
   }
 
@@ -230,6 +248,7 @@ export function ListRow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
+        bare && styles.rowBare,
         plain && styles.rowPlain,
         pressed && styles.pressed,
         disabled && styles.disabled,
@@ -367,7 +386,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     opacity: 0.7,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
   },
   card: {
     borderRadius: 24,
@@ -380,7 +399,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   separator: {
-    height: StyleSheet.hairlineWidth,
+    height: 1,
     marginLeft: 70,
   },
   row: {
@@ -393,6 +412,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  rowContentBare: {
+    gap: 14,
+  },
+  rowBare: {
+    minHeight: 52,
+    paddingHorizontal: 16,
   },
   iconCircle: {
     alignItems: "center",

@@ -9,6 +9,9 @@ import { updatePreferences } from "../lib/preferences-api";
 import { getAppLanguage, type AppLanguage } from "../locales";
 
 export const LANGUAGE_STORAGE_KEY = "@trefix/language";
+
+/** What the user picked: a language or "follow the device". */
+export type LanguageMode = "system" | AppLanguage;
 export const THEME_STORAGE_KEY = "@trefix/theme";
 
 /**
@@ -17,7 +20,7 @@ export const THEME_STORAGE_KEY = "@trefix/theme";
  * language is also sent with every request and reported once per session.
  */
 export function useAppPreferences(session: AuthTokens | null) {
-  const [userLanguage, setUserLanguage] = useState<AppLanguage | null>(null);
+  const [languageMode, setLanguageMode] = useState<LanguageMode>("system");
   const [userTheme, setUserTheme] = useState<ThemePreference>("system");
   const [arePreferencesLoaded, setArePreferencesLoaded] = useState(false);
 
@@ -25,8 +28,12 @@ export function useAppPreferences(session: AuthTokens | null) {
     async function loadPreferences() {
       try {
         const storedLang = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-        if (storedLang === "ru" || storedLang === "en") {
-          setUserLanguage(storedLang);
+        if (
+          storedLang === "ru" ||
+          storedLang === "en" ||
+          storedLang === "system"
+        ) {
+          setLanguageMode(storedLang);
         }
         const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (
@@ -45,7 +52,8 @@ export function useAppPreferences(session: AuthTokens | null) {
     void loadPreferences();
   }, []);
 
-  const language: AppLanguage = userLanguage ?? getAppLanguage();
+  const language: AppLanguage =
+    languageMode === "system" ? getAppLanguage() : languageMode;
   const reportedLanguageRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -53,20 +61,20 @@ export function useAppPreferences(session: AuthTokens | null) {
     if (!session || !arePreferencesLoaded) {
       return;
     }
-    const reportKey = `${session.sessionId}:${language}`;
+    const reportKey = `${session.sessionId}:${language}:${languageMode}`;
     if (reportedLanguageRef.current === reportKey) {
       return;
     }
     reportedLanguageRef.current = reportKey;
-    updatePreferences({ language }).catch((error: unknown) => {
+    updatePreferences({ language, languageMode }).catch((error: unknown) => {
       reportedLanguageRef.current = null;
       logger.warn("Failed to report the app language:", error);
     });
-  }, [session, language, arePreferencesLoaded]);
+  }, [session, language, languageMode, arePreferencesLoaded]);
 
-  const selectLanguage = (nextLanguage: AppLanguage) => {
-    setUserLanguage(nextLanguage);
-    void AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+  const selectLanguage = (nextMode: LanguageMode) => {
+    setLanguageMode(nextMode);
+    void AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextMode);
   };
 
   const selectTheme = (nextTheme: ThemePreference) => {
@@ -74,5 +82,5 @@ export function useAppPreferences(session: AuthTokens | null) {
     void AsyncStorage.setItem(THEME_STORAGE_KEY, nextTheme);
   };
 
-  return { language, userTheme, selectLanguage, selectTheme };
+  return { language, languageMode, userTheme, selectLanguage, selectTheme };
 }

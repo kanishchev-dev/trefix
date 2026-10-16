@@ -10,6 +10,8 @@ import { useHeaderOptions } from "../../main/context/header-context";
 type Props = {
   title: string;
   onBack: () => void;
+  /** Pinned under the content, e.g. the main action of a form. */
+  footer?: ReactNode;
   rightAction?: ReactNode;
   /** Changes when `rightAction` must be re-rendered (elements are new on every render). */
   rightActionKey?: string;
@@ -27,6 +29,7 @@ export function ProfileSubScreen({
   theme,
   themeMode,
   children,
+  footer = null,
 }: Props) {
   useHeaderOptions(
     {
@@ -53,6 +56,7 @@ export function ProfileSubScreen({
       themeMode={themeMode}
     >
       <View style={styles.stack}>{children}</View>
+      {footer ? <View style={styles.footer}>{footer}</View> : null}
     </SectionLayout>
   );
 }
@@ -86,15 +90,18 @@ export function Footnote({
 
 const styles = StyleSheet.create({
   stack: {
-    gap: 20,
+    gap: 32,
     paddingTop: 4,
   },
   section: {
-    gap: 8,
+    gap: 12,
+  },
+  footer: {
+    paddingTop: 24,
   },
   footnote: {
-    fontSize: 12,
-    lineHeight: 16,
-    paddingHorizontal: 8,
+    fontSize: 13,
+    lineHeight: 18,
+    paddingHorizontal: 16,
   },
 });

@@ -100,6 +100,17 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
   },
+  tabsCompact: {
+    width: 148,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  tabCompact: {
+    paddingVertical: 7,
+  },
+  tabTextCompact: {
+    fontSize: 13,
+  },
   button: {
     flex: 1,
     height: 52,

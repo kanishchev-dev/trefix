@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, TextInput } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, TextInput, View } from "react-native";
 
 import {
   type AthleteProfileUpdate,
   type ExperienceLevel,
 } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
-import { Segmented } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
-import { type MainCopy } from "../../../locales";
-import { SheetButton } from "../../../shared/ui/bottom-sheet";
+import { fillTemplate, type MainCopy } from "../../../locales";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
 import { Switch } from "../../../shared/ui/switch";
 import { useToast } from "../../../shared/ui/toast";
+import { SelectedMark } from "../components/profile-ui";
 import {
+  Footnote,
   ProfileSection,
   ProfileSubScreen,
 } from "../components/profile-sub-screen";
@@ -36,37 +36,63 @@ type Props = {
 };
 
 const LIMITATIONS_MAX = 500;
+/** Pause after typing before the limitations text is saved. */
+const AUTOSAVE_DELAY_MS = 800;
+const LEVELS: ExperienceLevel[] = ["beginner", "intermediate", "advanced"];
 
-/** Level, running since, injuries and limitations. */
+/** Level, running since, injuries and limitations; every change is saved right away. */
 export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
   const { data: athlete } = useAthleteProfile();
   const update = useUpdateAthleteProfile();
   const { showToast } = useToast();
   const [sheet, setSheet] = useState<ValueSheetConfig | null>(null);
   const [text, setText] = useState("");
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const e = copy.profile.experience;
+  const x = copy.profile.experienceScreen;
 
   useEffect(() => {
     setText(athlete?.limitations ?? "");
   }, [athlete?.limitations]);
 
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
   const save = async (patch: AthleteProfileUpdate) => {
     try {
-      await update.mutateAsync(patch);
+      const before = athlete;
+      const after = await update.mutateAsync(patch);
       trackEvent("profile_field_updated", {
         field: Object.keys(patch).join(","),
         source: "manual",
       });
+      // The server lowers the schedule when the level goes down; say what changed.
+      if (before?.allowDoubles && after && !after.allowDoubles) {
+        showToast(copy.profile.scheduleScreen.doublesReset);
+      } else if (
+        before &&
+        after &&
+        after.sessionsPerWeek < before.sessionsPerWeek
+      ) {
+        showToast(
+          fillTemplate(copy.profile.scheduleScreen.lowered, {
+            count: after.sessionsPerWeek,
+          }),
+        );
+      }
     } catch (error) {
       showToast(profileErrorMessage(error, copy));
-      throw error;
     }
   };
 
   if (!athlete) {
     return (
       <ProfileSubScreen
-        title={e.title}
+        title={x.title}
         onBack={onBack}
         theme={theme}
         themeMode={themeMode}
@@ -78,36 +104,50 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
 
   const year = new Date().getFullYear();
   const noLimitations = athlete.limitations === "";
-  const dirty =
-    text.trim() !== (athlete.limitations ?? "").trim() &&
-    text.trim().length > 0;
+
+  const changeText = (value: string) => {
+    setText(value);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const trimmed = value.trim();
+      if (trimmed !== (athlete.limitations ?? "").trim()) {
+        void save({ limitations: trimmed.length > 0 ? trimmed : null });
+      }
+    }, AUTOSAVE_DELAY_MS);
+  };
 
   return (
     <ProfileSubScreen
-      title={e.title}
+      title={x.title}
       onBack={onBack}
       theme={theme}
       themeMode={themeMode}
     >
       <ProfileSection>
         <SectionTitle text={e.level} theme={theme} />
-        <Segmented
-          segments={(["beginner", "intermediate", "advanced"] as const).map(
-            (value) => ({
-              value,
-              label: copy.profile.levels[value],
-            }),
-          )}
-          value={athlete.experienceLevel as ExperienceLevel}
-          onChange={(value) =>
-            void save({ experienceLevel: value }).catch(() => undefined)
-          }
-          theme={theme}
-          themeMode={themeMode}
-        />
+        <ListCard theme={theme} bare>
+          {LEVELS.map((level) => (
+            <ListRow
+              key={level}
+              theme={theme}
+              title={copy.profile.levels[level]}
+              description={x.levelDescriptions[level]}
+              trailing={
+                athlete.experienceLevel === level ? (
+                  <SelectedMark theme={theme} />
+                ) : undefined
+              }
+              chevron={false}
+              onPress={() => {
+                if (athlete.experienceLevel !== level)
+                  void save({ experienceLevel: level });
+              }}
+            />
+          ))}
+        </ListCard>
       </ProfileSection>
 
-      <ListCard theme={theme}>
+      <ListCard theme={theme} bare>
         <ListRow
           theme={theme}
           title={e.since}
@@ -116,6 +156,7 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
               ? String(athlete.runningSinceYear)
               : copy.profile.summary.notSet
           }
+          chevron={false}
           onPress={() =>
             setSheet({
               kind: "number",
@@ -124,11 +165,12 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
               fallback: year - 2,
               min: 1960,
               max: year,
-              majorEvery: 5,
-              labelEvery: 10,
+              unit: x.yearUnit,
               formatValue: (value) => String(value),
               clearable: true,
-              onSave: (value) => save({ runningSinceYear: value }),
+              onSave: async (value) => {
+                await update.mutateAsync({ runningSinceYear: value });
+              },
             })
           }
         />
@@ -136,54 +178,44 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
 
       <ProfileSection>
         <SectionTitle text={e.limitations} theme={theme} />
-        <ListCard theme={theme}>
+        {!noLimitations ? (
+          <View style={[styles.area, { backgroundColor: theme.color.card }]}>
+            <TextInput
+              multiline
+              maxLength={LIMITATIONS_MAX}
+              value={text}
+              onChangeText={changeText}
+              placeholder={e.limitationsPlaceholder}
+              placeholderTextColor={theme.color.mutedForeground}
+              accessibilityLabel={e.limitations}
+              style={[
+                styles.input,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.regular,
+                },
+              ]}
+            />
+          </View>
+        ) : null}
+        <ListCard theme={theme} bare>
           <ListRow
             theme={theme}
             title={e.none}
+            description={x.noneDescription}
             trailing={
               <Switch
                 theme={theme}
                 value={noLimitations}
                 accessibilityLabel={e.none}
                 onValueChange={(value) =>
-                  void save({ limitations: value ? "" : null }).catch(
-                    () => undefined,
-                  )
+                  void save({ limitations: value ? "" : null })
                 }
               />
             }
           />
         </ListCard>
-        {!noLimitations ? (
-          <>
-            <TextInput
-              multiline
-              maxLength={LIMITATIONS_MAX}
-              value={text}
-              onChangeText={setText}
-              placeholder={e.limitationsPlaceholder}
-              placeholderTextColor={theme.color.mutedForeground}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.color.card,
-                  color: theme.color.foreground,
-                  fontFamily: theme.typography.fontFamily.sans.regular,
-                },
-              ]}
-            />
-            <SheetButton
-              label={e.save}
-              disabled={!dirty}
-              pending={update.isPending}
-              onPress={() =>
-                void save({ limitations: text.trim() }).catch(() => undefined)
-              }
-              theme={theme}
-              themeMode={themeMode}
-            />
-          </>
-        ) : null}
+        <Footnote text={x.footnote} theme={theme} />
       </ProfileSection>
 
       <ProfileValueSheet
@@ -198,12 +230,16 @@ export function ExperienceScreen({ theme, themeMode, copy, onBack }: Props) {
 }
 
 const styles = StyleSheet.create({
-  input: {
-    minHeight: 120,
+  area: {
     borderRadius: 24,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  input: {
+    minHeight: 88,
     fontSize: 15,
-    lineHeight: 20,
+    lineHeight: 22,
     textAlignVertical: "top",
+    padding: 0,
   },
 });

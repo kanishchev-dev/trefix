@@ -11,7 +11,9 @@ PODS:
     - PromisesObjC (~> 2.4)
     - PromisesSwift (~> 2.4)
     - RecaptchaInterop (~> 101.0)
-  - EXConstants (57.0.18):
+  - EXApplication (57.0.3):
+    - ExpoModulesCore
+  - EXConstants (57.0.22):
     - ExpoModulesCore
   - Expo (57.0.23):
     - ExpoModulesCore
@@ -56,6 +58,8 @@ PODS:
   - ExpoBlur (57.0.3):
     - ExpoModulesCore
   - ExpoCrypto (57.0.3):
+    - ExpoModulesCore
+  - ExpoDevice (57.0.2):
     - ExpoModulesCore
   - ExpoDocumentPicker (57.0.2):
     - ExpoModulesCore
@@ -116,6 +120,8 @@ PODS:
     - ExpoModulesJSI
     - ExpoModulesWorklets
     - RNWorklets
+  - ExpoNotifications (57.0.23):
+    - ExpoModulesCore
   - ExpoSecureStore (57.0.4):
     - ExpoModulesCore
   - ExpoSensors (57.0.3):
@@ -2511,7 +2517,8 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@57.0.18_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nativ_617c80be45ed6aae16aef370ad119d70/node_modules/expo-constants/ios`)"
+  - "EXApplication (from `../../../node_modules/.pnpm/expo-application@57.0.3_expo@57.0.23/node_modules/expo-application/ios`)"
+  - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@57.0.22_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nativ_38ec98b065f526307c23fdd8649a8095/node_modules/expo-constants/ios`)"
   - "Expo (from `../../../node_modules/.pnpm/expo@57.0.23_@babel+core@7.29.7_@expo+dom-webview@57.0.1_react-dom@19.3.0_react@19.2.3__0a2e755fbc6fc0c3e6a80470d2f6825c/node_modules/expo`)"
   - "ExpoAdapterGoogleSignIn (from `../../../node_modules/.pnpm/@react-native-google-signin+google-signin@16.1.5_expo@57.0.23_react-native@0.86.3_@babe_8018907b9971da4127b83cf101c36cf1/node_modules/@react-native-google-signin/google-signin/expo/ios`)"
   - "ExpoAppleAuthentication (from `../../../node_modules/.pnpm/expo-apple-authentication@57.0.2_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@r_9985d4cd9091873bce5bcf3c6bdb80f9/node_modules/expo-apple-authentication/ios`)"
@@ -2519,6 +2526,7 @@ DEPENDENCIES:
   - "ExpoBackgroundTask (from `../../../node_modules/.pnpm/expo-background-task@57.0.21_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react_6afa43383d2d14fc1dddbe6e4139ef79/node_modules/expo-background-task/ios`)"
   - "ExpoBlur (from `../../../node_modules/.pnpm/expo-blur@57.0.3_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+metr_8fd4e36f321be700cb7136936c254c62/node_modules/expo-blur/ios`)"
   - "ExpoCrypto (from `../../../node_modules/.pnpm/expo-crypto@57.0.3_expo@57.0.23/node_modules/expo-crypto/ios`)"
+  - "ExpoDevice (from `../../../node_modules/.pnpm/expo-device@57.0.2_expo@57.0.23/node_modules/expo-device/ios`)"
   - "ExpoDocumentPicker (from `../../../node_modules/.pnpm/expo-document-picker@57.0.2_expo@57.0.23/node_modules/expo-document-picker/ios`)"
   - "ExpoDomWebView (from `../../../node_modules/.pnpm/@expo+dom-webview@57.0.1_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nat_0d9311e142cc7cc8df3b4d1a28879431/node_modules/@expo/dom-webview/ios`)"
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@57.0.7_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nati_a5b81e5ca8b2540ff00822785647a7fa/node_modules/expo-file-system/ios/ExpoFileSystem.podspec`)"
@@ -2535,6 +2543,7 @@ DEPENDENCIES:
   - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-jsi@57.1.0_patch_hash=e574242d8961392542e534744aa86fad7f3cdad4728f6fa18d4e_f69246657f6ce874bbeed4749215a679/node_modules/expo-modules-jsi/apple`)"
   - "ExpoModulesWorklets (from `../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core/ExpoModulesWorklets.podspec`)"
   - "ExpoModulesWorkletsAdapter (from `../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core`)"
+  - "ExpoNotifications (from `../../../node_modules/.pnpm/expo-notifications@57.0.23_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-n_3609a944b82416c0b6c1514314f6da04/node_modules/expo-notifications/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@57.0.4_expo@57.0.23/node_modules/expo-secure-store/ios`)"
   - "ExpoSensors (from `../../../node_modules/.pnpm/expo-sensors@57.0.3_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+m_98a930dcf651c0c231dd44e3e7463f8d/node_modules/expo-sensors/ios`)"
   - "ExpoSpeech (from `../../../node_modules/.pnpm/expo-speech@57.0.3_expo@57.0.23/node_modules/expo-speech/ios`)"
@@ -2651,8 +2660,10 @@ SPEC REPOS:
     - Turf
 
 EXTERNAL SOURCES:
+  EXApplication:
+    :path: "../../../node_modules/.pnpm/expo-application@57.0.3_expo@57.0.23/node_modules/expo-application/ios"
   EXConstants:
-    :path: "../../../node_modules/.pnpm/expo-constants@57.0.18_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nativ_617c80be45ed6aae16aef370ad119d70/node_modules/expo-constants/ios"
+    :path: "../../../node_modules/.pnpm/expo-constants@57.0.22_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-nativ_38ec98b065f526307c23fdd8649a8095/node_modules/expo-constants/ios"
   Expo:
     :path: "../../../node_modules/.pnpm/expo@57.0.23_@babel+core@7.29.7_@expo+dom-webview@57.0.1_react-dom@19.3.0_react@19.2.3__0a2e755fbc6fc0c3e6a80470d2f6825c/node_modules/expo"
   ExpoAdapterGoogleSignIn:
@@ -2667,6 +2678,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-blur@57.0.3_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-native+metr_8fd4e36f321be700cb7136936c254c62/node_modules/expo-blur/ios"
   ExpoCrypto:
     :path: "../../../node_modules/.pnpm/expo-crypto@57.0.3_expo@57.0.23/node_modules/expo-crypto/ios"
+  ExpoDevice:
+    :path: "../../../node_modules/.pnpm/expo-device@57.0.2_expo@57.0.23/node_modules/expo-device/ios"
   ExpoDocumentPicker:
     :path: "../../../node_modules/.pnpm/expo-document-picker@57.0.2_expo@57.0.23/node_modules/expo-document-picker/ios"
   ExpoDomWebView:
@@ -2699,6 +2712,8 @@ EXTERNAL SOURCES:
     :podspec: "../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core/ExpoModulesWorklets.podspec"
   ExpoModulesWorkletsAdapter:
     :path: "../../../node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_@react-native_1415c05fda78f4f2d1128b52d447685f/node_modules/expo-modules-core"
+  ExpoNotifications:
+    :path: "../../../node_modules/.pnpm/expo-notifications@57.0.23_expo@57.0.23_react-native@0.86.3_@babel+core@7.29.7_@react-n_3609a944b82416c0b6c1514314f6da04/node_modules/expo-notifications/ios"
   ExpoSecureStore:
     :path: "../../../node_modules/.pnpm/expo-secure-store@57.0.4_expo@57.0.23/node_modules/expo-secure-store/ios"
   ExpoSensors:
@@ -2898,7 +2913,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AppAuth: ef4da5a3fc2e10b90c09a0a94a9baeaedc0341d5
   AppCheckCore: be8fce5469f68d7f6a29aa94b25f097409ff7fdc
-  EXConstants: 568e63ce4d1c1ebe8049a0307ae6bbe0fa881ff7
+  EXApplication: b442efdb7459bb32cb6bd716b0b6aed3a5959cc8
+  EXConstants: 64d0320a4fb0c99f866315808f26316c096ccb63
   Expo: 7c28b534bf9a0bb73cdd21073d446851716c897c
   ExpoAdapterGoogleSignIn: 98ac18f2a53d1bd61b1e25237c866c455cf1b846
   ExpoAppleAuthentication: 3f757cf93eb59c5f8390ef7e45663ba095e1e4b0
@@ -2906,6 +2922,7 @@ SPEC CHECKSUMS:
   ExpoBackgroundTask: 112d1272fe45a3b43fbbc357387dc1cdbfd5b7e5
   ExpoBlur: dbe1508ab11794f127c215b5796115753b1c04e0
   ExpoCrypto: db33a5a35bf1216d9622356b2d5badf0b2f2960c
+  ExpoDevice: 80931dddc3776927f0576f8c2f3fa953ce0330a8
   ExpoDocumentPicker: d8f4cb67554681c213902976b10f33d9f4db04a9
   ExpoDomWebView: fa9c72fe29dd4649197a7ecb07ddd870d55c4eda
   ExpoFileSystem: 980be7ecc921f6ba73cdf986ff66e1ecd57b8ef7
@@ -2922,6 +2939,7 @@ SPEC CHECKSUMS:
   ExpoModulesJSI: c8dd52f25cdeaeadf733197eefd279dd22e63f17
   ExpoModulesWorklets: 37830cb23e90c87218523f942c3e10eaac9c9322
   ExpoModulesWorkletsAdapter: 1e31a552ba2570c9ba3d3260fe045221fdde9ab3
+  ExpoNotifications: dead13a5c1f1bab0338521df8cd8e88598e2c6a3
   ExpoSecureStore: c704911d323d1d62ecf6b81bf3afa58eecedd80c
   ExpoSensors: 1dd2b96e5fb76c4433ea1db1ab77cd1ba1e5c376
   ExpoSpeech: d4a346d40ae3ff8ad2e7273baf84beedeef8b6d4

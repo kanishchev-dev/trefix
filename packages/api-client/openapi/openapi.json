@@ -654,6 +654,289 @@
         ]
       }
     },
+    "/v1/auth/sessions": {
+      "get": {
+        "operationId": "AuthAccountController_listSessions_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Devices signed in to the account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/sessions/{id}": {
+      "delete": {
+        "description": "Errors: AUTH_SESSION_NOT_FOUND, AUTH_SESSION_CURRENT",
+        "operationId": "AuthAccountController_revokeSession_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sign out another device",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/logout-others": {
+      "post": {
+        "operationId": "AuthAccountController_logoutOthers_v1",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sign out every device except this one",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/identities": {
+      "get": {
+        "operationId": "AuthAccountController_listIdentities_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthIdentityListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apple and Google accounts linked for sign-in",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/identities/apple": {
+      "post": {
+        "description": "Errors: AUTH_IDENTITY_IN_USE, AUTH_IDENTITY_ALREADY_LINKED",
+        "operationId": "AuthAccountController_linkApple_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleNativeExchangeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthIdentityResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link an Apple account with a native authorization code",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/identities/google": {
+      "post": {
+        "description": "Errors: AUTH_IDENTITY_IN_USE, AUTH_IDENTITY_ALREADY_LINKED",
+        "operationId": "AuthAccountController_linkGoogle_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleNativeExchangeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthIdentityResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link a Google account with a native ID token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/identities/{provider}": {
+      "delete": {
+        "description": "Errors: AUTH_IDENTITY_NOT_FOUND",
+        "operationId": "AuthAccountController_unlink_v1",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "apple",
+                "google"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlink an Apple or Google account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/email/change/request": {
+      "post": {
+        "description": "Errors: AUTH_EMAIL_UNCHANGED, AUTH_EMAIL_ALREADY_EXISTS, AUTH_VERIFICATION_CODE_RATE_LIMITED",
+        "operationId": "AuthAccountController_requestEmailChange_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailChangeChallengeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a code to the new email",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/email/change/confirm": {
+      "post": {
+        "description": "Errors: AUTH_VERIFICATION_CODE_INVALID",
+        "operationId": "AuthAccountController_confirmEmailChange_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeConfirmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm the new email with the code",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/v1/users": {
       "post": {
         "operationId": "UsersController_create_v1",
@@ -3294,6 +3577,7 @@
                 "experienceLevel": "intermediate",
                 "weeklyMileageKm": 38,
                 "sessionsPerWeek": 4,
+                "allowDoubles": false,
                 "recentRaceResults": [],
                 "preferredTrainingDays": [
                   "tuesday",
@@ -3416,6 +3700,7 @@
                 "experienceLevel": "intermediate",
                 "weeklyMileageKm": 38,
                 "sessionsPerWeek": 4,
+                "allowDoubles": false,
                 "recentRaceResults": [],
                 "preferredTrainingDays": [
                   "tuesday",
@@ -3540,6 +3825,7 @@
                 "experienceLevel": "intermediate",
                 "weeklyMileageKm": 38,
                 "sessionsPerWeek": 4,
+                "allowDoubles": false,
                 "recentRaceResults": [],
                 "preferredTrainingDays": [
                   "tuesday",
@@ -3621,6 +3907,7 @@
                 "experienceLevel": "intermediate",
                 "weeklyMileageKm": 38,
                 "sessionsPerWeek": 4,
+                "allowDoubles": false,
                 "recentRaceResults": [],
                 "preferredTrainingDays": [
                   "tuesday",
@@ -4569,6 +4856,20 @@
                 "retired"
               ]
             }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "All types when omitted",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "shoes",
+                "watch",
+                "sensor"
+              ]
+            }
           }
         ],
         "responses": {
@@ -4593,8 +4894,13 @@
                     ],
                     "replaceReminder": true,
                     "source": "manual",
+                    "isDefault": true,
+                    "isPrimary": false,
+                    "dataSource": null,
                     "distanceKm": 412.5,
                     "workoutsCount": 38,
+                    "averagePaceSecondsPerKm": 332,
+                    "weeklyKm": 42.5,
                     "remainingKm": 287.5,
                     "wearPercent": 59,
                     "replaceSoon": false,
@@ -4657,8 +4963,13 @@
                 ],
                 "replaceReminder": true,
                 "source": "manual",
+                "isDefault": true,
+                "isPrimary": false,
+                "dataSource": null,
                 "distanceKm": 412.5,
                 "workoutsCount": 38,
+                "averagePaceSecondsPerKm": 332,
+                "weeklyKm": 42.5,
                 "remainingKm": 287.5,
                 "wearPercent": 59,
                 "replaceSoon": false,
@@ -4720,8 +5031,13 @@
                 ],
                 "replaceReminder": true,
                 "source": "manual",
+                "isDefault": true,
+                "isPrimary": false,
+                "dataSource": null,
                 "distanceKm": 412.5,
                 "workoutsCount": 38,
+                "averagePaceSecondsPerKm": 332,
+                "weeklyKm": 42.5,
                 "remainingKm": 287.5,
                 "wearPercent": 59,
                 "replaceSoon": false,
@@ -4792,8 +5108,13 @@
                 ],
                 "replaceReminder": true,
                 "source": "manual",
+                "isDefault": true,
+                "isPrimary": false,
+                "dataSource": null,
                 "distanceKm": 412.5,
                 "workoutsCount": 38,
+                "averagePaceSecondsPerKm": 332,
+                "weeklyKm": 42.5,
                 "remainingKm": 287.5,
                 "wearPercent": 59,
                 "replaceSoon": false,
@@ -4962,6 +5283,53 @@
           }
         ],
         "summary": "Set or clear the shoes of a workout",
+        "tags": [
+          "Gear"
+        ]
+      }
+    },
+    "/v1/workouts/{id}/device": {
+      "patch": {
+        "description": "Errors: WORKOUT_NOT_FOUND, GEAR_NOT_FOUND, GEAR_TYPE_MISMATCH",
+        "operationId": "GearController_assignDevice_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignWorkoutDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutDeviceAssignmentDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or clear the watch or sensor a workout was recorded with",
         "tags": [
           "Gear"
         ]
@@ -6640,18 +7008,40 @@
           "200": {
             "schema": {
               "example": {
-                "units": "metric",
+                "distanceUnit": "km",
+                "weightUnit": "kg",
+                "heightUnit": "cm",
+                "temperatureUnit": "c",
                 "weekStart": "mon",
                 "timeFormat": "24h",
                 "coachEnabled": true,
                 "coachAdaptationMode": "confirm",
+                "coachTone": "neutral",
+                "coachProactive": {
+                  "preWorkout": true,
+                  "workoutReview": true,
+                  "wellbeingCheck": true,
+                  "weeklySummary": true,
+                  "missedSupport": true
+                },
                 "coachQuietHours": {
                   "from": "22:00",
                   "to": "08:00"
                 },
+                "notifications": {
+                  "workoutReminder": true,
+                  "workoutReminderTime": "morning",
+                  "missedWorkout": true,
+                  "planChanged": true,
+                  "achievements": true,
+                  "workoutSynced": false
+                },
                 "stravaProfileSync": true,
+                "stravaActivitiesSync": true,
+                "stravaGearSync": true,
                 "timezone": "Europe/Moscow",
                 "language": "ru",
+                "languageMode": "system",
                 "updatedAt": "2026-10-09T08:00:00.000Z"
               }
             },
@@ -6692,18 +7082,40 @@
           "200": {
             "schema": {
               "example": {
-                "units": "metric",
+                "distanceUnit": "km",
+                "weightUnit": "kg",
+                "heightUnit": "cm",
+                "temperatureUnit": "c",
                 "weekStart": "mon",
                 "timeFormat": "24h",
                 "coachEnabled": true,
                 "coachAdaptationMode": "confirm",
+                "coachTone": "neutral",
+                "coachProactive": {
+                  "preWorkout": true,
+                  "workoutReview": true,
+                  "wellbeingCheck": true,
+                  "weeklySummary": true,
+                  "missedSupport": true
+                },
                 "coachQuietHours": {
                   "from": "22:00",
                   "to": "08:00"
                 },
+                "notifications": {
+                  "workoutReminder": true,
+                  "workoutReminderTime": "morning",
+                  "missedWorkout": true,
+                  "planChanged": true,
+                  "achievements": true,
+                  "workoutSynced": false
+                },
                 "stravaProfileSync": true,
+                "stravaActivitiesSync": true,
+                "stravaGearSync": true,
                 "timezone": "Europe/Moscow",
                 "language": "ru",
+                "languageMode": "system",
                 "updatedAt": "2026-10-09T08:00:00.000Z"
               }
             },
@@ -6916,6 +7328,29 @@
           }
         },
         "summary": "Sync weight, sex and shoes from Strava now",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/v1/integrations/strava/gear-import": {
+      "post": {
+        "description": "Errors: STRAVA_NOT_CONNECTED, STRAVA_PROFILE_ACCESS_REQUIRED",
+        "operationId": "IntegrationsController_importStravaShoes_v1",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GearImportResultDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Import shoes from Strava now and report what changed",
         "tags": [
           "Integrations"
         ]
@@ -7527,6 +7962,93 @@
           "Consents"
         ]
       }
+    },
+    "/v1/me/data-export": {
+      "get": {
+        "operationId": "DataExportController_latest_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The latest data export request",
+        "tags": [
+          "Account"
+        ]
+      },
+      "post": {
+        "description": "Errors: DATA_EXPORT_RATE_LIMITED (429, `details.availableAt`)",
+        "operationId": "DataExportController_request_v1",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request an archive of my data; a link is emailed when it is ready",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/data-exports/{id}/download": {
+      "get": {
+        "description": "Errors: DATA_EXPORT_NOT_FOUND",
+        "operationId": "DataExportController_download_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "description": "Token from the emailed link",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Download the archive from the emailed link",
+        "tags": [
+          "Account"
+        ]
+      }
     }
   },
   "info": {
@@ -7610,6 +8132,11 @@
             "type": "string",
             "example": "https://example.com/avatar.jpg"
           },
+          "bio": {
+            "type": "string",
+            "nullable": true,
+            "example": "Running my first marathon this autumn"
+          },
           "referralCode": {
             "type": "string",
             "example": "REF123"
@@ -7642,6 +8169,7 @@
           "email",
           "firstName",
           "lastName",
+          "bio",
           "emailVerified",
           "createdAt",
           "features"
@@ -7928,8 +8456,16 @@
           },
           "avatarUrl": {
             "type": "string",
+            "nullable": true,
             "example": "https://example.com/avatar.jpg",
-            "description": "Public URL to the user's avatar image"
+            "description": "Public URL to the user's avatar image; `null` removes the avatar"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 300,
+            "example": "Running my first marathon this autumn",
+            "description": "Short text about the user; empty string or `null` clears it"
           }
         }
       },
@@ -7948,6 +8484,174 @@
         "required": [
           "currentPassword",
           "newPassword"
+        ]
+      },
+      "AuthSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "6f1d7c3a-9a55-4b4f-9e2d-9c10b8c8d8e8"
+          },
+          "deviceName": {
+            "type": "string",
+            "nullable": true,
+            "example": "iPhone 15 Pro",
+            "description": "Reported by the app"
+          },
+          "platform": {
+            "type": "string",
+            "nullable": true,
+            "example": "ios"
+          },
+          "appVersion": {
+            "type": "string",
+            "nullable": true,
+            "example": "1.4.0"
+          },
+          "city": {
+            "type": "string",
+            "nullable": true,
+            "example": "Moscow",
+            "description": "By IP at sign-in; may be empty"
+          },
+          "country": {
+            "type": "string",
+            "nullable": true,
+            "example": "RU"
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true,
+            "description": "Fallback when the app did not report the device"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-01T08:00:00.000Z"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "example": "2026-10-15T08:00:00.000Z",
+            "description": "Last token refresh"
+          },
+          "current": {
+            "type": "boolean",
+            "description": "The session making this request"
+          }
+        },
+        "required": [
+          "id",
+          "deviceName",
+          "platform",
+          "appVersion",
+          "city",
+          "country",
+          "userAgent",
+          "createdAt",
+          "lastActiveAt",
+          "current"
+        ]
+      },
+      "AuthSessionListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthSessionResponseDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AuthIdentityResponseDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "apple",
+              "google"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "runner@icloud.com"
+          },
+          "linkedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "email",
+          "linkedAt"
+        ]
+      },
+      "AuthIdentityListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthIdentityResponseDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "EmailChangeRequestDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "new@example.com",
+            "description": "New account email; the code is sent there"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "EmailChangeChallengeResponseDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "new@example.com"
+          },
+          "expiresInSeconds": {
+            "type": "number",
+            "example": 600
+          },
+          "resendAfterSeconds": {
+            "type": "number",
+            "example": 60
+          }
+        },
+        "required": [
+          "email",
+          "expiresInSeconds",
+          "resendAfterSeconds"
+        ]
+      },
+      "EmailChangeConfirmDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "4821",
+            "description": "Code from the email sent to the new address"
+          }
+        },
+        "required": [
+          "code"
         ]
       },
       "AdminCreateUserDto": {
@@ -11161,8 +11865,6 @@
             "enum": [
               "female",
               "male",
-              "other",
-              "prefer_not_to_say",
               null
             ],
             "nullable": true
@@ -11184,6 +11886,11 @@
           },
           "sessionsPerWeek": {
             "type": "number"
+          },
+          "allowDoubles": {
+            "type": "boolean",
+            "example": false,
+            "description": "Two workouts on one day; only for advanced athletes"
           },
           "recentRaceResults": {
             "type": "array",
@@ -11340,6 +12047,7 @@
           "experienceLevel",
           "weeklyMileageKm",
           "sessionsPerWeek",
+          "allowDoubles",
           "recentRaceResults",
           "preferredTrainingDays",
           "availableTrainingDays",
@@ -11378,8 +12086,6 @@
             "enum": [
               "female",
               "male",
-              "other",
-              "prefer_not_to_say",
               null
             ],
             "nullable": true
@@ -11483,7 +12189,12 @@
           },
           "sessionsPerWeek": {
             "type": "number",
-            "example": 4
+            "example": 4,
+            "description": "Up to the number of available days, or twice that (max 7) with `allowDoubles`"
+          },
+          "allowDoubles": {
+            "type": "boolean",
+            "description": "Two workouts on one day; accepted only for `advanced`, reset when the level goes down"
           },
           "longRunDay": {
             "type": "string",
@@ -11542,9 +12253,7 @@
             "type": "string",
             "enum": [
               "female",
-              "male",
-              "other",
-              "prefer_not_to_say"
+              "male"
             ]
           },
           "heightCm": {
@@ -11630,8 +12339,6 @@
             "enum": [
               "female",
               "male",
-              "other",
-              "prefer_not_to_say",
               null
             ],
             "nullable": true
@@ -11653,6 +12360,11 @@
           },
           "sessionsPerWeek": {
             "type": "number"
+          },
+          "allowDoubles": {
+            "type": "boolean",
+            "example": false,
+            "description": "Two workouts on one day; only for advanced athletes"
           },
           "recentRaceResults": {
             "type": "array",
@@ -11774,6 +12486,7 @@
           "experienceLevel",
           "weeklyMileageKm",
           "sessionsPerWeek",
+          "allowDoubles",
           "recentRaceResults",
           "preferredTrainingDays",
           "availableTrainingDays",
@@ -12443,6 +13156,11 @@
             "type": "string",
             "nullable": true,
             "description": "Gear (shoes) used for the workout"
+          },
+          "deviceId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Watch or sensor the workout was recorded with"
           },
           "createdAt": {
             "format": "date-time",
@@ -13123,7 +13841,9 @@
           "type": {
             "type": "string",
             "enum": [
-              "shoes"
+              "shoes",
+              "watch",
+              "sensor"
             ]
           },
           "brand": {
@@ -13144,7 +13864,9 @@
           },
           "limitKm": {
             "type": "number",
-            "example": 700
+            "nullable": true,
+            "example": 700,
+            "description": "Shoes only"
           },
           "startedAt": {
             "type": "string",
@@ -13190,6 +13912,25 @@
               "strava"
             ]
           },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Default shoes for new workouts"
+          },
+          "isPrimary": {
+            "type": "boolean",
+            "description": "Main recording device"
+          },
+          "dataSource": {
+            "type": "string",
+            "enum": [
+              "strava",
+              "garmin",
+              "apple_health",
+              "health_connect",
+              null
+            ],
+            "nullable": true
+          },
           "distanceKm": {
             "type": "number",
             "example": 412.5,
@@ -13199,14 +13940,28 @@
             "type": "number",
             "example": 38
           },
+          "averagePaceSecondsPerKm": {
+            "type": "number",
+            "nullable": true,
+            "example": 332,
+            "description": "Over workouts with duration and distance"
+          },
+          "weeklyKm": {
+            "type": "number",
+            "example": 42.5,
+            "description": "Average weekly distance over the last 4 weeks; for the wear forecast"
+          },
           "remainingKm": {
             "type": "number",
-            "example": 287.5
+            "nullable": true,
+            "example": 287.5,
+            "description": "Shoes only"
           },
           "wearPercent": {
             "type": "number",
+            "nullable": true,
             "example": 59,
-            "description": "Share of the limit used, %"
+            "description": "Share of the limit used, %; shoes only"
           },
           "replaceSoon": {
             "type": "boolean",
@@ -13235,8 +13990,13 @@
           "defaultWorkoutTypes",
           "replaceReminder",
           "source",
+          "isDefault",
+          "isPrimary",
+          "dataSource",
           "distanceKm",
           "workoutsCount",
+          "averagePaceSecondsPerKm",
+          "weeklyKm",
           "remainingKm",
           "wearPercent",
           "replaceSoon",
@@ -13264,7 +14024,9 @@
           "type": {
             "type": "string",
             "enum": [
-              "shoes"
+              "shoes",
+              "watch",
+              "sensor"
             ],
             "default": "shoes"
           },
@@ -13295,7 +14057,8 @@
             "example": 700,
             "default": 700,
             "min": 100,
-            "max": 2000
+            "max": 2000,
+            "description": "Wear limit; shoes only"
           },
           "startedAt": {
             "type": "string",
@@ -13309,6 +14072,7 @@
               "easy",
               "long_run"
             ],
+            "description": "Shoes only",
             "items": {
               "type": "string",
               "enum": [
@@ -13327,7 +14091,29 @@
           "replaceReminder": {
             "type": "boolean",
             "default": true,
-            "description": "Remind when 10% of the limit is left"
+            "description": "Remind when 10% of the limit is left; shoes only"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false,
+            "description": "Shoes for new workouts when no workout-type default matches; shoes only, one pair at most"
+          },
+          "isPrimary": {
+            "type": "boolean",
+            "default": false,
+            "description": "Main recording device; its data wins over duplicates from other services. Devices only"
+          },
+          "dataSource": {
+            "type": "string",
+            "enum": [
+              "strava",
+              "garmin",
+              "apple_health",
+              "health_connect",
+              null
+            ],
+            "nullable": true,
+            "description": "Service that delivers workouts of this device; devices only"
           }
         },
         "required": [
@@ -13338,12 +14124,6 @@
       "UpdateGearDto": {
         "type": "object",
         "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "shoes"
-            ]
-          },
           "brand": {
             "type": "string",
             "example": "Nike",
@@ -13369,7 +14149,8 @@
             "type": "number",
             "example": 700,
             "min": 100,
-            "max": 2000
+            "max": 2000,
+            "description": "Wear limit; shoes only"
           },
           "startedAt": {
             "type": "string",
@@ -13383,6 +14164,7 @@
               "easy",
               "long_run"
             ],
+            "description": "Shoes only",
             "items": {
               "type": "string",
               "enum": [
@@ -13400,7 +14182,27 @@
           },
           "replaceReminder": {
             "type": "boolean",
-            "description": "Remind when 10% of the limit is left"
+            "description": "Remind when 10% of the limit is left; shoes only"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Shoes for new workouts when no workout-type default matches; shoes only, one pair at most"
+          },
+          "isPrimary": {
+            "type": "boolean",
+            "description": "Main recording device; its data wins over duplicates from other services. Devices only"
+          },
+          "dataSource": {
+            "type": "string",
+            "enum": [
+              "strava",
+              "garmin",
+              "apple_health",
+              "health_connect",
+              null
+            ],
+            "nullable": true,
+            "description": "Service that delivers workouts of this device; devices only"
           }
         }
       },
@@ -13431,6 +14233,35 @@
         "required": [
           "workoutId",
           "gearId"
+        ]
+      },
+      "AssignWorkoutDeviceDto": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "nullable": true,
+            "example": "01929b5e-6f1d-7c3a-9a55-3b4f1e2d9c10"
+          }
+        },
+        "required": [
+          "deviceId"
+        ]
+      },
+      "WorkoutDeviceAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "workoutId": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "workoutId",
+          "deviceId"
         ]
       },
       "SummaryWorkoutDto": {
@@ -15643,6 +16474,33 @@
           }
         }
       },
+      "CoachProactiveDto": {
+        "type": "object",
+        "properties": {
+          "preWorkout": {
+            "type": "boolean"
+          },
+          "workoutReview": {
+            "type": "boolean"
+          },
+          "wellbeingCheck": {
+            "type": "boolean"
+          },
+          "weeklySummary": {
+            "type": "boolean"
+          },
+          "missedSupport": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "preWorkout",
+          "workoutReview",
+          "wellbeingCheck",
+          "weeklySummary",
+          "missedSupport"
+        ]
+      },
       "QuietHoursDto": {
         "type": "object",
         "properties": {
@@ -15662,16 +16520,78 @@
           "to"
         ]
       },
+      "NotificationSettingsDto": {
+        "type": "object",
+        "properties": {
+          "workoutReminder": {
+            "type": "boolean"
+          },
+          "workoutReminderTime": {
+            "type": "string",
+            "enum": [
+              "morning",
+              "2h",
+              "1h",
+              "30m"
+            ],
+            "example": "morning"
+          },
+          "missedWorkout": {
+            "type": "boolean"
+          },
+          "planChanged": {
+            "type": "boolean"
+          },
+          "achievements": {
+            "type": "boolean"
+          },
+          "workoutSynced": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "workoutReminder",
+          "workoutReminderTime",
+          "missedWorkout",
+          "planChanged",
+          "achievements",
+          "workoutSynced"
+        ]
+      },
       "UserPreferencesResponseDto": {
         "type": "object",
         "properties": {
-          "units": {
+          "distanceUnit": {
             "type": "string",
             "enum": [
-              "metric",
-              "imperial"
+              "km",
+              "mi"
             ],
-            "example": "metric"
+            "example": "km"
+          },
+          "weightUnit": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "lb"
+            ],
+            "example": "kg"
+          },
+          "heightUnit": {
+            "type": "string",
+            "enum": [
+              "cm",
+              "ft"
+            ],
+            "example": "cm"
+          },
+          "temperatureUnit": {
+            "type": "string",
+            "enum": [
+              "c",
+              "f"
+            ],
+            "example": "c"
           },
           "weekStart": {
             "type": "string",
@@ -15702,6 +16622,18 @@
             ],
             "example": "confirm"
           },
+          "coachTone": {
+            "type": "string",
+            "enum": [
+              "soft",
+              "neutral",
+              "strict"
+            ],
+            "example": "neutral"
+          },
+          "coachProactive": {
+            "$ref": "#/components/schemas/CoachProactiveDto"
+          },
           "coachQuietHours": {
             "nullable": true,
             "example": {
@@ -15715,7 +16647,18 @@
               }
             ]
           },
+          "notifications": {
+            "$ref": "#/components/schemas/NotificationSettingsDto"
+          },
           "stravaProfileSync": {
+            "type": "boolean",
+            "example": true
+          },
+          "stravaActivitiesSync": {
+            "type": "boolean",
+            "example": true
+          },
+          "stravaGearSync": {
             "type": "boolean",
             "example": true
           },
@@ -15734,32 +16677,131 @@
             "nullable": true,
             "example": "ru"
           },
+          "languageMode": {
+            "type": "string",
+            "enum": [
+              "system",
+              "ru",
+              "en"
+            ],
+            "example": "system"
+          },
           "updatedAt": {
             "format": "date-time",
             "type": "string"
           }
         },
         "required": [
-          "units",
+          "distanceUnit",
+          "weightUnit",
+          "heightUnit",
+          "temperatureUnit",
           "weekStart",
           "timeFormat",
           "coachEnabled",
           "coachAdaptationMode",
+          "coachTone",
+          "coachProactive",
           "coachQuietHours",
+          "notifications",
           "stravaProfileSync",
+          "stravaActivitiesSync",
+          "stravaGearSync",
           "timezone",
           "language",
+          "languageMode",
           "updatedAt"
         ]
+      },
+      "UpdateCoachProactiveDto": {
+        "type": "object",
+        "properties": {
+          "preWorkout": {
+            "type": "boolean",
+            "description": "Reminder and tips before a planned workout"
+          },
+          "workoutReview": {
+            "type": "boolean",
+            "description": "Review of a completed workout"
+          },
+          "wellbeingCheck": {
+            "type": "boolean",
+            "description": "Asks how the workout felt (RPE)"
+          },
+          "weeklySummary": {
+            "type": "boolean",
+            "description": "Summary of the training week"
+          },
+          "missedSupport": {
+            "type": "boolean",
+            "description": "Support after missed workouts"
+          }
+        }
+      },
+      "UpdateNotificationSettingsDto": {
+        "type": "object",
+        "properties": {
+          "workoutReminder": {
+            "type": "boolean",
+            "description": "Remind about planned workouts"
+          },
+          "workoutReminderTime": {
+            "type": "string",
+            "enum": [
+              "morning",
+              "2h",
+              "1h",
+              "30m"
+            ],
+            "description": "Morning of the day or a lead time"
+          },
+          "missedWorkout": {
+            "type": "boolean",
+            "description": "A planned workout became missed (48 h grace)"
+          },
+          "planChanged": {
+            "type": "boolean",
+            "description": "The active plan was changed"
+          },
+          "achievements": {
+            "type": "boolean",
+            "description": "New records and achievements"
+          },
+          "workoutSynced": {
+            "type": "boolean",
+            "description": "A workout was imported from a connected service"
+          }
+        }
       },
       "UpdateUserPreferencesDto": {
         "type": "object",
         "properties": {
-          "units": {
+          "distanceUnit": {
             "type": "string",
             "enum": [
-              "metric",
-              "imperial"
+              "km",
+              "mi"
+            ]
+          },
+          "weightUnit": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "lb"
+            ]
+          },
+          "heightUnit": {
+            "type": "string",
+            "enum": [
+              "cm",
+              "ft"
+            ]
+          },
+          "temperatureUnit": {
+            "type": "string",
+            "enum": [
+              "c",
+              "f"
             ]
           },
           "weekStart": {
@@ -15787,6 +16829,17 @@
               "suggest"
             ]
           },
+          "coachTone": {
+            "type": "string",
+            "enum": [
+              "soft",
+              "neutral",
+              "strict"
+            ]
+          },
+          "coachProactive": {
+            "$ref": "#/components/schemas/UpdateCoachProactiveDto"
+          },
           "coachQuietHours": {
             "nullable": true,
             "description": "`null` turns quiet hours off",
@@ -15797,8 +16850,20 @@
               }
             ]
           },
+          "notifications": {
+            "$ref": "#/components/schemas/UpdateNotificationSettingsDto"
+          },
           "stravaProfileSync": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Weight and sex from Strava"
+          },
+          "stravaActivitiesSync": {
+            "type": "boolean",
+            "description": "Import new Strava activities"
+          },
+          "stravaGearSync": {
+            "type": "boolean",
+            "description": "Shoes and mileage from Strava"
           },
           "timezone": {
             "type": "string",
@@ -15811,7 +16876,16 @@
               "ru",
               "en"
             ],
-            "description": "App language; coach messages and emails are written in it"
+            "description": "Resolved app language; coach messages and emails are written in it"
+          },
+          "languageMode": {
+            "type": "string",
+            "enum": [
+              "system",
+              "ru",
+              "en"
+            ],
+            "description": "Language picked in the app; `system` follows the device. Clients still report `language`"
           }
         }
       },
@@ -15953,6 +17027,39 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "GearImportResultDto": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "number",
+            "example": 2,
+            "description": "Pairs added"
+          },
+          "updated": {
+            "type": "number",
+            "example": 1,
+            "description": "Pairs whose mileage or archive state changed"
+          },
+          "unchanged": {
+            "type": "number",
+            "example": 3,
+            "description": "Pairs already up to date"
+          },
+          "items": {
+            "description": "Added and updated pairs",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GearResponseDto"
+            }
+          }
+        },
+        "required": [
+          "created",
+          "updated",
+          "unchanged",
+          "items"
         ]
       },
       "SuccessResponseDto": {
@@ -17114,6 +18221,69 @@
         },
         "required": [
           "confirm"
+        ]
+      },
+      "DataExportResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ready",
+              "failed",
+              "expired"
+            ],
+            "description": "`ready` — the link was emailed"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "readyAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the emailed link stops working"
+          },
+          "nextAvailableAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When a new export can be requested"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "requestedAt",
+          "readyAt",
+          "expiresAt",
+          "nextAvailableAt"
+        ]
+      },
+      "DataExportStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "latest": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DataExportResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "latest"
         ]
       }
     }

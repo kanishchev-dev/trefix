@@ -20,6 +20,13 @@ export const queryKeys = {
   gear: {
     all: ["gear"] as const,
     list: (status: string) => ["gear", status] as const,
+    detail: (gearId: string) => ["gear", "detail", gearId] as const,
+  },
+  account: {
+    all: ["account"] as const,
+    sessions: () => ["account", "sessions"] as const,
+    identities: () => ["account", "identities"] as const,
+    dataExport: () => ["account", "data-export"] as const,
   },
   health: {
     availability: () => ["health", "availability"] as const,

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { type QuietHours } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
-import { Compound } from "@trefix/ui-native";
+import { Wheel } from "@trefix/ui-native";
 
 import { type MainCopy } from "../../../locales";
 import {
@@ -11,7 +11,6 @@ import {
   SheetBlock,
   SheetButton,
 } from "../../../shared/ui/bottom-sheet";
-import { SectionTitle } from "../../../shared/ui/list-card";
 import { SheetActionsColumn } from "../../plans/components/plans-ui";
 
 type Props = {
@@ -31,7 +30,7 @@ const parse = (time: string): [number, number] => {
   return [hours || 0, minutes || 0];
 };
 
-/** Start and end of quiet hours as two "h : min" wheels. */
+/** Start and end of quiet hours as two hour wheels side by side. */
 export function QuietHoursSheet({
   visible,
   value,
@@ -44,7 +43,6 @@ export function QuietHoursSheet({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<QuietHours>(value ?? DEFAULT);
   const c = copy.profile.coach;
-  const labels = copy.profile.unitLabels;
 
   useEffect(() => {
     if (visible) {
@@ -53,42 +51,26 @@ export function QuietHoursSheet({
     }
   }, [visible, value]);
 
-  const picker = (key: keyof QuietHours, title: string) => {
-    const [hours, minutes] = parse(draft[key]);
-    return (
-      <View style={styles.picker}>
-        <SectionTitle text={title} theme={theme} />
-        <Compound
-          parts={[
-            {
-              label: labels.h,
-              value: hours,
-              min: 0,
-              max: 23,
-              formatValue: pad,
-            },
-            {
-              label: labels.min,
-              value: minutes,
-              min: 0,
-              max: 55,
-              step: 5,
-              formatValue: pad,
-            },
-          ]}
-          separator=":"
-          onChangePart={(index, next) => {
-            const parts = parse(draft[key]);
-            parts[index] = next;
-            setDraft({ ...draft, [key]: `${pad(parts[0])}:${pad(parts[1])}` });
-          }}
-          accessibilityLabel={title}
-          theme={theme}
-          themeMode={themeMode}
-        />
-      </View>
-    );
+  const muted = {
+    color: theme.color.mutedForeground,
+    fontFamily: theme.typography.fontFamily.sans.regular,
   };
+  const wheel = (key: keyof QuietHours, title: string) => (
+    <View style={styles.column}>
+      <Text style={[styles.label, muted]}>{title}</Text>
+      <Wheel
+        value={parse(draft[key])[0]}
+        onChange={(hours) => setDraft({ ...draft, [key]: `${pad(hours)}:00` })}
+        min={0}
+        max={23}
+        formatValue={(hours) => `${pad(hours)}:00`}
+        visibleItems={5}
+        accessibilityLabel={title}
+        theme={theme}
+        themeMode={themeMode}
+      />
+    </View>
+  );
 
   return (
     <BottomSheet
@@ -108,9 +90,14 @@ export function QuietHoursSheet({
         showsVerticalScrollIndicator={false}
       >
         <SheetBlock theme={theme}>
+          <Text style={[styles.body, muted]}>
+            {copy.profile.coachScreen.quietHoursSheetBody}
+          </Text>
+        </SheetBlock>
+        <SheetBlock theme={theme}>
           <View style={styles.pickers}>
-            {picker("from", c.quietHoursFrom)}
-            {picker("to", c.quietHoursTo)}
+            {wheel("from", c.quietHoursFrom)}
+            {wheel("to", c.quietHoursTo)}
           </View>
         </SheetBlock>
         <SheetBlock theme={theme}>
@@ -136,13 +123,6 @@ export function QuietHoursSheet({
                 themeMode={themeMode}
               />
             ) : null}
-            <SheetButton
-              label={copy.profile.valueSheet.cancel}
-              variant="secondary"
-              onPress={() => setOpen(false)}
-              theme={theme}
-              themeMode={themeMode}
-            />
           </SheetActionsColumn>
         </SheetBlock>
       </ScrollView>
@@ -160,9 +140,21 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   pickers: {
-    gap: 16,
-  },
-  picker: {
+    flexDirection: "row",
     gap: 8,
+  },
+  column: {
+    flex: 1,
+    gap: 8,
+  },
+  label: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  body: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
   },
 });

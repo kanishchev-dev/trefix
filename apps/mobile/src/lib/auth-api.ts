@@ -222,6 +222,11 @@ export async function updateMe(data: UpdateUserInput): Promise<AuthUser> {
   return authUserSchema.parse(response);
 }
 
+/** Removes the own photo together with the stored file. */
+export async function removeAvatar(): Promise<void> {
+  await request<void>("/avatars/me", { method: "DELETE", useAuth: true });
+}
+
 export async function uploadAvatar(uri: string): Promise<string> {
   const formData = new FormData();
   const filename = uri.split("/").pop() || "avatar.jpg";

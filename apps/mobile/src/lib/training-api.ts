@@ -16,6 +16,7 @@ import {
   athleteProfileSchema,
   athleteProfileUpdateSchema,
   pendingAdaptationListSchema,
+  gearImportResultSchema,
   gearListSchema,
   gearSchema,
   trainingAthleteSchema,
@@ -33,6 +34,7 @@ import {
   type PendingAdaptation,
   type AthleteProfileUpdate,
   type Gear,
+  type GearImportResult,
   type GearInput,
   type GearStatus,
   type CancelPlanResponse,
@@ -101,6 +103,31 @@ export async function listGear(status: GearStatus = "active"): Promise<Gear[]> {
     useAuth: true,
   });
   return gearListSchema.parse(response).items;
+}
+
+export async function getGear(gearId: string): Promise<Gear> {
+  const response = await request<unknown>(`/gear/${gearId}`, { useAuth: true });
+  return gearSchema.parse(response);
+}
+
+/** Shoes from the Strava profile, imported right away with a report of what changed. */
+export async function importStravaGear(): Promise<GearImportResult> {
+  const response = await request<unknown>("/integrations/strava/gear-import", {
+    method: "POST",
+    useAuth: true,
+  });
+  return gearImportResultSchema.parse(response);
+}
+
+export async function setWorkoutDevice(
+  workoutId: string,
+  deviceId: string | null,
+): Promise<void> {
+  await request<unknown>(`/workouts/${workoutId}/device`, {
+    method: "PATCH",
+    body: { deviceId },
+    useAuth: true,
+  });
 }
 
 export async function createGear(input: GearInput): Promise<Gear> {

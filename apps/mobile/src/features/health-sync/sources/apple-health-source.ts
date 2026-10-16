@@ -64,11 +64,10 @@ const WRITE_TYPES = [
 /** Accuracy reported for a fix without one, metres. */
 const DEFAULT_ACCURACY_M = 10;
 
-/** HealthKit BiologicalSex: 0 notSet, 1 female, 2 male, 3 other. */
+/** HealthKit BiologicalSex: 0 notSet, 1 female, 2 male; 3 (other) is not mapped. */
 const SEX_BY_HEALTHKIT: Record<number, DeviceProfileMetricsRequest["sex"]> = {
   1: "female",
   2: "male",
-  3: "other",
 };
 
 /** iOS never tells whether read access was granted: these are the scopes that were requested. */

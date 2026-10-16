@@ -8,14 +8,16 @@ import {
   type HrZonesMethod,
 } from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
-import { Segmented } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import { fillTemplate, type MainCopy } from "../../../locales";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
+import { SheetTabs } from "../../../shared/ui/sheet-controls";
 import { useToast } from "../../../shared/ui/toast";
-import { Notice, NoticeText } from "../../plans/components/plans-ui";
+import { useActivePlan } from "../../plans/hooks/use-active-plan";
+import { zoneColors } from "../components/profile-ui";
 import {
+  Footnote,
   ProfileSection,
   ProfileSubScreen,
 } from "../components/profile-sub-screen";
@@ -23,19 +25,20 @@ import {
   ProfileValueSheet,
   type ValueSheetConfig,
 } from "../components/profile-value-sheet";
-import { useActivePlan } from "../../plans/hooks/use-active-plan";
 import {
   useAthleteProfile,
   useUpdateAthleteProfile,
 } from "../hooks/use-athlete-profile";
 import { usePreferences } from "../hooks/use-preferences";
-import { profileErrorMessage } from "../lib/profile-format";
+import { profileErrorMessage, zoneRangeText } from "../lib/profile-format";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
   onBack: () => void;
+  /** Custom zone bounds are edited on their own screen. */
+  onOpenZones: () => void;
 };
 
 type HeartField = "restingHeartRate" | "maxHeartRate" | "thresholdHeartRate";
@@ -50,34 +53,23 @@ const RANGES: Record<
 };
 
 /** Default custom bounds when nothing is known yet: max-HR shares of an assumed 185. */
-const FALLBACK_CUSTOM = [111, 130, 148, 167];
+export const FALLBACK_CUSTOM_ZONES = [111, 130, 148, 167];
 
-/** P3 — resting, max and threshold heart rate, and the zones the server derives from them. */
-export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
+/** Heart rate: resting, max and threshold, the zone method and the zones the server derives. */
+export function HeartScreen({
+  theme,
+  themeMode,
+  copy,
+  onBack,
+  onOpenZones,
+}: Props) {
   const { data: athlete } = useAthleteProfile();
-  const update = useUpdateAthleteProfile();
+  const save = useHeartSave(copy);
   const { showToast } = useToast();
-  const activePlan = useActivePlan();
-  const { preferences } = usePreferences();
   const [sheet, setSheet] = useState<ValueSheetConfig | null>(null);
   const h = copy.profile.heart;
+  const t = copy.profile.heartScreen;
   const bpm = copy.profile.unitLabels.bpm;
-
-  const save = async (patch: AthleteProfileUpdate) => {
-    await update.mutateAsync(patch);
-    trackEvent("profile_field_updated", {
-      field: Object.keys(patch).join(","),
-      source: "manual",
-    });
-    // Zones drive heart-rate targets of the active plan; in "confirm" mode the coach proposes the update.
-    if (
-      activePlan.data?.plan &&
-      preferences.coachEnabled &&
-      preferences.coachAdaptationMode === "confirm"
-    ) {
-      showToast(h.planNote);
-    }
-  };
 
   const openValue = (
     field: HeartField,
@@ -95,34 +87,15 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
       min: range.min,
       max: range.max,
       unit: bpm,
-      majorEvery: 10,
-      labelEvery: 10,
       clearable: true,
+      suggestion: estimate
+        ? {
+            text: fillTemplate(h.estimate, { value: estimate }),
+            actionLabel: t.setEstimate,
+            value: estimate,
+          }
+        : undefined,
       onSave: (value) => save({ [field]: value }),
-    });
-  };
-
-  const openCustomBound = (index: number, profile: AthleteProfile) => {
-    const bounds =
-      profile.hrZonesCustom ??
-      currentUpperBounds(profile.hrZones) ??
-      FALLBACK_CUSTOM;
-    setSheet({
-      kind: "number",
-      title: fillTemplate(h.zoneUpper, { zone: index + 1 }),
-      value: bounds[index],
-      fallback: bounds[index],
-      min: 60,
-      max: 225,
-      unit: bpm,
-      majorEvery: 10,
-      labelEvery: 10,
-      onSave: async (value) => {
-        if (value === null) return;
-        const next = [...bounds];
-        next[index] = value;
-        await save({ hrZonesMethod: "custom", hrZonesCustom: next });
-      },
     });
   };
 
@@ -135,7 +108,7 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
         const bounds =
           profile.hrZonesCustom ??
           currentUpperBounds(profile.hrZones) ??
-          FALLBACK_CUSTOM;
+          FALLBACK_CUSTOM_ZONES;
         await save({ hrZonesMethod: "custom", hrZonesCustom: bounds });
       } else {
         await save({ hrZonesMethod: method });
@@ -171,7 +144,7 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
       openValue("thresholdHeartRate", h.threshold, athlete);
     else if (reason === "max_missing")
       openValue("maxHeartRate", h.max, athlete);
-    else openCustomBound(0, athlete);
+    else onOpenZones();
   };
 
   return (
@@ -183,19 +156,20 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
     >
       <ProfileSection>
         <SectionTitle text={h.values} theme={theme} />
-        <ListCard theme={theme}>
+        <ListCard theme={theme} bare>
           <ListRow
             theme={theme}
             title={h.rest}
             value={valueOf("restingHeartRate")}
             valueColor={colorOf("restingHeartRate")}
+            chevron={false}
             onPress={() => openValue("restingHeartRate", h.rest, athlete)}
           />
           <ListRow
             theme={theme}
             title={h.max}
             description={
-              !athlete.maxHeartRate && athlete.maxHeartRateEstimate
+              athlete.maxHeartRateEstimate
                 ? fillTemplate(h.estimate, {
                     value: athlete.maxHeartRateEstimate,
                   })
@@ -203,6 +177,7 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
             }
             value={valueOf("maxHeartRate")}
             valueColor={colorOf("maxHeartRate")}
+            chevron={false}
             onPress={() => openValue("maxHeartRate", h.max, athlete)}
           />
           <ListRow
@@ -210,48 +185,38 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
             title={h.threshold}
             value={valueOf("thresholdHeartRate")}
             valueColor={colorOf("thresholdHeartRate")}
+            chevron={false}
             onPress={() =>
               openValue("thresholdHeartRate", h.threshold, athlete)
             }
           />
         </ListCard>
-        {!athlete.thresholdHeartRate ? (
-          <Notice theme={theme}>
-            <NoticeText theme={theme}>{h.thresholdHint}</NoticeText>
-          </Notice>
-        ) : null}
+        <Footnote text={h.thresholdHint} theme={theme} />
       </ProfileSection>
 
       <ProfileSection>
         <SectionTitle text={h.zones} theme={theme} />
-        <Segmented
-          segments={(["threshold", "max_hr", "custom"] as const).map(
-            (value) => ({ value, label: h.methods[value] }),
-          )}
+        <SheetTabs
+          tabs={(["threshold", "max_hr", "custom"] as const).map((key) => ({
+            key,
+            label: h.methods[key],
+          }))}
           value={method}
           onChange={(next) => void changeMethod(next, athlete)}
           theme={theme}
-          themeMode={themeMode}
+          trackColor={theme.color.card}
+          accessibilityLabel={h.zones}
         />
         {zones ? (
-          <ListCard theme={theme}>
-            {[...zones].reverse().map((zone) => (
-              <ZoneRow
-                key={zone.zone}
-                zone={zone}
-                name={h.zoneNames[zone.zone - 1] ?? `Z${zone.zone}`}
-                bpm={bpm}
-                theme={theme}
-                onPress={
-                  method === "custom" && zone.zone < 5
-                    ? () => openCustomBound(zone.zone - 1, athlete)
-                    : undefined
-                }
-              />
-            ))}
-          </ListCard>
+          <ZonesCard
+            theme={theme}
+            zones={zones}
+            names={h.zoneNames}
+            copy={copy}
+            onPressZone={method === "custom" ? onOpenZones : undefined}
+          />
         ) : (
-          <ListCard theme={theme}>
+          <ListCard theme={theme} bare>
             <ListRow
               theme={theme}
               title={reason ? h.unavailable[reason] : h.unavailable.max_missing}
@@ -260,6 +225,7 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
             />
           </ListCard>
         )}
+        <Footnote text={t.planNote} theme={theme} />
       </ProfileSection>
 
       <ProfileValueSheet
@@ -273,7 +239,30 @@ export function HeartScreen({ theme, themeMode, copy, onBack }: Props) {
   );
 }
 
-function currentUpperBounds(
+/** Saves heart fields and tells the user that the coach will propose plan updates. */
+export function useHeartSave(copy: MainCopy) {
+  const update = useUpdateAthleteProfile();
+  const { showToast } = useToast();
+  const activePlan = useActivePlan();
+  const { preferences } = usePreferences();
+  return async (patch: AthleteProfileUpdate) => {
+    await update.mutateAsync(patch);
+    trackEvent("profile_field_updated", {
+      field: Object.keys(patch).join(","),
+      source: "manual",
+    });
+    // Zones drive heart-rate targets of the active plan; in "confirm" mode the coach proposes the update.
+    if (
+      activePlan.data?.plan &&
+      preferences.coachEnabled &&
+      preferences.coachAdaptationMode === "confirm"
+    ) {
+      showToast(copy.profile.heart.planNote);
+    }
+  };
+}
+
+export function currentUpperBounds(
   zones: HrZone[] | null | undefined,
 ): number[] | null {
   if (!zones || zones.length < 4) return null;
@@ -283,106 +272,95 @@ function currentUpperBounds(
     : null;
 }
 
-function ZoneRow({
-  zone,
-  name,
-  bpm,
+function ZonesCard({
   theme,
-  onPress,
+  zones,
+  names,
+  copy,
+  onPressZone,
 }: {
-  zone: HrZone;
-  name: string;
-  bpm: string;
   theme: ThemeTokens;
-  onPress?: () => void;
+  zones: HrZone[];
+  names: string[];
+  copy: MainCopy;
+  onPressZone?: () => void;
 }) {
-  const range =
-    zone.min === null
-      ? `< ${zone.max}`
-      : zone.max === null
-        ? `> ${zone.min}`
-        : `${zone.min}–${zone.max}`;
+  const colors = zoneColors(theme);
   return (
-    <Pressable
-      accessibilityRole={onPress ? "button" : undefined}
-      accessibilityLabel={`Z${zone.zone} ${name} ${range} ${bpm}`}
-      disabled={!onPress}
-      onPress={onPress}
-      style={({ pressed }) => [styles.zoneRow, pressed && styles.pressed]}
-    >
-      <View
-        style={[
-          styles.zoneBar,
-          {
-            backgroundColor: theme.color.foreground,
-            opacity: 0.2 + zone.zone * 0.16,
-          },
-        ]}
-      />
-      <Text
-        style={[
-          styles.zoneLabel,
-          {
-            color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.semibold,
-          },
-        ]}
-      >
-        Z{zone.zone}
-      </Text>
-      <Text
-        numberOfLines={1}
-        style={[
-          styles.zoneName,
-          {
-            color: theme.color.foreground,
-            fontFamily: theme.typography.fontFamily.sans.regular,
-          },
-        ]}
-      >
-        {name}
-      </Text>
-      <Text
-        style={[
-          styles.zoneRange,
-          {
-            color: theme.color.mutedForeground,
-            fontFamily: theme.typography.fontFamily.sans.medium,
-          },
-        ]}
-      >
-        {range} {bpm}
-      </Text>
-    </Pressable>
+    <View style={[styles.card, { backgroundColor: theme.color.card }]}>
+      {zones.map((zone, index) => (
+        <Pressable
+          key={zone.zone}
+          accessibilityRole={onPressZone ? "button" : undefined}
+          disabled={!onPressZone}
+          onPress={onPressZone}
+          style={({ pressed }) => [
+            styles.zoneRow,
+            index > 0 && {
+              borderTopWidth: 1,
+              borderTopColor: theme.color.screen,
+            },
+            pressed && styles.pressed,
+          ]}
+        >
+          <View
+            style={[styles.swatch, { backgroundColor: colors[zone.zone - 1] }]}
+          />
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.zoneTitle,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {`Z${zone.zone} · ${names[zone.zone - 1] ?? ""}`}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.zoneValue,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
+          >
+            {zoneRangeText(zone, copy)}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    borderRadius: 24,
+    overflow: "hidden",
+  },
   zoneRow: {
-    minHeight: 48,
+    minHeight: 52,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  zoneBar: {
-    width: 4,
-    height: 24,
-    borderRadius: 2,
+  swatch: {
+    width: 10,
+    height: 28,
+    borderRadius: 5,
   },
-  zoneLabel: {
-    width: 26,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  zoneName: {
+  zoneTitle: {
     flex: 1,
     fontSize: 15,
     lineHeight: 20,
   },
-  zoneRange: {
-    fontSize: 14,
-    lineHeight: 18,
+  zoneValue: {
+    fontSize: 15,
+    lineHeight: 20,
   },
   pressed: {
     opacity: 0.82,

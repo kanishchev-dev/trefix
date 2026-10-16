@@ -15,7 +15,6 @@ import {
 } from "./main-routes";
 import { type MainTabKey } from "./main-types";
 import { PlanScreen } from "./screens/plan-screen";
-import { type ThemePreference } from "./screens/theme-settings-screen";
 import { TodayScreen } from "./screens/today-screen";
 
 const Tabs = createBottomTabNavigator<MainTabParamList>();
@@ -26,9 +25,6 @@ type Props = {
   copy: MainCopy;
   userEmail: string;
   userLanguage: AppLanguage;
-  userTheme: ThemePreference;
-  onLogout: () => void;
-  onAccountDeleted: () => void;
 };
 
 // Module-level so their identity is stable: tab screens list them in `useHeaderOptions` deps.
@@ -47,9 +43,6 @@ export function MainTabsScreen({
   copy,
   userEmail,
   userLanguage,
-  userTheme,
-  onLogout,
-  onAccountDeleted,
 }: Props) {
   const { push, openTrefix } = useMainShell();
   const { preferences } = usePreferences();
@@ -124,17 +117,14 @@ export function MainTabsScreen({
               theme={theme}
               themeMode={themeMode}
               copy={copy}
-              userLanguage={userLanguage}
-              userTheme={userTheme}
-              onLogout={onLogout}
               onEdit={openProfileEdit}
               onOpenNotifications={openNotifications}
               onOpenLanguage={openLanguage}
               onOpenTheme={openTheme}
               onOpenIntegrations={() => push({ kind: "integrations" })}
               onOpenStrava={() => push({ kind: "strava-integration" })}
+              onOpenHealth={() => push({ kind: "health-integration" })}
               onNavigate={push}
-              onAccountDeleted={onAccountDeleted}
             />
           </PushedScreen>
         )}

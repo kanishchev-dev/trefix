@@ -61,7 +61,11 @@ export function localeOf(language: AppLanguage): string {
 }
 
 export type Formatter = {
+  /** Distance and pace system; weight and height have their own. */
   units: UnitSystem;
+  weightUnits: UnitSystem;
+  heightUnits: UnitSystem;
+  temperatureUnit: UserPreferences["temperatureUnit"];
   labels: UnitLabels;
   locale: string;
   distance: (km: number, digits?: number) => string;
@@ -77,15 +81,23 @@ export function createFormatter(
 ): Formatter {
   const labels = copy.profile.unitLabels;
   const locale = localeOf(language);
-  const units = preferences.units;
+  const units: UnitSystem =
+    preferences.distanceUnit === "mi" ? "imperial" : "metric";
+  const weightUnits: UnitSystem =
+    preferences.weightUnit === "lb" ? "imperial" : "metric";
+  const heightUnits: UnitSystem =
+    preferences.heightUnit === "ft" ? "imperial" : "metric";
   return {
     units,
+    weightUnits,
+    heightUnits,
+    temperatureUnit: preferences.temperatureUnit,
     labels,
     locale,
     distance: (km, digits = 1) =>
       formatDistance(km, units, labels, locale, digits),
-    weight: (kg) => formatWeight(kg, units, labels, locale),
-    height: (cm) => formatHeight(cm, units, labels),
+    weight: (kg) => formatWeight(kg, weightUnits, labels, locale),
+    height: (cm) => formatHeight(cm, heightUnits, labels),
     minutes: (total) => {
       const hours = Math.floor(total / 60);
       const minutes = total % 60;
@@ -229,15 +241,28 @@ export function experienceSummary(
   return parts.join(" · ") || copy.profile.summary.notSet;
 }
 
-export function gearName(gear: Gear): string {
+export function gearName(gear: Pick<Gear, "brand" | "model">): string {
+  if (gear.brand.trim() === gear.model.trim()) return gear.model.trim();
   return `${gear.brand} ${gear.model}`.trim();
+}
+
+/** Devices are entered as one line: the first word is the brand, the rest the model. */
+export function splitDeviceName(name: string): {
+  brand: string;
+  model: string;
+} {
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  const space = trimmed.indexOf(" ");
+  if (space < 0) return { brand: trimmed, model: trimmed };
+  return { brand: trimmed.slice(0, space), model: trimmed.slice(space + 1) };
 }
 
 /** The most worn active pair, shown on the profile row. */
 export function mostWorn(gear: Gear[] | undefined): Gear | null {
-  if (!gear || gear.length === 0) return null;
-  return [...gear].sort(
-    (left, right) => right.wearPercent - left.wearPercent,
+  const shoes = (gear ?? []).filter((item) => item.type === "shoes");
+  if (shoes.length === 0) return null;
+  return [...shoes].sort(
+    (left, right) => (right.wearPercent ?? 0) - (left.wearPercent ?? 0),
   )[0];
 }
 
@@ -264,4 +289,27 @@ export function profileErrorMessage(error: unknown, copy: MainCopy): string {
   const code = (error as { code?: string } | null)?.code;
   const errors = copy.profile.errors as Record<string, string>;
   return (code && errors[code]) || copy.profile.errors.generic;
+}
+
+/** Zone range for lists: "до 131", "132–148", "169+". */
+export function zoneRangeText(
+  zone: { min?: number | null; max?: number | null },
+  copy: MainCopy,
+): string {
+  const t = copy.profile.heartScreen;
+  if (zone.min == null && zone.max != null)
+    return fillTemplate(t.upTo, { value: zone.max });
+  if (zone.max == null && zone.min != null)
+    return fillTemplate(t.above, { value: zone.min });
+  return fillTemplate(t.range, { from: zone.min ?? "—", to: zone.max ?? "—" });
+}
+
+/** Compact zone range under the bars of the hub: "–131", "132–148", "169+". */
+export function zoneRangeShort(zone: {
+  min?: number | null;
+  max?: number | null;
+}): string {
+  if (zone.min == null && zone.max != null) return `–${zone.max}`;
+  if (zone.max == null && zone.min != null) return `${zone.min}+`;
+  return `${zone.min ?? "—"}–${zone.max ?? "—"}`;
 }

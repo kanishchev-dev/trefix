@@ -1,24 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
-import { type GearInput, type WorkoutType } from "@trefix/api-client";
+import {
+  type GearDataSource,
+  type GearInput,
+  type GearType,
+} from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
-import { Ruler } from "@trefix/ui-native";
 
 import { trackEvent } from "../../../lib/analytics";
 import {
-  formatShortDate,
+  formatLongDate,
   type AppLanguage,
   type MainCopy,
 } from "../../../locales";
 import { displayToKm, kmToDisplay } from "../../../shared/lib/units";
 import { SheetButton } from "../../../shared/ui/bottom-sheet";
-import { Chip, ChipScroller } from "../../../shared/ui/chip-scroller";
 import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
+import { SheetTabs } from "../../../shared/ui/sheet-controls";
 import { Switch } from "../../../shared/ui/switch";
 import { InlineError } from "../../plans/components/plans-ui";
+import { FormField, FormInput } from "../components/profile-form";
+import { SelectedMark } from "../components/profile-ui";
 import {
-  Footnote,
   ProfileSection,
   ProfileSubScreen,
 } from "../components/profile-sub-screen";
@@ -26,12 +30,18 @@ import {
   ProfileValueSheet,
   type ValueSheetConfig,
 } from "../components/profile-value-sheet";
-import { useGear, useGearMutation } from "../hooks/use-gear";
-import { usePreferences } from "../hooks/use-preferences";
-import { createFormatter, profileErrorMessage } from "../lib/profile-format";
+import { useGear, useGearItem, useGearMutation } from "../hooks/use-gear";
+import { useUnitFormat } from "../hooks/use-unit-format";
+import {
+  gearName,
+  profileErrorMessage,
+  splitDeviceName,
+} from "../lib/profile-format";
 
 type Props = {
   gearId?: string;
+  /** Type of new gear; ignored when editing. */
+  type?: GearType;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
@@ -39,102 +49,116 @@ type Props = {
   onBack: () => void;
 };
 
-const WORKOUT_TYPES = [
-  "easy",
-  "recovery",
-  "long_run",
-  "tempo",
-  "threshold",
-  "interval",
-  "hill",
-  "race",
-] as const;
-const PRESETS = [
-  { key: "race", km: 400 },
-  { key: "training", km: 700 },
-  { key: "trail", km: 800 },
-] as const;
-
-type Draft = Required<Omit<GearInput, "nickname" | "startedAt">> & {
-  nickname: string;
+type Draft = {
+  type: GearType;
+  brand: string;
+  model: string;
+  /** Devices: one line, split into brand and model on save. */
+  name: string;
   startedAt: string | null;
+  limitKm: number;
+  initialDistanceKm: number;
+  isDefault: boolean;
+  isPrimary: boolean;
+  dataSource: GearDataSource | null;
 };
 
-const EMPTY: Draft = {
-  brand: "",
-  model: "",
-  nickname: "",
-  initialDistanceKm: 0,
-  limitKm: 700,
-  startedAt: null,
-  defaultWorkoutTypes: [],
-  replaceReminder: true,
-};
+const DEFAULT_LIMIT_KM = 700;
+const DEVICE_SOURCES: GearDataSource[] = [
+  "garmin",
+  Platform.OS === "android" ? "health_connect" : "apple_health",
+  "strava",
+];
 
-/** D5 — add or edit a pair of shoes. */
+/** Add or edit shoes, a watch or a sensor. */
 export function GearEditScreen({
   gearId,
+  type,
   theme,
   themeMode,
   copy,
   language,
   onBack,
 }: Props) {
+  const { data: existing } = useGearItem(gearId);
   const { data: active = [] } = useGear("active");
-  const { data: retired = [] } = useGear("retired");
   const mutation = useGearMutation();
-  const { preferences } = usePreferences();
-  const existing = useMemo(
-    () => [...active, ...retired].find((gear) => gear.id === gearId) ?? null,
-    [active, retired, gearId],
-  );
-  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const format = useUnitFormat(copy, language);
   const [sheet, setSheet] = useState<ValueSheetConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const e = copy.profile.gearEdit;
-  const format = createFormatter(copy, language, preferences);
-  const units = preferences.units;
-  const distanceUnit =
-    units === "imperial" ? format.labels.mi : format.labels.km;
+  const s = copy.profile.gearScreen;
+  const e = s.edit;
+  const hasPrimary = useMemo(
+    () => active.some((item) => item.isPrimary),
+    [active],
+  );
+  const hasDefault = useMemo(
+    () => active.some((item) => item.isDefault),
+    [active],
+  );
+
+  const [draft, setDraft] = useState<Draft>(() => ({
+    type: type ?? "shoes",
+    brand: "",
+    model: "",
+    name: "",
+    startedAt: null,
+    limitKm: DEFAULT_LIMIT_KM,
+    initialDistanceKm: 0,
+    isDefault: !hasDefault,
+    isPrimary: !hasPrimary,
+    dataSource: null,
+  }));
 
   useEffect(() => {
     if (!existing) return;
     setDraft({
+      type: existing.type,
       brand: existing.brand,
       model: existing.model,
-      nickname: existing.nickname ?? "",
-      initialDistanceKm: existing.initialDistanceKm,
-      limitKm: existing.limitKm,
+      name: gearName(existing),
       startedAt: existing.startedAt,
-      defaultWorkoutTypes: existing.defaultWorkoutTypes,
-      replaceReminder: existing.replaceReminder,
+      limitKm: existing.limitKm ?? DEFAULT_LIMIT_KM,
+      initialDistanceKm: existing.initialDistanceKm,
+      isDefault: existing.isDefault,
+      isPrimary: existing.isPrimary,
+      dataSource: existing.dataSource,
     });
   }, [existing]);
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
-  const valid = draft.brand.trim().length > 0 && draft.model.trim().length > 0;
-  const takenElsewhere = new Set(
-    active
-      .filter((gear) => gear.id !== gearId)
-      .flatMap((gear) => gear.defaultWorkoutTypes),
-  );
-  const movesTypes = draft.defaultWorkoutTypes.some((type) =>
-    takenElsewhere.has(type),
-  );
+
+  const shoes = draft.type === "shoes";
+  const distanceUnit =
+    format.units === "imperial" ? format.labels.mi : format.labels.km;
+  const valid = shoes
+    ? draft.brand.trim().length > 0 && draft.model.trim().length > 0
+    : draft.name.trim().length > 0;
+  const title = shoes
+    ? e.shoesTitle
+    : draft.type === "watch"
+      ? e.watchTitle
+      : e.sensorTitle;
 
   const submit = async () => {
     setError(null);
-    const input: GearInput = {
-      brand: draft.brand.trim(),
-      model: draft.model.trim(),
-      nickname: draft.nickname.trim() || null,
-      initialDistanceKm: draft.initialDistanceKm,
-      limitKm: draft.limitKm,
-      startedAt: draft.startedAt,
-      defaultWorkoutTypes: draft.defaultWorkoutTypes,
-      replaceReminder: draft.replaceReminder,
-    };
+    const input: GearInput = shoes
+      ? {
+          brand: draft.brand.trim(),
+          model: draft.model.trim(),
+          startedAt: draft.startedAt,
+          limitKm: draft.limitKm,
+          initialDistanceKm: draft.initialDistanceKm,
+          isDefault: draft.isDefault,
+        }
+      : {
+          ...splitDeviceName(draft.name),
+          startedAt: draft.startedAt,
+          initialDistanceKm: draft.initialDistanceKm,
+          isPrimary: draft.isPrimary,
+          dataSource: draft.dataSource,
+        };
     try {
       if (existing) {
         await mutation.mutateAsync({
@@ -143,217 +167,188 @@ export function GearEditScreen({
           input,
         });
       } else {
-        await mutation.mutateAsync({ kind: "create", input });
-        trackEvent("gear_created", { source: "manual" });
+        await mutation.mutateAsync({
+          kind: "create",
+          input: { ...input, type: draft.type },
+        });
+        trackEvent("gear_added", { type: draft.type });
       }
       onBack();
-    } catch (saveError) {
-      setError(profileErrorMessage(saveError, copy));
+    } catch (submitError) {
+      setError(profileErrorMessage(submitError, copy));
     }
   };
 
-  const input = (
-    value: string,
-    onChange: (text: string) => void,
-    placeholder: string,
-    maxLength: number,
-  ) => (
-    <TextInput
-      value={value}
-      onChangeText={onChange}
-      placeholder={placeholder}
-      placeholderTextColor={theme.color.mutedForeground}
-      maxLength={maxLength}
-      style={[
-        styles.input,
-        {
-          color: theme.color.foreground,
-          fontFamily: theme.typography.fontFamily.sans.regular,
-        },
-      ]}
-    />
-  );
+  const openStarted = () =>
+    setSheet({
+      kind: "date",
+      title: e.startedAt,
+      value: draft.startedAt,
+      fallback: new Date().toISOString().slice(0, 10),
+      minDate: "2010-01-01",
+      clearable: true,
+      onSave: async (value) => set("startedAt", value),
+    });
 
-  const toggleType = (type: WorkoutType) =>
-    set(
-      "defaultWorkoutTypes",
-      draft.defaultWorkoutTypes.includes(type)
-        ? draft.defaultWorkoutTypes.filter((entry) => entry !== type)
-        : [...draft.defaultWorkoutTypes, type],
-    );
+  const openDistance = (field: "limitKm" | "initialDistanceKm") =>
+    setSheet({
+      kind: "number",
+      title: field === "limitKm" ? e.resource : e.initial,
+      value: Math.round(kmToDisplay(draft[field], format.units)),
+      fallback:
+        field === "limitKm"
+          ? Math.round(kmToDisplay(DEFAULT_LIMIT_KM, format.units))
+          : 0,
+      min: field === "limitKm" ? Math.round(kmToDisplay(100, format.units)) : 0,
+      max: Math.round(
+        kmToDisplay(field === "limitKm" ? 2000 : 5000, format.units),
+      ),
+      step: 10,
+      unit: distanceUnit,
+      onSave: async (value) =>
+        set(field, Math.round(displayToKm(value ?? 0, format.units))),
+    });
 
   return (
     <ProfileSubScreen
-      title={existing ? e.editTitle : e.newTitle}
+      title={title}
       onBack={onBack}
       theme={theme}
       themeMode={themeMode}
-    >
-      <ProfileSection>
-        <SectionTitle text={e.model} theme={theme} />
-        <ListCard theme={theme}>
-          <ListRow
-            theme={theme}
-            title={e.brand}
-            trailing={input(
-              draft.brand,
-              (text) => set("brand", text),
-              "Nike",
-              60,
-            )}
-          />
-          <ListRow
-            theme={theme}
-            title={e.modelName}
-            trailing={input(
-              draft.model,
-              (text) => set("model", text),
-              "Pegasus 41",
-              80,
-            )}
-          />
-          <ListRow
-            theme={theme}
-            title={e.nickname}
-            trailing={input(
-              draft.nickname,
-              (text) => set("nickname", text),
-              e.optional,
-              60,
-            )}
-          />
-        </ListCard>
-      </ProfileSection>
-
-      <ProfileSection>
-        <SectionTitle text={e.resource} theme={theme} />
-        <View style={[styles.rulerCard, { backgroundColor: theme.color.card }]}>
-          <Ruler
-            value={Math.round(kmToDisplay(draft.limitKm, units) / 10) * 10}
-            onChange={(value) =>
-              set(
-                "limitKm",
-                Math.min(
-                  2000,
-                  Math.max(100, Math.round(displayToKm(value, units))),
-                ),
-              )
-            }
-            min={units === "imperial" ? 60 : 100}
-            max={units === "imperial" ? 1240 : 2000}
-            step={10}
-            majorEvery={100}
-            labelEvery={200}
-            unit={distanceUnit}
-            accessibilityLabel={e.resource}
+      footer={
+        <View style={styles.footer}>
+          {error ? <InlineError message={error} theme={theme} /> : null}
+          <SheetButton
+            label={existing ? e.save : e.add}
+            disabled={!valid}
+            pending={mutation.isPending}
+            onPress={() => void submit()}
             theme={theme}
             themeMode={themeMode}
           />
         </View>
-        <ChipScroller>
-          {PRESETS.map((preset) => (
-            <Chip
-              key={preset.key}
-              theme={theme}
-              label={`${e.presets[preset.key]} · ${format.distance(preset.km, 0)}`}
-              selected={draft.limitKm === preset.km}
-              onPress={() => set("limitKm", preset.km)}
-            />
-          ))}
-        </ChipScroller>
-      </ProfileSection>
+      }
+    >
+      {!shoes && !existing ? (
+        <ProfileSection>
+          <SectionTitle text={e.type} theme={theme} />
+          <SheetTabs
+            tabs={[
+              { key: "watch" as const, label: s.addSheet.watch.title },
+              { key: "sensor" as const, label: s.addSheet.sensor.title },
+            ]}
+            value={draft.type === "sensor" ? "sensor" : "watch"}
+            onChange={(next) => set("type", next)}
+            theme={theme}
+            trackColor={theme.color.card}
+            accessibilityLabel={e.type}
+          />
+        </ProfileSection>
+      ) : null}
 
-      <ProfileSection>
-        <SectionTitle text={e.mileage} theme={theme} />
-        <ListCard theme={theme}>
+      {shoes ? (
+        <>
+          <FormField theme={theme} label={e.brand}>
+            <FormInput
+              theme={theme}
+              value={draft.brand}
+              onChangeText={(value) => set("brand", value)}
+              maxLength={60}
+              accessibilityLabel={e.brand}
+            />
+          </FormField>
+          <FormField theme={theme} label={e.model}>
+            <FormInput
+              theme={theme}
+              value={draft.model}
+              onChangeText={(value) => set("model", value)}
+              maxLength={80}
+              accessibilityLabel={e.model}
+            />
+          </FormField>
+        </>
+      ) : (
+        <FormField theme={theme} label={e.model}>
+          <FormInput
+            theme={theme}
+            value={draft.name}
+            onChangeText={(value) => set("name", value)}
+            maxLength={140}
+            accessibilityLabel={e.model}
+          />
+        </FormField>
+      )}
+
+      {shoes ? (
+        <ListCard theme={theme} bare>
+          <ListRow
+            theme={theme}
+            title={e.startedAt}
+            value={
+              draft.startedAt
+                ? formatLongDate(draft.startedAt, language)
+                : copy.profile.summary.notSet
+            }
+            chevron={false}
+            onPress={openStarted}
+          />
+          <ListRow
+            theme={theme}
+            title={e.resource}
+            value={format.distance(draft.limitKm, 0)}
+            chevron={false}
+            onPress={() => openDistance("limitKm")}
+          />
           <ListRow
             theme={theme}
             title={e.initial}
+            description={e.initialDescription}
             value={format.distance(draft.initialDistanceKm, 0)}
-            onPress={() =>
-              setSheet({
-                kind: "number",
-                title: e.initial,
-                value: Math.round(kmToDisplay(draft.initialDistanceKm, units)),
-                fallback: 0,
-                min: 0,
-                max: units === "imperial" ? 1500 : 2500,
-                step: 5,
-                majorEvery: 50,
-                labelEvery: 100,
-                unit: distanceUnit,
-                onSave: async (value) =>
-                  set(
-                    "initialDistanceKm",
-                    Math.round(displayToKm(value ?? 0, units) * 10) / 10,
-                  ),
-              })
-            }
-          />
-          <ListRow
-            theme={theme}
-            title={e.start}
-            value={
-              draft.startedAt
-                ? formatShortDate(draft.startedAt, language)
-                : e.notSet
-            }
-            onPress={() =>
-              setSheet({
-                kind: "date",
-                title: e.start,
-                value: draft.startedAt,
-                fallback: new Date().toISOString().slice(0, 10),
-                minDate: "2000-01-01",
-                clearable: true,
-                onSave: async (value) => set("startedAt", value),
-              })
-            }
+            chevron={false}
+            onPress={() => openDistance("initialDistanceKm")}
           />
         </ListCard>
-      </ProfileSection>
+      ) : (
+        <ProfileSection>
+          <SectionTitle text={e.dataSource} theme={theme} />
+          <ListCard theme={theme} bare>
+            {DEVICE_SOURCES.map((source) => (
+              <ListRow
+                key={source}
+                theme={theme}
+                title={s.sources[source]}
+                trailing={
+                  draft.dataSource === source ? (
+                    <SelectedMark theme={theme} />
+                  ) : undefined
+                }
+                chevron={false}
+                onPress={() =>
+                  set("dataSource", draft.dataSource === source ? null : source)
+                }
+              />
+            ))}
+          </ListCard>
+        </ProfileSection>
+      )}
 
-      <ProfileSection>
-        <SectionTitle text={e.defaults} theme={theme} />
-        <ChipScroller>
-          {WORKOUT_TYPES.map((type) => (
-            <Chip
-              key={type}
-              theme={theme}
-              label={copy.profile.workoutTypes[type]}
-              selected={draft.defaultWorkoutTypes.includes(type)}
-              onPress={() => toggleType(type)}
-            />
-          ))}
-        </ChipScroller>
-        {movesTypes ? <Footnote text={e.defaultsMoved} theme={theme} /> : null}
-      </ProfileSection>
-
-      <ListCard theme={theme}>
+      <ListCard theme={theme} bare>
         <ListRow
           theme={theme}
-          title={e.reminder}
-          description={e.reminderDescription}
+          title={shoes ? e.default : e.primary}
+          description={shoes ? e.defaultDescription : e.primaryDescription}
           trailing={
             <Switch
               theme={theme}
-              value={draft.replaceReminder}
-              onValueChange={(value) => set("replaceReminder", value)}
-              accessibilityLabel={e.reminder}
+              value={shoes ? draft.isDefault : draft.isPrimary}
+              accessibilityLabel={shoes ? e.default : e.primary}
+              onValueChange={(value) =>
+                set(shoes ? "isDefault" : "isPrimary", value)
+              }
             />
           }
         />
       </ListCard>
-
-      {error ? <InlineError message={error} theme={theme} /> : null}
-      <SheetButton
-        label={existing ? e.save : e.add}
-        disabled={!valid}
-        pending={mutation.isPending}
-        onPress={() => void submit()}
-        theme={theme}
-        themeMode={themeMode}
-      />
 
       <ProfileValueSheet
         config={sheet}
@@ -367,17 +362,7 @@ export function GearEditScreen({
 }
 
 const styles = StyleSheet.create({
-  input: {
-    minWidth: 120,
-    maxWidth: 200,
-    textAlign: "right",
-    fontSize: 15,
-    lineHeight: 20,
-    paddingVertical: 4,
-  },
-  rulerCard: {
-    borderRadius: 24,
-    paddingVertical: 12,
-    overflow: "hidden",
+  footer: {
+    gap: 12,
   },
 });

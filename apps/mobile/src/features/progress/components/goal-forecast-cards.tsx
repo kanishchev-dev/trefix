@@ -1,9 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { ChevronRight, Target } from "lucide-react-native";
-import {
-  type ProgressOverview,
-  type RecordDistance,
-} from "@trefix/api-client";
+import { type ProgressOverview, type RecordDistance } from "@trefix/api-client";
 import { fillTemplate, pluralize } from "../../../locales";
 import { IconCircle, Pill } from "../../../shared/ui/list-card";
 import {

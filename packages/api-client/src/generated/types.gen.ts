@@ -22,6 +22,7 @@ export type AuthUserResponseDto = {
   firstName: string;
   lastName: string;
   avatarUrl?: string;
+  bio: string | null;
   referralCode?: string;
   emailVerified: boolean;
   createdAt: string;
@@ -121,14 +122,80 @@ export type UpdateUserDto = {
    */
   lastName?: string;
   /**
-   * Public URL to the user's avatar image
+   * Public URL to the user's avatar image; `null` removes the avatar
    */
-  avatarUrl?: string;
+  avatarUrl?: string | null;
+  /**
+   * Short text about the user; empty string or `null` clears it
+   */
+  bio?: string | null;
 };
 
 export type ChangePasswordDto = {
   currentPassword: string;
   newPassword: string;
+};
+
+export type AuthSessionResponseDto = {
+  id: string;
+  /**
+   * Reported by the app
+   */
+  deviceName: string | null;
+  platform: string | null;
+  appVersion: string | null;
+  /**
+   * By IP at sign-in; may be empty
+   */
+  city: string | null;
+  country: string | null;
+  /**
+   * Fallback when the app did not report the device
+   */
+  userAgent: string | null;
+  createdAt: string;
+  /**
+   * Last token refresh
+   */
+  lastActiveAt: string;
+  /**
+   * The session making this request
+   */
+  current: boolean;
+};
+
+export type AuthSessionListResponseDto = {
+  items: Array<AuthSessionResponseDto>;
+};
+
+export type AuthIdentityResponseDto = {
+  provider: "apple" | "google";
+  email: string | null;
+  linkedAt: string;
+};
+
+export type AuthIdentityListResponseDto = {
+  items: Array<AuthIdentityResponseDto>;
+};
+
+export type EmailChangeRequestDto = {
+  /**
+   * New account email; the code is sent there
+   */
+  email: string;
+};
+
+export type EmailChangeChallengeResponseDto = {
+  email: string;
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+};
+
+export type EmailChangeConfirmDto = {
+  /**
+   * Code from the email sent to the new address
+   */
+  code: string;
 };
 
 export type AdminCreateUserDto = {
@@ -1316,12 +1383,16 @@ export type AthleteProfileResponseDto = {
   id: string;
   userId: string;
   age: number | null;
-  sex: "female" | "male" | "other" | "prefer_not_to_say" | null;
+  sex: "female" | "male" | null;
   heightCm: number | null;
   weightKg: number | null;
   experienceLevel: string;
   weeklyMileageKm: number | null;
   sessionsPerWeek: number;
+  /**
+   * Two workouts on one day; only for advanced athletes
+   */
+  allowDoubles: boolean;
   recentRaceResults: Array<{
     [key: string]: unknown;
   }>;
@@ -1369,7 +1440,7 @@ export type AthleteProfileResponseDto = {
 
 export type UpdateAthleteProfileDto = {
   birthDate?: string | null;
-  sex?: "female" | "male" | "other" | "prefer_not_to_say" | null;
+  sex?: "female" | "male" | null;
   heightCm?: number | null;
   weightKg?: number | null;
   restingHeartRate?: number | null;
@@ -1399,7 +1470,14 @@ export type UpdateAthleteProfileDto = {
     | "sunday"
   >;
   preferredTimeOfDay?: "morning" | "day" | "evening" | "any";
+  /**
+   * Up to the number of available days, or twice that (max 7) with `allowDoubles`
+   */
   sessionsPerWeek?: number;
+  /**
+   * Two workouts on one day; accepted only for `advanced`, reset when the level goes down
+   */
+  allowDoubles?: boolean;
   longRunDay?:
     | "monday"
     | "tuesday"
@@ -1422,7 +1500,7 @@ export type UpdateAthleteProfileDto = {
 
 export type CreateAthleteDto = {
   age?: number;
-  sex?: "female" | "male" | "other" | "prefer_not_to_say";
+  sex?: "female" | "male";
   heightCm?: number;
   weightKg?: number;
   experienceLevel: "beginner" | "intermediate" | "advanced";
@@ -1440,12 +1518,16 @@ export type TrainingAthleteResponseDto = {
   id: string;
   userId: string;
   age: number | null;
-  sex: "female" | "male" | "other" | "prefer_not_to_say" | null;
+  sex: "female" | "male" | null;
   heightCm: number | null;
   weightKg: number | null;
   experienceLevel: string;
   weeklyMileageKm: number | null;
   sessionsPerWeek: number;
+  /**
+   * Two workouts on one day; only for advanced athletes
+   */
+  allowDoubles: boolean;
   recentRaceResults: Array<{
     [key: string]: unknown;
   }>;
@@ -1741,6 +1823,10 @@ export type TrainingWorkoutResponseDto = {
    * Gear (shoes) used for the workout
    */
   gearId?: string | null;
+  /**
+   * Watch or sensor the workout was recorded with
+   */
+  deviceId?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -1986,12 +2072,15 @@ export type AdaptPlanDto = {
 
 export type GearResponseDto = {
   id: string;
-  type: "shoes";
+  type: "shoes" | "watch" | "sensor";
   brand: string;
   model: string;
   nickname: string | null;
   initialDistanceKm: number;
-  limitKm: number;
+  /**
+   * Shoes only
+   */
+  limitKm: number | null;
   startedAt: string | null;
   retiredAt: string | null;
   status: "active" | "retired";
@@ -2009,15 +2098,35 @@ export type GearResponseDto = {
   replaceReminder: boolean;
   source: "manual" | "strava";
   /**
+   * Default shoes for new workouts
+   */
+  isDefault: boolean;
+  /**
+   * Main recording device
+   */
+  isPrimary: boolean;
+  dataSource: "strava" | "garmin" | "apple_health" | "health_connect" | null;
+  /**
    * Initial distance plus completed workouts
    */
   distanceKm: number;
   workoutsCount: number;
-  remainingKm: number;
   /**
-   * Share of the limit used, %
+   * Over workouts with duration and distance
    */
-  wearPercent: number;
+  averagePaceSecondsPerKm: number | null;
+  /**
+   * Average weekly distance over the last 4 weeks; for the wear forecast
+   */
+  weeklyKm: number;
+  /**
+   * Shoes only
+   */
+  remainingKm: number | null;
+  /**
+   * Share of the limit used, %; shoes only
+   */
+  wearPercent: number | null;
   /**
    * Less than 10% of the limit is left
    */
@@ -2031,7 +2140,7 @@ export type GearListResponseDto = {
 };
 
 export type CreateGearDto = {
-  type?: "shoes";
+  type?: "shoes" | "watch" | "sensor";
   brand: string;
   model: string;
   nickname?: string | null;
@@ -2039,11 +2148,17 @@ export type CreateGearDto = {
    * Distance covered before adding to Trefix, km
    */
   initialDistanceKm?: number;
+  /**
+   * Wear limit; shoes only
+   */
   limitKm?: number;
   /**
    * When the pair went into use
    */
   startedAt?: string | null;
+  /**
+   * Shoes only
+   */
   defaultWorkoutTypes?: Array<
     | "recovery"
     | "easy"
@@ -2056,13 +2171,24 @@ export type CreateGearDto = {
     | "rest"
   >;
   /**
-   * Remind when 10% of the limit is left
+   * Remind when 10% of the limit is left; shoes only
    */
   replaceReminder?: boolean;
+  /**
+   * Shoes for new workouts when no workout-type default matches; shoes only, one pair at most
+   */
+  isDefault?: boolean;
+  /**
+   * Main recording device; its data wins over duplicates from other services. Devices only
+   */
+  isPrimary?: boolean;
+  /**
+   * Service that delivers workouts of this device; devices only
+   */
+  dataSource?: "strava" | "garmin" | "apple_health" | "health_connect" | null;
 };
 
 export type UpdateGearDto = {
-  type?: "shoes";
   brand?: string;
   model?: string;
   nickname?: string | null;
@@ -2070,11 +2196,17 @@ export type UpdateGearDto = {
    * Distance covered before adding to Trefix, km
    */
   initialDistanceKm?: number;
+  /**
+   * Wear limit; shoes only
+   */
   limitKm?: number;
   /**
    * When the pair went into use
    */
   startedAt?: string | null;
+  /**
+   * Shoes only
+   */
   defaultWorkoutTypes?: Array<
     | "recovery"
     | "easy"
@@ -2087,9 +2219,21 @@ export type UpdateGearDto = {
     | "rest"
   >;
   /**
-   * Remind when 10% of the limit is left
+   * Remind when 10% of the limit is left; shoes only
    */
   replaceReminder?: boolean;
+  /**
+   * Shoes for new workouts when no workout-type default matches; shoes only, one pair at most
+   */
+  isDefault?: boolean;
+  /**
+   * Main recording device; its data wins over duplicates from other services. Devices only
+   */
+  isPrimary?: boolean;
+  /**
+   * Service that delivers workouts of this device; devices only
+   */
+  dataSource?: "strava" | "garmin" | "apple_health" | "health_connect" | null;
 };
 
 export type AssignWorkoutGearDto = {
@@ -2099,6 +2243,15 @@ export type AssignWorkoutGearDto = {
 export type WorkoutGearAssignmentDto = {
   workoutId: string;
   gearId: string | null;
+};
+
+export type AssignWorkoutDeviceDto = {
+  deviceId: string | null;
+};
+
+export type WorkoutDeviceAssignmentDto = {
+  workoutId: string;
+  deviceId: string | null;
 };
 
 export type SummaryWorkoutDto = {
@@ -2821,6 +2974,14 @@ export type AdminWorkoutUpdateDto = {
   title?: string;
 };
 
+export type CoachProactiveDto = {
+  preWorkout: boolean;
+  workoutReview: boolean;
+  wellbeingCheck: boolean;
+  weeklySummary: boolean;
+  missedSupport: boolean;
+};
+
 export type QuietHoursDto = {
   /**
    * Start, HH:MM in the user time zone
@@ -2832,38 +2993,127 @@ export type QuietHoursDto = {
   to: string;
 };
 
+export type NotificationSettingsDto = {
+  workoutReminder: boolean;
+  workoutReminderTime: "morning" | "2h" | "1h" | "30m";
+  missedWorkout: boolean;
+  planChanged: boolean;
+  achievements: boolean;
+  workoutSynced: boolean;
+};
+
 export type UserPreferencesResponseDto = {
-  units: "metric" | "imperial";
+  distanceUnit: "km" | "mi";
+  weightUnit: "kg" | "lb";
+  heightUnit: "cm" | "ft";
+  temperatureUnit: "c" | "f";
   weekStart: "mon" | "sun";
   timeFormat: "24h" | "12h";
   coachEnabled: boolean;
   coachAdaptationMode: "auto" | "confirm" | "suggest";
+  coachTone: "soft" | "neutral" | "strict";
+  coachProactive: CoachProactiveDto;
   coachQuietHours: QuietHoursDto | null;
+  notifications: NotificationSettingsDto;
   stravaProfileSync: boolean;
+  stravaActivitiesSync: boolean;
+  stravaGearSync: boolean;
   timezone: string | null;
   language: "ru" | "en" | null;
+  languageMode: "system" | "ru" | "en";
   updatedAt: string;
 };
 
+export type UpdateCoachProactiveDto = {
+  /**
+   * Reminder and tips before a planned workout
+   */
+  preWorkout?: boolean;
+  /**
+   * Review of a completed workout
+   */
+  workoutReview?: boolean;
+  /**
+   * Asks how the workout felt (RPE)
+   */
+  wellbeingCheck?: boolean;
+  /**
+   * Summary of the training week
+   */
+  weeklySummary?: boolean;
+  /**
+   * Support after missed workouts
+   */
+  missedSupport?: boolean;
+};
+
+export type UpdateNotificationSettingsDto = {
+  /**
+   * Remind about planned workouts
+   */
+  workoutReminder?: boolean;
+  /**
+   * Morning of the day or a lead time
+   */
+  workoutReminderTime?: "morning" | "2h" | "1h" | "30m";
+  /**
+   * A planned workout became missed (48 h grace)
+   */
+  missedWorkout?: boolean;
+  /**
+   * The active plan was changed
+   */
+  planChanged?: boolean;
+  /**
+   * New records and achievements
+   */
+  achievements?: boolean;
+  /**
+   * A workout was imported from a connected service
+   */
+  workoutSynced?: boolean;
+};
+
 export type UpdateUserPreferencesDto = {
-  units?: "metric" | "imperial";
+  distanceUnit?: "km" | "mi";
+  weightUnit?: "kg" | "lb";
+  heightUnit?: "cm" | "ft";
+  temperatureUnit?: "c" | "f";
   weekStart?: "mon" | "sun";
   timeFormat?: "24h" | "12h";
   coachEnabled?: boolean;
   coachAdaptationMode?: "auto" | "confirm" | "suggest";
+  coachTone?: "soft" | "neutral" | "strict";
+  coachProactive?: UpdateCoachProactiveDto;
   /**
    * `null` turns quiet hours off
    */
   coachQuietHours?: QuietHoursDto | null;
+  notifications?: UpdateNotificationSettingsDto;
+  /**
+   * Weight and sex from Strava
+   */
   stravaProfileSync?: boolean;
+  /**
+   * Import new Strava activities
+   */
+  stravaActivitiesSync?: boolean;
+  /**
+   * Shoes and mileage from Strava
+   */
+  stravaGearSync?: boolean;
   /**
    * IANA time zone of the device
    */
   timezone?: string;
   /**
-   * App language; coach messages and emails are written in it
+   * Resolved app language; coach messages and emails are written in it
    */
   language?: "ru" | "en";
+  /**
+   * Language picked in the app; `system` follows the device. Clients still report `language`
+   */
+  languageMode?: "system" | "ru" | "en";
 };
 
 export type IntegrationItemResponseDto = {
@@ -2909,6 +3159,25 @@ export type StravaProfileAccessResponseDto = {
 
 export type QueuedResponseDto = {
   status: "queued";
+};
+
+export type GearImportResultDto = {
+  /**
+   * Pairs added
+   */
+  created: number;
+  /**
+   * Pairs whose mileage or archive state changed
+   */
+  updated: number;
+  /**
+   * Pairs already up to date
+   */
+  unchanged: number;
+  /**
+   * Added and updated pairs
+   */
+  items: Array<GearResponseDto>;
 };
 
 export type SuccessResponseDto = {
@@ -3283,6 +3552,28 @@ export type DeleteAccountDto = {
   confirm: boolean;
 };
 
+export type DataExportResponseDto = {
+  id: string;
+  /**
+   * `ready` — the link was emailed
+   */
+  status: "pending" | "ready" | "failed" | "expired";
+  requestedAt: string;
+  readyAt: string | null;
+  /**
+   * When the emailed link stops working
+   */
+  expiresAt: string | null;
+  /**
+   * When a new export can be requested
+   */
+  nextAvailableAt: string;
+};
+
+export type DataExportStatusResponseDto = {
+  latest: DataExportResponseDto | null;
+};
+
 export type HealthControllerLiveData = {
   body?: never;
   path?: never;
@@ -3619,6 +3910,136 @@ export type AuthControllerChangePasswordV1Responses = {
 
 export type AuthControllerChangePasswordV1Response =
   AuthControllerChangePasswordV1Responses[keyof AuthControllerChangePasswordV1Responses];
+
+export type AuthAccountControllerListSessionsV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/sessions";
+};
+
+export type AuthAccountControllerListSessionsV1Responses = {
+  200: AuthSessionListResponseDto;
+};
+
+export type AuthAccountControllerListSessionsV1Response =
+  AuthAccountControllerListSessionsV1Responses[keyof AuthAccountControllerListSessionsV1Responses];
+
+export type AuthAccountControllerRevokeSessionV1Data = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/auth/sessions/{id}";
+};
+
+export type AuthAccountControllerRevokeSessionV1Responses = {
+  204: void;
+};
+
+export type AuthAccountControllerRevokeSessionV1Response =
+  AuthAccountControllerRevokeSessionV1Responses[keyof AuthAccountControllerRevokeSessionV1Responses];
+
+export type AuthAccountControllerLogoutOthersV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/logout-others";
+};
+
+export type AuthAccountControllerLogoutOthersV1Responses = {
+  204: void;
+};
+
+export type AuthAccountControllerLogoutOthersV1Response =
+  AuthAccountControllerLogoutOthersV1Responses[keyof AuthAccountControllerLogoutOthersV1Responses];
+
+export type AuthAccountControllerListIdentitiesV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/identities";
+};
+
+export type AuthAccountControllerListIdentitiesV1Responses = {
+  200: AuthIdentityListResponseDto;
+};
+
+export type AuthAccountControllerListIdentitiesV1Response =
+  AuthAccountControllerListIdentitiesV1Responses[keyof AuthAccountControllerListIdentitiesV1Responses];
+
+export type AuthAccountControllerLinkAppleV1Data = {
+  body: AppleNativeExchangeDto;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/identities/apple";
+};
+
+export type AuthAccountControllerLinkAppleV1Responses = {
+  201: AuthIdentityResponseDto;
+};
+
+export type AuthAccountControllerLinkAppleV1Response =
+  AuthAccountControllerLinkAppleV1Responses[keyof AuthAccountControllerLinkAppleV1Responses];
+
+export type AuthAccountControllerLinkGoogleV1Data = {
+  body: GoogleNativeExchangeDto;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/identities/google";
+};
+
+export type AuthAccountControllerLinkGoogleV1Responses = {
+  201: AuthIdentityResponseDto;
+};
+
+export type AuthAccountControllerLinkGoogleV1Response =
+  AuthAccountControllerLinkGoogleV1Responses[keyof AuthAccountControllerLinkGoogleV1Responses];
+
+export type AuthAccountControllerUnlinkV1Data = {
+  body?: never;
+  path: {
+    provider: "apple" | "google";
+  };
+  query?: never;
+  url: "/v1/auth/identities/{provider}";
+};
+
+export type AuthAccountControllerUnlinkV1Responses = {
+  204: void;
+};
+
+export type AuthAccountControllerUnlinkV1Response =
+  AuthAccountControllerUnlinkV1Responses[keyof AuthAccountControllerUnlinkV1Responses];
+
+export type AuthAccountControllerRequestEmailChangeV1Data = {
+  body: EmailChangeRequestDto;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/email/change/request";
+};
+
+export type AuthAccountControllerRequestEmailChangeV1Responses = {
+  200: EmailChangeChallengeResponseDto;
+};
+
+export type AuthAccountControllerRequestEmailChangeV1Response =
+  AuthAccountControllerRequestEmailChangeV1Responses[keyof AuthAccountControllerRequestEmailChangeV1Responses];
+
+export type AuthAccountControllerConfirmEmailChangeV1Data = {
+  body: EmailChangeConfirmDto;
+  path?: never;
+  query?: never;
+  url: "/v1/auth/email/change/confirm";
+};
+
+export type AuthAccountControllerConfirmEmailChangeV1Responses = {
+  204: void;
+};
+
+export type AuthAccountControllerConfirmEmailChangeV1Response =
+  AuthAccountControllerConfirmEmailChangeV1Responses[keyof AuthAccountControllerConfirmEmailChangeV1Responses];
 
 export type UsersControllerFindAllV1Data = {
   body?: never;
@@ -5019,6 +5440,10 @@ export type GearControllerListV1Data = {
   path?: never;
   query?: {
     status?: "active" | "retired";
+    /**
+     * All types when omitted
+     */
+    type?: "shoes" | "watch" | "sensor";
   };
   url: "/v1/gear";
 };
@@ -5139,6 +5564,22 @@ export type GearControllerAssignV1Responses = {
 
 export type GearControllerAssignV1Response =
   GearControllerAssignV1Responses[keyof GearControllerAssignV1Responses];
+
+export type GearControllerAssignDeviceV1Data = {
+  body: AssignWorkoutDeviceDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/workouts/{id}/device";
+};
+
+export type GearControllerAssignDeviceV1Responses = {
+  200: WorkoutDeviceAssignmentDto;
+};
+
+export type GearControllerAssignDeviceV1Response =
+  GearControllerAssignDeviceV1Responses[keyof GearControllerAssignDeviceV1Responses];
 
 export type ProgressControllerSummaryV1Data = {
   body?: never;
@@ -6043,6 +6484,20 @@ export type IntegrationsControllerTriggerStravaProfileSyncV1Responses = {
 export type IntegrationsControllerTriggerStravaProfileSyncV1Response =
   IntegrationsControllerTriggerStravaProfileSyncV1Responses[keyof IntegrationsControllerTriggerStravaProfileSyncV1Responses];
 
+export type IntegrationsControllerImportStravaShoesV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/integrations/strava/gear-import";
+};
+
+export type IntegrationsControllerImportStravaShoesV1Responses = {
+  201: GearImportResultDto;
+};
+
+export type IntegrationsControllerImportStravaShoesV1Response =
+  IntegrationsControllerImportStravaShoesV1Responses[keyof IntegrationsControllerImportStravaShoesV1Responses];
+
 export type IntegrationsControllerGetStravaSyncStatusV1Data = {
   body?: never;
   path?: never;
@@ -6301,3 +6756,49 @@ export type UserConsentsControllerRevokeV1Responses = {
 
 export type UserConsentsControllerRevokeV1Response =
   UserConsentsControllerRevokeV1Responses[keyof UserConsentsControllerRevokeV1Responses];
+
+export type DataExportControllerLatestV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/me/data-export";
+};
+
+export type DataExportControllerLatestV1Responses = {
+  200: DataExportStatusResponseDto;
+};
+
+export type DataExportControllerLatestV1Response =
+  DataExportControllerLatestV1Responses[keyof DataExportControllerLatestV1Responses];
+
+export type DataExportControllerRequestV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/me/data-export";
+};
+
+export type DataExportControllerRequestV1Responses = {
+  202: DataExportResponseDto;
+};
+
+export type DataExportControllerRequestV1Response =
+  DataExportControllerRequestV1Responses[keyof DataExportControllerRequestV1Responses];
+
+export type DataExportControllerDownloadV1Data = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    /**
+     * Token from the emailed link
+     */
+    token: string;
+  };
+  url: "/v1/data-exports/{id}/download";
+};
+
+export type DataExportControllerDownloadV1Responses = {
+  200: unknown;
+};

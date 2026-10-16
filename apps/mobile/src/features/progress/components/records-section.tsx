@@ -1,9 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { Plus } from "lucide-react-native";
-import {
-  type ProgressOverview,
-  type RecordDistance,
-} from "@trefix/api-client";
+import { type ProgressOverview, type RecordDistance } from "@trefix/api-client";
 import { type MainCopy } from "../../../locales";
 import { ListCard, ListRow, Pill } from "../../../shared/ui/list-card";
 import {

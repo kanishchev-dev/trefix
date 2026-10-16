@@ -1,134 +1,101 @@
 import { useMemo, useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import {
-  Image,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import {
-  Activity,
   Bell,
+  ChevronRight,
   Footprints,
-  Gauge,
-  HeartPulse,
-  KeyRound,
   Languages,
-  LogOut,
   Palette,
-  Ruler as RulerIcon,
+  Ruler,
+  Settings,
   Share2,
-  ShieldCheck,
+  ShieldUser,
   Sparkles,
-  Trash2,
   UserRound,
-  CalendarDays,
+  WandSparkles,
 } from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
-import appConfig from "../../../../app.json";
 import {
   fillTemplate,
   formatProfileJoinedDate,
-  type AppLanguage,
+  pluralize,
   type MainCopy,
 } from "../../../locales";
 import { trackEvent } from "../../../lib/analytics";
 import { resolveBackendMediaUrl } from "../../../lib/backend-url";
-import {
-  ListCard,
-  ListRow,
-  Pill,
-  SectionTitle,
-  SourceBadge,
-} from "../../../shared/ui/list-card";
-import {
-  HeaderLogo,
-  HeaderQrButton,
-  HeaderTextButton,
-} from "../../main/components/header";
+import { IntegrationLogo } from "../../../shared/ui/integration-logo";
+import { ListCard, ListRow } from "../../../shared/ui/list-card";
+import { healthStoreName } from "../../health-sync/health-integration-screen";
+import { useHealthProvider } from "../../health-sync/hooks";
+import { HeaderLogo, HeaderQrButton } from "../../main/components/header";
 import { QrDialog } from "../../main/components/qr-dialog";
 import { SectionLayout } from "../../main/components/section-layout";
+import { useAppSettings } from "../../main/context/app-settings-context";
 import { useHeaderOptions } from "../../main/context/header-context";
-import { useStravaIntegration } from "../../main/hooks/use-integrations";
+import { useIntegrations } from "../../main/hooks/use-integrations";
 import { useProfile } from "../../main/hooks/use-profile";
-import { DeleteAccountSheet } from "../components/delete-account-sheet";
-import { useAthleteProfile } from "../hooks/use-athlete-profile";
-import { useGear } from "../hooks/use-gear";
-import { usePreferences } from "../hooks/use-preferences";
 import {
-  bodySummary,
-  createFormatter,
-  experienceSummary,
-  formatAgo,
-  gearName,
-  heartSummary,
-  heroSubtitle,
-  missingGroups,
-  mostWorn,
-  scheduleSummary,
-} from "../lib/profile-format";
+  BodyTitle,
+  CardBody,
+  HEADER_ICON,
+  ICON_STROKE,
+  Meta,
+  ProfileCard,
+  ROW_ICON,
+  StatGrid,
+  WearBar,
+} from "../components/profile-ui";
+import { useAthleteProfile } from "../hooks/use-athlete-profile";
+import { usePreferences } from "../hooks/use-preferences";
+import { useUnitFormat } from "../hooks/use-unit-format";
+import { formatAgo, missingGroups } from "../lib/profile-format";
 import { type ProfileNavigate } from "../profile-routes";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
-  userLanguage: AppLanguage;
-  userTheme: "system" | "dark" | "light";
-  onLogout: () => void;
   onEdit: () => void;
   onOpenNotifications: () => void;
   onOpenLanguage: () => void;
   onOpenTheme: () => void;
   onOpenIntegrations: () => void;
   onOpenStrava: () => void;
+  onOpenHealth: () => void;
   onNavigate: ProfileNavigate;
-  /** The account is deleted: end the session. */
-  onAccountDeleted: () => void;
 };
 
+/** Below this share the running profile card asks to fill the profile instead of showing stats. */
 const COMPLETENESS_CARD_THRESHOLD = 70;
-const ICON = 20;
 
-/** Profile hub: who the athlete is, links to every group of inputs and app settings. */
+/** Profile: who the athlete is, the running profile, the coach, connected services and app settings. */
 export function ProfileScreen({
   theme,
   themeMode,
   copy,
-  userLanguage,
-  userTheme,
-  onLogout,
   onEdit,
   onOpenNotifications,
   onOpenLanguage,
   onOpenTheme,
   onOpenIntegrations,
   onOpenStrava,
+  onOpenHealth,
   onNavigate,
-  onAccountDeleted,
 }: Props) {
+  const { language, languageMode, userTheme } = useAppSettings();
   const { data: user, isLoading } = useProfile();
   const { data: athlete } = useAthleteProfile();
-  const { data: gear } = useGear("active");
   const { preferences } = usePreferences();
-  const { data: strava } = useStravaIntegration();
+  const { data: integrations } = useIntegrations();
+  const healthProvider = useHealthProvider();
+  const format = useUnitFormat(copy, language);
   const [qrVisible, setQrVisible] = useState(false);
-  const [deleteVisible, setDeleteVisible] = useState(false);
 
   const p = copy.profile;
-  const format = useMemo(
-    () => createFormatter(copy, userLanguage, preferences),
-    [copy, userLanguage, preferences],
-  );
-  const missing = missingGroups(athlete);
-  const stravaConnected = Boolean(strava && strava.status !== "disconnected");
-  const percent = athlete?.completeness?.percent ?? 100;
-  const worn = mostWorn(gear);
-  const iconColor = theme.color.foreground;
-  const appVersion = appConfig.expo.version ?? "1.0.0";
+  const h = p.home;
+  const fg = theme.color.foreground;
   const logoSource =
     themeMode === "dark"
       ? require("../../../../assets/trefix-logo-light.png")
@@ -144,31 +111,69 @@ export function ProfileScreen({
         />
       ),
       centerContent: <HeaderLogo source={logoSource} />,
-      rightAction: (
-        <HeaderTextButton
-          theme={theme}
-          themeMode={themeMode}
-          accessibilityLabel={p.hero.edit}
-          label={p.hero.edit}
-          onPress={onEdit}
-        />
-      ),
+      rightAction: null,
       variant: "default",
       bottomContent: null,
     },
-    [theme, themeMode, logoSource, p.hero.edit, onEdit],
+    [theme, themeMode, logoSource],
   );
 
-  const open = (section: Parameters<ProfileNavigate>[0]) => {
-    trackEvent("profile_section_opened", { section: section.kind });
-    onNavigate(section);
+  const open = (route: Parameters<ProfileNavigate>[0]) => {
+    trackEvent("profile_section_opened", { section: route.kind });
+    onNavigate(route);
   };
 
-  const subtitle = heroSubtitle(athlete, copy);
-  const joined = formatProfileJoinedDate(
-    user?.createdAt ? new Date(user.createdAt) : new Date(),
-    userLanguage,
-  );
+  const subtitle = useMemo(() => {
+    if (!athlete?.runningSinceYear) {
+      return formatProfileJoinedDate(
+        user?.createdAt ? new Date(user.createdAt) : new Date(),
+        language,
+      );
+    }
+    const level = h.levels[athlete.experienceLevel as keyof typeof h.levels];
+    return [
+      fillTemplate(p.summary.runningSince, { year: athlete.runningSinceYear }),
+      level,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }, [athlete, h, language, p.summary.runningSince, user?.createdAt]);
+
+  const percent = athlete?.completeness?.percent ?? 100;
+  const needsFilling =
+    Boolean(athlete) && percent < COMPLETENESS_CARD_THRESHOLD;
+  const missing = missingGroups(athlete);
+  const years = athlete?.runningSinceYear
+    ? Math.max(0, new Date().getFullYear() - athlete.runningSinceYear)
+    : null;
+
+  const strava = integrations?.items.find((item) => item.provider === "strava");
+  const health = healthProvider
+    ? integrations?.items.find((item) => item.provider === healthProvider)
+    : undefined;
+  const services = [
+    strava && strava.status !== "disconnected"
+      ? {
+          key: "strava" as const,
+          item: strava,
+          title: "Strava",
+          onPress: onOpenStrava,
+        }
+      : null,
+    health && healthProvider && health.status !== "disconnected"
+      ? {
+          key: healthProvider,
+          item: health,
+          title: healthStoreName(copy),
+          onPress: onOpenHealth,
+        }
+      : null,
+  ].filter((entry) => entry !== null);
+
+  const languageValue =
+    languageMode === "system"
+      ? p.languageScreen.system
+      : p.languageScreen.native[languageMode];
 
   return (
     <SectionLayout
@@ -193,18 +198,16 @@ export function ProfileScreen({
                 style={styles.avatarImage}
               />
             ) : (
-              <UserRound
-                color={theme.color.foreground}
-                size={34}
-                strokeWidth={1.9}
-              />
+              <UserRound color={fg} size={34} strokeWidth={ICON_STROKE} />
             )}
           </Pressable>
           <Text
+            accessibilityRole="header"
+            numberOfLines={1}
             style={[
               styles.name,
               {
-                color: theme.color.foreground,
+                color: fg,
                 fontFamily: theme.typography.fontFamily.sans.medium,
               },
             ]}
@@ -223,310 +226,303 @@ export function ProfileScreen({
               },
             ]}
           >
-            {subtitle ?? joined}
+            {subtitle}
           </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onEdit}
+            style={({ pressed }) => [
+              styles.editButton,
+              { backgroundColor: theme.color.card },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.editLabel,
+                {
+                  color: fg,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {h.editProfile}
+            </Text>
+          </Pressable>
         </View>
 
-        {athlete && percent < COMPLETENESS_CARD_THRESHOLD ? (
-          <ListCard theme={theme}>
-            <ListRow
-              theme={theme}
-              icon={<Sparkles color={iconColor} size={ICON} />}
-              title={p.completeness.title}
-              description={fillTemplate(p.completeness.description, {
-                percent,
-              })}
-              trailing={<Pill theme={theme} text={p.completeness.action} />}
-              chevron={false}
-              onPress={() => {
-                const step = missing.has("body")
-                  ? 1
-                  : missing.has("heart")
-                    ? 2
-                    : missing.has("experience")
-                      ? 3
-                      : 1;
-                open({ kind: "profile-wizard", step });
-              }}
+        <ProfileCard
+          theme={theme}
+          title={h.runningProfile}
+          icon={
+            <Footprints
+              color={fg}
+              size={HEADER_ICON}
+              strokeWidth={ICON_STROKE}
             />
-          </ListCard>
-        ) : null}
+          }
+          onPress={() => open({ kind: "profile-running" })}
+        >
+          {needsFilling ? (
+            <CardBody>
+              <View style={styles.fillTop}>
+                <BodyTitle theme={theme} text={p.completeness.title} />
+                <Text
+                  style={[
+                    styles.fillPercent,
+                    { color: theme.color.mutedForeground },
+                  ]}
+                >
+                  {`${percent}%`}
+                </Text>
+              </View>
+              <WearBar theme={theme} percent={percent} />
+              <Meta theme={theme} text={h.fillHint} numberOfLines={3} />
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  open({
+                    kind: "profile-wizard",
+                    step: missing.has("body")
+                      ? 1
+                      : missing.has("heart")
+                        ? 2
+                        : missing.has("experience")
+                          ? 3
+                          : 1,
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.primary,
+                  { backgroundColor: theme.color.primary },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.primaryLabel,
+                    {
+                      color: theme.color.primaryForeground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {p.completeness.action}
+                </Text>
+              </Pressable>
+            </CardBody>
+          ) : (
+            <StatGrid
+              theme={theme}
+              stats={[
+                {
+                  value:
+                    years !== null ? pluralize(h.years, years, language) : "—",
+                  label: h.experience,
+                },
+                {
+                  value: athlete?.weeklyMileageKm
+                    ? format.distance(athlete.weeklyMileageKm, 0)
+                    : "—",
+                  label: h.volume,
+                },
+                {
+                  value: athlete?.thresholdHeartRate
+                    ? String(athlete.thresholdHeartRate)
+                    : "—",
+                  label: h.threshold,
+                },
+              ]}
+            />
+          )}
+        </ProfileCard>
 
-        {strava && !stravaConnected ? (
-          <ListCard theme={theme}>
-            <ListRow
-              theme={theme}
-              icon={<Activity color={iconColor} size={ICON} />}
-              title={p.stravaCard.title}
-              description={p.stravaCard.description}
-              trailing={<Pill theme={theme} text={p.stravaCard.action} />}
-              chevron={false}
-              onPress={onOpenStrava}
+        <ProfileCard
+          theme={theme}
+          title={h.tref}
+          icon={
+            <Sparkles color={fg} size={HEADER_ICON} strokeWidth={ICON_STROKE} />
+          }
+          onPress={() => open({ kind: "settings-coach" })}
+        >
+          <View style={styles.coach}>
+            <WandSparkles
+              color={fg}
+              size={ROW_ICON}
+              strokeWidth={ICON_STROKE}
+              style={styles.coachIcon}
             />
-          </ListCard>
-        ) : null}
+            <View style={styles.coachText}>
+              <View style={styles.coachTop}>
+                <BodyTitle theme={theme} text={h.coach} style={styles.flex} />
+                <Text
+                  style={[
+                    styles.coachStatus,
+                    {
+                      color: fg,
+                      fontFamily: theme.typography.fontFamily.sans.regular,
+                    },
+                  ]}
+                >
+                  {preferences.coachEnabled ? h.coachOn : h.coachOff}
+                </Text>
+              </View>
+              <Meta
+                theme={theme}
+                numberOfLines={2}
+                text={
+                  preferences.coachEnabled
+                    ? fillTemplate(h.adaptation, {
+                        mode: h.modes[preferences.coachAdaptationMode],
+                      })
+                    : h.coachOffHint
+                }
+              />
+            </View>
+          </View>
+        </ProfileCard>
 
-        {user?.features?.showReferral ? (
-          <ListCard theme={theme}>
-            <ListRow
-              theme={theme}
-              icon={<Share2 color={iconColor} size={ICON} />}
-              title={p.referral.title}
-              value={user.referralCode ?? undefined}
-              onPress={() => setQrVisible(true)}
-            />
-          </ListCard>
-        ) : null}
-
-        <View style={styles.section}>
-          <SectionTitle text={p.sections.athlete} theme={theme} />
-          <ListCard theme={theme}>
-            <ListRow
-              theme={theme}
-              icon={<RulerIcon color={iconColor} size={ICON} />}
-              title={p.rows.body}
-              description={
-                athlete
-                  ? bodySummary(athlete, copy, userLanguage, format)
-                  : undefined
-              }
-              dot={missing.has("body")}
-              trailing={
-                athlete?.fieldSources?.weightKg?.source === "strava" ? (
-                  <SourceBadge theme={theme} />
-                ) : athlete?.fieldSources?.weightKg?.source ===
-                    "apple_health" ||
-                  athlete?.fieldSources?.weightKg?.source ===
-                    "health_connect" ? (
-                  <SourceBadge theme={theme} label="H" />
-                ) : undefined
-              }
-              onPress={() => open({ kind: "profile-body" })}
-            />
-            <ListRow
-              theme={theme}
-              icon={<HeartPulse color={iconColor} size={ICON} />}
-              title={p.rows.heart}
-              description={athlete ? heartSummary(athlete, copy) : undefined}
-              dot={missing.has("heart")}
-              onPress={() => open({ kind: "profile-heart" })}
-            />
-            <ListRow
-              theme={theme}
-              icon={<CalendarDays color={iconColor} size={ICON} />}
-              title={p.rows.schedule}
-              description={
-                athlete ? scheduleSummary(athlete, copy, format) : undefined
-              }
-              dot={missing.has("schedule")}
-              onPress={() => open({ kind: "profile-schedule" })}
-            />
-            <ListRow
-              theme={theme}
-              icon={<Footprints color={iconColor} size={ICON} />}
-              title={p.rows.gear}
-              description={
-                worn
-                  ? `${gearName(worn)} · ${format.distance(worn.distanceKm, 0)} / ${format.distance(worn.limitKm, 0)}`
-                  : p.summary.gearEmpty
-              }
-              trailing={
-                worn?.replaceSoon ? (
-                  <Pill
+        <ProfileCard
+          theme={theme}
+          title={h.services}
+          icon={
+            <Share2 color={fg} size={HEADER_ICON} strokeWidth={ICON_STROKE} />
+          }
+          onPress={onOpenIntegrations}
+        >
+          {services.length === 0 ? (
+            <CardBody>
+              <BodyTitle theme={theme} text={h.noServices} />
+              <Meta
+                theme={theme}
+                numberOfLines={3}
+                text={fillTemplate(h.noServicesHint, {
+                  health: healthStoreName(copy),
+                })}
+              />
+            </CardBody>
+          ) : (
+            services.map((service, index) => (
+              <Pressable
+                key={service.key}
+                accessibilityRole="button"
+                onPress={service.onPress}
+                style={({ pressed }) => [
+                  styles.service,
+                  index > 0 && {
+                    borderTopWidth: 1,
+                    borderTopColor: theme.color.screen,
+                  },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <IntegrationLogo
+                  provider={service.key}
+                  themeMode={themeMode}
+                  size={44}
+                />
+                <View style={styles.serviceText}>
+                  <BodyTitle theme={theme} text={service.title} />
+                  <Meta
                     theme={theme}
-                    text={p.summary.replaceSoon}
-                    tone="warning"
+                    text={
+                      service.item.lastSyncedAt
+                        ? fillTemplate(h.connectedAgo, {
+                            ago: formatAgo(service.item.lastSyncedAt, copy),
+                          })
+                        : h.connected
+                    }
                   />
-                ) : undefined
-              }
-              onPress={() => open({ kind: "profile-gear" })}
-            />
-            <ListRow
-              theme={theme}
-              icon={<Gauge color={iconColor} size={ICON} />}
-              title={p.rows.experience}
-              description={
-                athlete
-                  ? experienceSummary(athlete, copy, userLanguage)
-                  : undefined
-              }
-              dot={missing.has("experience")}
-              onPress={() => open({ kind: "profile-experience" })}
-            />
-          </ListCard>
-        </View>
+                </View>
+                <ChevronRight
+                  color={theme.color.mutedForeground}
+                  size={18}
+                  strokeWidth={2.2}
+                />
+              </Pressable>
+            ))
+          )}
+        </ProfileCard>
 
-        <View style={styles.section}>
-          <SectionTitle text={p.sections.trefix} theme={theme} />
-          <ListCard theme={theme}>
+        <ProfileCard
+          theme={theme}
+          title={h.appSettings}
+          icon={
+            <Settings color={fg} size={HEADER_ICON} strokeWidth={ICON_STROKE} />
+          }
+        >
+          <ListCard theme={theme} bare>
             <ListRow
               theme={theme}
-              icon={<Sparkles color={iconColor} size={ICON} />}
-              title={p.rows.coach}
-              description={
-                preferences.coachEnabled
-                  ? p.coach.modeLabel[preferences.coachAdaptationMode]
-                  : undefined
-              }
-              trailing={
-                <Pill
-                  theme={theme}
-                  text={preferences.coachEnabled ? p.summary.on : p.summary.off}
+              icon={
+                <Languages
+                  color={fg}
+                  size={ROW_ICON}
+                  strokeWidth={ICON_STROKE}
                 />
               }
-              onPress={() => open({ kind: "settings-coach" })}
-            />
-          </ListCard>
-        </View>
-
-        <View style={styles.section}>
-          <SectionTitle text={p.sections.app} theme={theme} />
-          <ListCard theme={theme}>
-            <ListRow
-              theme={theme}
-              icon={<RulerIcon color={iconColor} size={ICON} />}
-              title={p.rows.units}
-              description={[
-                preferences.units === "imperial"
-                  ? `${format.labels.mi} · ${format.labels.lb}`
-                  : `${format.labels.km} · ${format.labels.kg}`,
-                preferences.weekStart === "sun"
-                  ? p.unitsScreen.sun
-                  : p.unitsScreen.mon,
-              ].join(" · ")}
-              onPress={() => open({ kind: "settings-units" })}
-            />
-            <ListRow
-              theme={theme}
-              icon={<Bell color={iconColor} size={ICON} />}
-              title={p.rows.notifications}
-              onPress={onOpenNotifications}
-            />
-            <ListRow
-              theme={theme}
-              icon={<Languages color={iconColor} size={ICON} />}
               title={p.rows.language}
-              value={p.settings.languages[userLanguage]}
+              value={languageValue}
               onPress={onOpenLanguage}
             />
             <ListRow
               theme={theme}
-              icon={<Palette color={iconColor} size={ICON} />}
+              icon={
+                <Palette color={fg} size={ROW_ICON} strokeWidth={ICON_STROKE} />
+              }
               title={p.rows.theme}
               value={p.settings.themes[userTheme]}
               onPress={onOpenTheme}
             />
             <ListRow
               theme={theme}
-              icon={<Share2 color={iconColor} size={ICON} />}
-              title={p.rows.integrations}
-              description={
-                stravaConnected
-                  ? fillTemplate(p.summary.synced, {
-                      ago: formatAgo(strava?.lastSyncedAt, copy),
-                    })
-                  : p.summary.notConnected
+              icon={
+                <Bell color={fg} size={ROW_ICON} strokeWidth={ICON_STROKE} />
               }
-              onPress={onOpenIntegrations}
+              title={p.rows.notifications}
+              onPress={onOpenNotifications}
+            />
+            <ListRow
+              theme={theme}
+              icon={
+                <Ruler color={fg} size={ROW_ICON} strokeWidth={ICON_STROKE} />
+              }
+              title={h.units}
+              value={fillTemplate(p.unitsScreen.summary, {
+                distance:
+                  format.units === "imperial"
+                    ? format.labels.mi
+                    : format.labels.km,
+                weight:
+                  format.weightUnits === "imperial"
+                    ? format.labels.lb
+                    : format.labels.kg,
+              })}
+              onPress={() => open({ kind: "settings-units" })}
+            />
+            <ListRow
+              theme={theme}
+              icon={
+                <ShieldUser
+                  color={fg}
+                  size={ROW_ICON}
+                  strokeWidth={ICON_STROKE}
+                />
+              }
+              title={h.account}
+              onPress={() => open({ kind: "settings-account" })}
             />
           </ListCard>
-        </View>
-
-        <View style={styles.section}>
-          <SectionTitle text={p.sections.account} theme={theme} />
-          <ListCard theme={theme}>
-            <ListRow
-              theme={theme}
-              icon={<KeyRound color={iconColor} size={ICON} />}
-              title={p.rows.signIn}
-              description={user?.email}
-              onPress={onEdit}
-            />
-            <ListRow
-              theme={theme}
-              icon={<ShieldCheck color={iconColor} size={ICON} />}
-              title={p.rows.privacy}
-              onPress={() =>
-                void Linking.openURL(
-                  process.env.EXPO_PUBLIC_PRIVACY_URL ??
-                    "https://trefix.run/privacy",
-                )
-              }
-            />
-            <ListRow
-              theme={theme}
-              icon={<Trash2 color={theme.color.danger} size={ICON} />}
-              title={p.rows.delete}
-              destructive
-              chevron={false}
-              onPress={() => setDeleteVisible(true)}
-            />
-            <ListRow
-              theme={theme}
-              icon={<LogOut color={iconColor} size={ICON} />}
-              title={p.rows.logout}
-              chevron={false}
-              onPress={onLogout}
-            />
-          </ListCard>
-        </View>
-
-        <View style={styles.footer}>
-          <Text
-            style={[
-              styles.footerText,
-              {
-                color: theme.color.mutedForeground,
-                fontFamily: theme.typography.fontFamily.sans.regular,
-              },
-            ]}
-          >
-            {p.version} {appVersion}
-            {" · "}
-            <Text
-              accessibilityRole="link"
-              onPress={() =>
-                void Linking.openURL(
-                  process.env.EXPO_PUBLIC_TERMS_URL ??
-                    "https://trefix.run/terms",
-                )
-              }
-            >
-              {p.legal.terms}
-            </Text>
-            {" · "}
-            <Text
-              accessibilityRole="link"
-              onPress={() =>
-                void Linking.openURL(
-                  process.env.EXPO_PUBLIC_PRIVACY_URL ??
-                    "https://trefix.run/privacy",
-                )
-              }
-            >
-              {p.legal.privacy}
-            </Text>
-          </Text>
-        </View>
+        </ProfileCard>
       </View>
-
       <QrDialog
         visible={qrVisible}
         onClose={() => setQrVisible(false)}
-        referralCode={user?.referralCode ?? "TREFIX"}
+        referralCode={user?.referralCode ?? ""}
         theme={theme}
         themeMode={themeMode}
         copy={copy}
-      />
-      <DeleteAccountSheet
-        visible={deleteVisible}
-        onClose={(deleted) => {
-          setDeleteVisible(false);
-          if (deleted) onAccountDeleted();
-        }}
-        copy={copy}
-        theme={theme}
-        themeMode={themeMode}
       />
     </SectionLayout>
   );
@@ -534,12 +530,12 @@ export function ProfileScreen({
 
 const styles = StyleSheet.create({
   stack: {
-    gap: 20,
+    gap: 16,
   },
   hero: {
     alignItems: "center",
-    gap: 8,
     paddingTop: 8,
+    paddingBottom: 4,
   },
   avatar: {
     width: 84,
@@ -548,7 +544,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    marginBottom: 4,
+    marginBottom: 12,
   },
   avatarImage: {
     width: "100%",
@@ -561,20 +557,84 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   subtitle: {
+    marginTop: 4,
     fontSize: 13,
     lineHeight: 18,
     textAlign: "center",
   },
-  section: {
-    gap: 8,
-  },
-  footer: {
+  editButton: {
+    marginTop: 14,
+    height: 40,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     alignItems: "center",
+    justifyContent: "center",
+  },
+  editLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  pressed: {
+    opacity: 0.82,
+  },
+  fillTop: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  fillPercent: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  primary: {
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  coach: {
+    flexDirection: "row",
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingTop: 14,
     paddingBottom: 16,
   },
-  footerText: {
-    fontSize: 12,
-    lineHeight: 16,
-    textAlign: "center",
+  coachIcon: {
+    marginTop: 1,
+  },
+  coachText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  coachTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  coachStatus: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  flex: {
+    flex: 1,
+  },
+  service: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 14,
+  },
+  serviceText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
 });

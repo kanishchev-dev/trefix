@@ -1147,9 +1147,7 @@
       "weight": "Weight",
       "sexes": {
         "female": "Female",
-        "male": "Male",
-        "other": "Other",
-        "prefer_not_to_say": "Prefer not to say"
+        "male": "Male"
       },
       "source": "Data source",
       "stravaSync": "Update from Strava",
@@ -1217,7 +1215,7 @@
       "save": "Save"
     },
     "unitsScreen": {
-      "title": "Units & format",
+      "title": "Units and format",
       "system": "System",
       "metric": "Metric",
       "imperial": "Imperial",
@@ -1232,7 +1230,23 @@
       "sun": "Sun",
       "timeFormat": "Time format",
       "h24": "24 h",
-      "h12": "12 h"
+      "h12": "12 h",
+      "measures": "Units",
+      "temperature": "Temperature",
+      "tabs": {
+        "km": "km",
+        "mi": "miles",
+        "kg": "kg",
+        "lb": "lb",
+        "cm": "cm",
+        "ft": "ft",
+        "c": "°C",
+        "f": "°F"
+      },
+      "distanceExample": "{{distance}} · {{pace}}",
+      "temperatureExample": "{{value}} · weather on workouts",
+      "formatHint": "The week start affects the calendar, the plan and weekly volume.",
+      "summary": "{{distance}} · {{weight}}"
     },
     "coach": {
       "title": "AI coach",
@@ -1398,7 +1412,17 @@
       "ATHLETE_HEART_RATE_INCONSISTENT": "Resting heart rate must be below threshold, and threshold below max",
       "ATHLETE_ZONES_INVALID": "Zone bounds must grow from Z1 to Z4",
       "STRAVA_NOT_CONNECTED": "Connect Strava first",
-      "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava profile access first"
+      "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava profile access first",
+      "ATHLETE_DOUBLES_NOT_ALLOWED": "Two workouts a day are only available at the advanced level",
+      "ATHLETE_SESSIONS_EXCEED_DAYS": "Too many workouts for the selected days",
+      "AUTH_IDENTITY_IN_USE": "This account is already linked to another user",
+      "AUTH_IDENTITY_ALREADY_LINKED": "Unlink the current account first",
+      "AUTH_EMAIL_UNCHANGED": "This is already your email",
+      "AUTH_EMAIL_ALREADY_EXISTS": "This email is already taken",
+      "AUTH_VERIFICATION_CODE_INVALID": "The code is wrong or expired",
+      "AUTH_VERIFICATION_CODE_RATE_LIMITED": "A code was already sent, wait a little",
+      "DATA_EXPORT_RATE_LIMITED": "An archive can be requested once a day",
+      "GEAR_FIELD_NOT_APPLICABLE": "These fields don't apply to this gear type"
     },
     "wizard": {
       "later": "Later",
@@ -1427,6 +1451,577 @@
       "noLimitsDescription": "You can change it any time",
       "hasLimits": "I have limitations",
       "hasLimitsDescription": "Describe them briefly"
+    },
+    "home": {
+      "editProfile": "Edit profile",
+      "runningProfile": "My running profile",
+      "experience": "Experience",
+      "volume": "Volume/wk",
+      "threshold": "Threshold HR",
+      "fillHint": "Heart rate, volume and experience help the coach pick the right load.",
+      "tref": "Tref",
+      "coach": "AI coach",
+      "coachOn": "On",
+      "coachOff": "Off",
+      "adaptation": "Plan adaptation: {{mode}}",
+      "coachOffHint": "Turn it on to let the plan adapt to you",
+      "modes": {
+        "auto": "automatic",
+        "confirm": "with confirmation",
+        "suggest": "advice only"
+      },
+      "services": "Connected services",
+      "noServices": "No connected services",
+      "noServicesHint": "Connect Strava or {{health}} — workouts, weight and heart rate will come in on their own.",
+      "connectedAgo": "Connected · {{ago}}",
+      "connected": "Connected",
+      "appSettings": "App settings",
+      "units": "Units",
+      "account": "Account and security",
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate level",
+        "advanced": "Advanced level"
+      },
+      "years": {
+        "one": "{{count}} year",
+        "other": "{{count}} years"
+      }
+    },
+    "running": {
+      "title": "Running profile",
+      "age": "Age",
+      "height": "Height",
+      "weight": "Weight",
+      "rest": "Resting",
+      "max": "Max",
+      "threshold": "Threshold",
+      "zonesBy": {
+        "threshold": "Zones by threshold",
+        "max_hr": "Zones by max HR",
+        "custom": "Custom zones"
+      },
+      "perWeek": "Per week",
+      "volume": "Volume",
+      "longRun": "Long run",
+      "time": "Time",
+      "gearMeta": "{{distance}} of {{limit}} · {{workouts}}",
+      "workouts": {
+        "one": "{{count}} workout",
+        "other": "{{count}} workouts"
+      },
+      "level": "Level",
+      "since": "Running since",
+      "limitations": "Injuries and limitations",
+      "none": "None",
+      "ageUnit": {
+        "one": "yr",
+        "other": "yrs"
+      },
+      "footnote": "The coach uses this to calculate load, paces and heart-rate zones. S marks a value from Strava."
+    },
+    "bodyScreen": {
+      "footnote": "Age, height and weight are needed to calculate load and calories.",
+      "sexHint": "Used for the age-based heart rate and calories."
+    },
+    "heartScreen": {
+      "upTo": "up to {{value}}",
+      "range": "{{from}}–{{to}}",
+      "above": "{{value}}+",
+      "distribution": "Distribution",
+      "upperBounds": "Upper bounds",
+      "customFootnote": "Each zone starts right after the previous one. Z5 is capped by your max heart rate.",
+      "setEstimate": "Use",
+      "planNote": "The coach will offer to update heart rate targets in your plan when these change."
+    },
+    "scheduleScreen": {
+      "title": "Schedule",
+      "durationVolume": "Duration and volume",
+      "doubles": "Two workouts a day",
+      "doublesDescription": "The second one is easy, only on days with room",
+      "pick": "The coach will pick {{picked}} of the {{days}} selected; the rest are spare for moving workouts.",
+      "everyDay": "Workouts on every selected day.",
+      "doublesHint": "{{sessions}} over {{days}}: {{doubles}} will get a second easy workout.",
+      "days": {
+        "one": "{{count}} day",
+        "other": "{{count}} days"
+      },
+      "sessions": {
+        "one": "{{count}} workout",
+        "other": "{{count}} workouts"
+      },
+      "lowered": "Workouts per week lowered to {{count}} to fit the selected days",
+      "doublesReset": "Two workouts a day are only for the advanced level, so it was turned off",
+      "longRunDayHint": "Only training days are available.",
+      "durationHint": "How much time you have for a weekday workout",
+      "durations": {
+        "30": "Up to 30 minutes",
+        "45": "Up to 45 minutes",
+        "60": "Up to 1 hour",
+        "90": "Up to 1.5 hours",
+        "none": "No limit"
+      },
+      "longDurations": {
+        "90": "Up to 1.5 hours",
+        "120": "Up to 2 hours",
+        "150": "Up to 2.5 hours",
+        "180": "Up to 3 hours",
+        "none": "No limit"
+      },
+      "noLimit": "no limit",
+      "volumeUnit": "km/wk",
+      "volumeUnitImperial": "mi/wk"
+    },
+    "experienceScreen": {
+      "title": "Experience",
+      "levelDescriptions": {
+        "beginner": "Running for less than a year or irregularly",
+        "intermediate": "Running regularly, have done some races",
+        "advanced": "Training to a plan with time goals"
+      },
+      "noneDescription": "The coach won't take limitations into account",
+      "footnote": "The coach will consider this when choosing load and exercises.",
+      "yearUnit": "year"
+    },
+    "edit": {
+      "title": "Profile",
+      "save": "Save",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "sex": "Sex",
+      "birthDate": "Date of birth",
+      "notSet": "Not set",
+      "about": "About",
+      "aboutPlaceholder": "A few words about you and your goals",
+      "counter": "{{count}}/{{max}}",
+      "photoTitle": "Profile photo",
+      "takePhoto": "Take a photo",
+      "pickPhoto": "Choose from library",
+      "removePhoto": "Remove photo",
+      "cancel": "Cancel",
+      "done": "Done",
+      "saved": "Profile saved",
+      "nameRequired": "Enter your first name"
+    },
+    "coachScreen": {
+      "hero": "AI coach Tref",
+      "heroOn": "Uses your data to adapt workouts and give personal recommendations.",
+      "heroOff": "Off. Turn it on to let the plan adapt to you.",
+      "howTitle": "How it works",
+      "how": "Tref analyses your workouts, form, goals and preferences, picks the load, adapts the plan and suggests what to do next.",
+      "proactive": "The coach writes first",
+      "topics": {
+        "preWorkout": {
+          "title": "Before a workout",
+          "description": "A reminder and today's task"
+        },
+        "workoutReview": {
+          "title": "Workout review",
+          "description": "A comment after every workout"
+        },
+        "wellbeingCheck": {
+          "title": "How it felt",
+          "description": "How it went and how hard it was"
+        },
+        "weeklySummary": {
+          "title": "Week summary",
+          "description": "Volume, form and plans for the week"
+        },
+        "missedSupport": {
+          "title": "Support after missed workouts",
+          "description": "Helps you get back on schedule"
+        }
+      },
+      "tone": "Tone",
+      "tones": {
+        "soft": "Gentle",
+        "neutral": "Neutral",
+        "strict": "Strict"
+      },
+      "toneHints": {
+        "soft": "Encourages and explains, no pressure.",
+        "neutral": "Calm and to the point.",
+        "strict": "Calls out deviations from the plan directly."
+      },
+      "considers": "What the coach considers",
+      "considerItems": [
+        {
+          "title": "Form and load",
+          "description": "Form, fatigue, recovery"
+        },
+        {
+          "title": "Goal and plan",
+          "description": "Distance, target time, date"
+        },
+        {
+          "title": "Workout history",
+          "description": "Completed and missed"
+        },
+        {
+          "title": "Schedule",
+          "description": "Available days and volume"
+        },
+        {
+          "title": "How you feel",
+          "description": "Answers and notes"
+        }
+      ],
+      "quietHoursSheetBody": "The coach won't write during this time. Workout reminders won't come either.",
+      "safetyTitle": "Your data is safe",
+      "safety": "Data is used only for your recommendations. Learn more in the",
+      "safetyLink": "privacy policy"
+    },
+    "languageScreen": {
+      "title": "Language",
+      "system": "System",
+      "systemNow": "Now — {{language}}",
+      "native": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "translated": {
+        "ru": "Russian",
+        "en": "English"
+      },
+      "hint": "The interface, notifications, workout names and coach messages will be in the selected language."
+    },
+    "themeScreen": {
+      "title": "Theme",
+      "appearance": "Appearance",
+      "hint": "System switches the theme together with your phone.",
+      "accent": "Accent colour",
+      "accentBw": "Black and white",
+      "accentDescription": "Buttons, switches, active tabs",
+      "soon": "Soon"
+    },
+    "notificationsScreen": {
+      "title": "Notifications",
+      "workouts": "Workouts",
+      "progress": "Progress",
+      "coach": "Coach",
+      "items": {
+        "workoutReminder": {
+          "title": "Workout reminder",
+          "description": "On the day of a planned workout"
+        },
+        "missedWorkout": {
+          "title": "Missed workout",
+          "description": "If not marked as done within 48 h"
+        },
+        "planChanged": {
+          "title": "Plan changes",
+          "description": "When you or the coach change the plan"
+        },
+        "achievements": {
+          "title": "Records and achievements",
+          "description": "New personal records after a workout"
+        },
+        "workoutSynced": {
+          "title": "New workout imported",
+          "description": "From Strava or {{health}}"
+        }
+      },
+      "reminderTime": "When to remind",
+      "reminderOptions": {
+        "morning": "In the morning of the day",
+        "2h": "2 hours before",
+        "1h": "1 hour before",
+        "30m": "30 minutes before"
+      },
+      "reminderValues": {
+        "morning": "In the morning",
+        "2h": "2 h before",
+        "1h": "1 h before",
+        "30m": "30 min before"
+      },
+      "morningDescription": "At 08:00",
+      "reminderHint": "If the workout has no time set, we'll remind you in the morning.",
+      "coachMessages": "Coach messages",
+      "coachMessagesDescription": "Reminders, reviews, week summary",
+      "coachHint": "What and when Tref writes is set up in the AI coach.",
+      "deniedTitle": "Notifications are off",
+      "deniedBody": "Allow notifications in your phone settings to get reminders and coach messages.",
+      "openSettings": "Open settings"
+    },
+    "account": {
+      "title": "Account and security",
+      "signIn": "Sign-in",
+      "email": "Email",
+      "emailDescription": "{{email}} · sign-in code",
+      "linked": "Connected",
+      "connect": "Connect",
+      "signInHint": "Sign in with any connected method — it's one account.",
+      "devices": "Devices",
+      "thisDevice": "This device",
+      "unknownDevice": "Device",
+      "logoutOthers": "Sign out on all devices",
+      "data": "Data",
+      "export": "Download my data",
+      "exportDescription": "An archive with profile, plans and workouts",
+      "exportPending": "The archive is being prepared — the link will come by email",
+      "accountSection": "Account",
+      "logout": "Sign out",
+      "delete": "Delete account",
+      "deleteDescription": "Profile, plans and workouts will be deleted forever",
+      "version": "Version {{version}}",
+      "identity": {
+        "title": "Sign in with {{provider}}",
+        "appleId": "Apple ID",
+        "googleAccount": "Google account",
+        "linkedAt": "Connected",
+        "body": "After unlinking you won't be able to sign in with {{provider}}. Workouts and plans stay.",
+        "unlink": "Unlink {{provider}}",
+        "done": "Done",
+        "linkedToast": "{{provider}} connected",
+        "unlinkedToast": "{{provider}} unlinked"
+      },
+      "device": {
+        "lastActive": "Last active",
+        "city": "City",
+        "firstSeen": "First sign-in",
+        "version": "Version",
+        "end": "End session",
+        "cancel": "Cancel",
+        "ended": "Session ended"
+      },
+      "logoutOthersSheet": {
+        "title": "Sign out on other devices?",
+        "body": "Sessions on other devices will end. You'll stay signed in on this device.",
+        "confirm": "Sign out on other devices",
+        "cancel": "Cancel",
+        "done": "Signed out on other devices"
+      },
+      "exportSheet": {
+        "title": "Download my data",
+        "body": "We'll put together an archive and send a link to {{email}}. It usually takes a few minutes.",
+        "items": [
+          "Profile and settings",
+          "Plans and workouts",
+          "Workout tracks",
+          "Gear",
+          "Coach chat history"
+        ],
+        "request": "Request archive",
+        "requested": "Preparing the archive — the link will come by email",
+        "nextAt": "A new archive can be requested {{date}}"
+      },
+      "logoutSheet": {
+        "title": "Sign out?",
+        "body": "Your data stays — sign in again any time.",
+        "confirm": "Sign out",
+        "cancel": "Cancel"
+      }
+    },
+    "emailChange": {
+      "title": "Email",
+      "newTitle": "New email",
+      "current": "You now sign in with {{email}}",
+      "label": "Email",
+      "hint": "We'll send a code to the new address. Until you confirm it, the old one keeps working.",
+      "getCode": "Get code",
+      "codeTitle": "Enter the code",
+      "sentTo": "Sent to {{email}}",
+      "resendIn": "Resend in {{time}}",
+      "resend": "Resend",
+      "confirm": "Confirm",
+      "changed": "Email changed",
+      "invalidEmail": "Check the address"
+    },
+    "gearScreen": {
+      "shoes": "Shoes",
+      "devices": "Watches and sensors",
+      "primary": "Primary",
+      "addGear": "Add gear",
+      "shoeMeta": "{{distance}} · {{count}} wkts · life {{limit}}",
+      "deviceSource": "Data via {{source}}",
+      "deviceWorkouts": "{{count}} wkts",
+      "devicesHint": "The coach knows which device heart rate and pace came from: a chest strap is more accurate.",
+      "footnote": "Shoe mileage is counted from the workouts linked to the pair.",
+      "noShoes": "Add shoes to track their mileage",
+      "addSheet": {
+        "title": "Add gear",
+        "shoes": {
+          "title": "Shoes",
+          "description": "We track mileage and wear"
+        },
+        "watch": {
+          "title": "Watch",
+          "description": "Source of workouts and heart rate"
+        },
+        "sensor": {
+          "title": "Sensor",
+          "description": "Heart rate strap, foot pod"
+        },
+        "import": {
+          "title": "Import from Strava",
+          "description": "Shoes from your Strava profile"
+        }
+      },
+      "edit": {
+        "shoesTitle": "Shoes",
+        "watchTitle": "Watch",
+        "sensorTitle": "Sensor",
+        "startedAt": "In use since",
+        "resource": "Lifespan",
+        "initial": "Starting mileage",
+        "initialDescription": "If the pair has already been worn",
+        "default": "Default",
+        "defaultDescription": "Link new workouts to this pair",
+        "type": "Type",
+        "dataSource": "Where data comes from",
+        "noSource": "Not selected",
+        "primary": "Primary device",
+        "primaryDescription": "Its data wins over duplicates",
+        "model": "Model",
+        "brand": "Brand",
+        "add": "Add",
+        "save": "Save"
+      },
+      "sources": {
+        "strava": "Strava",
+        "garmin": "Garmin Connect",
+        "apple_health": "Apple Health",
+        "health_connect": "Health Connect"
+      },
+      "detail": {
+        "mileage": "Mileage",
+        "workouts": "Workouts",
+        "pace": "Avg pace",
+        "wear": "Wear",
+        "wearPercent": "{{percent}}% of lifespan",
+        "forecast": "About {{distance}} left — roughly {{weeks}}",
+        "forecastShort": "About {{distance}} left",
+        "weeks": {
+          "one": "{{count}} week",
+          "other": "{{count}} weeks"
+        },
+        "defaultDescription": "New workouts are linked to this pair",
+        "primaryDescription": "Its data wins over duplicates",
+        "more": "More"
+      },
+      "menu": {
+        "edit": "Edit",
+        "retire": "Archive",
+        "retireDescription": "Hide from the choice for workouts",
+        "delete": "Delete",
+        "cancel": "Cancel"
+      },
+      "archive": {
+        "title": "Archive",
+        "meta": "{{distance}} · {{count}} wkts · archived since {{date}}",
+        "restore": "Restore",
+        "footnote": "Archived pairs aren't offered for new workouts. Their stats stay.",
+        "empty": "The archive is empty"
+      },
+      "import": {
+        "title": {
+          "one": "Imported {{count}} pair",
+          "other": "Imported {{count}} pairs"
+        },
+        "nothing": "No new shoes in Strava",
+        "body": "Mileage came from Strava. Default lifespan is 700 km — change it on the pair's card.",
+        "done": "Done"
+      }
+    },
+    "services": {
+      "title": "Services",
+      "connected": "Connected",
+      "available": "Available",
+      "healthDescription": "Heart rate, weight and workouts",
+      "garminDescription": "Workouts and heart rate from the watch",
+      "connect": "Connect",
+      "soon": "Soon",
+      "syncedAgo": "Synced {{ago}}",
+      "duplicatesHint": "If a workout comes from several sources, we keep one — from the primary device."
+    },
+    "stravaScreen": {
+      "connectedAgo": "Connected · {{ago}}",
+      "connectedAs": "Connected · {{name}} · {{ago}}",
+      "sync": "What to sync",
+      "activities": {
+        "title": "Workouts",
+        "description": "Import new workouts"
+      },
+      "profile": {
+        "title": "Weight and sex",
+        "description": "Update the athlete profile"
+      },
+      "gear": {
+        "title": "Shoes",
+        "description": "Pull pairs and mileage"
+      },
+      "upload": {
+        "title": "Upload to Strava",
+        "description": "Workouts recorded in Trefix"
+      },
+      "syncNow": "Sync now",
+      "disconnect": "Disconnect Strava"
+    },
+    "connect": {
+      "close": "Close",
+      "strava": {
+        "title": "Connect Strava",
+        "lede": "Workouts will appear in Trefix on their own, and the coach will take them into account right away.",
+        "chips": ["Workouts", "Heart rate", "Shoes", "Weight"],
+        "benefits": [
+          {
+            "title": "No manual entry",
+            "description": "Every workout from your watch or phone lands in your history"
+          },
+          {
+            "title": "Shoes and mileage",
+            "description": "Pairs from Strava come in with their current mileage"
+          },
+          {
+            "title": "A more accurate plan",
+            "description": "The coach sees real volume and pace, not just the plan"
+          }
+        ],
+        "fine": "We only take workout and profile data. You can disconnect at any time."
+      },
+      "garmin": {
+        "title": "Connect Garmin",
+        "lede": "Data from your watch arrives right after a sync — no Strava in between.",
+        "chips": ["Workouts", "Heart rate", "Sleep", "HRV"],
+        "benefits": [
+          {
+            "title": "Workouts from the watch",
+            "description": "Pace, heart rate and cadence without loss of precision"
+          },
+          {
+            "title": "Recovery",
+            "description": "Sleep, HRV and resting heart rate tell the coach whether you're ready for load"
+          },
+          {
+            "title": "Accurate zones",
+            "description": "Heart rate from the watch and chest strap to calculate zones"
+          }
+        ],
+        "cta": "Connect Garmin Connect",
+        "soon": "Garmin Connect is coming in an upcoming update",
+        "fine": "Garmin Connect sign-in will open. You can disconnect at any time."
+      },
+      "health": {
+        "title": "Connect {{store}}",
+        "lede": "Trefix will read data from {{store}} and save your workouts there.",
+        "chips": ["Heart rate", "Weight", "Sleep", "Workouts"],
+        "benefits": [
+          {
+            "title": "Resting heart rate and weight",
+            "description": "Updated in your profile automatically"
+          },
+          {
+            "title": "Sleep and recovery",
+            "description": "The coach takes into account how rested you are"
+          },
+          {
+            "title": "Both ways",
+            "description": "Workouts from Trefix appear in {{store}}"
+          }
+        ],
+        "cta": "Allow access",
+        "fine": "You choose which data to share. Health data is never shared with third parties."
+      }
     }
   },
   "plans": {

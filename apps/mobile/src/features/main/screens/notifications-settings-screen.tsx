@@ -1,238 +1,268 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback, useEffect, useState } from "react";
+import {
+  AppState,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import * as Notifications from "expo-notifications";
 
+import {
+  type UserPreferences,
+  type UserPreferencesUpdate,
+} from "@trefix/api-client";
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
+import { fillTemplate, type MainCopy } from "../../../locales";
+import { ListCard, ListRow, SectionTitle } from "../../../shared/ui/list-card";
 import { Switch } from "../../../shared/ui/switch";
-import { HeaderBackButton, HeaderTitle } from "../components/header";
-import { SectionLayout } from "../components/section-layout";
-import { type MainCopy } from "../../../locales";
-import { logger } from "../../../lib/logger";
-
-const NOTIFICATIONS_STORAGE_KEY = "@trefix/notifications_settings";
-
-export type NotificationsSettings = {
-  workoutReminders: boolean;
-  weeklySummary: boolean;
-  aiUpdates: boolean;
-};
-
-const DEFAULT_SETTINGS: NotificationsSettings = {
-  workoutReminders: true,
-  weeklySummary: true,
-  aiUpdates: true,
-};
+import { healthStoreName } from "../../health-sync/health-integration-screen";
+import { ProfileSheet } from "../../profile/components/profile-sheet";
+import {
+  Footnote,
+  ProfileSection,
+  ProfileSubScreen,
+} from "../../profile/components/profile-sub-screen";
+import {
+  usePreferences,
+  useUpdatePreferences,
+} from "../../profile/hooks/use-preferences";
 
 type Props = {
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
   onBack: () => void;
+  onOpenCoach: () => void;
 };
 
+type Flag = Exclude<
+  keyof UserPreferences["notifications"],
+  "workoutReminderTime"
+>;
+type ReminderTime = UserPreferences["notifications"]["workoutReminderTime"];
+
+const REMINDER_TIMES: ReminderTime[] = ["morning", "2h", "1h", "30m"];
+
+/** Whether the system lets the app show notifications; re-checked when the app comes back. */
+function useNotificationsAllowed(): boolean | null {
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+  const check = useCallback(() => {
+    Notifications.getPermissionsAsync()
+      .then((status: Notifications.NotificationPermissionsStatus) =>
+        setAllowed(status.granted || status.status === "undetermined"),
+      )
+      .catch(() => setAllowed(null));
+  }, []);
+  useEffect(() => {
+    check();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") check();
+    });
+    return () => subscription.remove();
+  }, [check]);
+  return allowed;
+}
+
+/** Workout and progress notifications; coach messages are set up on the coach screen. */
 export function NotificationsSettingsScreen({
   theme,
   themeMode,
   copy,
   onBack,
+  onOpenCoach,
 }: Props) {
-  const [settings, setSettings] =
-    useState<NotificationsSettings>(DEFAULT_SETTINGS);
+  const { preferences } = usePreferences();
+  const update = useUpdatePreferences();
+  const allowed = useNotificationsAllowed();
+  const [reminderVisible, setReminderVisible] = useState(false);
+  const n = copy.profile.notificationsScreen;
+  const settings = preferences.notifications;
+  const disabled = allowed === false;
 
-  useEffect(() => {
-    async function loadSettings() {
-      try {
-        const stored = await AsyncStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
-        if (stored) {
-          setSettings(JSON.parse(stored) as NotificationsSettings);
+  const patch = (notifications: UserPreferencesUpdate["notifications"]) =>
+    update.mutate({ notifications });
+
+  const flagRow = (flag: Flag) => {
+    const item = n.items[flag];
+    return (
+      <ListRow
+        key={flag}
+        theme={theme}
+        title={item.title}
+        description={fillTemplate(item.description, {
+          health: healthStoreName(copy),
+        })}
+        trailing={
+          <Switch
+            theme={theme}
+            value={settings[flag]}
+            disabled={disabled}
+            accessibilityLabel={item.title}
+            onValueChange={(value) => patch({ [flag]: value })}
+          />
         }
-      } catch (error) {
-        logger.warn("Failed to load notifications settings:", error);
-      }
-    }
-    void loadSettings();
-  }, []);
-
-  const toggleSetting = (key: keyof NotificationsSettings) => {
-    setSettings((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      void AsyncStorage.setItem(
-        NOTIFICATIONS_STORAGE_KEY,
-        JSON.stringify(next),
-      );
-      return next;
-    });
+      />
+    );
   };
 
   return (
-    <SectionLayout
-      leftAction={
-        <HeaderBackButton
-          theme={theme}
-          themeMode={themeMode}
-          onPress={onBack}
-        />
-      }
-      headerCenter={
-        <HeaderTitle theme={theme}>
-          {copy.profile.settings.notificationsTitle}
-        </HeaderTitle>
-      }
-      scrollable
+    <ProfileSubScreen
+      title={n.title}
+      onBack={onBack}
       theme={theme}
       themeMode={themeMode}
     >
-      <View style={styles.container}>
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: theme.color.surfaceElevated,
-              borderColor: theme.color.border,
-            },
-          ]}
-        >
-          <View style={styles.row}>
-            <View style={styles.textWrap}>
-              <Text
-                style={[
-                  styles.title,
-                  {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {copy.profile.settings.notificationsWorkout}
-              </Text>
-              <Text
-                style={[
-                  styles.description,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.regular,
-                  },
-                ]}
-              >
-                {copy.profile.settings.notificationsWorkoutDesc}
-              </Text>
-            </View>
-            <Switch
-              value={settings.workoutReminders}
-              onValueChange={() => toggleSetting("workoutReminders")}
-              theme={theme}
-            />
-          </View>
-
-          <View
-            style={[styles.separator, { backgroundColor: theme.color.border }]}
-          />
-
-          <View style={styles.row}>
-            <View style={styles.textWrap}>
-              <Text
-                style={[
-                  styles.title,
-                  {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {copy.profile.settings.notificationsWeekly}
-              </Text>
-              <Text
-                style={[
-                  styles.description,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.regular,
-                  },
-                ]}
-              >
-                {copy.profile.settings.notificationsWeeklyDesc}
-              </Text>
-            </View>
-            <Switch
-              value={settings.weeklySummary}
-              onValueChange={() => toggleSetting("weeklySummary")}
-              theme={theme}
-            />
-          </View>
-
-          <View
-            style={[styles.separator, { backgroundColor: theme.color.border }]}
-          />
-
-          <View style={styles.row}>
-            <View style={styles.textWrap}>
-              <Text
-                style={[
-                  styles.title,
-                  {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {copy.profile.settings.notificationsAi}
-              </Text>
-              <Text
-                style={[
-                  styles.description,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.regular,
-                  },
-                ]}
-              >
-                {copy.profile.settings.notificationsAiDesc}
-              </Text>
-            </View>
-            <Switch
-              value={settings.aiUpdates}
-              onValueChange={() => toggleSetting("aiUpdates")}
-              theme={theme}
-            />
-          </View>
+      {disabled ? (
+        <View style={[styles.alert, { backgroundColor: theme.color.card }]}>
+          <Text
+            style={[
+              styles.alertTitle,
+              {
+                color: theme.color.foreground,
+                fontFamily: theme.typography.fontFamily.sans.medium,
+              },
+            ]}
+          >
+            {n.deniedTitle}
+          </Text>
+          <Text
+            style={[
+              styles.alertBody,
+              {
+                color: theme.color.mutedForeground,
+                fontFamily: theme.typography.fontFamily.sans.regular,
+              },
+            ]}
+          >
+            {n.deniedBody}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void Linking.openSettings()}
+            style={({ pressed }) => [
+              styles.alertButton,
+              { backgroundColor: theme.color.iconSurface },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.alertButtonText,
+                {
+                  color: theme.color.foreground,
+                  fontFamily: theme.typography.fontFamily.sans.medium,
+                },
+              ]}
+            >
+              {n.openSettings}
+            </Text>
+          </Pressable>
         </View>
-      </View>
-    </SectionLayout>
+      ) : null}
+
+      <ProfileSection>
+        <SectionTitle text={n.workouts} theme={theme} />
+        <View
+          style={disabled ? styles.dimmed : undefined}
+          pointerEvents={disabled ? "none" : "auto"}
+        >
+          <ListCard theme={theme} bare>
+            {flagRow("workoutReminder")}
+            {settings.workoutReminder && !disabled ? (
+              <ListRow
+                theme={theme}
+                title={n.reminderTime}
+                value={n.reminderValues[settings.workoutReminderTime]}
+                chevron={false}
+                onPress={() => setReminderVisible(true)}
+              />
+            ) : null}
+            {flagRow("missedWorkout")}
+            {flagRow("planChanged")}
+          </ListCard>
+        </View>
+      </ProfileSection>
+
+      <ProfileSection>
+        <SectionTitle text={n.progress} theme={theme} />
+        <View
+          style={disabled ? styles.dimmed : undefined}
+          pointerEvents={disabled ? "none" : "auto"}
+        >
+          <ListCard theme={theme} bare>
+            {flagRow("achievements")}
+            {flagRow("workoutSynced")}
+          </ListCard>
+        </View>
+      </ProfileSection>
+
+      <ProfileSection>
+        <SectionTitle text={n.coach} theme={theme} />
+        <ListCard theme={theme} bare>
+          <ListRow
+            theme={theme}
+            title={n.coachMessages}
+            description={n.coachMessagesDescription}
+            onPress={onOpenCoach}
+          />
+        </ListCard>
+        <Footnote text={n.coachHint} theme={theme} />
+      </ProfileSection>
+
+      <ProfileSheet
+        visible={reminderVisible}
+        onClose={() => setReminderVisible(false)}
+        title={n.reminderTime}
+        actions={REMINDER_TIMES.map((time) => ({
+          key: time,
+          label: n.reminderOptions[time],
+          description: time === "morning" ? n.morningDescription : undefined,
+          selected: time === settings.workoutReminderTime,
+          onPress: () => patch({ workoutReminderTime: time }),
+        }))}
+        body={n.reminderHint}
+        copy={copy}
+        theme={theme}
+        themeMode={themeMode}
+      />
+    </ProfileSubScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingTop: 16,
-  },
-  card: {
+  alert: {
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: "hidden",
+    padding: 16,
+    gap: 8,
+    alignItems: "flex-start",
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 16,
-  },
-  textWrap: {
-    flex: 1,
-    gap: 4,
-  },
-  title: {
+  alertTitle: {
     fontSize: 15,
     lineHeight: 20,
   },
-  description: {
+  alertBody: {
     fontSize: 13,
     lineHeight: 18,
   },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 20,
+  alertButton: {
+    marginTop: 4,
+    height: 28,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  alertButtonText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  dimmed: {
+    opacity: 0.5,
+  },
+  pressed: {
+    opacity: 0.82,
   },
 });

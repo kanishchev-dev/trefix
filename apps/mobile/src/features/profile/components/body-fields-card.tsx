@@ -9,7 +9,7 @@ import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 import { syncStravaProfile } from "../../../lib/integrations-api";
 import { trackEvent } from "../../../lib/analytics";
 import {
-  formatShortDate,
+  formatLongDate,
   type AppLanguage,
   type MainCopy,
 } from "../../../locales";
@@ -53,7 +53,8 @@ export function BodyFieldsCard({
   const format = createFormatter(copy, language, preferences);
   const stravaConnected = Boolean(strava && strava.status !== "disconnected");
   const profileAccess = Boolean(strava?.profileAccess);
-  const imperial = preferences.units === "imperial";
+  const imperialHeight = format.heightUnits === "imperial";
+  const imperialWeight = format.weightUnits === "imperial";
 
   const save = async (patch: AthleteProfileUpdate) => {
     await update.mutateAsync(patch);
@@ -107,16 +108,18 @@ export function BodyFieldsCard({
       kind: "options",
       title: b.sex,
       value: profile.sex,
-      options: (["female", "male", "other", "prefer_not_to_say"] as const).map(
-        (value) => ({ value, label: b.sexes[value] }),
-      ),
+      options: (["male", "female"] as const).map((value) => ({
+        value,
+        label: b.sexes[value],
+      })),
+      hint: copy.profile.bodyScreen.sexHint,
       provenance: provenance("sex"),
       onSave: (value) => save({ sex: value as AthleteProfileUpdate["sex"] }),
     });
 
   const openHeight = (profile: AthleteProfile) =>
     setSheet(
-      imperial
+      imperialHeight
         ? {
             kind: "number",
             title: b.height,
@@ -156,22 +159,21 @@ export function BodyFieldsCard({
       kind: "number",
       title: b.weight,
       value: profile.weightKg
-        ? Math.round(kgToDisplay(profile.weightKg, preferences.units) * 10) / 10
+        ? Math.round(kgToDisplay(profile.weightKg, format.weightUnits) * 10) /
+          10
         : null,
-      fallback: imperial ? 160 : 70,
-      min: imperial ? 66 : 30,
-      max: imperial ? 550 : 250,
+      fallback: imperialWeight ? 160 : 70,
+      min: imperialWeight ? 66 : 30,
+      max: imperialWeight ? 550 : 250,
       step: 0.1,
-      majorEvery: imperial ? 10 : 5,
-      labelEvery: imperial ? 10 : 5,
-      unit: imperial ? format.labels.lb : format.labels.kg,
+      unit: imperialWeight ? format.labels.lb : format.labels.kg,
       provenance: provenance("weightKg"),
       onSave: (value) =>
         save({
           weightKg:
             value === null
               ? null
-              : Math.round(displayToKg(value, preferences.units) * 10) / 10,
+              : Math.round(displayToKg(value, format.weightUnits) * 10) / 10,
         }),
     });
 
@@ -179,13 +181,13 @@ export function BodyFieldsCard({
 
   return (
     <>
-      <ListCard theme={theme}>
+      <ListCard theme={theme} bare>
         <ListRow
           theme={theme}
           title={b.birthDate}
           value={
             athlete.birthDate
-              ? formatShortDate(athlete.birthDate, language)
+              ? formatLongDate(athlete.birthDate, language)
               : notSet
           }
           trailing={badge("birthDate")}

@@ -1,27 +1,55 @@
+import { useState } from "react";
 import {
   ActivityIndicator,
   Linking,
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import {
-  CheckCircle2,
-  AlertCircle,
+  Footprints,
   RefreshCw,
+  TrendingUp,
   Unplug,
+  Zap,
 } from "lucide-react-native";
-import { type ThemeTokens } from "@trefix/tokens";
 
-import { HeaderBackButton, HeaderTitle } from "../components/header";
-import { useHeaderOptions } from "../context/header-context";
-import { SectionLayout } from "../components/section-layout";
-import { type AppLanguage, type MainCopy } from "../../../locales";
+import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+
+import { requestStravaProfileAccess } from "../../../lib/integrations-api";
 import {
+  fillTemplate,
+  type AppLanguage,
+  type MainCopy,
+} from "../../../locales";
+import {
+  IntegrationLogo,
   StravaCompatibleLogo,
   StravaConnectButton,
 } from "../../../shared/ui/integration-logo";
+import {
+  ListCard,
+  ListRow,
+  Pill,
+  SectionTitle,
+} from "../../../shared/ui/list-card";
+import { Switch } from "../../../shared/ui/switch";
+import { useToast } from "../../../shared/ui/toast";
+import { ProfileSheet } from "../../profile/components/profile-sheet";
+import { ICON_STROKE, ROW_ICON } from "../../profile/components/profile-ui";
+import {
+  ProfileSection,
+  ProfileSubScreen,
+} from "../../profile/components/profile-sub-screen";
+import {
+  usePreferences,
+  useUpdatePreferences,
+} from "../../profile/hooks/use-preferences";
+import {
+  formatAgo,
+  profileErrorMessage,
+} from "../../profile/lib/profile-format";
+import { ConnectOnboarding } from "../components/connect-onboarding";
 import {
   useConnectStrava,
   useDisconnectStrava,
@@ -32,425 +60,303 @@ import {
 
 type Props = {
   theme: ThemeTokens;
-  themeMode: "light" | "dark";
+  themeMode: ThemeMode;
   copy: MainCopy;
   userLanguage: AppLanguage;
   onBack: () => void;
 };
 
+/** Strava: onboarding while disconnected; what to sync, sync now and disconnect once connected. */
 export function StravaIntegrationScreen({
   theme,
   themeMode,
   copy,
   onBack,
 }: Props) {
-  const {
-    data: strava,
-    isLoading: isStravaLoading,
-    refetch: refetchStrava,
-  } = useStravaIntegration();
-  const connectMutation = useConnectStrava();
-  const disconnectMutation = useDisconnectStrava();
-  const triggerSyncMutation = useTriggerStravaSync();
+  const { data: strava, isLoading, refetch } = useStravaIntegration();
+  const connect = useConnectStrava();
+  const disconnect = useDisconnectStrava();
+  const triggerSync = useTriggerStravaSync();
+  const { preferences } = usePreferences();
+  const updatePreferences = useUpdatePreferences();
+  const { showToast } = useToast();
+  const [disconnectVisible, setDisconnectVisible] = useState(false);
+  const s = copy.profile.integrations.strava;
+  const v = copy.profile.stravaScreen;
+  const c = copy.profile.connect.strava;
+  const fg = theme.color.foreground;
 
-  const isSyncing =
+  const syncing =
     strava?.status === "syncing" || strava?.status === "connecting";
-  const { data: syncStatus } = useStravaSyncStatus(isSyncing);
+  const { data: syncStatus } = useStravaSyncStatus(syncing);
+  const connected =
+    strava?.status === "connected" || strava?.status === "syncing";
+  const needsReauth =
+    strava?.status === "error" || strava?.status === "reauthorization_required";
 
-  const handleConnect = async () => {
+  const startConnect = async () => {
     try {
-      const res = await connectMutation.mutateAsync();
-      if (res.authUrl) {
-        await Linking.openURL(res.authUrl);
-      }
+      const response = await connect.mutateAsync();
+      if (response.authUrl) await Linking.openURL(response.authUrl);
     } catch (error) {
-      // Handled by UI
+      showToast(profileErrorMessage(error, copy));
     }
   };
 
-  const handleDisconnect = async () => {
-    await disconnectMutation.mutateAsync();
-    refetchStrava();
+  const allowProfile = async () => {
+    try {
+      const { authorizeUrl } = await requestStravaProfileAccess();
+      await Linking.openURL(authorizeUrl);
+    } catch (error) {
+      showToast(profileErrorMessage(error, copy));
+    }
   };
 
-  const handleTriggerSync = async () => {
-    await triggerSyncMutation.mutateAsync();
-    refetchStrava();
-  };
-
-  const isConnected =
-    strava?.status === "connected" || strava?.status === "syncing";
-  const isError =
-    strava?.status === "error" || strava?.status === "reauthorization_required";
-
-  useHeaderOptions(
-    {
-      leftAction: (
-        <HeaderBackButton
-          theme={theme}
-          themeMode={themeMode}
-          onPress={onBack}
-        />
-      ),
-      centerContent: <HeaderTitle theme={theme}>Strava</HeaderTitle>,
-      rightAction: null,
-      variant: "default",
-      bottomContent: null,
-    },
-    [theme, themeMode, onBack],
+  const syncSwitch = (
+    key: "stravaActivitiesSync" | "stravaProfileSync" | "stravaGearSync",
+    label: string,
+    needsProfileAccess: boolean,
+  ) => (
+    <Switch
+      theme={theme}
+      value={
+        preferences[key] &&
+        (!needsProfileAccess || Boolean(strava?.profileAccess))
+      }
+      accessibilityLabel={label}
+      onValueChange={(value) => {
+        if (value && needsProfileAccess && !strava?.profileAccess) {
+          void allowProfile();
+          return;
+        }
+        updatePreferences.mutate({ [key]: value });
+      }}
+    />
   );
 
+  if (isLoading) {
+    return (
+      <ProfileSubScreen
+        title={s.title}
+        onBack={onBack}
+        theme={theme}
+        themeMode={themeMode}
+      >
+        <ActivityIndicator color={fg} />
+      </ProfileSubScreen>
+    );
+  }
+
+  if (!connected && !needsReauth) {
+    return (
+      <ProfileSubScreen
+        title=""
+        onBack={onBack}
+        theme={theme}
+        themeMode={themeMode}
+      >
+        <ConnectOnboarding
+          theme={theme}
+          themeMode={themeMode}
+          provider="strava"
+          title={c.title}
+          lede={c.lede}
+          chips={c.chips}
+          benefits={c.benefits}
+          benefitIcons={[Zap, Footprints, TrendingUp]}
+          cta={
+            <StravaConnectButton
+              accessibilityLabel={s.connectBtn}
+              pending={connect.isPending}
+              onPress={() => void startConnect()}
+            />
+          }
+          fine={c.fine}
+        />
+      </ProfileSubScreen>
+    );
+  }
+
+  const ago = strava?.lastSyncedAt
+    ? formatAgo(strava.lastSyncedAt, copy)
+    : s.justNow;
+
   return (
-    <SectionLayout
-      hasHeader={false}
-      scrollable
+    <ProfileSubScreen
+      title={s.title}
+      onBack={onBack}
       theme={theme}
       themeMode={themeMode}
     >
-      <View style={styles.stack}>
-        {/* Header Hero */}
-        <View
+      <View style={styles.hero}>
+        <IntegrationLogo provider="strava" themeMode={themeMode} size={64} />
+        <Text
           style={[
-            styles.heroCard,
+            styles.heroTitle,
+            { color: fg, fontFamily: theme.typography.fontFamily.sans.medium },
+          ]}
+        >
+          Strava
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.heroText,
             {
-              backgroundColor: theme.color.surfaceElevated,
-              borderColor: theme.color.border,
+              color: theme.color.mutedForeground,
+              fontFamily: theme.typography.fontFamily.sans.regular,
             },
           ]}
         >
-          <StravaCompatibleLogo themeMode={themeMode} />
+          {needsReauth
+            ? s.reauthStatus
+            : syncing
+              ? `${s.importingHistory}${syncStatus?.processed ? ` · ${syncStatus.imported}` : ""}`
+              : fillTemplate(v.connectedAgo, { ago })}
+        </Text>
+      </View>
 
+      {needsReauth ? (
+        <View style={styles.reauth}>
           <Text
             style={[
-              styles.heroDesc,
+              styles.heroText,
               {
                 color: theme.color.mutedForeground,
                 fontFamily: theme.typography.fontFamily.sans.regular,
               },
             ]}
           >
-            {copy.profile.integrations.strava.description}
+            {s.reconnectDesc}
           </Text>
+          <StravaConnectButton
+            accessibilityLabel={s.reconnectBtn}
+            pending={connect.isPending}
+            onPress={() => void startConnect()}
+          />
         </View>
-
-        {/* State Content */}
-        {isStravaLoading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={theme.color.primary} size="large" />
-          </View>
-        ) : isConnected ? (
-          <View style={styles.connectedStack}>
-            <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: theme.color.surfaceElevated,
-                  borderColor: theme.color.border,
-                },
-              ]}
-            >
-              <View style={styles.statusHeader}>
-                <CheckCircle2
-                  color={theme.color.success}
-                  size={24}
-                  strokeWidth={2}
-                />
-                <Text
-                  style={[
-                    styles.statusTitle,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {copy.profile.integrations.strava.connectedStateTitle}
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text
-                  style={[
-                    styles.metaLabel,
-                    {
-                      color: theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.regular,
-                    },
-                  ]}
-                >
-                  {copy.profile.integrations.strava.lastSyncLabel}
-                </Text>
-                <Text
-                  style={[
-                    styles.metaValue,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {strava.lastSyncedAt
-                    ? new Date(strava.lastSyncedAt).toLocaleString()
-                    : copy.profile.integrations.strava.justNow}
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text
-                  style={[
-                    styles.metaLabel,
-                    {
-                      color: theme.color.mutedForeground,
-                      fontFamily: theme.typography.fontFamily.sans.regular,
-                    },
-                  ]}
-                >
-                  {copy.profile.integrations.strava.activitiesImportedLabel}
-                </Text>
-                <Text
-                  style={[
-                    styles.metaValue,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {strava.importedActivitiesCount ?? 0}
-                </Text>
-              </View>
-
-              {isSyncing ? (
-                <View style={styles.syncingBox}>
-                  <ActivityIndicator color={theme.color.primary} size="small" />
-                  <Text
-                    style={[
-                      styles.syncingText,
-                      {
-                        color: theme.color.mutedForeground,
-                        fontFamily: theme.typography.fontFamily.sans.regular,
-                      },
-                    ]}
-                  >
-                    {copy.profile.integrations.strava.importingHistory}
-                    {syncStatus?.processed
-                      ? ` (${syncStatus.imported} imported)`
-                      : ""}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-
-            {/* Actions */}
-            <Pressable
-              accessibilityRole="button"
-              disabled={triggerSyncMutation.isPending}
-              onPress={handleTriggerSync}
-              style={({ pressed }) => [
-                styles.syncButton,
-                {
-                  backgroundColor: theme.color.surfaceElevated,
-                  borderColor: theme.color.border,
-                },
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <RefreshCw color={theme.color.foreground} size={18} />
-              <Text
-                style={[
-                  styles.syncButtonText,
-                  {
-                    color: theme.color.foreground,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {copy.profile.integrations.strava.syncNow}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              disabled={disconnectMutation.isPending}
-              onPress={handleDisconnect}
-              style={({ pressed }) => [
-                styles.disconnectButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Unplug color={theme.color.danger} size={18} />
-              <Text
-                style={[
-                  styles.disconnectText,
-                  {
-                    color: theme.color.danger,
-                    fontFamily: theme.typography.fontFamily.sans.medium,
-                  },
-                ]}
-              >
-                {copy.profile.integrations.strava.disconnect}
-              </Text>
-            </Pressable>
-          </View>
-        ) : isError ? (
-          <View style={styles.errorStack}>
-            <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: theme.color.surfaceElevated,
-                  borderColor: theme.color.border,
-                },
-              ]}
-            >
-              <View style={styles.statusHeader}>
-                <AlertCircle
-                  color={theme.color.danger}
-                  size={24}
-                  strokeWidth={2}
-                />
-                <Text
-                  style={[
-                    styles.statusTitle,
-                    {
-                      color: theme.color.foreground,
-                      fontFamily: theme.typography.fontFamily.sans.medium,
-                    },
-                  ]}
-                >
-                  {copy.profile.integrations.strava.connectionExpiredTitle}
-                </Text>
-              </View>
-
-              <Text
-                style={[
-                  styles.errorDesc,
-                  {
-                    color: theme.color.mutedForeground,
-                    fontFamily: theme.typography.fontFamily.sans.regular,
-                  },
-                ]}
-              >
-                {copy.profile.integrations.strava.reconnectDesc}
-              </Text>
-            </View>
-
-            <StravaConnectButton
-              onPress={() => void handleConnect()}
-              pending={connectMutation.isPending}
-              accessibilityLabel={copy.profile.integrations.strava.reconnectBtn}
+      ) : (
+        <ProfileSection>
+          <SectionTitle text={v.sync} theme={theme} />
+          <ListCard theme={theme} bare>
+            <ListRow
+              theme={theme}
+              title={v.activities.title}
+              description={v.activities.description}
+              trailing={syncSwitch(
+                "stravaActivitiesSync",
+                v.activities.title,
+                false,
+              )}
             />
-          </View>
-        ) : (
-          /* Disconnected State */
-          <View style={styles.disconnectedStack}>
-            <StravaConnectButton
-              onPress={() => void handleConnect()}
-              pending={connectMutation.isPending}
-              accessibilityLabel={copy.profile.integrations.strava.connectBtn}
+            <ListRow
+              theme={theme}
+              title={v.profile.title}
+              description={v.profile.description}
+              trailing={syncSwitch("stravaProfileSync", v.profile.title, true)}
             />
-          </View>
-        )}
+            <ListRow
+              theme={theme}
+              title={v.gear.title}
+              description={v.gear.description}
+              trailing={syncSwitch("stravaGearSync", v.gear.title, true)}
+            />
+            <ListRow
+              theme={theme}
+              title={v.upload.title}
+              description={v.upload.description}
+              trailing={
+                <Pill theme={theme} text={copy.profile.services.soon} />
+              }
+            />
+          </ListCard>
+        </ProfileSection>
+      )}
+
+      <ListCard theme={theme} bare>
+        {!needsReauth ? (
+          <ListRow
+            theme={theme}
+            icon={
+              <RefreshCw color={fg} size={ROW_ICON} strokeWidth={ICON_STROKE} />
+            }
+            title={v.syncNow}
+            chevron={false}
+            disabled={triggerSync.isPending || syncing}
+            onPress={() =>
+              void triggerSync
+                .mutateAsync()
+                .then(() => refetch())
+                .catch((error) => showToast(profileErrorMessage(error, copy)))
+            }
+          />
+        ) : null}
+        <ListRow
+          theme={theme}
+          icon={
+            <Unplug
+              color={theme.color.danger}
+              size={ROW_ICON}
+              strokeWidth={ICON_STROKE}
+            />
+          }
+          title={v.disconnect}
+          destructive
+          chevron={false}
+          onPress={() => setDisconnectVisible(true)}
+        />
+      </ListCard>
+
+      <View style={styles.compatible}>
+        <StravaCompatibleLogo themeMode={themeMode} />
       </View>
-    </SectionLayout>
+
+      <ProfileSheet
+        visible={disconnectVisible}
+        onClose={() => setDisconnectVisible(false)}
+        title={v.disconnect}
+        body={s.description}
+        buttons={[
+          {
+            label: s.disconnect,
+            variant: "destructive",
+            onPress: async () => {
+              await disconnect.mutateAsync();
+              await refetch();
+            },
+          },
+          { label: copy.profile.valueSheet.cancel, variant: "secondary" },
+        ]}
+        copy={copy}
+        theme={theme}
+        themeMode={themeMode}
+      />
+    </ProfileSubScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: {
-    gap: 16,
+  hero: {
+    alignItems: "center",
+    gap: 6,
     paddingTop: 8,
   },
-  heroCard: {
-    padding: 20,
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    gap: 12,
+  heroTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.3,
   },
-  heroDesc: {
-    fontSize: 14,
-    lineHeight: 20,
+  heroText: {
+    fontSize: 13,
+    lineHeight: 18,
     textAlign: "center",
   },
-  loadingBox: {
-    paddingVertical: 32,
+  reauth: {
     alignItems: "center",
+    gap: 16,
   },
-  connectedStack: {
-    gap: 12,
-  },
-  disconnectedStack: {
-    gap: 12,
-  },
-  errorStack: {
-    gap: 12,
-  },
-  card: {
-    padding: 16,
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 12,
-  },
-  statusHeader: {
-    flexDirection: "row",
+  compatible: {
     alignItems: "center",
-    gap: 10,
-  },
-  statusTitle: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 4,
-  },
-  metaLabel: {
-    fontSize: 14,
-  },
-  metaValue: {
-    fontSize: 14,
-  },
-  syncingBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingTop: 8,
-  },
-  syncingText: {
-    fontSize: 13,
-  },
-  errorDesc: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  syncButton: {
-    minHeight: 48,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  syncButtonText: {
-    fontSize: 15,
-  },
-  disconnectButton: {
-    minHeight: 48,
-    borderRadius: 999,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  disconnectText: {
-    fontSize: 15,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.985 }],
+    paddingBottom: 16,
   },
 });
