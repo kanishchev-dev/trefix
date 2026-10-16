@@ -1,38 +1,85 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Ruler } from "@trefix/ui-native";
+import { useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  Gauge,
+  Heart,
+  Play,
+  Ruler as RulerIcon,
+  Timer,
+} from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+
+import { type AppLanguage, type MainCopy } from "../../../../locales";
+import { getErrorMessage } from "../../../../shared/lib/error-message";
+import { displayToKm, kmToDisplay } from "../../../../shared/lib/units";
 import {
   BottomSheet,
   SheetBlock,
   SheetButton,
-  SheetTabs,
 } from "../../../../shared/ui/bottom-sheet";
+import {
+  SheetList,
+  SheetListRow,
+  SheetSubtitle,
+} from "../../../../shared/ui/sheet-list";
+import {
+  ValueSheet,
+  type ValueSheetConfig,
+} from "../../../../shared/ui/value-sheet";
+import { InlineError } from "../../../plans/components/plans-ui";
+import { useCurrentMetrics } from "../../../plans/hooks/use-plan-rebuild";
+import { todayIso } from "../../../plans/lib/plan-dates";
+import { useUnitFormat } from "../../../profile/hooks/use-unit-format";
+import { formatClock } from "../../../tracker/format";
 import { useCreateWorkout } from "../../hooks/use-workouts";
-import { type MainCopy } from "../../../../locales";
-import { getErrorMessage } from "../../../../shared/lib/error-message";
+import { estimatedPaceSec } from "../../lib/goal-estimate";
+import { pushSubScreen } from "../../main-routes";
+import { defaultGoalDraft, GoalEditor, type GoalDraft } from "./goal-editor";
 
 export type ManualWorkoutType = "easy" | "tempo" | "interval" | "hill" | "race";
-export type WorkoutGoalMode = "duration" | "distance";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD, the day selected in the Today calendar
   workoutType: ManualWorkoutType;
   theme: ThemeTokens;
   themeMode: ThemeMode;
   copy: MainCopy;
+  language: AppLanguage;
 };
 
-const DISTANCE_PRESETS = [3, 5, 8, 10, 12, 15, 21, 42];
-const DURATION_PRESETS = [20, 30, 45, 60, 90, 120];
+/** Which sheet the selected day asks for. */
+export type GoalSheetMode = "today" | "future" | "past";
+
+export function goalSheetMode(date: string, today = todayIso()): GoalSheetMode {
+  if (date === today) return "today";
+  return date > today ? "future" : "past";
+}
+
+type PastLog = {
+  distanceKm: number | null;
+  durationSec: number | null;
+  heartRate: number | null;
+  rpe: number | null;
+};
+
+type Editing = "timeLimit" | keyof PastLog;
+
+const EMPTY_LOG: PastLog = {
+  distanceKm: null,
+  durationSec: null,
+  heartRate: null,
+  rpe: null,
+};
 
 /**
- * Reference sheet of the app (opened from the "add workout" type buttons
- * on the Today screen). Renders inside the shared BottomSheet shell that
- * was extracted 1:1 from this sheet.
+ * One sheet for the type tiles and "+" on Today, chosen by the selected day:
+ * today — the goal with "Start now" and "Add"; a future day — the goal with
+ * "Add"; a past day — "How did it go" that saves a completed workout.
+ * Only the value the athlete sets is sent; the other one is shown as an
+ * estimate and never stored.
  */
 export function WorkoutGoalSheet({
   visible,
@@ -42,335 +89,360 @@ export function WorkoutGoalSheet({
   theme,
   themeMode,
   copy,
+  language,
 }: Props) {
-  const createWorkoutMutation = useCreateWorkout();
-  const goalSheetCopy = copy.today.goalSheet;
+  const s = copy.today.goalSheet;
+  const format = useUnitFormat(copy, language);
+  const units = format.units;
+  const distanceUnit =
+    units === "imperial" ? format.labels.mi : format.labels.km;
+  const createWorkout = useCreateWorkout();
+  const metrics = useCurrentMetrics(visible);
+  const mode = goalSheetMode(date);
 
-  const [mode, setMode] = useState<WorkoutGoalMode>("distance");
-  const [distanceVal, setDistanceVal] = useState("10");
-  const [durationVal, setDurationVal] = useState("45");
-  const [errorMessage, setErrorMessage] = useState("");
+  // The sheet and its value sheets take turns: the open one slides away first.
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<Editing | null>(null);
+  const nextEdit = useRef<Editing | null>(null);
+
+  const [draft, setDraft] = useState<GoalDraft>(() => defaultGoalDraft(units));
+  const [log, setLog] = useState<PastLog>(EMPTY_LOG);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<"start" | "add" | null>(null);
 
   useEffect(() => {
-    if (visible) {
-      setErrorMessage("");
-    }
-  }, [visible]);
+    if (!visible) return;
+    setDraft(defaultGoalDraft(units));
+    setLog(EMPTY_LOG);
+    setError(null);
+    setPending(null);
+    setSheetOpen(true);
+  }, [units, visible]);
 
-  // The backend plans manual workouts from tomorrow on; today is logged as done instead.
-  const isFutureOrToday = useMemo(() => {
-    if (!date) return true;
-    const target = new Date(`${date}T00:00:00.000`);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return target.getTime() > today.getTime();
-  }, [date]);
+  const thresholdPace = metrics.data?.thresholdPaceSecondsPerKm.value ?? null;
+  const distanceKm = displayToKm(draft.distance, units);
 
-  const parsedValue = useMemo(() => {
-    const val =
-      mode === "distance"
-        ? parseFloat(distanceVal.replace(",", "."))
-        : parseInt(durationVal, 10);
-    return isNaN(val) ? 0 : val;
-  }, [mode, distanceVal, durationVal]);
+  const openEdit = (field: Editing) => {
+    nextEdit.current = field;
+    setSheetOpen(false);
+  };
 
-  const isValid =
-    parsedValue > 0 && isFutureOrToday && !createWorkoutMutation.isPending;
+  const onSheetClosed = () => {
+    setSheetOpen(false);
+    const field = nextEdit.current;
+    nextEdit.current = null;
+    if (field) setEditing(field);
+    else onClose();
+  };
 
-  const handleSubmit = async () => {
-    setErrorMessage("");
+  const scheduledAt = new Date(`${date}T09:00:00.000Z`).toISOString();
 
-    if (!isFutureOrToday) {
-      setErrorMessage(goalSheetCopy.futureDateOnly);
-      return;
-    }
-
-    if (parsedValue <= 0) {
-      setErrorMessage(goalSheetCopy.invalidValue);
-      return;
-    }
-
-    const scheduledAt = new Date(`${date}T09:00:00.000Z`).toISOString();
-
-    const distanceKm =
-      mode === "distance"
-        ? parsedValue
-        : Math.max(1, Math.round(parsedValue / 6));
-    const durationMinutes =
-      mode === "duration"
-        ? parsedValue
-        : Math.max(5, Math.round(parsedValue * 6));
-
+  const createPlanned = async (then: "start" | "add") => {
+    if (pending) return;
+    setPending(then);
+    setError(null);
     try {
-      await createWorkoutMutation.mutateAsync({
+      const { goal, minutes, timeLimitMin } = draft;
+      const created = await createWorkout.mutateAsync({
         scheduledAt,
         type: workoutType,
-        distanceKm,
-        durationMinutes,
         status: "planned",
+        goal,
+        ...(goal === "duration" ? { durationMinutes: minutes } : {}),
+        ...(goal === "distance"
+          ? {
+              distanceKm: Math.round(distanceKm * 100) / 100,
+              ...(timeLimitMin ? { timeLimitMin } : {}),
+            }
+          : {}),
       });
-
-      onClose();
-    } catch (err: unknown) {
-      setErrorMessage(
-        getErrorMessage(err, copy.errors, goalSheetCopy.errorDefault),
-      );
+      setSheetOpen(false);
+      if (then === "start")
+        pushSubScreen({ kind: "tracker-setup", plannedWorkoutId: created.id });
+    } catch (createError) {
+      setError(getErrorMessage(createError, copy.errors, s.errorDefault));
+    } finally {
+      setPending(null);
     }
   };
 
+  const savePast = async () => {
+    if (pending) return;
+    if (!log.distanceKm || !log.durationSec) {
+      setError(s.pastRequired);
+      return;
+    }
+    setPending("add");
+    setError(null);
+    try {
+      await createWorkout.mutateAsync({
+        scheduledAt,
+        type: workoutType,
+        status: "completed",
+        actualDistanceKm: log.distanceKm,
+        actualDurationMinutes: Math.round((log.durationSec / 60) * 100) / 100,
+        actualAveragePaceSecondsPerKm: Math.round(
+          log.durationSec / log.distanceKm,
+        ),
+        ...(log.heartRate ? { actualAverageHeartRate: log.heartRate } : {}),
+        ...(log.rpe ? { rpe: log.rpe } : {}),
+      });
+      setSheetOpen(false);
+    } catch (createError) {
+      setError(getErrorMessage(createError, copy.errors, s.errorDefault));
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const valueConfig = ((): ValueSheetConfig | null => {
+    const labels = s.timeLabels;
+    switch (editing) {
+      case "timeLimit": {
+        const estimateMin = Math.round(
+          (distanceKm * estimatedPaceSec(workoutType, thresholdPace)) / 60,
+        );
+        return {
+          kind: "duration",
+          title: s.timeLimit,
+          value: (draft.timeLimitMin ?? estimateMin) * 60,
+          seconds: false,
+          labels,
+          secondary: draft.timeLimitMin
+            ? { label: s.clear, value: null }
+            : undefined,
+          onSave: (value) =>
+            setDraft((current) => ({
+              ...current,
+              timeLimitMin:
+                value && value >= 60 ? Math.round(value / 60) : null,
+            })),
+        };
+      }
+      case "distanceKm":
+        return {
+          kind: "decimal",
+          title: s.fields.distance,
+          value: kmToDisplay(log.distanceKm ?? 5, units),
+          max: 300,
+          unit: distanceUnit,
+          separator: copy.tracker.units.decimal,
+          onSave: (value) =>
+            setLog((current) => ({
+              ...current,
+              distanceKm:
+                value && value > 0
+                  ? Math.round(displayToKm(value, units) * 100) / 100
+                  : null,
+            })),
+        };
+      case "durationSec":
+        return {
+          kind: "duration",
+          title: s.fields.duration,
+          value: log.durationSec ?? 30 * 60,
+          seconds: true,
+          labels,
+          onSave: (value) =>
+            setLog((current) => ({
+              ...current,
+              durationSec: value && value > 0 ? value : null,
+            })),
+        };
+      case "heartRate":
+        return {
+          kind: "integer",
+          title: s.fields.heartRate,
+          value: log.heartRate ?? 140,
+          min: 40,
+          max: 220,
+          unit: s.bpm,
+          secondary: log.heartRate
+            ? { label: s.clear, value: null }
+            : undefined,
+          onSave: (value) =>
+            setLog((current) => ({ ...current, heartRate: value })),
+        };
+      case "rpe":
+        return {
+          kind: "integer",
+          title: s.fields.rpe,
+          value: log.rpe ?? 5,
+          min: 1,
+          max: 10,
+          secondary: log.rpe ? { label: s.clear, value: null } : undefined,
+          onSave: (value) => setLog((current) => ({ ...current, rpe: value })),
+        };
+      default:
+        return null;
+    }
+  })();
+
+  const iconProps = {
+    size: 20,
+    color: theme.color.foreground,
+    strokeWidth: 1.9,
+  };
+
   return (
-    <BottomSheet
-      title={goalSheetCopy.title}
-      visible={visible}
-      onClose={onClose}
-      theme={theme}
-      themeMode={themeMode}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        style={styles.scrollView}
+    <>
+      <BottomSheet
+        title={copy.today.types[workoutType]}
+        visible={sheetOpen}
+        animatedHide
+        onClose={onSheetClosed}
+        theme={theme}
+        themeMode={themeMode}
       >
-        {/* Mode Tabs with Animated Pill Indicator */}
-        <SheetBlock theme={theme}>
-          <SheetTabs
-            value={mode}
-            onChange={setMode}
-            theme={theme}
-            tabs={[
-              {
-                key: "distance" as WorkoutGoalMode,
-                label: goalSheetCopy.tabs.distance,
-              },
-              {
-                key: "duration" as WorkoutGoalMode,
-                label: goalSheetCopy.tabs.duration,
-              },
-            ]}
-          />
-        </SheetBlock>
-        {errorMessage ? (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <SheetBlock theme={theme}>
-            <View
-              style={[
-                styles.errorBanner,
-                { backgroundColor: theme.color.dangerSurface },
-              ]}
-            >
-              <Text style={[styles.errorText, { color: theme.color.danger }]}>
-                {errorMessage}
-              </Text>
+            <SheetSubtitle
+              text={mode === "past" ? s.pastTitle : s.title}
+              theme={theme}
+            />
+          </SheetBlock>
+
+          {mode === "past" ? (
+            <SheetBlock theme={theme}>
+              <SheetList theme={theme}>
+                <SheetListRow
+                  theme={theme}
+                  icon={<RulerIcon {...iconProps} />}
+                  title={s.fields.distance}
+                  value={
+                    log.distanceKm
+                      ? format.distance(log.distanceKm, 2)
+                      : s.empty.distance
+                  }
+                  valueStrong={Boolean(log.distanceKm)}
+                  chevron
+                  onPress={() => openEdit("distanceKm")}
+                />
+                <SheetListRow
+                  theme={theme}
+                  divided
+                  icon={<Timer {...iconProps} />}
+                  title={s.fields.duration}
+                  value={
+                    log.durationSec
+                      ? formatClock(log.durationSec * 1000)
+                      : s.empty.duration
+                  }
+                  valueStrong={Boolean(log.durationSec)}
+                  chevron
+                  onPress={() => openEdit("durationSec")}
+                />
+                <SheetListRow
+                  theme={theme}
+                  divided
+                  icon={<Heart {...iconProps} />}
+                  title={s.fields.heartRate}
+                  value={
+                    log.heartRate
+                      ? `${log.heartRate} ${s.bpm}`
+                      : s.empty.heartRate
+                  }
+                  valueStrong={Boolean(log.heartRate)}
+                  chevron
+                  onPress={() => openEdit("heartRate")}
+                />
+                <SheetListRow
+                  theme={theme}
+                  divided
+                  icon={<Gauge {...iconProps} />}
+                  title={s.fields.rpe}
+                  value={log.rpe ? String(log.rpe) : s.empty.rpe}
+                  valueStrong={Boolean(log.rpe)}
+                  chevron
+                  onPress={() => openEdit("rpe")}
+                />
+              </SheetList>
+            </SheetBlock>
+          ) : (
+            <GoalEditor
+              draft={draft}
+              onChange={setDraft}
+              onEditTimeLimit={() => openEdit("timeLimit")}
+              workoutType={workoutType}
+              theme={theme}
+              themeMode={themeMode}
+              copy={copy}
+              language={language}
+            />
+          )}
+
+          {error ? (
+            <SheetBlock theme={theme}>
+              <InlineError message={error} theme={theme} />
+            </SheetBlock>
+          ) : null}
+
+          <SheetBlock theme={theme}>
+            <View style={styles.buttons}>
+              {mode === "past" ? (
+                <SheetButton
+                  label={s.save}
+                  onPress={() => void savePast()}
+                  pending={pending === "add"}
+                  disabled={!log.distanceKm || !log.durationSec}
+                  theme={theme}
+                  themeMode={themeMode}
+                />
+              ) : null}
+              {mode === "today" ? (
+                <SheetButton
+                  label={s.startNow}
+                  leading={
+                    <Play
+                      size={16}
+                      color={theme.color.primaryForeground}
+                      fill={theme.color.primaryForeground}
+                    />
+                  }
+                  onPress={() => void createPlanned("start")}
+                  pending={pending === "start"}
+                  disabled={pending !== null}
+                  theme={theme}
+                  themeMode={themeMode}
+                />
+              ) : null}
+              {mode !== "past" ? (
+                <SheetButton
+                  label={s.submit}
+                  variant={mode === "today" ? "secondary" : "primary"}
+                  onPress={() => void createPlanned("add")}
+                  pending={pending === "add"}
+                  disabled={pending !== null}
+                  theme={theme}
+                  themeMode={themeMode}
+                />
+              ) : null}
             </View>
           </SheetBlock>
-        ) : null}
+        </ScrollView>
+      </BottomSheet>
 
-        {/* Goal value: − value + with draggable ruler */}
-        <SheetBlock theme={theme}>
-          <Ruler
-            value={
-              mode === "distance"
-                ? parseFloat(distanceVal) || 1
-                : parseInt(durationVal, 10) || 10
-            }
-            onChange={(val) => {
-              if (mode === "distance") {
-                setDistanceVal(val.toString());
-              } else {
-                setDurationVal(val.toString());
-              }
-            }}
-            min={mode === "distance" ? 0.5 : 5}
-            max={mode === "distance" ? 1000 : 1440}
-            step={mode === "distance" ? 0.5 : 1}
-            majorEvery={mode === "distance" ? 1 : 5}
-            labelEvery={mode === "distance" ? 1 : 10}
-            unit={
-              mode === "distance"
-                ? goalSheetCopy.distanceUnit
-                : goalSheetCopy.durationUnit
-            }
-            accessibilityLabel={
-              mode === "distance"
-                ? goalSheetCopy.tabs.distance
-                : goalSheetCopy.tabs.duration
-            }
-            theme={theme}
-            themeMode={themeMode}
-          />
-        </SheetBlock>
-
-        {/* Quick Presets Horizontal Slider (Edge-to-Edge) */}
-        <SheetBlock theme={theme} edgeToEdge>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.presetsScrollContent}
-            style={styles.presetsScrollView}
-          >
-            {(mode === "distance" ? DISTANCE_PRESETS : DURATION_PRESETS).map(
-              (preset) => {
-                const isSelected =
-                  mode === "distance"
-                    ? parseFloat(distanceVal.replace(",", ".")) === preset
-                    : parseInt(durationVal, 10) === preset;
-
-                return (
-                  <Pressable
-                    key={preset}
-                    onPress={() => {
-                      if (mode === "distance") {
-                        setDistanceVal(preset.toString());
-                      } else {
-                        setDurationVal(preset.toString());
-                      }
-                    }}
-                    style={[
-                      styles.presetChip,
-                      {
-                        backgroundColor: isSelected
-                          ? theme.color.primary
-                          : theme.color.control,
-                        borderColor: theme.color.controlBorder,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.presetChipText,
-                        {
-                          color: isSelected
-                            ? theme.color.primaryForeground
-                            : theme.color.foreground,
-                          fontFamily: isSelected
-                            ? theme.typography.fontFamily.sans.bold
-                            : theme.typography.fontFamily.sans.medium,
-                        },
-                      ]}
-                    >
-                      {preset}{" "}
-                      {mode === "distance"
-                        ? goalSheetCopy.distanceUnit
-                        : goalSheetCopy.durationUnit}
-                    </Text>
-                  </Pressable>
-                );
-              },
-            )}
-          </ScrollView>
-        </SheetBlock>
-      </ScrollView>
-
-      {/* Actions Row */}
-      <SheetBlock theme={theme}>
-        <View style={styles.actionsRow}>
-          <SheetButton
-            label={goalSheetCopy.cancel}
-            onPress={onClose}
-            variant="secondary"
-            theme={theme}
-            themeMode={themeMode}
-          />
-
-          <SheetButton
-            label={goalSheetCopy.submit}
-            onPress={handleSubmit}
-            disabled={!isValid}
-            pending={createWorkoutMutation.isPending}
-            theme={theme}
-            themeMode={themeMode}
-          />
-        </View>
-      </SheetBlock>
-    </BottomSheet>
+      <ValueSheet
+        config={valueConfig}
+        onClose={() => {
+          setEditing(null);
+          setSheetOpen(true);
+        }}
+        doneLabel={s.done}
+        theme={theme}
+        themeMode={themeMode}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    width: "100%",
-  },
-  scrollContent: {
-    gap: 20,
-    paddingTop: 72,
-    paddingBottom: 84,
-  },
-  errorBanner: {
-    padding: 12,
-    borderRadius: 12,
-    width: "100%",
-  },
-  errorText: {
-    fontSize: 13,
-    textAlign: "center",
-  },
-  numberWrapper: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  superscriptUnit: {
-    position: "absolute",
-    top: -20,
-    left: 0,
-    right: 0,
-    textAlign: "center",
-    fontSize: 10,
-    lineHeight: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  stepperButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 9999,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  valueInput: {
-    fontSize: 48,
-    lineHeight: 56,
-    textAlign: "center",
-    minWidth: 90,
-  },
-  presetsScrollView: {
-    width: "100%",
-    maxHeight: 50,
-  },
-  presetsScrollContent: {
-    gap: 10,
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  presetChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 9999,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  presetChipText: {
-    fontSize: 14,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 12,
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    backgroundColor: "transparent",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  buttonPressed: {
-    transform: [{ scale: 0.985 }],
-  },
+  scroll: { width: "100%" },
+  content: { gap: 16, paddingTop: 72, paddingBottom: 32 },
+  buttons: { gap: 8, marginTop: 4 },
 });

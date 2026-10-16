@@ -15,6 +15,7 @@ export type UserSectionKey =
   | "gear"
   | "integrations"
   | "coach"
+  | "notifications"
   | "history";
 
 export type UserSectionGroup = "account" | "training" | "services";
@@ -80,6 +81,12 @@ export const USER_SECTIONS: readonly UserSection[] = [
     segment: "coach",
     group: "services",
     permissions: ["coach.users.read"],
+  },
+  {
+    key: "notifications",
+    segment: "notifications",
+    group: "services",
+    permissions: ["notifications.users.read"],
   },
   {
     key: "history",

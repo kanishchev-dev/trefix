@@ -1,6 +1,6 @@
 import type { ExecutionStep } from "@trefix/api-client";
 
-import type { Cue } from "./cues";
+import type { Cue, VoiceReport } from "./cues";
 
 export type VoiceLanguage = "ru" | "en";
 export type VoiceUnits = "metric" | "imperial";
@@ -206,25 +206,32 @@ const capitalize = (text: string): string =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
 /** The sentence for a cue, ready for the speech engine. */
+/** Text of a cue; an empty string when the report has nothing left to say. */
 export function renderCue(
   cue: Cue,
   language: VoiceLanguage,
   units: VoiceUnits,
+  report?: VoiceReport,
 ): string {
   const t = TEXT[language];
   switch (cue.type) {
     case "started":
       return t.started;
     case "interval": {
-      const parts = [
-        `${capitalize(speakDistance(cue.distanceM, language, units))}.`,
-        `${t.time} ${speakDuration(cue.movingMs / 1000, language)}.`,
-      ];
-      if (cue.segmentPaceSecPerKm !== null)
+      const parts: string[] = [];
+      if (!report || report.distance)
+        parts.push(
+          `${capitalize(speakDistance(cue.distanceM, language, units))}.`,
+        );
+      if (!report || report.time)
+        parts.push(
+          `${t.time} ${speakDuration(cue.movingMs / 1000, language)}.`,
+        );
+      if (cue.segmentPaceSecPerKm !== null && (!report || report.splitPace))
         parts.push(
           `${t.segmentPace} ${speakPace(cue.segmentPaceSecPerKm, language, units)}.`,
         );
-      if (cue.avgPaceSecPerKm !== null)
+      if (cue.avgPaceSecPerKm !== null && (!report || report.avgPace))
         parts.push(
           `${t.avgPace} ${speakPace(cue.avgPaceSecPerKm, language, units)}.`,
         );

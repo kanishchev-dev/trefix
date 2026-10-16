@@ -4,7 +4,13 @@ import type { ExecutionStep } from "@trefix/api-client";
 
 import type { StepProgress } from "../engine/plan-progress";
 import type { EngineView } from "../engine/types";
-import { createCueState, nextCues, type Cue, type VoiceSettings } from "./cues";
+import {
+  createCueState,
+  nextCues,
+  reportedCues,
+  type Cue,
+  type VoiceSettings,
+} from "./cues";
 import { renderCue, speakDuration, speakPace } from "./phrases";
 
 const settings: VoiceSettings = { enabled: true, interval: "1u" };
@@ -257,5 +263,44 @@ describe("phrases", () => {
         "imperial",
       ),
     ).toBe("Workout finished. 3.2 miles in 30 minutes.");
+  });
+});
+
+describe("voice report", () => {
+  const report = {
+    distance: true,
+    time: false,
+    splitPace: false,
+    avgPace: true,
+    planSteps: false,
+  };
+
+  it("says only the chosen parts of the regular report", () => {
+    expect(
+      renderCue(
+        {
+          type: "interval",
+          distanceM: 2004,
+          movingMs: 610_000,
+          avgPaceSecPerKm: 305,
+          segmentPaceSecPerKm: 300,
+        },
+        "ru",
+        "metric",
+        report,
+      ),
+    ).toBe("2 километра. Средний темп 5 минут 5 секунд на километр.");
+  });
+
+  it("drops plan announcements when plan steps are off", () => {
+    const cues: Cue[] = [
+      { type: "step", step: work, index: 1, total: 8 },
+      { type: "planDone" },
+      { type: "paused" },
+    ];
+    expect(reportedCues(cues, report).map((cue) => cue.type)).toEqual([
+      "paused",
+    ]);
+    expect(reportedCues(cues, undefined)).toHaveLength(3);
   });
 });

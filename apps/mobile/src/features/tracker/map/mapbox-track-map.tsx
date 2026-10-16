@@ -13,12 +13,14 @@ import Mapbox, {
   LocationPuck,
   MapView,
   ShapeSource,
+  StyleImport,
   SymbolLayer,
 } from "@rnmapbox/maps";
 import { LocateFixed } from "lucide-react-native";
 
 import { isDarkTheme, type ThemeTokens } from "@trefix/tokens";
 
+import { Glass } from "../components/glass";
 import { boundsOf, type LatLng } from "../engine/geo";
 import type { DistanceMarker, LngLat, TrackLines } from "../engine/track";
 
@@ -26,8 +28,8 @@ import type { DistanceMarker, LngLat, TrackLines } from "../engine/track";
 void Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? "");
 Mapbox.setTelemetryEnabled(false);
 
-const STYLE_LIGHT = "mapbox://styles/mapbox/light-v11";
-const STYLE_DARK = "mapbox://styles/mapbox/dark-v11";
+/** Mapbox Standard: day / night light preset, no POI or transit labels. */
+const STYLE_STANDARD = "mapbox://styles/mapbox/standard";
 const FOLLOW_ZOOM = 16;
 const FIT_PADDING = 32;
 
@@ -41,6 +43,10 @@ export type TrackMapProps = {
   points?: LatLng[];
   interactive?: boolean;
   centerLabel?: string;
+  /** Where the "back to my position" button sits; top right by default. */
+  centerButtonStyle?: StyleProp<ViewStyle>;
+  /** Hides the attribution and logo margins under overlays (full-screen map). */
+  ornamentsBottom?: number;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -61,6 +67,8 @@ export function MapboxTrackMap({
   points = [],
   interactive = mode === "follow",
   centerLabel,
+  centerButtonStyle,
+  ornamentsBottom = 8,
   style,
 }: TrackMapProps) {
   const [following, setFollowing] = useState(true);
@@ -128,16 +136,25 @@ export function MapboxTrackMap({
     >
       <MapView
         style={StyleSheet.absoluteFill}
-        styleURL={dark ? STYLE_DARK : STYLE_LIGHT}
+        styleURL={STYLE_STANDARD}
         scrollEnabled={interactive}
         zoomEnabled={interactive}
         rotateEnabled={false}
         pitchEnabled={false}
         scaleBarEnabled={false}
         compassEnabled={false}
-        logoPosition={{ bottom: 8, left: 8 }}
-        attributionPosition={{ bottom: 8, right: 8 }}
+        logoPosition={{ bottom: ornamentsBottom, left: 8 }}
+        attributionPosition={{ bottom: ornamentsBottom, right: 8 }}
       >
+        <StyleImport
+          id="basemap"
+          existing
+          config={{
+            lightPreset: dark ? "night" : "day",
+            showPointOfInterestLabels: false,
+            showTransitLabels: false,
+          }}
+        />
         {mode === "follow" ? (
           <Camera
             followUserLocation={following}
@@ -218,14 +235,8 @@ export function MapboxTrackMap({
             id="trefix-ends-circle"
             style={{
               circleRadius: 6,
-              circleColor: [
-                "match",
-                ["get", "kind"],
-                "start",
-                theme.color.success,
-                theme.color.danger,
-              ],
-              circleStrokeColor: theme.color.background,
+              circleColor: theme.color.foreground,
+              circleStrokeColor: theme.color.card,
               circleStrokeWidth: 2,
             }}
           />
@@ -239,14 +250,13 @@ export function MapboxTrackMap({
           onPress={() => setFollowing(true)}
           style={({ pressed }) => [
             styles.center,
-            {
-              backgroundColor: theme.color.floating,
-              borderColor: theme.color.border,
-            },
+            centerButtonStyle,
             pressed && styles.pressed,
           ]}
         >
-          <LocateFixed color={theme.color.foreground} size={20} />
+          <Glass theme={theme} interactive style={styles.centerGlass}>
+            <LocateFixed color={theme.color.foreground} size={20} />
+          </Glass>
         </Pressable>
       ) : null}
     </View>
@@ -261,8 +271,10 @@ const styles = StyleSheet.create({
     top: 12,
     width: 44,
     height: 44,
+  },
+  centerGlass: {
+    flex: 1,
     borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },

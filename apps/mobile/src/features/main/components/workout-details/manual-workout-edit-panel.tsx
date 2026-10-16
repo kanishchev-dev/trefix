@@ -20,7 +20,6 @@ import {
   SheetActionBar,
 } from "../../../plans/components/plans-ui";
 import {
-  addDaysIso,
   mondayBasedWeekday,
   todayIso,
   workoutLocalDate,
@@ -55,7 +54,7 @@ type Props = {
 /**
  * Change, move or remove a workout the user added by hand. Unlike plan
  * workouts there is nothing else to recalculate, so changes apply right away.
- * A planned manual workout lives on a future day: moves start from tomorrow.
+ * A planned manual workout lives on today or a later day: moves start from today.
  */
 export function ManualWorkoutEditPanel({
   mode,
@@ -75,10 +74,8 @@ export function ManualWorkoutEditPanel({
   const deleteMutation = useDeleteWorkout();
   const [error, setError] = useState<string | null>(null);
   const currentDate = workoutLocalDate(workout.scheduledAt);
-  const tomorrow = addDaysIso(todayIso(), 1);
-  const [date, setDate] = useState(
-    currentDate < tomorrow ? tomorrow : currentDate,
-  );
+  const today = todayIso();
+  const [date, setDate] = useState(currentDate < today ? today : currentDate);
   const busy = updateMutation.isPending || deleteMutation.isPending;
 
   const fail = (reason: unknown) =>
@@ -164,8 +161,8 @@ export function ManualWorkoutEditPanel({
           <SheetBlock theme={theme}>
             <DateWheel
               value={date}
-              onChange={(next) => setDate(next < tomorrow ? tomorrow : next)}
-              minDate={tomorrow}
+              onChange={(next) => setDate(next < today ? today : next)}
+              minDate={today}
               monthNames={copy.plan.creation.datePicker.months}
               accessibilityLabel={editCopy.dateLabel}
               theme={theme}

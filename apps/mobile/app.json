@@ -109,6 +109,12 @@
         }
       ],
       "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#18181b"
+        }
+      ],
       "@rnmapbox/maps"
     ],
     "locales": {

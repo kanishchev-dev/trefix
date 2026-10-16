@@ -1,8 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import type {
-  RecordedActivityRequest,
-  WorkoutType,
-} from "@trefix/api-client";
+import type { RecordedActivityRequest, WorkoutType } from "@trefix/api-client";
 
 import type { EngineState, LocationSample } from "../engine/types";
 import type { TrackFile } from "../engine/summary";
@@ -57,6 +54,19 @@ export type SessionMeta = {
   workoutType: Exclude<WorkoutType, "rest"> | null;
   /** Voice cues of this run; absent in sessions of older builds. */
   voice?: SessionVoice | null;
+  /**
+   * The run goes towards one goal (a workout added with a goal, or a free run
+   * with a goal set before the start) rather than through plan steps.
+   */
+  goal?: RunGoal | null;
+};
+
+export type RunGoal = {
+  kind: "duration" | "distance";
+  durationSec: number | null;
+  distanceM: number | null;
+  /** Distance goal: finish within this many seconds. */
+  timeLimitSec: number | null;
 };
 
 export type SessionVoice = VoiceSettings & {
@@ -144,6 +154,20 @@ export async function saveSessionState(
     "UPDATE sessions SET status = ?, state = ?, updated_at = ? WHERE id = ?",
     status,
     JSON.stringify(state),
+    Date.now(),
+    id,
+  );
+}
+
+export async function saveSessionMeta(
+  id: string,
+  meta: SessionMeta,
+): Promise<void> {
+  await (
+    await db()
+  ).runAsync(
+    "UPDATE sessions SET meta = ?, updated_at = ? WHERE id = ?",
+    JSON.stringify(meta),
     Date.now(),
     id,
   );

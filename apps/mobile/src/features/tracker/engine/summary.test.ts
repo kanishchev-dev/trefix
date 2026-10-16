@@ -142,6 +142,7 @@ describe("buildRecording", () => {
       { distanceM: 2000 },
       device,
     );
+    expect(summary).not.toHaveProperty("linkPlanned");
     expect(summary).toMatchObject({
       distanceSource: "manual",
       distanceM: 2000,

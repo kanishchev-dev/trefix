@@ -1,5 +1,6 @@
 import {
   ActivityIcon,
+  BellIcon,
   CalendarRangeIcon,
   EyeIcon,
   FootprintsIcon,
@@ -29,6 +30,7 @@ export const ACTIVITY_DOMAIN_ICONS: Record<ActivityItem["domain"], LucideIcon> =
     integrations: PlugIcon,
     coach: SparklesIcon,
     preferences: SlidersHorizontalIcon,
+    notifications: BellIcon,
     data_access: EyeIcon,
     settings: SettingsIcon,
   };

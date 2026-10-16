@@ -24,18 +24,48 @@
       "race": "Race"
     },
     "goalSheet": {
-      "title": "Specify goal",
+      "title": "Set a goal",
+      "pastTitle": "How did it go",
       "tabs": {
-        "distance": "Distance",
-        "duration": "Time"
+        "none": "No goal",
+        "duration": "Time",
+        "distance": "Distance"
       },
       "distanceUnit": "km",
       "durationUnit": "min",
+      "timeLimit": "Finish within",
+      "notSet": "Not set",
+      "estimateDistance": "≈ {{distance}} at {{pace}}",
+      "estimateDuration": "≈ {{duration}} at {{pace}}",
+      "corridor": "Pace {{pace}} — range {{min}}–{{max}}",
+      "noGoalHint": "Time and distance are recorded without a goal",
+      "startNow": "Start now",
       "submit": "Add",
+      "save": "Save",
       "cancel": "Cancel",
-      "invalidValue": "Please enter a value greater than 0",
-      "futureDateOnly": "Planned workouts can only be added for future dates.",
-      "errorDefault": "Failed to add workout. Please try again."
+      "done": "Done",
+      "clear": "Remove",
+      "fields": {
+        "distance": "Distance",
+        "duration": "Time",
+        "heartRate": "Average heart rate",
+        "rpe": "Effort, RPE"
+      },
+      "empty": {
+        "distance": "Not set",
+        "duration": "Not set",
+        "heartRate": "Not set",
+        "rpe": "Not set"
+      },
+      "timeLabels": {
+        "h": "h",
+        "min": "min",
+        "s": "s"
+      },
+      "bpm": "bpm",
+      "pastRequired": "Enter the distance and time",
+      "invalidValue": "Enter a value greater than 0",
+      "errorDefault": "Couldn't add the workout. Please try again."
     },
     "eventTypes": {
       "workout": "Workout",
@@ -126,7 +156,11 @@
         "editTitle": "Edit workout",
         "removeTitle": "Delete workout",
         "removeBody": "The workout will be deleted permanently. Are you sure you want to delete it?"
-      }
+      },
+      "moveToToday": "Move to today",
+      "moveToTodayFailed": "Couldn't move the workout. Please try again.",
+      "futureNote": "You can start it on its day. To run it today, move it.",
+      "missedNote": "Ran but didn't record it? Mark it done — the goal is filled in, just add the time."
     }
   },
   "plan": {
@@ -2535,7 +2569,308 @@
     "healthExport": "Save to {{store}}",
     "healthExportHint": "The workout and its route will appear in {{store}}. Write access is asked once.",
     "healthDenied": "No write access to {{store}}. Allow it in {{store}} settings.",
-    "healthFailed": "Couldn't save the workout to {{store}}"
+    "healthFailed": "Couldn't save the workout to {{store}}",
+    "recordSection": "Recording",
+    "whereShort": "Where",
+    "goal": "Goal",
+    "goalValue": {
+      "none": "No goal",
+      "duration": "Time · {{value}}",
+      "distance": "Distance · {{value}}",
+      "distanceLimit": "Distance · {{value}} in {{limit}}"
+    },
+    "distanceRow": "Distance",
+    "pedometer": "Pedometer",
+    "voiceEvery": {
+      "1u": "Every 1 km",
+      "2u": "Every 2 km",
+      "5min": "Every 5 min",
+      "10min": "Every 10 min"
+    },
+    "voiceEveryImperial": {
+      "1u": "Every mile",
+      "2u": "Every 2 miles"
+    },
+    "voiceOff": "Off",
+    "freeTitle": "Free workout",
+    "treadmillTitle": "Treadmill",
+    "heroSub": {
+      "ready": "Type, feeling and a note — after the finish",
+      "searching": "You can start — accuracy improves within a minute",
+      "treadmill": "The pedometer counts the distance; check it against the console",
+      "goal": "Goal {{goal}} · {{estimate}}"
+    },
+    "gpsPill": {
+      "searching": "Searching for GPS",
+      "searchingAccuracy": "Searching for GPS · ±{{metres}} m",
+      "ready": "GPS ready",
+      "off": "No GPS"
+    },
+    "noGps": {
+      "title": "No location access",
+      "body": "The route won't be recorded without it. You can start by time — the pedometer will count the distance.",
+      "servicesTitle": "Location is off",
+      "servicesBody": "Turn on location services in the phone settings or start by time — the pedometer will count the distance."
+    },
+    "kicker": {
+      "today": "Today",
+      "week": "Today · week {{number}}",
+      "own": "Today · your workout"
+    },
+    "goalSub": {
+      "duration": "time goal",
+      "distance": "distance goal",
+      "limit": "in {{limit}}"
+    },
+    "goalNone": "No goal",
+    "noCorridor": "no pace range",
+    "corridorRange": "range {{min}}–{{max}}",
+    "goalSheetTitle": "Goal",
+    "done": "Done",
+    "voiceSheet": {
+      "title": "Voice cues",
+      "toggle": "Voice cues",
+      "howOften": "How often",
+      "what": "What to tell",
+      "items": {
+        "distance": "Distance",
+        "time": "Time",
+        "splitPace": "Last km pace",
+        "splitPaceImperial": "Last mile pace",
+        "avgPace": "Average pace",
+        "planSteps": "Plan steps"
+      },
+      "hint": "They play with the screen off too."
+    },
+    "countdown": {
+      "tap": "Tap the screen to start right away",
+      "firstStep": "Step 1 — {{step}}"
+    },
+    "access": {
+      "title": "Access",
+      "notNow": "Not now",
+      "location": {
+        "title": "Location",
+        "subtitle": "Needed to record the route, pace and splits.",
+        "allow": "Allow location",
+        "rows": [
+          {
+            "title": "Route and exact distance",
+            "text": "Without location only time and steps are recorded"
+          },
+          {
+            "title": "“While using” is enough",
+            "text": "Recording goes on with the screen off"
+          },
+          {
+            "title": "Only during a workout",
+            "text": "Location is used between “Start” and “Finish”"
+          }
+        ]
+      },
+      "motion": {
+        "title": "Motion & fitness",
+        "subtitle": "The motion sensor counts the run without GPS.",
+        "allow": "Allow access",
+        "rows": [
+          {
+            "title": "Distance on a treadmill and without GPS",
+            "text": "Counted from steps and stride length"
+          },
+          {
+            "title": "Cadence",
+            "text": "Steps per minute — shown in the summary"
+          },
+          {
+            "title": "Accurate auto-pause",
+            "text": "Pauses only when you really stop"
+          }
+        ]
+      }
+    },
+    "status": {
+      "gps": "GPS",
+      "searching": "Searching for GPS",
+      "noGps": "No GPS",
+      "pedometer": "Pedometer",
+      "pausedFor": "Paused · {{time}}",
+      "auto": "Auto-pause"
+    },
+    "gpsLostToast": {
+      "title": "GPS signal lost",
+      "body": "Counting with the pedometer, the route continues"
+    },
+    "autoPauseCaption": "Recording resumes when you start running",
+    "holdFinishCaption": "Hold “Finish” to end the workout",
+    "pages": {
+      "metrics": "Metrics",
+      "map": "Map",
+      "steps": "Steps"
+    },
+    "metricNames": {
+      "time": "Time",
+      "distance": "Distance",
+      "pace": "Pace",
+      "splitPace": "Last km pace",
+      "splitPaceImperial": "Last mile pace",
+      "avgPace": "Average pace",
+      "elevation": "Elevation gain",
+      "cadence": "Cadence"
+    },
+    "distancePedometer": "Distance · pedometer",
+    "card": {
+      "left": "left",
+      "unitLeft": "{{unit}} left",
+      "corridor": "Range",
+      "slower": "slower",
+      "faster": "faster",
+      "next": "Next: {{step}}",
+      "skip": "Skip",
+      "then": "Next",
+      "inCorridor": "in range",
+      "stepDone": "Step {{current}} of {{total}} done",
+      "own": "{{type}} · yours",
+      "goalTime": "Goal {{value}}",
+      "goalDone": "goal reached",
+      "passed": "{{time}} done",
+      "distanceIn": "{{distance}} in {{time}}",
+      "toFinish": "Finish in {{time}}",
+      "ahead": "Ahead by {{delta}}",
+      "behind": "Behind by {{delta}}",
+      "onTrack": "On schedule",
+      "forecast": "forecast {{time}}",
+      "covered": "{{done}} of {{total}} done",
+      "moreSteps": "{{count}} more steps",
+      "pedometerPace": "Pace is approximate without GPS",
+      "pace": "Pace {{pace}}"
+    },
+    "sheets": {
+      "planDone": {
+        "title": "Plan done",
+        "body": "All steps are behind you. Finish now or run easy — the rest goes into this workout."
+      },
+      "goalDone": {
+        "title": "{{goal}} done",
+        "body": "Goal reached. Finish now or run easy — the extra is recorded too."
+      },
+      "short": {
+        "title": "Recording too short",
+        "body": "Under 200 m and 1 minute — it won't go into your log. Keep running or delete the recording."
+      },
+      "finishRun": "Finish workout",
+      "continueRun": "Keep running",
+      "deleteRun": "Delete recording",
+      "laps": "Segments",
+      "lapsValue": "{{done}} of {{total}}"
+    },
+    "metricPicker": {
+      "title": "Metric",
+      "instead": "Instead of “{{metric}}”",
+      "onScreen": "on screen",
+      "hint": "Hold a cell on the recording screen to replace it. The set is kept for your next workouts."
+    },
+    "summary": {
+      "kicker": {
+        "free": "{{date}} · free",
+        "own": "{{date}} · your workout",
+        "week": "{{date}} · week {{number}}",
+        "treadmill": "{{date}} · treadmill"
+      },
+      "todayAt": "Today, {{time}}",
+      "noPlan": "No plan",
+      "goalMeta": "goal {{goal}}",
+      "noGpsMeta": "no GPS",
+      "result": "Result",
+      "how": "How did it go?",
+      "data": "Details",
+      "saving": "Saving",
+      "tiles": {
+        "pace": "Pace",
+        "avgHeartRate": "Average heart rate",
+        "elevation": "Elevation gain",
+        "cadence": "Cadence",
+        "maxHeartRate": "Max heart rate"
+      },
+      "planNote": "{{done}} of {{total}} in range",
+      "goalDone": "Goal reached",
+      "goalPart": "Goal {{percent}}% done",
+      "lapPlan": "plan {{value}}",
+      "lapGoal": "goal {{value}}",
+      "lapDone": "done",
+      "rest": "Rest",
+      "restDetail": "{{count}} × {{time}}",
+      "splitNote": {
+        "negative": "Negative split: {{from}} → {{to}}",
+        "fastest": "Fastest — {{km}} {{unit}}, {{pace}}",
+        "even": "Even: {{min}}–{{max}}",
+        "pedometer": "By pedometer, ±5%"
+      },
+      "rpeLabels": [
+        "Very easy",
+        "Very easy",
+        "Easy",
+        "Easy",
+        "Moderate",
+        "Moderate",
+        "Hard",
+        "Hard",
+        "Very hard",
+        "Max"
+      ],
+      "type": "Type",
+      "typeFree": "No type",
+      "typePlan": "{{type}} · plan",
+      "typeOwn": "{{type}} · yours",
+      "distanceSource": {
+        "gps": "By GPS",
+        "pedometer": "Pedometer · check it",
+        "treadmill": "Pedometer · compare",
+        "edited": "Entered by hand"
+      },
+      "link": {
+        "section": "Today's plan",
+        "title": "Count as “{{title}}”",
+        "hint": "The recording closes the calendar workout instead of a separate one."
+      },
+      "offline": {
+        "title": "No internet",
+        "body": "The workout is kept on the phone and sent when you're online. Tref's review comes after that."
+      },
+      "healthNote": {
+        "routeHr": "With route and heart rate",
+        "route": "With route",
+        "hr": "With heart rate",
+        "plain": "Time and distance"
+      },
+      "hint": "After saving, the workout opens with Tref's review.",
+      "hintOffline": "Tref's review appears once the workout is sent.",
+      "saveOffline": "Save on the phone",
+      "distanceSheet": {
+        "title": "Distance",
+        "treadmillBody": "The pedometer counted {{distance}}. Enter what the treadmill showed.",
+        "body": "The pedometer counted {{distance}}. Enter the exact distance if you know it.",
+        "keep": "Keep {{distance}}"
+      },
+      "more": {
+        "title": "Actions",
+        "share": "Share",
+        "delete": "Delete recording"
+      },
+      "shareText": "{{title}}: {{distance}} in {{time}}, pace {{pace}}",
+      "deleteSheet": {
+        "title": "Delete the recording?",
+        "body": "The workout won't be saved. This can't be undone.",
+        "confirm": "Delete"
+      },
+      "shoes": "Shoes"
+    },
+    "restore": {
+      "title": "Recording interrupted",
+      "body": "The app closed at {{time}}. Everything up to then is saved — continue from there or finish.",
+      "resume": "Continue recording",
+      "finish": "Finish and see the summary",
+      "delete": "Delete recording"
+    }
   },
   "errors": {
     "title": "Error",
@@ -2779,6 +3114,49 @@
     "units": {
       "m": "m",
       "ft": "ft"
+    }
+  },
+  "inbox": {
+    "title": "Notifications",
+    "bellLabel": "Notifications",
+    "bellLabelUnread": "Notifications, unread: {{count}}",
+    "channelName": "Notifications",
+    "empty": {
+      "title": "All quiet",
+      "body": "Messages from Tref and Trefix news will appear here"
+    },
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loadMore": "Show more",
+    "error": "Could not load notifications",
+    "retry": "Try again",
+    "menu": {
+      "title": "Notifications",
+      "readAll": "Mark all as read",
+      "settings": "Notification settings"
+    },
+    "item": {
+      "title": "Notification",
+      "open": "Open",
+      "delete": "Delete"
+    },
+    "push": {
+      "offTitle": "Push notifications are off",
+      "offBody": "Turn them on so you don't miss messages from Tref",
+      "enable": "Turn on",
+      "openSettings": "Open settings"
+    },
+    "senders": {
+      "coach": "Tref",
+      "admin": "Trefix",
+      "workouts": "Workouts",
+      "plans": "Plan",
+      "progress": "Progress",
+      "account": "Trefix"
+    },
+    "types": {
+      "coach_message": "Message from Tref",
+      "admin_message": "Message from Trefix"
     }
   }
 }

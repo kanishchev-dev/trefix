@@ -109,6 +109,17 @@ cd frontend/apps/mobile/android
 
 Версии задаются в `app.json`: `version`, а для version code — `android.versionCode`.
 
+## Пуш-уведомления
+
+Пуши идут через Expo Push Service (`expo-notifications`, плагин подключён в `app.json`). Приложение само регистрирует токен (`PUT /v1/notifications/devices`) при старте и при возврате из фона, но только если разрешение уже выдано. Само разрешение запрашивается с экрана «Уведомления» (колокольчик на «Сегодня»).
+
+Чтобы токен выдавался, нужно:
+- привязать проект к EAS: `npx eas init` записывает `extra.eas.projectId` в `app.json`;
+- загрузить ключи: APNs key для iOS (`eas credentials`) и FCM v1 service account для Android (`google-services.json` + ключ в проекте Expo);
+- собрать нативную сборку после добавления плагина. В Expo Go на Android удалённые пуши не работают; входящие в приложении при этом работают.
+
+Без `projectId` или в симуляторе регистрация тихо пропускается, остаются только входящие и realtime-бейдж.
+
 ## Без нативной сборки
 
 ```bash

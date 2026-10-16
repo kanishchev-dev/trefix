@@ -38,6 +38,7 @@ const SECTION_PERMISSIONS: SectionPermission[] = [
     permission: section.permissions[0],
   })),
   { prefix: "/audit", permission: "audit.read" },
+  { prefix: "/notifications", permission: "notifications.broadcasts.read" },
   { prefix: "/users/list", permission: "users.read" },
   { prefix: "/users/create", permission: "users.create" },
   { prefix: "/users", permission: "users.read" },

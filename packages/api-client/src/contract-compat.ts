@@ -63,6 +63,9 @@ export type RequestChecks = [
   Expect<Assignable<api.UpdateSettingsInput, dto.UpdateSettingsDto>>,
   Expect<Assignable<api.AdminCreateWorkoutInput, dto.AdminWorkoutCreateDto>>,
   Expect<Assignable<api.AdminUpdateWorkoutInput, dto.AdminWorkoutUpdateDto>>,
+  Expect<Assignable<api.CreateBroadcastInput, dto.CreateBroadcastDto>>,
+  Expect<Assignable<api.BroadcastAudienceInput, dto.BroadcastAudienceDto>>,
+  Expect<Assignable<api.RegisterPushDeviceInput, dto.RegisterPushDeviceDto>>,
 ];
 
 export type ResponseChecks = [
@@ -73,6 +76,18 @@ export type ResponseChecks = [
     Assignable<
       dto.CoachMessageResponseDto,
       z.input<typeof api.coachMessageSchema>
+    >
+  >,
+  Expect<
+    Assignable<
+      dto.NotificationResponseDto,
+      z.input<typeof api.notificationSchema>
+    >
+  >,
+  Expect<
+    Assignable<
+      dto.AdminNotificationResponseDto,
+      z.input<typeof api.adminNotificationSchema>
     >
   >,
 ];

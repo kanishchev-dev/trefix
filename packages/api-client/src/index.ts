@@ -353,6 +353,10 @@ export const createWorkoutSchema = z.object({
   description: z.string().optional(),
   durationMinutes: z.number().optional(),
   distanceKm: z.number().optional(),
+  /** One goal of a workout added by hand; only its value is stored, the other stays 0. */
+  goal: z.enum(["none", "duration", "distance"]).optional(),
+  /** Distance goal only: finish within this many minutes (sets the pace corridor). */
+  timeLimitMin: z.number().optional(),
   status: z.enum(["planned", "completed"]).optional(),
   actualDurationMinutes: z.number().optional(),
   actualDistanceKm: z.number().optional(),
@@ -372,6 +376,7 @@ export const completeWorkoutSchema = z.object({
 });
 
 export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;
+export type WorkoutGoal = NonNullable<CreateWorkoutInput["goal"]>;
 export type CompleteWorkoutInput = z.infer<typeof completeWorkoutSchema>;
 
 // --- Training Goals Taxonomy & Universal Goal Model ---
@@ -1675,6 +1680,8 @@ export type RecordedActivityRequest = {
   environment: RecordingEnvironment;
   distanceSource: DistanceSource;
   plannedWorkoutId?: string | null;
+  /** False keeps a free run apart from the day's unfinished planned workout. */
+  linkPlanned?: boolean;
   workoutType?: Exclude<WorkoutType, "rest"> | null;
   startedAt: string;
   endedAt: string;
@@ -1737,7 +1744,8 @@ export const adminOverviewSchema = contract.zAdminOverviewResponseDto;
 export const accountSecuritySchema = contract.zAccountSecurityResponseDto;
 export const blockUserSchema = contract.zBlockUserDto;
 export const userBlockReasonSchema = contract.zBlockUserDto.shape.reason;
-export const userStatusSchema = contract.zAccountSecurityResponseDto.shape.status;
+export const userStatusSchema =
+  contract.zAccountSecurityResponseDto.shape.status;
 export const adminEmailChangeSchema = contract.zAdminEmailChangeDto;
 export const adminCoachSessionListSchema =
   contract.zAdminCoachSessionListResponseDto;
@@ -1765,6 +1773,135 @@ export type TrainingWorkoutCompletion = z.infer<
   typeof trainingWorkoutCompletionSchema
 >;
 export type RaceResult = z.infer<typeof raceResultSchema>;
+
+// --- Notifications ---
+
+/**
+ * Inbox entries. `category` and `type` stay open strings on the client: an
+ * older app must keep showing the inbox when the backend adds a new kind.
+ */
+export const notificationSchema = contract.zNotificationResponseDto.extend({
+  category: z.string(),
+  type: z.string(),
+});
+export const notificationPageSchema = z.object({
+  data: z.array(notificationSchema),
+  meta: paginationMetaSchema,
+});
+export const notificationUnreadCountSchema =
+  contract.zNotificationUnreadCountResponseDto;
+export const pushDeviceSchema = contract.zPushDeviceResponseDto;
+export const pushDeviceListSchema = contract.zPushDeviceListResponseDto;
+export const adminNotificationSchema =
+  contract.zAdminNotificationResponseDto.extend({
+    category: z.string(),
+    type: z.string(),
+  });
+export const adminNotificationPageSchema = z.object({
+  data: z.array(adminNotificationSchema),
+  meta: paginationMetaSchema,
+});
+export const broadcastSchema = contract.zBroadcastResponseDto;
+export const broadcastPageSchema = z.object({
+  data: z.array(broadcastSchema),
+  meta: paginationMetaSchema,
+});
+export const broadcastRecipientSchema = contract.zBroadcastRecipientResponseDto;
+export const broadcastRecipientPageSchema = z.object({
+  data: z.array(broadcastRecipientSchema),
+  meta: paginationMetaSchema,
+});
+export const audiencePreviewSchema = contract.zAudiencePreviewResponseDto;
+
+export const NOTIFICATION_CATEGORIES =
+  contract.zNotificationResponseDto.shape.category.options;
+export const NOTIFICATION_LINK_TARGETS =
+  contract.zNotificationLinkDto.shape.target.options;
+export const NOTIFICATION_CHANNELS =
+  contract.zNotificationDeliveryResponseDto.shape.channel.options;
+export const NOTIFICATION_DELIVERY_STATUSES =
+  contract.zNotificationDeliveryResponseDto.shape.status.options;
+export const BROADCAST_AUDIENCE_TYPES =
+  contract.zBroadcastAudienceDto.shape.type.options;
+export const BROADCAST_STATUSES = broadcastSchema.shape.status.options;
+export const PUSH_PLATFORMS = pushDeviceSchema.shape.platform.options;
+
+/** Bounds mirrored from the backend broadcast DTOs. */
+export const BROADCAST_LIMITS = {
+  titleMaxLength: 120,
+  bodyMaxLength: 2000,
+  urlMaxLength: 500,
+  usersMax: 1000,
+} as const;
+
+const broadcastTextSchema = z.object({
+  title: z.string().trim().max(BROADCAST_LIMITS.titleMaxLength).nullish(),
+  body: z.string().trim().min(1).max(BROADCAST_LIMITS.bodyMaxLength),
+});
+
+export const broadcastAudienceInputSchema = z.object({
+  type: z.enum(BROADCAST_AUDIENCE_TYPES),
+  userIds: z.array(z.uuid()).max(BROADCAST_LIMITS.usersMax).optional(),
+  groupId: z.uuid().optional(),
+  segment: z
+    .object({
+      languages: z.array(z.enum(["ru", "en"])).optional(),
+      platforms: z.array(z.enum(PUSH_PLATFORMS)).optional(),
+      registeredFrom: z.string().optional(),
+      registeredTo: z.string().optional(),
+      activePlan: z.boolean().optional(),
+    })
+    .optional(),
+});
+
+export const createBroadcastSchema = z.object({
+  audience: broadcastAudienceInputSchema,
+  content: z.object({
+    ru: broadcastTextSchema.optional(),
+    en: broadcastTextSchema.optional(),
+  }),
+  link: z
+    .object({
+      target: z.enum(NOTIFICATION_LINK_TARGETS),
+      id: z.uuid().nullish(),
+      url: z.url().max(BROADCAST_LIMITS.urlMaxLength).nullish(),
+    })
+    .nullish(),
+  channels: z.array(z.enum(NOTIFICATION_CHANNELS)),
+});
+
+export type Notification = z.infer<typeof notificationSchema>;
+export type NotificationPage = z.infer<typeof notificationPageSchema>;
+export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
+export type NotificationLink = NonNullable<Notification["link"]>;
+export type NotificationLinkTarget = (typeof NOTIFICATION_LINK_TARGETS)[number];
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+export type NotificationDeliveryStatus =
+  (typeof NOTIFICATION_DELIVERY_STATUSES)[number];
+export type PushDevice = z.infer<typeof pushDeviceSchema>;
+export type PushPlatform = (typeof PUSH_PLATFORMS)[number];
+export type AdminNotification = z.infer<typeof adminNotificationSchema>;
+export type AdminNotificationPage = z.infer<typeof adminNotificationPageSchema>;
+export type Broadcast = z.infer<typeof broadcastSchema>;
+export type BroadcastPage = z.infer<typeof broadcastPageSchema>;
+export type BroadcastStatus = (typeof BROADCAST_STATUSES)[number];
+export type BroadcastAudienceType = (typeof BROADCAST_AUDIENCE_TYPES)[number];
+export type BroadcastRecipient = z.infer<typeof broadcastRecipientSchema>;
+export type BroadcastRecipientPage = z.infer<
+  typeof broadcastRecipientPageSchema
+>;
+export type AudiencePreview = z.infer<typeof audiencePreviewSchema>;
+export type BroadcastAudienceInput = z.infer<
+  typeof broadcastAudienceInputSchema
+>;
+export type CreateBroadcastInput = z.infer<typeof createBroadcastSchema>;
+export type RegisterPushDeviceInput = {
+  token: string;
+  platform: PushPlatform;
+  locale?: string | null;
+  appVersion?: string | null;
+  deviceName?: string | null;
+};
 
 export class ApiClientError extends Error {
   readonly status: number;

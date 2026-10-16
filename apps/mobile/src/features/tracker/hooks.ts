@@ -9,6 +9,31 @@ import { pushSubScreen } from "../main/main-routes";
 import { recorder, type RecorderSnapshot } from "./recorder";
 import { processUploadQueue, type UploadOutcome } from "./storage/uploader";
 
+let restorePrompt = false;
+const restoreListeners = new Set<() => void>();
+
+function showRestorePrompt(): void {
+  restorePrompt = true;
+  for (const listener of restoreListeners) listener();
+}
+
+/** Whether Today should ask about an interrupted recording, and how to dismiss it. */
+export function useRestorePrompt(): [boolean, () => void] {
+  const shown = useSyncExternalStore(
+    (listener) => {
+      restoreListeners.add(listener);
+      return () => restoreListeners.delete(listener);
+    },
+    () => restorePrompt,
+    () => restorePrompt,
+  );
+  const dismiss = useCallback(() => {
+    restorePrompt = false;
+    for (const listener of restoreListeners) listener();
+  }, []);
+  return [shown, dismiss];
+}
+
 export function useRecorder(): RecorderSnapshot | null {
   return useSyncExternalStore(
     recorder.subscribe,
@@ -65,12 +90,16 @@ export function useTrackerBootstrap(copy: MainCopy): void {
         .catch(() => undefined);
       const snapshot = recorder.getSnapshot();
       if (snapshot) {
-        pushSubScreen({
-          kind:
-            snapshot.view.status === "finished"
-              ? "tracker-summary"
-              : "tracker-recording",
-        });
+        // A run stopped while the app was closed asks what to do on Today;
+        // one that kept recording in the background simply goes on.
+        if (snapshot.view.status === "paused") showRestorePrompt();
+        else
+          pushSubScreen({
+            kind:
+              snapshot.view.status === "finished"
+                ? "tracker-summary"
+                : "tracker-recording",
+          });
       }
       await upload().catch(() => undefined);
     })();

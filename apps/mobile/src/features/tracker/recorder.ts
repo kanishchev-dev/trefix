@@ -22,11 +22,18 @@ import {
   enqueueUpload,
   loadOpenSession,
   loadPoints,
+  saveSessionMeta,
   saveSessionState,
   type SessionMeta,
   type SessionStatus,
 } from "./storage/tracker-db";
-import { createCueState, nextCues, type CueState } from "./voice/cues";
+import {
+  createCueState,
+  nextCues,
+  reportedCues,
+  type CueState,
+  type VoiceSettings,
+} from "./voice/cues";
 import { renderCue } from "./voice/phrases";
 import { speak, stopSpeaking } from "./voice/speaker";
 
@@ -221,6 +228,24 @@ class Recorder {
     this.publish();
   }
 
+  /** Voice settings changed during the run (the voice button on the recording screen). */
+  setVoice(voice: VoiceSettings): void {
+    const current = this.meta.voice;
+    if (!current || !this.sessionId) return;
+    if (!current.enabled && voice.enabled) {
+      // Turned on mid-run: carry on from here instead of replaying the start.
+      this.cues = createCueState(
+        this.engine?.view(Date.now()) ?? null,
+        voice,
+        this.unitM,
+      );
+    }
+    if (current.enabled && !voice.enabled) stopSpeaking();
+    this.meta = { ...this.meta, voice: { ...current, ...voice } };
+    void saveSessionMeta(this.sessionId, this.meta).catch(() => undefined);
+    this.publish();
+  }
+
   /** The runner ends the running step of the plan early. */
   nextStep(): void {
     this.engine?.nextStep(Date.now());
@@ -402,14 +427,13 @@ class Recorder {
   private say(view: EngineView): void {
     const voice = this.meta.voice;
     if (!voice?.enabled || !this.cues) return;
-    for (const cue of nextCues(
-      this.cues,
-      view,
-      Date.now(),
-      voice,
-      this.unitM,
-    )) {
-      speak(renderCue(cue, voice.language, voice.units), voice.language);
+    const cues = reportedCues(
+      nextCues(this.cues, view, Date.now(), voice, this.unitM),
+      voice.report,
+    );
+    for (const cue of cues) {
+      const text = renderCue(cue, voice.language, voice.units, voice.report);
+      if (text) speak(text, voice.language);
     }
   }
 

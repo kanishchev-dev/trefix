@@ -31,8 +31,10 @@ export function useWorkoutCompletion(copy: MainCopy, onCompleted: () => void) {
   const start = (workout: TrainingWorkout) => {
     setForm({
       ...EMPTY_FORM,
-      distanceKm: String(workout.distanceKm || "5"),
-      durationMinutes: String(workout.durationMinutes || "30"),
+      // The planned goal is filled in; a value the workout has no goal for stays for the user.
+      distanceKm: workout.distanceKm > 0 ? String(workout.distanceKm) : "",
+      durationMinutes:
+        workout.durationMinutes > 0 ? String(workout.durationMinutes) : "",
     });
     setIsCompleting(true);
     setErrorMessage("");

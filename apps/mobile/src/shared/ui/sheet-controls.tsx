@@ -16,6 +16,7 @@ export function SheetButton({
   disabled = false,
   pending = false,
   theme,
+  leading,
   trailing,
   style,
 }: {
@@ -27,6 +28,8 @@ export function SheetButton({
   pending?: boolean;
   theme: ThemeTokens;
   themeMode: ThemeMode;
+  /** Icon before the label, e.g. play on "Start now". */
+  leading?: ReactNode;
   trailing?: ReactNode;
   style?: object;
 }) {
@@ -48,6 +51,7 @@ export function SheetButton({
         disabled && !pending ? { opacity: 0.5 } : null,
         pending ? { opacity: 0.7 } : null,
         pressed && !disabled && !pending ? styles.buttonPressed : null,
+        leading ? styles.buttonWithIcon : null,
         style,
       ]}
     >
@@ -55,6 +59,7 @@ export function SheetButton({
         <ActivityIndicator color={theme.color.primaryForeground} />
       ) : (
         <>
+          {leading}
           <Text
             style={[
               styles.buttonLabel,

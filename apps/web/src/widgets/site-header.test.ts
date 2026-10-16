@@ -115,4 +115,14 @@ describe("resolveBreadcrumbs", () => {
       { key: "breadcrumbs.audit" },
     ]);
   });
+
+  it("resolves the notifications page and a notification", () => {
+    expect(resolveBreadcrumbs("/notifications")).toEqual([
+      { key: "breadcrumbs.notifications" },
+    ]);
+    expect(resolveBreadcrumbs("/notifications/abc")).toEqual([
+      { key: "breadcrumbs.notifications", href: "/notifications" },
+      { key: "breadcrumbs.notification" },
+    ]);
+  });
 });

@@ -1566,6 +1566,8 @@ export const zCreateWorkoutDto = z.object({
   description: z.string().optional(),
   durationMinutes: z.number().gte(0).optional().default(30),
   distanceKm: z.number().gte(0).optional().default(5),
+  goal: z.enum(["none", "duration", "distance"]).optional(),
+  timeLimitMin: z.number().gte(1).lte(600).optional(),
   status: z.enum(["planned", "completed"]).optional().default("planned"),
   actualDurationMinutes: z.number().gte(0).optional(),
   actualDistanceKm: z.number().gte(0).optional(),
@@ -2810,6 +2812,7 @@ export const zActivityItemDto = z.object({
     "integrations",
     "coach",
     "preferences",
+    "notifications",
     "data_access",
     "settings",
   ]),
@@ -2950,6 +2953,237 @@ export const zAdminOverviewResponseDto = z.object({
   upcomingWorkouts: z.array(zOverviewWorkoutDto),
   attention: z.array(zOverviewAttentionDto),
   connections: z.array(zOverviewConnectionDto),
+});
+
+export const zNotificationLinkDto = z.object({
+  target: z.enum([
+    "coach",
+    "today",
+    "workout",
+    "plan",
+    "progress",
+    "profile",
+    "url",
+  ]),
+  id: z.string().nullable(),
+  url: z.string().nullable(),
+});
+
+export const zNotificationResponseDto = z.object({
+  id: z.uuid(),
+  category: z.enum([
+    "coach",
+    "admin",
+    "workouts",
+    "plans",
+    "progress",
+    "account",
+  ]),
+  type: z.enum(["coach.message", "admin.message"]),
+  title: z.string().nullable(),
+  body: z.string().nullable(),
+  params: z.record(z.string(), z.unknown()),
+  link: zNotificationLinkDto.nullable(),
+  readAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+});
+
+export const zNotificationUnreadCountResponseDto = z.object({
+  count: z.number(),
+});
+
+export const zMarkNotificationsReadDto = z.object({
+  ids: z.array(z.uuid()).max(100),
+});
+
+export const zRegisterPushDeviceDto = z.object({
+  token: z.string().max(255),
+  platform: z.enum(["ios", "android"]),
+  locale: z.string().max(8).nullish(),
+  appVersion: z.string().max(32).nullish(),
+  deviceName: z.string().max(100).nullish(),
+});
+
+export const zPushDeviceResponseDto = z.object({
+  id: z.uuid(),
+  platform: z.enum(["ios", "android"]),
+  locale: z.string().nullable(),
+  appVersion: z.string().nullable(),
+  deviceName: z.string().nullable(),
+  lastSeenAt: z.iso.datetime(),
+  createdAt: z.iso.datetime(),
+});
+
+export const zUnregisterPushDeviceDto = z.object({
+  token: z.string().max(255),
+});
+
+export const zBroadcastAuthorDto = z.object({
+  id: z.uuid(),
+  name: z.string(),
+});
+
+export const zBroadcastSegmentResponseDto = z.object({
+  languages: z.array(z.enum(["ru", "en"])).optional(),
+  platforms: z.array(z.enum(["ios", "android"])).optional(),
+  registeredFrom: z.iso.date().optional(),
+  registeredTo: z.iso.date().optional(),
+  activePlan: z.boolean().optional(),
+});
+
+export const zBroadcastAudienceResponseDto = z.object({
+  type: z.enum(["users", "group", "all", "segment"]),
+  userIds: z.array(z.uuid()).optional(),
+  groupId: z.uuid().optional(),
+  segment: zBroadcastSegmentResponseDto.optional(),
+});
+
+export const zBroadcastTextResponseDto = z.object({
+  title: z.string().nullable(),
+  body: z.string(),
+});
+
+export const zBroadcastContentResponseDto = z.object({
+  ru: zBroadcastTextResponseDto.optional(),
+  en: zBroadcastTextResponseDto.optional(),
+});
+
+export const zBroadcastChannelStatsDto = z.object({
+  pending: z.number(),
+  sent: z.number(),
+  delivered: z.number(),
+  failed: z.number(),
+  skipped: z.number(),
+});
+
+export const zBroadcastStatsDto = z.object({
+  read: z.number(),
+  push: zBroadcastChannelStatsDto,
+  email: zBroadcastChannelStatsDto,
+});
+
+export const zBroadcastResponseDto = z.object({
+  id: z.uuid(),
+  createdBy: zBroadcastAuthorDto.nullable(),
+  audience: zBroadcastAudienceResponseDto,
+  content: zBroadcastContentResponseDto,
+  link: zNotificationLinkDto.nullable(),
+  channels: z.array(z.enum(["push", "email"])),
+  status: z.enum(["queued", "sending", "sent", "failed"]),
+  recipientsCount: z.number(),
+  error: z.string().nullable(),
+  stats: zBroadcastStatsDto,
+  createdAt: z.iso.datetime(),
+  completedAt: z.iso.datetime().nullable(),
+});
+
+export const zBroadcastRecipientUserDto = z.object({
+  id: z.uuid(),
+  name: z.string(),
+});
+
+export const zNotificationDeliveryResponseDto = z.object({
+  channel: z.enum(["push", "email"]),
+  status: z.enum(["pending", "sent", "delivered", "failed", "skipped"]),
+  error: z
+    .enum([
+      "no_devices",
+      "preference_off",
+      "device_not_registered",
+      "provider_error",
+      "invalid_recipient",
+      "mail_error",
+      "push_disabled",
+    ])
+    .nullable(),
+  sentAt: z.iso.datetime().nullable(),
+});
+
+export const zBroadcastRecipientResponseDto = z.object({
+  notificationId: z.uuid(),
+  user: zBroadcastRecipientUserDto,
+  readAt: z.iso.datetime().nullable(),
+  deliveries: z.array(zNotificationDeliveryResponseDto),
+});
+
+export const zBroadcastSegmentDto = z.object({
+  languages: z.array(z.enum(["ru", "en"])).optional(),
+  platforms: z.array(z.enum(["ios", "android"])).optional(),
+  registeredFrom: z.iso.date().optional(),
+  registeredTo: z.iso.date().optional(),
+  activePlan: z.boolean().optional(),
+});
+
+export const zBroadcastAudienceDto = z.object({
+  type: z.enum(["users", "group", "all", "segment"]),
+  userIds: z.array(z.uuid()).max(1000).optional(),
+  groupId: z.uuid().optional(),
+  segment: zBroadcastSegmentDto.optional(),
+});
+
+export const zAudiencePreviewDto = z.object({
+  audience: zBroadcastAudienceDto,
+});
+
+export const zAudiencePreviewResponseDto = z.object({
+  recipients: z.number(),
+  withPush: z.number(),
+});
+
+export const zBroadcastTextDto = z.object({
+  title: z.string().max(120).nullish(),
+  body: z.string().max(2000),
+});
+
+export const zBroadcastContentDto = z.object({
+  ru: zBroadcastTextDto.optional(),
+  en: zBroadcastTextDto.optional(),
+});
+
+export const zBroadcastLinkDto = z.object({
+  target: z.enum([
+    "coach",
+    "today",
+    "workout",
+    "plan",
+    "progress",
+    "profile",
+    "url",
+  ]),
+  id: z.uuid().nullish(),
+  url: z.string().max(500).nullish(),
+});
+
+export const zCreateBroadcastDto = z.object({
+  audience: zBroadcastAudienceDto,
+  content: zBroadcastContentDto,
+  link: zBroadcastLinkDto.nullish(),
+  channels: z.array(z.enum(["push", "email"])),
+});
+
+export const zAdminNotificationResponseDto = z.object({
+  id: z.uuid(),
+  category: z.enum([
+    "coach",
+    "admin",
+    "workouts",
+    "plans",
+    "progress",
+    "account",
+  ]),
+  type: z.enum(["coach.message", "admin.message"]),
+  title: z.string().nullable(),
+  body: z.string().nullable(),
+  params: z.record(z.string(), z.unknown()),
+  link: zNotificationLinkDto.nullable(),
+  readAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  broadcastId: z.uuid().nullable(),
+  deliveries: z.array(zNotificationDeliveryResponseDto),
+});
+
+export const zPushDeviceListResponseDto = z.object({
+  items: z.array(zPushDeviceResponseDto),
 });
 
 export const zAuthControllerRegisterV1Body = zRegisterDto;
@@ -4615,6 +4849,7 @@ export const zActivityControllerListForUserV1Query = z.object({
         "integrations",
         "coach",
         "preferences",
+        "notifications",
         "data_access",
         "settings",
       ]),
@@ -4652,6 +4887,7 @@ export const zActivityControllerExportForUserV1Query = z.object({
         "integrations",
         "coach",
         "preferences",
+        "notifications",
         "data_access",
         "settings",
       ]),
@@ -4681,6 +4917,7 @@ export const zActivityControllerListLogV1Query = z.object({
         "integrations",
         "coach",
         "preferences",
+        "notifications",
         "data_access",
         "settings",
       ]),
@@ -4717,6 +4954,7 @@ export const zActivityControllerExportLogV1Query = z.object({
         "integrations",
         "coach",
         "preferences",
+        "notifications",
         "data_access",
         "settings",
       ]),
@@ -4822,3 +5060,121 @@ export const zAdminOverviewControllerGetOverviewV1Query = z.object({
 
 export const zAdminOverviewControllerGetOverviewV1Response =
   zAdminOverviewResponseDto;
+
+export const zNotificationsControllerListV1Query = z.object({
+  page: z.number().gte(1).optional().default(1),
+  limit: z.number().gte(1).lte(100).optional().default(10),
+  category: z
+    .enum(["coach", "admin", "workouts", "plans", "progress", "account"])
+    .optional(),
+  unread: z.boolean().optional(),
+});
+
+export const zNotificationsControllerListV1Response = zPaginatedResponseDto.and(
+  z.object({
+    data: z.array(zNotificationResponseDto),
+  }),
+);
+
+export const zNotificationsControllerUnreadCountV1Response =
+  zNotificationUnreadCountResponseDto;
+
+export const zNotificationsControllerMarkReadV1Body = zMarkNotificationsReadDto;
+
+export const zNotificationsControllerMarkReadV1Response =
+  zNotificationUnreadCountResponseDto;
+
+export const zNotificationsControllerMarkAllReadV1Response =
+  zNotificationUnreadCountResponseDto;
+
+export const zNotificationsControllerRemoveV1Path = z.object({
+  id: z.string(),
+});
+
+export const zNotificationsControllerRemoveV1Response = z.void();
+
+export const zNotificationsControllerRegisterDeviceV1Body =
+  zRegisterPushDeviceDto;
+
+export const zNotificationsControllerRegisterDeviceV1Response =
+  zPushDeviceResponseDto;
+
+export const zNotificationsControllerUnregisterDeviceV1Body =
+  zUnregisterPushDeviceDto;
+
+export const zNotificationsControllerUnregisterDeviceV1Response = z.void();
+
+export const zAdminBroadcastsControllerListV1Query = z.object({
+  page: z.number().gte(1).optional().default(1),
+  limit: z.number().gte(1).lte(100).optional().default(10),
+  status: z.enum(["queued", "sending", "sent", "failed"]).optional(),
+});
+
+export const zAdminBroadcastsControllerListV1Response =
+  zPaginatedResponseDto.and(
+    z.object({
+      data: z.array(zBroadcastResponseDto),
+    }),
+  );
+
+export const zAdminBroadcastsControllerCreateV1Body = zCreateBroadcastDto;
+
+export const zAdminBroadcastsControllerCreateV1Response = zBroadcastResponseDto;
+
+export const zAdminBroadcastsControllerGetV1Path = z.object({
+  id: z.string(),
+});
+
+export const zAdminBroadcastsControllerGetV1Response = zBroadcastResponseDto;
+
+export const zAdminBroadcastsControllerRecipientsV1Path = z.object({
+  id: z.string(),
+});
+
+export const zAdminBroadcastsControllerRecipientsV1Query = z.object({
+  page: z.number().gte(1).optional().default(1),
+  limit: z.number().gte(1).lte(100).optional().default(10),
+  category: z
+    .enum(["coach", "admin", "workouts", "plans", "progress", "account"])
+    .optional(),
+  unread: z.boolean().optional(),
+});
+
+export const zAdminBroadcastsControllerRecipientsV1Response =
+  zPaginatedResponseDto.and(
+    z.object({
+      data: z.array(zBroadcastRecipientResponseDto),
+    }),
+  );
+
+export const zAdminBroadcastsControllerPreviewV1Body = zAudiencePreviewDto;
+
+export const zAdminBroadcastsControllerPreviewV1Response =
+  zAudiencePreviewResponseDto;
+
+export const zAdminUserNotificationsControllerListV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminUserNotificationsControllerListV1Query = z.object({
+  page: z.number().gte(1).optional().default(1),
+  limit: z.number().gte(1).lte(100).optional().default(10),
+  category: z
+    .enum(["coach", "admin", "workouts", "plans", "progress", "account"])
+    .optional(),
+  unread: z.boolean().optional(),
+});
+
+export const zAdminUserNotificationsControllerListV1Response =
+  zPaginatedResponseDto.and(
+    z.object({
+      data: z.array(zAdminNotificationResponseDto),
+    }),
+  );
+
+export const zAdminUserNotificationsControllerDevicesV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminUserNotificationsControllerDevicesV1Response =
+  zPushDeviceListResponseDto;

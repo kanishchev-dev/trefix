@@ -3,6 +3,7 @@
 import type { ReactElement } from "react";
 
 import {
+  BellIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   SettingsIcon,
@@ -63,6 +64,12 @@ const NAVIGATION: NavigationNode[] = [
         requiredPermissions: ["permissions.read"],
       },
     ],
+  },
+  {
+    titleKey: "sidebar.notifications",
+    url: "/notifications",
+    icon: <BellIcon />,
+    requiredPermissions: ["notifications.broadcasts.read"],
   },
   {
     titleKey: "sidebar.audit",

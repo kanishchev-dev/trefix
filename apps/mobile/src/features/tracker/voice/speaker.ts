@@ -2,8 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Speech from "expo-speech";
 
 import {
+  DEFAULT_VOICE_REPORT,
   DEFAULT_VOICE_SETTINGS,
   type VoiceInterval,
+  type VoiceReport,
   type VoiceSettings,
 } from "./cues";
 import type { VoiceLanguage } from "./phrases";
@@ -40,6 +42,7 @@ export async function loadVoiceSettings(): Promise<VoiceSettings> {
       interval: INTERVALS.includes(parsed.interval as VoiceInterval)
         ? (parsed.interval as VoiceInterval)
         : DEFAULT_VOICE_SETTINGS.interval,
+      report: readReport(parsed.report),
     };
   } catch {
     return DEFAULT_VOICE_SETTINGS;
@@ -54,4 +57,20 @@ export async function saveVoiceSettings(
   } catch {
     // A preference; the run goes on with what was picked.
   }
+}
+
+function readReport(value: unknown): VoiceReport {
+  if (!value || typeof value !== "object") return DEFAULT_VOICE_REPORT;
+  const stored = value as Partial<Record<keyof VoiceReport, unknown>>;
+  const pick = (key: keyof VoiceReport): boolean =>
+    typeof stored[key] === "boolean"
+      ? (stored[key] as boolean)
+      : DEFAULT_VOICE_REPORT[key];
+  return {
+    distance: pick("distance"),
+    time: pick("time"),
+    splitPace: pick("splitPace"),
+    avgPace: pick("avgPace"),
+    planSteps: pick("planSteps"),
+  };
 }

@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CalendarDays, Check, Pencil, Play, Trash2 } from "lucide-react-native";
+import {
+  CalendarArrowUp,
+  CalendarDays,
+  Check,
+  Pencil,
+  Play,
+  Trash2,
+} from "lucide-react-native";
 
 import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
@@ -49,7 +56,8 @@ import { ManualWorkoutEditPanel } from "../components/workout-details/manual-wor
 import { WorkoutStructure } from "../components/workout-details/workout-structure";
 import { useHeaderOptions } from "../context/header-context";
 import { useWorkoutCompletion } from "../hooks/use-workout-completion";
-import { useWorkoutExecution } from "../hooks/use-workouts";
+import { useUpdateWorkout, useWorkoutExecution } from "../hooks/use-workouts";
+import { getErrorMessage } from "../../../shared/lib/error-message";
 import { getWorkoutActions } from "../lib/workout-detail-rules";
 import { workoutIntensity } from "../lib/workout-intensity";
 import { pushSubScreen } from "../main-routes";
@@ -95,6 +103,8 @@ export function WorkoutDetailsScreen({
   const [actionOpen, setActionOpen] = useState(false);
   const nextSheet = useRef<NextSheet>(null);
   const completion = useWorkoutCompletion(copy, () => completion.reset());
+  const updateWorkout = useUpdateWorkout();
+  const [moveError, setMoveError] = useState<string | null>(null);
 
   const t = copy.today.details;
   const planCopy = copy.plans.edit;
@@ -109,14 +119,11 @@ export function WorkoutDetailsScreen({
         Boolean(recorder.active),
       )
     : null;
-  // Plan workouts change through the plan; workouts added by hand directly,
-  // while they are planned for a future day (the backend applies the same rule).
+  // Plan workouts change through the plan; workouts added by hand directly
+  // while they are planned (a missed one too: it can be moved or removed).
   const isPlanEditable = Boolean(actions?.isEditable);
   const isManualEditable = Boolean(
-    workout &&
-      !workout.planId &&
-      workout.status === "planned" &&
-      workoutDate > todayIso(),
+    workout && !workout.planId && workout.status === "planned",
   );
   const isEditable = isPlanEditable || isManualEditable;
 
@@ -173,7 +180,33 @@ export function WorkoutDetailsScreen({
   }
 
   const isCompleted = actions.isCompleted;
-  const isMissed = workout.status === "skipped";
+  const today = todayIso();
+  // A workout the athlete added by hand starts only on its day: a future or a
+  // missed one is moved to today first (the backend allows today and later).
+  const isOwnPlanned =
+    !workout.planId && workout.status === "planned" && workout.type !== "rest";
+  const canMoveToToday =
+    isOwnPlanned && workoutDate !== today && !recorder.active;
+  const isOwnMissed = isOwnPlanned && workoutDate < today;
+  const isMissed = workout.status === "skipped" || isOwnMissed;
+  const moveToToday = async () => {
+    setMoveError(null);
+    try {
+      await updateWorkout.mutateAsync({
+        workoutId: workout.id,
+        dto: { scheduledAt: new Date(`${today}T09:00:00.000Z`).toISOString() },
+      });
+    } catch (moveFailure) {
+      setMoveError(
+        getErrorMessage(moveFailure, copy.errors, t.moveToTodayFailed),
+      );
+    }
+  };
+  const actionNote = canMoveToToday
+    ? isOwnMissed
+      ? t.missedNote
+      : t.futureNote
+    : null;
   const isCompleting = completion.isCompleting;
   const level = workoutIntensity(workout.type);
   const typeLabel = (
@@ -183,7 +216,7 @@ export function WorkoutDetailsScreen({
     workoutTargetText(workout.target, "title") || typeLabel || workout.type;
   const description = workoutTargetText(workout.target, "description");
 
-  const isToday = workoutDate === todayIso();
+  const isToday = workoutDate === today;
   const dateLabel = isToday
     ? copy.today.today
     : [
@@ -361,8 +394,38 @@ export function WorkoutDetailsScreen({
           <Text style={[styles.meta, muted]}>{meta}</Text>
         </View>
 
-        {!isCompleting && (actions.canRecord || actions.canComplete) ? (
+        {!isCompleting &&
+        (actions.canRecord || actions.canComplete || canMoveToToday) ? (
           <View style={styles.actions}>
+            {canMoveToToday ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={updateWorkout.isPending}
+                onPress={() => void moveToToday()}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  { backgroundColor: theme.color.primary },
+                  updateWorkout.isPending && styles.busy,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <CalendarArrowUp
+                  size={20}
+                  color={theme.color.primaryForeground}
+                />
+                <Text
+                  style={[
+                    styles.primaryLabel,
+                    {
+                      color: theme.color.primaryForeground,
+                      fontFamily: theme.typography.fontFamily.sans.medium,
+                    },
+                  ]}
+                >
+                  {t.moveToToday}
+                </Text>
+              </Pressable>
+            ) : null}
             {actions.canRecord ? (
               <Pressable
                 accessibilityRole="button"
@@ -397,7 +460,9 @@ export function WorkoutDetailsScreen({
                 accessibilityLabel={t.markDone}
                 onPress={() => completion.start(workout)}
                 style={({ pressed }) => [
-                  actions.canRecord ? styles.roundButton : styles.wideButton,
+                  actions.canRecord || canMoveToToday
+                    ? styles.roundButton
+                    : styles.wideButton,
                   {
                     backgroundColor: theme.color.control,
                     borderColor: theme.color.controlBorder,
@@ -410,7 +475,7 @@ export function WorkoutDetailsScreen({
                   strokeWidth={2.4}
                   color={theme.color.foreground}
                 />
-                {actions.canRecord ? null : (
+                {actions.canRecord || canMoveToToday ? null : (
                   <Text
                     style={[
                       styles.primaryLabel,
@@ -425,6 +490,23 @@ export function WorkoutDetailsScreen({
                 )}
               </Pressable>
             ) : null}
+          </View>
+        ) : null}
+
+        {actionNote && !isCompleting ? (
+          <Text style={[styles.note, muted]}>{actionNote}</Text>
+        ) : null}
+
+        {moveError ? (
+          <View
+            style={[
+              styles.errorBanner,
+              { backgroundColor: theme.color.dangerSurface },
+            ]}
+          >
+            <Text style={[styles.body, { color: theme.color.danger }]}>
+              {moveError}
+            </Text>
           </View>
         ) : null}
 
@@ -739,6 +821,15 @@ const styles = StyleSheet.create({
   },
   pressed: {
     transform: [{ scale: 0.98 }],
+  },
+  busy: {
+    opacity: 0.7,
+  },
+  note: {
+    marginTop: -16,
+    paddingHorizontal: 16,
+    fontSize: 13,
+    lineHeight: 18,
   },
   section: {
     gap: 10,

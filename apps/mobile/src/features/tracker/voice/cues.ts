@@ -5,16 +5,53 @@ import type { EngineView } from "../engine/types";
 
 export type VoiceInterval = "1u" | "2u" | "5min" | "10min";
 
+/** What the regular report says, and whether plan steps are announced. */
+export type VoiceReport = {
+  distance: boolean;
+  time: boolean;
+  /** Pace of the last kilometre (mile) or interval. */
+  splitPace: boolean;
+  avgPace: boolean;
+  planSteps: boolean;
+};
+
 export type VoiceSettings = {
   enabled: boolean;
   /** Distance report every 1 or 2 units (km or miles), or a time report every 5 or 10 minutes. */
   interval: VoiceInterval;
+  /** Absent in settings and sessions of older builds: everything is said. */
+  report?: VoiceReport;
+};
+
+export const DEFAULT_VOICE_REPORT: VoiceReport = {
+  distance: true,
+  time: true,
+  splitPace: true,
+  avgPace: false,
+  planSteps: true,
 };
 
 export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
   enabled: true,
   interval: "1u",
+  report: DEFAULT_VOICE_REPORT,
 };
+
+const PLAN_CUES: ReadonlySet<Cue["type"]> = new Set([
+  "step",
+  "stepEnding",
+  "pace",
+  "planDone",
+]);
+
+/** Drops the plan announcements the runner turned off. */
+export function reportedCues(
+  cues: Cue[],
+  report: VoiceReport | undefined,
+): Cue[] {
+  if (!report || report.planSteps) return cues;
+  return cues.filter((cue) => !PLAN_CUES.has(cue.type));
+}
 
 /** Rules of the voice; tuned on real runs. */
 export const CUE_RULES = {

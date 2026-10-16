@@ -18,6 +18,8 @@ export type SummaryEdits = {
   distanceM?: number | null;
   workoutType?: Exclude<WorkoutType, "rest"> | null;
   plannedWorkoutId?: string | null;
+  /** False: a free run stays apart from the day's unfinished planned workout. */
+  linkPlanned?: boolean;
   feeling?: number | null;
   rpe?: number | null;
   notes?: string | null;
@@ -147,6 +149,7 @@ export function buildRecording(
     environment: state.config.environment,
     distanceSource: resolveDistanceSource(state, edited),
     plannedWorkoutId: edits.plannedWorkoutId ?? null,
+    ...(edits.linkPlanned === false ? { linkPlanned: false } : {}),
     workoutType: edits.workoutType ?? null,
     startedAt: new Date(state.startedAt).toISOString(),
     endedAt: new Date(endedAt).toISOString(),

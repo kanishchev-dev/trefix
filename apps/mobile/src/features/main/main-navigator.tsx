@@ -47,6 +47,8 @@ import { ZonesScreen } from "../profile/screens/zones-screen";
 import { useProgressRealtime } from "../progress/hooks/use-progress-v2";
 import { MetricScreen } from "../progress/screens/metric-screen";
 import { RecordsScreen } from "../progress/screens/records-screen";
+import { useNotificationsBootstrap } from "../notifications/hooks/use-notifications-bootstrap";
+import { NotificationsScreen } from "../notifications/screens/notifications-screen";
 import { useTrackerBootstrap } from "../tracker/hooks";
 import { TrackerRecordingScreen } from "../tracker/screens/tracker-recording-screen";
 import { TrackerSetupScreen } from "../tracker/screens/tracker-setup-screen";
@@ -162,6 +164,8 @@ function MainStackHost({ theme, themeMode, copy, userEmail, language }: Props) {
       pushSubScreen({ kind: "settings-coach" });
     }
   }, [preferences.coachEnabled]);
+
+  useNotificationsBootstrap(copy, language, openTrefix);
 
   const openPlanTab = useCallback(() => openTab("plan"), []);
 
@@ -282,6 +286,19 @@ function MainStackHost({ theme, themeMode, copy, userEmail, language }: Props) {
                     onOpenCoach={() =>
                       pushSubScreen({ kind: "settings-coach" })
                     }
+                  />,
+                )
+              }
+            </Stack.Screen>
+            <Stack.Screen name="notifications">
+              {() =>
+                frame(
+                  <NotificationsScreen
+                    theme={theme}
+                    themeMode={themeMode}
+                    copy={copy}
+                    language={language}
+                    onBack={goBack}
                   />,
                 )
               }

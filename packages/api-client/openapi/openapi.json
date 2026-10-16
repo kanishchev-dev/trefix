@@ -10348,6 +10348,7 @@
                   "integrations",
                   "coach",
                   "preferences",
+                  "notifications",
                   "data_access",
                   "settings"
                 ]
@@ -10500,6 +10501,7 @@
                   "integrations",
                   "coach",
                   "preferences",
+                  "notifications",
                   "data_access",
                   "settings"
                 ]
@@ -10613,6 +10615,7 @@
                   "integrations",
                   "coach",
                   "preferences",
+                  "notifications",
                   "data_access",
                   "settings"
                 ]
@@ -10788,6 +10791,7 @@
                   "integrations",
                   "coach",
                   "preferences",
+                  "notifications",
                   "data_access",
                   "settings"
                 ]
@@ -11370,6 +11374,712 @@
         "summary": "Summary of the user for the first screen of the admin card",
         "tags": [
           "Admin Overview"
+        ]
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "coach",
+                "admin",
+                "workouts",
+                "plans",
+                "progress",
+                "account"
+              ]
+            }
+          },
+          {
+            "name": "unread",
+            "required": false,
+            "in": "query",
+            "description": "Only unread notifications",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/NotificationResponseDto"
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Own notifications, newest first; texts in the request language",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationsController_unreadCount_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationUnreadCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Number of unread notifications, for the badge",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkNotificationsReadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationUnreadCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark notifications as read; returns the new unread count",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationUnreadCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark every notification as read",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/{id}": {
+      "delete": {
+        "description": "Errors: NOTIFICATION_NOT_FOUND",
+        "operationId": "NotificationsController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a notification from the inbox",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/devices": {
+      "put": {
+        "description": "Called on every app start; the device is bound to the current session and removed on sign-out.",
+        "operationId": "NotificationsController_registerDevice_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPushDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushDeviceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register the push token of this app installation",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/devices/unregister": {
+      "post": {
+        "operationId": "NotificationsController_unregisterDevice_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnregisterPushDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stop sending pushes to this installation",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notification-broadcasts": {
+      "get": {
+        "operationId": "AdminBroadcastsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "queued",
+                "sending",
+                "sent",
+                "failed"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/BroadcastResponseDto"
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sent broadcasts with delivery stats, newest first",
+        "tags": [
+          "Admin Notifications"
+        ]
+      },
+      "post": {
+        "description": "Errors: NOTIFICATION_CONTENT_REQUIRED, NOTIFICATION_LINK_URL_REQUIRED, NOTIFICATION_AUDIENCE_EMPTY, PERMISSION_GROUP_NOT_FOUND",
+        "operationId": "AdminBroadcastsController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBroadcastDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a notification; delivery runs in the background",
+        "tags": [
+          "Admin Notifications"
+        ]
+      }
+    },
+    "/v1/notification-broadcasts/{id}": {
+      "get": {
+        "description": "Errors: NOTIFICATION_BROADCAST_NOT_FOUND",
+        "operationId": "AdminBroadcastsController_get_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "A broadcast with delivery stats",
+        "tags": [
+          "Admin Notifications"
+        ]
+      }
+    },
+    "/v1/notification-broadcasts/{id}/recipients": {
+      "get": {
+        "operationId": "AdminBroadcastsController_recipients_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "coach",
+                "admin",
+                "workouts",
+                "plans",
+                "progress",
+                "account"
+              ]
+            }
+          },
+          {
+            "name": "unread",
+            "required": false,
+            "in": "query",
+            "description": "Only unread notifications",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/BroadcastRecipientResponseDto"
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recipients of a broadcast with read and delivery status",
+        "tags": [
+          "Admin Notifications"
+        ]
+      }
+    },
+    "/v1/notification-broadcasts/audience-preview": {
+      "post": {
+        "operationId": "AdminBroadcastsController_preview_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudiencePreviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudiencePreviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "How many active accounts an audience reaches, and how many of them have push",
+        "tags": [
+          "Admin Notifications"
+        ]
+      }
+    },
+    "/v1/users/{userId}/notifications": {
+      "get": {
+        "operationId": "AdminUserNotificationsController_list_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "coach",
+                "admin",
+                "workouts",
+                "plans",
+                "progress",
+                "account"
+              ]
+            }
+          },
+          {
+            "name": "unread",
+            "required": false,
+            "in": "query",
+            "description": "Only unread notifications",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/AdminNotificationResponseDto"
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Inbox of the user with delivery status per channel",
+        "tags": [
+          "Admin Notifications"
+        ]
+      }
+    },
+    "/v1/users/{userId}/notifications/devices": {
+      "get": {
+        "operationId": "AdminUserNotificationsController_devices_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushDeviceListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "App installations of the user that receive pushes",
+        "tags": [
+          "Admin Notifications"
         ]
       }
     }
@@ -17140,6 +17850,21 @@
             "minimum": 0,
             "default": 5
           },
+          "goal": {
+            "type": "string",
+            "enum": [
+              "none",
+              "duration",
+              "distance"
+            ],
+            "description": "Goal of the workout. When set, only the goal value is stored: `duration` keeps durationMinutes, `distance` keeps distanceKm (and timeLimitMin as its duration), the other value stays 0."
+          },
+          "timeLimitMin": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 600,
+            "description": "Distance goal only: finish the distance within this many minutes (sets the target pace)."
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -21920,6 +22645,7 @@
               "integrations",
               "coach",
               "preferences",
+              "notifications",
               "data_access",
               "settings"
             ]
@@ -22518,6 +23244,869 @@
           "upcomingWorkouts",
           "attention",
           "connections"
+        ]
+      },
+      "NotificationLinkDto": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "coach",
+              "today",
+              "workout",
+              "plan",
+              "progress",
+              "profile",
+              "url"
+            ],
+            "description": "Screen the app opens on tap"
+          },
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Entity of the target: coach session, workout or plan"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "description": "Only for the `url` target"
+          }
+        },
+        "required": [
+          "target",
+          "id",
+          "url"
+        ]
+      },
+      "NotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "coach",
+              "admin",
+              "workouts",
+              "plans",
+              "progress",
+              "account"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "coach.message",
+              "admin.message"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "description": "Written title in the request language; null — clients show the sender of the category"
+          },
+          "body": {
+            "type": "string",
+            "nullable": true,
+            "description": "Written text; null — clients render the type with `params`"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Values for rendering system types"
+          },
+          "link": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationLinkDto"
+              }
+            ]
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "type",
+          "title",
+          "body",
+          "params",
+          "link",
+          "readAt",
+          "createdAt"
+        ]
+      },
+      "NotificationUnreadCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "example": 3
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "MarkNotificationsReadDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "ids"
+        ]
+      },
+      "RegisterPushDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+            "maxLength": 255
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true,
+            "example": "ru-RU",
+            "maxLength": 8
+          },
+          "appVersion": {
+            "type": "string",
+            "nullable": true,
+            "example": "1.4.0",
+            "maxLength": 32
+          },
+          "deviceName": {
+            "type": "string",
+            "nullable": true,
+            "example": "iPhone 16",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "PushDeviceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          },
+          "appVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "platform",
+          "locale",
+          "appVersion",
+          "deviceName",
+          "lastSeenAt",
+          "createdAt"
+        ]
+      },
+      "UnregisterPushDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "BroadcastAuthorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "BroadcastSegmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android"
+              ]
+            }
+          },
+          "registeredFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "registeredTo": {
+            "type": "string",
+            "format": "date"
+          },
+          "activePlan": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BroadcastAudienceResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "users",
+              "group",
+              "all",
+              "segment"
+            ]
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "segment": {
+            "$ref": "#/components/schemas/BroadcastSegmentResponseDto"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "BroadcastTextResponseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ]
+      },
+      "BroadcastContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "ru": {
+            "$ref": "#/components/schemas/BroadcastTextResponseDto"
+          },
+          "en": {
+            "$ref": "#/components/schemas/BroadcastTextResponseDto"
+          }
+        }
+      },
+      "BroadcastChannelStatsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number"
+          },
+          "sent": {
+            "type": "number"
+          },
+          "delivered": {
+            "type": "number",
+            "description": "Confirmed by Apple/Google (push only)"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "skipped": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "pending",
+          "sent",
+          "delivered",
+          "failed",
+          "skipped"
+        ]
+      },
+      "BroadcastStatsDto": {
+        "type": "object",
+        "properties": {
+          "read": {
+            "type": "number",
+            "description": "Recipients who opened the notification in the app"
+          },
+          "push": {
+            "$ref": "#/components/schemas/BroadcastChannelStatsDto"
+          },
+          "email": {
+            "$ref": "#/components/schemas/BroadcastChannelStatsDto"
+          }
+        },
+        "required": [
+          "read",
+          "push",
+          "email"
+        ]
+      },
+      "BroadcastResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BroadcastAuthorDto"
+              }
+            ]
+          },
+          "audience": {
+            "$ref": "#/components/schemas/BroadcastAudienceResponseDto"
+          },
+          "content": {
+            "$ref": "#/components/schemas/BroadcastContentResponseDto"
+          },
+          "link": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationLinkDto"
+              }
+            ]
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "push",
+                "email"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sending",
+              "sent",
+              "failed"
+            ]
+          },
+          "recipientsCount": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "stats": {
+            "$ref": "#/components/schemas/BroadcastStatsDto"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "createdBy",
+          "audience",
+          "content",
+          "link",
+          "channels",
+          "status",
+          "recipientsCount",
+          "error",
+          "stats",
+          "createdAt",
+          "completedAt"
+        ]
+      },
+      "BroadcastRecipientUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name; empty for a purged account"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "NotificationDeliveryResponseDto": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "enum": [
+              "push",
+              "email"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sent",
+              "delivered",
+              "failed",
+              "skipped"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "enum": [
+              "no_devices",
+              "preference_off",
+              "device_not_registered",
+              "provider_error",
+              "invalid_recipient",
+              "mail_error",
+              "push_disabled",
+              null
+            ],
+            "nullable": true
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "channel",
+          "status",
+          "error",
+          "sentAt"
+        ]
+      },
+      "BroadcastRecipientResponseDto": {
+        "type": "object",
+        "properties": {
+          "notificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user": {
+            "$ref": "#/components/schemas/BroadcastRecipientUserDto"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationDeliveryResponseDto"
+            }
+          }
+        },
+        "required": [
+          "notificationId",
+          "user",
+          "readAt",
+          "deliveries"
+        ]
+      },
+      "BroadcastSegmentDto": {
+        "type": "object",
+        "properties": {
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "description": "Users with a push device of these platforms",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android"
+              ]
+            }
+          },
+          "registeredFrom": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-09-01"
+          },
+          "registeredTo": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-10-01"
+          },
+          "activePlan": {
+            "type": "boolean",
+            "description": "true — with an active plan, false — without one"
+          }
+        }
+      },
+      "BroadcastAudienceDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "users",
+              "group",
+              "all",
+              "segment"
+            ]
+          },
+          "userIds": {
+            "maxItems": 1000,
+            "description": "For `users`",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Permission group, for `group`"
+          },
+          "segment": {
+            "description": "For `segment`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BroadcastSegmentDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "AudiencePreviewDto": {
+        "type": "object",
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/BroadcastAudienceDto"
+          }
+        },
+        "required": [
+          "audience"
+        ]
+      },
+      "AudiencePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "recipients": {
+            "type": "number",
+            "description": "Active accounts the broadcast would reach"
+          },
+          "withPush": {
+            "type": "number",
+            "description": "Of them, with at least one push device"
+          }
+        },
+        "required": [
+          "recipients",
+          "withPush"
+        ]
+      },
+      "BroadcastTextDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "BroadcastContentDto": {
+        "type": "object",
+        "properties": {
+          "ru": {
+            "$ref": "#/components/schemas/BroadcastTextDto"
+          },
+          "en": {
+            "$ref": "#/components/schemas/BroadcastTextDto"
+          }
+        }
+      },
+      "BroadcastLinkDto": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "coach",
+              "today",
+              "workout",
+              "plan",
+              "progress",
+              "profile",
+              "url"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "target"
+        ]
+      },
+      "CreateBroadcastDto": {
+        "type": "object",
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/BroadcastAudienceDto"
+          },
+          "content": {
+            "$ref": "#/components/schemas/BroadcastContentDto"
+          },
+          "link": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BroadcastLinkDto"
+              }
+            ]
+          },
+          "channels": {
+            "type": "array",
+            "description": "Channels besides the inbox; empty — the inbox only",
+            "items": {
+              "type": "string",
+              "enum": [
+                "push",
+                "email"
+              ]
+            }
+          }
+        },
+        "required": [
+          "audience",
+          "content",
+          "channels"
+        ]
+      },
+      "AdminNotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "coach",
+              "admin",
+              "workouts",
+              "plans",
+              "progress",
+              "account"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "coach.message",
+              "admin.message"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "description": "Written title in the request language; null — clients show the sender of the category"
+          },
+          "body": {
+            "type": "string",
+            "nullable": true,
+            "description": "Written text; null — clients render the type with `params`"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Values for rendering system types"
+          },
+          "link": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationLinkDto"
+              }
+            ]
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "broadcastId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationDeliveryResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "type",
+          "title",
+          "body",
+          "params",
+          "link",
+          "readAt",
+          "createdAt",
+          "broadcastId",
+          "deliveries"
+        ]
+      },
+      "PushDeviceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PushDeviceResponseDto"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       }
     }

@@ -80,6 +80,15 @@ export function resolveBreadcrumbs(pathname: string): BreadcrumbItemDef[] {
     return items;
   }
 
+  if (pathname.startsWith("/notifications")) {
+    return /^\/notifications\/[^/]+\/?$/.test(pathname)
+      ? [
+          { key: "breadcrumbs.notifications", href: "/notifications" },
+          { key: "breadcrumbs.notification" },
+        ]
+      : [{ key: "breadcrumbs.notifications" }];
+  }
+
   if (pathname.startsWith("/audit")) {
     return [{ key: "breadcrumbs.audit" }];
   }

@@ -9,12 +9,9 @@ import { type ThemeTokens, type ThemeMode } from "@trefix/tokens";
 import { type TrainingWorkout } from "@trefix/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 
-import {
-  HeaderLogo,
-  HeaderPlusButton,
-  HeaderBellButton,
-} from "../components/header";
+import { HeaderLogo, HeaderPlusButton } from "../components/header";
 import { useHeaderOptions } from "../context/header-context";
+import { NotificationsBellButton } from "../../notifications/components/notifications-bell";
 import { SectionLayout } from "../components/section-layout";
 import {
   formatDayMonth,
@@ -26,7 +23,6 @@ import {
   TodayTimeline,
   type TodayTimelineRef,
 } from "../components/today/today-timeline";
-import { AddWorkoutSheet } from "../components/today/add-workout-sheet";
 import {
   WorkoutGoalSheet,
   type ManualWorkoutType,
@@ -38,6 +34,7 @@ import {
   FloatingActions,
   RecordButton,
 } from "../../tracker/components/record-button";
+import { RestoreSheet } from "../../tracker/components/restore-sheet";
 import { queryKeys } from "../../../shared/lib/query-keys";
 import {
   type DayEvent,
@@ -71,8 +68,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
   const [visibleDate, setVisibleDate] = useState(toIsoDate(new Date()));
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("week");
 
-  // Sheet states
-  const [addSheetVisible, setAddSheetVisible] = useState(false);
+  // Goal sheet: opened by the type tiles and by "+"; its mode follows the selected day.
   const [goalSheetVisible, setGoalSheetVisible] = useState(false);
   const [selectedWorkoutType, setSelectedWorkoutType] =
     useState<ManualWorkoutType>("easy");
@@ -124,8 +120,13 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
             ? copy.today.today
             : formatDayMonth(dateStr, language),
         intensity: workoutIntensity(workout.type),
-        duration: format.minutes(Math.round(workout.durationMinutes)),
-        distance: format.distance(workout.distanceKm),
+        // A workout added with one goal keeps 0 for the other value: nothing to show.
+        duration:
+          workout.durationMinutes > 0
+            ? format.minutes(Math.round(workout.durationMinutes))
+            : "",
+        distance:
+          workout.distanceKm > 0 ? format.distance(workout.distanceKm) : "",
       });
 
       map.set(dateStr, existing);
@@ -187,15 +188,15 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
         <HeaderPlusButton
           theme={theme}
           themeMode={themeMode}
-          onPress={() => setAddSheetVisible(true)}
+          onPress={() => handleSelectWorkoutType("easy")}
         />
       ),
       centerContent: <HeaderLogo source={logoSource} />,
       rightAction: (
-        <HeaderBellButton
+        <NotificationsBellButton
           theme={theme}
           themeMode={themeMode}
-          onPress={() => undefined}
+          copy={copy}
         />
       ),
       variant: "calendar",
@@ -222,6 +223,7 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
       setCalendarMode,
       eventDates,
       logoSource,
+      handleSelectWorkoutType,
     ],
   );
 
@@ -287,25 +289,22 @@ export function TodayScreen({ theme, themeMode, copy }: Props) {
         </FloatingActions>
       </View>
 
-      {/* Add Workout Modal Sheet */}
-      <AddWorkoutSheet
-        copy={copy}
-        defaultDate={toIsoDate(selectedDate)}
-        onClose={() => setAddSheetVisible(false)}
-        theme={theme}
-        themeMode={themeMode}
-        visible={addSheetVisible}
-      />
-
-      {/* Planned Workout Goal Sheet */}
       <WorkoutGoalSheet
         copy={copy}
+        language={language}
         date={toIsoDate(selectedDate)}
         onClose={() => setGoalSheetVisible(false)}
         theme={theme}
         themeMode={themeMode}
         visible={goalSheetVisible}
         workoutType={selectedWorkoutType}
+      />
+
+      <RestoreSheet
+        theme={theme}
+        themeMode={themeMode}
+        copy={copy}
+        language={language}
       />
     </SectionLayout>
   );

@@ -67,7 +67,8 @@
     "signOut": "Sign out",
     "accessDenied": "Section unavailable",
     "profile": "Profile",
-    "audit": "Activity log"
+    "audit": "Activity log",
+    "notifications": "Notifications"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -93,7 +94,9 @@
     "createPlan": "New plan",
     "rebuild": "Prepare again",
     "audit": "Activity log",
-    "workout": "Workout"
+    "workout": "Workout",
+    "notifications": "Notifications",
+    "notification": "Notification"
   },
   "users": {
     "title": "Users",
@@ -786,7 +789,8 @@
       "training": "Training",
       "other": "Other",
       "account": "Account",
-      "audit": "Audit"
+      "audit": "Audit",
+      "notifications": "Notifications"
     },
     "actions": {
       "read": "Read",
@@ -797,7 +801,8 @@
       "sync": "Sync",
       "message": "Send messages",
       "analyze": "Analyze",
-      "adapt": "Adapt"
+      "adapt": "Adapt",
+      "send": "Send"
     },
     "sectionEmpty": "No permissions in the catalog",
     "resources": {
@@ -828,6 +833,10 @@
       },
       "integrations": {
         "users": "User integrations"
+      },
+      "notifications": {
+        "users": "User notifications",
+        "broadcasts": "Broadcasts"
       }
     },
     "descriptions": {
@@ -945,6 +954,17 @@
       },
       "audit": {
         "read": "View and export the log of actions of all administrators and users"
+      },
+      "notifications": {
+        "read": "View own notifications and the number of unread ones",
+        "manage": "Mark own notifications as read, remove them and register the app for push notifications",
+        "users": {
+          "read": "View notifications of any user with their delivery status, and the devices that receive pushes"
+        },
+        "broadcasts": {
+          "read": "View notifications sent from the admin panel, their recipients and delivery stats",
+          "send": "Send notifications to a user, a group, a segment or all users by inbox, push and email"
+        }
       }
     }
   },
@@ -1047,7 +1067,11 @@
       "RECORDING_NOT_FOUND": "Recording not found",
       "RESULT_INVALID": "Check the distance, time and date of the result",
       "RESULT_NOT_FOUND": "Result not found",
-      "PROGRESS_DISTANCE_UNKNOWN": "Unknown distance"
+      "PROGRESS_DISTANCE_UNKNOWN": "Unknown distance",
+      "NOTIFICATION_CONTENT_REQUIRED": "Write the notification text in at least one language",
+      "NOTIFICATION_LINK_URL_REQUIRED": "Enter the address of the page the notification opens",
+      "NOTIFICATION_AUDIENCE_EMPTY": "Nobody matches the chosen recipients",
+      "NOTIFICATION_BROADCAST_NOT_FOUND": "Notification not found"
     },
     "byStatus": {
       "400": "Please check the entered data",
@@ -1233,6 +1257,10 @@
       "history": {
         "title": "History",
         "description": "Everything done by and to the user"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Inbox, delivery and devices"
       }
     },
     "status": {
@@ -1957,7 +1985,8 @@
       "coach": "Coach",
       "preferences": "Settings",
       "data_access": "Data views",
-      "settings": "System settings"
+      "settings": "System settings",
+      "notifications": "Notifications"
     },
     "resources": {
       "coach_conversation": "a coach conversation",
@@ -2075,7 +2104,189 @@
       "coach_workout_note_generated": "Coach reviewed a workout",
       "coach_workout_note_deleted": "Coach review deleted",
       "coach_sessions_deleted": "Conversation history cleared",
-      "admin_data_accessed": "Viewed {resource}"
+      "admin_data_accessed": "Viewed {resource}",
+      "notifications_device_registered": "Push device connected",
+      "notifications_device_removed": "Push device disconnected",
+      "notifications_broadcast_created": "Notification sent"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Messages to users in the app inbox, by push and by email",
+    "compose": "New notification",
+    "composeDescription": "The message lands in the app inbox; push and email follow the chosen channels",
+    "composeToUser": "Notification for {name}",
+    "filters": {
+      "allStatuses": "All statuses"
+    },
+    "list": {
+      "empty": {
+        "title": "No notifications yet",
+        "description": "Notifications sent from the admin panel will appear here"
+      },
+      "columns": {
+        "message": "Message",
+        "audience": "Recipients",
+        "channels": "Channels",
+        "status": "Status",
+        "read": "Read",
+        "push": "Push delivered",
+        "createdAt": "Sent"
+      }
+    },
+    "statuses": {
+      "queued": "Queued",
+      "sending": "Sending",
+      "sent": "Sent",
+      "failed": "Failed"
+    },
+    "audience": {
+      "label": "Recipients",
+      "types": {
+        "users": "Users",
+        "group": "Group",
+        "segment": "Segment",
+        "all": "Everyone"
+      },
+      "summary": {
+        "users": "Users: {count}",
+        "group": "Group",
+        "segment": "Segment",
+        "all": "All users"
+      },
+      "searchUsers": "Find by name or email",
+      "noUsersFound": "Nobody found",
+      "selectedUsers": "Selected: {count}",
+      "pickUsers": "Add at least one user",
+      "group": "Group",
+      "groupPlaceholder": "Choose a group",
+      "pickGroup": "Choose a group",
+      "languages": "App language",
+      "platforms": "Platform",
+      "registeredFrom": "Registered from",
+      "registeredTo": "Registered until",
+      "activePlan": "Active plan",
+      "activePlanOptions": {
+        "any": "Any",
+        "yes": "Has one",
+        "no": "Has none"
+      },
+      "segmentHint": "A segment without conditions matches every user",
+      "preview": "Recipients: {recipients} · with push: {withPush}",
+      "previewLoading": "Counting recipients…",
+      "excluded": "Blocked, deleted and system accounts never get notifications"
+    },
+    "content": {
+      "label": "Text",
+      "hint": "Users see the text in their app language, or in the other language when it is missing",
+      "languages": {
+        "ru": "Russian",
+        "en": "English"
+      },
+      "title": "Title",
+      "titlePlaceholder": "Optional — “Trefix” by default",
+      "body": "Message",
+      "bodyPlaceholder": "What do you want to tell the user",
+      "required": "Write the text in at least one language"
+    },
+    "link": {
+      "label": "Opens on tap",
+      "targets": {
+        "none": "Nothing, just the notification",
+        "coach": "Chat with Tref",
+        "today": "Today",
+        "workout": "Workout",
+        "plan": "Plan",
+        "progress": "Progress",
+        "profile": "Profile",
+        "url": "Web page"
+      },
+      "id": "Object ID",
+      "idHint": "Optional; without an ID the section opens",
+      "url": "Page address",
+      "urlInvalid": "Enter an address starting with https://"
+    },
+    "channels": {
+      "label": "Channels",
+      "inbox": "App inbox — always",
+      "push": "Push",
+      "email": "Email",
+      "none": "Inbox only"
+    },
+    "send": "Send",
+    "confirmTitle": "Send the notification?",
+    "confirmDescription": "Recipients: {count}. Sending cannot be undone.",
+    "sent": "Notification sent",
+    "detail": {
+      "title": "Notification",
+      "stats": "Delivery",
+      "recipients": "Recipients",
+      "recipientsTotal": "Recipients",
+      "read": "Read",
+      "push": "Push",
+      "email": "Email",
+      "content": "Message",
+      "link": "On tap",
+      "author": "Sent by",
+      "sentAt": "Sent",
+      "completedAt": "Delivered to inboxes",
+      "noRecipients": "No recipients yet",
+      "onlyUnread": "Unread only",
+      "system": "System"
+    },
+    "delivery": {
+      "statuses": {
+        "pending": "Queued",
+        "sent": "Sent",
+        "delivered": "Delivered",
+        "failed": "Failed",
+        "skipped": "Skipped"
+      },
+      "errors": {
+        "no_devices": "no devices",
+        "preference_off": "off in settings",
+        "device_not_registered": "device unavailable",
+        "provider_error": "service error",
+        "invalid_recipient": "no address",
+        "mail_error": "mail error",
+        "push_disabled": "push is off on the server"
+      },
+      "channels": {
+        "push": "Push",
+        "email": "Email"
+      },
+      "inboxOnly": "Inbox only"
+    },
+    "categories": {
+      "coach": "Tref",
+      "admin": "Trefix",
+      "workouts": "Workouts",
+      "plans": "Plan",
+      "progress": "Progress",
+      "account": "Account"
+    },
+    "types": {
+      "coach_message": "Message from Tref",
+      "admin_message": "Message from an administrator"
+    },
+    "user": {
+      "inboxTitle": "Inbox",
+      "inboxDescription": "Notifications of the user and their delivery per channel",
+      "devicesTitle": "Push devices",
+      "devicesDescription": "App installations that receive pushes",
+      "noDevices": "Push is not set up — the app has not registered a device",
+      "lastSeen": "Active {date}",
+      "send": "Send notification",
+      "unread": "Unread",
+      "read": "Read {date}",
+      "empty": {
+        "title": "No notifications",
+        "description": "Messages from Tref and administrators will appear here"
+      },
+      "platforms": {
+        "ios": "iOS",
+        "android": "Android"
+      }
     }
   }
 }

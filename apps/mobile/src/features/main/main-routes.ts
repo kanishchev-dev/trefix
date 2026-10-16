@@ -37,6 +37,7 @@ export type MainStackParamList = SubScreenParams & {
   trefix: undefined;
   profileEdit: undefined;
   notificationsSettings: undefined;
+  notifications: undefined;
   languageSettings: undefined;
   themeSettings: undefined;
 };
@@ -98,6 +99,7 @@ export function openStackScreen(
     | "trefix"
     | "profileEdit"
     | "notificationsSettings"
+    | "notifications"
     | "languageSettings"
     | "themeSettings",
 ): void {

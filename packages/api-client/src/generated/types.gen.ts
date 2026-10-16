@@ -2068,6 +2068,14 @@ export type CreateWorkoutDto = {
   description?: string;
   durationMinutes?: number;
   distanceKm?: number;
+  /**
+   * Goal of the workout. When set, only the goal value is stored: `duration` keeps durationMinutes, `distance` keeps distanceKm (and timeLimitMin as its duration), the other value stays 0.
+   */
+  goal?: "none" | "duration" | "distance";
+  /**
+   * Distance goal only: finish the distance within this many minutes (sets the target pace).
+   */
+  timeLimitMin?: number;
   status?: "planned" | "completed";
   actualDurationMinutes?: number;
   actualDistanceKm?: number;
@@ -3693,6 +3701,7 @@ export type ActivityItemDto = {
     | "integrations"
     | "coach"
     | "preferences"
+    | "notifications"
     | "data_access"
     | "settings";
   actor: ActivityActorDto;
@@ -3879,6 +3888,283 @@ export type AdminOverviewResponseDto = {
   upcomingWorkouts: Array<OverviewWorkoutDto>;
   attention: Array<OverviewAttentionDto>;
   connections: Array<OverviewConnectionDto>;
+};
+
+export type NotificationLinkDto = {
+  /**
+   * Screen the app opens on tap
+   */
+  target:
+    | "coach"
+    | "today"
+    | "workout"
+    | "plan"
+    | "progress"
+    | "profile"
+    | "url";
+  /**
+   * Entity of the target: coach session, workout or plan
+   */
+  id: string | null;
+  /**
+   * Only for the `url` target
+   */
+  url: string | null;
+};
+
+export type NotificationResponseDto = {
+  id: string;
+  category: "coach" | "admin" | "workouts" | "plans" | "progress" | "account";
+  type: "coach.message" | "admin.message";
+  /**
+   * Written title in the request language; null — clients show the sender of the category
+   */
+  title: string | null;
+  /**
+   * Written text; null — clients render the type with `params`
+   */
+  body: string | null;
+  /**
+   * Values for rendering system types
+   */
+  params: {
+    [key: string]: unknown;
+  };
+  link: NotificationLinkDto | null;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export type NotificationUnreadCountResponseDto = {
+  count: number;
+};
+
+export type MarkNotificationsReadDto = {
+  ids: Array<string>;
+};
+
+export type RegisterPushDeviceDto = {
+  token: string;
+  platform: "ios" | "android";
+  locale?: string | null;
+  appVersion?: string | null;
+  deviceName?: string | null;
+};
+
+export type PushDeviceResponseDto = {
+  id: string;
+  platform: "ios" | "android";
+  locale: string | null;
+  appVersion: string | null;
+  deviceName: string | null;
+  lastSeenAt: string;
+  createdAt: string;
+};
+
+export type UnregisterPushDeviceDto = {
+  token: string;
+};
+
+export type BroadcastAuthorDto = {
+  id: string;
+  name: string;
+};
+
+export type BroadcastSegmentResponseDto = {
+  languages?: Array<"ru" | "en">;
+  platforms?: Array<"ios" | "android">;
+  registeredFrom?: string;
+  registeredTo?: string;
+  activePlan?: boolean;
+};
+
+export type BroadcastAudienceResponseDto = {
+  type: "users" | "group" | "all" | "segment";
+  userIds?: Array<string>;
+  groupId?: string;
+  segment?: BroadcastSegmentResponseDto;
+};
+
+export type BroadcastTextResponseDto = {
+  title: string | null;
+  body: string;
+};
+
+export type BroadcastContentResponseDto = {
+  ru?: BroadcastTextResponseDto;
+  en?: BroadcastTextResponseDto;
+};
+
+export type BroadcastChannelStatsDto = {
+  pending: number;
+  sent: number;
+  /**
+   * Confirmed by Apple/Google (push only)
+   */
+  delivered: number;
+  failed: number;
+  skipped: number;
+};
+
+export type BroadcastStatsDto = {
+  /**
+   * Recipients who opened the notification in the app
+   */
+  read: number;
+  push: BroadcastChannelStatsDto;
+  email: BroadcastChannelStatsDto;
+};
+
+export type BroadcastResponseDto = {
+  id: string;
+  createdBy: BroadcastAuthorDto | null;
+  audience: BroadcastAudienceResponseDto;
+  content: BroadcastContentResponseDto;
+  link: NotificationLinkDto | null;
+  channels: Array<"push" | "email">;
+  status: "queued" | "sending" | "sent" | "failed";
+  recipientsCount: number;
+  error: string | null;
+  stats: BroadcastStatsDto;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+export type BroadcastRecipientUserDto = {
+  id: string;
+  /**
+   * Display name; empty for a purged account
+   */
+  name: string;
+};
+
+export type NotificationDeliveryResponseDto = {
+  channel: "push" | "email";
+  status: "pending" | "sent" | "delivered" | "failed" | "skipped";
+  error:
+    | "no_devices"
+    | "preference_off"
+    | "device_not_registered"
+    | "provider_error"
+    | "invalid_recipient"
+    | "mail_error"
+    | "push_disabled"
+    | null;
+  sentAt: string | null;
+};
+
+export type BroadcastRecipientResponseDto = {
+  notificationId: string;
+  user: BroadcastRecipientUserDto;
+  readAt: string | null;
+  deliveries: Array<NotificationDeliveryResponseDto>;
+};
+
+export type BroadcastSegmentDto = {
+  languages?: Array<"ru" | "en">;
+  /**
+   * Users with a push device of these platforms
+   */
+  platforms?: Array<"ios" | "android">;
+  registeredFrom?: string;
+  registeredTo?: string;
+  /**
+   * true — with an active plan, false — without one
+   */
+  activePlan?: boolean;
+};
+
+export type BroadcastAudienceDto = {
+  type: "users" | "group" | "all" | "segment";
+  /**
+   * For `users`
+   */
+  userIds?: Array<string>;
+  /**
+   * Permission group, for `group`
+   */
+  groupId?: string;
+  /**
+   * For `segment`
+   */
+  segment?: BroadcastSegmentDto;
+};
+
+export type AudiencePreviewDto = {
+  audience: BroadcastAudienceDto;
+};
+
+export type AudiencePreviewResponseDto = {
+  /**
+   * Active accounts the broadcast would reach
+   */
+  recipients: number;
+  /**
+   * Of them, with at least one push device
+   */
+  withPush: number;
+};
+
+export type BroadcastTextDto = {
+  title?: string | null;
+  body: string;
+};
+
+export type BroadcastContentDto = {
+  ru?: BroadcastTextDto;
+  en?: BroadcastTextDto;
+};
+
+export type BroadcastLinkDto = {
+  target:
+    | "coach"
+    | "today"
+    | "workout"
+    | "plan"
+    | "progress"
+    | "profile"
+    | "url";
+  id?: string | null;
+  url?: string | null;
+};
+
+export type CreateBroadcastDto = {
+  audience: BroadcastAudienceDto;
+  content: BroadcastContentDto;
+  link?: BroadcastLinkDto | null;
+  /**
+   * Channels besides the inbox; empty — the inbox only
+   */
+  channels: Array<"push" | "email">;
+};
+
+export type AdminNotificationResponseDto = {
+  id: string;
+  category: "coach" | "admin" | "workouts" | "plans" | "progress" | "account";
+  type: "coach.message" | "admin.message";
+  /**
+   * Written title in the request language; null — clients show the sender of the category
+   */
+  title: string | null;
+  /**
+   * Written text; null — clients render the type with `params`
+   */
+  body: string | null;
+  /**
+   * Values for rendering system types
+   */
+  params: {
+    [key: string]: unknown;
+  };
+  link: NotificationLinkDto | null;
+  readAt: string | null;
+  createdAt: string;
+  broadcastId: string | null;
+  deliveries: Array<NotificationDeliveryResponseDto>;
+};
+
+export type PushDeviceListResponseDto = {
+  items: Array<PushDeviceResponseDto>;
 };
 
 export type HealthControllerLiveData = {
@@ -8151,6 +8437,7 @@ export type ActivityControllerListForUserV1Data = {
       | "integrations"
       | "coach"
       | "preferences"
+      | "notifications"
       | "data_access"
       | "settings"
     >;
@@ -8218,6 +8505,7 @@ export type ActivityControllerExportForUserV1Data = {
       | "integrations"
       | "coach"
       | "preferences"
+      | "notifications"
       | "data_access"
       | "settings"
     >;
@@ -8268,6 +8556,7 @@ export type ActivityControllerListLogV1Data = {
       | "integrations"
       | "coach"
       | "preferences"
+      | "notifications"
       | "data_access"
       | "settings"
     >;
@@ -8336,6 +8625,7 @@ export type ActivityControllerExportLogV1Data = {
       | "integrations"
       | "coach"
       | "preferences"
+      | "notifications"
       | "data_access"
       | "settings"
     >;
@@ -8597,3 +8887,263 @@ export type AdminOverviewControllerGetOverviewV1Responses = {
 
 export type AdminOverviewControllerGetOverviewV1Response =
   AdminOverviewControllerGetOverviewV1Responses[keyof AdminOverviewControllerGetOverviewV1Responses];
+
+export type NotificationsControllerListV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    page?: number;
+    limit?: number;
+    category?:
+      | "coach"
+      | "admin"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "account";
+    /**
+     * Only unread notifications
+     */
+    unread?: boolean;
+  };
+  url: "/v1/notifications";
+};
+
+export type NotificationsControllerListV1Responses = {
+  200: PaginatedResponseDto & {
+    data: Array<NotificationResponseDto>;
+  };
+};
+
+export type NotificationsControllerListV1Response =
+  NotificationsControllerListV1Responses[keyof NotificationsControllerListV1Responses];
+
+export type NotificationsControllerUnreadCountV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/notifications/unread-count";
+};
+
+export type NotificationsControllerUnreadCountV1Responses = {
+  200: NotificationUnreadCountResponseDto;
+};
+
+export type NotificationsControllerUnreadCountV1Response =
+  NotificationsControllerUnreadCountV1Responses[keyof NotificationsControllerUnreadCountV1Responses];
+
+export type NotificationsControllerMarkReadV1Data = {
+  body: MarkNotificationsReadDto;
+  path?: never;
+  query?: never;
+  url: "/v1/notifications/read";
+};
+
+export type NotificationsControllerMarkReadV1Responses = {
+  200: NotificationUnreadCountResponseDto;
+};
+
+export type NotificationsControllerMarkReadV1Response =
+  NotificationsControllerMarkReadV1Responses[keyof NotificationsControllerMarkReadV1Responses];
+
+export type NotificationsControllerMarkAllReadV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/notifications/read-all";
+};
+
+export type NotificationsControllerMarkAllReadV1Responses = {
+  200: NotificationUnreadCountResponseDto;
+};
+
+export type NotificationsControllerMarkAllReadV1Response =
+  NotificationsControllerMarkAllReadV1Responses[keyof NotificationsControllerMarkAllReadV1Responses];
+
+export type NotificationsControllerRemoveV1Data = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/notifications/{id}";
+};
+
+export type NotificationsControllerRemoveV1Responses = {
+  204: void;
+};
+
+export type NotificationsControllerRemoveV1Response =
+  NotificationsControllerRemoveV1Responses[keyof NotificationsControllerRemoveV1Responses];
+
+export type NotificationsControllerRegisterDeviceV1Data = {
+  body: RegisterPushDeviceDto;
+  path?: never;
+  query?: never;
+  url: "/v1/notifications/devices";
+};
+
+export type NotificationsControllerRegisterDeviceV1Responses = {
+  200: PushDeviceResponseDto;
+};
+
+export type NotificationsControllerRegisterDeviceV1Response =
+  NotificationsControllerRegisterDeviceV1Responses[keyof NotificationsControllerRegisterDeviceV1Responses];
+
+export type NotificationsControllerUnregisterDeviceV1Data = {
+  body: UnregisterPushDeviceDto;
+  path?: never;
+  query?: never;
+  url: "/v1/notifications/devices/unregister";
+};
+
+export type NotificationsControllerUnregisterDeviceV1Responses = {
+  204: void;
+};
+
+export type NotificationsControllerUnregisterDeviceV1Response =
+  NotificationsControllerUnregisterDeviceV1Responses[keyof NotificationsControllerUnregisterDeviceV1Responses];
+
+export type AdminBroadcastsControllerListV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    page?: number;
+    limit?: number;
+    status?: "queued" | "sending" | "sent" | "failed";
+  };
+  url: "/v1/notification-broadcasts";
+};
+
+export type AdminBroadcastsControllerListV1Responses = {
+  200: PaginatedResponseDto & {
+    data: Array<BroadcastResponseDto>;
+  };
+};
+
+export type AdminBroadcastsControllerListV1Response =
+  AdminBroadcastsControllerListV1Responses[keyof AdminBroadcastsControllerListV1Responses];
+
+export type AdminBroadcastsControllerCreateV1Data = {
+  body: CreateBroadcastDto;
+  path?: never;
+  query?: never;
+  url: "/v1/notification-broadcasts";
+};
+
+export type AdminBroadcastsControllerCreateV1Responses = {
+  201: BroadcastResponseDto;
+};
+
+export type AdminBroadcastsControllerCreateV1Response =
+  AdminBroadcastsControllerCreateV1Responses[keyof AdminBroadcastsControllerCreateV1Responses];
+
+export type AdminBroadcastsControllerGetV1Data = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/notification-broadcasts/{id}";
+};
+
+export type AdminBroadcastsControllerGetV1Responses = {
+  200: BroadcastResponseDto;
+};
+
+export type AdminBroadcastsControllerGetV1Response =
+  AdminBroadcastsControllerGetV1Responses[keyof AdminBroadcastsControllerGetV1Responses];
+
+export type AdminBroadcastsControllerRecipientsV1Data = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: {
+    page?: number;
+    limit?: number;
+    category?:
+      | "coach"
+      | "admin"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "account";
+    /**
+     * Only unread notifications
+     */
+    unread?: boolean;
+  };
+  url: "/v1/notification-broadcasts/{id}/recipients";
+};
+
+export type AdminBroadcastsControllerRecipientsV1Responses = {
+  200: PaginatedResponseDto & {
+    data: Array<BroadcastRecipientResponseDto>;
+  };
+};
+
+export type AdminBroadcastsControllerRecipientsV1Response =
+  AdminBroadcastsControllerRecipientsV1Responses[keyof AdminBroadcastsControllerRecipientsV1Responses];
+
+export type AdminBroadcastsControllerPreviewV1Data = {
+  body: AudiencePreviewDto;
+  path?: never;
+  query?: never;
+  url: "/v1/notification-broadcasts/audience-preview";
+};
+
+export type AdminBroadcastsControllerPreviewV1Responses = {
+  200: AudiencePreviewResponseDto;
+};
+
+export type AdminBroadcastsControllerPreviewV1Response =
+  AdminBroadcastsControllerPreviewV1Responses[keyof AdminBroadcastsControllerPreviewV1Responses];
+
+export type AdminUserNotificationsControllerListV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    page?: number;
+    limit?: number;
+    category?:
+      | "coach"
+      | "admin"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "account";
+    /**
+     * Only unread notifications
+     */
+    unread?: boolean;
+  };
+  url: "/v1/users/{userId}/notifications";
+};
+
+export type AdminUserNotificationsControllerListV1Responses = {
+  200: PaginatedResponseDto & {
+    data: Array<AdminNotificationResponseDto>;
+  };
+};
+
+export type AdminUserNotificationsControllerListV1Response =
+  AdminUserNotificationsControllerListV1Responses[keyof AdminUserNotificationsControllerListV1Responses];
+
+export type AdminUserNotificationsControllerDevicesV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/notifications/devices";
+};
+
+export type AdminUserNotificationsControllerDevicesV1Responses = {
+  200: PushDeviceListResponseDto;
+};
+
+export type AdminUserNotificationsControllerDevicesV1Response =
+  AdminUserNotificationsControllerDevicesV1Responses[keyof AdminUserNotificationsControllerDevicesV1Responses];

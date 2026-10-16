@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { AppState } from "react-native";
 import * as Location from "expo-location";
+import { Pedometer } from "expo-sensors";
 
 import type { TrainingWorkout } from "@trefix/api-client";
 
@@ -40,6 +42,8 @@ export function usePlannedWorkout(
  */
 export function useGpsWarmup(enabled: boolean): {
   status: "searching" | "weak" | "good";
+  /** Horizontal accuracy of the last fix, metres. */
+  accuracy: number | null;
   slow: boolean;
 } {
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -85,5 +89,79 @@ export function useGpsWarmup(enabled: boolean): {
 
   const status =
     accuracy === null ? "searching" : accuracy <= GPS_READY_M ? "good" : "weak";
-  return { status, slow };
+  return { status, accuracy: enabled ? accuracy : null, slow };
+}
+
+/**
+ * Location access for the run: GPS turns on by itself when it is allowed;
+ * without it the run is recorded by the pedometer. Checked again when the
+ * app comes back (the user may have changed it in the settings).
+ */
+export type LocationAccess =
+  | "checking"
+  | "granted"
+  /** Never asked: asked on "Start". */
+  | "ask"
+  | "denied"
+  | "services_off";
+
+export async function readLocationAccess(): Promise<
+  Exclude<LocationAccess, "checking">
+> {
+  try {
+    if (!(await Location.hasServicesEnabledAsync())) return "services_off";
+    const permission = await Location.getForegroundPermissionsAsync();
+    if (permission.granted) return "granted";
+    return permission.canAskAgain ? "ask" : "denied";
+  } catch {
+    return "denied";
+  }
+}
+
+export function useLocationAccess(): {
+  access: LocationAccess;
+  refresh: () => void;
+} {
+  const [access, setAccess] = useState<LocationAccess>("checking");
+  const refresh = useCallback(() => {
+    void readLocationAccess().then(setAccess);
+  }, []);
+  useEffect(() => {
+    refresh();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refresh();
+    });
+    return () => subscription.remove();
+  }, [refresh]);
+  return { access, refresh };
+}
+
+/** Pedometer access for a run without GPS (treadmill, no location). */
+export async function motionAccess(): Promise<
+  "granted" | "ask" | "denied" | "unavailable"
+> {
+  try {
+    if (!(await Pedometer.isAvailableAsync())) return "unavailable";
+    const permission = await Pedometer.getPermissionsAsync();
+    if (permission.granted) return "granted";
+    return permission.canAskAgain ? "ask" : "denied";
+  } catch {
+    return "unavailable";
+  }
+}
+
+export async function requestMotion(): Promise<boolean> {
+  try {
+    return (await Pedometer.requestPermissionsAsync()).granted;
+  } catch {
+    return false;
+  }
+}
+
+export async function requestLocation(): Promise<boolean> {
+  try {
+    return (await Location.requestForegroundPermissionsAsync()).granted;
+  } catch {
+    return false;
+  }
 }

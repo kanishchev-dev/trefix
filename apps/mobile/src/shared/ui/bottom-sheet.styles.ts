@@ -118,6 +118,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonWithIcon: {
+    flexDirection: "row",
+    gap: 8,
+  },
   buttonLabel: {
     fontSize: 15,
     lineHeight: 20,
