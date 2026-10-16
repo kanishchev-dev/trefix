@@ -1539,6 +1539,7 @@ export const userListQuerySchema = z.object({
     .enum(["createdAt", "email", "firstName", "lastName"])
     .default("createdAt"),
   sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
+  status: contract.zAdminUserResponseDto.shape.status.optional(),
 });
 
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
@@ -1727,6 +1728,43 @@ export type AdminCalendarSummaryDay = z.infer<
 >;
 export type AdminCreateWorkoutInput = z.infer<typeof adminCreateWorkoutSchema>;
 export type AdminUpdateWorkoutInput = z.infer<typeof adminUpdateWorkoutSchema>;
+
+// --- Admin: user control (activity, account, overview, workouts, coach) ---
+
+export const activityItemSchema = contract.zActivityItemDto;
+export const activityPageSchema = contract.zActivityPageDto;
+export const adminOverviewSchema = contract.zAdminOverviewResponseDto;
+export const accountSecuritySchema = contract.zAccountSecurityResponseDto;
+export const blockUserSchema = contract.zBlockUserDto;
+export const userBlockReasonSchema = contract.zBlockUserDto.shape.reason;
+export const userStatusSchema = contract.zAccountSecurityResponseDto.shape.status;
+export const adminEmailChangeSchema = contract.zAdminEmailChangeDto;
+export const adminCoachSessionListSchema =
+  contract.zAdminCoachSessionListResponseDto;
+export const adminCoachNoteListSchema = contract.zAdminCoachNoteListResponseDto;
+export const deviceSyncRequestSchema = contract.zDeviceSyncRequestResponseDto;
+export const trainingWorkoutCompletionSchema =
+  contract.zTrainingWorkoutCompletionResponseDto;
+export const raceResultSchema = contract.zRaceResultResponseDto;
+export const recordsExclusionSchema = contract.zRecordsExclusionResponseDto;
+export const workoutGearAssignmentSchema = contract.zWorkoutGearAssignmentDto;
+
+export const USER_BLOCK_REASONS = userBlockReasonSchema.options;
+export const USER_STATUSES = userStatusSchema.options;
+
+export type ActivityItem = z.infer<typeof activityItemSchema>;
+export type ActivityPage = z.infer<typeof activityPageSchema>;
+export type AdminOverview = z.infer<typeof adminOverviewSchema>;
+export type AccountSecurity = z.infer<typeof accountSecuritySchema>;
+export type BlockUserInput = z.infer<typeof blockUserSchema>;
+export type UserBlockReason = z.infer<typeof userBlockReasonSchema>;
+export type UserStatus = z.infer<typeof userStatusSchema>;
+export type AdminCoachSessionList = z.infer<typeof adminCoachSessionListSchema>;
+export type AdminCoachNoteList = z.infer<typeof adminCoachNoteListSchema>;
+export type TrainingWorkoutCompletion = z.infer<
+  typeof trainingWorkoutCompletionSchema
+>;
+export type RaceResult = z.infer<typeof raceResultSchema>;
 
 export class ApiClientError extends Error {
   readonly status: number;

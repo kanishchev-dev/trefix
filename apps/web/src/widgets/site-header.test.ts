@@ -76,7 +76,7 @@ describe("resolveBreadcrumbs", () => {
     expect(resolveBreadcrumbs("/users/u1/plans/p1")).toEqual([
       { key: "breadcrumbs.users", href: "/users/list" },
       { key: "breadcrumbs.user", href: "/users/u1" },
-      { key: "breadcrumbs.plans", href: "/users/u1?tab=plans" },
+      { key: "breadcrumbs.plans", href: "/users/u1/plans" },
       { key: "breadcrumbs.plan" },
     ]);
   });
@@ -88,6 +88,31 @@ describe("resolveBreadcrumbs", () => {
     expect(resolveBreadcrumbs("/users/u1/plans/p1/rebuild").slice(-2)).toEqual([
       { key: "breadcrumbs.plan", href: "/users/u1/plans/p1" },
       { key: "breadcrumbs.rebuild" },
+    ]);
+  });
+
+  it("resolves sections of a user's card", () => {
+    expect(resolveBreadcrumbs("/users/u1")).toEqual([
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.user" },
+    ]);
+    expect(resolveBreadcrumbs("/users/u1/account")).toEqual([
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.user", href: "/users/u1" },
+      { key: "userCard.sections.account.title" },
+    ]);
+    expect(resolveBreadcrumbs("/users/u1/workouts/w1").slice(-2)).toEqual([
+      {
+        key: "userCard.sections.calendar.title",
+        href: "/users/u1/calendar",
+      },
+      { key: "breadcrumbs.workout" },
+    ]);
+  });
+
+  it("resolves the audit log", () => {
+    expect(resolveBreadcrumbs("/audit")).toEqual([
+      { key: "breadcrumbs.audit" },
     ]);
   });
 });

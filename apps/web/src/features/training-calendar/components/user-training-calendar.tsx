@@ -173,6 +173,9 @@ export function UserTrainingCalendar({
             ) : (
               <WorkoutDayList
                 workouts={day.workouts}
+                workoutHref={(workout) =>
+                  `/users/${userId}/workouts/${workout.id}`
+                }
                 canManage={canManage}
                 onEdit={(workout) => setDialog({ mode: "edit", workout })}
               />

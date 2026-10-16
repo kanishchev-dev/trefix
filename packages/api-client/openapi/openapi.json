@@ -937,6 +937,299 @@
         ]
       }
     },
+    "/v1/users/{userId}/sessions": {
+      "get": {
+        "operationId": "AdminAuthController_listSessions_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Active sessions (devices) of the user",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/sessions/{sessionId}": {
+      "delete": {
+        "operationId": "AdminAuthController_revokeSession_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "AUTH_SESSION_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End one session of the user",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/sessions/revoke-all": {
+      "post": {
+        "operationId": "AdminAuthController_revokeAllSessions_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End every session of the user",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/identities": {
+      "get": {
+        "operationId": "AdminAuthController_listIdentities_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthIdentityListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apple and Google accounts linked for sign-in",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/identities/{provider}": {
+      "delete": {
+        "operationId": "AdminAuthController_unlinkIdentity_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "apple",
+                "google"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "AUTH_IDENTITY_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlink an Apple or Google account; email codes keep working",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/password-reset": {
+      "post": {
+        "operationId": "AdminAuthController_sendPasswordReset_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Email the user a password reset code",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/email/verify": {
+      "post": {
+        "operationId": "AdminAuthController_verifyEmail_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark the email as verified",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
+    "/v1/users/{userId}/email": {
+      "patch": {
+        "operationId": "AdminAuthController_changeEmail_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminEmailChangeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "409": {
+            "description": "EMAIL_TAKEN"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the email; the new address stays unverified until the user enters the code",
+        "tags": [
+          "Admin Account Security"
+        ]
+      }
+    },
     "/v1/users": {
       "post": {
         "operationId": "UsersController_create_v1",
@@ -1037,6 +1330,20 @@
               "enum": [
                 "ASC",
                 "DESC"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Only users in this status; deleted ones only when asked",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "blocked",
+                "deleted"
               ]
             }
           }
@@ -2205,6 +2512,24 @@
         "tags": [
           "Avatars"
         ]
+      },
+      "delete": {
+        "operationId": "AvatarsController_removeOwnAvatar_v1",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove the own avatar",
+        "tags": [
+          "Avatars"
+        ]
       }
     },
     "/v1/avatars/{userId}": {
@@ -2712,6 +3037,283 @@
         "summary": "Send a chat message to the coach",
         "tags": [
           "Coach"
+        ]
+      }
+    },
+    "/v1/users/{userId}/coach/sessions": {
+      "get": {
+        "operationId": "AdminCoachController_listSessions_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCoachSessionListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chat sessions with titles and message counts, without their text",
+        "tags": [
+          "Admin Coach"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminCoachController_clearHistory_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete the whole chat history of the user",
+        "tags": [
+          "Admin Coach"
+        ]
+      }
+    },
+    "/v1/users/{userId}/coach/sessions/{sessionId}": {
+      "get": {
+        "operationId": "AdminCoachController_getSession_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachSessionDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Messages of a chat session; every view is logged",
+        "tags": [
+          "Admin Coach"
+        ]
+      }
+    },
+    "/v1/users/{userId}/coach/workout-notes": {
+      "get": {
+        "operationId": "AdminCoachController_listNotes_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCoachNoteListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Workout notes the coach wrote, newest first",
+        "tags": [
+          "Admin Coach"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/note": {
+      "get": {
+        "operationId": "AdminCoachController_getNote_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachWorkoutNoteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The coach note of a workout; scheduled when missing",
+        "tags": [
+          "Admin Coach"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminCoachController_deleteNote_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete the coach note of a workout",
+        "tags": [
+          "Admin Coach"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/note/regenerate": {
+      "post": {
+        "operationId": "AdminCoachController_regenerateNote_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachWorkoutNoteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Write the coach note again",
+        "tags": [
+          "Admin Coach"
         ]
       }
     },
@@ -6027,6 +6629,1314 @@
         "tags": [
           "Admin Training Calendar"
         ]
+      },
+      "get": {
+        "operationId": "AdminWorkoutsController_getWorkout_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWorkoutResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND, WORKOUT_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Workout with its plan, actual result and analysis",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminWorkoutsController_delete_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "409": {
+            "description": "WORKOUT_BELONGS_TO_PLAN"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a workout outside a plan, in any status",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/complete": {
+      "post": {
+        "operationId": "AdminWorkoutsController_complete_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteWorkoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWorkoutCompletionResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "WORKOUT_CANCELLED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Complete a workout with its actual result; a skipped workout can be completed too",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/result": {
+      "patch": {
+        "operationId": "AdminWorkoutsController_updateResult_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteWorkoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWorkoutResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "WORKOUT_NOT_COMPLETED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Correct the actual result of a completed workout",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/reopen": {
+      "post": {
+        "operationId": "AdminWorkoutsController_reopen_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWorkoutResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "WORKOUT_NOT_COMPLETED, WORKOUT_HAS_SOURCES"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Return a completed workout with a hand-entered result to planned",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/gear": {
+      "patch": {
+        "operationId": "AdminWorkoutsController_setGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignWorkoutGearDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutGearAssignmentDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or clear the shoes of a workout",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/device": {
+      "patch": {
+        "operationId": "AdminWorkoutsController_setDevice_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignWorkoutDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutDeviceAssignmentDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or clear the watch or sensor of a workout",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/records": {
+      "patch": {
+        "operationId": "AdminWorkoutsController_setRecordsExcluded_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordsExclusionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordsExclusionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Exclude the workout from records or include it back",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/plans/active/adaptations": {
+      "get": {
+        "operationId": "AdminWorkoutsController_listAdaptations_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingAdaptationListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Adaptations of the active plan waiting for a decision or shown as advice",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/plans/active/adaptations/{adaptationId}/apply": {
+      "post": {
+        "operationId": "AdminWorkoutsController_applyAdaptation_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "adaptationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingAdaptationResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ADAPTATION_NOT_PROPOSED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apply a proposed adaptation on behalf of the user",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/plans/active/adaptations/{adaptationId}/dismiss": {
+      "post": {
+        "operationId": "AdminWorkoutsController_dismissAdaptation_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "adaptationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingAdaptationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Dismiss a pending adaptation on behalf of the user",
+        "tags": [
+          "Admin Training Workouts"
+        ]
+      }
+    },
+    "/v1/users/{userId}/athlete": {
+      "get": {
+        "operationId": "AdminAthleteController_getAthlete_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteProfileResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Athlete profile with the source of every value, zones and completeness",
+        "tags": [
+          "Admin Athlete"
+        ]
+      },
+      "patch": {
+        "description": "Errors: ATHLETE_FIELD_OUT_OF_RANGE, ATHLETE_HEART_RATE_INCONSISTENT, ATHLETE_ZONES_INVALID",
+        "operationId": "AdminAthleteController_updateAthlete_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAthleteProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteProfileResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the athlete profile, zones and availability",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/summary": {
+      "get": {
+        "operationId": "AdminAthleteController_progressSummary_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone used for local days, weeks and months; UTC when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Totals by week, month, year and all time with comparisons",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/overview": {
+      "get": {
+        "operationId": "AdminAthleteController_progressOverview_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "3M",
+              "type": "string",
+              "enum": [
+                "4W",
+                "8W",
+                "3M",
+                "6M",
+                "1Y"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressOverviewResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Computed progress: form, metrics, records, achievements",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/metrics/{metric}": {
+      "get": {
+        "operationId": "AdminAthleteController_progressMetric_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "metric",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "3M",
+              "type": "string",
+              "enum": [
+                "4W",
+                "8W",
+                "3M",
+                "6M",
+                "1Y"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressMetricResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One computed metric with its history",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/records": {
+      "get": {
+        "operationId": "AdminAthleteController_records_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressRecordsResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Best results per distance",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/records/{distance}": {
+      "get": {
+        "operationId": "AdminAthleteController_recordHistory_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "distance",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordHistoryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every attempt on a record distance, including results added by hand",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/results": {
+      "post": {
+        "description": "Errors: RESULT_INVALID",
+        "operationId": "AdminAthleteController_addResult_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceResultResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a race or test result by hand",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/progress/results/{resultId}": {
+      "delete": {
+        "description": "Errors: RESULT_NOT_FOUND",
+        "operationId": "AdminAthleteController_deleteResult_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "resultId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a result added by hand",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/gear": {
+      "get": {
+        "operationId": "AdminAthleteController_listGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "active",
+              "type": "string",
+              "enum": [
+                "active",
+                "retired"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "All types when omitted",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "shoes",
+                "watch",
+                "sensor"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GearListResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Shoes and devices with mileage",
+        "tags": [
+          "Admin Athlete"
+        ]
+      },
+      "post": {
+        "operationId": "AdminAthleteController_createGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGearDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GearResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add gear",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/gear/{gearId}": {
+      "patch": {
+        "description": "Errors: GEAR_NOT_FOUND, GEAR_RETIRED",
+        "operationId": "AdminAthleteController_updateGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "gearId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGearDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GearResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit gear",
+        "tags": [
+          "Admin Athlete"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminAthleteController_removeGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "gearId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete gear; workouts keep their history without the link",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/gear/{gearId}/retire": {
+      "post": {
+        "operationId": "AdminAthleteController_retireGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "gearId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GearResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move gear to the archive",
+        "tags": [
+          "Admin Athlete"
+        ]
+      }
+    },
+    "/v1/users/{userId}/gear/{gearId}/restore": {
+      "post": {
+        "operationId": "AdminAthleteController_restoreGear_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "gearId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GearResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND, ATHLETE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Return gear from the archive",
+        "tags": [
+          "Admin Athlete"
+        ]
       }
     },
     "/v1/users/{userId}/training/plans/counts": {
@@ -7862,6 +9772,361 @@
         ]
       }
     },
+    "/v1/users/{userId}/integrations": {
+      "get": {
+        "operationId": "AdminIntegrationsController_list_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationsListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every provider with its connection status",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/integrations/strava/sync": {
+      "post": {
+        "description": "Errors: STRAVA_NOT_CONNECTED",
+        "operationId": "AdminIntegrationsController_syncStrava_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationSyncStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sync Strava activities of the user now",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/integrations/strava/profile-sync": {
+      "post": {
+        "description": "Errors: STRAVA_NOT_CONNECTED, STRAVA_PROFILE_ACCESS_REQUIRED",
+        "operationId": "AdminIntegrationsController_syncStravaProfile_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueuedResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sync weight, sex and shoes from Strava now",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/integrations/{provider}/sync-request": {
+      "post": {
+        "operationId": "AdminIntegrationsController_requestDeviceSync_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "apple_health",
+                "health_connect"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceSyncRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ask the app to sync Health data in the background",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/integrations/{provider}": {
+      "delete": {
+        "operationId": "AdminIntegrationsController_disconnect_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "strava",
+                "apple_health",
+                "health_connect"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Disconnect a provider; imported workouts stay",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/sources": {
+      "get": {
+        "operationId": "AdminIntegrationsController_listWorkoutSources_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutSourcesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Provider records the workout was built from, primary first",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/sources/{provider}": {
+      "delete": {
+        "operationId": "AdminIntegrationsController_unlinkWorkoutSource_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "strava",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "WORKOUT_SOURCE_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detach a provider record from the workout",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
+    "/v1/users/{userId}/training/workouts/{workoutId}/recording": {
+      "get": {
+        "operationId": "AdminIntegrationsController_getRecording_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workoutId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutRecordingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Route and splits of a workout recorded in the app; the view is logged",
+        "tags": [
+          "Admin Integrations"
+        ]
+      }
+    },
     "/v1/me/consents": {
       "get": {
         "operationId": "UserConsentsController_list_v1",
@@ -8047,6 +10312,1064 @@
         "summary": "Download the archive from the emailed link",
         "tags": [
           "Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/activity": {
+      "get": {
+        "operationId": "ActivityController_listForUser_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "domain",
+            "required": false,
+            "in": "query",
+            "description": "Sections; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "account",
+                  "access",
+                  "athlete",
+                  "workouts",
+                  "plans",
+                  "progress",
+                  "gear",
+                  "integrations",
+                  "coach",
+                  "preferences",
+                  "data_access",
+                  "settings"
+                ]
+              }
+            }
+          },
+          {
+            "name": "actorType",
+            "required": false,
+            "in": "query",
+            "description": "Kinds of actor; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin",
+                  "system",
+                  "integration",
+                  "coach"
+                ]
+              }
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Entries at or after this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Entries before this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "description": "History of one entity, together with `entityId`",
+            "schema": {
+              "example": "workout",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Matches the action name or the exact entity id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Cursor from the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityPageDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ACTIVITY_CURSOR_INVALID"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Action history of one user, newest first",
+        "tags": [
+          "Admin Activity"
+        ]
+      }
+    },
+    "/v1/users/{userId}/activity/export": {
+      "get": {
+        "operationId": "ActivityController_exportForUser_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "domain",
+            "required": false,
+            "in": "query",
+            "description": "Sections; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "account",
+                  "access",
+                  "athlete",
+                  "workouts",
+                  "plans",
+                  "progress",
+                  "gear",
+                  "integrations",
+                  "coach",
+                  "preferences",
+                  "data_access",
+                  "settings"
+                ]
+              }
+            }
+          },
+          {
+            "name": "actorType",
+            "required": false,
+            "in": "query",
+            "description": "Kinds of actor; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin",
+                  "system",
+                  "integration",
+                  "coach"
+                ]
+              }
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Entries at or after this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Entries before this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "description": "History of one entity, together with `entityId`",
+            "schema": {
+              "example": "workout",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Matches the action name or the exact entity id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "CSV export of the action history of one user",
+        "tags": [
+          "Admin Activity"
+        ]
+      }
+    },
+    "/v1/activity": {
+      "get": {
+        "operationId": "ActivityController_listLog_v1",
+        "parameters": [
+          {
+            "name": "domain",
+            "required": false,
+            "in": "query",
+            "description": "Sections; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "account",
+                  "access",
+                  "athlete",
+                  "workouts",
+                  "plans",
+                  "progress",
+                  "gear",
+                  "integrations",
+                  "coach",
+                  "preferences",
+                  "data_access",
+                  "settings"
+                ]
+              }
+            }
+          },
+          {
+            "name": "actorType",
+            "required": false,
+            "in": "query",
+            "description": "Kinds of actor; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin",
+                  "system",
+                  "integration",
+                  "coach"
+                ]
+              }
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Entries at or after this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Entries before this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "description": "History of one entity, together with `entityId`",
+            "schema": {
+              "example": "workout",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Matches the action name or the exact entity id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Cursor from the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "admin",
+              "type": "string",
+              "enum": [
+                "admin",
+                "data_access",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "actorUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityPageDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ACTIVITY_CURSOR_INVALID"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Global log: admin actions (default), data access or everything, newest first",
+        "tags": [
+          "Admin Activity"
+        ]
+      }
+    },
+    "/v1/activity/export": {
+      "get": {
+        "operationId": "ActivityController_exportLog_v1",
+        "parameters": [
+          {
+            "name": "domain",
+            "required": false,
+            "in": "query",
+            "description": "Sections; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "account",
+                  "access",
+                  "athlete",
+                  "workouts",
+                  "plans",
+                  "progress",
+                  "gear",
+                  "integrations",
+                  "coach",
+                  "preferences",
+                  "data_access",
+                  "settings"
+                ]
+              }
+            }
+          },
+          {
+            "name": "actorType",
+            "required": false,
+            "in": "query",
+            "description": "Kinds of actor; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin",
+                  "system",
+                  "integration",
+                  "coach"
+                ]
+              }
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Entries at or after this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Entries before this moment",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "description": "History of one entity, together with `entityId`",
+            "schema": {
+              "example": "workout",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Matches the action name or the exact entity id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "admin",
+              "type": "string",
+              "enum": [
+                "admin",
+                "data_access",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "actorUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "CSV export of the global log",
+        "tags": [
+          "Admin Activity"
+        ]
+      }
+    },
+    "/v1/users/{userId}/security": {
+      "get": {
+        "operationId": "AdminAccountController_getSecurity_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSecurityResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Status, block, sign-in state and pending deletion of the account",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/block": {
+      "post": {
+        "operationId": "AdminAccountController_block_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "USER_BLOCK_UNTIL_INVALID"
+          },
+          "409": {
+            "description": "USER_BLOCK_FORBIDDEN, USER_ALREADY_BLOCKED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Block the account: no sign-in, sessions ended unless asked to keep them",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/unblock": {
+      "post": {
+        "operationId": "AdminAccountController_unblock_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "409": {
+            "description": "USER_NOT_BLOCKED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lift the block",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/deletion": {
+      "post": {
+        "operationId": "AdminAccountController_requestDeletion_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete the account the way the user would: deactivate now, erase all data later",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/restore": {
+      "post": {
+        "operationId": "AdminAccountController_restore_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "409": {
+            "description": "ACCOUNT_DELETION_NOT_REQUESTED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore a deleted account before its data is erased",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/preferences": {
+      "get": {
+        "operationId": "AdminAccountController_getPreferences_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "App preferences of the user, including the AI coach switch",
+        "tags": [
+          "Admin Account"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminAccountController_updatePreferences_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change app preferences of the user",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/consents": {
+      "get": {
+        "operationId": "AdminAccountController_getConsents_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentsListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Current consents of the user; only the user can give or revoke them",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/data-exports": {
+      "get": {
+        "operationId": "AdminAccountController_listDataExports_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DataExportResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Data exports of the user, newest first",
+        "tags": [
+          "Admin Account"
+        ]
+      },
+      "post": {
+        "description": "Errors: DATA_EXPORT_RATE_LIMITED",
+        "operationId": "AdminAccountController_requestDataExport_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Build a data export; the user gets the link by email",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/data-exports/{exportId}/download": {
+      "get": {
+        "description": "Errors: DATA_EXPORT_NOT_FOUND",
+        "operationId": "AdminAccountController_downloadDataExport_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "exportId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a ready export",
+        "tags": [
+          "Admin Account"
+        ]
+      }
+    },
+    "/v1/users/{userId}/overview": {
+      "get": {
+        "operationId": "AdminOverviewController_getOverview_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of \"today\" and \"this week\"; UTC when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverviewResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "USER_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Summary of the user for the first screen of the admin card",
+        "tags": [
+          "Admin Overview"
         ]
       }
     }
@@ -8654,6 +11977,19 @@
           "code"
         ]
       },
+      "AdminEmailChangeDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "new@example.com",
+            "description": "New account email; a verification code is sent there"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
       "AdminCreateUserDto": {
         "type": "object",
         "properties": {
@@ -8760,6 +12096,44 @@
             "format": "date-time",
             "nullable": true,
             "example": "2026-09-11T12:00:00.000Z"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blocked",
+              "deleted"
+            ],
+            "example": "active"
+          },
+          "blockedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "blockedUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Null with blockedAt set: until unblocked"
+          },
+          "blockedReason": {
+            "type": "string",
+            "enum": [
+              "policy_violation",
+              "spam",
+              "fraud",
+              "user_request",
+              "other",
+              null
+            ],
+            "nullable": true
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Set for a deleted account"
           }
         },
         "required": [
@@ -8775,7 +12149,11 @@
           "systemKey",
           "createdAt",
           "updatedAt",
-          "passwordChangedAt"
+          "passwordChangedAt",
+          "status",
+          "blockedAt",
+          "blockedUntil",
+          "blockedReason"
         ]
       },
       "PaginationMetaDto": {
@@ -8966,6 +12344,44 @@
             "nullable": true,
             "example": "2026-09-11T12:00:00.000Z"
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blocked",
+              "deleted"
+            ],
+            "example": "active"
+          },
+          "blockedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "blockedUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Null with blockedAt set: until unblocked"
+          },
+          "blockedReason": {
+            "type": "string",
+            "enum": [
+              "policy_violation",
+              "spam",
+              "fraud",
+              "user_request",
+              "other",
+              null
+            ],
+            "nullable": true
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Set for a deleted account"
+          },
           "groups": {
             "type": "array",
             "items": {
@@ -9002,6 +12418,10 @@
           "createdAt",
           "updatedAt",
           "passwordChangedAt",
+          "status",
+          "blockedAt",
+          "blockedUntil",
+          "blockedReason",
           "groups",
           "individualPermissions",
           "effectivePermissions"
@@ -9592,6 +13012,90 @@
         "required": [
           "sessionId",
           "message"
+        ]
+      },
+      "AdminCoachSessionItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "description": "Session title the coach gave it"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "lastMessageAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "messagesCount": {
+            "type": "number",
+            "description": "Messages of the user and the coach (tool calls excluded)"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "createdAt",
+          "lastMessageAt",
+          "messagesCount"
+        ]
+      },
+      "AdminCoachSessionListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminCoachSessionItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AdminCoachNoteItemDto": {
+        "type": "object",
+        "properties": {
+          "workoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "language": {
+            "type": "string",
+            "example": "ru"
+          },
+          "generatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workoutId",
+          "language",
+          "generatedAt"
+        ]
+      },
+      "AdminCoachNoteListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminCoachNoteItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "GoalTargetSummaryDto": {
@@ -18092,6 +21596,18 @@
           "notes"
         ]
       },
+      "DeviceSyncRequestResponseDto": {
+        "type": "object",
+        "properties": {
+          "delivered": {
+            "type": "boolean",
+            "description": "Whether the app was online to receive the request"
+          }
+        },
+        "required": [
+          "delivered"
+        ]
+      },
       "ConsentResponseDto": {
         "type": "object",
         "properties": {
@@ -18284,6 +21800,724 @@
         },
         "required": [
           "latest"
+        ]
+      },
+      "ActivityActorDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin",
+              "system",
+              "integration",
+              "coach"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Display name of a user or admin actor"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "name"
+        ]
+      },
+      "ActivityUserRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "ActivityEntityDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "workout"
+          },
+          "id": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "id"
+        ]
+      },
+      "ActivityClientDto": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "nullable": true,
+            "example": "ios"
+          },
+          "appVersion": {
+            "type": "string",
+            "nullable": true,
+            "example": "1.4.2"
+          },
+          "device": {
+            "type": "string",
+            "nullable": true,
+            "example": "iPhone 15 Pro"
+          }
+        },
+        "required": [
+          "platform",
+          "appVersion",
+          "device"
+        ]
+      },
+      "ActivityItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "example": "training.workout.updated",
+            "description": "Domain event code; clients translate it"
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "account",
+              "access",
+              "athlete",
+              "workouts",
+              "plans",
+              "progress",
+              "gear",
+              "integrations",
+              "coach",
+              "preferences",
+              "data_access",
+              "settings"
+            ]
+          },
+          "actor": {
+            "$ref": "#/components/schemas/ActivityActorDto"
+          },
+          "subject": {
+            "nullable": true,
+            "description": "Whose history the entry belongs to",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityUserRefDto"
+              }
+            ]
+          },
+          "entity": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityEntityDto"
+              }
+            ]
+          },
+          "changes": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "from": {},
+                "to": {}
+              }
+            },
+            "example": {
+              "distanceKm": {
+                "from": 8,
+                "to": 9
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Labels for rendering the entry"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "mobile",
+              "web",
+              "admin",
+              "webhook",
+              "job"
+            ]
+          },
+          "client": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityClientDto"
+              }
+            ]
+          },
+          "ip": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "occurredAt",
+          "action",
+          "domain",
+          "actor",
+          "subject",
+          "entity",
+          "changes",
+          "metadata",
+          "source",
+          "client",
+          "ip"
+        ]
+      },
+      "ActivityPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityItemDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "hasNext"
+        ]
+      },
+      "AdminUserRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "AccountBlockDto": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "policy_violation",
+              "spam",
+              "fraud",
+              "user_request",
+              "other",
+              null
+            ],
+            "nullable": true
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "by": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminUserRefDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "at",
+          "until",
+          "reason",
+          "comment",
+          "by"
+        ]
+      },
+      "AccountDeletionStateDto": {
+        "type": "object",
+        "properties": {
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "purgeAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the data is erased for good"
+          }
+        },
+        "required": [
+          "deletedAt",
+          "purgeAt"
+        ]
+      },
+      "AccountSecurityResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blocked",
+              "deleted"
+            ]
+          },
+          "block": {
+            "nullable": true,
+            "description": "The block in force",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AccountBlockDto"
+              }
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "emailVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "passwordChangedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "hasPassword": {
+            "type": "boolean"
+          },
+          "deletion": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AccountDeletionStateDto"
+              }
+            ]
+          },
+          "isSystem": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "status",
+          "block",
+          "email",
+          "emailVerified",
+          "emailVerifiedAt",
+          "passwordChangedAt",
+          "hasPassword",
+          "deletion",
+          "isSystem"
+        ]
+      },
+      "BlockUserDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "policy_violation",
+              "spam",
+              "fraud",
+              "user_request",
+              "other"
+            ]
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Visible to administrators only"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of a temporary block; omit to block until unblocked"
+          },
+          "revokeSessions": {
+            "type": "boolean",
+            "default": true,
+            "description": "End every active session right away"
+          },
+          "notify": {
+            "type": "boolean",
+            "default": false,
+            "description": "Email the user that the account is blocked"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "OverviewSessionDto": {
+        "type": "object",
+        "properties": {
+          "lastActiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "platform": {
+            "type": "string",
+            "nullable": true,
+            "example": "ios"
+          },
+          "appVersion": {
+            "type": "string",
+            "nullable": true,
+            "example": "1.4.2"
+          },
+          "deviceName": {
+            "type": "string",
+            "nullable": true,
+            "example": "iPhone 15 Pro"
+          }
+        },
+        "required": [
+          "lastActiveAt",
+          "platform",
+          "appVersion",
+          "deviceName"
+        ]
+      },
+      "OverviewActivePlanDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentWeek": {
+            "type": "number",
+            "example": 6,
+            "description": "1-based week of the plan that contains today"
+          },
+          "totalWeeks": {
+            "type": "number",
+            "example": 14
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "example": "2027-04-20"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "currentWeek",
+          "totalWeeks",
+          "endDate"
+        ]
+      },
+      "OverviewWeekDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "example": "2026-10-12",
+            "description": "Monday of the current week"
+          },
+          "plannedKm": {
+            "type": "number",
+            "example": 32
+          },
+          "doneKm": {
+            "type": "number",
+            "example": 24.3
+          },
+          "plannedWorkouts": {
+            "type": "number",
+            "example": 4
+          },
+          "doneWorkouts": {
+            "type": "number",
+            "example": 3
+          }
+        },
+        "required": [
+          "from",
+          "plannedKm",
+          "doneKm",
+          "plannedWorkouts",
+          "doneWorkouts"
+        ]
+      },
+      "OverviewWorkoutDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "example": "easy"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "description": "Title the user or admin gave; clients name the type otherwise"
+          },
+          "status": {
+            "type": "string",
+            "example": "planned"
+          },
+          "distanceKm": {
+            "type": "number",
+            "example": 8,
+            "description": "Planned distance, km"
+          },
+          "actualDistanceKm": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Actual distance, km"
+          },
+          "actualPaceSecondsPerKm": {
+            "type": "number",
+            "nullable": true,
+            "example": 312
+          }
+        },
+        "required": [
+          "id",
+          "scheduledAt",
+          "completedAt",
+          "type",
+          "title",
+          "status",
+          "distanceKm",
+          "actualDistanceKm",
+          "actualPaceSecondsPerKm"
+        ]
+      },
+      "OverviewAttentionDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "adaptation_pending",
+              "missed_workouts",
+              "gear_replace_soon",
+              "integration_error"
+            ]
+          },
+          "entityId": {
+            "type": "string",
+            "description": "Adaptation or gear id"
+          },
+          "count": {
+            "type": "number",
+            "example": 2
+          },
+          "days": {
+            "type": "number",
+            "example": 14
+          },
+          "name": {
+            "type": "string",
+            "example": "Nike Pegasus 40"
+          },
+          "distanceKm": {
+            "type": "number",
+            "example": 742
+          },
+          "limitKm": {
+            "type": "number",
+            "example": 800
+          },
+          "provider": {
+            "type": "string",
+            "example": "strava"
+          },
+          "status": {
+            "type": "string",
+            "example": "error"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "OverviewConnectionDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "strava",
+            "description": "Integration provider or `coach`"
+          },
+          "status": {
+            "type": "string",
+            "example": "connected",
+            "description": "Integration status, or `enabled` / `disabled` for the coach"
+          }
+        },
+        "required": [
+          "key",
+          "status"
+        ]
+      },
+      "AdminOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blocked",
+              "deleted"
+            ]
+          },
+          "lastSession": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverviewSessionDto"
+              }
+            ]
+          },
+          "hasAthlete": {
+            "type": "boolean",
+            "description": "False when the user never set up the athlete profile; training blocks are then empty"
+          },
+          "activePlan": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverviewActivePlanDto"
+              }
+            ]
+          },
+          "week": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverviewWeekDto"
+              }
+            ]
+          },
+          "lastWorkout": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverviewWorkoutDto"
+              }
+            ]
+          },
+          "upcomingWorkouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OverviewWorkoutDto"
+            }
+          },
+          "attention": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OverviewAttentionDto"
+            }
+          },
+          "connections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OverviewConnectionDto"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "lastSession",
+          "hasAthlete",
+          "activePlan",
+          "week",
+          "lastWorkout",
+          "upcomingWorkouts",
+          "attention",
+          "connections"
         ]
       }
     }

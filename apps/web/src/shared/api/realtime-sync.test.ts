@@ -29,6 +29,10 @@ function makeUser(overrides: Partial<AdminUser> = {}): AdminUser {
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
     passwordChangedAt: null,
+    status: "active",
+    blockedAt: null,
+    blockedUntil: null,
+    blockedReason: null,
     ...overrides,
   };
 }

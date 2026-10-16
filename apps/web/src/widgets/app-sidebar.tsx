@@ -2,7 +2,12 @@
 
 import type { ReactElement } from "react";
 
-import { LayoutDashboardIcon, SettingsIcon, UsersIcon } from "lucide-react";
+import {
+  HistoryIcon,
+  LayoutDashboardIcon,
+  SettingsIcon,
+  UsersIcon,
+} from "lucide-react";
 import { Skeleton } from "@trefix/ui/components/skeleton";
 
 import { useAuth } from "@/components/auth-provider";
@@ -58,6 +63,12 @@ const NAVIGATION: NavigationNode[] = [
         requiredPermissions: ["permissions.read"],
       },
     ],
+  },
+  {
+    titleKey: "sidebar.audit",
+    url: "/audit",
+    icon: <HistoryIcon />,
+    requiredPermissions: ["audit.read"],
   },
   {
     titleKey: "sidebar.settings",

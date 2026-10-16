@@ -163,11 +163,16 @@ export async function responseFromBackend(
     return NextResponse.json(json, { status: response.status });
   }
 
-  const text = await response.text().catch(() => "");
-  return new NextResponse(text, {
-    status: response.status,
-    headers: contentType ? { "content-type": contentType } : undefined,
-  });
+  // Files (CSV exports, data archives) and plain text are streamed through as they are.
+  const headers: Record<string, string> = {};
+  if (contentType) {
+    headers["content-type"] = contentType;
+  }
+  const disposition = response.headers.get("content-disposition");
+  if (disposition) {
+    headers["content-disposition"] = disposition;
+  }
+  return new NextResponse(response.body, { status: response.status, headers });
 }
 
 /**

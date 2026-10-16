@@ -8,6 +8,7 @@ import { Button } from "@trefix/ui/components/button";
 import { ServerCrashIcon, ShieldXIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
+import { USER_SECTIONS } from "@/features/users/lib/user-sections";
 import { useI18n } from "@/shared/i18n";
 
 type SectionPermission =
@@ -25,6 +26,18 @@ const SECTION_PERMISSIONS: SectionPermission[] = [
     pattern: /^\/users\/[^/]+\/plans(\/|$)/,
     permission: "training.userplans.read",
   },
+  // Sections of a user's card follow the permission of the section.
+  {
+    pattern: /^\/users\/[^/]+\/workouts(\/|$)/,
+    permission: "training.calendar.read",
+  },
+  ...USER_SECTIONS.filter(
+    (section) => section.segment && section.permissions.length > 0,
+  ).map((section) => ({
+    pattern: new RegExp(`^/users/[^/]+/${section.segment}(/|$)`),
+    permission: section.permissions[0],
+  })),
+  { prefix: "/audit", permission: "audit.read" },
   { prefix: "/users/list", permission: "users.read" },
   { prefix: "/users/create", permission: "users.create" },
   { prefix: "/users", permission: "users.read" },

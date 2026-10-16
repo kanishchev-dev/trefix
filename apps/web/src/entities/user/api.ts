@@ -33,6 +33,7 @@ export async function fetchUsers(
       search: query.search || undefined,
       sortBy: query.sortBy,
       sortOrder: query.sortOrder,
+      status: query.status,
     },
   });
 

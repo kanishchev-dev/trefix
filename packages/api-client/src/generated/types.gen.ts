@@ -198,6 +198,13 @@ export type EmailChangeConfirmDto = {
   code: string;
 };
 
+export type AdminEmailChangeDto = {
+  /**
+   * New account email; a verification code is sent there
+   */
+  email: string;
+};
+
 export type AdminCreateUserDto = {
   email: string;
   firstName: string;
@@ -234,6 +241,23 @@ export type UserResponseDto = {
   createdAt: string;
   updatedAt: string;
   passwordChangedAt: string | null;
+  status: "active" | "blocked" | "deleted";
+  blockedAt: string | null;
+  /**
+   * Null with blockedAt set: until unblocked
+   */
+  blockedUntil: string | null;
+  blockedReason:
+    | "policy_violation"
+    | "spam"
+    | "fraud"
+    | "user_request"
+    | "other"
+    | null;
+  /**
+   * Set for a deleted account
+   */
+  deletedAt?: string | null;
 };
 
 export type PaginationMetaDto = {
@@ -287,6 +311,23 @@ export type AdminUserResponseDto = {
   createdAt: string;
   updatedAt: string;
   passwordChangedAt: string | null;
+  status: "active" | "blocked" | "deleted";
+  blockedAt: string | null;
+  /**
+   * Null with blockedAt set: until unblocked
+   */
+  blockedUntil: string | null;
+  blockedReason:
+    | "policy_violation"
+    | "spam"
+    | "fraud"
+    | "user_request"
+    | "other"
+    | null;
+  /**
+   * Set for a deleted account
+   */
+  deletedAt?: string | null;
   groups: Array<AdminUserGroupDto>;
   individualPermissions: Array<AdminUserPermissionDto>;
   effectivePermissions: Array<string>;
@@ -545,6 +586,34 @@ export type CoachChatResponseDto = {
 export type CoachChatDto = {
   sessionId: string;
   message: string;
+};
+
+export type AdminCoachSessionItemDto = {
+  id: string;
+  /**
+   * Session title the coach gave it
+   */
+  title: string | null;
+  createdAt: string;
+  lastMessageAt: string | null;
+  /**
+   * Messages of the user and the coach (tool calls excluded)
+   */
+  messagesCount: number;
+};
+
+export type AdminCoachSessionListResponseDto = {
+  items: Array<AdminCoachSessionItemDto>;
+};
+
+export type AdminCoachNoteItemDto = {
+  workoutId: string;
+  language: string;
+  generatedAt: string;
+};
+
+export type AdminCoachNoteListResponseDto = {
+  items: Array<AdminCoachNoteItemDto>;
 };
 
 export type GoalTargetSummaryDto = {
@@ -3504,6 +3573,13 @@ export type WorkoutRecordingResponseDto = {
   notes: string | null;
 };
 
+export type DeviceSyncRequestResponseDto = {
+  /**
+   * Whether the app was online to receive the request
+   */
+  delivered: boolean;
+};
+
 export type ConsentResponseDto = {
   type: "health_data";
   version: string;
@@ -3572,6 +3648,237 @@ export type DataExportResponseDto = {
 
 export type DataExportStatusResponseDto = {
   latest: DataExportResponseDto | null;
+};
+
+export type ActivityActorDto = {
+  type: "user" | "admin" | "system" | "integration" | "coach";
+  id: string | null;
+  /**
+   * Display name of a user or admin actor
+   */
+  name: string | null;
+};
+
+export type ActivityUserRefDto = {
+  id: string;
+  name: string | null;
+};
+
+export type ActivityEntityDto = {
+  type: string;
+  id: string | null;
+};
+
+export type ActivityClientDto = {
+  platform: string | null;
+  appVersion: string | null;
+  device: string | null;
+};
+
+export type ActivityItemDto = {
+  id: string;
+  occurredAt: string;
+  /**
+   * Domain event code; clients translate it
+   */
+  action: string;
+  domain:
+    | "account"
+    | "access"
+    | "athlete"
+    | "workouts"
+    | "plans"
+    | "progress"
+    | "gear"
+    | "integrations"
+    | "coach"
+    | "preferences"
+    | "data_access"
+    | "settings";
+  actor: ActivityActorDto;
+  /**
+   * Whose history the entry belongs to
+   */
+  subject: ActivityUserRefDto | null;
+  entity: ActivityEntityDto | null;
+  changes: {
+    [key: string]: {
+      from?: unknown;
+      to?: unknown;
+    };
+  } | null;
+  /**
+   * Labels for rendering the entry
+   */
+  metadata: {
+    [key: string]: unknown;
+  };
+  source: "mobile" | "web" | "admin" | "webhook" | "job";
+  client: ActivityClientDto | null;
+  ip: string | null;
+};
+
+export type ActivityPageDto = {
+  items: Array<ActivityItemDto>;
+  nextCursor: string | null;
+  hasNext: boolean;
+};
+
+export type AdminUserRefDto = {
+  id: string;
+  name: string | null;
+};
+
+export type AccountBlockDto = {
+  at: string;
+  until: string | null;
+  reason:
+    | "policy_violation"
+    | "spam"
+    | "fraud"
+    | "user_request"
+    | "other"
+    | null;
+  comment: string | null;
+  by: AdminUserRefDto | null;
+};
+
+export type AccountDeletionStateDto = {
+  deletedAt: string;
+  /**
+   * When the data is erased for good
+   */
+  purgeAt: string | null;
+};
+
+export type AccountSecurityResponseDto = {
+  status: "active" | "blocked" | "deleted";
+  /**
+   * The block in force
+   */
+  block: AccountBlockDto | null;
+  email: string;
+  emailVerified: boolean;
+  emailVerifiedAt: string | null;
+  passwordChangedAt: string | null;
+  hasPassword: boolean;
+  deletion: AccountDeletionStateDto | null;
+  isSystem: boolean;
+};
+
+export type BlockUserDto = {
+  reason: "policy_violation" | "spam" | "fraud" | "user_request" | "other";
+  /**
+   * Visible to administrators only
+   */
+  comment?: string;
+  /**
+   * End of a temporary block; omit to block until unblocked
+   */
+  until?: string;
+  /**
+   * End every active session right away
+   */
+  revokeSessions?: boolean;
+  /**
+   * Email the user that the account is blocked
+   */
+  notify?: boolean;
+};
+
+export type OverviewSessionDto = {
+  lastActiveAt: string;
+  platform: string | null;
+  appVersion: string | null;
+  deviceName: string | null;
+};
+
+export type OverviewActivePlanDto = {
+  id: string;
+  name: string | null;
+  /**
+   * 1-based week of the plan that contains today
+   */
+  currentWeek: number;
+  totalWeeks: number;
+  endDate: string | null;
+};
+
+export type OverviewWeekDto = {
+  /**
+   * Monday of the current week
+   */
+  from: string;
+  plannedKm: number;
+  doneKm: number;
+  plannedWorkouts: number;
+  doneWorkouts: number;
+};
+
+export type OverviewWorkoutDto = {
+  id: string;
+  scheduledAt: string;
+  completedAt: string | null;
+  type: string;
+  /**
+   * Title the user or admin gave; clients name the type otherwise
+   */
+  title: string | null;
+  status: string;
+  /**
+   * Planned distance, km
+   */
+  distanceKm: number;
+  /**
+   * Actual distance, km
+   */
+  actualDistanceKm: number | null;
+  actualPaceSecondsPerKm: number | null;
+};
+
+export type OverviewAttentionDto = {
+  code:
+    | "adaptation_pending"
+    | "missed_workouts"
+    | "gear_replace_soon"
+    | "integration_error";
+  /**
+   * Adaptation or gear id
+   */
+  entityId?: string;
+  count?: number;
+  days?: number;
+  name?: string;
+  distanceKm?: number;
+  limitKm?: number;
+  provider?: string;
+  status?: string;
+};
+
+export type OverviewConnectionDto = {
+  /**
+   * Integration provider or `coach`
+   */
+  key: string;
+  /**
+   * Integration status, or `enabled` / `disabled` for the coach
+   */
+  status: string;
+};
+
+export type AdminOverviewResponseDto = {
+  status: "active" | "blocked" | "deleted";
+  lastSession: OverviewSessionDto | null;
+  /**
+   * False when the user never set up the athlete profile; training blocks are then empty
+   */
+  hasAthlete: boolean;
+  activePlan: OverviewActivePlanDto | null;
+  week: OverviewWeekDto | null;
+  lastWorkout: OverviewWorkoutDto | null;
+  upcomingWorkouts: Array<OverviewWorkoutDto>;
+  attention: Array<OverviewAttentionDto>;
+  connections: Array<OverviewConnectionDto>;
 };
 
 export type HealthControllerLiveData = {
@@ -4041,6 +4348,157 @@ export type AuthAccountControllerConfirmEmailChangeV1Responses = {
 export type AuthAccountControllerConfirmEmailChangeV1Response =
   AuthAccountControllerConfirmEmailChangeV1Responses[keyof AuthAccountControllerConfirmEmailChangeV1Responses];
 
+export type AdminAuthControllerListSessionsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/sessions";
+};
+
+export type AdminAuthControllerListSessionsV1Responses = {
+  200: AuthSessionListResponseDto;
+};
+
+export type AdminAuthControllerListSessionsV1Response =
+  AdminAuthControllerListSessionsV1Responses[keyof AdminAuthControllerListSessionsV1Responses];
+
+export type AdminAuthControllerRevokeSessionV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    sessionId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/sessions/{sessionId}";
+};
+
+export type AdminAuthControllerRevokeSessionV1Errors = {
+  /**
+   * AUTH_SESSION_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAuthControllerRevokeSessionV1Responses = {
+  204: void;
+};
+
+export type AdminAuthControllerRevokeSessionV1Response =
+  AdminAuthControllerRevokeSessionV1Responses[keyof AdminAuthControllerRevokeSessionV1Responses];
+
+export type AdminAuthControllerRevokeAllSessionsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/sessions/revoke-all";
+};
+
+export type AdminAuthControllerRevokeAllSessionsV1Responses = {
+  204: void;
+};
+
+export type AdminAuthControllerRevokeAllSessionsV1Response =
+  AdminAuthControllerRevokeAllSessionsV1Responses[keyof AdminAuthControllerRevokeAllSessionsV1Responses];
+
+export type AdminAuthControllerListIdentitiesV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/identities";
+};
+
+export type AdminAuthControllerListIdentitiesV1Responses = {
+  200: AuthIdentityListResponseDto;
+};
+
+export type AdminAuthControllerListIdentitiesV1Response =
+  AdminAuthControllerListIdentitiesV1Responses[keyof AdminAuthControllerListIdentitiesV1Responses];
+
+export type AdminAuthControllerUnlinkIdentityV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    provider: "apple" | "google";
+  };
+  query?: never;
+  url: "/v1/users/{userId}/identities/{provider}";
+};
+
+export type AdminAuthControllerUnlinkIdentityV1Errors = {
+  /**
+   * AUTH_IDENTITY_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAuthControllerUnlinkIdentityV1Responses = {
+  204: void;
+};
+
+export type AdminAuthControllerUnlinkIdentityV1Response =
+  AdminAuthControllerUnlinkIdentityV1Responses[keyof AdminAuthControllerUnlinkIdentityV1Responses];
+
+export type AdminAuthControllerSendPasswordResetV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/password-reset";
+};
+
+export type AdminAuthControllerSendPasswordResetV1Responses = {
+  204: void;
+};
+
+export type AdminAuthControllerSendPasswordResetV1Response =
+  AdminAuthControllerSendPasswordResetV1Responses[keyof AdminAuthControllerSendPasswordResetV1Responses];
+
+export type AdminAuthControllerVerifyEmailV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/email/verify";
+};
+
+export type AdminAuthControllerVerifyEmailV1Responses = {
+  204: void;
+};
+
+export type AdminAuthControllerVerifyEmailV1Response =
+  AdminAuthControllerVerifyEmailV1Responses[keyof AdminAuthControllerVerifyEmailV1Responses];
+
+export type AdminAuthControllerChangeEmailV1Data = {
+  body: AdminEmailChangeDto;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/email";
+};
+
+export type AdminAuthControllerChangeEmailV1Errors = {
+  /**
+   * EMAIL_TAKEN
+   */
+  409: unknown;
+};
+
+export type AdminAuthControllerChangeEmailV1Responses = {
+  204: void;
+};
+
+export type AdminAuthControllerChangeEmailV1Response =
+  AdminAuthControllerChangeEmailV1Responses[keyof AdminAuthControllerChangeEmailV1Responses];
+
 export type UsersControllerFindAllV1Data = {
   body?: never;
   path?: never;
@@ -4059,6 +4517,10 @@ export type UsersControllerFindAllV1Data = {
      * Sort direction
      */
     sortOrder?: "ASC" | "DESC";
+    /**
+     * Only users in this status; deleted ones only when asked
+     */
+    status?: "active" | "blocked" | "deleted";
   };
   url: "/v1/users";
 };
@@ -4559,6 +5021,20 @@ export type StorageControllerDownloadV1Responses = {
   200: unknown;
 };
 
+export type AvatarsControllerRemoveOwnAvatarV1Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/avatars/me";
+};
+
+export type AvatarsControllerRemoveOwnAvatarV1Responses = {
+  204: void;
+};
+
+export type AvatarsControllerRemoveOwnAvatarV1Response =
+  AvatarsControllerRemoveOwnAvatarV1Responses[keyof AvatarsControllerRemoveOwnAvatarV1Responses];
+
 export type AvatarsControllerUploadOwnAvatarV1Data = {
   body: {
     file: Blob | File;
@@ -4761,6 +5237,122 @@ export type CoachControllerChatV1Responses = {
 
 export type CoachControllerChatV1Response =
   CoachControllerChatV1Responses[keyof CoachControllerChatV1Responses];
+
+export type AdminCoachControllerClearHistoryV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/coach/sessions";
+};
+
+export type AdminCoachControllerClearHistoryV1Responses = {
+  204: void;
+};
+
+export type AdminCoachControllerClearHistoryV1Response =
+  AdminCoachControllerClearHistoryV1Responses[keyof AdminCoachControllerClearHistoryV1Responses];
+
+export type AdminCoachControllerListSessionsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/coach/sessions";
+};
+
+export type AdminCoachControllerListSessionsV1Responses = {
+  200: AdminCoachSessionListResponseDto;
+};
+
+export type AdminCoachControllerListSessionsV1Response =
+  AdminCoachControllerListSessionsV1Responses[keyof AdminCoachControllerListSessionsV1Responses];
+
+export type AdminCoachControllerGetSessionV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    sessionId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/coach/sessions/{sessionId}";
+};
+
+export type AdminCoachControllerGetSessionV1Responses = {
+  200: CoachSessionDetailResponseDto;
+};
+
+export type AdminCoachControllerGetSessionV1Response =
+  AdminCoachControllerGetSessionV1Responses[keyof AdminCoachControllerGetSessionV1Responses];
+
+export type AdminCoachControllerListNotesV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/coach/workout-notes";
+};
+
+export type AdminCoachControllerListNotesV1Responses = {
+  200: AdminCoachNoteListResponseDto;
+};
+
+export type AdminCoachControllerListNotesV1Response =
+  AdminCoachControllerListNotesV1Responses[keyof AdminCoachControllerListNotesV1Responses];
+
+export type AdminCoachControllerDeleteNoteV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/note";
+};
+
+export type AdminCoachControllerDeleteNoteV1Responses = {
+  204: void;
+};
+
+export type AdminCoachControllerDeleteNoteV1Response =
+  AdminCoachControllerDeleteNoteV1Responses[keyof AdminCoachControllerDeleteNoteV1Responses];
+
+export type AdminCoachControllerGetNoteV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/note";
+};
+
+export type AdminCoachControllerGetNoteV1Responses = {
+  200: CoachWorkoutNoteResponseDto;
+};
+
+export type AdminCoachControllerGetNoteV1Response =
+  AdminCoachControllerGetNoteV1Responses[keyof AdminCoachControllerGetNoteV1Responses];
+
+export type AdminCoachControllerRegenerateNoteV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/note/regenerate";
+};
+
+export type AdminCoachControllerRegenerateNoteV1Responses = {
+  200: CoachWorkoutNoteResponseDto;
+};
+
+export type AdminCoachControllerRegenerateNoteV1Response =
+  AdminCoachControllerRegenerateNoteV1Responses[keyof AdminCoachControllerRegenerateNoteV1Responses];
 
 export type PlansControllerListV1Data = {
   body?: never;
@@ -5826,6 +6418,54 @@ export type AdminTrainingControllerCreateWorkoutV1Responses = {
 export type AdminTrainingControllerCreateWorkoutV1Response =
   AdminTrainingControllerCreateWorkoutV1Responses[keyof AdminTrainingControllerCreateWorkoutV1Responses];
 
+export type AdminWorkoutsControllerDeleteV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}";
+};
+
+export type AdminWorkoutsControllerDeleteV1Errors = {
+  /**
+   * WORKOUT_BELONGS_TO_PLAN
+   */
+  409: unknown;
+};
+
+export type AdminWorkoutsControllerDeleteV1Responses = {
+  204: void;
+};
+
+export type AdminWorkoutsControllerDeleteV1Response =
+  AdminWorkoutsControllerDeleteV1Responses[keyof AdminWorkoutsControllerDeleteV1Responses];
+
+export type AdminWorkoutsControllerGetWorkoutV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}";
+};
+
+export type AdminWorkoutsControllerGetWorkoutV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND, WORKOUT_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminWorkoutsControllerGetWorkoutV1Responses = {
+  200: TrainingWorkoutResponseDto;
+};
+
+export type AdminWorkoutsControllerGetWorkoutV1Response =
+  AdminWorkoutsControllerGetWorkoutV1Responses[keyof AdminWorkoutsControllerGetWorkoutV1Responses];
+
 export type AdminTrainingControllerUpdateWorkoutV1Data = {
   body: AdminWorkoutUpdateDto;
   path: {
@@ -5856,6 +6496,553 @@ export type AdminTrainingControllerUpdateWorkoutV1Responses = {
 
 export type AdminTrainingControllerUpdateWorkoutV1Response =
   AdminTrainingControllerUpdateWorkoutV1Responses[keyof AdminTrainingControllerUpdateWorkoutV1Responses];
+
+export type AdminWorkoutsControllerCompleteV1Data = {
+  body: CompleteWorkoutDto;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/complete";
+};
+
+export type AdminWorkoutsControllerCompleteV1Errors = {
+  /**
+   * WORKOUT_CANCELLED
+   */
+  409: unknown;
+};
+
+export type AdminWorkoutsControllerCompleteV1Responses = {
+  200: TrainingWorkoutCompletionResponseDto;
+};
+
+export type AdminWorkoutsControllerCompleteV1Response =
+  AdminWorkoutsControllerCompleteV1Responses[keyof AdminWorkoutsControllerCompleteV1Responses];
+
+export type AdminWorkoutsControllerUpdateResultV1Data = {
+  body: CompleteWorkoutDto;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/result";
+};
+
+export type AdminWorkoutsControllerUpdateResultV1Errors = {
+  /**
+   * WORKOUT_NOT_COMPLETED
+   */
+  409: unknown;
+};
+
+export type AdminWorkoutsControllerUpdateResultV1Responses = {
+  200: TrainingWorkoutResponseDto;
+};
+
+export type AdminWorkoutsControllerUpdateResultV1Response =
+  AdminWorkoutsControllerUpdateResultV1Responses[keyof AdminWorkoutsControllerUpdateResultV1Responses];
+
+export type AdminWorkoutsControllerReopenV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/reopen";
+};
+
+export type AdminWorkoutsControllerReopenV1Errors = {
+  /**
+   * WORKOUT_NOT_COMPLETED, WORKOUT_HAS_SOURCES
+   */
+  409: unknown;
+};
+
+export type AdminWorkoutsControllerReopenV1Responses = {
+  200: TrainingWorkoutResponseDto;
+};
+
+export type AdminWorkoutsControllerReopenV1Response =
+  AdminWorkoutsControllerReopenV1Responses[keyof AdminWorkoutsControllerReopenV1Responses];
+
+export type AdminWorkoutsControllerSetGearV1Data = {
+  body: AssignWorkoutGearDto;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/gear";
+};
+
+export type AdminWorkoutsControllerSetGearV1Responses = {
+  200: WorkoutGearAssignmentDto;
+};
+
+export type AdminWorkoutsControllerSetGearV1Response =
+  AdminWorkoutsControllerSetGearV1Responses[keyof AdminWorkoutsControllerSetGearV1Responses];
+
+export type AdminWorkoutsControllerSetDeviceV1Data = {
+  body: AssignWorkoutDeviceDto;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/device";
+};
+
+export type AdminWorkoutsControllerSetDeviceV1Responses = {
+  200: WorkoutDeviceAssignmentDto;
+};
+
+export type AdminWorkoutsControllerSetDeviceV1Response =
+  AdminWorkoutsControllerSetDeviceV1Responses[keyof AdminWorkoutsControllerSetDeviceV1Responses];
+
+export type AdminWorkoutsControllerSetRecordsExcludedV1Data = {
+  body: RecordsExclusionDto;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/records";
+};
+
+export type AdminWorkoutsControllerSetRecordsExcludedV1Responses = {
+  200: RecordsExclusionResponseDto;
+};
+
+export type AdminWorkoutsControllerSetRecordsExcludedV1Response =
+  AdminWorkoutsControllerSetRecordsExcludedV1Responses[keyof AdminWorkoutsControllerSetRecordsExcludedV1Responses];
+
+export type AdminWorkoutsControllerListAdaptationsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/plans/active/adaptations";
+};
+
+export type AdminWorkoutsControllerListAdaptationsV1Responses = {
+  200: TrainingAdaptationListResponseDto;
+};
+
+export type AdminWorkoutsControllerListAdaptationsV1Response =
+  AdminWorkoutsControllerListAdaptationsV1Responses[keyof AdminWorkoutsControllerListAdaptationsV1Responses];
+
+export type AdminWorkoutsControllerApplyAdaptationV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    adaptationId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/plans/active/adaptations/{adaptationId}/apply";
+};
+
+export type AdminWorkoutsControllerApplyAdaptationV1Errors = {
+  /**
+   * ADAPTATION_NOT_PROPOSED
+   */
+  409: unknown;
+};
+
+export type AdminWorkoutsControllerApplyAdaptationV1Responses = {
+  200: TrainingAdaptationResponseDto;
+};
+
+export type AdminWorkoutsControllerApplyAdaptationV1Response =
+  AdminWorkoutsControllerApplyAdaptationV1Responses[keyof AdminWorkoutsControllerApplyAdaptationV1Responses];
+
+export type AdminWorkoutsControllerDismissAdaptationV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    adaptationId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/plans/active/adaptations/{adaptationId}/dismiss";
+};
+
+export type AdminWorkoutsControllerDismissAdaptationV1Responses = {
+  200: TrainingAdaptationResponseDto;
+};
+
+export type AdminWorkoutsControllerDismissAdaptationV1Response =
+  AdminWorkoutsControllerDismissAdaptationV1Responses[keyof AdminWorkoutsControllerDismissAdaptationV1Responses];
+
+export type AdminAthleteControllerGetAthleteV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/athlete";
+};
+
+export type AdminAthleteControllerGetAthleteV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerGetAthleteV1Responses = {
+  200: AthleteProfileResponseDto;
+};
+
+export type AdminAthleteControllerGetAthleteV1Response =
+  AdminAthleteControllerGetAthleteV1Responses[keyof AdminAthleteControllerGetAthleteV1Responses];
+
+export type AdminAthleteControllerUpdateAthleteV1Data = {
+  body: UpdateAthleteProfileDto;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/athlete";
+};
+
+export type AdminAthleteControllerUpdateAthleteV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerUpdateAthleteV1Responses = {
+  200: AthleteProfileResponseDto;
+};
+
+export type AdminAthleteControllerUpdateAthleteV1Response =
+  AdminAthleteControllerUpdateAthleteV1Responses[keyof AdminAthleteControllerUpdateAthleteV1Responses];
+
+export type AdminAthleteControllerProgressSummaryV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    /**
+     * IANA timezone used for local days, weeks and months; UTC when omitted
+     */
+    timezone?: string;
+  };
+  url: "/v1/users/{userId}/progress/summary";
+};
+
+export type AdminAthleteControllerProgressSummaryV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerProgressSummaryV1Responses = {
+  200: ProgressSummaryResponseDto;
+};
+
+export type AdminAthleteControllerProgressSummaryV1Response =
+  AdminAthleteControllerProgressSummaryV1Responses[keyof AdminAthleteControllerProgressSummaryV1Responses];
+
+export type AdminAthleteControllerProgressOverviewV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    period?: "4W" | "8W" | "3M" | "6M" | "1Y";
+  };
+  url: "/v1/users/{userId}/progress/overview";
+};
+
+export type AdminAthleteControllerProgressOverviewV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerProgressOverviewV1Responses = {
+  200: ProgressOverviewResponseDto;
+};
+
+export type AdminAthleteControllerProgressOverviewV1Response =
+  AdminAthleteControllerProgressOverviewV1Responses[keyof AdminAthleteControllerProgressOverviewV1Responses];
+
+export type AdminAthleteControllerProgressMetricV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    metric: string;
+  };
+  query?: {
+    period?: "4W" | "8W" | "3M" | "6M" | "1Y";
+  };
+  url: "/v1/users/{userId}/progress/metrics/{metric}";
+};
+
+export type AdminAthleteControllerProgressMetricV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerProgressMetricV1Responses = {
+  200: ProgressMetricResponseDto;
+};
+
+export type AdminAthleteControllerProgressMetricV1Response =
+  AdminAthleteControllerProgressMetricV1Responses[keyof AdminAthleteControllerProgressMetricV1Responses];
+
+export type AdminAthleteControllerRecordsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/progress/records";
+};
+
+export type AdminAthleteControllerRecordsV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerRecordsV1Responses = {
+  200: ProgressRecordsResponseDto;
+};
+
+export type AdminAthleteControllerRecordsV1Response =
+  AdminAthleteControllerRecordsV1Responses[keyof AdminAthleteControllerRecordsV1Responses];
+
+export type AdminAthleteControllerRecordHistoryV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    distance: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/progress/records/{distance}";
+};
+
+export type AdminAthleteControllerRecordHistoryV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerRecordHistoryV1Responses = {
+  200: RecordHistoryResponseDto;
+};
+
+export type AdminAthleteControllerRecordHistoryV1Response =
+  AdminAthleteControllerRecordHistoryV1Responses[keyof AdminAthleteControllerRecordHistoryV1Responses];
+
+export type AdminAthleteControllerAddResultV1Data = {
+  body: CreateResultDto;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/progress/results";
+};
+
+export type AdminAthleteControllerAddResultV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerAddResultV1Responses = {
+  201: RaceResultResponseDto;
+};
+
+export type AdminAthleteControllerAddResultV1Response =
+  AdminAthleteControllerAddResultV1Responses[keyof AdminAthleteControllerAddResultV1Responses];
+
+export type AdminAthleteControllerDeleteResultV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    resultId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/progress/results/{resultId}";
+};
+
+export type AdminAthleteControllerDeleteResultV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerDeleteResultV1Responses = {
+  204: void;
+};
+
+export type AdminAthleteControllerDeleteResultV1Response =
+  AdminAthleteControllerDeleteResultV1Responses[keyof AdminAthleteControllerDeleteResultV1Responses];
+
+export type AdminAthleteControllerListGearV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    status?: "active" | "retired";
+    /**
+     * All types when omitted
+     */
+    type?: "shoes" | "watch" | "sensor";
+  };
+  url: "/v1/users/{userId}/gear";
+};
+
+export type AdminAthleteControllerListGearV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerListGearV1Responses = {
+  200: GearListResponseDto;
+};
+
+export type AdminAthleteControllerListGearV1Response =
+  AdminAthleteControllerListGearV1Responses[keyof AdminAthleteControllerListGearV1Responses];
+
+export type AdminAthleteControllerCreateGearV1Data = {
+  body: CreateGearDto;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/gear";
+};
+
+export type AdminAthleteControllerCreateGearV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerCreateGearV1Responses = {
+  201: GearResponseDto;
+};
+
+export type AdminAthleteControllerCreateGearV1Response =
+  AdminAthleteControllerCreateGearV1Responses[keyof AdminAthleteControllerCreateGearV1Responses];
+
+export type AdminAthleteControllerRemoveGearV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    gearId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/gear/{gearId}";
+};
+
+export type AdminAthleteControllerRemoveGearV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerRemoveGearV1Responses = {
+  204: void;
+};
+
+export type AdminAthleteControllerRemoveGearV1Response =
+  AdminAthleteControllerRemoveGearV1Responses[keyof AdminAthleteControllerRemoveGearV1Responses];
+
+export type AdminAthleteControllerUpdateGearV1Data = {
+  body: UpdateGearDto;
+  path: {
+    userId: string;
+    gearId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/gear/{gearId}";
+};
+
+export type AdminAthleteControllerUpdateGearV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerUpdateGearV1Responses = {
+  200: GearResponseDto;
+};
+
+export type AdminAthleteControllerUpdateGearV1Response =
+  AdminAthleteControllerUpdateGearV1Responses[keyof AdminAthleteControllerUpdateGearV1Responses];
+
+export type AdminAthleteControllerRetireGearV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    gearId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/gear/{gearId}/retire";
+};
+
+export type AdminAthleteControllerRetireGearV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerRetireGearV1Responses = {
+  200: GearResponseDto;
+};
+
+export type AdminAthleteControllerRetireGearV1Response =
+  AdminAthleteControllerRetireGearV1Responses[keyof AdminAthleteControllerRetireGearV1Responses];
+
+export type AdminAthleteControllerRestoreGearV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    gearId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/gear/{gearId}/restore";
+};
+
+export type AdminAthleteControllerRestoreGearV1Errors = {
+  /**
+   * USER_NOT_FOUND, ATHLETE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminAthleteControllerRestoreGearV1Responses = {
+  200: GearResponseDto;
+};
+
+export type AdminAthleteControllerRestoreGearV1Response =
+  AdminAthleteControllerRestoreGearV1Responses[keyof AdminAthleteControllerRestoreGearV1Responses];
 
 export type AdminPlansControllerCountsV1Data = {
   body?: never;
@@ -6713,6 +7900,147 @@ export type RecordingsControllerGetRecordingV1Responses = {
 export type RecordingsControllerGetRecordingV1Response =
   RecordingsControllerGetRecordingV1Responses[keyof RecordingsControllerGetRecordingV1Responses];
 
+export type AdminIntegrationsControllerListV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/integrations";
+};
+
+export type AdminIntegrationsControllerListV1Responses = {
+  200: IntegrationsListResponseDto;
+};
+
+export type AdminIntegrationsControllerListV1Response =
+  AdminIntegrationsControllerListV1Responses[keyof AdminIntegrationsControllerListV1Responses];
+
+export type AdminIntegrationsControllerSyncStravaV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/integrations/strava/sync";
+};
+
+export type AdminIntegrationsControllerSyncStravaV1Responses = {
+  200: IntegrationSyncStatusResponseDto;
+};
+
+export type AdminIntegrationsControllerSyncStravaV1Response =
+  AdminIntegrationsControllerSyncStravaV1Responses[keyof AdminIntegrationsControllerSyncStravaV1Responses];
+
+export type AdminIntegrationsControllerSyncStravaProfileV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/integrations/strava/profile-sync";
+};
+
+export type AdminIntegrationsControllerSyncStravaProfileV1Responses = {
+  202: QueuedResponseDto;
+};
+
+export type AdminIntegrationsControllerSyncStravaProfileV1Response =
+  AdminIntegrationsControllerSyncStravaProfileV1Responses[keyof AdminIntegrationsControllerSyncStravaProfileV1Responses];
+
+export type AdminIntegrationsControllerRequestDeviceSyncV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    provider: "apple_health" | "health_connect";
+  };
+  query?: never;
+  url: "/v1/users/{userId}/integrations/{provider}/sync-request";
+};
+
+export type AdminIntegrationsControllerRequestDeviceSyncV1Responses = {
+  202: DeviceSyncRequestResponseDto;
+};
+
+export type AdminIntegrationsControllerRequestDeviceSyncV1Response =
+  AdminIntegrationsControllerRequestDeviceSyncV1Responses[keyof AdminIntegrationsControllerRequestDeviceSyncV1Responses];
+
+export type AdminIntegrationsControllerDisconnectV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    provider: "strava" | "apple_health" | "health_connect";
+  };
+  query?: never;
+  url: "/v1/users/{userId}/integrations/{provider}";
+};
+
+export type AdminIntegrationsControllerDisconnectV1Responses = {
+  200: SuccessResponseDto;
+};
+
+export type AdminIntegrationsControllerDisconnectV1Response =
+  AdminIntegrationsControllerDisconnectV1Responses[keyof AdminIntegrationsControllerDisconnectV1Responses];
+
+export type AdminIntegrationsControllerListWorkoutSourcesV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/sources";
+};
+
+export type AdminIntegrationsControllerListWorkoutSourcesV1Responses = {
+  200: WorkoutSourcesResponseDto;
+};
+
+export type AdminIntegrationsControllerListWorkoutSourcesV1Response =
+  AdminIntegrationsControllerListWorkoutSourcesV1Responses[keyof AdminIntegrationsControllerListWorkoutSourcesV1Responses];
+
+export type AdminIntegrationsControllerUnlinkWorkoutSourceV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+    provider: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/sources/{provider}";
+};
+
+export type AdminIntegrationsControllerUnlinkWorkoutSourceV1Errors = {
+  /**
+   * WORKOUT_SOURCE_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminIntegrationsControllerUnlinkWorkoutSourceV1Responses = {
+  204: void;
+};
+
+export type AdminIntegrationsControllerUnlinkWorkoutSourceV1Response =
+  AdminIntegrationsControllerUnlinkWorkoutSourceV1Responses[keyof AdminIntegrationsControllerUnlinkWorkoutSourceV1Responses];
+
+export type AdminIntegrationsControllerGetRecordingV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    workoutId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/training/workouts/{workoutId}/recording";
+};
+
+export type AdminIntegrationsControllerGetRecordingV1Responses = {
+  200: WorkoutRecordingResponseDto;
+};
+
+export type AdminIntegrationsControllerGetRecordingV1Response =
+  AdminIntegrationsControllerGetRecordingV1Responses[keyof AdminIntegrationsControllerGetRecordingV1Responses];
+
 export type UserConsentsControllerListV1Data = {
   body?: never;
   path?: never;
@@ -6802,3 +8130,470 @@ export type DataExportControllerDownloadV1Data = {
 export type DataExportControllerDownloadV1Responses = {
   200: unknown;
 };
+
+export type ActivityControllerListForUserV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    /**
+     * Sections; comma-separated or repeated
+     */
+    domain?: Array<
+      | "account"
+      | "access"
+      | "athlete"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "gear"
+      | "integrations"
+      | "coach"
+      | "preferences"
+      | "data_access"
+      | "settings"
+    >;
+    /**
+     * Kinds of actor; comma-separated or repeated
+     */
+    actorType?: Array<"user" | "admin" | "system" | "integration" | "coach">;
+    /**
+     * Entries at or after this moment
+     */
+    from?: string;
+    /**
+     * Entries before this moment
+     */
+    to?: string;
+    /**
+     * History of one entity, together with `entityId`
+     */
+    entityType?: string;
+    entityId?: string;
+    /**
+     * Matches the action name or the exact entity id
+     */
+    q?: string;
+    /**
+     * Cursor from the previous page
+     */
+    cursor?: string;
+    limit?: number;
+  };
+  url: "/v1/users/{userId}/activity";
+};
+
+export type ActivityControllerListForUserV1Errors = {
+  /**
+   * ACTIVITY_CURSOR_INVALID
+   */
+  400: unknown;
+};
+
+export type ActivityControllerListForUserV1Responses = {
+  200: ActivityPageDto;
+};
+
+export type ActivityControllerListForUserV1Response =
+  ActivityControllerListForUserV1Responses[keyof ActivityControllerListForUserV1Responses];
+
+export type ActivityControllerExportForUserV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    /**
+     * Sections; comma-separated or repeated
+     */
+    domain?: Array<
+      | "account"
+      | "access"
+      | "athlete"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "gear"
+      | "integrations"
+      | "coach"
+      | "preferences"
+      | "data_access"
+      | "settings"
+    >;
+    /**
+     * Kinds of actor; comma-separated or repeated
+     */
+    actorType?: Array<"user" | "admin" | "system" | "integration" | "coach">;
+    /**
+     * Entries at or after this moment
+     */
+    from?: string;
+    /**
+     * Entries before this moment
+     */
+    to?: string;
+    /**
+     * History of one entity, together with `entityId`
+     */
+    entityType?: string;
+    entityId?: string;
+    /**
+     * Matches the action name or the exact entity id
+     */
+    q?: string;
+  };
+  url: "/v1/users/{userId}/activity/export";
+};
+
+export type ActivityControllerExportForUserV1Responses = {
+  200: unknown;
+};
+
+export type ActivityControllerListLogV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Sections; comma-separated or repeated
+     */
+    domain?: Array<
+      | "account"
+      | "access"
+      | "athlete"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "gear"
+      | "integrations"
+      | "coach"
+      | "preferences"
+      | "data_access"
+      | "settings"
+    >;
+    /**
+     * Kinds of actor; comma-separated or repeated
+     */
+    actorType?: Array<"user" | "admin" | "system" | "integration" | "coach">;
+    /**
+     * Entries at or after this moment
+     */
+    from?: string;
+    /**
+     * Entries before this moment
+     */
+    to?: string;
+    /**
+     * History of one entity, together with `entityId`
+     */
+    entityType?: string;
+    entityId?: string;
+    /**
+     * Matches the action name or the exact entity id
+     */
+    q?: string;
+    /**
+     * Cursor from the previous page
+     */
+    cursor?: string;
+    limit?: number;
+    kind?: "admin" | "data_access" | "all";
+    actorUserId?: string;
+    subjectUserId?: string;
+  };
+  url: "/v1/activity";
+};
+
+export type ActivityControllerListLogV1Errors = {
+  /**
+   * ACTIVITY_CURSOR_INVALID
+   */
+  400: unknown;
+};
+
+export type ActivityControllerListLogV1Responses = {
+  200: ActivityPageDto;
+};
+
+export type ActivityControllerListLogV1Response =
+  ActivityControllerListLogV1Responses[keyof ActivityControllerListLogV1Responses];
+
+export type ActivityControllerExportLogV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Sections; comma-separated or repeated
+     */
+    domain?: Array<
+      | "account"
+      | "access"
+      | "athlete"
+      | "workouts"
+      | "plans"
+      | "progress"
+      | "gear"
+      | "integrations"
+      | "coach"
+      | "preferences"
+      | "data_access"
+      | "settings"
+    >;
+    /**
+     * Kinds of actor; comma-separated or repeated
+     */
+    actorType?: Array<"user" | "admin" | "system" | "integration" | "coach">;
+    /**
+     * Entries at or after this moment
+     */
+    from?: string;
+    /**
+     * Entries before this moment
+     */
+    to?: string;
+    /**
+     * History of one entity, together with `entityId`
+     */
+    entityType?: string;
+    entityId?: string;
+    /**
+     * Matches the action name or the exact entity id
+     */
+    q?: string;
+    kind?: "admin" | "data_access" | "all";
+    actorUserId?: string;
+    subjectUserId?: string;
+  };
+  url: "/v1/activity/export";
+};
+
+export type ActivityControllerExportLogV1Responses = {
+  200: unknown;
+};
+
+export type AdminAccountControllerGetSecurityV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/security";
+};
+
+export type AdminAccountControllerGetSecurityV1Responses = {
+  200: AccountSecurityResponseDto;
+};
+
+export type AdminAccountControllerGetSecurityV1Response =
+  AdminAccountControllerGetSecurityV1Responses[keyof AdminAccountControllerGetSecurityV1Responses];
+
+export type AdminAccountControllerBlockV1Data = {
+  body: BlockUserDto;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/block";
+};
+
+export type AdminAccountControllerBlockV1Errors = {
+  /**
+   * USER_BLOCK_UNTIL_INVALID
+   */
+  400: unknown;
+  /**
+   * USER_BLOCK_FORBIDDEN, USER_ALREADY_BLOCKED
+   */
+  409: unknown;
+};
+
+export type AdminAccountControllerBlockV1Responses = {
+  204: void;
+};
+
+export type AdminAccountControllerBlockV1Response =
+  AdminAccountControllerBlockV1Responses[keyof AdminAccountControllerBlockV1Responses];
+
+export type AdminAccountControllerUnblockV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/unblock";
+};
+
+export type AdminAccountControllerUnblockV1Errors = {
+  /**
+   * USER_NOT_BLOCKED
+   */
+  409: unknown;
+};
+
+export type AdminAccountControllerUnblockV1Responses = {
+  204: void;
+};
+
+export type AdminAccountControllerUnblockV1Response =
+  AdminAccountControllerUnblockV1Responses[keyof AdminAccountControllerUnblockV1Responses];
+
+export type AdminAccountControllerRequestDeletionV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/deletion";
+};
+
+export type AdminAccountControllerRequestDeletionV1Responses = {
+  204: void;
+};
+
+export type AdminAccountControllerRequestDeletionV1Response =
+  AdminAccountControllerRequestDeletionV1Responses[keyof AdminAccountControllerRequestDeletionV1Responses];
+
+export type AdminAccountControllerRestoreV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/restore";
+};
+
+export type AdminAccountControllerRestoreV1Errors = {
+  /**
+   * ACCOUNT_DELETION_NOT_REQUESTED
+   */
+  409: unknown;
+};
+
+export type AdminAccountControllerRestoreV1Responses = {
+  204: void;
+};
+
+export type AdminAccountControllerRestoreV1Response =
+  AdminAccountControllerRestoreV1Responses[keyof AdminAccountControllerRestoreV1Responses];
+
+export type AdminAccountControllerGetPreferencesV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/preferences";
+};
+
+export type AdminAccountControllerGetPreferencesV1Responses = {
+  200: UserPreferencesResponseDto;
+};
+
+export type AdminAccountControllerGetPreferencesV1Response =
+  AdminAccountControllerGetPreferencesV1Responses[keyof AdminAccountControllerGetPreferencesV1Responses];
+
+export type AdminAccountControllerUpdatePreferencesV1Data = {
+  body: UpdateUserPreferencesDto;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/preferences";
+};
+
+export type AdminAccountControllerUpdatePreferencesV1Responses = {
+  200: UserPreferencesResponseDto;
+};
+
+export type AdminAccountControllerUpdatePreferencesV1Response =
+  AdminAccountControllerUpdatePreferencesV1Responses[keyof AdminAccountControllerUpdatePreferencesV1Responses];
+
+export type AdminAccountControllerGetConsentsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/consents";
+};
+
+export type AdminAccountControllerGetConsentsV1Responses = {
+  200: ConsentsListResponseDto;
+};
+
+export type AdminAccountControllerGetConsentsV1Response =
+  AdminAccountControllerGetConsentsV1Responses[keyof AdminAccountControllerGetConsentsV1Responses];
+
+export type AdminAccountControllerListDataExportsV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/data-exports";
+};
+
+export type AdminAccountControllerListDataExportsV1Responses = {
+  200: Array<DataExportResponseDto>;
+};
+
+export type AdminAccountControllerListDataExportsV1Response =
+  AdminAccountControllerListDataExportsV1Responses[keyof AdminAccountControllerListDataExportsV1Responses];
+
+export type AdminAccountControllerRequestDataExportV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/data-exports";
+};
+
+export type AdminAccountControllerRequestDataExportV1Responses = {
+  200: DataExportResponseDto;
+};
+
+export type AdminAccountControllerRequestDataExportV1Response =
+  AdminAccountControllerRequestDataExportV1Responses[keyof AdminAccountControllerRequestDataExportV1Responses];
+
+export type AdminAccountControllerDownloadDataExportV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+    exportId: string;
+  };
+  query?: never;
+  url: "/v1/users/{userId}/data-exports/{exportId}/download";
+};
+
+export type AdminAccountControllerDownloadDataExportV1Responses = {
+  200: unknown;
+};
+
+export type AdminOverviewControllerGetOverviewV1Data = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    /**
+     * IANA timezone of "today" and "this week"; UTC when omitted
+     */
+    timezone?: string;
+  };
+  url: "/v1/users/{userId}/overview";
+};
+
+export type AdminOverviewControllerGetOverviewV1Errors = {
+  /**
+   * USER_NOT_FOUND
+   */
+  404: unknown;
+};
+
+export type AdminOverviewControllerGetOverviewV1Responses = {
+  200: AdminOverviewResponseDto;
+};
+
+export type AdminOverviewControllerGetOverviewV1Response =
+  AdminOverviewControllerGetOverviewV1Responses[keyof AdminOverviewControllerGetOverviewV1Responses];

@@ -15,6 +15,7 @@ import {
 import { Separator } from "@trefix/ui/components/separator";
 import { SidebarTrigger } from "@trefix/ui/components/sidebar";
 
+import { USER_SECTIONS } from "@/features/users/lib/user-sections";
 import { useI18n } from "@/shared/i18n";
 
 export interface BreadcrumbItemDef {
@@ -63,7 +64,7 @@ export function resolveBreadcrumbs(pathname: string): BreadcrumbItemDef[] {
     const items: BreadcrumbItemDef[] = [
       { key: "breadcrumbs.users", href: "/users/list" },
       { key: "breadcrumbs.user", href: `/users/${userId}` },
-      { key: "breadcrumbs.plans", href: `/users/${userId}?tab=plans` },
+      { key: "breadcrumbs.plans", href: `/users/${userId}/plans` },
     ];
     if (planSegment === "create") {
       items.push({ key: "breadcrumbs.createPlan" });
@@ -79,6 +80,38 @@ export function resolveBreadcrumbs(pathname: string): BreadcrumbItemDef[] {
     return items;
   }
 
+  if (pathname.startsWith("/audit")) {
+    return [{ key: "breadcrumbs.audit" }];
+  }
+
+  const workoutMatch = /^\/users\/([^/]+)\/workouts\/[^/]+\/?$/.exec(pathname);
+  if (workoutMatch) {
+    const [, userId] = workoutMatch;
+    return [
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.user", href: `/users/${userId}` },
+      {
+        key: "userCard.sections.calendar.title",
+        href: `/users/${userId}/calendar`,
+      },
+      { key: "breadcrumbs.workout" },
+    ];
+  }
+
+  const sectionMatch = /^\/users\/([^/]+)\/([^/]+)\/?$/.exec(pathname);
+  const section = sectionMatch
+    ? USER_SECTIONS.find(
+        (item) => item.segment && item.segment === sectionMatch[2],
+      )
+    : undefined;
+  if (sectionMatch && section) {
+    return [
+      { key: "breadcrumbs.users", href: "/users/list" },
+      { key: "breadcrumbs.user", href: `/users/${sectionMatch[1]}` },
+      { key: `userCard.sections.${section.key}.title` },
+    ];
+  }
+
   if (pathname.startsWith("/users")) {
     const items: BreadcrumbItemDef[] = [
       { key: "breadcrumbs.users", href: "/users/list" },
@@ -89,6 +122,8 @@ export function resolveBreadcrumbs(pathname: string): BreadcrumbItemDef[] {
       items.push({ key: "breadcrumbs.create" });
     } else if (pathname.endsWith("/edit")) {
       items.push({ key: "breadcrumbs.edit" });
+    } else {
+      items.push({ key: "breadcrumbs.user" });
     }
     return items;
   }

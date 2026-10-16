@@ -40,7 +40,7 @@ import {
   XCircleIcon,
 } from "lucide-react";
 
-import type { AdminUser } from "@trefix/api-client";
+import { USER_STATUSES, type AdminUser } from "@trefix/api-client";
 
 import { getFriendlyApiMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/notifications";
@@ -50,6 +50,8 @@ import { AvatarPresenceDot } from "@/widgets/avatar-presence-dot";
 import { EmptyState, ErrorState, TableSkeleton } from "@/widgets/data-state";
 import { useDeleteUser, useUsers } from "@/features/users/hooks/use-users";
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
+import { UserStatusBadge } from "@/features/users/components/card/user-status-badge";
+import { OptionSelect } from "@/widgets/option-select";
 import { formatDate, useI18n } from "@/shared/i18n";
 import { useAuth } from "@/components/auth-provider";
 
@@ -66,6 +68,8 @@ export function UsersTable(): ReactElement {
   const sortBy =
     (searchParams.get("sortBy") as SortField | null) ?? "createdAt";
   const sortOrder = searchParams.get("sortOrder") === "ASC" ? "ASC" : "DESC";
+  const requestedStatus = searchParams.get("status");
+  const status = USER_STATUSES.find((value) => value === requestedStatus);
 
   const usersQuery = useUsers({
     page,
@@ -73,6 +77,7 @@ export function UsersTable(): ReactElement {
     search: search || undefined,
     sortBy,
     sortOrder,
+    status,
   });
   const deleteUser = useDeleteUser();
 
@@ -156,6 +161,24 @@ export function UsersTable(): ReactElement {
             {t("common.actions.search")}
           </Button>
         </form>
+        <div className="w-44">
+          <OptionSelect
+            value={status ?? "all"}
+            options={[
+              { value: "all", label: t("users.statusFilter.all") },
+              ...USER_STATUSES.map((value) => ({
+                value,
+                label: t(`userCard.status.${value}`),
+              })),
+            ]}
+            onValueChange={(value) =>
+              navigateWithParams({
+                status: value === "all" ? undefined : value,
+                page: undefined,
+              })
+            }
+          />
+        </div>
       </div>
 
       {usersQuery.isLoading ? (
@@ -239,6 +262,7 @@ export function UsersTable(): ReactElement {
                         >
                           {displayName}
                         </Link>
+                        <UserStatusBadge status={user.status} />
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">

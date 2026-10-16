@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactElement } from "react";
 
 import { Badge } from "@trefix/ui/components/badge";
@@ -26,8 +27,11 @@ export function WorkoutDayList({
   workouts,
   canManage,
   onEdit,
+  workoutHref,
 }: {
   workouts: readonly AdminCalendarWorkout[];
+  /** Page of a workout; the title links to it when set. */
+  workoutHref?: (workout: AdminCalendarWorkout) => string;
   canManage: boolean;
   onEdit: (workout: AdminCalendarWorkout) => void;
 }): ReactElement {
@@ -60,9 +64,18 @@ export function WorkoutDayList({
                 {timeFormat.format(new Date(workout.scheduledAt))}
               </time>
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="truncate text-sm font-medium">
-                  {workout.title ?? typeLabel}
-                </span>
+                {workoutHref ? (
+                  <Link
+                    href={workoutHref(workout)}
+                    className="truncate text-sm font-medium hover:underline"
+                  >
+                    {workout.title ?? typeLabel}
+                  </Link>
+                ) : (
+                  <span className="truncate text-sm font-medium">
+                    {workout.title ?? typeLabel}
+                  </span>
+                )}
                 <span className="text-sm text-muted-foreground">
                   {t("trainingCalendar.list.metrics", {
                     type: typeLabel,

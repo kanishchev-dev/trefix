@@ -66,7 +66,8 @@
     "languageEnglish": "Английский",
     "signOut": "Выйти",
     "accessDenied": "Раздел недоступен",
-    "profile": "Профиль"
+    "profile": "Профиль",
+    "audit": "Журнал действий"
   },
   "dashboard": {
     "title": "Дашборд",
@@ -90,7 +91,9 @@
     "plans": "Планы",
     "plan": "План",
     "createPlan": "Новый план",
-    "rebuild": "Подготовить заново"
+    "rebuild": "Подготовить заново",
+    "audit": "Журнал действий",
+    "workout": "Тренировка"
   },
   "users": {
     "title": "Пользователи",
@@ -197,6 +200,9 @@
     "confirmRevokePermission": {
       "title": "Снять право",
       "description": "Право {name} будет снято с пользователя. Эффективные права изменятся сразу."
+    },
+    "statusFilter": {
+      "all": "Все статусы"
     }
   },
   "trainingCalendar": {
@@ -779,7 +785,8 @@
       "coach": "ИИ-тренер",
       "training": "Тренировки",
       "other": "Прочее",
-      "account": "Аккаунт"
+      "account": "Аккаунт",
+      "audit": "Аудит"
     },
     "actions": {
       "read": "Просмотр",
@@ -795,7 +802,9 @@
     "sectionEmpty": "Каталог прав пуст",
     "resources": {
       "coach": {
-        "sessions": "Консультации"
+        "sessions": "Консультации",
+        "users": "ИИ-тренер пользователей",
+        "conversations": "Переписка с ИИ-тренером"
       },
       "training": {
         "athletes": "Спортсмен",
@@ -805,10 +814,20 @@
         "workouts": "Тренировки",
         "calendar": "Календарь тренировок",
         "userplans": "Планы пользователей",
-        "gear": "Снаряжение"
+        "gear": "Снаряжение",
+        "userathletes": "Атлеты пользователей",
+        "userprogress": "Прогресс пользователей",
+        "usergear": "Снаряжение пользователей"
       },
       "account": {
         "preferences": "Настройки"
+      },
+      "users": {
+        "activity": "История действий",
+        "security": "Аккаунт и безопасность"
+      },
+      "integrations": {
+        "users": "Интеграции пользователей"
       }
     },
     "descriptions": {
@@ -821,7 +840,14 @@
         "create": "Создание пользователей из админки",
         "update": "Изменение профилей, статуса и собственных настроек профиля",
         "delete": "Безвозвратное удаление пользователей",
-        "manage": "Управление доступом: приглашения, группы и индивидуальные права"
+        "manage": "Управление доступом: приглашения, группы и индивидуальные права",
+        "activity": {
+          "read": "Просмотр и выгрузка истории действий любого пользователя"
+        },
+        "security": {
+          "read": "Просмотр статуса аккаунта, сессий, способов входа, согласий и выгрузок данных любого пользователя",
+          "manage": "Блокировка и разблокировка, завершение сессий, смена способов входа и email, выгрузка данных, удаление и восстановление аккаунтов"
+        }
       },
       "settings": {
         "read": "Просмотр общих настроек: тема, язык и значения по умолчанию для новых учётных записей",
@@ -835,7 +861,11 @@
       "integrations": {
         "read": "Просмотр подключённых интеграций, их статуса и ссылки подключения",
         "sync": "Запуск синхронизации с внешним сервисом, например со Strava",
-        "delete": "Отключение интеграции и отзыв доступа к данным пользователя"
+        "delete": "Отключение интеграции и отзыв доступа к данным пользователя",
+        "users": {
+          "read": "Просмотр интеграций любого пользователя в админке",
+          "manage": "Синхронизация и отключение интеграций любого пользователя из админки"
+        }
       },
       "coach": {
         "sessions": {
@@ -843,6 +873,13 @@
           "create": "Начало новой консультации с ИИ-тренером",
           "message": "Отправка сообщений ИИ-тренеру и получение ответов",
           "delete": "Очистка своей истории чата с AI-коучем"
+        },
+        "users": {
+          "read": "Просмотр списка сессий и комментариев ИИ-тренера любого пользователя",
+          "manage": "Удаление переписки и перегенерация или удаление комментариев ИИ-тренера"
+        },
+        "conversations": {
+          "read": "Чтение переписки любого пользователя с ИИ-тренером (для отладки, каждый просмотр записывается)"
         }
       },
       "training": {
@@ -884,6 +921,18 @@
         "gear": {
           "read": "Просмотр своего снаряжения и его пробега",
           "manage": "Добавление, изменение, архивирование и удаление снаряжения и привязка его к тренировкам"
+        },
+        "userathletes": {
+          "read": "Просмотр профиля атлета и зон любого пользователя в админке",
+          "manage": "Изменение профиля атлета, зон и доступности любого пользователя из админки"
+        },
+        "userprogress": {
+          "read": "Просмотр прогресса, рекордов и результатов стартов любого пользователя",
+          "manage": "Добавление и удаление результатов стартов любого пользователя"
+        },
+        "usergear": {
+          "read": "Просмотр кроссовок и устройств любого пользователя",
+          "manage": "Добавление, изменение, архивирование и удаление снаряжения любого пользователя"
         }
       },
       "account": {
@@ -893,6 +942,9 @@
           "update": "Изменение своих настроек приложения, в том числе включение и выключение AI-коуча"
         },
         "delete": "Удаление своего аккаунта и всех данных без возможности восстановления"
+      },
+      "audit": {
+        "read": "Просмотр и выгрузка журнала действий всех администраторов и пользователей"
       }
     }
   },
@@ -952,7 +1004,50 @@
       "PLAN_RESIZE_NOT_POSSIBLE": "План нельзя подогнать под эту дату",
       "PLAN_METRICS_INVALID": "Некоторые метрики вне допустимых диапазонов",
       "MANUAL_PLAN_CONFIG_INVALID": "Такая конфигурация недоступна. Измените дни тренировок или длительность плана",
-      "MANUAL_PLAN_WORKOUT_INVALID": "Эту тренировку нельзя добавить в план"
+      "MANUAL_PLAN_WORKOUT_INVALID": "Эту тренировку нельзя добавить в план",
+      "ACTIVITY_CURSOR_INVALID": "Некорректный курсор страницы истории действий",
+      "ACCOUNT_DELETION_NOT_REQUESTED": "Аккаунт не удалён",
+      "ACCOUNT_DELETION_FORBIDDEN": "Этот аккаунт нельзя удалить",
+      "EMAIL_TAKEN": "Этот email уже используется другим аккаунтом",
+      "USER_ALREADY_BLOCKED": "Аккаунт уже заблокирован",
+      "USER_BLOCKED": "Аккаунт заблокирован",
+      "USER_BLOCK_FORBIDDEN": "Нельзя заблокировать системный или собственный аккаунт",
+      "USER_BLOCK_UNTIL_INVALID": "Окончание блокировки должно быть в будущем",
+      "USER_NOT_BLOCKED": "Аккаунт не заблокирован",
+      "WORKOUT_HAS_SOURCES": "Результат получен из записи или интеграции, его нельзя сбросить",
+      "WORKOUT_BELONGS_TO_PLAN": "Тренировки плана меняются через план",
+      "WORKOUT_SOURCE_NOT_FOUND": "У тренировки нет записи от этого сервиса",
+      "INTEGRATION_PROVIDER_INVALID": "На устройстве синхронизируются только Apple Health и Health Connect",
+      "WORKOUT_NOT_COMPLETED": "Тренировка ещё не завершена",
+      "WORKOUT_NOT_PLANNED": "Так можно завершить только запланированную тренировку",
+      "WORKOUT_CANCELLED": "Тренировка отменена. Запишите пробежку как отдельную тренировку",
+      "ADAPTATION_NOT_FOUND": "Изменение плана не найдено",
+      "ADAPTATION_NOT_PROPOSED": "Это изменение плана уже не ждёт решения",
+      "ATHLETE_DOUBLES_NOT_ALLOWED": "Две тренировки в день доступны только на продвинутом уровне",
+      "ATHLETE_FIELD_OUT_OF_RANGE": "Значение вне допустимого диапазона",
+      "ATHLETE_HEART_RATE_INCONSISTENT": "Пульс покоя должен быть ниже порогового, а пороговый — ниже максимального",
+      "ATHLETE_SESSIONS_EXCEED_DAYS": "Слишком много тренировок для выбранных дней",
+      "ATHLETE_ZONES_INVALID": "Зоны — четыре возрастающих значения между пульсом покоя и максимальным",
+      "AUTH_EMAIL_UNCHANGED": "Это уже ваш email",
+      "AUTH_IDENTITY_NOT_FOUND": "Этот аккаунт не привязан",
+      "COACH_SESSION_NOT_FOUND": "Сессия с тренером не найдена",
+      "DATA_EXPORT_NOT_FOUND": "Ссылка недействительна или устарела",
+      "DATA_EXPORT_RATE_LIMITED": "Экспорт данных можно запросить раз в сутки",
+      "GEAR_FIELD_NOT_APPLICABLE": "Некоторые поля не относятся к этому типу снаряжения",
+      "GEAR_INVALID": "Проверьте данные снаряжения",
+      "GEAR_NOT_FOUND": "Снаряжение не найдено",
+      "GEAR_RETIRED": "Действие недоступно для снаряжения в архиве",
+      "GEAR_TYPE_MISMATCH": "Этот тип снаряжения здесь не подходит",
+      "INTEGRATION_NOT_CONNECTED": "Сначала подключите интеграцию",
+      "INTEGRATION_NOT_FOUND": "Интеграция не найдена",
+      "INTEGRATION_PROVIDER_REQUEST_FAILED": "Подключённый сервис не ответил. Попробуйте позже",
+      "INTEGRATION_REAUTHORIZATION_REQUIRED": "Переподключите интеграцию, чтобы продолжить",
+      "STRAVA_NOT_CONNECTED": "Сначала подключите Strava",
+      "STRAVA_PROFILE_ACCESS_REQUIRED": "Сначала разрешите Strava передавать данные профиля",
+      "RECORDING_NOT_FOUND": "Запись не найдена",
+      "RESULT_INVALID": "Проверьте дистанцию, время и дату результата",
+      "RESULT_NOT_FOUND": "Результат не найден",
+      "PROGRESS_DISTANCE_UNKNOWN": "Неизвестная дистанция"
     },
     "byStatus": {
       "400": "Проверьте введённые данные",
@@ -1079,6 +1174,875 @@
     },
     "validation": {
       "passwordsMismatch": "Пароли не совпадают"
+    }
+  },
+  "userCard": {
+    "nav": {
+      "label": "Разделы пользователя"
+    },
+    "groups": {
+      "account": "Аккаунт",
+      "training": "Тренировки",
+      "services": "Сервисы"
+    },
+    "sections": {
+      "overview": {
+        "title": "Обзор",
+        "description": "Главное о пользователе"
+      },
+      "profile": {
+        "title": "Профиль",
+        "description": "Имя, почта и служебные данные"
+      },
+      "access": {
+        "title": "Права доступа",
+        "description": "Группы и персональные права"
+      },
+      "account": {
+        "title": "Аккаунт и безопасность",
+        "description": "Сессии, вход, настройки и данные"
+      },
+      "athlete": {
+        "title": "Атлет",
+        "description": "Параметры, пульсовые зоны и график"
+      },
+      "calendar": {
+        "title": "Календарь",
+        "description": "Тренировки по дням"
+      },
+      "plans": {
+        "title": "Планы",
+        "description": "Тренировочные планы и адаптации"
+      },
+      "progress": {
+        "title": "Прогресс",
+        "description": "Объёмы, рекорды и результаты"
+      },
+      "gear": {
+        "title": "Снаряжение",
+        "description": "Кроссовки, часы и датчики"
+      },
+      "integrations": {
+        "title": "Интеграции",
+        "description": "Strava и данные здоровья"
+      },
+      "coach": {
+        "title": "AI-коуч",
+        "description": "Диалоги и разборы тренировок"
+      },
+      "history": {
+        "title": "История",
+        "description": "Все действия пользователя и с ним"
+      }
+    },
+    "status": {
+      "active": "Активен",
+      "blocked": "Заблокирован",
+      "deleted": "Удалён"
+    },
+    "blockReasons": {
+      "policy_violation": "Нарушение правил",
+      "spam": "Спам",
+      "fraud": "Мошенничество",
+      "user_request": "Просьба пользователя",
+      "other": "Другое"
+    },
+    "actions": {
+      "block": "Заблокировать",
+      "unblock": "Разблокировать",
+      "restore": "Восстановить"
+    },
+    "banner": {
+      "blocked": "Пользователь заблокирован бессрочно",
+      "blockedUntil": "Пользователь заблокирован до {date}",
+      "blockedDetails": "С {date}. Причина: {reason}",
+      "deleted": "Аккаунт удалён",
+      "deletedDetails": "Удалён {date}. До окончательного удаления данных аккаунт можно восстановить"
+    },
+    "block": {
+      "title": "Блокировка пользователя",
+      "description": "{name} не сможет войти в приложение и админку, пока блокировка действует",
+      "reason": "Причина",
+      "duration": "Срок",
+      "durations": {
+        "permanent": "Бессрочно",
+        "1d": "1 день",
+        "7d": "7 дней",
+        "30d": "30 дней",
+        "custom": "До даты"
+      },
+      "until": "Дата окончания",
+      "untilInvalid": "Укажите дату в будущем",
+      "comment": "Комментарий",
+      "commentPlaceholder": "Что произошло",
+      "commentHint": "Комментарий видят только администраторы",
+      "revokeSessions": "Завершить все сессии",
+      "notify": "Отправить письмо о блокировке"
+    },
+    "unblock": {
+      "title": "Разблокировать пользователя?",
+      "description": "{name} снова сможет входить в приложение"
+    },
+    "delete": {
+      "description": "Аккаунт {name} будет удалён, сессии завершены. До окончательного удаления данных его можно восстановить"
+    },
+    "restore": {
+      "title": "Восстановить аккаунт?",
+      "description": "Аккаунт {name} снова станет активным"
+    },
+    "denied": {
+      "title": "Раздел недоступен",
+      "description": "Для этого раздела нужны дополнительные права"
+    },
+    "noAthlete": {
+      "title": "Нет профиля атлета"
+    },
+    "providers": {
+      "strava": "Strava",
+      "garmin": "Garmin",
+      "apple_health": "Apple Health",
+      "health_connect": "Health Connect",
+      "coach": "AI-коуч",
+      "apple": "Apple",
+      "google": "Google",
+      "manual": "Вручную",
+      "trefix": "Трефикс"
+    },
+    "connectionStatuses": {
+      "connecting": "Подключается",
+      "connected": "Подключено",
+      "syncing": "Синхронизация",
+      "error": "Ошибка",
+      "reauthorization_required": "Нужен повторный вход",
+      "disconnected": "Не подключено",
+      "enabled": "Включён",
+      "disabled": "Выключен"
+    },
+    "weekdays": {
+      "monday": "Понедельник",
+      "tuesday": "Вторник",
+      "wednesday": "Среда",
+      "thursday": "Четверг",
+      "friday": "Пятница",
+      "saturday": "Суббота",
+      "sunday": "Воскресенье"
+    },
+    "weekdaysShort": {
+      "monday": "Пн",
+      "tuesday": "Вт",
+      "wednesday": "Ср",
+      "thursday": "Чт",
+      "friday": "Пт",
+      "saturday": "Сб",
+      "sunday": "Вс"
+    },
+    "units": {
+      "cm": "см",
+      "kg": "кг",
+      "km": "км",
+      "min": "мин",
+      "bpm": "уд/мин"
+    },
+    "overview": {
+      "attention": "Требует внимания",
+      "attentionCodes": {
+        "adaptation_pending": "Адаптаций плана ждут решения: {count}",
+        "missed_workouts": "Пропущено тренировок за {days} дн.: {count}",
+        "gear_replace_soon": "{name}: пора менять, {distance} из {limit} км",
+        "integration_error": "Проблема с интеграцией {provider}"
+      },
+      "activePlan": "Активный план",
+      "noPlan": "Нет активного плана",
+      "planWithoutName": "План без названия",
+      "planWeek": "Неделя {current} из {total}",
+      "thisWeek": "Эта неделя",
+      "weekKm": "{done} из {planned} км",
+      "weekWorkouts": "Тренировок: {done} из {planned}",
+      "lastWorkout": "Последняя тренировка",
+      "lastSession": "Последний вход",
+      "km": "{value} км",
+      "pace": "Темп {value} /км",
+      "upcoming": "Ближайшие тренировки",
+      "noUpcoming": "Запланированных тренировок нет",
+      "connections": "Подключения",
+      "noConnections": "Нет подключений",
+      "recentActivity": "Последние действия",
+      "allActivity": "Вся история"
+    },
+    "account": {
+      "security": {
+        "title": "Безопасность",
+        "description": "Статус аккаунта, почта и пароль",
+        "status": "Статус",
+        "password": "Пароль",
+        "passwordChanged": "Изменён {date}",
+        "noPassword": "Не задан, вход через Apple или Google",
+        "blockReason": "Причина блокировки",
+        "blockUntil": "Блокировка до",
+        "blockedBy": "Заблокировал",
+        "purgeAt": "Окончательное удаление"
+      },
+      "actions": {
+        "changeEmail": "Сменить почту",
+        "verifyEmail": "Подтвердить почту",
+        "passwordReset": "Отправить сброс пароля",
+        "revokeAll": "Завершить все",
+        "revoke": "Завершить",
+        "unlink": "Отвязать",
+        "requestExport": "Запросить выгрузку",
+        "download": "Скачать"
+      },
+      "changeEmail": {
+        "title": "Смена почты",
+        "description": "Сейчас: {email}. Новый адрес сразу станет адресом входа",
+        "label": "Новый адрес",
+        "invalid": "Укажите другой корректный адрес"
+      },
+      "sessions": {
+        "title": "Сессии",
+        "description": "Устройства, на которых выполнен вход",
+        "empty": "Активных сессий нет",
+        "device": "Устройство",
+        "location": "Место",
+        "lastActive": "Активность",
+        "createdAt": "Вход"
+      },
+      "identities": {
+        "title": "Вход через сервисы",
+        "description": "Привязанные аккаунты Apple и Google",
+        "empty": "Аккаунты не привязаны"
+      },
+      "preferences": {
+        "title": "Настройки приложения",
+        "description": "Единицы, язык и AI-коуч",
+        "updatedAt": "Изменены {date}",
+        "fields": {
+          "distanceUnit": "Дистанция",
+          "weekStart": "Начало недели",
+          "timeFormat": "Формат времени",
+          "languageMode": "Язык",
+          "coachAdaptationMode": "Адаптация плана",
+          "coachTone": "Тон коуча",
+          "coachEnabled": "AI-коуч включён",
+          "stravaProfileSync": "Профиль из Strava",
+          "stravaActivitiesSync": "Тренировки из Strava",
+          "stravaGearSync": "Снаряжение из Strava",
+          "timezone": "Часовой пояс"
+        },
+        "values": {
+          "distanceUnit": {
+            "km": "Километры",
+            "mi": "Мили"
+          },
+          "weekStart": {
+            "mon": "Понедельник",
+            "sun": "Воскресенье"
+          },
+          "timeFormat": {
+            "24h": "24 часа",
+            "12h": "12 часов"
+          },
+          "languageMode": {
+            "system": "Как в системе",
+            "ru": "Русский",
+            "en": "Английский"
+          },
+          "coachAdaptationMode": {
+            "auto": "Автоматически",
+            "confirm": "С подтверждением",
+            "suggest": "Только предлагать"
+          },
+          "coachTone": {
+            "soft": "Мягкий",
+            "neutral": "Нейтральный",
+            "strict": "Строгий"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Данные и согласия",
+        "description": "Согласия на обработку данных и выгрузки",
+        "consents": "Согласия",
+        "noConsents": "Согласий нет",
+        "consentTypes": {
+          "health_data": "Данные о здоровье"
+        },
+        "accepted": "Принято {date}",
+        "revoked": "Отозвано {date}",
+        "exports": "Выгрузки данных",
+        "noExports": "Выгрузок не было",
+        "exportStatuses": {
+          "pending": "Готовится",
+          "ready": "Готова",
+          "failed": "Ошибка",
+          "expired": "Срок истёк"
+        }
+      },
+      "confirm": {
+        "revokeAll": {
+          "title": "Завершить все сессии?",
+          "description": "Пользователю придётся войти заново на всех устройствах"
+        },
+        "revoke": {
+          "title": "Завершить сессию?",
+          "description": "Пользователю придётся войти заново на этом устройстве"
+        },
+        "unlink": {
+          "title": "Отвязать аккаунт?",
+          "description": "Войти через этот сервис больше не получится, пока пользователь не привяжет его снова"
+        },
+        "passwordReset": {
+          "title": "Отправить сброс пароля?",
+          "description": "Пользователь получит письмо с кодом для смены пароля"
+        },
+        "verifyEmail": {
+          "title": "Подтвердить почту?",
+          "description": "Адрес будет считаться подтверждённым без письма пользователю"
+        }
+      },
+      "toasts": {
+        "blocked": "Пользователь заблокирован",
+        "unblocked": "Пользователь разблокирован",
+        "deletionRequested": "Аккаунт удалён",
+        "restored": "Аккаунт восстановлен",
+        "sessionRevoked": "Сессия завершена",
+        "sessionsRevoked": "Все сессии завершены",
+        "identityUnlinked": "Аккаунт отвязан",
+        "passwordResetSent": "Письмо для сброса пароля отправлено",
+        "emailVerified": "Почта подтверждена",
+        "emailChanged": "Почта изменена",
+        "preferencesSaved": "Настройки сохранены",
+        "exportRequested": "Выгрузка запрошена"
+      }
+    },
+    "athlete": {
+      "title": "Профиль атлета",
+      "updatedAt": "Изменён {date}",
+      "editTitle": "Профиль атлета",
+      "editDescription": "Изменения сразу учитываются в зонах и будущих планах",
+      "completeness": "Заполнен на {percent}%",
+      "age": "{age} лет",
+      "trainingTitle": "График и объёмы",
+      "heartTitle": "Пульс и зоны",
+      "anyDay": "Любой день",
+      "estimate": "≈ {value} уд/мин, расчётный",
+      "zone": "Зона {zone}",
+      "fields": {
+        "birthDate": "Дата рождения",
+        "sex": "Пол",
+        "heightCm": "Рост, см",
+        "weightKg": "Вес, кг",
+        "experienceLevel": "Опыт",
+        "runningSinceYear": "Бегает с года",
+        "weeklyMileageKm": "Объём в неделю, км",
+        "sessionsPerWeek": "Тренировок в неделю",
+        "availableTrainingDays": "Дни тренировок",
+        "longRunDay": "День длительной",
+        "preferredTimeOfDay": "Время тренировок",
+        "preferredWorkoutDurationMinutes": "Обычная тренировка, мин",
+        "longRunMaxDurationMinutes": "Длительная до, мин",
+        "limitations": "Ограничения",
+        "restingHeartRate": "Пульс покоя",
+        "maxHeartRate": "Максимальный пульс",
+        "thresholdHeartRate": "Пороговый пульс",
+        "hrZonesMethod": "Расчёт зон"
+      },
+      "sex": {
+        "none": "Не указан",
+        "female": "Женский",
+        "male": "Мужской"
+      },
+      "levels": {
+        "beginner": "Начинающий",
+        "intermediate": "Средний",
+        "advanced": "Опытный"
+      },
+      "zonesMethods": {
+        "threshold": "От порогового пульса",
+        "max_hr": "От максимального пульса",
+        "custom": "Свои границы"
+      },
+      "timesOfDay": {
+        "morning": "Утро",
+        "day": "День",
+        "evening": "Вечер",
+        "any": "Любое"
+      },
+      "zonesUnavailable": {
+        "threshold_missing": "Зоны не рассчитаны: нет порогового пульса",
+        "max_missing": "Зоны не рассчитаны: нет максимального пульса",
+        "custom_missing": "Зоны не рассчитаны: не заданы свои границы"
+      },
+      "toasts": {
+        "saved": "Профиль атлета сохранён"
+      }
+    },
+    "progress": {
+      "periods": {
+        "week": "Эта неделя",
+        "month": "Этот месяц",
+        "year": "Этот год"
+      },
+      "workoutsCount": "Тренировок: {count}",
+      "longest": "Самая длинная: {value} км",
+      "recordsTitle": "Рекорды",
+      "recordsDescription": "Лучшие результаты на стандартных дистанциях. Нажмите на строку, чтобы увидеть историю",
+      "historyTitle": "История: {distance}",
+      "new": "Новый",
+      "columns": {
+        "distance": "Дистанция",
+        "best": "Лучшее время",
+        "date": "Дата",
+        "prediction": "Прогноз",
+        "time": "Время",
+        "source": "Источник"
+      },
+      "distances": {
+        "1k": "1 км",
+        "5k": "5 км",
+        "10k": "10 км",
+        "half_marathon": "Полумарафон",
+        "marathon": "Марафон"
+      },
+      "kinds": {
+        "race": "Забег",
+        "workout": "Тренировка",
+        "test": "Тест"
+      },
+      "addResult": {
+        "action": "Добавить результат",
+        "title": "Новый результат",
+        "description": "Результат забега или теста, которого нет в тренировках",
+        "distance": "Дистанция",
+        "time": "Время",
+        "timeInvalid": "Укажите время в формате ч:мм:сс или мм:сс",
+        "date": "Дата",
+        "kind": "Вид",
+        "name": "Название"
+      },
+      "deleteResult": {
+        "title": "Удалить результат?",
+        "description": "Результат пропадёт из рекордов и прогнозов"
+      },
+      "toasts": {
+        "resultAdded": "Результат добавлен",
+        "resultDeleted": "Результат удалён"
+      }
+    },
+    "gear": {
+      "title": "Снаряжение",
+      "description": "Пробег считается по тренировкам, к которым привязано снаряжение",
+      "add": "Добавить",
+      "statuses": {
+        "active": "Активное",
+        "retired": "В архиве"
+      },
+      "types": {
+        "shoes": "Кроссовки",
+        "watch": "Часы",
+        "sensor": "Датчик"
+      },
+      "columns": {
+        "name": "Название",
+        "type": "Тип",
+        "distance": "Пробег",
+        "wear": "Износ",
+        "workouts": "Тренировок"
+      },
+      "default": "По умолчанию",
+      "replaceSoon": "Пора менять",
+      "distanceOfLimit": "{distance} из {limit} км",
+      "retire": "В архив",
+      "restore": "Вернуть из архива",
+      "deleteTitle": "Удалить снаряжение?",
+      "deleteDescription": "{name} пропадёт из списка, тренировки останутся без привязки",
+      "empty": {
+        "title": "Снаряжения нет",
+        "description": "Здесь появятся кроссовки и устройства пользователя"
+      },
+      "form": {
+        "createTitle": "Новое снаряжение",
+        "editTitle": "Изменение снаряжения",
+        "description": "Пользователь увидит изменения в приложении",
+        "type": "Тип",
+        "brand": "Бренд",
+        "model": "Модель",
+        "nickname": "Своё название",
+        "initialDistance": "Начальный пробег, км",
+        "limit": "Ресурс, км",
+        "replaceReminder": "Напомнить о замене",
+        "isDefault": "По умолчанию для тренировок",
+        "invalid": "Заполните бренд и модель, ресурс — от 100 до 2000 км"
+      },
+      "toasts": {
+        "created": "Снаряжение добавлено",
+        "updated": "Снаряжение обновлено",
+        "retired": "Снаряжение в архиве",
+        "restored": "Снаряжение возвращено",
+        "deleted": "Снаряжение удалено"
+      }
+    },
+    "integrations": {
+      "connectedAt": "Подключено {date}",
+      "notConnected": "Не подключено",
+      "unavailable": "Недоступно на устройстве пользователя",
+      "lastSync": "Последняя синхронизация",
+      "imported": "Импортировано тренировок",
+      "externalId": "ID в сервисе",
+      "pending": "Пакетов в очереди",
+      "profileSync": "Профиль",
+      "scopes": "Доступы",
+      "off": "Выключено",
+      "actions": {
+        "sync": "Синхронизировать",
+        "profileSync": "Обновить профиль",
+        "requestSync": "Запросить синхронизацию",
+        "disconnect": "Отключить"
+      },
+      "disconnectTitle": "Отключить интеграцию?",
+      "disconnectDescription": "{provider} перестанет присылать данные. Импортированные тренировки останутся",
+      "toasts": {
+        "syncStarted": "Синхронизация запущена",
+        "profileSynced": "Профиль обновлён из Strava",
+        "syncRequested": "Запрос отправлен на устройство",
+        "deviceOffline": "Приложение пользователя сейчас не в сети, запрос не доставлен",
+        "disconnected": "Интеграция отключена"
+      }
+    },
+    "coach": {
+      "sessionsTitle": "Диалоги",
+      "sessionsDescription": "Переписка пользователя с AI-коучем",
+      "noConversationAccess": "Просмотр переписки требует отдельного права",
+      "pickSession": "Выберите диалог слева",
+      "accessLogged": "Просмотр записывается в журнал действий",
+      "untitled": "Без названия",
+      "messages": "Сообщений: {count}",
+      "toolCall": "Вызов инструмента: {tool}",
+      "roles": {
+        "user": "Пользователь",
+        "assistant": "Коуч",
+        "tool": "Инструмент"
+      },
+      "clear": "Очистить историю",
+      "clearTitle": "Очистить историю диалогов?",
+      "clearDescription": "Все диалоги пользователя с коучем будут удалены без возможности восстановления",
+      "empty": {
+        "title": "Диалогов нет",
+        "description": "Пользователь ещё не общался с коучем"
+      },
+      "notesTitle": "Разборы тренировок",
+      "notesDescription": "Заметки коуча к выполненным тренировкам",
+      "noNotes": "Разборов нет",
+      "noteFor": "Разбор от {date}",
+      "toasts": {
+        "cleared": "История диалогов очищена"
+      }
+    },
+    "workout": {
+      "planWeek": "План, неделя {week}",
+      "completedAt": "Выполнена {date}",
+      "minutes": "{value} мин",
+      "details": "Служебное",
+      "phase": "Фаза: {phase}",
+      "history": "История тренировки",
+      "notFound": {
+        "title": "Тренировка не найдена",
+        "description": "Возможно, её удалили"
+      },
+      "actions": {
+        "complete": "Отметить выполненной",
+        "editResult": "Изменить результат",
+        "reopen": "Вернуть в план",
+        "excludeRecords": "Не учитывать в рекордах",
+        "includeRecords": "Учитывать в рекордах"
+      },
+      "planFact": {
+        "title": "План и факт",
+        "planned": "План",
+        "actual": "Факт"
+      },
+      "analysis": {
+        "completion": "Выполнено на {value}%",
+        "load": "Нагрузка {value} из {expected}",
+        "fatigue": {
+          "low": "Низкая усталость",
+          "moderate": "Умеренная усталость",
+          "high": "Высокая усталость"
+        }
+      },
+      "result": {
+        "completeTitle": "Отметить выполненной",
+        "completeDescription": "Результат пересчитает нагрузку и может адаптировать план",
+        "editTitle": "Изменение результата",
+        "editDescription": "Нагрузка и состояние атлета будут пересчитаны",
+        "distance": "Дистанция, км",
+        "duration": "Длительность, мин",
+        "pace": "Темп, мин/км",
+        "heartRate": "Средний пульс",
+        "rpe": "Нагрузка по ощущениям, 1–10",
+        "notes": "Заметка",
+        "notesHint": "Заметку увидит пользователь",
+        "errors": {
+          "distance": "Укажите дистанцию",
+          "duration": "Укажите длительность больше нуля",
+          "pace": "Темп в формате м:сс",
+          "heartRate": "Пульс от 30 до 250",
+          "rpe": "Оценка от 1 до 10"
+        }
+      },
+      "reopenTitle": "Вернуть тренировку в план?",
+      "reopenDescription": "Результат будет сброшен, нагрузка пересчитана",
+      "deleteTitle": "Удалить тренировку?",
+      "deleteDescription": "Тренировка пропадёт из календаря пользователя",
+      "sources": {
+        "title": "Источники",
+        "description": "Откуда пришли данные тренировки",
+        "empty": "Данные внесены вручную",
+        "primary": "Основной",
+        "unlink": "Отвязать",
+        "unlinkTitle": "Отвязать источник?",
+        "unlinkDescription": "Данные {provider} перестанут относиться к этой тренировке",
+        "showRecording": "Показать запись",
+        "noRecording": "Записи из приложения нет"
+      },
+      "recording": {
+        "distance": "Дистанция",
+        "moving": "В движении",
+        "pace": "Средний темп",
+        "heartRate": "Пульс ср./макс.",
+        "elevation": "Набор высоты, м",
+        "environment": "Где",
+        "environments": {
+          "outdoor": "На улице",
+          "trail": "Трейл",
+          "treadmill": "Дорожка"
+        },
+        "splits": "Отрезков по километрам: {count}"
+      },
+      "gear": {
+        "title": "Снаряжение",
+        "description": "К пробегу чего засчитать тренировку",
+        "none": "Без снаряжения",
+        "retired": "Снаряжение в архиве"
+      },
+      "note": {
+        "title": "Разбор коуча",
+        "description": "Заметка коуча к тренировке",
+        "generatedAt": "Создан {date}",
+        "regenerate": "Создать заново",
+        "deleteTitle": "Удалить разбор?",
+        "deleteDescription": "Пользователь перестанет видеть заметку к этой тренировке",
+        "statuses": {
+          "pending": "Разбор ещё не готов",
+          "disabled": "Коуч выключен у пользователя",
+          "ready": "Разбор пуст"
+        }
+      },
+      "toasts": {
+        "completed": "Тренировка выполнена",
+        "resultUpdated": "Результат обновлён",
+        "reopened": "Тренировка возвращена в план",
+        "deleted": "Тренировка удалена",
+        "gearSet": "Снаряжение изменено",
+        "recordsExcluded": "Тренировка не учитывается в рекордах",
+        "recordsIncluded": "Тренировка учитывается в рекордах",
+        "sourceUnlinked": "Источник отвязан",
+        "noteRegenerated": "Разбор создаётся заново",
+        "noteDeleted": "Разбор удалён"
+      }
+    },
+    "adaptations": {
+      "title": "Адаптации плана ждут решения",
+      "description": "Изменения, которые система предложила после тренировок",
+      "confidence": "Уверенность {value}%",
+      "workout": "Тренировка",
+      "apply": "Применить",
+      "dismiss": "Отклонить",
+      "toasts": {
+        "applied": "Адаптация применена",
+        "dismissed": "Адаптация отклонена"
+      }
+    }
+  },
+  "activity": {
+    "userTitle": "История действий",
+    "userDescription": "Что делал пользователь и что делали с его данными",
+    "auditTitle": "Журнал действий",
+    "auditDescription": "Действия администраторов и просмотры персональных данных",
+    "export": "Скачать CSV",
+    "loadMore": "Показать ещё",
+    "open": "Открыть",
+    "changes": "Изменения: {count}",
+    "diff": {
+      "field": "Поле",
+      "before": "Было",
+      "after": "Стало"
+    },
+    "empty": {
+      "title": "Действий нет",
+      "description": "За выбранный период ничего не найдено"
+    },
+    "filters": {
+      "allDomains": "Все разделы",
+      "allActors": "Все источники",
+      "search": "Поиск по действиям"
+    },
+    "periods": {
+      "7d": "7 дней",
+      "30d": "30 дней",
+      "90d": "90 дней",
+      "all": "Всё время"
+    },
+    "kinds": {
+      "admin": "Действия админов",
+      "data_access": "Просмотры данных",
+      "all": "Все записи"
+    },
+    "actors": {
+      "user": "Пользователь",
+      "admin": "Админ",
+      "system": "Система",
+      "integration": "Интеграция",
+      "coach": "Коуч"
+    },
+    "sources": {
+      "mobile": "Приложение",
+      "web": "Веб",
+      "admin": "Админка",
+      "webhook": "Вебхук",
+      "job": "Фоновая задача"
+    },
+    "domains": {
+      "account": "Аккаунт",
+      "access": "Права",
+      "athlete": "Атлет",
+      "workouts": "Тренировки",
+      "plans": "Планы",
+      "progress": "Прогресс",
+      "gear": "Снаряжение",
+      "integrations": "Интеграции",
+      "coach": "Коуч",
+      "preferences": "Настройки",
+      "data_access": "Просмотр данных",
+      "settings": "Настройки системы"
+    },
+    "resources": {
+      "coach_conversation": "переписку с коучем",
+      "user_data_export": "выгрузку данных",
+      "workout_recording": "запись тренировки",
+      "activity_export": "выгрузку истории"
+    },
+    "fields": {
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "email": "Почта",
+      "status": "Статус",
+      "type": "Тип",
+      "scheduledAt": "Дата и время",
+      "distanceKm": "Дистанция, км",
+      "durationMinutes": "Длительность, мин",
+      "title": "Название",
+      "actual": "Результат",
+      "gearId": "Снаряжение",
+      "deviceId": "Устройство",
+      "excludeFromRecords": "Без рекордов",
+      "weekStart": "Начало недели",
+      "distanceUnit": "Дистанция",
+      "timeFormat": "Формат времени",
+      "languageMode": "Язык",
+      "language": "Язык",
+      "timezone": "Часовой пояс",
+      "coachEnabled": "AI-коуч",
+      "coachTone": "Тон коуча",
+      "coachAdaptationMode": "Адаптация плана",
+      "notifications": "Уведомления",
+      "weightKg": "Вес, кг",
+      "heightCm": "Рост, см",
+      "birthDate": "Дата рождения",
+      "sex": "Пол",
+      "maxHeartRate": "Максимальный пульс",
+      "restingHeartRate": "Пульс покоя",
+      "thresholdHeartRate": "Пороговый пульс",
+      "experienceLevel": "Опыт",
+      "sessionsPerWeek": "Тренировок в неделю",
+      "weeklyMileageKm": "Объём в неделю",
+      "availableTrainingDays": "Дни тренировок",
+      "longRunDay": "День длительной",
+      "limitations": "Ограничения",
+      "name": "Название",
+      "brand": "Бренд",
+      "model": "Модель",
+      "nickname": "Своё название",
+      "limitKm": "Ресурс, км",
+      "retiredAt": "В архиве с",
+      "reason": "Причина",
+      "until": "До"
+    },
+    "actions": {
+      "auth_registered": "Зарегистрировался",
+      "auth_email_verified": "Подтвердил почту",
+      "auth_email_change_requested": "Запросил смену почты",
+      "auth_email_changed": "Почта изменена",
+      "auth_identity_linked": "Привязан вход через сервис",
+      "auth_identity_unlinked": "Отвязан вход через сервис",
+      "auth_password_changed": "Пароль изменён",
+      "auth_password_reset_requested": "Запрошен сброс пароля",
+      "auth_session_created": "Вход в аккаунт",
+      "auth_session_revoked": "Сессия завершена",
+      "user_created": "Аккаунт создан",
+      "user_updated": "Профиль изменён",
+      "user_deleted": "Аккаунт удалён",
+      "user_invited": "Отправлено приглашение",
+      "users_blocked": "Пользователь заблокирован",
+      "users_unblocked": "Пользователь разблокирован",
+      "users_deletion_restored": "Аккаунт восстановлен",
+      "account_deletion_requested": "Запрошено удаление аккаунта",
+      "account_data_export_requested": "Запрошена выгрузка данных",
+      "account_data_export_ready": "Выгрузка данных готова",
+      "users_consent_given": "Дано согласие",
+      "users_consent_revoked": "Согласие отозвано",
+      "preferences_updated": "Настройки изменены",
+      "user_permissions_updated": "Права изменены",
+      "permission_created": "Право создано",
+      "permission_updated": "Право изменено",
+      "permission_deleted": "Право удалено",
+      "permission_group_created": "Группа создана",
+      "permission_group_deleted": "Группа удалена",
+      "permission_group_updated": "Группа изменена",
+      "settings_updated": "Настройки системы изменены",
+      "training_athlete_created": "Создан профиль атлета",
+      "training_athlete_updated": "Профиль атлета изменён",
+      "training_athlete_zones_changed": "Пересчитаны пульсовые зоны",
+      "training_workout_created": "Тренировка добавлена",
+      "training_workout_completed": "Тренировка выполнена",
+      "training_workout_deleted": "Тренировка удалена",
+      "training_workout_updated": "Тренировка изменена",
+      "training_goal_created": "Поставлена цель",
+      "training_plan_created": "План создан",
+      "training_plan_updated": "План изменён",
+      "training_plan_started": "План запущен",
+      "training_plan_cancelled": "План отменён",
+      "training_plan_completed": "План завершён",
+      "training_plan_deleted": "План удалён",
+      "training_plan_adapted": "План адаптирован",
+      "training_plan_adaptation_dismissed": "Адаптация отклонена",
+      "training_plan_adaptation_proposed": "Предложена адаптация плана",
+      "training_gear_updated": "Снаряжение изменено",
+      "training_gear_replace_soon": "Снаряжение пора менять",
+      "integrations_connected": "Интеграция подключена",
+      "integrations_disconnected": "Интеграция отключена",
+      "integrations_activity_imported": "Тренировка импортирована",
+      "integrations_activity_merged": "Данные объединены с тренировкой",
+      "integrations_activity_updated": "Импортированная тренировка обновлена",
+      "integrations_activity_source_removed": "Источник удалён из сервиса",
+      "integrations_sync_completed": "Синхронизация завершена",
+      "integrations_source_unlinked": "Источник отвязан от тренировки",
+      "integrations_sync_requested": "Запрошена синхронизация устройства",
+      "coach_session_created": "Начат диалог с коучем",
+      "coach_workout_note_generated": "Коуч разобрал тренировку",
+      "coach_workout_note_deleted": "Разбор коуча удалён",
+      "coach_sessions_deleted": "История диалогов очищена",
+      "admin_data_accessed": "Просмотрел {resource}"
     }
   }
 }

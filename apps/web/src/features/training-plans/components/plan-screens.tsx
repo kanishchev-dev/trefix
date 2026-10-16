@@ -47,7 +47,7 @@ function ScreenHeader({
         variant="ghost"
         size="sm"
         className="w-fit"
-        render={<Link href={`/users/${userId}?tab=plans`} />}
+        render={<Link href={`/users/${userId}/plans`} />}
       >
         <ArrowLeftIcon />
         {t("userPlans.actions.backToPlans")}

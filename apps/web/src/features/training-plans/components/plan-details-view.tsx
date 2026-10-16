@@ -105,7 +105,7 @@ export function PlanDetailsView({
   const isActive = plan.status === "active";
   const isHistory = HISTORY_STATUSES.includes(plan.status);
   const todayKey = toDateKey(new Date());
-  const backHref = `/users/${userId}?tab=plans&group=${isDraft ? "draft" : isActive ? "active" : "history"}`;
+  const backHref = `/users/${userId}/plans?group=${isDraft ? "draft" : isActive ? "active" : "history"}`;
 
   const weeks = useMemo(() => buildPlanWeeks(plan), [plan]);
   const describeWorkout = useMemo(() => {

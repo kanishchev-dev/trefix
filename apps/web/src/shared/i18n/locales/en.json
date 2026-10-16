@@ -66,7 +66,8 @@
     "languageEnglish": "English",
     "signOut": "Sign out",
     "accessDenied": "Section unavailable",
-    "profile": "Profile"
+    "profile": "Profile",
+    "audit": "Activity log"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -90,7 +91,9 @@
     "plans": "Plans",
     "plan": "Plan",
     "createPlan": "New plan",
-    "rebuild": "Prepare again"
+    "rebuild": "Prepare again",
+    "audit": "Activity log",
+    "workout": "Workout"
   },
   "users": {
     "title": "Users",
@@ -197,6 +200,9 @@
     "confirmRevokePermission": {
       "title": "Revoke permission",
       "description": "Permission {name} will be removed from this user. Effective permissions will change immediately."
+    },
+    "statusFilter": {
+      "all": "All statuses"
     }
   },
   "trainingCalendar": {
@@ -779,7 +785,8 @@
       "coach": "AI coach",
       "training": "Training",
       "other": "Other",
-      "account": "Account"
+      "account": "Account",
+      "audit": "Audit"
     },
     "actions": {
       "read": "Read",
@@ -795,7 +802,9 @@
     "sectionEmpty": "No permissions in the catalog",
     "resources": {
       "coach": {
-        "sessions": "Sessions"
+        "sessions": "Sessions",
+        "users": "User AI coach",
+        "conversations": "AI coach conversations"
       },
       "training": {
         "athletes": "Athlete",
@@ -805,10 +814,20 @@
         "workouts": "Workouts",
         "calendar": "Workout calendar",
         "userplans": "User plans",
-        "gear": "Gear"
+        "gear": "Gear",
+        "userathletes": "User athletes",
+        "userprogress": "User progress",
+        "usergear": "User gear"
       },
       "account": {
         "preferences": "Preferences"
+      },
+      "users": {
+        "activity": "Action history",
+        "security": "Account security"
+      },
+      "integrations": {
+        "users": "User integrations"
       }
     },
     "descriptions": {
@@ -821,7 +840,14 @@
         "create": "Create user accounts from the admin panel",
         "update": "Edit user profiles, status and own profile settings",
         "delete": "Delete user accounts permanently",
-        "manage": "Manage user access: send activation invites, assign groups and individual rights"
+        "manage": "Manage user access: send activation invites, assign groups and individual rights",
+        "activity": {
+          "read": "View and export the action history of any user"
+        },
+        "security": {
+          "read": "View account status, sessions, sign-in methods, consents and data exports of any user",
+          "manage": "Block and unblock users, end sessions, change sign-in methods and email, request data exports, delete and restore accounts"
+        }
       },
       "settings": {
         "read": "View global settings: theme, locale and defaults for new accounts",
@@ -835,7 +861,11 @@
       "integrations": {
         "read": "View connected integrations, their status and the connection link",
         "sync": "Trigger a manual data sync with an external service such as Strava",
-        "delete": "Disconnect an integration and revoke its access to user data"
+        "delete": "Disconnect an integration and revoke its access to user data",
+        "users": {
+          "read": "View integrations of any user in the admin panel",
+          "manage": "Sync and disconnect integrations of any user from the admin panel"
+        }
       },
       "coach": {
         "sessions": {
@@ -843,6 +873,13 @@
           "create": "Start a new coaching session with the AI coach",
           "message": "Send messages to the AI coach and receive answers",
           "delete": "Clear the own chat history with the AI coach"
+        },
+        "users": {
+          "read": "View the AI coach session list and workout notes of any user",
+          "manage": "Delete AI coach conversations and regenerate or delete workout notes of any user"
+        },
+        "conversations": {
+          "read": "Read AI coach conversations of any user (debugging; every view is logged)"
         }
       },
       "training": {
@@ -884,6 +921,18 @@
         "gear": {
           "read": "View own running gear with its mileage",
           "manage": "Add, edit, retire and delete own running gear and assign it to workouts"
+        },
+        "userathletes": {
+          "read": "View the athlete profile and zones of any user in the admin panel",
+          "manage": "Edit the athlete profile, zones and availability of any user from the admin panel"
+        },
+        "userprogress": {
+          "read": "View progress, records and race results of any user",
+          "manage": "Add and delete race results of any user"
+        },
+        "usergear": {
+          "read": "View shoes and devices of any user",
+          "manage": "Add, edit, archive and delete gear of any user"
         }
       },
       "account": {
@@ -893,6 +942,9 @@
           "update": "Change own app preferences, including turning the AI coach on or off"
         },
         "delete": "Delete the own account and all its data permanently"
+      },
+      "audit": {
+        "read": "View and export the log of actions of all administrators and users"
       }
     }
   },
@@ -952,7 +1004,50 @@
       "PLAN_RESIZE_NOT_POSSIBLE": "The plan cannot be fitted to this date",
       "PLAN_METRICS_INVALID": "Some metrics are outside the supported ranges",
       "MANUAL_PLAN_CONFIG_INVALID": "This configuration is not available. Change training days or plan length",
-      "MANUAL_PLAN_WORKOUT_INVALID": "This workout cannot be added to the plan"
+      "MANUAL_PLAN_WORKOUT_INVALID": "This workout cannot be added to the plan",
+      "ACTIVITY_CURSOR_INVALID": "The activity page cursor is invalid",
+      "ACCOUNT_DELETION_NOT_REQUESTED": "The account is not deleted",
+      "ACCOUNT_DELETION_FORBIDDEN": "This account cannot be deleted",
+      "EMAIL_TAKEN": "This email belongs to another account",
+      "USER_ALREADY_BLOCKED": "The account is already blocked",
+      "USER_BLOCKED": "The account is blocked",
+      "USER_BLOCK_FORBIDDEN": "System accounts and your own account cannot be blocked",
+      "USER_BLOCK_UNTIL_INVALID": "The end of the block must be in the future",
+      "USER_NOT_BLOCKED": "The account is not blocked",
+      "WORKOUT_HAS_SOURCES": "The result came from a recording or an integration and cannot be discarded",
+      "WORKOUT_BELONGS_TO_PLAN": "Plan workouts change through the plan",
+      "WORKOUT_SOURCE_NOT_FOUND": "The workout has no record from this provider",
+      "INTEGRATION_PROVIDER_INVALID": "Only Health providers sync on the device",
+      "WORKOUT_NOT_COMPLETED": "The workout is not completed yet",
+      "WORKOUT_NOT_PLANNED": "Only a planned workout can be completed this way",
+      "WORKOUT_CANCELLED": "This workout was cancelled. Log it as a separate workout instead",
+      "ADAPTATION_NOT_FOUND": "Plan change not found",
+      "ADAPTATION_NOT_PROPOSED": "This plan change is no longer waiting for your decision",
+      "ATHLETE_DOUBLES_NOT_ALLOWED": "Two workouts a day are available only for the advanced level",
+      "ATHLETE_FIELD_OUT_OF_RANGE": "The value is outside the accepted range",
+      "ATHLETE_HEART_RATE_INCONSISTENT": "Resting heart rate must be below threshold, and threshold below max",
+      "ATHLETE_SESSIONS_EXCEED_DAYS": "Too many workouts for the selected days",
+      "ATHLETE_ZONES_INVALID": "Zones must be four increasing values between resting and max heart rate",
+      "AUTH_EMAIL_UNCHANGED": "This is already your email",
+      "AUTH_IDENTITY_NOT_FOUND": "This account is not linked",
+      "COACH_SESSION_NOT_FOUND": "Coach session not found",
+      "DATA_EXPORT_NOT_FOUND": "The link is invalid or has expired",
+      "DATA_EXPORT_RATE_LIMITED": "A data export can be requested once a day",
+      "GEAR_FIELD_NOT_APPLICABLE": "Some fields do not apply to this gear type",
+      "GEAR_INVALID": "Check the gear details",
+      "GEAR_NOT_FOUND": "Gear not found",
+      "GEAR_RETIRED": "This action is not available for retired gear",
+      "GEAR_TYPE_MISMATCH": "This gear type cannot be used here",
+      "INTEGRATION_NOT_CONNECTED": "Connect the integration first",
+      "INTEGRATION_NOT_FOUND": "Integration not found",
+      "INTEGRATION_PROVIDER_REQUEST_FAILED": "The connected service did not respond, please try again later",
+      "INTEGRATION_REAUTHORIZATION_REQUIRED": "Reconnect the integration to continue",
+      "STRAVA_NOT_CONNECTED": "Connect Strava first",
+      "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava to share your profile first",
+      "RECORDING_NOT_FOUND": "Recording not found",
+      "RESULT_INVALID": "Check the distance, time and date of the result",
+      "RESULT_NOT_FOUND": "Result not found",
+      "PROGRESS_DISTANCE_UNKNOWN": "Unknown distance"
     },
     "byStatus": {
       "400": "Please check the entered data",
@@ -1079,6 +1174,875 @@
     },
     "validation": {
       "passwordsMismatch": "The passwords do not match"
+    }
+  },
+  "userCard": {
+    "nav": {
+      "label": "User sections"
+    },
+    "groups": {
+      "account": "Account",
+      "training": "Training",
+      "services": "Services"
+    },
+    "sections": {
+      "overview": {
+        "title": "Overview",
+        "description": "The essentials about the user"
+      },
+      "profile": {
+        "title": "Profile",
+        "description": "Name, email and service data"
+      },
+      "access": {
+        "title": "Access",
+        "description": "Groups and personal permissions"
+      },
+      "account": {
+        "title": "Account and security",
+        "description": "Sessions, sign-in, settings and data"
+      },
+      "athlete": {
+        "title": "Athlete",
+        "description": "Body data, heart rate zones and schedule"
+      },
+      "calendar": {
+        "title": "Calendar",
+        "description": "Workouts by day"
+      },
+      "plans": {
+        "title": "Plans",
+        "description": "Training plans and adaptations"
+      },
+      "progress": {
+        "title": "Progress",
+        "description": "Volume, records and results"
+      },
+      "gear": {
+        "title": "Gear",
+        "description": "Shoes, watches and sensors"
+      },
+      "integrations": {
+        "title": "Integrations",
+        "description": "Strava and health data"
+      },
+      "coach": {
+        "title": "AI coach",
+        "description": "Conversations and workout reviews"
+      },
+      "history": {
+        "title": "History",
+        "description": "Everything done by and to the user"
+      }
+    },
+    "status": {
+      "active": "Active",
+      "blocked": "Blocked",
+      "deleted": "Deleted"
+    },
+    "blockReasons": {
+      "policy_violation": "Policy violation",
+      "spam": "Spam",
+      "fraud": "Fraud",
+      "user_request": "User request",
+      "other": "Other"
+    },
+    "actions": {
+      "block": "Block",
+      "unblock": "Unblock",
+      "restore": "Restore"
+    },
+    "banner": {
+      "blocked": "The user is blocked indefinitely",
+      "blockedUntil": "The user is blocked until {date}",
+      "blockedDetails": "Since {date}. Reason: {reason}",
+      "deleted": "Account deleted",
+      "deletedDetails": "Deleted {date}. The account can be restored until its data is erased"
+    },
+    "block": {
+      "title": "Block user",
+      "description": "{name} won't be able to sign in while the block lasts",
+      "reason": "Reason",
+      "duration": "Duration",
+      "durations": {
+        "permanent": "Indefinitely",
+        "1d": "1 day",
+        "7d": "7 days",
+        "30d": "30 days",
+        "custom": "Until a date"
+      },
+      "until": "End date",
+      "untilInvalid": "Pick a date in the future",
+      "comment": "Comment",
+      "commentPlaceholder": "What happened",
+      "commentHint": "Only admins can see the comment",
+      "revokeSessions": "End all sessions",
+      "notify": "Email the user about the block"
+    },
+    "unblock": {
+      "title": "Unblock the user?",
+      "description": "{name} will be able to sign in again"
+    },
+    "delete": {
+      "description": "The account of {name} will be deleted and its sessions ended. It can be restored until its data is erased"
+    },
+    "restore": {
+      "title": "Restore the account?",
+      "description": "The account of {name} becomes active again"
+    },
+    "denied": {
+      "title": "Section unavailable",
+      "description": "This section needs additional permissions"
+    },
+    "noAthlete": {
+      "title": "No athlete profile"
+    },
+    "providers": {
+      "strava": "Strava",
+      "garmin": "Garmin",
+      "apple_health": "Apple Health",
+      "health_connect": "Health Connect",
+      "coach": "AI coach",
+      "apple": "Apple",
+      "google": "Google",
+      "manual": "Manual",
+      "trefix": "Trefix"
+    },
+    "connectionStatuses": {
+      "connecting": "Connecting",
+      "connected": "Connected",
+      "syncing": "Syncing",
+      "error": "Error",
+      "reauthorization_required": "Needs sign-in again",
+      "disconnected": "Not connected",
+      "enabled": "On",
+      "disabled": "Off"
+    },
+    "weekdays": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
+    "weekdaysShort": {
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "sunday": "Sun"
+    },
+    "units": {
+      "cm": "cm",
+      "kg": "kg",
+      "km": "km",
+      "min": "min",
+      "bpm": "bpm"
+    },
+    "overview": {
+      "attention": "Needs attention",
+      "attentionCodes": {
+        "adaptation_pending": "Plan adaptations awaiting a decision: {count}",
+        "missed_workouts": "Workouts missed in {days} days: {count}",
+        "gear_replace_soon": "{name}: time to replace, {distance} of {limit} km",
+        "integration_error": "Problem with the {provider} integration"
+      },
+      "activePlan": "Active plan",
+      "noPlan": "No active plan",
+      "planWithoutName": "Untitled plan",
+      "planWeek": "Week {current} of {total}",
+      "thisWeek": "This week",
+      "weekKm": "{done} of {planned} km",
+      "weekWorkouts": "Workouts: {done} of {planned}",
+      "lastWorkout": "Last workout",
+      "lastSession": "Last sign-in",
+      "km": "{value} km",
+      "pace": "Pace {value} /km",
+      "upcoming": "Upcoming workouts",
+      "noUpcoming": "No planned workouts",
+      "connections": "Connections",
+      "noConnections": "No connections",
+      "recentActivity": "Recent activity",
+      "allActivity": "Full history"
+    },
+    "account": {
+      "security": {
+        "title": "Security",
+        "description": "Account status, email and password",
+        "status": "Status",
+        "password": "Password",
+        "passwordChanged": "Changed {date}",
+        "noPassword": "Not set, signs in with Apple or Google",
+        "blockReason": "Block reason",
+        "blockUntil": "Blocked until",
+        "blockedBy": "Blocked by",
+        "purgeAt": "Data erased at"
+      },
+      "actions": {
+        "changeEmail": "Change email",
+        "verifyEmail": "Verify email",
+        "passwordReset": "Send password reset",
+        "revokeAll": "End all",
+        "revoke": "End",
+        "unlink": "Unlink",
+        "requestExport": "Request export",
+        "download": "Download"
+      },
+      "changeEmail": {
+        "title": "Change email",
+        "description": "Current: {email}. The new address becomes the sign-in address right away",
+        "label": "New address",
+        "invalid": "Enter a different valid address"
+      },
+      "sessions": {
+        "title": "Sessions",
+        "description": "Devices the user is signed in on",
+        "empty": "No active sessions",
+        "device": "Device",
+        "location": "Location",
+        "lastActive": "Last active",
+        "createdAt": "Signed in"
+      },
+      "identities": {
+        "title": "Sign-in services",
+        "description": "Linked Apple and Google accounts",
+        "empty": "No linked accounts"
+      },
+      "preferences": {
+        "title": "App settings",
+        "description": "Units, language and AI coach",
+        "updatedAt": "Changed {date}",
+        "fields": {
+          "distanceUnit": "Distance",
+          "weekStart": "Week starts on",
+          "timeFormat": "Time format",
+          "languageMode": "Language",
+          "coachAdaptationMode": "Plan adaptation",
+          "coachTone": "Coach tone",
+          "coachEnabled": "AI coach on",
+          "stravaProfileSync": "Profile from Strava",
+          "stravaActivitiesSync": "Workouts from Strava",
+          "stravaGearSync": "Gear from Strava",
+          "timezone": "Time zone"
+        },
+        "values": {
+          "distanceUnit": {
+            "km": "Kilometres",
+            "mi": "Miles"
+          },
+          "weekStart": {
+            "mon": "Monday",
+            "sun": "Sunday"
+          },
+          "timeFormat": {
+            "24h": "24-hour",
+            "12h": "12-hour"
+          },
+          "languageMode": {
+            "system": "System",
+            "ru": "Russian",
+            "en": "English"
+          },
+          "coachAdaptationMode": {
+            "auto": "Automatic",
+            "confirm": "With confirmation",
+            "suggest": "Suggest only"
+          },
+          "coachTone": {
+            "soft": "Soft",
+            "neutral": "Neutral",
+            "strict": "Strict"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Data and consents",
+        "description": "Data processing consents and exports",
+        "consents": "Consents",
+        "noConsents": "No consents",
+        "consentTypes": {
+          "health_data": "Health data"
+        },
+        "accepted": "Accepted {date}",
+        "revoked": "Revoked {date}",
+        "exports": "Data exports",
+        "noExports": "No exports yet",
+        "exportStatuses": {
+          "pending": "Preparing",
+          "ready": "Ready",
+          "failed": "Failed",
+          "expired": "Expired"
+        }
+      },
+      "confirm": {
+        "revokeAll": {
+          "title": "End all sessions?",
+          "description": "The user will have to sign in again on every device"
+        },
+        "revoke": {
+          "title": "End the session?",
+          "description": "The user will have to sign in again on this device"
+        },
+        "unlink": {
+          "title": "Unlink the account?",
+          "description": "Signing in with this service stops working until the user links it again"
+        },
+        "passwordReset": {
+          "title": "Send a password reset?",
+          "description": "The user gets an email with a code to change the password"
+        },
+        "verifyEmail": {
+          "title": "Verify the email?",
+          "description": "The address counts as verified without an email to the user"
+        }
+      },
+      "toasts": {
+        "blocked": "User blocked",
+        "unblocked": "User unblocked",
+        "deletionRequested": "Account deleted",
+        "restored": "Account restored",
+        "sessionRevoked": "Session ended",
+        "sessionsRevoked": "All sessions ended",
+        "identityUnlinked": "Account unlinked",
+        "passwordResetSent": "Password reset email sent",
+        "emailVerified": "Email verified",
+        "emailChanged": "Email changed",
+        "preferencesSaved": "Settings saved",
+        "exportRequested": "Export requested"
+      }
+    },
+    "athlete": {
+      "title": "Athlete profile",
+      "updatedAt": "Changed {date}",
+      "editTitle": "Athlete profile",
+      "editDescription": "Changes apply to zones and future plans right away",
+      "completeness": "{percent}% complete",
+      "age": "{age} years",
+      "trainingTitle": "Schedule and volume",
+      "heartTitle": "Heart rate and zones",
+      "anyDay": "Any day",
+      "estimate": "≈ {value} bpm, estimated",
+      "zone": "Zone {zone}",
+      "fields": {
+        "birthDate": "Date of birth",
+        "sex": "Sex",
+        "heightCm": "Height, cm",
+        "weightKg": "Weight, kg",
+        "experienceLevel": "Experience",
+        "runningSinceYear": "Running since",
+        "weeklyMileageKm": "Weekly volume, km",
+        "sessionsPerWeek": "Workouts per week",
+        "availableTrainingDays": "Training days",
+        "longRunDay": "Long run day",
+        "preferredTimeOfDay": "Time of day",
+        "preferredWorkoutDurationMinutes": "Usual workout, min",
+        "longRunMaxDurationMinutes": "Long run up to, min",
+        "limitations": "Limitations",
+        "restingHeartRate": "Resting heart rate",
+        "maxHeartRate": "Max heart rate",
+        "thresholdHeartRate": "Threshold heart rate",
+        "hrZonesMethod": "Zones based on"
+      },
+      "sex": {
+        "none": "Not set",
+        "female": "Female",
+        "male": "Male"
+      },
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
+      "zonesMethods": {
+        "threshold": "Threshold heart rate",
+        "max_hr": "Max heart rate",
+        "custom": "Custom bounds"
+      },
+      "timesOfDay": {
+        "morning": "Morning",
+        "day": "Day",
+        "evening": "Evening",
+        "any": "Any"
+      },
+      "zonesUnavailable": {
+        "threshold_missing": "No zones: threshold heart rate is missing",
+        "max_missing": "No zones: max heart rate is missing",
+        "custom_missing": "No zones: custom bounds are missing"
+      },
+      "toasts": {
+        "saved": "Athlete profile saved"
+      }
+    },
+    "progress": {
+      "periods": {
+        "week": "This week",
+        "month": "This month",
+        "year": "This year"
+      },
+      "workoutsCount": "Workouts: {count}",
+      "longest": "Longest: {value} km",
+      "recordsTitle": "Records",
+      "recordsDescription": "Best results at standard distances. Click a row to see its history",
+      "historyTitle": "History: {distance}",
+      "new": "New",
+      "columns": {
+        "distance": "Distance",
+        "best": "Best time",
+        "date": "Date",
+        "prediction": "Prediction",
+        "time": "Time",
+        "source": "Source"
+      },
+      "distances": {
+        "1k": "1 km",
+        "5k": "5 km",
+        "10k": "10 km",
+        "half_marathon": "Half marathon",
+        "marathon": "Marathon"
+      },
+      "kinds": {
+        "race": "Race",
+        "workout": "Workout",
+        "test": "Test"
+      },
+      "addResult": {
+        "action": "Add result",
+        "title": "New result",
+        "description": "A race or test result that is not among the workouts",
+        "distance": "Distance",
+        "time": "Time",
+        "timeInvalid": "Enter the time as h:mm:ss or mm:ss",
+        "date": "Date",
+        "kind": "Kind",
+        "name": "Name"
+      },
+      "deleteResult": {
+        "title": "Delete the result?",
+        "description": "The result leaves records and predictions"
+      },
+      "toasts": {
+        "resultAdded": "Result added",
+        "resultDeleted": "Result deleted"
+      }
+    },
+    "gear": {
+      "title": "Gear",
+      "description": "Mileage counts the workouts the gear is linked to",
+      "add": "Add",
+      "statuses": {
+        "active": "Active",
+        "retired": "Archived"
+      },
+      "types": {
+        "shoes": "Shoes",
+        "watch": "Watch",
+        "sensor": "Sensor"
+      },
+      "columns": {
+        "name": "Name",
+        "type": "Type",
+        "distance": "Mileage",
+        "wear": "Wear",
+        "workouts": "Workouts"
+      },
+      "default": "Default",
+      "replaceSoon": "Replace soon",
+      "distanceOfLimit": "{distance} of {limit} km",
+      "retire": "Archive",
+      "restore": "Restore from archive",
+      "deleteTitle": "Delete the gear?",
+      "deleteDescription": "{name} leaves the list, its workouts stay without gear",
+      "empty": {
+        "title": "No gear",
+        "description": "The user's shoes and devices show up here"
+      },
+      "form": {
+        "createTitle": "New gear",
+        "editTitle": "Edit gear",
+        "description": "The user sees the changes in the app",
+        "type": "Type",
+        "brand": "Brand",
+        "model": "Model",
+        "nickname": "Nickname",
+        "initialDistance": "Starting mileage, km",
+        "limit": "Lifespan, km",
+        "replaceReminder": "Remind to replace",
+        "isDefault": "Default for workouts",
+        "invalid": "Fill in brand and model; lifespan is 100 to 2000 km"
+      },
+      "toasts": {
+        "created": "Gear added",
+        "updated": "Gear updated",
+        "retired": "Gear archived",
+        "restored": "Gear restored",
+        "deleted": "Gear deleted"
+      }
+    },
+    "integrations": {
+      "connectedAt": "Connected {date}",
+      "notConnected": "Not connected",
+      "unavailable": "Unavailable on the user's device",
+      "lastSync": "Last sync",
+      "imported": "Workouts imported",
+      "externalId": "Service ID",
+      "pending": "Batches queued",
+      "profileSync": "Profile",
+      "scopes": "Scopes",
+      "off": "Off",
+      "actions": {
+        "sync": "Sync",
+        "profileSync": "Update profile",
+        "requestSync": "Request sync",
+        "disconnect": "Disconnect"
+      },
+      "disconnectTitle": "Disconnect the integration?",
+      "disconnectDescription": "{provider} stops sending data. Imported workouts stay",
+      "toasts": {
+        "syncStarted": "Sync started",
+        "profileSynced": "Profile updated from Strava",
+        "syncRequested": "Request sent to the device",
+        "deviceOffline": "The user's app is offline, the request was not delivered",
+        "disconnected": "Integration disconnected"
+      }
+    },
+    "coach": {
+      "sessionsTitle": "Conversations",
+      "sessionsDescription": "The user's conversations with the AI coach",
+      "noConversationAccess": "Reading conversations needs a separate permission",
+      "pickSession": "Pick a conversation on the left",
+      "accessLogged": "Viewing is recorded in the activity log",
+      "untitled": "Untitled",
+      "messages": "Messages: {count}",
+      "toolCall": "Tool call: {tool}",
+      "roles": {
+        "user": "User",
+        "assistant": "Coach",
+        "tool": "Tool"
+      },
+      "clear": "Clear history",
+      "clearTitle": "Clear the conversation history?",
+      "clearDescription": "All the user's conversations with the coach are deleted for good",
+      "empty": {
+        "title": "No conversations",
+        "description": "The user has not talked to the coach yet"
+      },
+      "notesTitle": "Workout reviews",
+      "notesDescription": "Coach notes on completed workouts",
+      "noNotes": "No reviews",
+      "noteFor": "Review of {date}",
+      "toasts": {
+        "cleared": "Conversation history cleared"
+      }
+    },
+    "workout": {
+      "planWeek": "Plan, week {week}",
+      "completedAt": "Completed {date}",
+      "minutes": "{value} min",
+      "details": "Service data",
+      "phase": "Phase: {phase}",
+      "history": "Workout history",
+      "notFound": {
+        "title": "Workout not found",
+        "description": "It may have been deleted"
+      },
+      "actions": {
+        "complete": "Mark as completed",
+        "editResult": "Edit result",
+        "reopen": "Return to plan",
+        "excludeRecords": "Exclude from records",
+        "includeRecords": "Count in records"
+      },
+      "planFact": {
+        "title": "Plan and result",
+        "planned": "Planned",
+        "actual": "Actual"
+      },
+      "analysis": {
+        "completion": "{value}% completed",
+        "load": "Load {value} of {expected}",
+        "fatigue": {
+          "low": "Low fatigue",
+          "moderate": "Moderate fatigue",
+          "high": "High fatigue"
+        }
+      },
+      "result": {
+        "completeTitle": "Mark as completed",
+        "completeDescription": "The result recalculates load and may adapt the plan",
+        "editTitle": "Edit result",
+        "editDescription": "Load and athlete state are recalculated",
+        "distance": "Distance, km",
+        "duration": "Duration, min",
+        "pace": "Pace, min/km",
+        "heartRate": "Average heart rate",
+        "rpe": "Perceived effort, 1–10",
+        "notes": "Note",
+        "notesHint": "The user sees the note",
+        "errors": {
+          "distance": "Enter the distance",
+          "duration": "Enter a duration above zero",
+          "pace": "Pace as m:ss",
+          "heartRate": "Heart rate from 30 to 250",
+          "rpe": "Effort from 1 to 10"
+        }
+      },
+      "reopenTitle": "Return the workout to the plan?",
+      "reopenDescription": "The result is cleared and the load recalculated",
+      "deleteTitle": "Delete the workout?",
+      "deleteDescription": "The workout leaves the user's calendar",
+      "sources": {
+        "title": "Sources",
+        "description": "Where the workout data came from",
+        "empty": "Entered manually",
+        "primary": "Primary",
+        "unlink": "Unlink",
+        "unlinkTitle": "Unlink the source?",
+        "unlinkDescription": "{provider} data stops belonging to this workout",
+        "showRecording": "Show recording",
+        "noRecording": "No recording from the app"
+      },
+      "recording": {
+        "distance": "Distance",
+        "moving": "Moving time",
+        "pace": "Average pace",
+        "heartRate": "Heart rate avg/max",
+        "elevation": "Elevation gain, m",
+        "environment": "Where",
+        "environments": {
+          "outdoor": "Outdoor",
+          "trail": "Trail",
+          "treadmill": "Treadmill"
+        },
+        "splits": "Kilometre splits: {count}"
+      },
+      "gear": {
+        "title": "Gear",
+        "description": "Which gear the workout counts towards",
+        "none": "No gear",
+        "retired": "Archived gear"
+      },
+      "note": {
+        "title": "Coach review",
+        "description": "The coach note on the workout",
+        "generatedAt": "Created {date}",
+        "regenerate": "Regenerate",
+        "deleteTitle": "Delete the review?",
+        "deleteDescription": "The user no longer sees the note on this workout",
+        "statuses": {
+          "pending": "The review is not ready yet",
+          "disabled": "The coach is off for this user",
+          "ready": "The review is empty"
+        }
+      },
+      "toasts": {
+        "completed": "Workout completed",
+        "resultUpdated": "Result updated",
+        "reopened": "Workout returned to the plan",
+        "deleted": "Workout deleted",
+        "gearSet": "Gear changed",
+        "recordsExcluded": "Workout excluded from records",
+        "recordsIncluded": "Workout counts in records",
+        "sourceUnlinked": "Source unlinked",
+        "noteRegenerated": "Review is being regenerated",
+        "noteDeleted": "Review deleted"
+      }
+    },
+    "adaptations": {
+      "title": "Plan adaptations awaiting a decision",
+      "description": "Changes the system proposed after workouts",
+      "confidence": "Confidence {value}%",
+      "workout": "Workout",
+      "apply": "Apply",
+      "dismiss": "Dismiss",
+      "toasts": {
+        "applied": "Adaptation applied",
+        "dismissed": "Adaptation dismissed"
+      }
+    }
+  },
+  "activity": {
+    "userTitle": "Activity history",
+    "userDescription": "What the user did and what was done with their data",
+    "auditTitle": "Activity log",
+    "auditDescription": "Admin actions and views of personal data",
+    "export": "Download CSV",
+    "loadMore": "Show more",
+    "open": "Open",
+    "changes": "Changes: {count}",
+    "diff": {
+      "field": "Field",
+      "before": "Before",
+      "after": "After"
+    },
+    "empty": {
+      "title": "No activity",
+      "description": "Nothing found for the selected period"
+    },
+    "filters": {
+      "allDomains": "All sections",
+      "allActors": "All actors",
+      "search": "Search activity"
+    },
+    "periods": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "all": "All time"
+    },
+    "kinds": {
+      "admin": "Admin actions",
+      "data_access": "Data views",
+      "all": "All entries"
+    },
+    "actors": {
+      "user": "User",
+      "admin": "Admin",
+      "system": "System",
+      "integration": "Integration",
+      "coach": "Coach"
+    },
+    "sources": {
+      "mobile": "App",
+      "web": "Web",
+      "admin": "Admin panel",
+      "webhook": "Webhook",
+      "job": "Background job"
+    },
+    "domains": {
+      "account": "Account",
+      "access": "Access",
+      "athlete": "Athlete",
+      "workouts": "Workouts",
+      "plans": "Plans",
+      "progress": "Progress",
+      "gear": "Gear",
+      "integrations": "Integrations",
+      "coach": "Coach",
+      "preferences": "Settings",
+      "data_access": "Data views",
+      "settings": "System settings"
+    },
+    "resources": {
+      "coach_conversation": "a coach conversation",
+      "user_data_export": "a data export",
+      "workout_recording": "a workout recording",
+      "activity_export": "an activity export"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "status": "Status",
+      "type": "Type",
+      "scheduledAt": "Date and time",
+      "distanceKm": "Distance, km",
+      "durationMinutes": "Duration, min",
+      "title": "Title",
+      "actual": "Result",
+      "gearId": "Gear",
+      "deviceId": "Device",
+      "excludeFromRecords": "Excluded from records",
+      "weekStart": "Week starts on",
+      "distanceUnit": "Distance",
+      "timeFormat": "Time format",
+      "languageMode": "Language",
+      "language": "Language",
+      "timezone": "Time zone",
+      "coachEnabled": "AI coach",
+      "coachTone": "Coach tone",
+      "coachAdaptationMode": "Plan adaptation",
+      "notifications": "Notifications",
+      "weightKg": "Weight, kg",
+      "heightCm": "Height, cm",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "maxHeartRate": "Max heart rate",
+      "restingHeartRate": "Resting heart rate",
+      "thresholdHeartRate": "Threshold heart rate",
+      "experienceLevel": "Experience",
+      "sessionsPerWeek": "Workouts per week",
+      "weeklyMileageKm": "Weekly volume",
+      "availableTrainingDays": "Training days",
+      "longRunDay": "Long run day",
+      "limitations": "Limitations",
+      "name": "Name",
+      "brand": "Brand",
+      "model": "Model",
+      "nickname": "Nickname",
+      "limitKm": "Lifespan, km",
+      "retiredAt": "Archived at",
+      "reason": "Reason",
+      "until": "Until"
+    },
+    "actions": {
+      "auth_registered": "Signed up",
+      "auth_email_verified": "Verified email",
+      "auth_email_change_requested": "Requested an email change",
+      "auth_email_changed": "Email changed",
+      "auth_identity_linked": "Sign-in service linked",
+      "auth_identity_unlinked": "Sign-in service unlinked",
+      "auth_password_changed": "Password changed",
+      "auth_password_reset_requested": "Password reset requested",
+      "auth_session_created": "Signed in",
+      "auth_session_revoked": "Session ended",
+      "user_created": "Account created",
+      "user_updated": "Profile changed",
+      "user_deleted": "Account deleted",
+      "user_invited": "Invitation sent",
+      "users_blocked": "User blocked",
+      "users_unblocked": "User unblocked",
+      "users_deletion_restored": "Account restored",
+      "account_deletion_requested": "Account deletion requested",
+      "account_data_export_requested": "Data export requested",
+      "account_data_export_ready": "Data export ready",
+      "users_consent_given": "Consent given",
+      "users_consent_revoked": "Consent revoked",
+      "preferences_updated": "Settings changed",
+      "user_permissions_updated": "Permissions changed",
+      "permission_created": "Permission created",
+      "permission_updated": "Permission changed",
+      "permission_deleted": "Permission deleted",
+      "permission_group_created": "Group created",
+      "permission_group_deleted": "Group deleted",
+      "permission_group_updated": "Group changed",
+      "settings_updated": "System settings changed",
+      "training_athlete_created": "Athlete profile created",
+      "training_athlete_updated": "Athlete profile changed",
+      "training_athlete_zones_changed": "Heart rate zones recalculated",
+      "training_workout_created": "Workout added",
+      "training_workout_completed": "Workout completed",
+      "training_workout_deleted": "Workout deleted",
+      "training_workout_updated": "Workout changed",
+      "training_goal_created": "Goal set",
+      "training_plan_created": "Plan created",
+      "training_plan_updated": "Plan changed",
+      "training_plan_started": "Plan started",
+      "training_plan_cancelled": "Plan cancelled",
+      "training_plan_completed": "Plan completed",
+      "training_plan_deleted": "Plan deleted",
+      "training_plan_adapted": "Plan adapted",
+      "training_plan_adaptation_dismissed": "Adaptation dismissed",
+      "training_plan_adaptation_proposed": "Plan adaptation proposed",
+      "training_gear_updated": "Gear changed",
+      "training_gear_replace_soon": "Gear needs replacing",
+      "integrations_connected": "Integration connected",
+      "integrations_disconnected": "Integration disconnected",
+      "integrations_activity_imported": "Workout imported",
+      "integrations_activity_merged": "Data merged into a workout",
+      "integrations_activity_updated": "Imported workout updated",
+      "integrations_activity_source_removed": "Source removed in the service",
+      "integrations_sync_completed": "Sync completed",
+      "integrations_source_unlinked": "Source unlinked from a workout",
+      "integrations_sync_requested": "Device sync requested",
+      "coach_session_created": "Started a coach conversation",
+      "coach_workout_note_generated": "Coach reviewed a workout",
+      "coach_workout_note_deleted": "Coach review deleted",
+      "coach_sessions_deleted": "Conversation history cleared",
+      "admin_data_accessed": "Viewed {resource}"
     }
   }
 }

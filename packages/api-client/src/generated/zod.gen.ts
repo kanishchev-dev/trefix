@@ -160,6 +160,10 @@ export const zEmailChangeConfirmDto = z.object({
   code: z.string(),
 });
 
+export const zAdminEmailChangeDto = z.object({
+  email: z.string(),
+});
+
 export const zAdminCreateUserDto = z.object({
   email: z.string(),
   firstName: z.string(),
@@ -184,6 +188,13 @@ export const zUserResponseDto = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   passwordChangedAt: z.iso.datetime().nullable(),
+  status: z.enum(["active", "blocked", "deleted"]),
+  blockedAt: z.iso.datetime().nullable(),
+  blockedUntil: z.iso.datetime().nullable(),
+  blockedReason: z
+    .enum(["policy_violation", "spam", "fraud", "user_request", "other"])
+    .nullable(),
+  deletedAt: z.iso.datetime().nullish(),
 });
 
 export const zPaginationMetaDto = z.object({
@@ -231,6 +242,13 @@ export const zAdminUserResponseDto = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   passwordChangedAt: z.iso.datetime().nullable(),
+  status: z.enum(["active", "blocked", "deleted"]),
+  blockedAt: z.iso.datetime().nullable(),
+  blockedUntil: z.iso.datetime().nullable(),
+  blockedReason: z
+    .enum(["policy_violation", "spam", "fraud", "user_request", "other"])
+    .nullable(),
+  deletedAt: z.iso.datetime().nullish(),
   groups: z.array(zAdminUserGroupDto),
   individualPermissions: z.array(zAdminUserPermissionDto),
   effectivePermissions: z.array(z.string()),
@@ -392,6 +410,28 @@ export const zCoachChatResponseDto = z.object({
 export const zCoachChatDto = z.object({
   sessionId: z.string(),
   message: z.string().min(1).max(4000),
+});
+
+export const zAdminCoachSessionItemDto = z.object({
+  id: z.uuid(),
+  title: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+  lastMessageAt: z.iso.datetime().nullable(),
+  messagesCount: z.number(),
+});
+
+export const zAdminCoachSessionListResponseDto = z.object({
+  items: z.array(zAdminCoachSessionItemDto),
+});
+
+export const zAdminCoachNoteItemDto = z.object({
+  workoutId: z.uuid(),
+  language: z.string(),
+  generatedAt: z.iso.datetime(),
+});
+
+export const zAdminCoachNoteListResponseDto = z.object({
+  items: z.array(zAdminCoachNoteItemDto),
 });
 
 export const zGoalTargetSummaryDto = z.object({
@@ -2683,6 +2723,10 @@ export const zWorkoutRecordingResponseDto = z.object({
   notes: z.string().nullable(),
 });
 
+export const zDeviceSyncRequestResponseDto = z.object({
+  delivered: z.boolean(),
+});
+
 export const zConsentResponseDto = z.object({
   type: z.enum(["health_data"]),
   version: z.string(),
@@ -2727,6 +2771,185 @@ export const zDataExportResponseDto = z.object({
 
 export const zDataExportStatusResponseDto = z.object({
   latest: zDataExportResponseDto.nullable(),
+});
+
+export const zActivityActorDto = z.object({
+  type: z.enum(["user", "admin", "system", "integration", "coach"]),
+  id: z.uuid().nullable(),
+  name: z.string().nullable(),
+});
+
+export const zActivityUserRefDto = z.object({
+  id: z.uuid(),
+  name: z.string().nullable(),
+});
+
+export const zActivityEntityDto = z.object({
+  type: z.string(),
+  id: z.string().nullable(),
+});
+
+export const zActivityClientDto = z.object({
+  platform: z.string().nullable(),
+  appVersion: z.string().nullable(),
+  device: z.string().nullable(),
+});
+
+export const zActivityItemDto = z.object({
+  id: z.uuid(),
+  occurredAt: z.iso.datetime(),
+  action: z.string(),
+  domain: z.enum([
+    "account",
+    "access",
+    "athlete",
+    "workouts",
+    "plans",
+    "progress",
+    "gear",
+    "integrations",
+    "coach",
+    "preferences",
+    "data_access",
+    "settings",
+  ]),
+  actor: zActivityActorDto,
+  subject: zActivityUserRefDto.nullable(),
+  entity: zActivityEntityDto.nullable(),
+  changes: z
+    .record(
+      z.string(),
+      z.object({
+        from: z.unknown().optional(),
+        to: z.unknown().optional(),
+      }),
+    )
+    .nullable(),
+  metadata: z.record(z.string(), z.unknown()),
+  source: z.enum(["mobile", "web", "admin", "webhook", "job"]),
+  client: zActivityClientDto.nullable(),
+  ip: z.string().nullable(),
+});
+
+export const zActivityPageDto = z.object({
+  items: z.array(zActivityItemDto),
+  nextCursor: z.string().nullable(),
+  hasNext: z.boolean(),
+});
+
+export const zAdminUserRefDto = z.object({
+  id: z.uuid(),
+  name: z.string().nullable(),
+});
+
+export const zAccountBlockDto = z.object({
+  at: z.iso.datetime(),
+  until: z.iso.datetime().nullable(),
+  reason: z
+    .enum(["policy_violation", "spam", "fraud", "user_request", "other"])
+    .nullable(),
+  comment: z.string().nullable(),
+  by: zAdminUserRefDto.nullable(),
+});
+
+export const zAccountDeletionStateDto = z.object({
+  deletedAt: z.iso.datetime(),
+  purgeAt: z.iso.datetime().nullable(),
+});
+
+export const zAccountSecurityResponseDto = z.object({
+  status: z.enum(["active", "blocked", "deleted"]),
+  block: zAccountBlockDto.nullable(),
+  email: z.string(),
+  emailVerified: z.boolean(),
+  emailVerifiedAt: z.iso.datetime().nullable(),
+  passwordChangedAt: z.iso.datetime().nullable(),
+  hasPassword: z.boolean(),
+  deletion: zAccountDeletionStateDto.nullable(),
+  isSystem: z.boolean(),
+});
+
+export const zBlockUserDto = z.object({
+  reason: z.enum([
+    "policy_violation",
+    "spam",
+    "fraud",
+    "user_request",
+    "other",
+  ]),
+  comment: z.string().max(500).optional(),
+  until: z.iso.datetime().optional(),
+  revokeSessions: z.boolean().optional().default(true),
+  notify: z.boolean().optional().default(false),
+});
+
+export const zOverviewSessionDto = z.object({
+  lastActiveAt: z.iso.datetime(),
+  platform: z.string().nullable(),
+  appVersion: z.string().nullable(),
+  deviceName: z.string().nullable(),
+});
+
+export const zOverviewActivePlanDto = z.object({
+  id: z.uuid(),
+  name: z.string().nullable(),
+  currentWeek: z.number(),
+  totalWeeks: z.number(),
+  endDate: z.string().nullable(),
+});
+
+export const zOverviewWeekDto = z.object({
+  from: z.string(),
+  plannedKm: z.number(),
+  doneKm: z.number(),
+  plannedWorkouts: z.number(),
+  doneWorkouts: z.number(),
+});
+
+export const zOverviewWorkoutDto = z.object({
+  id: z.uuid(),
+  scheduledAt: z.iso.datetime(),
+  completedAt: z.iso.datetime().nullable(),
+  type: z.string(),
+  title: z.string().nullable(),
+  status: z.string(),
+  distanceKm: z.number(),
+  actualDistanceKm: z.number().nullable(),
+  actualPaceSecondsPerKm: z.number().nullable(),
+});
+
+export const zOverviewAttentionDto = z.object({
+  code: z.enum([
+    "adaptation_pending",
+    "missed_workouts",
+    "gear_replace_soon",
+    "integration_error",
+  ]),
+  entityId: z.string().optional(),
+  count: z.number().optional(),
+  days: z.number().optional(),
+  name: z.string().optional(),
+  distanceKm: z.number().optional(),
+  limitKm: z.number().optional(),
+  provider: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export const zOverviewConnectionDto = z.object({
+  key: z.string(),
+  status: z.string(),
+});
+
+export const zAdminOverviewResponseDto = z.object({
+  status: z.enum(["active", "blocked", "deleted"]),
+  lastSession: zOverviewSessionDto.nullable(),
+  hasAthlete: z.boolean(),
+  activePlan: zOverviewActivePlanDto.nullable(),
+  week: zOverviewWeekDto.nullable(),
+  lastWorkout: zOverviewWorkoutDto.nullable(),
+  upcomingWorkouts: z.array(zOverviewWorkoutDto),
+  attention: z.array(zOverviewAttentionDto),
+  connections: z.array(zOverviewConnectionDto),
 });
 
 export const zAuthControllerRegisterV1Body = zRegisterDto;
@@ -2872,6 +3095,60 @@ export const zAuthAccountControllerConfirmEmailChangeV1Body =
 
 export const zAuthAccountControllerConfirmEmailChangeV1Response = z.void();
 
+export const zAdminAuthControllerListSessionsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAuthControllerListSessionsV1Response =
+  zAuthSessionListResponseDto;
+
+export const zAdminAuthControllerRevokeSessionV1Path = z.object({
+  userId: z.uuid(),
+  sessionId: z.string(),
+});
+
+export const zAdminAuthControllerRevokeSessionV1Response = z.void();
+
+export const zAdminAuthControllerRevokeAllSessionsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAuthControllerRevokeAllSessionsV1Response = z.void();
+
+export const zAdminAuthControllerListIdentitiesV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAuthControllerListIdentitiesV1Response =
+  zAuthIdentityListResponseDto;
+
+export const zAdminAuthControllerUnlinkIdentityV1Path = z.object({
+  userId: z.uuid(),
+  provider: z.enum(["apple", "google"]),
+});
+
+export const zAdminAuthControllerUnlinkIdentityV1Response = z.void();
+
+export const zAdminAuthControllerSendPasswordResetV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAuthControllerSendPasswordResetV1Response = z.void();
+
+export const zAdminAuthControllerVerifyEmailV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAuthControllerVerifyEmailV1Response = z.void();
+
+export const zAdminAuthControllerChangeEmailV1Body = zAdminEmailChangeDto;
+
+export const zAdminAuthControllerChangeEmailV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAuthControllerChangeEmailV1Response = z.void();
+
 export const zUsersControllerFindAllV1Query = z.object({
   page: z.number().gte(1).optional().default(1),
   limit: z.number().gte(1).lte(100).optional().default(10),
@@ -2881,6 +3158,7 @@ export const zUsersControllerFindAllV1Query = z.object({
     .optional()
     .default("createdAt"),
   sortOrder: z.enum(["ASC", "DESC"]).optional().default("DESC"),
+  status: z.enum(["active", "blocked", "deleted"]).optional(),
 });
 
 export const zUsersControllerFindAllV1Response = zPaginatedResponseDto.and(
@@ -3099,6 +3377,8 @@ export const zStorageControllerDownloadV1Path = z.object({
   id: z.string(),
 });
 
+export const zAvatarsControllerRemoveOwnAvatarV1Response = z.void();
+
 export const zAvatarsControllerUploadOwnAvatarV1Body = z.object({
   file: z.string(),
 });
@@ -3190,6 +3470,57 @@ export const zCoachControllerChatV1Body = zCoachChatDto;
  * Coach reply generated
  */
 export const zCoachControllerChatV1Response = zCoachChatResponseDto;
+
+export const zAdminCoachControllerClearHistoryV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminCoachControllerClearHistoryV1Response = z.void();
+
+export const zAdminCoachControllerListSessionsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminCoachControllerListSessionsV1Response =
+  zAdminCoachSessionListResponseDto;
+
+export const zAdminCoachControllerGetSessionV1Path = z.object({
+  userId: z.uuid(),
+  sessionId: z.uuid(),
+});
+
+export const zAdminCoachControllerGetSessionV1Response =
+  zCoachSessionDetailResponseDto;
+
+export const zAdminCoachControllerListNotesV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminCoachControllerListNotesV1Response =
+  zAdminCoachNoteListResponseDto;
+
+export const zAdminCoachControllerDeleteNoteV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminCoachControllerDeleteNoteV1Response = z.void();
+
+export const zAdminCoachControllerGetNoteV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminCoachControllerGetNoteV1Response =
+  zCoachWorkoutNoteResponseDto;
+
+export const zAdminCoachControllerRegenerateNoteV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminCoachControllerRegenerateNoteV1Response =
+  zCoachWorkoutNoteResponseDto;
 
 export const zPlansControllerListV1Query = z.object({
   page: z.number().gte(1).optional().default(1),
@@ -3657,6 +3988,21 @@ export const zAdminTrainingControllerCreateWorkoutV1Path = z.object({
 export const zAdminTrainingControllerCreateWorkoutV1Response =
   zAdminWorkoutMutationResponseDto;
 
+export const zAdminWorkoutsControllerDeleteV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerDeleteV1Response = z.void();
+
+export const zAdminWorkoutsControllerGetWorkoutV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerGetWorkoutV1Response =
+  zTrainingWorkoutResponseDto;
+
 export const zAdminTrainingControllerUpdateWorkoutV1Body =
   zAdminWorkoutUpdateDto;
 
@@ -3667,6 +4013,219 @@ export const zAdminTrainingControllerUpdateWorkoutV1Path = z.object({
 
 export const zAdminTrainingControllerUpdateWorkoutV1Response =
   zAdminWorkoutMutationResponseDto;
+
+export const zAdminWorkoutsControllerCompleteV1Body = zCompleteWorkoutDto;
+
+export const zAdminWorkoutsControllerCompleteV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerCompleteV1Response =
+  zTrainingWorkoutCompletionResponseDto;
+
+export const zAdminWorkoutsControllerUpdateResultV1Body = zCompleteWorkoutDto;
+
+export const zAdminWorkoutsControllerUpdateResultV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerUpdateResultV1Response =
+  zTrainingWorkoutResponseDto;
+
+export const zAdminWorkoutsControllerReopenV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerReopenV1Response =
+  zTrainingWorkoutResponseDto;
+
+export const zAdminWorkoutsControllerSetGearV1Body = zAssignWorkoutGearDto;
+
+export const zAdminWorkoutsControllerSetGearV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerSetGearV1Response =
+  zWorkoutGearAssignmentDto;
+
+export const zAdminWorkoutsControllerSetDeviceV1Body = zAssignWorkoutDeviceDto;
+
+export const zAdminWorkoutsControllerSetDeviceV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerSetDeviceV1Response =
+  zWorkoutDeviceAssignmentDto;
+
+export const zAdminWorkoutsControllerSetRecordsExcludedV1Body =
+  zRecordsExclusionDto;
+
+export const zAdminWorkoutsControllerSetRecordsExcludedV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerSetRecordsExcludedV1Response =
+  zRecordsExclusionResponseDto;
+
+export const zAdminWorkoutsControllerListAdaptationsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerListAdaptationsV1Response =
+  zTrainingAdaptationListResponseDto;
+
+export const zAdminWorkoutsControllerApplyAdaptationV1Path = z.object({
+  userId: z.uuid(),
+  adaptationId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerApplyAdaptationV1Response =
+  zTrainingAdaptationResponseDto;
+
+export const zAdminWorkoutsControllerDismissAdaptationV1Path = z.object({
+  userId: z.uuid(),
+  adaptationId: z.uuid(),
+});
+
+export const zAdminWorkoutsControllerDismissAdaptationV1Response =
+  zTrainingAdaptationResponseDto;
+
+export const zAdminAthleteControllerGetAthleteV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerGetAthleteV1Response =
+  zAthleteProfileResponseDto;
+
+export const zAdminAthleteControllerUpdateAthleteV1Body =
+  zUpdateAthleteProfileDto;
+
+export const zAdminAthleteControllerUpdateAthleteV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerUpdateAthleteV1Response =
+  zAthleteProfileResponseDto;
+
+export const zAdminAthleteControllerProgressSummaryV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerProgressSummaryV1Query = z.object({
+  timezone: z.string().optional(),
+});
+
+export const zAdminAthleteControllerProgressSummaryV1Response =
+  zProgressSummaryResponseDto;
+
+export const zAdminAthleteControllerProgressOverviewV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerProgressOverviewV1Query = z.object({
+  period: z.enum(["4W", "8W", "3M", "6M", "1Y"]).optional().default("3M"),
+});
+
+export const zAdminAthleteControllerProgressOverviewV1Response =
+  zProgressOverviewResponseDto;
+
+export const zAdminAthleteControllerProgressMetricV1Path = z.object({
+  userId: z.uuid(),
+  metric: z.string(),
+});
+
+export const zAdminAthleteControllerProgressMetricV1Query = z.object({
+  period: z.enum(["4W", "8W", "3M", "6M", "1Y"]).optional().default("3M"),
+});
+
+export const zAdminAthleteControllerProgressMetricV1Response =
+  zProgressMetricResponseDto;
+
+export const zAdminAthleteControllerRecordsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerRecordsV1Response =
+  zProgressRecordsResponseDto;
+
+export const zAdminAthleteControllerRecordHistoryV1Path = z.object({
+  userId: z.uuid(),
+  distance: z.string(),
+});
+
+export const zAdminAthleteControllerRecordHistoryV1Response =
+  zRecordHistoryResponseDto;
+
+export const zAdminAthleteControllerAddResultV1Body = zCreateResultDto;
+
+export const zAdminAthleteControllerAddResultV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerAddResultV1Response =
+  zRaceResultResponseDto;
+
+export const zAdminAthleteControllerDeleteResultV1Path = z.object({
+  userId: z.uuid(),
+  resultId: z.uuid(),
+});
+
+export const zAdminAthleteControllerDeleteResultV1Response = z.void();
+
+export const zAdminAthleteControllerListGearV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerListGearV1Query = z.object({
+  status: z.enum(["active", "retired"]).optional().default("active"),
+  type: z.enum(["shoes", "watch", "sensor"]).optional(),
+});
+
+export const zAdminAthleteControllerListGearV1Response = zGearListResponseDto;
+
+export const zAdminAthleteControllerCreateGearV1Body = zCreateGearDto;
+
+export const zAdminAthleteControllerCreateGearV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAthleteControllerCreateGearV1Response = zGearResponseDto;
+
+export const zAdminAthleteControllerRemoveGearV1Path = z.object({
+  userId: z.uuid(),
+  gearId: z.uuid(),
+});
+
+export const zAdminAthleteControllerRemoveGearV1Response = z.void();
+
+export const zAdminAthleteControllerUpdateGearV1Body = zUpdateGearDto;
+
+export const zAdminAthleteControllerUpdateGearV1Path = z.object({
+  userId: z.uuid(),
+  gearId: z.uuid(),
+});
+
+export const zAdminAthleteControllerUpdateGearV1Response = zGearResponseDto;
+
+export const zAdminAthleteControllerRetireGearV1Path = z.object({
+  userId: z.uuid(),
+  gearId: z.uuid(),
+});
+
+export const zAdminAthleteControllerRetireGearV1Response = zGearResponseDto;
+
+export const zAdminAthleteControllerRestoreGearV1Path = z.object({
+  userId: z.uuid(),
+  gearId: z.uuid(),
+});
+
+export const zAdminAthleteControllerRestoreGearV1Response = zGearResponseDto;
 
 export const zAdminPlansControllerCountsV1Path = z.object({
   userId: z.uuid(),
@@ -3951,6 +4510,68 @@ export const zRecordingsControllerGetRecordingV1Path = z.object({
 export const zRecordingsControllerGetRecordingV1Response =
   zWorkoutRecordingResponseDto;
 
+export const zAdminIntegrationsControllerListV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminIntegrationsControllerListV1Response =
+  zIntegrationsListResponseDto;
+
+export const zAdminIntegrationsControllerSyncStravaV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminIntegrationsControllerSyncStravaV1Response =
+  zIntegrationSyncStatusResponseDto;
+
+export const zAdminIntegrationsControllerSyncStravaProfileV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminIntegrationsControllerSyncStravaProfileV1Response =
+  zQueuedResponseDto;
+
+export const zAdminIntegrationsControllerRequestDeviceSyncV1Path = z.object({
+  userId: z.uuid(),
+  provider: z.enum(["apple_health", "health_connect"]),
+});
+
+export const zAdminIntegrationsControllerRequestDeviceSyncV1Response =
+  zDeviceSyncRequestResponseDto;
+
+export const zAdminIntegrationsControllerDisconnectV1Path = z.object({
+  userId: z.uuid(),
+  provider: z.enum(["strava", "apple_health", "health_connect"]),
+});
+
+export const zAdminIntegrationsControllerDisconnectV1Response =
+  zSuccessResponseDto;
+
+export const zAdminIntegrationsControllerListWorkoutSourcesV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminIntegrationsControllerListWorkoutSourcesV1Response =
+  zWorkoutSourcesResponseDto;
+
+export const zAdminIntegrationsControllerUnlinkWorkoutSourceV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+  provider: z.string(),
+});
+
+export const zAdminIntegrationsControllerUnlinkWorkoutSourceV1Response =
+  z.void();
+
+export const zAdminIntegrationsControllerGetRecordingV1Path = z.object({
+  userId: z.uuid(),
+  workoutId: z.uuid(),
+});
+
+export const zAdminIntegrationsControllerGetRecordingV1Response =
+  zWorkoutRecordingResponseDto;
+
 export const zUserConsentsControllerListV1Response = zConsentsListResponseDto;
 
 export const zUserConsentsControllerGiveV1Body = zGiveConsentDto;
@@ -3975,3 +4596,229 @@ export const zDataExportControllerDownloadV1Path = z.object({
 export const zDataExportControllerDownloadV1Query = z.object({
   token: z.string(),
 });
+
+export const zActivityControllerListForUserV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zActivityControllerListForUserV1Query = z.object({
+  domain: z
+    .array(
+      z.enum([
+        "account",
+        "access",
+        "athlete",
+        "workouts",
+        "plans",
+        "progress",
+        "gear",
+        "integrations",
+        "coach",
+        "preferences",
+        "data_access",
+        "settings",
+      ]),
+    )
+    .optional(),
+  actorType: z
+    .array(z.enum(["user", "admin", "system", "integration", "coach"]))
+    .optional(),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+  q: z.string().optional(),
+  cursor: z.string().optional(),
+  limit: z.number().gte(1).lte(100).optional().default(50),
+});
+
+export const zActivityControllerListForUserV1Response = zActivityPageDto;
+
+export const zActivityControllerExportForUserV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zActivityControllerExportForUserV1Query = z.object({
+  domain: z
+    .array(
+      z.enum([
+        "account",
+        "access",
+        "athlete",
+        "workouts",
+        "plans",
+        "progress",
+        "gear",
+        "integrations",
+        "coach",
+        "preferences",
+        "data_access",
+        "settings",
+      ]),
+    )
+    .optional(),
+  actorType: z
+    .array(z.enum(["user", "admin", "system", "integration", "coach"]))
+    .optional(),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+  q: z.string().optional(),
+});
+
+export const zActivityControllerListLogV1Query = z.object({
+  domain: z
+    .array(
+      z.enum([
+        "account",
+        "access",
+        "athlete",
+        "workouts",
+        "plans",
+        "progress",
+        "gear",
+        "integrations",
+        "coach",
+        "preferences",
+        "data_access",
+        "settings",
+      ]),
+    )
+    .optional(),
+  actorType: z
+    .array(z.enum(["user", "admin", "system", "integration", "coach"]))
+    .optional(),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+  q: z.string().optional(),
+  cursor: z.string().optional(),
+  limit: z.number().gte(1).lte(100).optional().default(50),
+  kind: z.enum(["admin", "data_access", "all"]).optional().default("admin"),
+  actorUserId: z.uuid().optional(),
+  subjectUserId: z.uuid().optional(),
+});
+
+export const zActivityControllerListLogV1Response = zActivityPageDto;
+
+export const zActivityControllerExportLogV1Query = z.object({
+  domain: z
+    .array(
+      z.enum([
+        "account",
+        "access",
+        "athlete",
+        "workouts",
+        "plans",
+        "progress",
+        "gear",
+        "integrations",
+        "coach",
+        "preferences",
+        "data_access",
+        "settings",
+      ]),
+    )
+    .optional(),
+  actorType: z
+    .array(z.enum(["user", "admin", "system", "integration", "coach"]))
+    .optional(),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+  q: z.string().optional(),
+  kind: z.enum(["admin", "data_access", "all"]).optional().default("admin"),
+  actorUserId: z.uuid().optional(),
+  subjectUserId: z.uuid().optional(),
+});
+
+export const zAdminAccountControllerGetSecurityV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerGetSecurityV1Response =
+  zAccountSecurityResponseDto;
+
+export const zAdminAccountControllerBlockV1Body = zBlockUserDto;
+
+export const zAdminAccountControllerBlockV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerBlockV1Response = z.void();
+
+export const zAdminAccountControllerUnblockV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerUnblockV1Response = z.void();
+
+export const zAdminAccountControllerRequestDeletionV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerRequestDeletionV1Response = z.void();
+
+export const zAdminAccountControllerRestoreV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerRestoreV1Response = z.void();
+
+export const zAdminAccountControllerGetPreferencesV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerGetPreferencesV1Response =
+  zUserPreferencesResponseDto;
+
+export const zAdminAccountControllerUpdatePreferencesV1Body =
+  zUpdateUserPreferencesDto;
+
+export const zAdminAccountControllerUpdatePreferencesV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerUpdatePreferencesV1Response =
+  zUserPreferencesResponseDto;
+
+export const zAdminAccountControllerGetConsentsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerGetConsentsV1Response =
+  zConsentsListResponseDto;
+
+export const zAdminAccountControllerListDataExportsV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerListDataExportsV1Response = z.array(
+  zDataExportResponseDto,
+);
+
+export const zAdminAccountControllerRequestDataExportV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminAccountControllerRequestDataExportV1Response =
+  zDataExportResponseDto;
+
+export const zAdminAccountControllerDownloadDataExportV1Path = z.object({
+  userId: z.uuid(),
+  exportId: z.uuid(),
+});
+
+export const zAdminOverviewControllerGetOverviewV1Path = z.object({
+  userId: z.uuid(),
+});
+
+export const zAdminOverviewControllerGetOverviewV1Query = z.object({
+  timezone: z.string().optional(),
+});
+
+export const zAdminOverviewControllerGetOverviewV1Response =
+  zAdminOverviewResponseDto;
