@@ -4,6 +4,7 @@ import { useState, type ReactElement } from "react";
 
 import { Badge } from "@trefix/ui/components/badge";
 import { Button, buttonVariants } from "@trefix/ui/components/button";
+import { ButtonGroup } from "@trefix/ui/components/button-group";
 import {
   Card,
   CardAction,
@@ -13,19 +14,24 @@ import {
   CardTitle,
 } from "@trefix/ui/components/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@trefix/ui/components/table";
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@trefix/ui/components/item";
 import {
   DownloadIcon,
   KeyRoundIcon,
+  KeySquareIcon,
   LogOutIcon,
   MailCheckIcon,
   MailIcon,
+  MonitorIcon,
+  SmartphoneIcon,
+  UnlinkIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
@@ -50,6 +56,9 @@ import {
 } from "../hooks/use-user-account";
 import { AccountPreferencesCard } from "./account-preferences-card";
 import { ChangeEmailDialog } from "./change-email-dialog";
+
+const isMobile = (platform: string | null): boolean =>
+  platform !== null && /ios|android/i.test(platform);
 
 type Confirm =
   | { kind: "revokeAll" }
@@ -160,7 +169,7 @@ function SecurityCard({
           ) : null}
         </div>
         {manageable ? (
-          <div className="flex flex-wrap gap-2">
+          <ButtonGroup>
             <Button
               variant="outline"
               size="sm"
@@ -187,7 +196,7 @@ function SecurityCard({
               <KeyRoundIcon />
               {t("userCard.account.actions.passwordReset")}
             </Button>
-          </div>
+          </ButtonGroup>
         ) : null}
       </CardContent>
       <ChangeEmailDialog
@@ -246,63 +255,60 @@ function SessionsCard({
             {t("userCard.account.sessions.empty")}
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("userCard.account.sessions.device")}</TableHead>
-                <TableHead>{t("userCard.account.sessions.location")}</TableHead>
-                <TableHead>
-                  {t("userCard.account.sessions.lastActive")}
-                </TableHead>
-                <TableHead>
-                  {t("userCard.account.sessions.createdAt")}
-                </TableHead>
-                {canManage ? <TableHead /> : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sessions.map((session) => (
-                <TableRow key={session.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">
-                        {session.deviceName ?? session.platform ?? "—"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {[session.platform, session.appVersion]
-                          .filter(Boolean)
-                          .join(" · ") ||
-                          session.userAgent ||
-                          ""}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {[session.city, session.country]
-                      .filter(Boolean)
-                      .join(", ") || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(session.lastActiveAt, locale)}
-                  </TableCell>
-                  <TableCell>{formatDate(session.createdAt, locale)}</TableCell>
+          <ItemGroup className="gap-2">
+            {sessions.map((session) => {
+              const DeviceIcon = isMobile(session.platform)
+                ? SmartphoneIcon
+                : MonitorIcon;
+              const place = [session.city, session.country]
+                .filter(Boolean)
+                .join(", ");
+              return (
+                <Item key={session.id} variant="outline" size="sm">
+                  <ItemMedia variant="icon">
+                    <DeviceIcon />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>
+                      {session.deviceName ??
+                        session.platform ??
+                        t("userCard.account.sessions.unknownDevice")}
+                      {session.appVersion ? (
+                        <Badge variant="outline">{session.appVersion}</Badge>
+                      ) : null}
+                    </ItemTitle>
+                    <ItemDescription>
+                      {[
+                        place,
+                        t("userCard.account.sessions.activeAt", {
+                          date: formatDate(session.lastActiveAt, locale),
+                        }),
+                        t("userCard.account.sessions.signedInAt", {
+                          date: formatDate(session.createdAt, locale),
+                        }),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </ItemDescription>
+                  </ItemContent>
                   {canManage ? (
-                    <TableCell className="text-right">
+                    <ItemActions>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon-sm"
+                        aria-label={t("userCard.account.actions.revoke")}
                         onClick={() =>
                           onConfirm({ kind: "revoke", sessionId: session.id })
                         }
                       >
-                        {t("userCard.account.actions.revoke")}
+                        <LogOutIcon />
                       </Button>
-                    </TableCell>
+                    </ItemActions>
                   ) : null}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </Item>
+              );
+            })}
+          </ItemGroup>
         )}
       </CardContent>
     </Card>
@@ -338,36 +344,42 @@ function IdentitiesCard({
             {t("userCard.account.identities.empty")}
           </p>
         ) : (
-          <ul className="flex flex-col divide-y">
+          <ItemGroup className="gap-2">
             {identities.map((identity) => (
-              <li
-                key={identity.provider}
-                className="flex items-center justify-between gap-4 py-2"
-              >
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">
+              <Item key={identity.provider} variant="outline" size="sm">
+                <ItemMedia variant="icon">
+                  <KeySquareIcon />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>
                     {t(`userCard.providers.${identity.provider}`)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
+                  </ItemTitle>
+                  <ItemDescription>
                     {[identity.email, formatDate(identity.linkedAt, locale)]
                       .filter(Boolean)
                       .join(" · ")}
-                  </span>
-                </div>
+                  </ItemDescription>
+                </ItemContent>
                 {canManage ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      onConfirm({ kind: "unlink", provider: identity.provider })
-                    }
-                  >
-                    {t("userCard.account.actions.unlink")}
-                  </Button>
+                  <ItemActions>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t("userCard.account.actions.unlink")}
+                      onClick={() =>
+                        onConfirm({
+                          kind: "unlink",
+                          provider: identity.provider,
+                        })
+                      }
+                    >
+                      <UnlinkIcon />
+                    </Button>
+                  </ItemActions>
                 ) : null}
-              </li>
+              </Item>
             ))}
-          </ul>
+          </ItemGroup>
         )}
       </CardContent>
     </Card>

@@ -21,6 +21,10 @@ import {
   TableHeader,
   TableRow,
 } from "@trefix/ui/components/table";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@trefix/ui/components/toggle-group";
 import { formatHoursMinutesSeconds } from "@trefix/utils";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 
@@ -28,6 +32,14 @@ import type { ProgressSummary } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { NoAthlete } from "@/features/users/components/card/no-athlete";
+import {
+  HeartRateZonesChart,
+  MonthlyDistanceChart,
+  PaceTrendChart,
+  RecordHistoryChart,
+  RegularityGrid,
+  WeeklyKmChart,
+} from "@/features/users/components/charts/card-charts";
 import { isNotFound } from "@/features/users/lib/card-errors";
 import {
   formatKm,
@@ -94,6 +106,105 @@ function PeriodCards({ summary }: { summary: ProgressSummary }): ReactElement {
   );
 }
 
+type VolumeView = "weeks" | "months";
+
+function ProgressCharts({
+  summary,
+}: {
+  summary: ProgressSummary;
+}): ReactElement {
+  const { t } = useI18n();
+  const [view, setView] = useState<VolumeView>("weeks");
+  const { analytics } = summary;
+  const months = summary.months.slice(-12);
+  const easyPace = analytics.pace.easy;
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-3">
+      <Card className="xl:col-span-2">
+        <CardHeader>
+          <CardTitle>{t("userCard.charts.volumeTitle")}</CardTitle>
+          <CardDescription>
+            {view === "weeks"
+              ? t("userCard.charts.weeklyKmDescription")
+              : t("userCard.charts.monthlyKmDescription")}
+          </CardDescription>
+          <CardAction>
+            <ToggleGroup
+              variant="outline"
+              size="sm"
+              spacing={0}
+              value={[view]}
+              onValueChange={(value: string[]) => {
+                const next = value[0] as VolumeView | undefined;
+                if (next) setView(next);
+              }}
+            >
+              <ToggleGroupItem value="weeks">
+                {t("userCard.charts.weeks")}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="months">
+                {t("userCard.charts.months")}
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {view === "weeks" ? (
+            <WeeklyKmChart weeks={analytics.weeklyKm} className="h-56" />
+          ) : (
+            <MonthlyDistanceChart months={months} />
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("userCard.charts.regularityTitle")}</CardTitle>
+          <CardDescription>
+            {t("userCard.charts.regularityDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RegularityGrid weeks={analytics.regularity} />
+        </CardContent>
+      </Card>
+
+      {easyPace.length > 1 ? (
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle>{t("userCard.charts.easyPaceTitle")}</CardTitle>
+            <CardDescription>
+              {t("userCard.charts.easyPaceDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PaceTrendChart points={easyPace} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {analytics.heartRateZones ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("userCard.charts.zonesTitle")}</CardTitle>
+            <CardDescription>
+              {analytics.avgHeartRate
+                ? t("userCard.charts.zonesDescription", {
+                    value: analytics.avgHeartRate,
+                  })
+                : t("userCard.charts.zonesDescriptionNoAvg")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <HeartRateZonesChart zones={analytics.heartRateZones} />
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
+  );
+}
+
 function RecordHistory({
   userId,
   distance,
@@ -115,6 +226,9 @@ function RecordHistory({
 
   return (
     <>
+      {query.data.attempts.length > 1 ? (
+        <RecordHistoryChart attempts={query.data.attempts} />
+      ) : null}
       <Table>
         <TableHeader>
           <TableRow>
@@ -201,6 +315,7 @@ export function UserProgressSection({
   return (
     <div className="flex flex-col gap-4">
       <PeriodCards summary={summary.data} />
+      <ProgressCharts summary={summary.data} />
 
       <Card>
         <CardHeader>

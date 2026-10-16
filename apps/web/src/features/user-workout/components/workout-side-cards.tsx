@@ -12,12 +12,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@trefix/ui/components/card";
-import { EyeIcon, RefreshCwIcon, Trash2Icon, UnlinkIcon } from "lucide-react";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@trefix/ui/components/item";
+import {
+  DatabaseIcon,
+  EyeIcon,
+  RefreshCwIcon,
+  Trash2Icon,
+  UnlinkIcon,
+} from "lucide-react";
 
 import type { TrainingWorkout } from "@trefix/api-client";
 
 import { useUserGear } from "@/features/user-athlete/hooks/use-user-athlete";
 import { DetailRow } from "@/features/users/components/card/detail-row";
+import { SplitsChart } from "@/features/users/components/charts/card-charts";
 import { formatKm, formatPaceSeconds } from "@/features/users/lib/card-format";
 import { formatDate, useI18n } from "@/shared/i18n";
 import { ConfirmDialog } from "@/widgets/confirm-dialog";
@@ -78,40 +94,42 @@ export function WorkoutSourcesCard({
             {t("userCard.workout.sources.empty")}
           </p>
         ) : (
-          <ul className="flex flex-col divide-y">
+          <ItemGroup className="gap-2">
             {items.map((source) => (
-              <li
-                key={source.provider}
-                className="flex items-center justify-between gap-4 py-2"
-              >
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 text-sm font-medium">
+              <Item key={source.provider} variant="outline" size="sm">
+                <ItemMedia variant="icon">
+                  <DatabaseIcon />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>
                     {t(`userCard.providers.${source.provider}`)}
                     {source.isPrimary ? (
                       <Badge variant="outline">
                         {t("userCard.workout.sources.primary")}
                       </Badge>
                     ) : null}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
+                  </ItemTitle>
+                  <ItemDescription>
                     {[source.originDevice, formatDate(source.startedAt, locale)]
                       .filter(Boolean)
                       .join(" · ")}
-                  </span>
-                </div>
+                  </ItemDescription>
+                </ItemContent>
                 {canManage ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setUnlinking(source.provider)}
-                  >
-                    <UnlinkIcon />
-                    {t("userCard.workout.sources.unlink")}
-                  </Button>
+                  <ItemActions>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t("userCard.workout.sources.unlink")}
+                      onClick={() => setUnlinking(source.provider)}
+                    >
+                      <UnlinkIcon />
+                    </Button>
+                  </ItemActions>
                 ) : null}
-              </li>
+              </Item>
             ))}
-          </ul>
+          </ItemGroup>
         )}
         {showRecording ? (
           recording.isLoading ? (
@@ -163,11 +181,14 @@ export function WorkoutSourcesCard({
                 />
               </div>
               {recording.data.splits.length > 0 ? (
-                <span className="text-xs text-muted-foreground">
-                  {t("userCard.workout.recording.splits", {
-                    count: recording.data.splits.length,
-                  })}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-muted-foreground">
+                    {t("userCard.workout.recording.splits", {
+                      count: recording.data.splits.length,
+                    })}
+                  </span>
+                  <SplitsChart splits={recording.data.splits} />
+                </div>
               ) : null}
             </div>
           )

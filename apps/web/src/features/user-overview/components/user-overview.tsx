@@ -14,12 +14,32 @@ import {
   CardTitle,
 } from "@trefix/ui/components/card";
 import { Progress } from "@trefix/ui/components/progress";
-import { AlertTriangleIcon } from "lucide-react";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@trefix/ui/components/item";
+import {
+  CalendarXIcon,
+  ChevronRightIcon,
+  FootprintsIcon,
+  GitPullRequestArrowIcon,
+  PlugIcon,
+  PlugZapIcon,
+  SparklesIcon,
+  type LucideIcon,
+} from "lucide-react";
 
 import type { AdminOverview } from "@trefix/api-client";
 
 import { useAuth } from "@/components/auth-provider";
 import { ActivityFeed } from "@/features/activity/components/activity-feed";
+import { useUserProgressSummary } from "@/features/user-athlete/hooks/use-user-athlete";
+import { WeeklyKmChart } from "@/features/users/components/charts/card-charts";
 import { useUserActivity } from "@/features/activity/hooks/use-activity";
 import {
   formatKm,
@@ -34,6 +54,13 @@ import { useUserOverview } from "../hooks/use-user-overview";
 
 type Attention = AdminOverview["attention"][number];
 type OverviewWorkout = AdminOverview["upcomingWorkouts"][number];
+
+const ATTENTION_ICONS: Record<Attention["code"], LucideIcon> = {
+  adaptation_pending: GitPullRequestArrowIcon,
+  missed_workouts: CalendarXIcon,
+  gear_replace_soon: FootprintsIcon,
+  integration_error: PlugZapIcon,
+};
 
 function StatCard({
   title,
@@ -82,26 +109,64 @@ function WorkoutLine({
 }): ReactElement {
   const { t, locale } = useI18n();
   const typeLabel = t(`trainingCalendar.types.${workout.type}`);
+  const date = new Date(workout.scheduledAt);
   return (
-    <li className="flex items-center justify-between gap-4 py-2">
-      <Link
-        href={`/users/${userId}/workouts/${workout.id}`}
-        className="flex min-w-0 flex-col hover:underline"
-      >
-        <span className="truncate text-sm font-medium">
-          {workout.title ?? typeLabel}
+    <Item
+      size="sm"
+      render={<Link href={`/users/${userId}/workouts/${workout.id}`} />}
+    >
+      <ItemMedia className="w-10 flex-col gap-0 rounded-xl border py-1 text-center leading-tight">
+        <span className="text-sm font-medium tabular-nums">
+          {date.getDate()}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-[10px] text-muted-foreground">
+          {new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date)}
+        </span>
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{workout.title ?? typeLabel}</ItemTitle>
+        <ItemDescription>
           {formatShortDate(workout.scheduledAt, locale, true)} ·{" "}
           {t("userCard.overview.km", {
             value: formatKm(workout.distanceKm, locale),
           })}
-        </span>
-      </Link>
-      <Badge variant="outline">
-        {t(`trainingCalendar.statuses.${workout.status}`)}
-      </Badge>
-    </li>
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <Badge variant="outline">
+          {t(`trainingCalendar.statuses.${workout.status}`)}
+        </Badge>
+      </ItemActions>
+    </Item>
+  );
+}
+
+function WeeklyVolume({ userId }: { userId: string }): ReactElement | null {
+  const { t } = useI18n();
+  const query = useUserProgressSummary(userId);
+  const weeks = query.data?.analytics.weeklyKm ?? [];
+  if (weeks.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("userCard.charts.weeklyKmTitle")}</CardTitle>
+        <CardDescription>
+          {t("userCard.charts.weeklyKmDescription")}
+        </CardDescription>
+        <CardAction>
+          <Link
+            href={userSectionHref(userId, "progress")}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            {t("userCard.sections.progress.title")}
+          </Link>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <WeeklyKmChart weeks={weeks} />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -163,32 +228,38 @@ export function UserOverview({ userId }: { userId: string }): ReactElement {
             <CardTitle>{t("userCard.overview.attention")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="flex flex-col divide-y">
-              {overview.attention.map((item, index) => (
-                <li
-                  key={`${item.code}-${item.entityId ?? index}`}
-                  className="flex items-center justify-between gap-4 py-2"
-                >
-                  <span className="flex items-center gap-2 text-sm">
-                    <AlertTriangleIcon className="size-4 shrink-0" />
-                    {t(`userCard.overview.attentionCodes.${item.code}`, {
-                      count: item.count ?? 0,
-                      days: item.days ?? 0,
-                      name: item.name ?? "",
-                      distance: formatKm(item.distanceKm, locale),
-                      limit: formatKm(item.limitKm, locale),
-                      provider: item.provider ?? "",
-                    })}
-                  </span>
-                  <Link
-                    href={attentionHref(userId, item)}
-                    className={buttonVariants({ variant: "ghost", size: "sm" })}
+            <ItemGroup className="gap-2">
+              {overview.attention.map((item, index) => {
+                const Icon = ATTENTION_ICONS[item.code];
+                return (
+                  <Item
+                    key={`${item.code}-${item.entityId ?? index}`}
+                    variant="outline"
+                    size="sm"
+                    render={<Link href={attentionHref(userId, item)} />}
                   >
-                    {t("activity.open")}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    <ItemMedia variant="icon">
+                      <Icon />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>
+                        {t(`userCard.overview.attentionCodes.${item.code}`, {
+                          count: item.count ?? 0,
+                          days: item.days ?? 0,
+                          name: item.name ?? "",
+                          distance: formatKm(item.distanceKm, locale),
+                          limit: formatKm(item.limitKm, locale),
+                          provider: item.provider ?? "",
+                        })}
+                      </ItemTitle>
+                    </ItemContent>
+                    <ItemActions>
+                      <ChevronRightIcon className="size-4 text-muted-foreground" />
+                    </ItemActions>
+                  </Item>
+                );
+              })}
+            </ItemGroup>
           </CardContent>
         </Card>
       ) : null}
@@ -282,6 +353,10 @@ export function UserOverview({ userId }: { userId: string }): ReactElement {
         />
       </div>
 
+      {hasPermission("training.userprogress.read") && overview.hasAthlete ? (
+        <WeeklyVolume userId={userId} />
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -331,27 +406,36 @@ export function UserOverview({ userId }: { userId: string }): ReactElement {
                 description=" "
               />
             ) : (
-              <ul className="flex flex-col divide-y">
+              <ItemGroup className="gap-1">
                 {overview.connections.map((connection) => (
-                  <li
-                    key={connection.key}
-                    className="flex items-center justify-between gap-4 py-2 text-sm"
-                  >
-                    <span className="font-medium">
-                      {t(`userCard.providers.${connection.key}`)}
-                    </span>
-                    <Badge
-                      variant={
-                        connection.status === "connected"
-                          ? "outline"
-                          : "secondary"
-                      }
-                    >
-                      {t(`userCard.connectionStatuses.${connection.status}`)}
-                    </Badge>
-                  </li>
+                  <Item key={connection.key} size="sm">
+                    <ItemMedia variant="icon">
+                      {connection.key === "coach" ? (
+                        <SparklesIcon />
+                      ) : (
+                        <PlugIcon />
+                      )}
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>
+                        {t(`userCard.providers.${connection.key}`)}
+                      </ItemTitle>
+                    </ItemContent>
+                    <ItemActions>
+                      <Badge
+                        variant={
+                          connection.status === "connected" ||
+                          connection.status === "enabled"
+                            ? "outline"
+                            : "secondary"
+                        }
+                      >
+                        {t(`userCard.connectionStatuses.${connection.status}`)}
+                      </Badge>
+                    </ItemActions>
+                  </Item>
                 ))}
-              </ul>
+              </ItemGroup>
             )}
           </CardContent>
         </Card>

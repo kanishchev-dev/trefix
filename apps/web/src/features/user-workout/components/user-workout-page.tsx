@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactElement } from "react";
 
 import { Badge } from "@trefix/ui/components/badge";
 import { Button, buttonVariants } from "@trefix/ui/components/button";
+import { ButtonGroup } from "@trefix/ui/components/button-group";
 import {
   Card,
   CardContent,
@@ -262,7 +263,7 @@ export function UserWorkoutPage({
         </div>
 
         {canManage ? (
-          <div className="flex items-center gap-2">
+          <ButtonGroup>
             {canComplete ? (
               <Button size="sm" onClick={() => setDialog("complete")}>
                 <CheckIcon />
@@ -324,7 +325,7 @@ export function UserWorkoutPage({
                 ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </ButtonGroup>
         ) : null}
       </div>
 

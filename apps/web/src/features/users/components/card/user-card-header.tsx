@@ -15,8 +15,20 @@ import {
   AvatarImage,
 } from "@trefix/ui/components/avatar";
 import { Button } from "@trefix/ui/components/button";
+import { ButtonGroup } from "@trefix/ui/components/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@trefix/ui/components/dropdown-menu";
 import {
   BanIcon,
+  CopyIcon,
+  HistoryIcon,
+  MoreHorizontalIcon,
   InfoIcon,
   PencilIcon,
   RotateCcwIcon,
@@ -32,6 +44,7 @@ import { toInitials } from "@/entities/avatar/lib/initials";
 import { BlockUserDialog } from "@/features/user-account/components/block-user-dialog";
 import { useAccountActions } from "@/features/user-account/hooks/use-user-account";
 import { displayNameOf } from "@/features/users/context/user-card-context";
+import { userSectionHref } from "@/features/users/lib/user-sections";
 import { useInviteUser } from "@/features/users/hooks/use-users";
 import { useUserPresence } from "@/features/users/hooks/use-user-presence";
 import { getFriendlyApiMessage } from "@/lib/errors";
@@ -60,6 +73,11 @@ export function UserCardHeader({
   const [restoreOpen, setRestoreOpen] = useState(false);
 
   const displayName = displayNameOf(user);
+  const copyId = () =>
+    navigator.clipboard
+      .writeText(user.id)
+      .then(() => notifySuccess(t("common.actions.copied")))
+      .catch(() => notifyError(t("common.actions.copyFailed")));
   const { isOnline } = useUserPresence([user.id]);
   const online = isOnline(user.id);
 
@@ -107,7 +125,7 @@ export function UserCardHeader({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <ButtonGroup>
           {canUpdate ? (
             <Button
               variant="outline"
@@ -118,58 +136,92 @@ export function UserCardHeader({
               {t("common.actions.edit")}
             </Button>
           ) : null}
-          {canInvite ? (
+          {isBlocked && canManageSecurity ? (
             <Button
               variant="outline"
               size="sm"
-              disabled={inviteUser.isPending}
-              onClick={() =>
-                inviteUser.mutate(user.id, {
-                  onSuccess: () => notifySuccess(t("users.toasts.invited")),
-                  onError: (error) =>
-                    notifyError(
-                      t("common.states.error"),
-                      getFriendlyApiMessage(error, t),
-                    ),
-                })
+              onClick={() => setUnblockOpen(true)}
+            >
+              <ShieldCheckIcon />
+              {t("userCard.actions.unblock")}
+            </Button>
+          ) : null}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={t("userCard.actions.more")}
+                />
               }
             >
-              <SendIcon />
-              {t("users.actions.invite")}
-            </Button>
-          ) : null}
-          {canManageSecurity && !isDeleted ? (
-            isBlocked ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setUnblockOpen(true)}
-              >
-                <ShieldCheckIcon />
-                {t("userCard.actions.unblock")}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBlockOpen(true)}
-              >
-                <BanIcon />
-                {t("userCard.actions.block")}
-              </Button>
-            )
-          ) : null}
-          {canDelete ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <Trash2Icon />
-              {t("common.actions.delete")}
-            </Button>
-          ) : null}
-        </div>
+              <MoreHorizontalIcon />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-56">
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={copyId}>
+                  <CopyIcon />
+                  {t("users.actions.copyId")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(userSectionHref(user.id, "history"))
+                  }
+                >
+                  <HistoryIcon />
+                  {t("userCard.sections.history.title")}
+                </DropdownMenuItem>
+                {canInvite ? (
+                  <DropdownMenuItem
+                    disabled={inviteUser.isPending}
+                    onClick={() =>
+                      inviteUser.mutate(user.id, {
+                        onSuccess: () =>
+                          notifySuccess(t("users.toasts.invited")),
+                        onError: (error) =>
+                          notifyError(
+                            t("common.states.error"),
+                            getFriendlyApiMessage(error, t),
+                          ),
+                      })
+                    }
+                  >
+                    <SendIcon />
+                    {t("users.actions.invite")}
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuGroup>
+              {canManageSecurity && !isDeleted ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {isBlocked ? (
+                      <DropdownMenuItem onClick={() => setUnblockOpen(true)}>
+                        <ShieldCheckIcon />
+                        {t("userCard.actions.unblock")}
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => setBlockOpen(true)}>
+                        <BanIcon />
+                        {t("userCard.actions.block")}
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete ? (
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => setDeleteOpen(true)}
+                      >
+                        <Trash2Icon />
+                        {t("common.actions.delete")}
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuGroup>
+                </>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ButtonGroup>
       </div>
 
       {user.isSystem ? (

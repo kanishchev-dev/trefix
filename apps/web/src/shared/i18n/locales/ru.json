@@ -1250,7 +1250,8 @@
     "actions": {
       "block": "Заблокировать",
       "unblock": "Разблокировать",
-      "restore": "Восстановить"
+      "restore": "Восстановить",
+      "more": "Ещё действия"
     },
     "banner": {
       "blocked": "Пользователь заблокирован бессрочно",
@@ -1405,7 +1406,10 @@
         "device": "Устройство",
         "location": "Место",
         "lastActive": "Активность",
-        "createdAt": "Вход"
+        "createdAt": "Вход",
+        "activeAt": "активность {date}",
+        "signedInAt": "вход {date}",
+        "unknownDevice": "Неизвестное устройство"
       },
       "identities": {
         "title": "Вход через сервисы",
@@ -1862,6 +1866,35 @@
         "applied": "Адаптация применена",
         "dismissed": "Адаптация отклонена"
       }
+    },
+    "charts": {
+      "weeklyKm": "Объём",
+      "currentWeek": "Текущая неделя, не закончилась",
+      "monthlyKm": "Объём",
+      "workouts": "Тренировок",
+      "easyPace": "Темп лёгких",
+      "zoneShare": "Доля времени",
+      "splitPace": "Темп",
+      "kilometre": "{km}-й км",
+      "weeklyKmTitle": "Объём по неделям",
+      "weeklyKmDescription": "Километры за последние недели, текущая выделена светлее",
+      "monthlyKmDescription": "Километры по месяцам за последний год",
+      "volumeTitle": "Объём",
+      "weeks": "Недели",
+      "months": "Месяцы",
+      "regularityTitle": "Регулярность",
+      "regularityDescription": "Дни с тренировками за последние недели",
+      "regularity": {
+        "run": "Тренировка",
+        "rest": "Отдых",
+        "missed": "Пропуск",
+        "future": "Впереди"
+      },
+      "easyPaceTitle": "Темп лёгких тренировок",
+      "easyPaceDescription": "Средний темп по месяцам, быстрее — выше",
+      "zonesTitle": "Пульсовые зоны",
+      "zonesDescription": "За месяц, средний пульс {value} уд/мин",
+      "zonesDescriptionNoAvg": "Доля времени в зонах за месяц"
     }
   },
   "activity": {

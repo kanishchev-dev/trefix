@@ -31,6 +31,15 @@ import {
 } from "../hooks/use-user-athlete";
 import { AthleteEditDialog, WEEKDAYS } from "./athlete-edit-dialog";
 
+/** Easy zones light, hard zones dark: the grey chart ramp in order. */
+const ZONE_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
+
 function Sourced({
   profile,
   field,
@@ -245,18 +254,37 @@ export function UserAthleteSection({
               />
             </div>
             {profile.hrZones ? (
-              <ul className="flex flex-col divide-y text-sm">
-                {profile.hrZones.map((zone) => (
-                  <li key={zone.zone} className="flex justify-between py-1.5">
-                    <span>
-                      {t("userCard.athlete.zone", { zone: zone.zone })}
-                    </span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {zone.min ?? "—"}–{zone.max ?? "—"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex flex-col gap-2">
+                <div className="flex h-3 gap-0.5 overflow-hidden rounded-full">
+                  {profile.hrZones.map((zone, index) => (
+                    <span
+                      key={zone.zone}
+                      className="flex-1"
+                      style={{ background: ZONE_COLORS[index] }}
+                    />
+                  ))}
+                </div>
+                <ul className="grid gap-1 text-sm">
+                  {profile.hrZones.map((zone, index) => (
+                    <li
+                      key={zone.zone}
+                      className="flex items-center justify-between gap-4"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="size-2.5 rounded-[3px]"
+                          style={{ background: ZONE_COLORS[index] }}
+                        />
+                        {t("userCard.athlete.zone", { zone: zone.zone })}
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {zone.min ?? "—"}–{zone.max ?? "—"}{" "}
+                        {t("userCard.units.bpm")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : profile.hrZonesUnavailableReason ? (
               <p className="text-sm text-muted-foreground">
                 {t(

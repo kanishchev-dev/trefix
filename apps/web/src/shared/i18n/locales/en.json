@@ -1250,7 +1250,8 @@
     "actions": {
       "block": "Block",
       "unblock": "Unblock",
-      "restore": "Restore"
+      "restore": "Restore",
+      "more": "More actions"
     },
     "banner": {
       "blocked": "The user is blocked indefinitely",
@@ -1405,7 +1406,10 @@
         "device": "Device",
         "location": "Location",
         "lastActive": "Last active",
-        "createdAt": "Signed in"
+        "createdAt": "Signed in",
+        "activeAt": "active {date}",
+        "signedInAt": "signed in {date}",
+        "unknownDevice": "Unknown device"
       },
       "identities": {
         "title": "Sign-in services",
@@ -1862,6 +1866,35 @@
         "applied": "Adaptation applied",
         "dismissed": "Adaptation dismissed"
       }
+    },
+    "charts": {
+      "weeklyKm": "Volume",
+      "currentWeek": "Current week, not over yet",
+      "monthlyKm": "Volume",
+      "workouts": "Workouts",
+      "easyPace": "Easy pace",
+      "zoneShare": "Share of time",
+      "splitPace": "Pace",
+      "kilometre": "Km {km}",
+      "weeklyKmTitle": "Weekly volume",
+      "weeklyKmDescription": "Kilometres over recent weeks, the current one is lighter",
+      "monthlyKmDescription": "Kilometres per month over the last year",
+      "volumeTitle": "Volume",
+      "weeks": "Weeks",
+      "months": "Months",
+      "regularityTitle": "Consistency",
+      "regularityDescription": "Training days over recent weeks",
+      "regularity": {
+        "run": "Workout",
+        "rest": "Rest",
+        "missed": "Missed",
+        "future": "Ahead"
+      },
+      "easyPaceTitle": "Easy run pace",
+      "easyPaceDescription": "Average pace by month, faster is higher",
+      "zonesTitle": "Heart rate zones",
+      "zonesDescription": "This month, average heart rate {value} bpm",
+      "zonesDescriptionNoAvg": "Share of time in zones this month"
     }
   },
   "activity": {

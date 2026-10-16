@@ -5,15 +5,36 @@ import { useState, type ReactElement } from "react";
 
 import { Badge } from "@trefix/ui/components/badge";
 import { Button } from "@trefix/ui/components/button";
+import { ButtonGroup } from "@trefix/ui/components/button-group";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@trefix/ui/components/card";
-import { RefreshCwIcon, UnplugIcon, UserRoundIcon } from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@trefix/ui/components/dropdown-menu";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@trefix/ui/components/item";
+import { Spinner } from "@trefix/ui/components/spinner";
+import {
+  ActivityIcon,
+  ChevronDownIcon,
+  HeartPulseIcon,
+  PlugIcon,
+  RefreshCwIcon,
+  UnplugIcon,
+  UserRoundIcon,
+  WatchIcon,
+  type LucideIcon,
+} from "lucide-react";
 
 import type { IntegrationsList } from "@trefix/api-client";
 
@@ -25,7 +46,6 @@ import {
   syncUserStrava,
   syncUserStravaProfile,
 } from "@/entities/user-integrations/api";
-import { DetailRow } from "@/features/users/components/card/detail-row";
 import { NoAthlete } from "@/features/users/components/card/no-athlete";
 import {
   userCardKeys,
@@ -72,7 +92,14 @@ function useIntegrationActions(userId: string) {
   };
 }
 
-function IntegrationCard({
+const PROVIDER_ICONS: Record<string, LucideIcon> = {
+  strava: ActivityIcon,
+  garmin: WatchIcon,
+  apple_health: HeartPulseIcon,
+  health_connect: HeartPulseIcon,
+};
+
+function IntegrationItem({
   userId,
   item,
   canManage,
@@ -88,23 +115,63 @@ function IntegrationCard({
   const connected = item.status !== "disconnected";
   const isDevice = DEVICE_PROVIDERS.has(item.provider);
   const isStrava = item.provider === "strava";
+  const Icon = PROVIDER_ICONS[item.provider] ?? PlugIcon;
+  const details = connected
+    ? [
+        t("userCard.integrations.connectedAt", {
+          date: formatDate(item.connectedAt, locale),
+        }),
+        `${t("userCard.integrations.lastSync")}: ${formatDate(item.lastSyncedAt, locale)}`,
+        `${t("userCard.integrations.imported")}: ${item.importedActivitiesCount ?? 0}`,
+      ]
+    : [
+        item.available === false
+          ? t("userCard.integrations.unavailable")
+          : t("userCard.integrations.notConnected"),
+      ];
+  const extra = [
+    item.externalUserId
+      ? `${t("userCard.integrations.externalId")}: ${item.externalUserId}`
+      : null,
+    item.pendingBatches
+      ? `${t("userCard.integrations.pending")}: ${item.pendingBatches}`
+      : null,
+    isStrava && connected
+      ? `${t("userCard.integrations.profileSync")}: ${
+          item.profileSync
+            ? formatDate(item.lastProfileSyncAt, locale)
+            : t("userCard.integrations.off")
+        }`
+      : null,
+    item.scopes?.length
+      ? `${t("userCard.integrations.scopes")}: ${item.scopes.join(", ")}`
+      : null,
+  ].filter(Boolean);
+  const syncAction = isStrava
+    ? {
+        label: t("userCard.integrations.actions.sync"),
+        pending: actions.syncStrava.isPending,
+        run: () => actions.syncStrava.mutate(undefined),
+      }
+    : isDevice
+      ? {
+          label: t("userCard.integrations.actions.requestSync"),
+          pending: actions.requestDeviceSync.isPending,
+          run: () => actions.requestDeviceSync.mutate(item.provider),
+        }
+      : null;
 
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardTitle className="font-medium">
+    <Item variant="outline" className={connected ? undefined : "opacity-70"}>
+      <ItemMedia
+        variant="icon"
+        className="size-10 rounded-xl border bg-muted/50"
+      >
+        <Icon />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
           {t(`userCard.providers.${item.provider}`)}
-        </CardTitle>
-        <CardDescription>
-          {item.available === false
-            ? t("userCard.integrations.unavailable")
-            : connected
-              ? t("userCard.integrations.connectedAt", {
-                  date: formatDate(item.connectedAt, locale),
-                })
-              : t("userCard.integrations.notConnected")}
-        </CardDescription>
-        <CardAction>
           <Badge
             variant={
               PROBLEM_STATUSES.has(item.status)
@@ -116,106 +183,66 @@ function IntegrationCard({
           >
             {t(`userCard.connectionStatuses.${item.status}`)}
           </Badge>
-        </CardAction>
-      </CardHeader>
-      {connected ? (
-        <CardContent className="flex flex-col gap-3">
-          <div className="grid gap-x-6 sm:grid-cols-2">
-            <DetailRow
-              label={t("userCard.integrations.lastSync")}
-              value={formatDate(item.lastSyncedAt, locale)}
-            />
-            <DetailRow
-              label={t("userCard.integrations.imported")}
-              value={item.importedActivitiesCount ?? 0}
-            />
-            {item.externalUserId ? (
-              <DetailRow
-                label={t("userCard.integrations.externalId")}
-                value={
-                  <span className="font-mono text-xs">
-                    {item.externalUserId}
-                  </span>
-                }
-              />
+        </ItemTitle>
+        <ItemDescription>{details.join(" · ")}</ItemDescription>
+      </ItemContent>
+      {canManage && connected ? (
+        <ItemActions>
+          <ButtonGroup>
+            {syncAction ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={syncAction.pending}
+                onClick={syncAction.run}
+              >
+                {syncAction.pending ? <Spinner /> : <RefreshCwIcon />}
+                {syncAction.label}
+              </Button>
             ) : null}
-            {item.pendingBatches ? (
-              <DetailRow
-                label={t("userCard.integrations.pending")}
-                value={item.pendingBatches}
-              />
-            ) : null}
-            {isStrava ? (
-              <DetailRow
-                label={t("userCard.integrations.profileSync")}
-                value={
-                  item.profileSync
-                    ? formatDate(item.lastProfileSyncAt, locale)
-                    : t("userCard.integrations.off")
-                }
-              />
-            ) : null}
-            {item.scopes?.length ? (
-              <DetailRow
-                label={t("userCard.integrations.scopes")}
-                value={item.scopes.join(", ")}
-              />
-            ) : null}
-          </div>
-          {canManage ? (
-            <div className="flex flex-wrap gap-2">
-              {isStrava ? (
-                <>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
                   <Button
                     variant="outline"
-                    size="sm"
-                    disabled={actions.syncStrava.isPending}
-                    onClick={() => actions.syncStrava.mutate(undefined)}
-                  >
-                    <RefreshCwIcon />
-                    {t("userCard.integrations.actions.sync")}
-                  </Button>
-                  {item.profileAccess ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={actions.syncStravaProfile.isPending}
-                      onClick={() =>
-                        actions.syncStravaProfile.mutate(undefined)
-                      }
-                    >
-                      <UserRoundIcon />
-                      {t("userCard.integrations.actions.profileSync")}
-                    </Button>
-                  ) : null}
-                </>
-              ) : null}
-              {isDevice ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={actions.requestDeviceSync.isPending}
-                  onClick={() =>
-                    actions.requestDeviceSync.mutate(item.provider)
-                  }
-                >
-                  <RefreshCwIcon />
-                  {t("userCard.integrations.actions.requestSync")}
-                </Button>
-              ) : null}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDisconnect(item.provider)}
+                    size="icon-sm"
+                    aria-label={t("userCard.actions.more")}
+                  />
+                }
               >
-                <UnplugIcon />
-                {t("userCard.integrations.actions.disconnect")}
-              </Button>
-            </div>
-          ) : null}
-        </CardContent>
+                <ChevronDownIcon />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-52">
+                {isStrava && item.profileAccess ? (
+                  <DropdownMenuItem
+                    disabled={actions.syncStravaProfile.isPending}
+                    onClick={() => actions.syncStravaProfile.mutate(undefined)}
+                  >
+                    <UserRoundIcon />
+                    {t("userCard.integrations.actions.profileSync")}
+                  </DropdownMenuItem>
+                ) : null}
+                {isStrava && item.profileAccess ? (
+                  <DropdownMenuSeparator />
+                ) : null}
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => onDisconnect(item.provider)}
+                >
+                  <UnplugIcon />
+                  {t("userCard.integrations.actions.disconnect")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ButtonGroup>
+        </ItemActions>
       ) : null}
-    </Card>
+      {connected && extra.length > 0 ? (
+        <ItemFooter className="basis-full justify-start pl-14 text-xs text-muted-foreground">
+          <span className="break-all">{extra.join(" · ")}</span>
+        </ItemFooter>
+      ) : null}
+    </Item>
   );
 }
 
@@ -243,9 +270,9 @@ export function UserIntegrationsSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-2">
+      <ItemGroup className="gap-3">
         {query.data.items.map((item) => (
-          <IntegrationCard
+          <IntegrationItem
             key={item.provider}
             userId={userId}
             item={item}
@@ -253,7 +280,7 @@ export function UserIntegrationsSection({
             onDisconnect={setDisconnecting}
           />
         ))}
-      </div>
+      </ItemGroup>
       <ConfirmDialog
         open={disconnecting !== null}
         onOpenChange={(open) => !open && setDisconnecting(null)}

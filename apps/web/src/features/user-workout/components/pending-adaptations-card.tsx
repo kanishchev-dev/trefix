@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 
 import { Badge } from "@trefix/ui/components/badge";
 import { Button } from "@trefix/ui/components/button";
+import { ButtonGroup } from "@trefix/ui/components/button-group";
 import {
   Card,
   CardContent,
@@ -12,6 +13,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@trefix/ui/components/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@trefix/ui/components/item";
+import { CheckIcon, GitPullRequestArrowIcon, XIcon } from "lucide-react";
 
 import { useAuth } from "@/components/auth-provider";
 import { formatDate, useI18n } from "@/shared/i18n";
@@ -45,22 +56,22 @@ export function PendingAdaptationsCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="flex flex-col divide-y">
+        <ItemGroup className="gap-2">
           {items.map((adaptation) => (
-            <li
-              key={adaptation.id}
-              className="flex flex-wrap items-start justify-between gap-4 py-3"
-            >
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
+            <Item key={adaptation.id} variant="outline" size="sm">
+              <ItemMedia variant="icon">
+                <GitPullRequestArrowIcon />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>
                   {adaptation.reason}
                   <Badge variant="outline">
                     {t("userCard.adaptations.confidence", {
                       value: Math.round(adaptation.confidence * 100),
                     })}
                   </Badge>
-                </span>
-                <span className="text-xs text-muted-foreground">
+                </ItemTitle>
+                <ItemDescription>
                   {adaptation.type} · {formatDate(adaptation.createdAt, locale)}
                   {adaptation.workoutId ? (
                     <>
@@ -73,40 +84,45 @@ export function PendingAdaptationsCard({
                       </Link>
                     </>
                   ) : null}
-                </span>
-              </div>
+                </ItemDescription>
+              </ItemContent>
               {canManage ? (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    disabled={decide.isPending}
-                    onClick={() =>
-                      decide.mutate({
-                        adaptationId: adaptation.id,
-                        decision: "apply",
-                      })
-                    }
-                  >
-                    {t("userCard.adaptations.apply")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={decide.isPending}
-                    onClick={() =>
-                      decide.mutate({
-                        adaptationId: adaptation.id,
-                        decision: "dismiss",
-                      })
-                    }
-                  >
-                    {t("userCard.adaptations.dismiss")}
-                  </Button>
-                </div>
+                <ItemActions>
+                  <ButtonGroup>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={decide.isPending}
+                      onClick={() =>
+                        decide.mutate({
+                          adaptationId: adaptation.id,
+                          decision: "apply",
+                        })
+                      }
+                    >
+                      <CheckIcon />
+                      {t("userCard.adaptations.apply")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={decide.isPending}
+                      onClick={() =>
+                        decide.mutate({
+                          adaptationId: adaptation.id,
+                          decision: "dismiss",
+                        })
+                      }
+                    >
+                      <XIcon />
+                      {t("userCard.adaptations.dismiss")}
+                    </Button>
+                  </ButtonGroup>
+                </ItemActions>
               ) : null}
-            </li>
+            </Item>
           ))}
-        </ul>
+        </ItemGroup>
       </CardContent>
     </Card>
   );
