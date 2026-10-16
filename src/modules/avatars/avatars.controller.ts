@@ -1,6 +1,26 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Res,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -50,6 +70,16 @@ export class AvatarsController {
     const avatarUrl = await this.avatarService.uploadAvatar(user.id, file);
 
     return { avatarUrl };
+  }
+
+  @Delete('me')
+  @RequirePermissions('account.update')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove the own avatar' })
+  @ApiNoContentResponse()
+  removeOwnAvatar(@CurrentUser() user: AuthUserContext): Promise<void> {
+    return this.avatarService.removeAvatar(user.id);
   }
 
   /**

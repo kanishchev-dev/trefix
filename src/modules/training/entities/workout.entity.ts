@@ -146,6 +146,14 @@ export class Workout extends Model {
   })
   gearId!: string | null;
 
+  /** Watch or sensor the workout was recorded with. */
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'device_id',
+  })
+  deviceId!: string | null;
+
   /** An erroneous track: kept in history but ignored by records and VDOT. */
   @Column({
     type: DataType.BOOLEAN,

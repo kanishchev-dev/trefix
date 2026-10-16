@@ -23,6 +23,7 @@ export interface AthleteView {
   experienceLevel: string;
   weeklyMileageKm: number | null;
   sessionsPerWeek: number;
+  allowDoubles: boolean;
   recentRaceResults: Array<Record<string, unknown>>;
   preferredTrainingDays: string[];
   availableTrainingDays: string[];
@@ -117,6 +118,7 @@ export interface WorkoutView {
   completedAt: Date | null;
   /** Shoes the workout was done in; resolved by the client from the gear list. */
   gearId?: string | null;
+  deviceId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

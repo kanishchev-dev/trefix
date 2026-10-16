@@ -53,6 +53,8 @@ export const validationSchema = Joi.object({
   STORAGE_MAX_FILE_SIZE: Joi.number().positive().integer().default(52428800),
   JWT_ACCESS_SECRET: Joi.string().required(),
   JWT_ACCESS_EXPIRATION: Joi.string().default('1h'),
+  TRUST_PROXY: Joi.string().default('loopback, uniquelocal'),
+  GEOIP_CITY_DB_PATH: Joi.string().optional(),
   AUTH_ACCESS_TOKEN_SECRET: Joi.string().optional(),
   AUTH_ACCESS_TOKEN_EXPIRES_IN: Joi.string().default('15m'),
   AUTH_REFRESH_TOKEN_SECRET: Joi.string().required(),

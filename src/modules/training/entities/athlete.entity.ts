@@ -98,6 +98,10 @@ export class Athlete extends Model {
   })
   sessionsPerWeek!: number;
 
+  /** Two workouts on one day; only for advanced athletes. */
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false, field: 'allow_doubles' })
+  allowDoubles!: boolean;
+
   @Column({
     type: DataType.JSONB,
     allowNull: false,

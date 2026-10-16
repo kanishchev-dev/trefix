@@ -40,6 +40,7 @@ import { AuthPasswordResetCodeInvalidException } from '../exceptions/auth-passwo
 import { AuthPasswordResetTokenExpiredException } from '../exceptions/auth-password-reset-token-expired.exception';
 import { AuthVerificationCodeInvalidException } from '../exceptions/auth-verification-code-invalid.exception';
 import { AuthVerificationCodeRateLimitException } from '../exceptions/auth-verification-code-rate-limit.exception';
+import { AuthClientContext } from '../interfaces/auth-client-context.interface';
 import { AuthCodeRecord } from '../interfaces/auth-code-record.interface';
 import { AuthEmailOtpCodeRecord } from '../interfaces/auth-email-otp-code-record.interface';
 import { AuthenticatedUserResult } from '../interfaces/authenticated-user-result.interface';
@@ -103,7 +104,7 @@ export class AuthCodeService {
     };
   }
 
-  async verifyEmailOtpCode(dto: EmailOtpVerifyDto): Promise<AuthenticatedUserResult> {
+  async verifyEmailOtpCode(dto: EmailOtpVerifyDto, context: AuthClientContext = {}): Promise<AuthenticatedUserResult> {
     const email = normalizeEmail(dto.email);
     const record = await this.authRedisService.getEmailOtpCode(email);
 
@@ -126,10 +127,7 @@ export class AuthCodeService {
     const currentUser = await this.usersService.findOne(user.id);
     this.eventEmitter.emit(AUTH_EVENTS.EMAIL_VERIFIED, new AuthEmailVerifiedEvent(currentUser.id, currentUser.email));
 
-    return this.authSessionService.createAuthenticatedSession(currentUser, {
-      userAgent: undefined,
-      ipAddress: undefined,
-    });
+    return this.authSessionService.createAuthenticatedSession(currentUser, context);
   }
 
   async verifyEmail(dto: VerifyEmailDto): Promise<AuthVerificationResponseDto> {

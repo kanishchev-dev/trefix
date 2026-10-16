@@ -1,6 +1,8 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Op } from 'sequelize';
 
+import { GearAssignmentService } from '@/modules/training/gear/gear-assignment.service';
+
 import type { AthletesService } from '../../training/athletes/athletes.service';
 import type { Athlete } from '../../training/entities/athlete.entity';
 import type { Workout } from '../../training/entities/workout.entity';
@@ -124,6 +126,7 @@ describe('ActivityIngestionService', () => {
       trainingService as unknown as WorkoutImportService,
       new ImportedWorkoutLookupService(workoutModel as unknown as typeof Workout),
       athletesStub(athleteModel),
+      { primaryDataSource: jest.fn().mockResolvedValue(null) } as unknown as GearAssignmentService,
       preferencesService as unknown as UserPreferencesService,
       new ActivityDedupService(),
       eventEmitter as unknown as EventEmitter2,

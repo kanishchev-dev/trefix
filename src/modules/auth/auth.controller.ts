@@ -1,7 +1,7 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Param, Patch, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
@@ -10,7 +10,9 @@ import { ActivateInviteDto } from '@/modules/users/dto/activate-invite.dto';
 import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
 import { User } from '@/modules/users/entities/user.entity';
 
+import { toAuthUserResponse } from './auth.helpers';
 import { AuthService } from './auth.service';
+import { ClientContext } from './decorators/client-context.decorator';
 import { AppleNativeExchangeDto } from './dto/apple-native-exchange.dto';
 import { AuthRegisterResponseDto } from './dto/auth-register-response.dto';
 import { AuthTokensResponseDto } from './dto/auth-tokens-response.dto';
@@ -30,6 +32,7 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { SocialExchangeDto } from './dto/social-exchange.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { AuthSocialFlowInvalidException } from './exceptions/auth-social-flow-invalid.exception';
+import { AuthClientContext } from './interfaces/auth-client-context.interface';
 import { AuthSocialProvider } from './interfaces/auth-social-provider.interface';
 import { AuthTokenResult } from './interfaces/auth-token-result.interface';
 import { AuthUserContext } from './interfaces/auth-user-context.interface';
@@ -64,11 +67,8 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
-  login(@Body() dto: LoginDto, @Req() request: Request, @Ip() ipAddress: string): Promise<AuthTokensResponseDto> {
-    const userAgentHeader = request.headers['user-agent'];
-    const userAgent = Array.isArray(userAgentHeader) ? userAgentHeader[0] : userAgentHeader;
-
-    return this.toTokensResponse(this.authService.login(dto, { userAgent, ipAddress }));
+  login(@Body() dto: LoginDto, @ClientContext() client: AuthClientContext): Promise<AuthTokensResponseDto> {
+    return this.toTokensResponse(this.authService.login(dto, client));
   }
 
   @Public()
@@ -103,8 +103,11 @@ export class AuthController {
   @Post('email/otp/verify')
   @ApiOperation({ summary: 'Verify the email OTP code' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
-  verifyEmailOtpCode(@Body() dto: EmailOtpVerifyDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authCodeService.verifyEmailOtpCode(dto));
+  verifyEmailOtpCode(
+    @Body() dto: EmailOtpVerifyDto,
+    @ClientContext() client: AuthClientContext,
+  ): Promise<AuthTokensResponseDto> {
+    return this.toTokensResponse(this.authCodeService.verifyEmailOtpCode(dto, client));
   }
 
   @Public()
@@ -130,6 +133,7 @@ export class AuthController {
     @Query('code') queryCode: string | undefined,
     @Query('state') queryState: string | undefined,
     @Body() body: { code?: string; state?: string } | undefined,
+    @ClientContext() client: AuthClientContext,
     @Res() response: Response,
   ): Promise<void> {
     const code = queryCode ?? body?.code;
@@ -138,7 +142,7 @@ export class AuthController {
       throw new AuthSocialFlowInvalidException('Missing authorization data');
     }
 
-    const redirectUri = await this.authSocialFlowService.completeSocialCallback(provider, code, state);
+    const redirectUri = await this.authSocialFlowService.completeSocialCallback(provider, code, state, client);
     response.redirect(302, redirectUri);
   }
 
@@ -156,8 +160,11 @@ export class AuthController {
   @Post('social/apple/native')
   @ApiOperation({ summary: 'Exchange a native Apple sign-in authorization code for tokens' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
-  exchangeNativeAppleCode(@Body() dto: AppleNativeExchangeDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authSocialFlowService.exchangeNativeAppleCode(dto));
+  exchangeNativeAppleCode(
+    @Body() dto: AppleNativeExchangeDto,
+    @ClientContext() client: AuthClientContext,
+  ): Promise<AuthTokensResponseDto> {
+    return this.toTokensResponse(this.authSocialFlowService.exchangeNativeAppleCode(dto, client));
   }
 
   @Public()
@@ -165,8 +172,11 @@ export class AuthController {
   @Post('social/google/native')
   @ApiOperation({ summary: 'Exchange a native Google sign-in ID token for tokens' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
-  exchangeNativeGoogleCode(@Body() dto: GoogleNativeExchangeDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authSocialFlowService.exchangeNativeGoogleCode(dto));
+  exchangeNativeGoogleCode(
+    @Body() dto: GoogleNativeExchangeDto,
+    @ClientContext() client: AuthClientContext,
+  ): Promise<AuthTokensResponseDto> {
+    return this.toTokensResponse(this.authSocialFlowService.exchangeNativeGoogleCode(dto, client));
   }
 
   @Public()
@@ -206,13 +216,9 @@ export class AuthController {
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
   activateInvite(
     @Body() dto: ActivateInviteDto,
-    @Req() request: Request,
-    @Ip() ipAddress: string,
+    @ClientContext() client: AuthClientContext,
   ): Promise<AuthTokensResponseDto> {
-    const userAgentHeader = request.headers['user-agent'];
-    const userAgent = Array.isArray(userAgentHeader) ? userAgentHeader[0] : userAgentHeader;
-
-    return this.toTokensResponse(this.authService.activateInvite(dto, { userAgent, ipAddress }));
+    return this.toTokensResponse(this.authService.activateInvite(dto, client));
   }
 
   @Get('me')
@@ -263,8 +269,12 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change the current user password' })
   @ApiResponse({ status: 200, type: AuthTokensResponseDto })
-  changePassword(@CurrentUser() user: AuthUserContext, @Body() dto: ChangePasswordDto): Promise<AuthTokensResponseDto> {
-    return this.toTokensResponse(this.authService.changePassword(user, dto));
+  changePassword(
+    @CurrentUser() user: AuthUserContext,
+    @Body() dto: ChangePasswordDto,
+    @ClientContext() client: AuthClientContext,
+  ): Promise<AuthTokensResponseDto> {
+    return this.toTokensResponse(this.authService.changePassword(user, dto, client));
   }
 
   private async toTokensResponse(
@@ -277,20 +287,7 @@ export class AuthController {
       refreshToken: result.tokens.refreshToken,
       sessionId: result.tokens.sessionId,
       accessTokenExpiresIn: result.tokens.accessTokenExpiresIn,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        firstName: result.user.firstName,
-        lastName: result.user.lastName,
-        avatarUrl: result.user.avatarUrl ?? undefined,
-        referralCode: result.user.referralCode ?? undefined,
-        emailVerified: result.user.emailVerified,
-        createdAt: result.user.createdAt,
-        permissions: result.permissions,
-        features: {
-          showReferral: !!result.user.referralCode,
-        },
-      },
+      user: toAuthUserResponse(result.user, result.permissions),
     };
   }
 }

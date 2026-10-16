@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 
+import { DomainConflictException, DomainNotFoundException } from '@/common/exceptions/domain-exceptions';
 import { EntityNotFoundException } from '@/common/exceptions/entity-not-found.exception';
 import { AUTH_EVENTS } from '@/modules/auth/auth.events';
 import { UserPermissionsService } from '@/modules/permissions/services/user-permissions.service';
@@ -10,18 +11,21 @@ import { User } from '@/modules/users/entities/user.entity';
 import { UsersService } from '@/modules/users/users.service';
 
 import { hashSecret } from '../auth.helpers';
+import { AuthSessionResponseDto, toAuthSessionResponse } from '../dto/auth-session-response.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { AuthSessionCreatedEvent } from '../events/auth-session-created.event';
 import { AuthSessionRevokedEvent } from '../events/auth-session-revoked.event';
 import { AuthRefreshTokenReuseException } from '../exceptions/auth-refresh-token-reuse.exception';
 import { AuthSessionNotFoundException } from '../exceptions/auth-session-not-found.exception';
 import { AuthTokenInvalidException } from '../exceptions/auth-token-invalid.exception';
+import { AuthClientContext } from '../interfaces/auth-client-context.interface';
 import { AuthSessionRecord } from '../interfaces/auth-session.interface';
 import { AuthUserContext } from '../interfaces/auth-user-context.interface';
 import { AuthenticatedUserResult } from '../interfaces/authenticated-user-result.interface';
 import { parseDurationToMilliseconds } from '../utils/duration.util';
 import { AuthRedisService } from './auth-redis.service';
 import { AuthTokenService } from './auth-token.service';
+import { GeoIpService } from './geo-ip.service';
 
 /**
  * Auth sessions: issuing token pairs, refresh rotation with reuse detection, logout.
@@ -34,6 +38,7 @@ export class AuthSessionService {
     private readonly authTokenService: AuthTokenService,
     private readonly userPermissionsService: UserPermissionsService,
     private readonly configService: ConfigService,
+    private readonly geoIpService: GeoIpService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -120,10 +125,35 @@ export class AuthSessionService {
     this.emitSessionRevokedEvents(revokedSessions, 'logout-all');
   }
 
-  async createAuthenticatedSession(
-    user: User,
-    context: { userAgent?: string; ipAddress?: string },
-  ): Promise<AuthenticatedUserResult> {
+  /** Active sessions of the user, most recently active first. */
+  async listSessions(user: AuthUserContext): Promise<AuthSessionResponseDto[]> {
+    const sessions = await this.authRedisService.listUserSessions(user.id);
+    return sessions
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .map((session) => toAuthSessionResponse(session, user.sessionId));
+  }
+
+  /** Ends one of the user's sessions; the current one is ended with `logout` instead. */
+  async revokeSession(user: AuthUserContext, sessionId: string): Promise<void> {
+    const session = await this.authRedisService.getSession(sessionId);
+    if (!session || session.userId !== user.id) {
+      // 404, not the 401 of an expired own session: the caller stays signed in.
+      throw new DomainNotFoundException('AUTH_SESSION_NOT_FOUND', 'Session is no longer active');
+    }
+    if (sessionId === user.sessionId) {
+      throw new DomainConflictException('AUTH_SESSION_CURRENT', 'Use logout to end the current session');
+    }
+    const revoked = await this.authRedisService.revokeSession(sessionId);
+    this.emitSessionRevokedEvents(revoked ? [revoked] : [], 'revoked');
+  }
+
+  /** Signs out every device except the one making the request. */
+  async logoutOthers(user: AuthUserContext): Promise<void> {
+    const revoked = await this.authRedisService.revokeUserSessions(user.id, user.sessionId);
+    this.emitSessionRevokedEvents(revoked, 'logout-others');
+  }
+
+  async createAuthenticatedSession(user: User, context: AuthClientContext): Promise<AuthenticatedUserResult> {
     const sessionId = randomUUID();
     const refreshToken = await this.authTokenService.signRefreshToken(user.id, sessionId);
     const refreshTokenHash = hashSecret(refreshToken);
@@ -151,7 +181,7 @@ export class AuthSessionService {
     user: User,
     sessionId: string,
     refreshTokenHash: string,
-    context: { userAgent?: string; ipAddress?: string },
+    context: AuthClientContext,
   ): AuthSessionRecord {
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + this.getRefreshTokenTtlMilliseconds()).toISOString();
@@ -164,6 +194,10 @@ export class AuthSessionService {
       refreshTokenHash,
       userAgent: context.userAgent ?? null,
       ipAddress: context.ipAddress ?? null,
+      deviceName: context.deviceName ?? null,
+      platform: context.platform ?? null,
+      appVersion: context.appVersion ?? null,
+      ...this.geoIpService.lookup(context.ipAddress),
       createdAt: now,
       updatedAt: now,
       expiresAt,

@@ -4,6 +4,12 @@ import { InjectModel } from '@nestjs/sequelize';
 
 import { USERS_EVENTS } from '@/modules/users/users.events';
 
+import {
+  COACH_PROACTIVE_DEFAULTS,
+  type CoachProactiveSettings,
+  NOTIFICATION_DEFAULTS,
+  type NotificationSettings,
+} from '../users.constants';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './dto/user-preferences.dto';
 import { PreferencesUpdatedEvent } from './events/preferences-updated.event';
 import { UserPreferences } from './user-preferences.entity';
@@ -41,12 +47,19 @@ export class UserPreferencesService {
       }
     };
 
-    assign('units');
+    assign('distanceUnit');
+    assign('weightUnit');
+    assign('heightUnit');
+    assign('temperatureUnit');
+    assign('coachTone');
+    assign('languageMode');
     assign('weekStart');
     assign('timeFormat');
     assign('coachEnabled');
     assign('coachAdaptationMode');
     assign('stravaProfileSync');
+    assign('stravaActivitiesSync');
+    assign('stravaGearSync');
     assign('timezone');
     assign('language');
     if (dto.coachQuietHours !== undefined) {
@@ -54,6 +67,21 @@ export class UserPreferencesService {
       if (JSON.stringify(preferences.coachQuietHours) !== JSON.stringify(next)) {
         preferences.coachQuietHours = next;
         changedFields.push('coachQuietHours');
+      }
+    }
+
+    if (dto.coachProactive) {
+      const next: CoachProactiveSettings = { ...this.coachProactive(preferences), ...definedOnly(dto.coachProactive) };
+      if (JSON.stringify(this.coachProactive(preferences)) !== JSON.stringify(next)) {
+        preferences.coachProactive = next;
+        changedFields.push('coachProactive');
+      }
+    }
+    if (dto.notifications) {
+      const next: NotificationSettings = { ...this.notifications(preferences), ...definedOnly(dto.notifications) };
+      if (JSON.stringify(this.notifications(preferences)) !== JSON.stringify(next)) {
+        preferences.notifications = next;
+        changedFields.push('notifications');
       }
     }
 
@@ -66,16 +94,38 @@ export class UserPreferencesService {
 
   private toResponse(preferences: UserPreferences): UserPreferencesResponseDto {
     return {
-      units: preferences.units,
+      distanceUnit: preferences.distanceUnit,
+      weightUnit: preferences.weightUnit,
+      heightUnit: preferences.heightUnit,
+      temperatureUnit: preferences.temperatureUnit,
       weekStart: preferences.weekStart,
       timeFormat: preferences.timeFormat,
       coachEnabled: preferences.coachEnabled,
       coachAdaptationMode: preferences.coachAdaptationMode,
+      coachTone: preferences.coachTone,
+      coachProactive: this.coachProactive(preferences),
       coachQuietHours: preferences.coachQuietHours ?? null,
+      notifications: this.notifications(preferences),
       stravaProfileSync: preferences.stravaProfileSync,
+      stravaActivitiesSync: preferences.stravaActivitiesSync,
+      stravaGearSync: preferences.stravaGearSync,
       timezone: preferences.timezone ?? null,
       language: preferences.language ?? null,
+      languageMode: preferences.languageMode,
       updatedAt: preferences.updatedAt,
     };
   }
+
+  /** Stored JSON merged over defaults, so topics added later start with their default value. */
+  coachProactive(preferences: UserPreferences): CoachProactiveSettings {
+    return { ...COACH_PROACTIVE_DEFAULTS, ...(preferences.coachProactive ?? {}) };
+  }
+
+  notifications(preferences: UserPreferences): NotificationSettings {
+    return { ...NOTIFICATION_DEFAULTS, ...(preferences.notifications ?? {}) };
+  }
+}
+
+function definedOnly<T extends object>(value: T): Partial<T> {
+  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<T>;
 }

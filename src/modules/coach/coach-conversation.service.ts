@@ -10,6 +10,7 @@ import { GoalsService } from '@/modules/training/goals/goals.service';
 import { PlanQueryService } from '@/modules/training/plans/plan-query.service';
 import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 import { CoachPolicyService } from '@/modules/users/preferences/coach-policy.service';
+import { type CoachTone } from '@/modules/users/users.constants';
 
 import { COACH_DEFAULT_TITLE } from './coach.constants';
 import { CoachToolExecutionResult } from './coach.interfaces';
@@ -29,6 +30,7 @@ export interface CoachTurn {
   context: CoachContextInput;
   history: CoachMessage[];
   userMessage: string;
+  tone: CoachTone;
 }
 
 export interface CoachReplyRecord {
@@ -89,7 +91,8 @@ export class CoachConversationService {
 
     const context = await this.buildContext(userId, session);
     const history = await this.getMessages(session.id);
-    return { session, context, history, userMessage };
+    const tone = await this.coachPolicyService.tone(userId);
+    return { session, context, history, userMessage, tone };
   }
 
   /** Stores the assistant reply and updates the session. */
@@ -120,8 +123,8 @@ export class CoachConversationService {
     return assistantMessage;
   }
 
-  instructions(): string {
-    return this.promptBuilder.buildInstructions();
+  instructions(turn: CoachTurn): string {
+    return this.promptBuilder.buildInstructions(turn.tone);
   }
 
   /** Prompt input: context (with tool results, if any), recent history and the new message. */

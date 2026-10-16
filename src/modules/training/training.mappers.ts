@@ -68,6 +68,7 @@ export function toAthleteView(athlete: Athlete): AthleteView {
     experienceLevel: athlete.experienceLevel,
     weeklyMileageKm: athlete.weeklyMileageKm,
     sessionsPerWeek: athlete.sessionsPerWeek,
+    allowDoubles: athlete.allowDoubles ?? false,
     recentRaceResults: toArrayOfRecords(athlete.recentRaceResults),
     preferredTrainingDays: [...athlete.preferredTrainingDays],
     availableTrainingDays: [...athlete.availableTrainingDays],
@@ -177,6 +178,7 @@ export function toWorkoutView(workout: Workout): WorkoutView {
     analysis: workout.analysis ? toWorkoutAnalysisView(workout.analysis) : null,
     completedAt: workout.completedAt,
     gearId: workout.gearId ?? null,
+    deviceId: workout.deviceId ?? null,
     createdAt: workout.createdAt,
     updatedAt: workout.updatedAt,
   };

@@ -108,6 +108,7 @@ describe('TrainingEngine plan lifecycle transforms', () => {
           experienceLevel: 'intermediate',
           weeklyMileageKm: 40,
           sessionsPerWeek: 4,
+          allowDoubles: false,
           recentRaceResults: [],
           preferredTrainingDays: [],
           availableTrainingDays: ['monday', 'wednesday', 'friday', 'saturday'],

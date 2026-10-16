@@ -1,6 +1,7 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { I18nService } from 'nestjs-i18n';
@@ -14,10 +15,12 @@ import { buildSwaggerDocument } from './openapi/swagger-document';
 const SWAGGER_PATH = 'docs';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
 
   const logger = app.get(Logger);
   app.useLogger(logger);
+  // Behind the reverse proxy `req.ip` must be the client address: sessions show where they were opened.
+  app.set('trust proxy', app.get(ConfigService).getOrThrow<string>('app.trustProxy'));
 
   app.use(helmet());
 

@@ -68,9 +68,15 @@ export class ActivityDedupService {
     return best;
   }
 
-  /** Sources by priority; ties go to the record seen first. */
-  orderByPriority<T extends SourceRecord>(sources: T[]): T[] {
+  /**
+   * Sources by priority; ties go to the record seen first. `preferred` — the
+   * service of the user's primary device — outranks the default order.
+   */
+  orderByPriority<T extends SourceRecord>(sources: T[], preferred: string | null = null): T[] {
     const rank = (provider: string): number => {
+      if (preferred && provider === preferred) {
+        return -1;
+      }
       const index = ACTIVITY_SOURCE_PRIORITY.indexOf(provider as (typeof ACTIVITY_SOURCE_PRIORITY)[number]);
       return index === -1 ? ACTIVITY_SOURCE_PRIORITY.length : index;
     };
@@ -87,11 +93,11 @@ export class ActivityDedupService {
    * Facts of the primary source, with gaps filled from the other sources in
    * priority order. Time range, duration and distance always come from the primary.
    */
-  merge(sources: SourceRecord[]): MergedSourceFacts {
+  merge(sources: SourceRecord[], preferred: string | null = null): MergedSourceFacts {
     if (sources.length === 0) {
       throw new InvariantViolationException('Cannot merge an empty source list');
     }
-    const ordered = this.orderByPriority(sources);
+    const ordered = this.orderByPriority(sources, preferred);
     const [primary] = ordered;
     const pick = <K extends keyof WorkoutSourceFacts>(key: K): WorkoutSourceFacts[K] | null => {
       for (const source of ordered) {

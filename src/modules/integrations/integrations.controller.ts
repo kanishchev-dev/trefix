@@ -13,6 +13,7 @@ import { IntegrationsService } from '@/modules/integrations/integrations.service
 import { StravaActivitySyncService } from '@/modules/integrations/strava/strava-activity-sync.service';
 import { StravaConnectionService } from '@/modules/integrations/strava/strava-connection.service';
 import { StravaProfileSyncService } from '@/modules/integrations/strava/strava-profile-sync.service';
+import { GearImportResultDto } from '@/modules/training/gear/dto/gear.dto';
 
 import { AuthUserContext } from '../auth/interfaces/auth-user-context.interface';
 import {
@@ -153,6 +154,17 @@ export class IntegrationsController {
   @ApiResponse({ status: 202, type: QueuedResponseDto })
   triggerStravaProfileSync(@CurrentUser() user: AuthUserContext): Promise<{ status: 'queued' }> {
     return this.stravaProfileSync.triggerStravaProfileSync(user.id);
+  }
+
+  @Post('strava/gear-import')
+  @RequirePermissions('integrations.sync')
+  @ApiOperation({
+    summary: 'Import shoes from Strava now and report what changed',
+    description: 'Errors: STRAVA_NOT_CONNECTED, STRAVA_PROFILE_ACCESS_REQUIRED',
+  })
+  @ApiResponse({ status: 201, type: GearImportResultDto })
+  importStravaShoes(@CurrentUser() user: AuthUserContext): Promise<GearImportResultDto> {
+    return this.stravaProfileSync.importStravaShoes(user.id);
   }
 
   @Delete('strava')

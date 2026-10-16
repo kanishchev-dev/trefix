@@ -24,6 +24,9 @@ export class AuthUserResponseDto {
   @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg' })
   avatarUrl?: string;
 
+  @ApiProperty({ type: String, nullable: true, example: 'Running my first marathon this autumn' })
+  bio!: string | null;
+
   @ApiPropertyOptional({ example: 'REF123' })
   referralCode?: string;
 

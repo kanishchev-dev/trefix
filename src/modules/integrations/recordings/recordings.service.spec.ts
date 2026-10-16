@@ -2,6 +2,7 @@ import type { StorageService } from '../../storage/storage.service';
 import type { AthletesService } from '../../training/athletes/athletes.service';
 import type { Workout } from '../../training/entities/workout.entity';
 import type { GearService } from '../../training/gear/gear.service';
+import type { GearAssignmentService } from '../../training/gear/gear-assignment.service';
 import { WorkoutImportService } from '../../training/workouts/workout-import.service';
 import type { WorkoutsService } from '../../training/workouts/workouts.service';
 import type { ActivityIngestionService } from '../ingestion/activity-ingestion.service';
@@ -74,6 +75,7 @@ describe('RecordingsService', () => {
       trainingService as unknown as WorkoutsService,
       trackerDetailsWriter(workoutModel),
       gearService as unknown as GearService,
+      gearService as unknown as GearAssignmentService,
       ingestion as unknown as ActivityIngestionService,
       storage as unknown as StorageService,
     );

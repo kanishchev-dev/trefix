@@ -16,6 +16,7 @@ import { WorkoutsService } from '@/modules/training/workouts/workouts.service';
 import { StorageUploadedFile } from '../../storage/interfaces/storage-uploaded-file.interface';
 import { StorageService } from '../../storage/storage.service';
 import { GearService } from '../../training/gear/gear.service';
+import { GearAssignmentService } from '../../training/gear/gear-assignment.service';
 import {
   GPS_DISTANCE_SOURCES,
   RECORDING_LIMITS,
@@ -75,6 +76,7 @@ export class RecordingsService {
     private readonly workoutsService: WorkoutsService,
     private readonly workoutImportService: WorkoutImportService,
     private readonly gearService: GearService,
+    private readonly gearAssignmentService: GearAssignmentService,
     private readonly ingestion: ActivityIngestionService,
     private readonly storageService: StorageService,
   ) {}
@@ -211,7 +213,7 @@ export class RecordingsService {
       notes: dto.notes,
     });
     if (dto.gearId) {
-      await this.gearService.assignToWorkout(userId, workoutId, dto.gearId);
+      await this.gearAssignmentService.assignToWorkout(userId, workoutId, dto.gearId);
     }
   }
 

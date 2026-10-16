@@ -109,7 +109,7 @@ export class CoachStreamService {
     return new Promise((resolve, reject) => {
       this.openAiService
         .streamResponse({
-          instructions: this.conversation.instructions(),
+          instructions: this.conversation.instructions(turn),
           input,
           schemaName,
           schema: (schemaName === 'coach_draft' ? COACH_DRAFT_SCHEMA : COACH_FINAL_SCHEMA) as Record<string, unknown>,

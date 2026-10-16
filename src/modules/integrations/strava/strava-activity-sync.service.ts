@@ -24,6 +24,7 @@ import { IntegrationSyncState } from '../entities/integration-sync-state.entity'
 import { StravaWebhookEvent } from '../entities/strava-webhook-event.entity';
 import { ActivityIngestionService } from '../ingestion/activity-ingestion.service';
 import { StravaProvider } from '../providers/strava/strava.provider';
+import { UserPreferencesService } from '@/modules/users/preferences/user-preferences.service';
 import { StravaTokenService } from './strava-token.service';
 
 /**
@@ -47,6 +48,7 @@ export class StravaActivitySyncService {
     private readonly configService: ConfigService,
     private readonly ingestion: ActivityIngestionService,
     private readonly stravaTokenService: StravaTokenService,
+    private readonly preferencesService: UserPreferencesService,
   ) {}
 
   /** Triggers a manual sync. */
@@ -288,7 +290,10 @@ export class StravaActivitySyncService {
         if (integration && integration.status !== INTEGRATION_STATUSES.DISCONNECTED) {
           await this.stravaTokenService.ensureValidAccessToken(integration);
 
-          if (event.aspectType === 'create' || event.aspectType === 'update') {
+          if (
+            (event.aspectType === 'create' || event.aspectType === 'update') &&
+            (await this.activitiesSyncEnabled(integration.athleteId))
+          ) {
             const activity = await this.stravaProvider.fetchActivity(integration, event.objectId);
             if (activity) {
               await this.ingestion.ingest(activity);
@@ -324,6 +329,15 @@ export class StravaActivitySyncService {
     if (activity) {
       await this.ingestion.ingest(activity);
     }
+  }
+
+  /** The user may keep Strava connected for the profile and shoes only. */
+  private async activitiesSyncEnabled(athleteId: string): Promise<boolean> {
+    const athlete = await this.athletesService.findById(athleteId);
+    if (!athlete) {
+      return false;
+    }
+    return (await this.preferencesService.getEntity(athlete.userId)).stravaActivitiesSync;
   }
 
   /** Handles deauthorization webhook event. */

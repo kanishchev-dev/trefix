@@ -7,7 +7,7 @@ import { TRAINING_EVENTS } from '@/modules/training/training.events';
 
 import { GearUpdatedEvent } from '../events/gear.events';
 import { WorkoutCompletedEvent } from '../events/workout-completed.event';
-import { GearService } from './gear.service';
+import { GearAssignmentService } from './gear-assignment.service';
 
 /** Payload of `integrations.activity_imported` / `_updated` / `_merged` used here; declared locally to avoid a module cycle. */
 interface ImportedActivity {
@@ -20,20 +20,20 @@ export class GearListener {
   private readonly logger = new Logger(GearListener.name);
 
   constructor(
-    private readonly gearService: GearService,
+    private readonly gearAssignmentService: GearAssignmentService,
     private readonly realtimeService: RealtimeService,
   ) {}
 
   @OnEvent(TRAINING_EVENTS.WORKOUT_COMPLETED, { async: true })
   async handleWorkoutCompleted(event: WorkoutCompletedEvent): Promise<void> {
-    await this.safely(() => this.gearService.autoAssign(event.workoutId));
+    await this.safely(() => this.gearAssignmentService.autoAssign(event.workoutId));
   }
 
   @OnEvent(INTEGRATIONS_EVENTS.ACTIVITY_IMPORTED, { async: true })
   @OnEvent(INTEGRATIONS_EVENTS.ACTIVITY_UPDATED, { async: true })
   @OnEvent(INTEGRATIONS_EVENTS.ACTIVITY_MERGED, { async: true })
   async handleActivityImported(event: ImportedActivity): Promise<void> {
-    await this.safely(() => this.gearService.autoAssign(event.workoutId, event.gearExternalId ?? null));
+    await this.safely(() => this.gearAssignmentService.autoAssign(event.workoutId, event.gearExternalId ?? null));
   }
 
   @OnEvent(TRAINING_EVENTS.GEAR_UPDATED)

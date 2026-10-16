@@ -122,6 +122,12 @@ describe('ActivityDedupService', () => {
         hc,
       ]);
     });
+
+    it("puts the primary device's service first", () => {
+      const strava = record({ provider: 'strava' });
+      const hk = record({ provider: 'apple_health' });
+      expect(service.orderByPriority([strava, hk], 'apple_health')).toEqual([hk, strava]);
+    });
   });
 
   describe('merge', () => {

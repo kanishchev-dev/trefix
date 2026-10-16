@@ -8,6 +8,7 @@ export const TRAINING_ATHLETE_EXAMPLE = {
   experienceLevel: 'intermediate',
   weeklyMileageKm: 38,
   sessionsPerWeek: 4,
+  allowDoubles: false,
   recentRaceResults: [],
   preferredTrainingDays: ['tuesday', 'thursday', 'saturday'],
   availableTrainingDays: ['tuesday', 'thursday', 'saturday', 'sunday'],

@@ -159,7 +159,10 @@ describe('CoachService', () => {
         { provide: CoachPromptBuilder, useValue: promptBuilder },
         { provide: CoachToolRunner, useValue: toolRunner },
         { provide: EventEmitter2, useValue: eventEmitter },
-        { provide: CoachPolicyService, useValue: { assertEnabled: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: CoachPolicyService,
+          useValue: { assertEnabled: jest.fn().mockResolvedValue(undefined), tone: jest.fn().mockResolvedValue('neutral') },
+        },
       ],
     }).compile();
 

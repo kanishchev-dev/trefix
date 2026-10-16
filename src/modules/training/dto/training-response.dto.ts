@@ -82,6 +82,9 @@ export class TrainingAthleteResponseDto implements AthleteView {
   @ApiProperty()
   sessionsPerWeek!: number;
 
+  @ApiProperty({ example: false, description: 'Two workouts on one day; only for advanced athletes' })
+  allowDoubles!: boolean;
+
   @ApiProperty({ type: [Object] })
   recentRaceResults!: Array<Record<string, unknown>>;
 
@@ -299,6 +302,9 @@ export class TrainingWorkoutResponseDto implements WorkoutView {
 
   @ApiPropertyOptional({ type: String, nullable: true, description: 'Gear (shoes) used for the workout' })
   gearId?: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Watch or sensor the workout was recorded with' })
+  deviceId?: string | null;
 
   @ApiProperty()
   createdAt!: Date;

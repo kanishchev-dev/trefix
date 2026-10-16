@@ -1,10 +1,9 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
-import type { GearSource, GearType, WorkoutType } from '../training.constants';
-import { GEAR_LIMIT_KM_DEFAULT } from '../training.constants';
+import type { GearDataSource, GearSource, GearType, WorkoutType } from '../training.constants';
 
-/** Running gear (v1: shoes). Distance is computed from completed workouts, never stored. */
+/** Shoes, watches and sensors. Distance is computed from completed workouts, never stored. */
 @Table({
   tableName: 'gear',
   underscored: true,
@@ -62,13 +61,25 @@ export class Gear extends Model {
   })
   initialDistanceKm!: number;
 
+  /** Wear limit; only shoes have one. */
   @Column({
     type: DataType.INTEGER,
-    allowNull: false,
-    defaultValue: GEAR_LIMIT_KM_DEFAULT,
+    allowNull: true,
     field: 'limit_km',
   })
-  limitKm!: number;
+  limitKm!: number | null;
+
+  /** Shoes picked for new workouts when no workout-type default matches; one active pair at most. */
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_default' })
+  isDefault!: boolean;
+
+  /** The main recording device; its service wins when two services report the same run. */
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_primary' })
+  isPrimary!: boolean;
+
+  /** Service that delivers workouts recorded by this device. */
+  @Column({ type: DataType.STRING(32), allowNull: true, field: 'data_source' })
+  dataSource!: GearDataSource | null;
 
   /** ISO date `YYYY-MM-DD`. */
   @Column({

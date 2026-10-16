@@ -17,6 +17,7 @@ import {
 
 import { RESTING_HR_MAX_SAMPLES } from '../../constants/integrations.constants';
 
+/** Health stores report `other` too; the profile keeps only female/male, so `other` is ignored. */
 export const DEVICE_PROFILE_SEX_VALUES = ['female', 'male', 'other'] as const;
 
 export class DeviceWeightDto {

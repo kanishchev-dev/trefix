@@ -44,7 +44,7 @@ export class DeviceProfileMetricsService {
     const requested: ProfileMetricField[] = [
       ...(dto.weight ? (['weightKg'] as const) : []),
       ...(dto.height ? (['heightCm'] as const) : []),
-      ...(dto.sex ? (['sex'] as const) : []),
+      ...(dto.sex && dto.sex !== 'other' ? (['sex'] as const) : []),
       ...(dto.birthDate ? (['birthDate'] as const) : []),
       ...(dto.restingHeartRate?.length ? (['restingHeartRate'] as const) : []),
     ];
@@ -89,7 +89,7 @@ export class DeviceProfileMetricsService {
     }
 
     // Characteristics have no measurement time: they fill the profile but never replace a manual value.
-    if (dto.sex) {
+    if (dto.sex && dto.sex !== 'other') {
       candidates.push({ field: 'sex', value: dto.sex });
     }
     if (dto.birthDate) {

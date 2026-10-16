@@ -7,6 +7,10 @@
 export const AUTH_EVENTS = {
   EMAIL_OTP_REQUESTED: 'auth.email_otp_requested',
   EMAIL_VERIFIED: 'auth.email_verified',
+  EMAIL_CHANGE_REQUESTED: 'auth.email_change_requested',
+  EMAIL_CHANGED: 'auth.email_changed',
+  IDENTITY_LINKED: 'auth.identity_linked',
+  IDENTITY_UNLINKED: 'auth.identity_unlinked',
   PASSWORD_CHANGED: 'auth.password_changed',
   PASSWORD_RESET_REQUESTED: 'auth.password_reset_requested',
   REGISTERED: 'auth.registered',

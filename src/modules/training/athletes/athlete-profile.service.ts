@@ -28,6 +28,7 @@ import {
 import { UpdateAthleteProfileDto } from './dto/update-athlete-profile.dto';
 import { calculateHrZones, estimateMaxHeartRate, type HrZone, isValidCustomZones } from './hr-zones';
 import { ageFromBirthDate, calculateCompleteness, type ProfileCompleteness } from './profile-completeness';
+import { reconcileSchedule } from './schedule-rules';
 
 export interface WeeklyMileageSuggestion {
   valueKm: number;
@@ -70,6 +71,7 @@ const UPDATABLE_FIELDS = [
   'availableTrainingDays',
   'preferredTimeOfDay',
   'sessionsPerWeek',
+  'allowDoubles',
   'longRunDay',
   'preferredWorkoutDurationMinutes',
   'longRunMaxDurationMinutes',
@@ -137,6 +139,7 @@ export class AthleteProfileService {
       }
     }
 
+    this.applyScheduleRules(athlete, dto, changed);
     this.validate(athlete);
 
     const sourcesChanged = JSON.stringify(sources) !== JSON.stringify(athlete.fieldSources ?? {});
@@ -330,6 +333,28 @@ export class AthleteProfileService {
       source: workoutsMetricsSource(workouts.map((workout) => workout.sourceProvider)),
       windowDays: VOLUME_WINDOW_DAYS,
     };
+  }
+
+  /** Corrects schedule fields that became invalid as a side effect and rejects invalid explicit values. */
+  private applyScheduleRules(athlete: Athlete, dto: UpdateAthleteProfileDto, changed: Set<UpdatableField>): void {
+    const current = {
+      experienceLevel: athlete.experienceLevel,
+      availableTrainingDays: athlete.availableTrainingDays ?? [],
+      sessionsPerWeek: athlete.sessionsPerWeek,
+      allowDoubles: athlete.allowDoubles ?? false,
+    };
+    const next = reconcileSchedule(current, {
+      sessionsPerWeek: dto.sessionsPerWeek !== undefined,
+      allowDoubles: dto.allowDoubles === true,
+    });
+    if (next.allowDoubles !== current.allowDoubles) {
+      athlete.allowDoubles = next.allowDoubles;
+      changed.add('allowDoubles');
+    }
+    if (next.sessionsPerWeek !== current.sessionsPerWeek) {
+      athlete.sessionsPerWeek = next.sessionsPerWeek;
+      changed.add('sessionsPerWeek');
+    }
   }
 
   private validate(athlete: Athlete): void {

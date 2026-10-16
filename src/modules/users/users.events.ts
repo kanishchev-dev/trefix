@@ -6,6 +6,8 @@
  */
 export const USERS_EVENTS = {
   ACCOUNT_DELETION_REQUESTED: 'account.deletion_requested',
+  DATA_EXPORT_REQUESTED: 'account.data_export_requested',
+  DATA_EXPORT_READY: 'account.data_export_ready',
   PREFERENCES_UPDATED: 'preferences.updated',
   USER_CREATED: 'user.created',
   USER_DELETED: 'user.deleted',

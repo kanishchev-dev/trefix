@@ -1,5 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsUrl, MaxLength, MinLength, ValidateIf } from 'class-validator';
+
+import { USER_BIO_MAX_LENGTH } from '../users.constants';
 
 export class UpdateUserDto {
   /**
@@ -27,10 +29,26 @@ export class UpdateUserDto {
    * @example https://example.com/avatar.jpg
    */
   @ApiPropertyOptional({
+    type: String,
+    nullable: true,
     example: 'https://example.com/avatar.jpg',
-    description: "Public URL to the user's avatar image",
+    description: "Public URL to the user's avatar image; `null` removes the avatar",
   })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsUrl()
-  avatarUrl?: string;
+  avatarUrl?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    maxLength: USER_BIO_MAX_LENGTH,
+    example: 'Running my first marathon this autumn',
+    description: 'Short text about the user; empty string or `null` clears it',
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsString()
+  @MaxLength(USER_BIO_MAX_LENGTH)
+  bio?: string | null;
 }

@@ -25,15 +25,18 @@ import { RequirePermissions } from '@/common/decorators/require-permissions.deco
 import { AuthUserContext } from '@/modules/auth/interfaces/auth-user-context.interface';
 
 import {
+  AssignWorkoutDeviceDto,
   AssignWorkoutGearDto,
   CreateGearDto,
   GearListQueryDto,
   GearListResponseDto,
   GearResponseDto,
   UpdateGearDto,
+  WorkoutDeviceAssignmentDto,
   WorkoutGearAssignmentDto,
 } from './dto/gear.dto';
 import { GearService } from './gear.service';
+import { GearAssignmentService } from './gear-assignment.service';
 
 const GEAR_EXAMPLE = {
   id: '01929b5e-6f1d-7c3a-9a55-3b4f1e2d9c10',
@@ -49,8 +52,13 @@ const GEAR_EXAMPLE = {
   defaultWorkoutTypes: ['easy', 'recovery'],
   replaceReminder: true,
   source: 'manual',
+  isDefault: true,
+  isPrimary: false,
+  dataSource: null,
   distanceKm: 412.5,
   workoutsCount: 38,
+  averagePaceSecondsPerKm: 332,
+  weeklyKm: 42.5,
   remainingKm: 287.5,
   wearPercent: 59,
   replaceSoon: false,
@@ -62,14 +70,17 @@ const GEAR_EXAMPLE = {
 @ApiBearerAuth()
 @Controller({ path: '', version: '1' })
 export class GearController {
-  constructor(private readonly gearService: GearService) {}
+  constructor(
+    private readonly gearService: GearService,
+    private readonly gearAssignmentService: GearAssignmentService,
+  ) {}
 
   @Get('gear')
   @RequirePermissions('training.gear.read')
   @ApiOperation({ summary: 'List own gear with mileage' })
   @ApiOkResponse({ type: GearListResponseDto, schema: { example: { items: [GEAR_EXAMPLE] } } })
   list(@CurrentUser() user: AuthUserContext, @Query() query: GearListQueryDto): Promise<GearListResponseDto> {
-    return this.gearService.list(user.id, query.status);
+    return this.gearService.list(user.id, query.status, query.type);
   }
 
   @Get('gear/:id')
@@ -136,6 +147,21 @@ export class GearController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignWorkoutGearDto,
   ): Promise<{ workoutId: string; gearId: string | null }> {
-    return this.gearService.assignToWorkout(user.id, id, dto.gearId ?? null);
+    return this.gearAssignmentService.assignToWorkout(user.id, id, dto.gearId ?? null);
+  }
+
+  @Patch('workouts/:id/device')
+  @RequirePermissions('training.gear.manage')
+  @ApiOperation({
+    summary: 'Set or clear the watch or sensor a workout was recorded with',
+    description: 'Errors: WORKOUT_NOT_FOUND, GEAR_NOT_FOUND, GEAR_TYPE_MISMATCH',
+  })
+  @ApiOkResponse({ type: WorkoutDeviceAssignmentDto })
+  assignDevice(
+    @CurrentUser() user: AuthUserContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignWorkoutDeviceDto,
+  ): Promise<{ workoutId: string; deviceId: string | null }> {
+    return this.gearAssignmentService.assignDeviceToWorkout(user.id, id, dto.deviceId ?? null);
   }
 }

@@ -92,6 +92,20 @@ export class AvatarService {
    * An avatar that points at an external URL is redirected instead of being
    * proxied, so third-party hosting is not turned into an open relay.
    */
+  /** Removes the own photo; the stored file is deleted too. */
+  async removeAvatar(userId: string): Promise<void> {
+    const user = await this.usersService.findOne(userId);
+    const fileId = this.extractManagedFileId(user.avatarUrl);
+    if (!user.avatarUrl) {
+      return;
+    }
+    await this.usersService.update(userId, { avatarUrl: null });
+    if (fileId) {
+      await this.storageService.deleteFileQuietly(fileId);
+    }
+    this.logger.log(`Avatar removed for user ${userId}`);
+  }
+
   async resolveAvatarSource(userId: string): Promise<AvatarSource> {
     const user = await this.usersService.findOne(userId);
     const avatarUrl = user.avatarUrl;

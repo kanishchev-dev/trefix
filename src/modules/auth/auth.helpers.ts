@@ -39,6 +39,7 @@ export function toAuthUserResponse(user: User, permissions?: string[]): AuthUser
     firstName: user.firstName,
     lastName: user.lastName,
     avatarUrl: user.avatarUrl ?? undefined,
+    bio: user.bio ?? null,
     referralCode: user.referralCode ?? undefined,
     emailVerified: user.emailVerified,
     createdAt: user.createdAt,

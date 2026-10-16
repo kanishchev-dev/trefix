@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 import { ForbiddenActionException } from '@/common/exceptions/domain-exceptions';
 
-import { type CoachAdaptationMode, type QuietHours } from '../users.constants';
+import {
+  type CoachAdaptationMode,
+  type CoachProactiveTopic,
+  type CoachTone,
+  type QuietHours,
+} from '../users.constants';
 import { UserPreferencesService } from './user-preferences.service';
 
 /**
@@ -48,13 +53,26 @@ export class CoachPolicyService {
     return MODE_TO_POLICY[preferences.coachAdaptationMode] ?? 'propose';
   }
 
+  async tone(userId: string): Promise<CoachTone> {
+    return (await this.preferencesService.getEntity(userId)).coachTone;
+  }
+
   /**
    * Whether a proactive message may be sent now. Replies to the user's own
    * messages are never restricted. Returns the moment quiet hours end otherwise.
+   * Messages with a `topic` are dropped when the user switched that topic off;
+   * messages without one (plan proposals, gear wear) only follow quiet hours.
    */
-  async proactiveMessageWindow(userId: string, now = new Date()): Promise<{ allowed: boolean; resumeAt: Date | null }> {
+  async proactiveMessageWindow(
+    userId: string,
+    now = new Date(),
+    topic: CoachProactiveTopic | null = null,
+  ): Promise<{ allowed: boolean; resumeAt: Date | null }> {
     const preferences = await this.preferencesService.getEntity(userId);
     if (!preferences.coachEnabled) {
+      return { allowed: false, resumeAt: null };
+    }
+    if (topic && !this.preferencesService.coachProactive(preferences)[topic]) {
       return { allowed: false, resumeAt: null };
     }
     const resumeAt = quietHoursEnd(preferences.coachQuietHours, preferences.timezone, now);

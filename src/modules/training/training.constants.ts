@@ -4,7 +4,7 @@ export const TRAINING_LOAD_ALGORITHM_VERSION = 'v1';
 export const TRAINING_STATE_SOURCE = 'deterministic_v1';
 
 export const ATHLETE_EXPERIENCE_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
-export const ATHLETE_SEX_VALUES = ['female', 'male', 'other', 'prefer_not_to_say'] as const;
+export const ATHLETE_SEX_VALUES = ['female', 'male'] as const;
 export const ATHLETE_GOAL_DISTANCES = ['5k', '10k', 'half_marathon', 'marathon', 'just_running'] as const;
 export const ATHLETE_GOAL_STATUSES = ['active', 'completed', 'paused', 'cancelled'] as const;
 export const TRAINING_PLAN_STATUSES = ['draft', 'active', 'completed', 'paused', 'cancelled'] as const;
@@ -164,7 +164,11 @@ export const FIELD_SOURCES = ['manual', 'strava', 'apple_health', 'health_connec
 /** A fact-based weekly volume is suggested when it differs from the profile by more than this share. */
 export const WEEKLY_MILEAGE_SUGGESTION_THRESHOLD = 0.1;
 
-export const GEAR_TYPES = ['shoes'] as const;
+export const GEAR_TYPES = ['shoes', 'watch', 'sensor'] as const;
+/** Gear that records workouts; shoes only accumulate mileage. */
+export const GEAR_DEVICE_TYPES = ['watch', 'sensor'] as const;
+/** Where workouts recorded by a device reach Trefix from. */
+export const GEAR_DATA_SOURCES = ['strava', 'garmin', 'apple_health', 'health_connect'] as const;
 /** Imported run counts as a long run from this distance, or when it beats the recent average by the factor. */
 export const IMPORTED_LONG_RUN_MIN_KM = 16;
 export const IMPORTED_LONG_RUN_FACTOR = 1.4;
@@ -228,6 +232,7 @@ export type FieldSource = (typeof FIELD_SOURCES)[number];
 export type TrainingWeekday = (typeof TRAINING_WEEKDAY_ORDER)[number];
 export type GearType = (typeof GEAR_TYPES)[number];
 export type GearSource = (typeof GEAR_SOURCES)[number];
+export type GearDataSource = (typeof GEAR_DATA_SOURCES)[number];
 export type GearStatus = (typeof GEAR_STATUSES)[number];
 export type AdaptationEventStatus = (typeof ADAPTATION_EVENT_STATUSES)[number];
 /** Per-field provenance stored in `athletes.field_sources`. */

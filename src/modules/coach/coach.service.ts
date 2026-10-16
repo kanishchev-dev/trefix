@@ -103,7 +103,7 @@ export class CoachService {
   async sendMessage(userId: string, sessionId: string, dto: SendCoachMessageDto): Promise<CoachChatResponseDto> {
     const turn = await this.conversation.openTurn(userId, sessionId, dto.message);
     const draft = await this.openAiService.createStructuredResponse<CoachDraftResponse>({
-      instructions: this.conversation.instructions(),
+      instructions: this.conversation.instructions(turn),
       input: this.conversation.promptMessages(turn),
       schemaName: 'coach_draft',
       schema: COACH_DRAFT_SCHEMA as Record<string, unknown>,
@@ -156,7 +156,7 @@ export class CoachService {
 
     const toolResults = await this.toolRunner.runTools(userId, turn.session.athleteId, draft.toolRequests);
     const finalResponse = await this.openAiService.createStructuredResponse<CoachFinalResponse>({
-      instructions: this.conversation.instructions(),
+      instructions: this.conversation.instructions(turn),
       input: this.conversation.promptMessages(turn, toolResults),
       schemaName: 'coach_final',
       schema: COACH_FINAL_SCHEMA as Record<string, unknown>,

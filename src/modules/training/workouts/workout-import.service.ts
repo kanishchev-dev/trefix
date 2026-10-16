@@ -183,6 +183,7 @@ export class WorkoutImportService {
         workout.analysis = null;
         workout.completedAt = null;
         workout.gearId = null;
+        workout.deviceId = null;
         workout.sourceProvider = null;
         workout.sourceActivityId = null;
         await workout.save({ transaction });

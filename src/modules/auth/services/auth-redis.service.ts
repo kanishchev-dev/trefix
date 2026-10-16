@@ -4,6 +4,7 @@ import { Redis } from 'ioredis';
 import { RedisService } from '@/common/redis/redis.service';
 
 import {
+  AUTH_EMAIL_CHANGE_REDIS_PREFIX,
   AUTH_EMAIL_OTP_COOLDOWN_REDIS_PREFIX,
   AUTH_EMAIL_OTP_REDIS_PREFIX,
   AUTH_EMAIL_VERIFICATION_COOLDOWN_REDIS_PREFIX,
@@ -16,6 +17,7 @@ import {
 } from '../auth.constants';
 import { AuthStorageUnavailableException } from '../exceptions/auth-storage-unavailable.exception';
 import { AuthCodeRecord } from '../interfaces/auth-code-record.interface';
+import { AuthEmailChangeRecord } from '../interfaces/auth-email-change-record.interface';
 import { AuthEmailOtpCodeRecord } from '../interfaces/auth-email-otp-code-record.interface';
 import { AuthSessionRecord } from '../interfaces/auth-session.interface';
 import { AuthSocialResultRecord } from '../interfaces/auth-social-result.interface';
@@ -66,10 +68,11 @@ export class AuthRedisService {
     return session;
   }
 
-  async revokeUserSessions(userId: string): Promise<AuthSessionRecord[]> {
+  /** Revokes all sessions of the user, optionally keeping one (the device asking to sign out the others). */
+  async revokeUserSessions(userId: string, keepSessionId?: string): Promise<AuthSessionRecord[]> {
     const client = this.getClient();
     const userSessionsKey = this.buildUserSessionsKey(userId);
-    const sessionIds = await client.smembers(userSessionsKey);
+    const sessionIds = (await client.smembers(userSessionsKey)).filter((sessionId) => sessionId !== keepSessionId);
 
     if (sessionIds.length === 0) {
       return [];
@@ -82,9 +85,29 @@ export class AuthRedisService {
       pipeline.del(this.buildSessionKey(sessionId));
     });
 
-    pipeline.del(userSessionsKey);
+    if (keepSessionId) {
+      pipeline.srem(userSessionsKey, ...sessionIds);
+    } else {
+      pipeline.del(userSessionsKey);
+    }
     await pipeline.exec();
 
+    return sessions.filter((session): session is AuthSessionRecord => session !== null);
+  }
+
+  /** Live sessions of the user; ids whose session already expired are dropped from the index. */
+  async listUserSessions(userId: string): Promise<AuthSessionRecord[]> {
+    const client = this.getClient();
+    const userSessionsKey = this.buildUserSessionsKey(userId);
+    const sessionIds = await client.smembers(userSessionsKey);
+    if (sessionIds.length === 0) {
+      return [];
+    }
+    const sessions = await this.getSessions(sessionIds);
+    const expired = sessionIds.filter((_, index) => sessions[index] === null);
+    if (expired.length > 0) {
+      await client.srem(userSessionsKey, ...expired);
+    }
     return sessions.filter((session): session is AuthSessionRecord => session !== null);
   }
 
@@ -177,6 +200,35 @@ export class AuthRedisService {
   async isVerificationCooldownActive(userId: string): Promise<boolean> {
     const client = this.getClient();
     return (await client.exists(this.buildVerificationCooldownKey(userId))) === 1;
+  }
+
+  async setEmailChangeCode(
+    userId: string,
+    record: AuthEmailChangeRecord,
+    ttlMilliseconds: number,
+    cooldownMilliseconds: number,
+  ): Promise<void> {
+    await this.getClient()
+      .multi()
+      .set(this.buildEmailChangeKey(userId), JSON.stringify(record), 'PX', ttlMilliseconds)
+      .set(this.buildEmailChangeCooldownKey(userId), '1', 'PX', cooldownMilliseconds)
+      .exec();
+  }
+
+  async getEmailChangeCode(userId: string): Promise<AuthEmailChangeRecord | null> {
+    return this.getJsonRecord<AuthEmailChangeRecord>(this.buildEmailChangeKey(userId));
+  }
+
+  async incrementEmailChangeAttempts(userId: string, maxAttempts: number): Promise<AuthCodeRecord | null> {
+    return this.incrementCodeAttempts(this.buildEmailChangeKey(userId), maxAttempts);
+  }
+
+  async clearEmailChangeCode(userId: string): Promise<void> {
+    await this.deleteKeys(this.buildEmailChangeKey(userId), this.buildEmailChangeCooldownKey(userId));
+  }
+
+  async isEmailChangeCooldownActive(userId: string): Promise<boolean> {
+    return (await this.getClient().exists(this.buildEmailChangeCooldownKey(userId))) === 1;
   }
 
   async setPasswordResetCode(userId: string, record: AuthCodeRecord, ttlMilliseconds: number): Promise<void> {
@@ -369,6 +421,14 @@ export class AuthRedisService {
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
+  }
+
+  private buildEmailChangeKey(userId: string): string {
+    return `${AUTH_EMAIL_CHANGE_REDIS_PREFIX}${userId}`;
+  }
+
+  private buildEmailChangeCooldownKey(userId: string): string {
+    return `${AUTH_EMAIL_CHANGE_REDIS_PREFIX}cooldown:${userId}`;
   }
 
   private buildSessionKey(sessionId: string): string {

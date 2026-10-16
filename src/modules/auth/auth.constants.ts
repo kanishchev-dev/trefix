@@ -20,3 +20,12 @@ export const AUTH_EMAIL_OTP_COOLDOWN_REDIS_PREFIX = 'auth:email-otp-cooldown:';
 export const AUTH_SOCIAL_STATE_REDIS_PREFIX = 'auth:social-state:';
 export const AUTH_SOCIAL_RESULT_REDIS_PREFIX = 'auth:social-result:';
 export const AUTH_PASSWORD_RESET_REDIS_PREFIX = 'auth:password-reset:';
+
+/** Headers the apps send so sessions can be shown as devices. */
+export const AUTH_CLIENT_DEVICE_HEADER = 'x-client-device';
+export const AUTH_CLIENT_PLATFORM_HEADER = 'x-client-platform';
+export const AUTH_CLIENT_APP_VERSION_HEADER = 'x-client-app-version';
+export const AUTH_CLIENT_HEADER_MAX_LENGTH = 120;
+
+export const AUTH_EMAIL_CHANGE_REDIS_PREFIX = 'auth:email-change:';
+export const AUTH_EMAIL_CHANGE_TEMPLATE = 'auth/email-change';

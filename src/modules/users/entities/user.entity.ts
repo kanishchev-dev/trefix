@@ -46,6 +46,9 @@ export class User extends Model {
   })
   avatarUrl!: string | null;
 
+  @Column({ type: DataType.STRING(300), allowNull: true })
+  bio!: string | null;
+
   @Column({
     type: DataType.STRING,
     allowNull: true,

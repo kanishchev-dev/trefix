@@ -131,7 +131,8 @@ export class UsersService {
 
   async update(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
-    await user.update(dto);
+    const bio = dto.bio === undefined ? undefined : dto.bio?.trim() || null;
+    await user.update({ ...dto, ...(bio === undefined ? {} : { bio }) });
 
     this.eventEmitter.emit(
       USERS_EVENTS.USER_UPDATED,
@@ -306,6 +307,21 @@ export class UsersService {
       passwordHash,
       passwordChangedAt: new Date(),
     });
+  }
+
+  /** Sets a new, already confirmed email; the caller has verified ownership with a code. */
+  async changeEmail(id: string, email: string): Promise<User> {
+    const existing = await this.findByEmail(email);
+    if (existing && existing.id !== id) {
+      throw new EntityAlreadyExistsException('User', 'email', email);
+    }
+    const user = await this.findOne(id);
+    await user.update({ email, emailVerified: true, emailVerifiedAt: new Date() });
+    this.eventEmitter.emit(
+      USERS_EVENTS.USER_UPDATED,
+      new UserUpdatedEvent(user.id, user.email, user.firstName, user.lastName, user.avatarUrl),
+    );
+    return user;
   }
 
   async setEmailVerified(id: string, emailVerified: boolean): Promise<User> {

@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
   IsISO8601,
@@ -133,11 +134,21 @@ export class UpdateAthleteProfileDto {
   @IsIn(TIMES_OF_DAY)
   preferredTimeOfDay?: TimeOfDay;
 
-  @ApiPropertyOptional({ example: 4 })
+  @ApiPropertyOptional({
+    example: 4,
+    description: 'Up to the number of available days, or twice that (max 7) with `allowDoubles`',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   sessionsPerWeek?: number;
+
+  @ApiPropertyOptional({
+    description: 'Two workouts on one day; accepted only for `advanced`, reset when the level goes down',
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowDoubles?: boolean;
 
   @ApiPropertyOptional({ enum: TRAINING_WEEKDAY_ORDER, nullable: true })
   @IsOptional()

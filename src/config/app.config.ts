@@ -39,6 +39,10 @@ export default registerAs('app', () => ({
    * translations copied next to it — hence two layouts.
    */
   i18nPath: process.env.NODE_ENV === 'development' ? '../../i18n/' : '../i18n/',
+  /** Express `trust proxy` value: which hops may set `X-Forwarded-For`. */
+  trustProxy: process.env.TRUST_PROXY || 'loopback, uniquelocal',
+  /** MaxMind GeoLite2-City database; without it sessions carry no city. */
+  geoipCityDbPath: process.env.GEOIP_CITY_DB_PATH || null,
   throttleLimit: parseInt(process.env.THROTTLE_LIMIT || '300', 10),
   throttleTtl: parseInt(process.env.THROTTLE_TTL || '60000', 10),
 }));

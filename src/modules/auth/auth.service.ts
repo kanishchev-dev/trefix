@@ -25,6 +25,7 @@ import { AuthInvalidCredentialsException } from './exceptions/auth-invalid-crede
 import { AuthInviteAlreadyActivatedException } from './exceptions/auth-invite-already-activated.exception';
 import { AuthInviteCodeInvalidException } from './exceptions/auth-invite-code-invalid.exception';
 import { AuthSessionNotFoundException } from './exceptions/auth-session-not-found.exception';
+import { AuthClientContext } from './interfaces/auth-client-context.interface';
 import { AuthUserContext } from './interfaces/auth-user-context.interface';
 import { AuthenticatedUserResult } from './interfaces/authenticated-user-result.interface';
 import { AuthCodeService } from './services/auth-code.service';
@@ -72,10 +73,7 @@ export class AuthService {
     };
   }
 
-  async login(
-    dto: LoginDto,
-    context: { userAgent?: string; ipAddress?: string } = {},
-  ): Promise<AuthenticatedUserResult> {
+  async login(dto: LoginDto, context: AuthClientContext = {}): Promise<AuthenticatedUserResult> {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user || !user.passwordHash) {
       throw new AuthInvalidCredentialsException();
@@ -93,7 +91,11 @@ export class AuthService {
     return this.authSessionService.createAuthenticatedSession(user, context);
   }
 
-  async changePassword(user: AuthUserContext, dto: ChangePasswordDto): Promise<AuthenticatedUserResult> {
+  async changePassword(
+    user: AuthUserContext,
+    dto: ChangePasswordDto,
+    context: AuthClientContext = {},
+  ): Promise<AuthenticatedUserResult> {
     const currentUser = await this.usersService.findOne(user.id);
     if (!currentUser.passwordHash || !(await verifyUserPassword(dto.currentPassword, currentUser.passwordHash))) {
       throw new AuthInvalidCredentialsException();
@@ -105,10 +107,7 @@ export class AuthService {
     const revokedSessions = await this.authRedisService.revokeUserSessions(currentUser.id);
     this.authSessionService.emitSessionRevokedEvents(revokedSessions, 'password-change');
 
-    return this.authSessionService.createAuthenticatedSession(await this.usersService.findOne(currentUser.id), {
-      userAgent: undefined,
-      ipAddress: undefined,
-    });
+    return this.authSessionService.createAuthenticatedSession(await this.usersService.findOne(currentUser.id), context);
   }
 
   /**
@@ -118,10 +117,7 @@ export class AuthService {
    * @param dto - Email, invite code and the new password
    * @returns The activated user together with a fresh session
    */
-  async activateInvite(
-    dto: ActivateInviteDto,
-    context: { userAgent?: string; ipAddress?: string } = {},
-  ): Promise<AuthenticatedUserResult> {
+  async activateInvite(dto: ActivateInviteDto, context: AuthClientContext = {}): Promise<AuthenticatedUserResult> {
     const user = await this.usersService.findByEmail(dto.email);
     // Same response for unknown email and wrong code so the endpoint cannot
     // be used to enumerate accounts.

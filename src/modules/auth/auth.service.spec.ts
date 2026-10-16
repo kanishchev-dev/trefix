@@ -16,7 +16,9 @@ import { AuthRedisService } from './services/auth-redis.service';
 import { AuthSessionService } from './services/auth-session.service';
 import { AuthSocialFlowService } from './services/auth-social-flow.service';
 import { AuthTokenService } from './services/auth-token.service';
+import { GeoIpService } from './services/geo-ip.service';
 import { SocialIdentityService } from './services/social-identity.service';
+import { UserIdentityService } from './services/user-identity.service';
 
 async function createPasswordHash(password: string): Promise<string> {
   return hashPassword(password, 12);
@@ -112,6 +114,8 @@ describe('AuthService', () => {
         { provide: PermissionsService, useValue: permissionsService },
         { provide: UserPermissionsService, useValue: permissionsService },
         SocialIdentityService,
+        { provide: UserIdentityService, useValue: { resolveUser: jest.fn() } },
+        { provide: GeoIpService, useValue: { lookup: jest.fn().mockReturnValue({ city: null, country: null }) } },
         { provide: ConfigService, useValue: configService },
         { provide: EventEmitter2, useValue: eventEmitter },
       ],

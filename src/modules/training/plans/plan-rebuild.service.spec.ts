@@ -252,6 +252,7 @@ describe('PlanRebuildService', () => {
         experienceLevel: 'intermediate',
         weeklyMileageKm: 30,
         sessionsPerWeek: 3,
+        allowDoubles: false,
         recentRaceResults: [],
         preferredTrainingDays: [],
         availableTrainingDays: ['tuesday', 'thursday', 'saturday'],

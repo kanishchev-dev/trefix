@@ -5,6 +5,7 @@ import { Op, UniqueConstraintError } from 'sequelize';
 
 import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
 import { AthletesService } from '@/modules/training/athletes/athletes.service';
+import { GearAssignmentService } from '@/modules/training/gear/gear-assignment.service';
 import { WorkoutView } from '@/modules/training/interfaces/training-views.interface';
 import { ImportedWorkoutLookupService } from '@/modules/training/workouts/imported-workout-lookup.service';
 import { WorkoutImportService } from '@/modules/training/workouts/workout-import.service';
@@ -84,6 +85,7 @@ export class ActivityIngestionService {
     private readonly workoutImportService: WorkoutImportService,
     private readonly workoutLookup: ImportedWorkoutLookupService,
     private readonly athletesService: AthletesService,
+    private readonly gearAssignmentService: GearAssignmentService,
     private readonly preferencesService: UserPreferencesService,
     private readonly dedup: ActivityDedupService,
     private readonly eventEmitter: EventEmitter2,
@@ -201,7 +203,11 @@ export class ActivityIngestionService {
     if (sources.length === 0) {
       return null;
     }
-    const merged = this.dedup.merge(sources.map((source) => this.sourceToRecord(source)));
+    const preferred = await this.gearAssignmentService.primaryDataSource(sources[0].athleteId);
+    const merged = this.dedup.merge(
+      sources.map((source) => this.sourceToRecord(source)),
+      preferred,
+    );
 
     for (const source of sources) {
       const isPrimary =

@@ -12,7 +12,12 @@ import { COACH_DEFAULT_TITLE } from '../coach.constants';
 import { CoachMessage } from '../entities/coach-message.entity';
 import { CoachSession } from '../entities/coach-session.entity';
 import { CoachReplyGeneratedEvent } from '../events/coach-reply-generated.event';
-import { COACH_PROACTIVE_JOB, COACH_PROACTIVE_QUEUE, type ProactiveMessage } from './coach-proactive.constants';
+import {
+  COACH_PROACTIVE_JOB,
+  COACH_PROACTIVE_QUEUE,
+  PROACTIVE_KIND_TOPIC,
+  type ProactiveMessage,
+} from './coach-proactive.constants';
 
 /**
  * Messages the coach starts on its own (gear wear, plan change proposals).
@@ -37,7 +42,11 @@ export class CoachProactiveService {
 
   /** Sends now, schedules for the end of quiet hours, or drops when the coach is off. */
   async deliver(message: ProactiveMessage, now = new Date()): Promise<'sent' | 'scheduled' | 'dropped'> {
-    const window = await this.coachPolicyService.proactiveMessageWindow(message.userId, now);
+    const window = await this.coachPolicyService.proactiveMessageWindow(
+      message.userId,
+      now,
+      PROACTIVE_KIND_TOPIC[message.kind],
+    );
     if (window.allowed) {
       await this.send(message);
       return 'sent';
