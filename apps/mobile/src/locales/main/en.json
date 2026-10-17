@@ -2596,8 +2596,8 @@
     "treadmillTitle": "Treadmill",
     "heroSub": {
       "ready": "Type, feeling and a note — after the finish",
-      "searching": "You can start — accuracy improves within a minute",
-      "treadmill": "The pedometer counts the distance; check it against the console",
+      "searching": "You can start — accuracy improves shortly",
+      "treadmill": "Pedometer distance — compare with the console",
       "goal": "Goal {{goal}} · {{estimate}}"
     },
     "gpsPill": {
@@ -2870,6 +2870,11 @@
       "resume": "Continue recording",
       "finish": "Finish and see the summary",
       "delete": "Delete recording"
+    },
+    "voiceShort": "Voice",
+    "cellNames": {
+      "splitPace": "Km pace",
+      "splitPaceImperial": "Mile pace"
     }
   },
   "errors": {

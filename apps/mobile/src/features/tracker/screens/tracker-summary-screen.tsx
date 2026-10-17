@@ -495,24 +495,44 @@ export function TrackerSummaryScreen({
         <View style={styles.section}>
           <SectionTitle text={ts.result} theme={theme} />
           <View style={styles.tiles}>
-            {tiles.map((tile) => (
-              <View
-                key={tile.label}
-                style={[styles.tile, { backgroundColor: theme.color.card }]}
-              >
-                <Text numberOfLines={1} style={[styles.small, muted]}>
-                  {tile.label}
-                </Text>
-                <View style={styles.tileValueRow}>
-                  <Text numberOfLines={1} style={[styles.tileValue, strong]}>
-                    {tile.value}
-                  </Text>
-                  <Text numberOfLines={1} style={[styles.small, muted]}>
-                    {tile.unit}
-                  </Text>
+            {[0, 2]
+              .filter((start) => start < tiles.length)
+              .map((start) => (
+                <View key={start} style={styles.tileRow}>
+                  {tiles.slice(start, start + 2).map((tile) => (
+                    <View
+                      key={tile.label}
+                      style={[
+                        styles.tile,
+                        { backgroundColor: theme.color.card },
+                      ]}
+                    >
+                      <Text numberOfLines={1} style={[styles.small, muted]}>
+                        {tile.label}
+                      </Text>
+                      <View style={styles.tileValueRow}>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.7}
+                          style={[styles.tileValue, styles.shrink, strong]}
+                        >
+                          {tile.value}
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          style={[styles.small, styles.shrink, muted]}
+                        >
+                          {tile.unit}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                  {start + 1 >= tiles.length ? (
+                    <View style={styles.tileGap} />
+                  ) : null}
                 </View>
-              </View>
-            ))}
+              ))}
           </View>
           {track.length >= 2 ? (
             <TrackMap
@@ -1579,12 +1599,18 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   volumeValue: {
+    flexShrink: 1,
     fontSize: 44,
     lineHeight: 48,
     letterSpacing: -1,
     fontVariant: ["tabular-nums"],
   },
-  volumeSub: { fontSize: 17, lineHeight: 22, fontVariant: ["tabular-nums"] },
+  volumeSub: {
+    flexShrink: 0,
+    fontSize: 17,
+    lineHeight: 22,
+    fontVariant: ["tabular-nums"],
+  },
   meta: { marginTop: 8, maxWidth: 240, fontSize: 13, lineHeight: 18 },
   section: { gap: 12 },
   sectionHead: {
@@ -1610,8 +1636,11 @@ const styles = StyleSheet.create({
   small: { fontSize: 13, lineHeight: 18 },
   tiny: { fontSize: 12, lineHeight: 16 },
   hint: { paddingHorizontal: 16, fontSize: 13, lineHeight: 18 },
-  tiles: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  tile: { width: "48.5%", flexGrow: 1, borderRadius: 20, padding: 16 },
+  tiles: { gap: 10 },
+  tileRow: { flexDirection: "row", gap: 10 },
+  tile: { flex: 1, minWidth: 0, borderRadius: 20, padding: 16 },
+  tileGap: { flex: 1 },
+  shrink: { flexShrink: 1 },
   tileValueRow: {
     marginTop: 6,
     flexDirection: "row",

@@ -199,7 +199,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
   },
+  // Keeps the title readable: a long value ends with an ellipsis instead.
   value: {
+    flexShrink: 1,
+    maxWidth: "60%",
     fontSize: 15,
     lineHeight: 20,
     fontVariant: ["tabular-nums"],

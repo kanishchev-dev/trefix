@@ -30,12 +30,13 @@ export const styles = StyleSheet.create({
     gap: 10,
   },
   volumeValue: {
+    flexShrink: 1,
     fontSize: 44,
     lineHeight: 48,
     letterSpacing: -1,
     fontVariant: ["tabular-nums"],
   },
-  volumeSub: { fontSize: 17, lineHeight: 22 },
+  volumeSub: { flexShrink: 1, fontSize: 17, lineHeight: 22 },
   meta: { marginTop: 8, fontSize: 13, lineHeight: 18 },
   pillRow: { flexDirection: "row", marginTop: 16 },
   pill: {
@@ -119,7 +120,7 @@ export const styles = StyleSheet.create({
   section: { gap: 12 },
   card: { borderRadius: 24, overflow: "hidden" },
   row: {
-    minHeight: 56,
+    minHeight: 52,
     paddingHorizontal: 16,
     paddingVertical: 8,
     flexDirection: "row",
@@ -127,10 +128,16 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   rowTitle: { flex: 1, fontSize: 15, lineHeight: 20 },
-  whereTabs: { width: 228 },
   hint: { paddingHorizontal: 16, fontSize: 13, lineHeight: 18 },
   inlineButton: { flex: 0 },
-  startBar: { position: "absolute", left: 16, right: 16, bottom: 0 },
+  startBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: 32,
+    paddingHorizontal: 16,
+  },
   start: {
     height: 52,
     borderRadius: 26,

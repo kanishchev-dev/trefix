@@ -111,6 +111,7 @@ export function GoalEditor({
         <SheetTabs
           value={goal}
           onChange={setGoal}
+          trackColor={theme.color.screen}
           theme={theme}
           tabs={(["none", "duration", "distance"] as const).map((key) => ({
             key,

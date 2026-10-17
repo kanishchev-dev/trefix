@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   CirclePause,
@@ -17,7 +18,7 @@ import type {
   RecordingEnvironment,
   TrainingWorkout,
 } from "@trefix/api-client";
-import { type ThemeMode, type ThemeTokens } from "@trefix/tokens";
+import { withAlpha, type ThemeMode, type ThemeTokens } from "@trefix/tokens";
 
 import {
   fillTemplate,
@@ -562,9 +563,10 @@ export function TrackerSetupScreen({
       <Text numberOfLines={1} style={[styles.rowTitle, strong]}>
         {t.whereShort}
       </Text>
-      <View style={styles.whereTabs}>
+      <View>
         <SheetTabs
           compact
+          compactWidth={216}
           value={environment}
           onChange={changeEnvironment}
           trackColor={theme.color.screen}
@@ -625,7 +627,7 @@ export function TrackerSetupScreen({
       key="voice"
       theme={theme}
       icon={<Volume2 {...iconProps} />}
-      title={t.voice}
+      title={t.voiceShort}
       value={voiceSummary(voice, units, copy)}
       chevron
       onPress={() => setSheet("voice")}
@@ -706,8 +708,14 @@ export function TrackerSetupScreen({
         ) : null}
       </SectionLayout>
 
-      <View
+      <LinearGradient
         pointerEvents="box-none"
+        colors={[
+          withAlpha(theme.color.screen, 0),
+          theme.color.screen,
+          theme.color.screen,
+        ]}
+        locations={[0, 0.4, 1]}
         style={[styles.startBar, { paddingBottom: insets.bottom + 8 }]}
       >
         <Pressable
@@ -738,7 +746,7 @@ export function TrackerSetupScreen({
             {noGps ? t.startByTime : t.start}
           </Text>
         </Pressable>
-      </View>
+      </LinearGradient>
 
       <VoiceSheet
         visible={sheet === "voice"}
@@ -832,6 +840,8 @@ function PlannedVolume({
     <View style={styles.volume}>
       <Text
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
         style={[
           styles.volumeValue,
           {

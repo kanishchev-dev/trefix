@@ -271,7 +271,14 @@ export function TrackerRecordingScreen({
       elevation: <Mountain {...iconSmall} />,
       cadence: <Footprints {...iconSmall} />,
     }[key];
-    const base = { key, label: label ?? metricLabel(key), icon };
+    // Cells are half the screen wide: the shorter name of the last km pace.
+    const cellLabel =
+      key === "splitPace"
+        ? units === "imperial"
+          ? t.cellNames.splitPaceImperial
+          : t.cellNames.splitPace
+        : metricLabel(key);
+    const base = { key, label: label ?? cellLabel, icon };
     switch (key) {
       case "time":
         return { ...base, value: formatClock(view.movingMs) };
@@ -409,11 +416,13 @@ export function TrackerRecordingScreen({
   const metricsPage = (() => {
     if (goal?.kind === "duration") {
       return (
-        <View
-          style={[
-            styles.page,
-            { width, paddingTop: topContent, paddingBottom: bottomSpace },
+        <ScrollView
+          style={{ width }}
+          contentContainerStyle={[
+            styles.pageScroll,
+            { paddingTop: topContent, paddingBottom: bottomSpace },
           ]}
+          showsVerticalScrollIndicator={false}
         >
           <TimeGoalCard
             view={view}
@@ -428,26 +437,25 @@ export function TrackerRecordingScreen({
             <MetricGrid
               theme={theme}
               cells={[
-                metricCell(
-                  "distance",
-                  view.onPedometer ? t.distancePedometer : undefined,
-                ),
+                metricCell("distance"),
                 metricCell("pace"),
                 metricCell("time"),
                 metricCell("cadence"),
               ]}
             />
           </View>
-        </View>
+        </ScrollView>
       );
     }
     if (goal?.kind === "distance") {
       return (
-        <View
-          style={[
-            styles.page,
-            { width, paddingTop: topContent, paddingBottom: bottomSpace },
+        <ScrollView
+          style={{ width }}
+          contentContainerStyle={[
+            styles.pageScroll,
+            { paddingTop: topContent, paddingBottom: bottomSpace },
           ]}
+          showsVerticalScrollIndicator={false}
         >
           <DistanceGoalCard
             view={view}
@@ -468,16 +476,18 @@ export function TrackerRecordingScreen({
               ]}
             />
           </View>
-        </View>
+        </ScrollView>
       );
     }
     if (multiStep && (view.step || doneLap)) {
       return (
-        <View
-          style={[
-            styles.page,
-            { width, paddingTop: topContent, paddingBottom: bottomSpace },
+        <ScrollView
+          style={{ width }}
+          contentContainerStyle={[
+            styles.pageScroll,
+            { paddingTop: topContent, paddingBottom: bottomSpace },
           ]}
+          showsVerticalScrollIndicator={false}
         >
           {doneLap && doneStep ? (
             <StepDoneCard
@@ -511,7 +521,7 @@ export function TrackerRecordingScreen({
               ]}
             />
           </View>
-        </View>
+        </ScrollView>
       );
     }
     return (
@@ -537,6 +547,7 @@ export function TrackerRecordingScreen({
             <Text
               numberOfLines={1}
               adjustsFontSizeToFit
+              minimumFontScale={0.5}
               style={[styles.heroValue, strong]}
             >
               {formatDistanceValue(view.distanceM, units, format.locale)}
@@ -592,7 +603,12 @@ export function TrackerRecordingScreen({
                 {cell.label}
               </Text>
               <View style={styles.mapStatValue}>
-                <Text numberOfLines={1} style={[styles.mapStatNumber, strong]}>
+                <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  style={[styles.mapStatNumber, styles.shrink, strong]}
+                >
                   {cell.value}
                 </Text>
                 {cell.unit ? (
@@ -1197,14 +1213,22 @@ function MetricSheet({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   page: { flex: 1, paddingHorizontal: 16 },
+  // Card pages scroll on short screens instead of going under the controls.
+  pageScroll: { paddingHorizontal: 16 },
   freePage: { justifyContent: "center", gap: 40 },
   mapPage: { paddingHorizontal: 0 },
   gridGap: { marginTop: 16 },
   hero: { alignItems: "center" },
   heroLabel: { flexDirection: "row", alignItems: "center", gap: 6 },
   heroLabelText: { fontSize: 15, lineHeight: 20 },
-  heroValueRow: { flexDirection: "row", alignItems: "baseline", gap: 8 },
+  heroValueRow: {
+    maxWidth: "100%",
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
+  },
   heroValue: {
+    flexShrink: 1,
     fontSize: 108,
     lineHeight: 112,
     letterSpacing: -5,
@@ -1246,6 +1270,7 @@ const styles = StyleSheet.create({
   },
   toastTitle: { fontSize: 15, lineHeight: 20 },
   flex: { flex: 1, minWidth: 0 },
+  shrink: { flexShrink: 1 },
   small: { fontSize: 13, lineHeight: 18 },
   tiny: { fontSize: 12, lineHeight: 16 },
   voiceButton: { position: "absolute", right: 16, width: 40, height: 40 },
@@ -1326,7 +1351,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  mapStat: { flex: 1, alignItems: "center", gap: 2 },
+  mapStat: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    gap: 2,
+    paddingHorizontal: 6,
+  },
   mapStatValue: { flexDirection: "row", alignItems: "baseline", gap: 4 },
   mapStatNumber: {
     fontSize: 24,

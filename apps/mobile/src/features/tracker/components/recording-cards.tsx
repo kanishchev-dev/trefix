@@ -87,7 +87,12 @@ function Remaining({
   }
   return (
     <View style={styles.remValue}>
-      <Text numberOfLines={1} style={[styles.remBig, strong]}>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.5}
+        style={[styles.remBig, strong]}
+      >
         {value}
       </Text>
       <Text numberOfLines={1} style={[styles.remLabel, muted]}>
@@ -326,7 +331,7 @@ export function StepDoneCard({
       ]}
     >
       <View style={styles.headRow}>
-        <Text numberOfLines={1} style={[styles.small, muted]}>
+        <Text numberOfLines={1} style={[styles.small, styles.flex, muted]}>
           {fillTemplate(t.card.stepDone, { current: lap.index + 1, total })}
         </Text>
         <View
@@ -416,7 +421,12 @@ export function TimeGoalCard({
       </View>
       <View style={styles.remRow}>
         <View style={styles.remValue}>
-          <Text numberOfLines={1} style={[styles.remBig, strong]}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            style={[styles.remBig, strong]}
+          >
             {formatClock(leftMs)}
           </Text>
           <Text numberOfLines={1} style={[styles.remLabel, muted]}>
@@ -501,7 +511,12 @@ export function DistanceGoalCard({
       </View>
       <View style={styles.remRow}>
         <View style={styles.remValue}>
-          <Text numberOfLines={1} style={[styles.remBig, strong]}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            style={[styles.remBig, strong]}
+          >
             {formatDistanceValue(leftM, fmt.units, fmt.locale)}
           </Text>
           <Text numberOfLines={1} style={[styles.remLabel, muted]}>
@@ -589,34 +604,52 @@ export function MetricGrid({
   onLongPress?: (index: number) => void;
 }) {
   const { muted, strong } = fonts(theme);
+  const rows: MetricCell[][] = [];
+  for (let index = 0; index < cells.length; index += 2)
+    rows.push(cells.slice(index, index + 2));
   return (
     <View style={[styles.grid, { backgroundColor: theme.color.screen }]}>
-      {cells.map((cell, index) => (
-        <Pressable
-          key={`${cell.key}-${index}`}
-          accessibilityLabel={`${cell.label} ${cell.value} ${cell.unit ?? ""}`}
-          disabled={!onLongPress}
-          onLongPress={() => onLongPress?.(index)}
-          delayLongPress={450}
-          style={[styles.cell, { backgroundColor: theme.color.card }]}
-        >
-          <View style={styles.cellLabel}>
-            {cell.icon}
-            <Text numberOfLines={1} style={[styles.small, muted]}>
-              {cell.label}
-            </Text>
-          </View>
-          <View style={styles.cellValueRow}>
-            <Text numberOfLines={1} style={[styles.cellValue, strong]}>
-              {cell.value}
-            </Text>
-            {cell.unit ? (
-              <Text numberOfLines={1} style={[styles.cellUnit, muted]}>
-                {cell.unit}
-              </Text>
-            ) : null}
-          </View>
-        </Pressable>
+      {rows.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.gridRow}>
+          {row.map((cell, column) => {
+            const index = rowIndex * 2 + column;
+            return (
+              <Pressable
+                key={`${cell.key}-${index}`}
+                accessibilityLabel={`${cell.label} ${cell.value} ${cell.unit ?? ""}`}
+                disabled={!onLongPress}
+                onLongPress={() => onLongPress?.(index)}
+                delayLongPress={450}
+                style={[styles.cell, { backgroundColor: theme.color.card }]}
+              >
+                <View style={styles.cellLabel}>
+                  {cell.icon}
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.small, styles.shrink, muted]}
+                  >
+                    {cell.label}
+                  </Text>
+                </View>
+                <View style={styles.cellValueRow}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                    style={[styles.cellValue, styles.shrink, strong]}
+                  >
+                    {cell.value}
+                  </Text>
+                  {cell.unit ? (
+                    <Text numberOfLines={1} style={[styles.cellUnit, muted]}>
+                      {cell.unit}
+                    </Text>
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       ))}
     </View>
   );
@@ -808,20 +841,30 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
   },
+  shrink: { flexShrink: 1 },
+  gridRow: { flexDirection: "row", gap: 2 },
   remValue: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "baseline",
     gap: 8,
-    flexShrink: 1,
   },
   remBig: {
+    flexShrink: 1,
     fontSize: 64,
     lineHeight: 68,
     letterSpacing: -2.5,
     fontVariant: ["tabular-nums"],
   },
-  remLabel: { fontSize: 17, lineHeight: 22 },
-  target: { alignItems: "flex-end", gap: 2, paddingBottom: 8 },
+  remLabel: { flexShrink: 0, fontSize: 17, lineHeight: 22 },
+  target: {
+    flexShrink: 0,
+    marginLeft: 12,
+    alignItems: "flex-end",
+    gap: 2,
+    paddingBottom: 8,
+  },
   targetValue: { fontSize: 17, lineHeight: 22, fontVariant: ["tabular-nums"] },
   gauge: { marginTop: 14, height: 46 },
   gaugeTrack: {
@@ -893,7 +936,7 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     fontVariant: ["tabular-nums"],
   },
-  doneUnit: { fontSize: 17, lineHeight: 22 },
+  doneUnit: { flexShrink: 1, fontSize: 17, lineHeight: 22 },
   doneLine: { marginTop: 4 },
   doneNext: { marginTop: "auto" },
   box: {
@@ -923,13 +966,11 @@ const styles = StyleSheet.create({
   grid: {
     borderRadius: 24,
     overflow: "hidden",
-    flexDirection: "row",
-    flexWrap: "wrap",
     gap: 2,
   },
   cell: {
-    width: "49.7%",
-    flexGrow: 1,
+    flex: 1,
+    minWidth: 0,
     paddingHorizontal: 18,
     paddingVertical: 16,
     gap: 8,

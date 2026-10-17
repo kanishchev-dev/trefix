@@ -155,6 +155,7 @@ export function SheetTabs<T extends string>({
   theme,
   trackColor,
   compact = false,
+  compactWidth,
   disabled = false,
   accessibilityLabel,
 }: {
@@ -166,6 +167,8 @@ export function SheetTabs<T extends string>({
   trackColor?: string;
   /** Narrow two-option switch at the end of a row (units, week start). */
   compact?: boolean;
+  /** Compact switch with more than two options needs more room than the default width. */
+  compactWidth?: number;
   disabled?: boolean;
   accessibilityLabel?: string;
 }) {
@@ -206,6 +209,7 @@ export function SheetTabs<T extends string>({
       style={[
         styles.tabsContainer,
         compact && styles.tabsCompact,
+        compact && compactWidth ? { width: compactWidth } : null,
         { backgroundColor: trackColor ?? theme.color.surface },
         disabled && { opacity: 0.5 },
       ]}

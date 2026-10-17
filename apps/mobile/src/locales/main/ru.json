@@ -2906,6 +2906,11 @@
       "resume": "Продолжить запись",
       "finish": "Завершить и перейти к итогу",
       "delete": "Удалить запись"
+    },
+    "voiceShort": "Голос",
+    "cellNames": {
+      "splitPace": "Темп за км",
+      "splitPaceImperial": "Темп за милю"
     }
   },
   "errors": {
