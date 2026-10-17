@@ -10,4 +10,6 @@ export const REALTIME_ROOM_PERMISSION_MAP: Readonly<Record<string, readonly stri
   // the theme and the locale, so requiring write rights here would lock users
   // out of the app entirely.
   settings: ['settings.read'],
+  // Live dashboard: tells open dashboards that analytics data changed.
+  analytics: ['analytics.read'],
 };

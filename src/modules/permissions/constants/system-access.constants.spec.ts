@@ -144,6 +144,7 @@ describe('SYSTEM_PERMISSION_CATALOG', () => {
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('training.userplans.manage');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('users.activity.read');
     expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('audit.read');
+    expect(DEFAULT_USER_PERMISSION_KEYS).not.toContain('analytics.read');
     expect(DEFAULT_USER_PERMISSION_KEYS).toContain('training.plans.read');
   });
 

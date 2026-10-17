@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Observable } from 'rxjs';
 
 import { OpenAiApiException } from './exceptions/openai-api.exception';
@@ -9,6 +10,7 @@ import {
   OpenAiResponseResult,
   OpenAiTextFormatJsonSchema,
 } from './interfaces/openai-types.interface';
+import { type LlmCallStatus, OPENAI_EVENTS, OpenAiUsageRecordedEvent } from './openai.events';
 
 /** Upper bound for a whole streamed answer, including generation time. */
 const OPENAI_STREAM_TIMEOUT_MS = 60_000;
@@ -23,7 +25,10 @@ export interface OpenAiStreamDelta {
 export class OpenAiService {
   private readonly logger = new Logger(OpenAiService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   getConfiguredModel(): string {
     return this.configService.get<string>('openai.model') || 'gpt-5';
@@ -45,14 +50,25 @@ export class OpenAiService {
   }
 
   async sendResponse(request: OpenAiResponseRequest): Promise<OpenAiResponseResult> {
-    const response = await this.executeRequest(request, false);
-    return (await response.json()) as OpenAiResponseResult;
+    const startedAt = Date.now();
+    try {
+      const response = await this.executeRequest(request, false);
+      const result = (await response.json()) as OpenAiResponseResult;
+      this.recordUsage(request, result.usage, result.status === 'completed' ? 'completed' : 'incomplete', startedAt);
+      return result;
+    } catch (error) {
+      this.recordUsage(request, undefined, 'failed', startedAt);
+      throw error;
+    }
   }
 
   streamResponse(request: OpenAiResponseRequest): Observable<OpenAiStreamDelta> {
     return new Observable<OpenAiStreamDelta>((subscriber) => {
       const controller = new AbortController();
       let isAborted = false;
+
+      const startedAt = Date.now();
+      let usageRecorded = false;
 
       const run = async (): Promise<void> => {
         try {
@@ -92,8 +108,15 @@ export class OpenAiService {
                     delta: json.delta,
                     isDone: false,
                   });
-                } else if (eventType === 'response.completed') {
+                } else if (eventType === 'response.completed' || eventType === 'response.incomplete') {
                   this.logger.debug(`OpenAI Stream Completed: ${json.response.id}`);
+                  usageRecorded = true;
+                  this.recordUsage(
+                    request,
+                    json.response?.usage,
+                    eventType === 'response.completed' ? 'completed' : 'incomplete',
+                    startedAt,
+                  );
                   subscriber.next({ type: 'completed', isDone: true });
                 }
               } catch {
@@ -104,6 +127,9 @@ export class OpenAiService {
 
           subscriber.complete();
         } catch (error) {
+          if (!usageRecorded) {
+            this.recordUsage(request, undefined, 'failed', startedAt);
+          }
           if (!isAborted) {
             subscriber.error(error);
           }
@@ -178,6 +204,33 @@ export class OpenAiService {
 
   async createInputMessages(messages: OpenAiInputMessage[]): Promise<OpenAiInputMessage[]> {
     return messages;
+  }
+
+  /** Publishes token usage of a call made on behalf of a product feature. */
+  private recordUsage(
+    request: OpenAiResponseRequest,
+    usage: Record<string, unknown> | undefined,
+    status: LlmCallStatus,
+    startedAt: number,
+  ): void {
+    if (!request.usage) {
+      return;
+    }
+    const tokens = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+    const details = (usage?.input_tokens_details ?? {}) as Record<string, unknown>;
+    this.eventEmitter.emit(
+      OPENAI_EVENTS.USAGE_RECORDED,
+      new OpenAiUsageRecordedEvent(
+        request.usage.feature,
+        request.usage.userId ?? null,
+        this.getConfiguredModel(),
+        tokens(usage?.input_tokens),
+        tokens(details.cached_tokens),
+        tokens(usage?.output_tokens),
+        Date.now() - startedAt,
+        status,
+      ),
+    );
   }
 
   private buildResponsesUrl(baseUrl: string): string {

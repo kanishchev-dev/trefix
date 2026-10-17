@@ -35,6 +35,7 @@ import { GearController } from './gear/gear.controller';
 import { GearListener } from './gear/gear.listener';
 import { GearService } from './gear/gear.service';
 import { GearAssignmentService } from './gear/gear-assignment.service';
+import { GoalProgressService } from './goals/goal-progress.service';
 import { GoalsService } from './goals/goals.service';
 import { PLAN_COMPLETION_QUEUE } from './jobs/plan-completion.constants';
 import { PlanCompletionProcessor } from './jobs/plan-completion.processor';
@@ -58,6 +59,7 @@ import { ProgressController } from './progress/progress.controller';
 import { ProgressListener } from './progress/progress.listener';
 import { ProgressService } from './progress/progress.service';
 import { ProgressSummaryService } from './progress/progress-summary.service';
+import { RecordsTimelineService } from './progress/records-timeline.service';
 import { TrainingController } from './training.controller';
 import { TrainingEngine } from './training.engine';
 import { TrainingListener } from './training.listener';
@@ -141,6 +143,8 @@ import { WorkoutsService } from './workouts/workouts.service';
     GearListener,
     ProgressService,
     ProgressSummaryService,
+    RecordsTimelineService,
+    GoalProgressService,
     ProgressListener,
     WorkoutExecutionBuilder,
   ],
@@ -156,6 +160,8 @@ import { WorkoutsService } from './workouts/workouts.service';
     AthleteProfileService,
     GearService,
     GearAssignmentService,
+    RecordsTimelineService,
+    GoalProgressService,
   ],
 })
 export class TrainingModule {}

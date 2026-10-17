@@ -27,6 +27,10 @@ export const validationSchema = Joi.object({
   THROTTLE_LIMIT: Joi.number().default(300),
   THROTTLE_TTL: Joi.number().default(60000),
   ACTIVITY_RETENTION_DAYS: Joi.number().integer().min(30).default(730),
+  // Day boundaries of the analytics dashboard when the request names no timezone.
+  ANALYTICS_DEFAULT_TIMEZONE: Joi.string().default('Europe/Moscow'),
+  // JSON: { "<model>": { "input": usd, "cachedInput": usd, "output": usd } } per 1M tokens; overrides built-in prices.
+  LLM_PRICING: Joi.string().allow('').optional(),
   // Expo access token; required only when "Enhanced push security" is on in the Expo project.
   EXPO_ACCESS_TOKEN: Joi.string().allow('').optional(),
   NOTIFICATIONS_PUSH_ENABLED: Joi.boolean().default(true),

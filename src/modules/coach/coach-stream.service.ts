@@ -114,6 +114,7 @@ export class CoachStreamService {
           schemaName,
           schema: (schemaName === 'coach_draft' ? COACH_DRAFT_SCHEMA : COACH_FINAL_SCHEMA) as Record<string, unknown>,
           metadata: { module: 'coach', sessionId: turn.session.id },
+          usage: { feature: 'coach_reply', userId: turn.session.userId },
         })
         .subscribe({
           next: (delta) => {

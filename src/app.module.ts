@@ -27,6 +27,7 @@ import trainingConfig from './config/training.config';
 import { validationSchema } from './config/validation.schema';
 import { ActivityModule } from './modules/activity/activity.module';
 import { AdminOverviewModule } from './modules/admin-overview/admin-overview.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './modules/auth/config/auth.config';
 import { CoachModule } from './modules/coach/coach.module';
@@ -96,6 +97,7 @@ const LOG_REDACTED_PATHS = [
     ActivityModule,
     AdminAccountModule,
     AdminOverviewModule,
+    AnalyticsModule,
     NotificationsModule,
     LoggerModule.forRootAsync({
       imports: [ConfigModule],

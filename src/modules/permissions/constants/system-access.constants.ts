@@ -543,6 +543,15 @@ export const SYSTEM_PERMISSION_CATALOG: readonly SystemPermissionDefinition[] = 
     action: 'read',
     description: 'View and export the log of actions of all administrators and users',
   },
+  // ------------------------------------------------------------- analytics
+  {
+    key: 'analytics.read',
+    adminOnly: true,
+    module: 'analytics',
+    resource: '',
+    action: 'read',
+    description: 'View the product analytics dashboard',
+  },
 ] as const;
 
 export const SYSTEM_PERMISSION_KEYS = SYSTEM_PERMISSION_CATALOG.map((permission) => permission.key);

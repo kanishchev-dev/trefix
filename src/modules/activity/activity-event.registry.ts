@@ -1,5 +1,6 @@
 import type { ActorType } from '@/common/context/activity-context';
 import type { FieldChanges } from '@/common/utils/field-changes.util';
+import { ANALYTICS_EVENTS } from '@/modules/analytics/analytics.constants';
 import { AUTH_EVENTS } from '@/modules/auth/auth.events';
 import type { AuthEmailChangedEvent } from '@/modules/auth/events/auth-email-changed.event';
 import type { AuthIdentityChangedEvent } from '@/modules/auth/events/auth-identity-changed.event';
@@ -16,6 +17,7 @@ import type { WorkoutSourceUnlinkedEvent } from '@/modules/integrations/events/w
 import { INTEGRATIONS_EVENTS } from '@/modules/integrations/integrations.events';
 import type { BroadcastCreatedEvent, PushDeviceEvent } from '@/modules/notifications/events/notification.events';
 import { NOTIFICATIONS_EVENTS } from '@/modules/notifications/notifications.events';
+import { OPENAI_EVENTS } from '@/modules/openai/openai.events';
 import type { PermissionCreatedEvent } from '@/modules/permissions/events/permission-created.event';
 import type { PermissionGroupUpdatedEvent } from '@/modules/permissions/events/permission-group-updated.event';
 import type { UserPermissionsUpdatedEvent } from '@/modules/permissions/events/user-permissions-updated.event';
@@ -480,4 +482,8 @@ export const ACTIVITY_IGNORED_EVENTS: ReadonlySet<string> = new Set([
   USERS_EVENTS.ACCOUNT_PURGED,
   STORAGE_EVENT_FILE_UPLOADED,
   STORAGE_EVENT_FILE_DELETED,
+  // Token counters of LLM calls go to analytics, not to the user's history.
+  OPENAI_EVENTS.USAGE_RECORDED,
+  // Dashboard refresh signal, not an action of anyone.
+  ANALYTICS_EVENTS.DATA_CHANGED,
 ]);

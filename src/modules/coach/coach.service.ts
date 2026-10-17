@@ -109,6 +109,7 @@ export class CoachService {
       schemaName: 'coach_draft',
       schema: COACH_DRAFT_SCHEMA as Record<string, unknown>,
       metadata: { module: 'coach', sessionId: turn.session.id },
+      usage: { feature: 'coach_reply', userId },
     });
 
     const { finalResponse, toolResults } = await this.resolveFinal(userId, turn, draft);
@@ -162,6 +163,7 @@ export class CoachService {
       schemaName: 'coach_final',
       schema: COACH_FINAL_SCHEMA as Record<string, unknown>,
       metadata: { module: 'coach', sessionId: turn.session.id },
+      usage: { feature: 'coach_reply', userId },
     });
     return { finalResponse, toolResults };
   }

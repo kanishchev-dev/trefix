@@ -104,6 +104,7 @@ export class CoachWorkoutNotesService {
       schemaName: 'coach_workout_note',
       schema: COACH_WORKOUT_NOTE_SCHEMA,
       strict: true,
+      usage: { feature: 'workout_note', userId: job.userId },
     });
     const content = draft.note.trim().slice(0, COACH_WORKOUT_NOTE_MAX_LENGTH);
     const model = this.openAiService.getConfiguredModel();

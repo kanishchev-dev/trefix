@@ -1,3 +1,5 @@
+import type { OpenAiUsageContext } from '../openai.events';
+
 export interface OpenAiTextFormatJsonSchema {
   type: 'json_schema';
   name: string;
@@ -26,6 +28,8 @@ export interface OpenAiResponseRequest {
   previousResponseId?: string | null;
   metadata?: Record<string, string>;
   strict?: boolean;
+  /** Feature and user the call is made for; when set, token usage is published for analytics. */
+  usage?: OpenAiUsageContext;
 }
 
 export interface OpenAiResponseOutputContent {

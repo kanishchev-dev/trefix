@@ -170,7 +170,7 @@ describe('realtime event wiring', () => {
   const handled = collectHandledEvents();
 
   it('finds the admin rooms to check against', () => {
-    expect([...ADMIN_ROOMS].sort()).toEqual(['permissions', 'settings', 'users']);
+    expect([...ADMIN_ROOMS].sort()).toEqual(['analytics', 'permissions', 'settings', 'users']);
     expect(emitted.get('users')).toBeDefined();
     expect(emitted.get('settings')).toBeDefined();
   });

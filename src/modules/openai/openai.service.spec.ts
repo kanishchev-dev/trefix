@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { OpenAiResponseResult } from './interfaces/openai-types.interface';
@@ -11,6 +12,7 @@ describe('OpenAiService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OpenAiService,
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         {
           provide: ConfigService,
           useValue: {
