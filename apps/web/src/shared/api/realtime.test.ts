@@ -81,10 +81,16 @@ describe("realtimeRoomsForPermissions", () => {
         "permissions.read",
         "settings.read",
         "training.read",
+        "analytics.read",
       ]),
     );
 
-    expect(rooms.sort()).toEqual(["permissions", "settings", "users"]);
+    expect(rooms.sort()).toEqual([
+      "analytics",
+      "permissions",
+      "settings",
+      "users",
+    ]);
   });
 
   it("returns nothing when the session has no realtime permissions", () => {
@@ -94,6 +100,7 @@ describe("realtimeRoomsForPermissions", () => {
 
   it("mirrors the room names the gateway knows about", () => {
     expect(Object.keys(REALTIME_ROOMS).sort()).toEqual([
+      "analytics",
       "permissions",
       "settings",
       "users",
@@ -117,6 +124,12 @@ describe("REALTIME_EVENT_CACHE_KEYS", () => {
     }
   });
 
+  it("refreshes every dashboard block when analytics data changes", () => {
+    expect(REALTIME_EVENT_CACHE_KEYS["analytics.updated"]).toEqual([
+      ["analytics"],
+    ]);
+  });
+
   it("refreshes settings when the control plane changes them", () => {
     expect(REALTIME_EVENT_CACHE_KEYS["settings.updated"]).toContainEqual([
       "settings",
@@ -136,6 +149,7 @@ describe("REALTIME_EVENT_CACHE_KEYS", () => {
       "permission-groups",
       "settings",
       "user-presence",
+      "analytics",
     ]);
 
     for (const keys of Object.values(REALTIME_EVENT_CACHE_KEYS)) {

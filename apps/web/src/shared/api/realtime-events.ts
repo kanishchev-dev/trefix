@@ -36,6 +36,7 @@ export const REALTIME_ROOMS: Readonly<Record<string, readonly string[]>> = {
   users: ["users.read", "users.manage"],
   permissions: ["permissions.read", "permissions.manage"],
   settings: ["settings.read"],
+  analytics: ["analytics.read"],
 };
 
 /**
@@ -119,6 +120,8 @@ export const REALTIME_EVENT_CACHE_KEYS: Readonly<
     ["settings"],
   ],
   "settings.updated": [["settings"]],
+  // Throttled on the backend; only the dashboard blocks on screen refetch.
+  "analytics.updated": [["analytics"]],
 };
 /**
  * Events that can change the viewer's own record.
