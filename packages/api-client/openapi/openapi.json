@@ -11377,6 +11377,669 @@
         ]
       }
     },
+    "/v1/analytics/summary": {
+      "get": {
+        "operationId": "AnalyticsController_summary_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsSummaryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "KPI cards: runners, plan adherence, goals, sign-ups, stickiness, records, distance, coach",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/activity": {
+      "get": {
+        "operationId": "AnalyticsController_activity_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "range",
+            "required": false,
+            "in": "query",
+            "description": "Range of the activity chart",
+            "schema": {
+              "default": "90d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsActivityResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daily active users, runners, workouts and distance for the main chart",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/engagement": {
+      "get": {
+        "operationId": "AnalyticsController_engagement_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsEngagementResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Regularity, habit formation, cohorts, sources and when people run",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/outcomes": {
+      "get": {
+        "operationId": "AnalyticsController_outcomes_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOutcomesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Goals, form growth, records, races against the target, safe load",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/plans": {
+      "get": {
+        "operationId": "AnalyticsController_plans_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsPlansResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Plans created, finished and abandoned, adherence by plan week, goals and races",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/coach": {
+      "get": {
+        "operationId": "AnalyticsController_coach_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsCoachResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AI coach usage, proactive replies, correlation with results and LLM cost",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/audience": {
+      "get": {
+        "operationId": "AnalyticsController_audience_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsAudienceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sign-ups, activation funnel, platforms, integrations, experience, languages",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/v1/analytics/attention-items": {
+      "get": {
+        "operationId": "AnalyticsController_attention_v1",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "Reporting period ending today",
+            "schema": {
+              "default": "30d",
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "12m"
+              ]
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted",
+            "schema": {
+              "example": "Europe/Moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeStaff",
+            "required": false,
+            "in": "query",
+            "description": "Count staff (holders of admin permissions) too",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "refresh",
+            "required": false,
+            "in": "query",
+            "description": "Recompute instead of serving the cached block",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Kinds of problems; comma-separated or repeated",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "churn_risk",
+                  "overload_risk",
+                  "goal_at_risk",
+                  "integration_error",
+                  "sync_stale",
+                  "notification_failed",
+                  "export_pending",
+                  "export_failed"
+                ]
+              }
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "severity",
+              "type": "string",
+              "enum": [
+                "severity",
+                "since"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsAttentionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Users that need an administrator, by kind of problem",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
     "/v1/notifications": {
       "get": {
         "operationId": "NotificationsController_list_v1",
@@ -23244,6 +23907,2163 @@
           "upcomingWorkouts",
           "attention",
           "connections"
+        ]
+      },
+      "AnalyticsRunnersKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "growthWeeks": {
+            "type": "number",
+            "example": 5,
+            "description": "Weeks in a row the number has grown"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "growthWeeks"
+        ]
+      },
+      "AnalyticsKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark"
+        ]
+      },
+      "AnalyticsGoalsKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "rate": {
+            "type": "number",
+            "nullable": true,
+            "example": 64,
+            "description": "Achieved of goals finished in the period, %"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "rate"
+        ]
+      },
+      "AnalyticsNewUsersKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "activationRate": {
+            "type": "number",
+            "nullable": true,
+            "example": 58,
+            "description": "First workout within 14 days of sign-up, %"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "activationRate"
+        ]
+      },
+      "AnalyticsStickinessKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "dau": {
+            "type": "number",
+            "example": 412,
+            "description": "Average daily active users of the period"
+          },
+          "mau": {
+            "type": "number",
+            "example": 1330,
+            "description": "Active users of the last 28 days"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "dau",
+          "mau"
+        ]
+      },
+      "AnalyticsRecordsKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "firsts": {
+            "type": "number",
+            "example": 41,
+            "description": "First results on a distance (not counted as improvements)"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "firsts"
+        ]
+      },
+      "AnalyticsDistanceKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "weeklyMedianKm": {
+            "type": "number",
+            "nullable": true,
+            "example": 21,
+            "description": "Median km of the last 7 days among runners"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "weeklyMedianKm"
+        ]
+      },
+      "AnalyticsCoachKpiDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 1046
+          },
+          "previous": {
+            "type": "number",
+            "example": 965,
+            "description": "Value over the previous period of the same length"
+          },
+          "deltaPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 8.4,
+            "description": "Change against the previous period, %"
+          },
+          "spark": {
+            "description": "Values by day (by week for 12m) of the period",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "proactiveReplyRate": {
+            "type": "number",
+            "nullable": true,
+            "example": 46,
+            "description": "Proactive messages answered within 24 h, %"
+          }
+        },
+        "required": [
+          "value",
+          "previous",
+          "deltaPct",
+          "spark",
+          "proactiveReplyRate"
+        ]
+      },
+      "AnalyticsSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "weeklyActiveRunners": {
+            "description": "Athletes with a workout in the last 7 days",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsRunnersKpiDto"
+              }
+            ]
+          },
+          "planAdherence": {
+            "description": "Done of done + missed planned workouts, %",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsKpiDto"
+              }
+            ]
+          },
+          "goalsAchieved": {
+            "$ref": "#/components/schemas/AnalyticsGoalsKpiDto"
+          },
+          "newUsers": {
+            "$ref": "#/components/schemas/AnalyticsNewUsersKpiDto"
+          },
+          "stickiness": {
+            "description": "Average DAU / MAU, %",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsStickinessKpiDto"
+              }
+            ]
+          },
+          "personalRecords": {
+            "description": "Improved personal records",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsRecordsKpiDto"
+              }
+            ]
+          },
+          "distanceKm": {
+            "description": "Distance of completed workouts, km",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsDistanceKpiDto"
+              }
+            ]
+          },
+          "coachActiveUsers": {
+            "description": "Users who wrote to the coach",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsCoachKpiDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "generatedAt",
+          "weeklyActiveRunners",
+          "planAdherence",
+          "goalsAchieved",
+          "newUsers",
+          "stickiness",
+          "personalRecords",
+          "distanceKm",
+          "coachActiveUsers"
+        ]
+      },
+      "AnalyticsActivityPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "activeUsers": {
+            "type": "number",
+            "example": 412
+          },
+          "runners": {
+            "type": "number",
+            "example": 188,
+            "description": "Athletes who completed a workout that day"
+          },
+          "workouts": {
+            "type": "number",
+            "example": 203
+          },
+          "distanceKm": {
+            "type": "number",
+            "example": 1904.2
+          }
+        },
+        "required": [
+          "date",
+          "activeUsers",
+          "runners",
+          "workouts",
+          "distanceKm"
+        ]
+      },
+      "AnalyticsActivityResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "range": {
+            "type": "string",
+            "enum": [
+              "7d",
+              "30d",
+              "90d"
+            ]
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsActivityPointDto"
+            }
+          },
+          "averageActiveUsers": {
+            "type": "number",
+            "example": 401.3
+          },
+          "averageRunners": {
+            "type": "number",
+            "example": 188.1
+          }
+        },
+        "required": [
+          "generatedAt",
+          "range",
+          "points",
+          "averageActiveUsers",
+          "averageRunners"
+        ]
+      },
+      "AnalyticsRegularityDto": {
+        "type": "object",
+        "properties": {
+          "weeks": {
+            "type": "number",
+            "example": 6,
+            "description": "Weeks with a workout out of the last 8"
+          },
+          "users": {
+            "type": "number",
+            "example": 112
+          }
+        },
+        "required": [
+          "weeks",
+          "users"
+        ]
+      },
+      "AnalyticsActiveDaysDto": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "number",
+            "example": 12,
+            "description": "Days with a workout out of the last 28"
+          },
+          "users": {
+            "type": "number",
+            "example": 40
+          }
+        },
+        "required": [
+          "days",
+          "users"
+        ]
+      },
+      "AnalyticsCohortDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "type": "string",
+            "example": "2026-08-17",
+            "description": "Monday of the registration week"
+          },
+          "size": {
+            "type": "number",
+            "example": 52
+          },
+          "retention": {
+            "description": "Share with a workout in week 0, 1, … after sign-up, %",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "week",
+          "size",
+          "retention"
+        ]
+      },
+      "AnalyticsHabitDto": {
+        "type": "object",
+        "properties": {
+          "startedRunning": {
+            "type": "number",
+            "example": 182,
+            "description": "First workout in the period shifted 4 weeks back"
+          },
+          "formedHabit": {
+            "type": "number",
+            "example": 97,
+            "description": "Of them trained in 3 of their first 4 weeks"
+          },
+          "rate": {
+            "type": "number",
+            "nullable": true,
+            "example": 53.3
+          }
+        },
+        "required": [
+          "startedRunning",
+          "formedHabit",
+          "rate"
+        ]
+      },
+      "AnalyticsFirstWorkoutBucketDto": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "day1",
+              "days2_3",
+              "days4_7",
+              "days8_14",
+              "later",
+              "never"
+            ]
+          },
+          "users": {
+            "type": "number",
+            "example": 71
+          }
+        },
+        "required": [
+          "bucket",
+          "users"
+        ]
+      },
+      "AnalyticsTimeToFirstWorkoutDto": {
+        "type": "object",
+        "properties": {
+          "medianHours": {
+            "type": "number",
+            "nullable": true,
+            "example": 31
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsFirstWorkoutBucketDto"
+            }
+          }
+        },
+        "required": [
+          "medianHours",
+          "buckets"
+        ]
+      },
+      "AnalyticsWeeklySourcesDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "type": "string",
+            "example": "2026-10-12"
+          },
+          "trefix": {
+            "type": "number",
+            "example": 120,
+            "description": "Recorded with the in-app tracker"
+          },
+          "strava": {
+            "type": "number",
+            "example": 90
+          },
+          "garmin": {
+            "type": "number",
+            "example": 12
+          },
+          "appleHealth": {
+            "type": "number",
+            "example": 80
+          },
+          "healthConnect": {
+            "type": "number",
+            "example": 30
+          },
+          "manual": {
+            "type": "number",
+            "example": 25,
+            "description": "Entered by hand"
+          }
+        },
+        "required": [
+          "week",
+          "trefix",
+          "strava",
+          "garmin",
+          "appleHealth",
+          "healthConnect",
+          "manual"
+        ]
+      },
+      "AnalyticsWeekdayHourDto": {
+        "type": "object",
+        "properties": {
+          "weekday": {
+            "type": "number",
+            "example": 1,
+            "description": "1 = Monday … 7 = Sunday, local time of the start"
+          },
+          "hour": {
+            "type": "number",
+            "example": 7
+          },
+          "workouts": {
+            "type": "number",
+            "example": 120
+          }
+        },
+        "required": [
+          "weekday",
+          "hour",
+          "workouts"
+        ]
+      },
+      "AnalyticsStickinessPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "dau": {
+            "type": "number",
+            "example": 412
+          },
+          "wau": {
+            "type": "number",
+            "example": 902
+          },
+          "mau": {
+            "type": "number",
+            "example": 1330
+          },
+          "stickiness": {
+            "type": "number",
+            "nullable": true,
+            "example": 31
+          }
+        },
+        "required": [
+          "date",
+          "dau",
+          "wau",
+          "mau",
+          "stickiness"
+        ]
+      },
+      "AnalyticsEngagementResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "regularity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRegularityDto"
+            }
+          },
+          "activeDays": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsActiveDaysDto"
+            }
+          },
+          "cohorts": {
+            "description": "Registration cohorts of the last 12 weeks",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsCohortDto"
+            }
+          },
+          "habit": {
+            "$ref": "#/components/schemas/AnalyticsHabitDto"
+          },
+          "timeToFirstWorkout": {
+            "$ref": "#/components/schemas/AnalyticsTimeToFirstWorkoutDto"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsWeeklySourcesDto"
+            }
+          },
+          "whenTheyRun": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsWeekdayHourDto"
+            }
+          },
+          "stickinessSeries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsStickinessPointDto"
+            }
+          }
+        },
+        "required": [
+          "generatedAt",
+          "regularity",
+          "activeDays",
+          "cohorts",
+          "habit",
+          "timeToFirstWorkout",
+          "sources",
+          "whenTheyRun",
+          "stickinessSeries"
+        ]
+      },
+      "AnalyticsOpenGoalsDto": {
+        "type": "object",
+        "properties": {
+          "onTrack": {
+            "type": "number",
+            "example": 437
+          },
+          "atRisk": {
+            "type": "number",
+            "example": 177
+          },
+          "noData": {
+            "type": "number",
+            "example": 60
+          }
+        },
+        "required": [
+          "onTrack",
+          "atRisk",
+          "noData"
+        ]
+      },
+      "AnalyticsFinishedGoalsDto": {
+        "type": "object",
+        "properties": {
+          "achieved": {
+            "type": "number",
+            "example": 37
+          },
+          "missed": {
+            "type": "number",
+            "example": 14
+          },
+          "abandoned": {
+            "type": "number",
+            "example": 7
+          },
+          "rate": {
+            "type": "number",
+            "nullable": true,
+            "example": 63.8
+          }
+        },
+        "required": [
+          "achieved",
+          "missed",
+          "abandoned",
+          "rate"
+        ]
+      },
+      "AnalyticsGoalCategoryDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "race_event",
+              "performance",
+              "training_habit",
+              "fitness_lifestyle",
+              "challenge",
+              "flexible"
+            ]
+          },
+          "onTrack": {
+            "type": "number"
+          },
+          "atRisk": {
+            "type": "number"
+          },
+          "noData": {
+            "type": "number"
+          },
+          "achieved": {
+            "type": "number"
+          },
+          "missed": {
+            "type": "number"
+          },
+          "abandoned": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "category",
+          "onTrack",
+          "atRisk",
+          "noData",
+          "achieved",
+          "missed",
+          "abandoned"
+        ]
+      },
+      "AnalyticsGoalsDto": {
+        "type": "object",
+        "properties": {
+          "snapshotDate": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-10-17",
+            "description": "Day of the latest nightly snapshot"
+          },
+          "active": {
+            "description": "Goals still going on, as of the latest snapshot",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsOpenGoalsDto"
+              }
+            ]
+          },
+          "finished": {
+            "description": "Goals that reached a final status in the period",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsFinishedGoalsDto"
+              }
+            ]
+          },
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsGoalCategoryDto"
+            }
+          }
+        },
+        "required": [
+          "snapshotDate",
+          "active",
+          "finished",
+          "byCategory"
+        ]
+      },
+      "AnalyticsFunnelStepDto": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "string",
+            "example": "plan_started"
+          },
+          "count": {
+            "type": "number",
+            "example": 1012
+          }
+        },
+        "required": [
+          "step",
+          "count"
+        ]
+      },
+      "AnalyticsRaceBucketDto": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "faster_3plus",
+              "within_3",
+              "slower_3_10",
+              "slower_10plus"
+            ]
+          },
+          "count": {
+            "type": "number",
+            "example": 21
+          }
+        },
+        "required": [
+          "bucket",
+          "count"
+        ]
+      },
+      "AnalyticsFitnessPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "thresholdPaceChangeMedianSec": {
+            "type": "number",
+            "nullable": true,
+            "example": -9
+          },
+          "fitnessChangeMedianPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 4.2
+          }
+        },
+        "required": [
+          "date",
+          "thresholdPaceChangeMedianSec",
+          "fitnessChangeMedianPct"
+        ]
+      },
+      "AnalyticsFitnessDto": {
+        "type": "object",
+        "properties": {
+          "athletes": {
+            "type": "number",
+            "example": 380,
+            "description": "Athletes with 8 weeks of history and ≥1 workout a week"
+          },
+          "improved": {
+            "type": "number",
+            "example": 205,
+            "description": "Threshold pace faster by 2+ s/km"
+          },
+          "stable": {
+            "type": "number",
+            "example": 118
+          },
+          "declined": {
+            "type": "number",
+            "example": 57
+          },
+          "thresholdPaceChangeMedianSec": {
+            "type": "number",
+            "nullable": true,
+            "example": -9,
+            "description": "Median change over 8 weeks, s/km (negative = faster)"
+          },
+          "fitnessChangeMedianPct": {
+            "type": "number",
+            "nullable": true,
+            "example": 4.2,
+            "description": "Median change of fitness over 8 weeks, %"
+          },
+          "historical": {
+            "type": "boolean",
+            "description": "False when the series is not kept (counted with staff)"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsFitnessPointDto"
+            }
+          }
+        },
+        "required": [
+          "athletes",
+          "improved",
+          "stable",
+          "declined",
+          "thresholdPaceChangeMedianSec",
+          "fitnessChangeMedianPct",
+          "historical",
+          "series"
+        ]
+      },
+      "AnalyticsRecordsWeekDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "type": "string",
+            "example": "2026-10-12"
+          },
+          "improvements": {
+            "type": "number",
+            "example": 24
+          },
+          "firsts": {
+            "type": "number",
+            "example": 10
+          }
+        },
+        "required": [
+          "week",
+          "improvements",
+          "firsts"
+        ]
+      },
+      "AnalyticsRecordsDistanceDto": {
+        "type": "object",
+        "properties": {
+          "distance": {
+            "type": "string",
+            "example": "5k"
+          },
+          "improvements": {
+            "type": "number",
+            "example": 31
+          },
+          "firsts": {
+            "type": "number",
+            "example": 12
+          }
+        },
+        "required": [
+          "distance",
+          "improvements",
+          "firsts"
+        ]
+      },
+      "AnalyticsRecordsDto": {
+        "type": "object",
+        "properties": {
+          "improvements": {
+            "type": "number",
+            "example": 96
+          },
+          "firsts": {
+            "type": "number",
+            "example": 41
+          },
+          "weekly": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRecordsWeekDto"
+            }
+          },
+          "byDistance": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRecordsDistanceDto"
+            }
+          }
+        },
+        "required": [
+          "improvements",
+          "firsts",
+          "weekly",
+          "byDistance"
+        ]
+      },
+      "AnalyticsVolumeWeekDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "type": "string",
+            "example": "2026-10-12"
+          },
+          "medianKm": {
+            "type": "number",
+            "nullable": true,
+            "example": 21
+          },
+          "runners": {
+            "type": "number",
+            "example": 820
+          }
+        },
+        "required": [
+          "week",
+          "medianKm",
+          "runners"
+        ]
+      },
+      "AnalyticsSafetyPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "share": {
+            "type": "number",
+            "nullable": true,
+            "example": 6.2
+          }
+        },
+        "required": [
+          "date",
+          "share"
+        ]
+      },
+      "AnalyticsSafetyDto": {
+        "type": "object",
+        "properties": {
+          "currentShare": {
+            "type": "number",
+            "nullable": true,
+            "example": 6.2,
+            "description": "Athletes with acute / chronic load > 1.5, %"
+          },
+          "historical": {
+            "type": "boolean"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsSafetyPointDto"
+            }
+          }
+        },
+        "required": [
+          "currentShare",
+          "historical",
+          "series"
+        ]
+      },
+      "AnalyticsOutcomesResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "goals": {
+            "$ref": "#/components/schemas/AnalyticsGoalsDto"
+          },
+          "goalFunnel": {
+            "description": "Goals of the last 12 months: goal_set → plan_started → half_plan → plan_completed → goal_achieved",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsFunnelStepDto"
+            }
+          },
+          "raceResults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRaceBucketDto"
+            }
+          },
+          "fitness": {
+            "$ref": "#/components/schemas/AnalyticsFitnessDto"
+          },
+          "records": {
+            "$ref": "#/components/schemas/AnalyticsRecordsDto"
+          },
+          "volume": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsVolumeWeekDto"
+            }
+          },
+          "safety": {
+            "$ref": "#/components/schemas/AnalyticsSafetyDto"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "goals",
+          "goalFunnel",
+          "raceResults",
+          "fitness",
+          "records",
+          "volume",
+          "safety"
+        ]
+      },
+      "AnalyticsPlansCreatedDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "type": "string",
+            "example": "2026-10-12"
+          },
+          "ai": {
+            "type": "number"
+          },
+          "manual": {
+            "type": "number"
+          },
+          "rebuild": {
+            "type": "number",
+            "description": "Prepared again from a past plan"
+          }
+        },
+        "required": [
+          "week",
+          "ai",
+          "manual",
+          "rebuild"
+        ]
+      },
+      "AnalyticsPlanOutcomesDto": {
+        "type": "object",
+        "properties": {
+          "completed": {
+            "type": "number",
+            "example": 52
+          },
+          "cancelled": {
+            "type": "number",
+            "example": 38,
+            "description": "Cancelled by the user or an administrator"
+          },
+          "replaced": {
+            "type": "number",
+            "example": 21,
+            "description": "Cancelled because another plan was started"
+          }
+        },
+        "required": [
+          "completed",
+          "cancelled",
+          "replaced"
+        ]
+      },
+      "AnalyticsPlanProgressBucketDto": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "0_25",
+              "25_50",
+              "50_75",
+              "75_100"
+            ],
+            "description": "Share of the plan behind when it was cancelled"
+          },
+          "plans": {
+            "type": "number",
+            "example": 17
+          }
+        },
+        "required": [
+          "bucket",
+          "plans"
+        ]
+      },
+      "AnalyticsCancelReasonDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "user"
+          },
+          "plans": {
+            "type": "number",
+            "example": 30
+          }
+        },
+        "required": [
+          "reason",
+          "plans"
+        ]
+      },
+      "AnalyticsPlanWeekAdherenceDto": {
+        "type": "object",
+        "properties": {
+          "planWeek": {
+            "type": "number",
+            "example": 6
+          },
+          "adherencePct": {
+            "type": "number",
+            "nullable": true,
+            "example": 68
+          },
+          "workouts": {
+            "type": "number",
+            "example": 240,
+            "description": "Done + missed workouts behind the share"
+          }
+        },
+        "required": [
+          "planWeek",
+          "adherencePct",
+          "workouts"
+        ]
+      },
+      "AnalyticsGoalTypeDto": {
+        "type": "object",
+        "properties": {
+          "goalType": {
+            "type": "string",
+            "example": "prepare_for_race"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "race_event",
+              "performance",
+              "training_habit",
+              "fitness_lifestyle",
+              "challenge",
+              "flexible"
+            ]
+          },
+          "goals": {
+            "type": "number",
+            "example": 196
+          }
+        },
+        "required": [
+          "goalType",
+          "category",
+          "goals"
+        ]
+      },
+      "AnalyticsRaceDistanceDto": {
+        "type": "object",
+        "properties": {
+          "distance": {
+            "type": "string",
+            "example": "half_marathon",
+            "description": "5k, 10k, half_marathon, marathon or other"
+          },
+          "races": {
+            "type": "number",
+            "example": 19
+          }
+        },
+        "required": [
+          "distance",
+          "races"
+        ]
+      },
+      "AnalyticsUpcomingRacesDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "example": 43
+          },
+          "byDistance": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRaceDistanceDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "byDistance"
+        ]
+      },
+      "AnalyticsAdaptationsDto": {
+        "type": "object",
+        "properties": {
+          "proposed": {
+            "type": "number"
+          },
+          "applied": {
+            "type": "number"
+          },
+          "dismissed": {
+            "type": "number"
+          },
+          "acceptanceRate": {
+            "type": "number",
+            "nullable": true,
+            "example": 72
+          }
+        },
+        "required": [
+          "proposed",
+          "applied",
+          "dismissed",
+          "acceptanceRate"
+        ]
+      },
+      "AnalyticsPlansResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "active": {
+            "type": "number",
+            "example": 612
+          },
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPlansCreatedDto"
+            }
+          },
+          "outcomes": {
+            "$ref": "#/components/schemas/AnalyticsPlanOutcomesDto"
+          },
+          "cancellationByProgress": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPlanProgressBucketDto"
+            }
+          },
+          "cancelReasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsCancelReasonDto"
+            }
+          },
+          "adherenceByPlanWeek": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPlanWeekAdherenceDto"
+            }
+          },
+          "goalTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsGoalTypeDto"
+            }
+          },
+          "upcomingRaces": {
+            "$ref": "#/components/schemas/AnalyticsUpcomingRacesDto"
+          },
+          "adaptations": {
+            "$ref": "#/components/schemas/AnalyticsAdaptationsDto"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "active",
+          "created",
+          "outcomes",
+          "cancellationByProgress",
+          "cancelReasons",
+          "adherenceByPlanWeek",
+          "goalTypes",
+          "upcomingRaces",
+          "adaptations"
+        ]
+      },
+      "AnalyticsCoachMessagesDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "userMessages": {
+            "type": "number"
+          },
+          "coachReplies": {
+            "type": "number"
+          },
+          "proactive": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "userMessages",
+          "coachReplies",
+          "proactive"
+        ]
+      },
+      "AnalyticsProactiveDto": {
+        "type": "object",
+        "properties": {
+          "sent": {
+            "type": "number"
+          },
+          "replied24h": {
+            "type": "number"
+          },
+          "replyRate": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "sent",
+          "replied24h",
+          "replyRate"
+        ]
+      },
+      "AnalyticsWorkoutNotesDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "notes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "notes"
+        ]
+      },
+      "AnalyticsWorkoutNotesDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "daily": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsWorkoutNotesDayDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "daily"
+        ]
+      },
+      "AnalyticsCoachEffectDto": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "example": "plan_adherence",
+            "description": "plan_adherence, week4_retention or goals_achieved"
+          },
+          "enabled": {
+            "type": "number",
+            "nullable": true,
+            "example": 84,
+            "description": "Users with the coach on, %"
+          },
+          "disabled": {
+            "type": "number",
+            "nullable": true,
+            "example": 71,
+            "description": "Users with the coach off, %"
+          }
+        },
+        "required": [
+          "metric",
+          "enabled",
+          "disabled"
+        ]
+      },
+      "AnalyticsLlmDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "costUsd": {
+            "type": "number",
+            "example": 4.12
+          },
+          "calls": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "costUsd",
+          "calls"
+        ]
+      },
+      "AnalyticsLlmBreakdownDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "coach_reply",
+            "description": "Feature or model"
+          },
+          "calls": {
+            "type": "number"
+          },
+          "costUsd": {
+            "type": "number"
+          },
+          "inputTokens": {
+            "type": "number"
+          },
+          "outputTokens": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "calls",
+          "costUsd",
+          "inputTokens",
+          "outputTokens"
+        ]
+      },
+      "AnalyticsLlmDto": {
+        "type": "object",
+        "properties": {
+          "costUsd": {
+            "type": "number",
+            "example": 121.4
+          },
+          "costPerActiveUserUsd": {
+            "type": "number",
+            "nullable": true,
+            "example": 0.31
+          },
+          "calls": {
+            "type": "number"
+          },
+          "inputTokens": {
+            "type": "number"
+          },
+          "outputTokens": {
+            "type": "number"
+          },
+          "failedShare": {
+            "type": "number",
+            "nullable": true,
+            "example": 0.4
+          },
+          "p95LatencyMs": {
+            "type": "number",
+            "nullable": true,
+            "example": 6800
+          },
+          "daily": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsLlmDayDto"
+            }
+          },
+          "byFeature": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsLlmBreakdownDto"
+            }
+          },
+          "byModel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsLlmBreakdownDto"
+            }
+          }
+        },
+        "required": [
+          "costUsd",
+          "costPerActiveUserUsd",
+          "calls",
+          "inputTokens",
+          "outputTokens",
+          "failedShare",
+          "p95LatencyMs",
+          "daily",
+          "byFeature",
+          "byModel"
+        ]
+      },
+      "AnalyticsCoachResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "enabledShare": {
+            "type": "number",
+            "nullable": true,
+            "example": 81,
+            "description": "Users with the coach switched on, %"
+          },
+          "activeUsers": {
+            "type": "number",
+            "example": 388
+          },
+          "messagesPerSession": {
+            "type": "number",
+            "nullable": true,
+            "example": 4.1,
+            "description": "Median user messages per conversation"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsCoachMessagesDayDto"
+            }
+          },
+          "proactive": {
+            "$ref": "#/components/schemas/AnalyticsProactiveDto"
+          },
+          "workoutNotes": {
+            "$ref": "#/components/schemas/AnalyticsWorkoutNotesDto"
+          },
+          "effect": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsCoachEffectDto"
+            }
+          },
+          "llm": {
+            "$ref": "#/components/schemas/AnalyticsLlmDto"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "enabledShare",
+          "activeUsers",
+          "messagesPerSession",
+          "messages",
+          "proactive",
+          "workoutNotes",
+          "effect",
+          "llm"
+        ]
+      },
+      "AnalyticsAudienceTotalsDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "number"
+          },
+          "blocked": {
+            "type": "number"
+          },
+          "newInPeriod": {
+            "type": "number"
+          },
+          "deletedInPeriod": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "users",
+          "blocked",
+          "newInPeriod",
+          "deletedInPeriod"
+        ]
+      },
+      "AnalyticsDailyUsersDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-10-01"
+          },
+          "users": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "users"
+        ]
+      },
+      "AnalyticsProviderUsersDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "example": "apple",
+            "description": "Sign-in provider or `email`"
+          },
+          "users": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "provider",
+          "users"
+        ]
+      },
+      "AnalyticsPlatformUsersDto": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "example": "ios"
+          },
+          "users": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "platform",
+          "users"
+        ]
+      },
+      "AnalyticsAppVersionDto": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "example": "ios"
+          },
+          "appVersion": {
+            "type": "string",
+            "nullable": true,
+            "example": "1.6.0"
+          },
+          "users": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "platform",
+          "appVersion",
+          "users"
+        ]
+      },
+      "AnalyticsIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "example": "strava"
+          },
+          "connected": {
+            "type": "number"
+          },
+          "errors": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "provider",
+          "connected",
+          "errors"
+        ]
+      },
+      "AnalyticsExperienceDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "example": "beginner"
+          },
+          "athletes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "level",
+          "athletes"
+        ]
+      },
+      "AnalyticsLanguageDto": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "example": "ru",
+            "description": "Interface language or `system`"
+          },
+          "users": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "language",
+          "users"
+        ]
+      },
+      "AnalyticsAudienceResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AnalyticsAudienceTotalsDto"
+          },
+          "registrations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsDailyUsersDto"
+            }
+          },
+          "registrationsByProvider": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsProviderUsersDto"
+            }
+          },
+          "activationFunnel": {
+            "description": "Users registered in the period: registered → … → habit",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsFunnelStepDto"
+            }
+          },
+          "platforms": {
+            "description": "Users active in the last 28 days",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPlatformUsersDto"
+            }
+          },
+          "appVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsAppVersionDto"
+            }
+          },
+          "integrations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsIntegrationDto"
+            }
+          },
+          "usersWithIntegrationShare": {
+            "type": "number",
+            "nullable": true,
+            "example": 63
+          },
+          "experience": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsExperienceDto"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsLanguageDto"
+            }
+          }
+        },
+        "required": [
+          "generatedAt",
+          "totals",
+          "registrations",
+          "registrationsByProvider",
+          "activationFunnel",
+          "platforms",
+          "appVersions",
+          "integrations",
+          "usersWithIntegrationShare",
+          "experience",
+          "languages"
+        ]
+      },
+      "AnalyticsAttentionCountDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "churn_risk",
+              "overload_risk",
+              "goal_at_risk",
+              "integration_error",
+              "sync_stale",
+              "notification_failed",
+              "export_pending",
+              "export_failed"
+            ]
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "count"
+        ]
+      },
+      "AnalyticsAttentionUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "avatarUrl"
+        ]
+      },
+      "AnalyticsAttentionDetailsDto": {
+        "type": "object",
+        "properties": {
+          "daysWithoutWorkout": {
+            "type": "number"
+          },
+          "planId": {
+            "type": "string"
+          },
+          "planName": {
+            "type": "string",
+            "nullable": true
+          },
+          "ratio": {
+            "type": "number",
+            "description": "Acute / chronic load"
+          },
+          "goalId": {
+            "type": "string"
+          },
+          "goalType": {
+            "type": "string"
+          },
+          "targetDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "progressPct": {
+            "type": "number",
+            "nullable": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "hoursSinceSync": {
+            "type": "number"
+          },
+          "failures": {
+            "type": "number"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exportId": {
+            "type": "string"
+          }
+        }
+      },
+      "AnalyticsAttentionItemDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "churn_risk",
+              "overload_risk",
+              "goal_at_risk",
+              "integration_error",
+              "sync_stale",
+              "notification_failed",
+              "export_pending",
+              "export_failed"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Since when the problem lasts"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AnalyticsAttentionUserDto"
+          },
+          "details": {
+            "$ref": "#/components/schemas/AnalyticsAttentionDetailsDto"
+          }
+        },
+        "required": [
+          "type",
+          "severity",
+          "since",
+          "user",
+          "details"
+        ]
+      },
+      "AnalyticsAttentionResponseDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the block was computed (it may come from cache)"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsAttentionCountDto"
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsAttentionItemDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "counts",
+          "data",
+          "meta"
         ]
       },
       "NotificationLinkDto": {

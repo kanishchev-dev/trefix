@@ -3890,6 +3890,789 @@ export type AdminOverviewResponseDto = {
   connections: Array<OverviewConnectionDto>;
 };
 
+export type AnalyticsRunnersKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * Weeks in a row the number has grown
+   */
+  growthWeeks: number;
+};
+
+export type AnalyticsKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+};
+
+export type AnalyticsGoalsKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * Achieved of goals finished in the period, %
+   */
+  rate: number | null;
+};
+
+export type AnalyticsNewUsersKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * First workout within 14 days of sign-up, %
+   */
+  activationRate: number | null;
+};
+
+export type AnalyticsStickinessKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * Average daily active users of the period
+   */
+  dau: number;
+  /**
+   * Active users of the last 28 days
+   */
+  mau: number;
+};
+
+export type AnalyticsRecordsKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * First results on a distance (not counted as improvements)
+   */
+  firsts: number;
+};
+
+export type AnalyticsDistanceKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * Median km of the last 7 days among runners
+   */
+  weeklyMedianKm: number | null;
+};
+
+export type AnalyticsCoachKpiDto = {
+  value: number;
+  /**
+   * Value over the previous period of the same length
+   */
+  previous: number;
+  /**
+   * Change against the previous period, %
+   */
+  deltaPct: number | null;
+  /**
+   * Values by day (by week for 12m) of the period
+   */
+  spark: Array<number>;
+  /**
+   * Proactive messages answered within 24 h, %
+   */
+  proactiveReplyRate: number | null;
+};
+
+export type AnalyticsSummaryResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  /**
+   * Athletes with a workout in the last 7 days
+   */
+  weeklyActiveRunners: AnalyticsRunnersKpiDto;
+  /**
+   * Done of done + missed planned workouts, %
+   */
+  planAdherence: AnalyticsKpiDto;
+  goalsAchieved: AnalyticsGoalsKpiDto;
+  newUsers: AnalyticsNewUsersKpiDto;
+  /**
+   * Average DAU / MAU, %
+   */
+  stickiness: AnalyticsStickinessKpiDto;
+  /**
+   * Improved personal records
+   */
+  personalRecords: AnalyticsRecordsKpiDto;
+  /**
+   * Distance of completed workouts, km
+   */
+  distanceKm: AnalyticsDistanceKpiDto;
+  /**
+   * Users who wrote to the coach
+   */
+  coachActiveUsers: AnalyticsCoachKpiDto;
+};
+
+export type AnalyticsActivityPointDto = {
+  date: string;
+  activeUsers: number;
+  /**
+   * Athletes who completed a workout that day
+   */
+  runners: number;
+  workouts: number;
+  distanceKm: number;
+};
+
+export type AnalyticsActivityResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  range: "7d" | "30d" | "90d";
+  points: Array<AnalyticsActivityPointDto>;
+  averageActiveUsers: number;
+  averageRunners: number;
+};
+
+export type AnalyticsRegularityDto = {
+  /**
+   * Weeks with a workout out of the last 8
+   */
+  weeks: number;
+  users: number;
+};
+
+export type AnalyticsActiveDaysDto = {
+  /**
+   * Days with a workout out of the last 28
+   */
+  days: number;
+  users: number;
+};
+
+export type AnalyticsCohortDto = {
+  /**
+   * Monday of the registration week
+   */
+  week: string;
+  size: number;
+  /**
+   * Share with a workout in week 0, 1, … after sign-up, %
+   */
+  retention: Array<number>;
+};
+
+export type AnalyticsHabitDto = {
+  /**
+   * First workout in the period shifted 4 weeks back
+   */
+  startedRunning: number;
+  /**
+   * Of them trained in 3 of their first 4 weeks
+   */
+  formedHabit: number;
+  rate: number | null;
+};
+
+export type AnalyticsFirstWorkoutBucketDto = {
+  bucket: "day1" | "days2_3" | "days4_7" | "days8_14" | "later" | "never";
+  users: number;
+};
+
+export type AnalyticsTimeToFirstWorkoutDto = {
+  medianHours: number | null;
+  buckets: Array<AnalyticsFirstWorkoutBucketDto>;
+};
+
+export type AnalyticsWeeklySourcesDto = {
+  week: string;
+  /**
+   * Recorded with the in-app tracker
+   */
+  trefix: number;
+  strava: number;
+  garmin: number;
+  appleHealth: number;
+  healthConnect: number;
+  /**
+   * Entered by hand
+   */
+  manual: number;
+};
+
+export type AnalyticsWeekdayHourDto = {
+  /**
+   * 1 = Monday … 7 = Sunday, local time of the start
+   */
+  weekday: number;
+  hour: number;
+  workouts: number;
+};
+
+export type AnalyticsStickinessPointDto = {
+  date: string;
+  dau: number;
+  wau: number;
+  mau: number;
+  stickiness: number | null;
+};
+
+export type AnalyticsEngagementResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  regularity: Array<AnalyticsRegularityDto>;
+  activeDays: Array<AnalyticsActiveDaysDto>;
+  /**
+   * Registration cohorts of the last 12 weeks
+   */
+  cohorts: Array<AnalyticsCohortDto>;
+  habit: AnalyticsHabitDto;
+  timeToFirstWorkout: AnalyticsTimeToFirstWorkoutDto;
+  sources: Array<AnalyticsWeeklySourcesDto>;
+  whenTheyRun: Array<AnalyticsWeekdayHourDto>;
+  stickinessSeries: Array<AnalyticsStickinessPointDto>;
+};
+
+export type AnalyticsOpenGoalsDto = {
+  onTrack: number;
+  atRisk: number;
+  noData: number;
+};
+
+export type AnalyticsFinishedGoalsDto = {
+  achieved: number;
+  missed: number;
+  abandoned: number;
+  rate: number | null;
+};
+
+export type AnalyticsGoalCategoryDto = {
+  category:
+    | "race_event"
+    | "performance"
+    | "training_habit"
+    | "fitness_lifestyle"
+    | "challenge"
+    | "flexible";
+  onTrack: number;
+  atRisk: number;
+  noData: number;
+  achieved: number;
+  missed: number;
+  abandoned: number;
+};
+
+export type AnalyticsGoalsDto = {
+  /**
+   * Day of the latest nightly snapshot
+   */
+  snapshotDate: string | null;
+  /**
+   * Goals still going on, as of the latest snapshot
+   */
+  active: AnalyticsOpenGoalsDto;
+  /**
+   * Goals that reached a final status in the period
+   */
+  finished: AnalyticsFinishedGoalsDto;
+  byCategory: Array<AnalyticsGoalCategoryDto>;
+};
+
+export type AnalyticsFunnelStepDto = {
+  step: string;
+  count: number;
+};
+
+export type AnalyticsRaceBucketDto = {
+  bucket: "faster_3plus" | "within_3" | "slower_3_10" | "slower_10plus";
+  count: number;
+};
+
+export type AnalyticsFitnessPointDto = {
+  date: string;
+  thresholdPaceChangeMedianSec: number | null;
+  fitnessChangeMedianPct: number | null;
+};
+
+export type AnalyticsFitnessDto = {
+  /**
+   * Athletes with 8 weeks of history and ≥1 workout a week
+   */
+  athletes: number;
+  /**
+   * Threshold pace faster by 2+ s/km
+   */
+  improved: number;
+  stable: number;
+  declined: number;
+  /**
+   * Median change over 8 weeks, s/km (negative = faster)
+   */
+  thresholdPaceChangeMedianSec: number | null;
+  /**
+   * Median change of fitness over 8 weeks, %
+   */
+  fitnessChangeMedianPct: number | null;
+  /**
+   * False when the series is not kept (counted with staff)
+   */
+  historical: boolean;
+  series: Array<AnalyticsFitnessPointDto>;
+};
+
+export type AnalyticsRecordsWeekDto = {
+  week: string;
+  improvements: number;
+  firsts: number;
+};
+
+export type AnalyticsRecordsDistanceDto = {
+  distance: string;
+  improvements: number;
+  firsts: number;
+};
+
+export type AnalyticsRecordsDto = {
+  improvements: number;
+  firsts: number;
+  weekly: Array<AnalyticsRecordsWeekDto>;
+  byDistance: Array<AnalyticsRecordsDistanceDto>;
+};
+
+export type AnalyticsVolumeWeekDto = {
+  week: string;
+  medianKm: number | null;
+  runners: number;
+};
+
+export type AnalyticsSafetyPointDto = {
+  date: string;
+  share: number | null;
+};
+
+export type AnalyticsSafetyDto = {
+  /**
+   * Athletes with acute / chronic load > 1.5, %
+   */
+  currentShare: number | null;
+  historical: boolean;
+  series: Array<AnalyticsSafetyPointDto>;
+};
+
+export type AnalyticsOutcomesResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  goals: AnalyticsGoalsDto;
+  /**
+   * Goals of the last 12 months: goal_set → plan_started → half_plan → plan_completed → goal_achieved
+   */
+  goalFunnel: Array<AnalyticsFunnelStepDto>;
+  raceResults: Array<AnalyticsRaceBucketDto>;
+  fitness: AnalyticsFitnessDto;
+  records: AnalyticsRecordsDto;
+  volume: Array<AnalyticsVolumeWeekDto>;
+  safety: AnalyticsSafetyDto;
+};
+
+export type AnalyticsPlansCreatedDto = {
+  week: string;
+  ai: number;
+  manual: number;
+  /**
+   * Prepared again from a past plan
+   */
+  rebuild: number;
+};
+
+export type AnalyticsPlanOutcomesDto = {
+  completed: number;
+  /**
+   * Cancelled by the user or an administrator
+   */
+  cancelled: number;
+  /**
+   * Cancelled because another plan was started
+   */
+  replaced: number;
+};
+
+export type AnalyticsPlanProgressBucketDto = {
+  /**
+   * Share of the plan behind when it was cancelled
+   */
+  bucket: "0_25" | "25_50" | "50_75" | "75_100";
+  plans: number;
+};
+
+export type AnalyticsCancelReasonDto = {
+  reason: string;
+  plans: number;
+};
+
+export type AnalyticsPlanWeekAdherenceDto = {
+  planWeek: number;
+  adherencePct: number | null;
+  /**
+   * Done + missed workouts behind the share
+   */
+  workouts: number;
+};
+
+export type AnalyticsGoalTypeDto = {
+  goalType: string;
+  category:
+    | "race_event"
+    | "performance"
+    | "training_habit"
+    | "fitness_lifestyle"
+    | "challenge"
+    | "flexible";
+  goals: number;
+};
+
+export type AnalyticsRaceDistanceDto = {
+  /**
+   * 5k, 10k, half_marathon, marathon or other
+   */
+  distance: string;
+  races: number;
+};
+
+export type AnalyticsUpcomingRacesDto = {
+  total: number;
+  byDistance: Array<AnalyticsRaceDistanceDto>;
+};
+
+export type AnalyticsAdaptationsDto = {
+  proposed: number;
+  applied: number;
+  dismissed: number;
+  acceptanceRate: number | null;
+};
+
+export type AnalyticsPlansResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  active: number;
+  created: Array<AnalyticsPlansCreatedDto>;
+  outcomes: AnalyticsPlanOutcomesDto;
+  cancellationByProgress: Array<AnalyticsPlanProgressBucketDto>;
+  cancelReasons: Array<AnalyticsCancelReasonDto>;
+  adherenceByPlanWeek: Array<AnalyticsPlanWeekAdherenceDto>;
+  goalTypes: Array<AnalyticsGoalTypeDto>;
+  upcomingRaces: AnalyticsUpcomingRacesDto;
+  adaptations: AnalyticsAdaptationsDto;
+};
+
+export type AnalyticsCoachMessagesDayDto = {
+  date: string;
+  userMessages: number;
+  coachReplies: number;
+  proactive: number;
+};
+
+export type AnalyticsProactiveDto = {
+  sent: number;
+  replied24h: number;
+  replyRate: number | null;
+};
+
+export type AnalyticsWorkoutNotesDayDto = {
+  date: string;
+  notes: number;
+};
+
+export type AnalyticsWorkoutNotesDto = {
+  total: number;
+  daily: Array<AnalyticsWorkoutNotesDayDto>;
+};
+
+export type AnalyticsCoachEffectDto = {
+  /**
+   * plan_adherence, week4_retention or goals_achieved
+   */
+  metric: string;
+  /**
+   * Users with the coach on, %
+   */
+  enabled: number | null;
+  /**
+   * Users with the coach off, %
+   */
+  disabled: number | null;
+};
+
+export type AnalyticsLlmDayDto = {
+  date: string;
+  costUsd: number;
+  calls: number;
+};
+
+export type AnalyticsLlmBreakdownDto = {
+  /**
+   * Feature or model
+   */
+  key: string;
+  calls: number;
+  costUsd: number;
+  inputTokens: number;
+  outputTokens: number;
+};
+
+export type AnalyticsLlmDto = {
+  costUsd: number;
+  costPerActiveUserUsd: number | null;
+  calls: number;
+  inputTokens: number;
+  outputTokens: number;
+  failedShare: number | null;
+  p95LatencyMs: number | null;
+  daily: Array<AnalyticsLlmDayDto>;
+  byFeature: Array<AnalyticsLlmBreakdownDto>;
+  byModel: Array<AnalyticsLlmBreakdownDto>;
+};
+
+export type AnalyticsCoachResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  /**
+   * Users with the coach switched on, %
+   */
+  enabledShare: number | null;
+  activeUsers: number;
+  /**
+   * Median user messages per conversation
+   */
+  messagesPerSession: number | null;
+  messages: Array<AnalyticsCoachMessagesDayDto>;
+  proactive: AnalyticsProactiveDto;
+  workoutNotes: AnalyticsWorkoutNotesDto;
+  effect: Array<AnalyticsCoachEffectDto>;
+  llm: AnalyticsLlmDto;
+};
+
+export type AnalyticsAudienceTotalsDto = {
+  users: number;
+  blocked: number;
+  newInPeriod: number;
+  deletedInPeriod: number;
+};
+
+export type AnalyticsDailyUsersDto = {
+  date: string;
+  users: number;
+};
+
+export type AnalyticsProviderUsersDto = {
+  /**
+   * Sign-in provider or `email`
+   */
+  provider: string;
+  users: number;
+};
+
+export type AnalyticsPlatformUsersDto = {
+  platform: string;
+  users: number;
+};
+
+export type AnalyticsAppVersionDto = {
+  platform: string;
+  appVersion: string | null;
+  users: number;
+};
+
+export type AnalyticsIntegrationDto = {
+  provider: string;
+  connected: number;
+  errors: number;
+};
+
+export type AnalyticsExperienceDto = {
+  level: string;
+  athletes: number;
+};
+
+export type AnalyticsLanguageDto = {
+  /**
+   * Interface language or `system`
+   */
+  language: string;
+  users: number;
+};
+
+export type AnalyticsAudienceResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  totals: AnalyticsAudienceTotalsDto;
+  registrations: Array<AnalyticsDailyUsersDto>;
+  registrationsByProvider: Array<AnalyticsProviderUsersDto>;
+  /**
+   * Users registered in the period: registered → … → habit
+   */
+  activationFunnel: Array<AnalyticsFunnelStepDto>;
+  /**
+   * Users active in the last 28 days
+   */
+  platforms: Array<AnalyticsPlatformUsersDto>;
+  appVersions: Array<AnalyticsAppVersionDto>;
+  integrations: Array<AnalyticsIntegrationDto>;
+  usersWithIntegrationShare: number | null;
+  experience: Array<AnalyticsExperienceDto>;
+  languages: Array<AnalyticsLanguageDto>;
+};
+
+export type AnalyticsAttentionCountDto = {
+  type:
+    | "churn_risk"
+    | "overload_risk"
+    | "goal_at_risk"
+    | "integration_error"
+    | "sync_stale"
+    | "notification_failed"
+    | "export_pending"
+    | "export_failed";
+  count: number;
+};
+
+export type AnalyticsAttentionUserDto = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl: string | null;
+};
+
+export type AnalyticsAttentionDetailsDto = {
+  daysWithoutWorkout?: number;
+  planId?: string;
+  planName?: string | null;
+  /**
+   * Acute / chronic load
+   */
+  ratio?: number;
+  goalId?: string;
+  goalType?: string;
+  targetDate?: string | null;
+  progressPct?: number | null;
+  provider?: string;
+  status?: string;
+  hoursSinceSync?: number;
+  failures?: number;
+  channels?: Array<string>;
+  exportId?: string;
+};
+
+export type AnalyticsAttentionItemDto = {
+  type:
+    | "churn_risk"
+    | "overload_risk"
+    | "goal_at_risk"
+    | "integration_error"
+    | "sync_stale"
+    | "notification_failed"
+    | "export_pending"
+    | "export_failed";
+  severity: "high" | "medium" | "low";
+  /**
+   * Since when the problem lasts
+   */
+  since: string | null;
+  user: AnalyticsAttentionUserDto;
+  details: AnalyticsAttentionDetailsDto;
+};
+
+export type AnalyticsAttentionResponseDto = {
+  /**
+   * When the block was computed (it may come from cache)
+   */
+  generatedAt: string;
+  counts: Array<AnalyticsAttentionCountDto>;
+  data: Array<AnalyticsAttentionItemDto>;
+  meta: PaginationMetaDto;
+};
+
 export type NotificationLinkDto = {
   /**
    * Screen the app opens on tap
@@ -8887,6 +9670,274 @@ export type AdminOverviewControllerGetOverviewV1Responses = {
 
 export type AdminOverviewControllerGetOverviewV1Response =
   AdminOverviewControllerGetOverviewV1Responses[keyof AdminOverviewControllerGetOverviewV1Responses];
+
+export type AnalyticsControllerSummaryV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+  };
+  url: "/v1/analytics/summary";
+};
+
+export type AnalyticsControllerSummaryV1Responses = {
+  200: AnalyticsSummaryResponseDto;
+};
+
+export type AnalyticsControllerSummaryV1Response =
+  AnalyticsControllerSummaryV1Responses[keyof AnalyticsControllerSummaryV1Responses];
+
+export type AnalyticsControllerActivityV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+    /**
+     * Range of the activity chart
+     */
+    range?: "7d" | "30d" | "90d";
+  };
+  url: "/v1/analytics/activity";
+};
+
+export type AnalyticsControllerActivityV1Responses = {
+  200: AnalyticsActivityResponseDto;
+};
+
+export type AnalyticsControllerActivityV1Response =
+  AnalyticsControllerActivityV1Responses[keyof AnalyticsControllerActivityV1Responses];
+
+export type AnalyticsControllerEngagementV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+  };
+  url: "/v1/analytics/engagement";
+};
+
+export type AnalyticsControllerEngagementV1Responses = {
+  200: AnalyticsEngagementResponseDto;
+};
+
+export type AnalyticsControllerEngagementV1Response =
+  AnalyticsControllerEngagementV1Responses[keyof AnalyticsControllerEngagementV1Responses];
+
+export type AnalyticsControllerOutcomesV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+  };
+  url: "/v1/analytics/outcomes";
+};
+
+export type AnalyticsControllerOutcomesV1Responses = {
+  200: AnalyticsOutcomesResponseDto;
+};
+
+export type AnalyticsControllerOutcomesV1Response =
+  AnalyticsControllerOutcomesV1Responses[keyof AnalyticsControllerOutcomesV1Responses];
+
+export type AnalyticsControllerPlansV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+  };
+  url: "/v1/analytics/plans";
+};
+
+export type AnalyticsControllerPlansV1Responses = {
+  200: AnalyticsPlansResponseDto;
+};
+
+export type AnalyticsControllerPlansV1Response =
+  AnalyticsControllerPlansV1Responses[keyof AnalyticsControllerPlansV1Responses];
+
+export type AnalyticsControllerCoachV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+  };
+  url: "/v1/analytics/coach";
+};
+
+export type AnalyticsControllerCoachV1Responses = {
+  200: AnalyticsCoachResponseDto;
+};
+
+export type AnalyticsControllerCoachV1Response =
+  AnalyticsControllerCoachV1Responses[keyof AnalyticsControllerCoachV1Responses];
+
+export type AnalyticsControllerAudienceV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+  };
+  url: "/v1/analytics/audience";
+};
+
+export type AnalyticsControllerAudienceV1Responses = {
+  200: AnalyticsAudienceResponseDto;
+};
+
+export type AnalyticsControllerAudienceV1Response =
+  AnalyticsControllerAudienceV1Responses[keyof AnalyticsControllerAudienceV1Responses];
+
+export type AnalyticsControllerAttentionV1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Reporting period ending today
+     */
+    period?: "7d" | "30d" | "90d" | "12m";
+    /**
+     * IANA timezone of day boundaries; ANALYTICS_DEFAULT_TIMEZONE when omitted
+     */
+    timezone?: string;
+    /**
+     * Count staff (holders of admin permissions) too
+     */
+    includeStaff?: boolean;
+    /**
+     * Recompute instead of serving the cached block
+     */
+    refresh?: boolean;
+    /**
+     * Kinds of problems; comma-separated or repeated
+     */
+    type?: Array<
+      | "churn_risk"
+      | "overload_risk"
+      | "goal_at_risk"
+      | "integration_error"
+      | "sync_stale"
+      | "notification_failed"
+      | "export_pending"
+      | "export_failed"
+    >;
+    sortBy?: "severity" | "since";
+    page?: number;
+    limit?: number;
+  };
+  url: "/v1/analytics/attention-items";
+};
+
+export type AnalyticsControllerAttentionV1Responses = {
+  200: AnalyticsAttentionResponseDto;
+};
+
+export type AnalyticsControllerAttentionV1Response =
+  AnalyticsControllerAttentionV1Responses[keyof AnalyticsControllerAttentionV1Responses];
 
 export type NotificationsControllerListV1Data = {
   body?: never;

@@ -1961,3 +1961,45 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     return (body ? JSON.parse(body) : undefined) as TResponse;
   };
 }
+
+// --- Admin: analytics dashboard ---
+
+export const analyticsSummarySchema = contract.zAnalyticsSummaryResponseDto;
+export const analyticsActivitySchema = contract.zAnalyticsActivityResponseDto;
+export const analyticsEngagementSchema =
+  contract.zAnalyticsEngagementResponseDto;
+export const analyticsOutcomesSchema = contract.zAnalyticsOutcomesResponseDto;
+export const analyticsPlansSchema = contract.zAnalyticsPlansResponseDto;
+export const analyticsCoachSchema = contract.zAnalyticsCoachResponseDto;
+export const analyticsAudienceSchema = contract.zAnalyticsAudienceResponseDto;
+export const analyticsAttentionSchema = contract.zAnalyticsAttentionResponseDto;
+export const analyticsAttentionTypeSchema =
+  contract.zAnalyticsAttentionItemDto.shape.type;
+export const analyticsAttentionSeveritySchema =
+  contract.zAnalyticsAttentionItemDto.shape.severity;
+
+export const ANALYTICS_ATTENTION_TYPES = analyticsAttentionTypeSchema.options;
+export const ANALYTICS_PERIODS =
+  contract.zAnalyticsControllerSummaryV1Query.shape.period
+    .unwrap()
+    .unwrap().options;
+export const ANALYTICS_RANGES = analyticsActivitySchema.shape.range.options;
+
+export type AnalyticsPeriod = (typeof ANALYTICS_PERIODS)[number];
+export type AnalyticsRange = z.infer<typeof analyticsActivitySchema>["range"];
+export type AnalyticsSummary = z.infer<typeof analyticsSummarySchema>;
+export type AnalyticsKpi = AnalyticsSummary["planAdherence"];
+export type AnalyticsActivity = z.infer<typeof analyticsActivitySchema>;
+export type AnalyticsEngagement = z.infer<typeof analyticsEngagementSchema>;
+export type AnalyticsOutcomes = z.infer<typeof analyticsOutcomesSchema>;
+export type AnalyticsPlans = z.infer<typeof analyticsPlansSchema>;
+export type AnalyticsCoach = z.infer<typeof analyticsCoachSchema>;
+export type AnalyticsAudience = z.infer<typeof analyticsAudienceSchema>;
+export type AnalyticsAttention = z.infer<typeof analyticsAttentionSchema>;
+export type AnalyticsAttentionItem = AnalyticsAttention["data"][number];
+export type AnalyticsAttentionType = z.infer<
+  typeof analyticsAttentionTypeSchema
+>;
+export type AnalyticsAttentionSeverity = z.infer<
+  typeof analyticsAttentionSeveritySchema
+>;

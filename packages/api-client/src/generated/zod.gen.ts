@@ -2955,6 +2955,538 @@ export const zAdminOverviewResponseDto = z.object({
   connections: z.array(zOverviewConnectionDto),
 });
 
+export const zAnalyticsRunnersKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  growthWeeks: z.number(),
+});
+
+export const zAnalyticsKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+});
+
+export const zAnalyticsGoalsKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  rate: z.number().nullable(),
+});
+
+export const zAnalyticsNewUsersKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  activationRate: z.number().nullable(),
+});
+
+export const zAnalyticsStickinessKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  dau: z.number(),
+  mau: z.number(),
+});
+
+export const zAnalyticsRecordsKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  firsts: z.number(),
+});
+
+export const zAnalyticsDistanceKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  weeklyMedianKm: z.number().nullable(),
+});
+
+export const zAnalyticsCoachKpiDto = z.object({
+  value: z.number(),
+  previous: z.number(),
+  deltaPct: z.number().nullable(),
+  spark: z.array(z.number()),
+  proactiveReplyRate: z.number().nullable(),
+});
+
+export const zAnalyticsSummaryResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  weeklyActiveRunners: zAnalyticsRunnersKpiDto,
+  planAdherence: zAnalyticsKpiDto,
+  goalsAchieved: zAnalyticsGoalsKpiDto,
+  newUsers: zAnalyticsNewUsersKpiDto,
+  stickiness: zAnalyticsStickinessKpiDto,
+  personalRecords: zAnalyticsRecordsKpiDto,
+  distanceKm: zAnalyticsDistanceKpiDto,
+  coachActiveUsers: zAnalyticsCoachKpiDto,
+});
+
+export const zAnalyticsActivityPointDto = z.object({
+  date: z.string(),
+  activeUsers: z.number(),
+  runners: z.number(),
+  workouts: z.number(),
+  distanceKm: z.number(),
+});
+
+export const zAnalyticsActivityResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  range: z.enum(["7d", "30d", "90d"]),
+  points: z.array(zAnalyticsActivityPointDto),
+  averageActiveUsers: z.number(),
+  averageRunners: z.number(),
+});
+
+export const zAnalyticsRegularityDto = z.object({
+  weeks: z.number(),
+  users: z.number(),
+});
+
+export const zAnalyticsActiveDaysDto = z.object({
+  days: z.number(),
+  users: z.number(),
+});
+
+export const zAnalyticsCohortDto = z.object({
+  week: z.string(),
+  size: z.number(),
+  retention: z.array(z.number()),
+});
+
+export const zAnalyticsHabitDto = z.object({
+  startedRunning: z.number(),
+  formedHabit: z.number(),
+  rate: z.number().nullable(),
+});
+
+export const zAnalyticsFirstWorkoutBucketDto = z.object({
+  bucket: z.enum(["day1", "days2_3", "days4_7", "days8_14", "later", "never"]),
+  users: z.number(),
+});
+
+export const zAnalyticsTimeToFirstWorkoutDto = z.object({
+  medianHours: z.number().nullable(),
+  buckets: z.array(zAnalyticsFirstWorkoutBucketDto),
+});
+
+export const zAnalyticsWeeklySourcesDto = z.object({
+  week: z.string(),
+  trefix: z.number(),
+  strava: z.number(),
+  garmin: z.number(),
+  appleHealth: z.number(),
+  healthConnect: z.number(),
+  manual: z.number(),
+});
+
+export const zAnalyticsWeekdayHourDto = z.object({
+  weekday: z.number(),
+  hour: z.number(),
+  workouts: z.number(),
+});
+
+export const zAnalyticsStickinessPointDto = z.object({
+  date: z.string(),
+  dau: z.number(),
+  wau: z.number(),
+  mau: z.number(),
+  stickiness: z.number().nullable(),
+});
+
+export const zAnalyticsEngagementResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  regularity: z.array(zAnalyticsRegularityDto),
+  activeDays: z.array(zAnalyticsActiveDaysDto),
+  cohorts: z.array(zAnalyticsCohortDto),
+  habit: zAnalyticsHabitDto,
+  timeToFirstWorkout: zAnalyticsTimeToFirstWorkoutDto,
+  sources: z.array(zAnalyticsWeeklySourcesDto),
+  whenTheyRun: z.array(zAnalyticsWeekdayHourDto),
+  stickinessSeries: z.array(zAnalyticsStickinessPointDto),
+});
+
+export const zAnalyticsOpenGoalsDto = z.object({
+  onTrack: z.number(),
+  atRisk: z.number(),
+  noData: z.number(),
+});
+
+export const zAnalyticsFinishedGoalsDto = z.object({
+  achieved: z.number(),
+  missed: z.number(),
+  abandoned: z.number(),
+  rate: z.number().nullable(),
+});
+
+export const zAnalyticsGoalCategoryDto = z.object({
+  category: z.enum([
+    "race_event",
+    "performance",
+    "training_habit",
+    "fitness_lifestyle",
+    "challenge",
+    "flexible",
+  ]),
+  onTrack: z.number(),
+  atRisk: z.number(),
+  noData: z.number(),
+  achieved: z.number(),
+  missed: z.number(),
+  abandoned: z.number(),
+});
+
+export const zAnalyticsGoalsDto = z.object({
+  snapshotDate: z.string().nullable(),
+  active: zAnalyticsOpenGoalsDto,
+  finished: zAnalyticsFinishedGoalsDto,
+  byCategory: z.array(zAnalyticsGoalCategoryDto),
+});
+
+export const zAnalyticsFunnelStepDto = z.object({
+  step: z.string(),
+  count: z.number(),
+});
+
+export const zAnalyticsRaceBucketDto = z.object({
+  bucket: z.enum(["faster_3plus", "within_3", "slower_3_10", "slower_10plus"]),
+  count: z.number(),
+});
+
+export const zAnalyticsFitnessPointDto = z.object({
+  date: z.string(),
+  thresholdPaceChangeMedianSec: z.number().nullable(),
+  fitnessChangeMedianPct: z.number().nullable(),
+});
+
+export const zAnalyticsFitnessDto = z.object({
+  athletes: z.number(),
+  improved: z.number(),
+  stable: z.number(),
+  declined: z.number(),
+  thresholdPaceChangeMedianSec: z.number().nullable(),
+  fitnessChangeMedianPct: z.number().nullable(),
+  historical: z.boolean(),
+  series: z.array(zAnalyticsFitnessPointDto),
+});
+
+export const zAnalyticsRecordsWeekDto = z.object({
+  week: z.string(),
+  improvements: z.number(),
+  firsts: z.number(),
+});
+
+export const zAnalyticsRecordsDistanceDto = z.object({
+  distance: z.string(),
+  improvements: z.number(),
+  firsts: z.number(),
+});
+
+export const zAnalyticsRecordsDto = z.object({
+  improvements: z.number(),
+  firsts: z.number(),
+  weekly: z.array(zAnalyticsRecordsWeekDto),
+  byDistance: z.array(zAnalyticsRecordsDistanceDto),
+});
+
+export const zAnalyticsVolumeWeekDto = z.object({
+  week: z.string(),
+  medianKm: z.number().nullable(),
+  runners: z.number(),
+});
+
+export const zAnalyticsSafetyPointDto = z.object({
+  date: z.string(),
+  share: z.number().nullable(),
+});
+
+export const zAnalyticsSafetyDto = z.object({
+  currentShare: z.number().nullable(),
+  historical: z.boolean(),
+  series: z.array(zAnalyticsSafetyPointDto),
+});
+
+export const zAnalyticsOutcomesResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  goals: zAnalyticsGoalsDto,
+  goalFunnel: z.array(zAnalyticsFunnelStepDto),
+  raceResults: z.array(zAnalyticsRaceBucketDto),
+  fitness: zAnalyticsFitnessDto,
+  records: zAnalyticsRecordsDto,
+  volume: z.array(zAnalyticsVolumeWeekDto),
+  safety: zAnalyticsSafetyDto,
+});
+
+export const zAnalyticsPlansCreatedDto = z.object({
+  week: z.string(),
+  ai: z.number(),
+  manual: z.number(),
+  rebuild: z.number(),
+});
+
+export const zAnalyticsPlanOutcomesDto = z.object({
+  completed: z.number(),
+  cancelled: z.number(),
+  replaced: z.number(),
+});
+
+export const zAnalyticsPlanProgressBucketDto = z.object({
+  bucket: z.enum(["0_25", "25_50", "50_75", "75_100"]),
+  plans: z.number(),
+});
+
+export const zAnalyticsCancelReasonDto = z.object({
+  reason: z.string(),
+  plans: z.number(),
+});
+
+export const zAnalyticsPlanWeekAdherenceDto = z.object({
+  planWeek: z.number(),
+  adherencePct: z.number().nullable(),
+  workouts: z.number(),
+});
+
+export const zAnalyticsGoalTypeDto = z.object({
+  goalType: z.string(),
+  category: z.enum([
+    "race_event",
+    "performance",
+    "training_habit",
+    "fitness_lifestyle",
+    "challenge",
+    "flexible",
+  ]),
+  goals: z.number(),
+});
+
+export const zAnalyticsRaceDistanceDto = z.object({
+  distance: z.string(),
+  races: z.number(),
+});
+
+export const zAnalyticsUpcomingRacesDto = z.object({
+  total: z.number(),
+  byDistance: z.array(zAnalyticsRaceDistanceDto),
+});
+
+export const zAnalyticsAdaptationsDto = z.object({
+  proposed: z.number(),
+  applied: z.number(),
+  dismissed: z.number(),
+  acceptanceRate: z.number().nullable(),
+});
+
+export const zAnalyticsPlansResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  active: z.number(),
+  created: z.array(zAnalyticsPlansCreatedDto),
+  outcomes: zAnalyticsPlanOutcomesDto,
+  cancellationByProgress: z.array(zAnalyticsPlanProgressBucketDto),
+  cancelReasons: z.array(zAnalyticsCancelReasonDto),
+  adherenceByPlanWeek: z.array(zAnalyticsPlanWeekAdherenceDto),
+  goalTypes: z.array(zAnalyticsGoalTypeDto),
+  upcomingRaces: zAnalyticsUpcomingRacesDto,
+  adaptations: zAnalyticsAdaptationsDto,
+});
+
+export const zAnalyticsCoachMessagesDayDto = z.object({
+  date: z.string(),
+  userMessages: z.number(),
+  coachReplies: z.number(),
+  proactive: z.number(),
+});
+
+export const zAnalyticsProactiveDto = z.object({
+  sent: z.number(),
+  replied24h: z.number(),
+  replyRate: z.number().nullable(),
+});
+
+export const zAnalyticsWorkoutNotesDayDto = z.object({
+  date: z.string(),
+  notes: z.number(),
+});
+
+export const zAnalyticsWorkoutNotesDto = z.object({
+  total: z.number(),
+  daily: z.array(zAnalyticsWorkoutNotesDayDto),
+});
+
+export const zAnalyticsCoachEffectDto = z.object({
+  metric: z.string(),
+  enabled: z.number().nullable(),
+  disabled: z.number().nullable(),
+});
+
+export const zAnalyticsLlmDayDto = z.object({
+  date: z.string(),
+  costUsd: z.number(),
+  calls: z.number(),
+});
+
+export const zAnalyticsLlmBreakdownDto = z.object({
+  key: z.string(),
+  calls: z.number(),
+  costUsd: z.number(),
+  inputTokens: z.number(),
+  outputTokens: z.number(),
+});
+
+export const zAnalyticsLlmDto = z.object({
+  costUsd: z.number(),
+  costPerActiveUserUsd: z.number().nullable(),
+  calls: z.number(),
+  inputTokens: z.number(),
+  outputTokens: z.number(),
+  failedShare: z.number().nullable(),
+  p95LatencyMs: z.number().nullable(),
+  daily: z.array(zAnalyticsLlmDayDto),
+  byFeature: z.array(zAnalyticsLlmBreakdownDto),
+  byModel: z.array(zAnalyticsLlmBreakdownDto),
+});
+
+export const zAnalyticsCoachResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  enabledShare: z.number().nullable(),
+  activeUsers: z.number(),
+  messagesPerSession: z.number().nullable(),
+  messages: z.array(zAnalyticsCoachMessagesDayDto),
+  proactive: zAnalyticsProactiveDto,
+  workoutNotes: zAnalyticsWorkoutNotesDto,
+  effect: z.array(zAnalyticsCoachEffectDto),
+  llm: zAnalyticsLlmDto,
+});
+
+export const zAnalyticsAudienceTotalsDto = z.object({
+  users: z.number(),
+  blocked: z.number(),
+  newInPeriod: z.number(),
+  deletedInPeriod: z.number(),
+});
+
+export const zAnalyticsDailyUsersDto = z.object({
+  date: z.string(),
+  users: z.number(),
+});
+
+export const zAnalyticsProviderUsersDto = z.object({
+  provider: z.string(),
+  users: z.number(),
+});
+
+export const zAnalyticsPlatformUsersDto = z.object({
+  platform: z.string(),
+  users: z.number(),
+});
+
+export const zAnalyticsAppVersionDto = z.object({
+  platform: z.string(),
+  appVersion: z.string().nullable(),
+  users: z.number(),
+});
+
+export const zAnalyticsIntegrationDto = z.object({
+  provider: z.string(),
+  connected: z.number(),
+  errors: z.number(),
+});
+
+export const zAnalyticsExperienceDto = z.object({
+  level: z.string(),
+  athletes: z.number(),
+});
+
+export const zAnalyticsLanguageDto = z.object({
+  language: z.string(),
+  users: z.number(),
+});
+
+export const zAnalyticsAudienceResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  totals: zAnalyticsAudienceTotalsDto,
+  registrations: z.array(zAnalyticsDailyUsersDto),
+  registrationsByProvider: z.array(zAnalyticsProviderUsersDto),
+  activationFunnel: z.array(zAnalyticsFunnelStepDto),
+  platforms: z.array(zAnalyticsPlatformUsersDto),
+  appVersions: z.array(zAnalyticsAppVersionDto),
+  integrations: z.array(zAnalyticsIntegrationDto),
+  usersWithIntegrationShare: z.number().nullable(),
+  experience: z.array(zAnalyticsExperienceDto),
+  languages: z.array(zAnalyticsLanguageDto),
+});
+
+export const zAnalyticsAttentionCountDto = z.object({
+  type: z.enum([
+    "churn_risk",
+    "overload_risk",
+    "goal_at_risk",
+    "integration_error",
+    "sync_stale",
+    "notification_failed",
+    "export_pending",
+    "export_failed",
+  ]),
+  count: z.number(),
+});
+
+export const zAnalyticsAttentionUserDto = z.object({
+  id: z.uuid(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
+  avatarUrl: z.string().nullable(),
+});
+
+export const zAnalyticsAttentionDetailsDto = z.object({
+  daysWithoutWorkout: z.number().optional(),
+  planId: z.string().optional(),
+  planName: z.string().nullish(),
+  ratio: z.number().optional(),
+  goalId: z.string().optional(),
+  goalType: z.string().optional(),
+  targetDate: z.string().nullish(),
+  progressPct: z.number().nullish(),
+  provider: z.string().optional(),
+  status: z.string().optional(),
+  hoursSinceSync: z.number().optional(),
+  failures: z.number().optional(),
+  channels: z.array(z.string()).optional(),
+  exportId: z.string().optional(),
+});
+
+export const zAnalyticsAttentionItemDto = z.object({
+  type: z.enum([
+    "churn_risk",
+    "overload_risk",
+    "goal_at_risk",
+    "integration_error",
+    "sync_stale",
+    "notification_failed",
+    "export_pending",
+    "export_failed",
+  ]),
+  severity: z.enum(["high", "medium", "low"]),
+  since: z.iso.datetime().nullable(),
+  user: zAnalyticsAttentionUserDto,
+  details: zAnalyticsAttentionDetailsDto,
+});
+
+export const zAnalyticsAttentionResponseDto = z.object({
+  generatedAt: z.iso.datetime(),
+  counts: z.array(zAnalyticsAttentionCountDto),
+  data: z.array(zAnalyticsAttentionItemDto),
+  meta: zPaginationMetaDto,
+});
+
 export const zNotificationLinkDto = z.object({
   target: z.enum([
     "coach",
@@ -5060,6 +5592,102 @@ export const zAdminOverviewControllerGetOverviewV1Query = z.object({
 
 export const zAdminOverviewControllerGetOverviewV1Response =
   zAdminOverviewResponseDto;
+
+export const zAnalyticsControllerSummaryV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+});
+
+export const zAnalyticsControllerSummaryV1Response =
+  zAnalyticsSummaryResponseDto;
+
+export const zAnalyticsControllerActivityV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+  range: z.enum(["7d", "30d", "90d"]).optional().default("90d"),
+});
+
+export const zAnalyticsControllerActivityV1Response =
+  zAnalyticsActivityResponseDto;
+
+export const zAnalyticsControllerEngagementV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+});
+
+export const zAnalyticsControllerEngagementV1Response =
+  zAnalyticsEngagementResponseDto;
+
+export const zAnalyticsControllerOutcomesV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+});
+
+export const zAnalyticsControllerOutcomesV1Response =
+  zAnalyticsOutcomesResponseDto;
+
+export const zAnalyticsControllerPlansV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+});
+
+export const zAnalyticsControllerPlansV1Response = zAnalyticsPlansResponseDto;
+
+export const zAnalyticsControllerCoachV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+});
+
+export const zAnalyticsControllerCoachV1Response = zAnalyticsCoachResponseDto;
+
+export const zAnalyticsControllerAudienceV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+});
+
+export const zAnalyticsControllerAudienceV1Response =
+  zAnalyticsAudienceResponseDto;
+
+export const zAnalyticsControllerAttentionV1Query = z.object({
+  period: z.enum(["7d", "30d", "90d", "12m"]).optional().default("30d"),
+  timezone: z.string().optional(),
+  includeStaff: z.boolean().optional().default(false),
+  refresh: z.boolean().optional().default(false),
+  type: z
+    .array(
+      z.enum([
+        "churn_risk",
+        "overload_risk",
+        "goal_at_risk",
+        "integration_error",
+        "sync_stale",
+        "notification_failed",
+        "export_pending",
+        "export_failed",
+      ]),
+    )
+    .optional(),
+  sortBy: z.enum(["severity", "since"]).optional().default("severity"),
+  page: z.number().gte(1).optional().default(1),
+  limit: z.number().gte(1).lte(100).optional().default(20),
+});
+
+export const zAnalyticsControllerAttentionV1Response =
+  zAnalyticsAttentionResponseDto;
 
 export const zNotificationsControllerListV1Query = z.object({
   page: z.number().gte(1).optional().default(1),

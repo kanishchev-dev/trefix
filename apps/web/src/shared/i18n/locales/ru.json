@@ -790,7 +790,8 @@
       "other": "Прочее",
       "account": "Аккаунт",
       "audit": "Аудит",
-      "notifications": "Уведомления"
+      "notifications": "Уведомления",
+      "analytics": "Аналитика"
     },
     "actions": {
       "read": "Просмотр",
@@ -965,6 +966,9 @@
           "read": "Просмотр уведомлений, отправленных из админки, получателей и статистики доставки",
           "send": "Отправка уведомлений пользователю, группе, сегменту или всем — во входящие, пушем и на почту"
         }
+      },
+      "analytics": {
+        "read": "Просмотр аналитического дашборда продукта"
       }
     }
   },
@@ -2287,6 +2291,421 @@
         "ios": "iOS",
         "android": "Android"
       }
+    }
+  },
+  "analytics": {
+    "title": "Дашборд",
+    "subtitle": "Помогаем ли мы людям достигать целей",
+    "welcome": "Аналитика доступна по праву «Просмотр аналитики». Быстрые переходы:",
+    "period": "Период",
+    "tabsLabel": "Раздел",
+    "includeStaff": "Учитывать сотрудников",
+    "updated": "Обновлено {when}",
+    "periods": {
+      "7d": "7 дней",
+      "30d": "30 дней",
+      "90d": "90 дней",
+      "12m": "12 месяцев"
+    },
+    "ranges": {
+      "7d": "7 дней",
+      "30d": "30 дней",
+      "90d": "3 месяца"
+    },
+    "tabs": {
+      "outcomes": "Польза",
+      "engagement": "Вовлечённость",
+      "plans": "Планы",
+      "coach": "Треф",
+      "audience": "Аудитория",
+      "attention": "Требует внимания"
+    },
+    "links": {
+      "users": {
+        "title": "Пользователи",
+        "description": "Список и карточки пользователей"
+      },
+      "notifications": {
+        "title": "Уведомления",
+        "description": "Рассылки пользователям"
+      },
+      "audit": {
+        "title": "Журнал действий",
+        "description": "Действия администраторов и пользователей"
+      }
+    },
+    "empty": {
+      "title": "Пока недостаточно данных",
+      "nightly": "Появится после ночного расчёта",
+      "fitness": "Нужны 8 недель истории тренировок",
+      "races": "Нет стартов с целевым временем за период",
+      "llm": "Вызовы коуча ещё не записывались"
+    },
+    "units": {
+      "secPerKm": " с/км",
+      "seconds": "{value} с"
+    },
+    "kpi": {
+      "runners": "Тренируются за неделю",
+      "runnersCaption": "Пользователи с тренировкой за 7 дней",
+      "adherence": "Выполнение плана",
+      "adherenceCaption": "Выполненные из запланированных",
+      "goals": "Достигнуто целей",
+      "goalsRate": "Успешность {value}",
+      "goalsCaption": "Из целей, завершённых за период",
+      "newUsers": "Новые пользователи",
+      "activation": "Активация {value}",
+      "newUsersCaption": "Первая тренировка за 14 дней",
+      "stickiness": "Липкость",
+      "dauMau": "DAU {dau} · MAU {mau}",
+      "stickinessCaption": "Доля месячной аудитории, заходящей ежедневно",
+      "records": "Улучшено рекордов",
+      "firsts": "Ещё первых результатов: {value}",
+      "recordsCaption": "Личные рекорды на дистанциях",
+      "distance": "Километров",
+      "weeklyMedian": "Медиана {value} км в неделю",
+      "distanceCaption": "Фактический объём тренировок",
+      "coach": "Писали Трефу",
+      "proactiveReplies": "Ответили на проактивные {value}",
+      "coachCaption": "Пользователи, писавшие коучу"
+    },
+    "insights": {
+      "growingWeeks": "Растёт недель подряд: {weeks}",
+      "aboveLast": "Выше прошлого периода",
+      "belowLast": "Ниже прошлого периода",
+      "stable": "На уровне прошлого периода",
+      "adherenceHigh": "Люди следуют планам",
+      "adherenceFalling": "Выполнение снижается",
+      "adherenceLow": "Ниже целевых 80%",
+      "activityAverage": "В среднем {runners} тренирующихся в день — {share}% активных",
+      "goalsOnTrack": "{share}% активных целей идут по графику",
+      "goalFunnel": "Цели достигают {share}% поставивших",
+      "fitnessFaster": "Медиана: темп порога быстрее на {seconds} с/км за 8 недель",
+      "fitnessSlower": "Медиана: темп порога медленнее на {seconds} с/км за 8 недель",
+      "fitnessStable": "Форма за 8 недель без заметных изменений",
+      "records": "Улучшений: {improvements} · первых результатов: {firsts}",
+      "races": "{share}% стартов — в целевое время или быстрее",
+      "overloadHigh": "Перегрузка выше нормы: {share}% атлетов",
+      "overloadNormal": "Резкий рост нагрузки у {share}% атлетов — в пределах нормы",
+      "volume": "Медиана недельного объёма: {from} → {to} км",
+      "regularity": "{share}% тренируются 6+ недель из последних 8",
+      "peakHour": "Пик: {weekday}, {hour}:00",
+      "planDrop": "Самое низкое выполнение — {week}-я неделя плана, {share}%",
+      "plansCompleted": "До конца доходят {share}% планов"
+    },
+    "activity": {
+      "title": "Активность",
+      "subtitle": "Активные пользователи и тренировки по дням",
+      "activeUsers": "Активные пользователи",
+      "runners": "Тренировались",
+      "workouts": "Тренировки",
+      "distanceKm": "Километры",
+      "metric": "Показатель",
+      "range": "Диапазон",
+      "byDay": "По дням"
+    },
+    "goalStatus": {
+      "achieved": "Достигнуто",
+      "missed": "Не достигнуто",
+      "abandoned": "Брошено",
+      "on_track": "По графику",
+      "at_risk": "Отстают",
+      "no_data": "Нет данных"
+    },
+    "goalCategories": {
+      "race_event": "Старт",
+      "performance": "Результат",
+      "training_habit": "Привычка",
+      "fitness_lifestyle": "Образ жизни",
+      "challenge": "Челлендж",
+      "flexible": "Своя цель"
+    },
+    "goalTypes": {
+      "prepare_for_race": "Подготовка к старту",
+      "improve_race_result": "Улучшить результат",
+      "run_new_distance": "Новая дистанция",
+      "trail_preparation": "Подготовка к трейлу",
+      "ultra_preparation": "Подготовка к ультра",
+      "backyard_preparation": "Подготовка к бэкъярду",
+      "improve_speed": "Скорость",
+      "improve_pace": "Темп",
+      "build_endurance": "Выносливость",
+      "improve_aerobic_fitness": "Аэробная форма",
+      "improve_hills": "Подъёмы",
+      "start_running": "Начать бегать",
+      "return_to_running": "Вернуться к бегу",
+      "build_consistency": "Регулярность",
+      "increase_running_volume": "Больше объёма",
+      "run_continuously": "Бег без остановок",
+      "lose_weight": "Снизить вес",
+      "maintain_fitness": "Поддерживать форму",
+      "general_health": "Здоровье",
+      "complete_challenge": "Челлендж",
+      "custom": "Своя цель"
+    },
+    "funnel": {
+      "goal_set": "Поставили цель",
+      "plan_started": "Начали план",
+      "half_plan": "Прошли половину",
+      "plan_completed": "Завершили план",
+      "goal_achieved": "Достигли цели",
+      "registered": "Регистрация",
+      "email_verified": "Email подтверждён",
+      "athlete_profile": "Профиль атлета",
+      "plan_created": "План",
+      "first_workout": "Первая тренировка",
+      "habit": "Привычка"
+    },
+    "outcomes": {
+      "goals": "Цели пользователей",
+      "successRate": "успешность",
+      "goalPath": "Путь к цели",
+      "fitness": "Рост формы",
+      "paceChange": "Изменение темпа порога",
+      "improved": "улучшили",
+      "stable": "без изменений",
+      "declined": "снизили",
+      "athletes": "атлетов в выборке",
+      "records": "Личные рекорды",
+      "improvements": "Улучшения",
+      "firsts": "Первые результаты",
+      "races": "Старты против цели",
+      "racesCount": "Стартов",
+      "safety": "Безопасная нагрузка",
+      "overloadShare": "Доля с перегрузкой",
+      "volume": "Недельный объём",
+      "medianKm": "Медиана, км"
+    },
+    "raceBuckets": {
+      "faster_3plus": "Быстрее 3%+",
+      "within_3": "±3%",
+      "slower_3_10": "Медленнее 3–10%",
+      "slower_10plus": "Медленнее 10%+"
+    },
+    "engagement": {
+      "regularity": "Регулярность",
+      "regularityAxis": "Недель с тренировкой из последних 8",
+      "runners": "Тренирующиеся",
+      "users": "Пользователи",
+      "habit": "Формирование привычки",
+      "habitCaption": "Тренировки в 3 из первых 4 недель",
+      "started": "начали тренироваться",
+      "formed": "сформировали привычку",
+      "conversion": "конверсия",
+      "firstWorkout": "Время до первой тренировки",
+      "firstWorkoutMedian": "Медиана {hours} ч после регистрации",
+      "activeDays": "Кривая вовлечённости",
+      "activeDaysCaption": "Пользователи по числу дней с тренировкой за 28 дней",
+      "sources": "Откуда тренировки",
+      "sourcesCaption": "Завершённые тренировки по неделям",
+      "cohorts": "Удержание когорт",
+      "cohortsCaption": "Доля с тренировкой через N недель после регистрации",
+      "cohortCell": "Неделя {week}: {share}",
+      "whenTheyRun": "Когда бегают",
+      "heatCell": "{weekday}, {hour}:00 — тренировок: {workouts}",
+      "stickiness": "DAU · WAU · MAU",
+      "stickinessNow": "Липкость сейчас {value}"
+    },
+    "firstWorkoutBuckets": {
+      "day1": "1-й день",
+      "days2_3": "2–3 дня",
+      "days4_7": "4–7 дней",
+      "days8_14": "8–14 дней",
+      "later": "Позже",
+      "never": "Пока нет"
+    },
+    "sources": {
+      "trefix": "Трекер Trefix",
+      "strava": "Strava",
+      "garmin": "Garmin",
+      "apple_health": "Apple Health",
+      "health_connect": "Health Connect",
+      "manual": "Вручную",
+      "other": "Другие устройства"
+    },
+    "plans": {
+      "created": "Создано планов",
+      "createdCaption": "Активных: {active} · создано за период: {created}",
+      "sources": {
+        "ai": "ИИ",
+        "manual": "Вручную",
+        "rebuild": "Подготовить заново"
+      },
+      "outcomes": "Итоги планов",
+      "completed": "завершены",
+      "cancelled": "отменены",
+      "replaced": "заменены новым",
+      "whereQuit": "Где бросают",
+      "whereQuitCaption": "Отменённые планы по пройденной части",
+      "progressBuckets": {
+        "0_25": "0–25%",
+        "25_50": "25–50%",
+        "50_75": "50–75%",
+        "75_100": "75–100%"
+      },
+      "cancelReasons": "Причины отмены",
+      "reasons": {
+        "user": "Пользователь",
+        "admin": "Администратор",
+        "replaced": "Начат другой план"
+      },
+      "adherenceByWeek": "Выполнение по неделям плана",
+      "adherenceCaption": "Доля выполненных тренировок по номеру недели",
+      "adherence": "Выполнение",
+      "weekShort": "Нед. {week}",
+      "goalTypes": "Цели по типам",
+      "goalTypesCaption": "Активные цели",
+      "goals": "Целей",
+      "upcomingRaces": "Ближайшие старты",
+      "upcomingCaption": "Стартов в ближайшие 30 дней: {total}",
+      "distance": "Дистанция",
+      "races": "Стартов",
+      "adaptations": "Адаптации плана",
+      "acceptance": "Принимают {value} предложений",
+      "proposed": "предложено",
+      "applied": "применено",
+      "dismissed": "отклонено",
+      "noCancelled": "Отменённых планов за период нет"
+    },
+    "distances": {
+      "5k": "5 км",
+      "10k": "10 км",
+      "half_marathon": "Полумарафон",
+      "marathon": "Марафон",
+      "other": "Другие"
+    },
+    "coach": {
+      "messages": "Сообщения",
+      "messagesCaption": "Коуч включён у {enabled} · писали: {users}",
+      "userMessages": "От пользователей",
+      "proactiveMessages": "Проактивные",
+      "proactive": "Проактивные сообщения",
+      "replyRate": "Отвечают на {value} в течение суток",
+      "sent": "отправлено",
+      "replied": "ответили за 24 ч",
+      "perSession": "сообщений на диалог",
+      "workoutNotes": "Комментарии к тренировкам",
+      "workoutNotesTotal": "Сгенерировано за период: {total}",
+      "notes": "Комментарии",
+      "effect": "С коучем и без",
+      "effectCaption": "Корреляция, не доказательство эффекта",
+      "effects": {
+        "plan_adherence": "Выполнение плана",
+        "week4_retention": "Удержание 4-й недели",
+        "goals_achieved": "Цели достигнуты"
+      },
+      "enabled": "Коуч включён",
+      "disabled": "Выключен",
+      "cost": "Стоимость",
+      "costPerUser": "{value} на активного пользователя",
+      "total": "стоимость",
+      "tokens": "токенов",
+      "failed": "ошибок",
+      "latency": "p95 задержки",
+      "costPerDay": "Стоимость в день",
+      "byFeature": "По функциям",
+      "byModel": "По моделям",
+      "feature": "Функция",
+      "model": "Модель",
+      "calls": "Вызовов",
+      "features": {
+        "coach_reply": "Ответы в чате",
+        "workout_note": "Комментарии к тренировкам",
+        "other": "Другое"
+      }
+    },
+    "audience": {
+      "registrations": "Регистрации",
+      "totals": "Всего {users} · заблокированы {blocked} · удалили аккаунт {deleted}",
+      "newUsers": "Новые пользователи",
+      "providers": {
+        "email": "Email",
+        "google": "Google",
+        "apple": "Apple"
+      },
+      "activation": "Активация",
+      "activationCaption": "{share}% новых пользователей дошли до первой тренировки",
+      "platforms": "Платформы и версии",
+      "platformsCaption": "Активные за 28 дней",
+      "platform": "Платформа",
+      "version": "Версия",
+      "users": "Пользователи",
+      "share": "Доля",
+      "platformNames": {
+        "ios": "iOS",
+        "android": "Android",
+        "web": "Веб"
+      },
+      "integrations": "Интеграции",
+      "integrationsCaption": "Хотя бы один сервис подключили {share} пользователей",
+      "service": "Сервис",
+      "connected": "Подключено",
+      "errors": "С ошибкой",
+      "experience": "Уровень подготовки",
+      "athletes": "Атлеты",
+      "levels": {
+        "beginner": "Начинающий",
+        "intermediate": "Средний",
+        "advanced": "Опытный"
+      },
+      "languages": "Язык интерфейса",
+      "languageNames": {
+        "ru": "Русский",
+        "en": "English",
+        "system": "Как в системе"
+      }
+    },
+    "attention": {
+      "all": "Все",
+      "types": {
+        "churn_risk": "Риск ухода",
+        "overload_risk": "Перегрузка",
+        "goal_at_risk": "Цель под угрозой",
+        "integration_error": "Интеграция",
+        "sync_stale": "Синхронизация",
+        "notification_failed": "Уведомления",
+        "export_pending": "Выгрузка ждёт",
+        "export_failed": "Выгрузка не удалась"
+      },
+      "severity": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "columns": {
+        "user": "Пользователь",
+        "problem": "Проблема",
+        "severity": "Важность",
+        "since": "С какого момента",
+        "details": "Детали"
+      },
+      "details": {
+        "churn_risk": "Дней без тренировок: {days} · план «{plan}»",
+        "overload_risk": "Нагрузка {ratio}× к хронической",
+        "goal_at_risk": "{goal} · срок {date} · прогресс {progress}",
+        "integration_error": "{provider} · {status}",
+        "sync_stale": "{provider} · без синхронизации {hours} ч",
+        "notification_failed": "Неудачных доставок: {failures} · {channels}",
+        "export_pending": "Выгрузка данных ждёт больше часа",
+        "export_failed": "Выгрузка данных завершилась ошибкой"
+      },
+      "integrationStatus": {
+        "error": "ошибка",
+        "reauthorization_required": "нужна повторная авторизация"
+      },
+      "channels": {
+        "push": "пуш",
+        "email": "email"
+      },
+      "openUser": "Открыть карточку",
+      "openCalendar": "Календарь тренировок",
+      "openPlans": "Тренировочные планы",
+      "openIntegrations": "Интеграции",
+      "openNotifications": "Уведомления",
+      "openAccount": "Аккаунт",
+      "notify": "Отправить уведомление",
+      "emptyTitle": "Всё в порядке",
+      "emptyDescription": "Сейчас никто не требует внимания"
     }
   }
 }

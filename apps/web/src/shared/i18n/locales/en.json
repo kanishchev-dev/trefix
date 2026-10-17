@@ -790,7 +790,8 @@
       "other": "Other",
       "account": "Account",
       "audit": "Audit",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "analytics": "Analytics"
     },
     "actions": {
       "read": "Read",
@@ -965,6 +966,9 @@
           "read": "View notifications sent from the admin panel, their recipients and delivery stats",
           "send": "Send notifications to a user, a group, a segment or all users by inbox, push and email"
         }
+      },
+      "analytics": {
+        "read": "View the product analytics dashboard"
       }
     }
   },
@@ -2287,6 +2291,421 @@
         "ios": "iOS",
         "android": "Android"
       }
+    }
+  },
+  "analytics": {
+    "title": "Dashboard",
+    "subtitle": "Are we helping people reach their goals",
+    "welcome": "Analytics needs the \"View analytics\" permission. Quick links:",
+    "period": "Period",
+    "tabsLabel": "Section",
+    "includeStaff": "Include staff",
+    "updated": "Updated {when}",
+    "periods": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "12m": "12 months"
+    },
+    "ranges": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "3 months"
+    },
+    "tabs": {
+      "outcomes": "Outcomes",
+      "engagement": "Engagement",
+      "plans": "Plans",
+      "coach": "Tref",
+      "audience": "Audience",
+      "attention": "Needs attention"
+    },
+    "links": {
+      "users": {
+        "title": "Users",
+        "description": "User list and profiles"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Messages to users"
+      },
+      "audit": {
+        "title": "Activity log",
+        "description": "Actions of administrators and users"
+      }
+    },
+    "empty": {
+      "title": "Not enough data yet",
+      "nightly": "Appears after the nightly calculation",
+      "fitness": "Needs 8 weeks of training history",
+      "races": "No races with a target time in the period",
+      "llm": "No coach calls recorded yet"
+    },
+    "units": {
+      "secPerKm": " s/km",
+      "seconds": "{value} s"
+    },
+    "kpi": {
+      "runners": "Running this week",
+      "runnersCaption": "Users with a workout in 7 days",
+      "adherence": "Plan adherence",
+      "adherenceCaption": "Done of planned workouts",
+      "goals": "Goals achieved",
+      "goalsRate": "Success rate {value}",
+      "goalsCaption": "Of goals finished in the period",
+      "newUsers": "New users",
+      "activation": "Activation {value}",
+      "newUsersCaption": "First workout within 14 days",
+      "stickiness": "Stickiness",
+      "dauMau": "DAU {dau} · MAU {mau}",
+      "stickinessCaption": "Share of monthly users active daily",
+      "records": "Records improved",
+      "firsts": "Plus first results: {value}",
+      "recordsCaption": "Personal records on distances",
+      "distance": "Kilometres",
+      "weeklyMedian": "Median {value} km a week",
+      "distanceCaption": "Actual training volume",
+      "coach": "Wrote to Tref",
+      "proactiveReplies": "Replied to proactive {value}",
+      "coachCaption": "Users who wrote to the coach"
+    },
+    "insights": {
+      "growingWeeks": "Growing for {weeks} weeks in a row",
+      "aboveLast": "Above the previous period",
+      "belowLast": "Below the previous period",
+      "stable": "Same as the previous period",
+      "adherenceHigh": "People follow their plans",
+      "adherenceFalling": "Adherence is falling",
+      "adherenceLow": "Below the 80% target",
+      "activityAverage": "On average {runners} runners a day — {share}% of active users",
+      "goalsOnTrack": "{share}% of active goals are on track",
+      "goalFunnel": "{share}% of those who set a goal reach it",
+      "fitnessFaster": "Median threshold pace {seconds} s/km faster over 8 weeks",
+      "fitnessSlower": "Median threshold pace {seconds} s/km slower over 8 weeks",
+      "fitnessStable": "No notable change in form over 8 weeks",
+      "records": "Improvements: {improvements} · first results: {firsts}",
+      "races": "{share}% of races at or faster than the target",
+      "overloadHigh": "Overload above normal: {share}% of athletes",
+      "overloadNormal": "Sharp load increase for {share}% of athletes — within normal",
+      "volume": "Median weekly volume: {from} → {to} km",
+      "regularity": "{share}% train 6+ of the last 8 weeks",
+      "peakHour": "Peak: {weekday}, {hour}:00",
+      "planDrop": "Lowest adherence in plan week {week}: {share}%",
+      "plansCompleted": "{share}% of plans are finished"
+    },
+    "activity": {
+      "title": "Activity",
+      "subtitle": "Active users and workouts by day",
+      "activeUsers": "Active users",
+      "runners": "Trained",
+      "workouts": "Workouts",
+      "distanceKm": "Kilometres",
+      "metric": "Metric",
+      "range": "Range",
+      "byDay": "By day"
+    },
+    "goalStatus": {
+      "achieved": "Achieved",
+      "missed": "Missed",
+      "abandoned": "Abandoned",
+      "on_track": "On track",
+      "at_risk": "At risk",
+      "no_data": "No data"
+    },
+    "goalCategories": {
+      "race_event": "Race",
+      "performance": "Performance",
+      "training_habit": "Habit",
+      "fitness_lifestyle": "Lifestyle",
+      "challenge": "Challenge",
+      "flexible": "Custom"
+    },
+    "goalTypes": {
+      "prepare_for_race": "Prepare for a race",
+      "improve_race_result": "Improve a race result",
+      "run_new_distance": "Run a new distance",
+      "trail_preparation": "Trail preparation",
+      "ultra_preparation": "Ultra preparation",
+      "backyard_preparation": "Backyard preparation",
+      "improve_speed": "Improve speed",
+      "improve_pace": "Improve pace",
+      "build_endurance": "Build endurance",
+      "improve_aerobic_fitness": "Aerobic fitness",
+      "improve_hills": "Hills",
+      "start_running": "Start running",
+      "return_to_running": "Return to running",
+      "build_consistency": "Build consistency",
+      "increase_running_volume": "More volume",
+      "run_continuously": "Run continuously",
+      "lose_weight": "Lose weight",
+      "maintain_fitness": "Maintain fitness",
+      "general_health": "General health",
+      "complete_challenge": "Challenge",
+      "custom": "Custom goal"
+    },
+    "funnel": {
+      "goal_set": "Set a goal",
+      "plan_started": "Started a plan",
+      "half_plan": "Halfway through",
+      "plan_completed": "Finished the plan",
+      "goal_achieved": "Reached the goal",
+      "registered": "Signed up",
+      "email_verified": "Email verified",
+      "athlete_profile": "Athlete profile",
+      "plan_created": "Plan",
+      "first_workout": "First workout",
+      "habit": "Habit"
+    },
+    "outcomes": {
+      "goals": "Users' goals",
+      "successRate": "success rate",
+      "goalPath": "Path to the goal",
+      "fitness": "Form growth",
+      "paceChange": "Threshold pace change",
+      "improved": "improved",
+      "stable": "stable",
+      "declined": "declined",
+      "athletes": "athletes measured",
+      "records": "Personal records",
+      "improvements": "Improvements",
+      "firsts": "First results",
+      "races": "Races against the target",
+      "racesCount": "Races",
+      "safety": "Safe load",
+      "overloadShare": "Overloaded share",
+      "volume": "Weekly volume",
+      "medianKm": "Median, km"
+    },
+    "raceBuckets": {
+      "faster_3plus": "Faster by 3%+",
+      "within_3": "±3%",
+      "slower_3_10": "Slower by 3–10%",
+      "slower_10plus": "Slower by 10%+"
+    },
+    "engagement": {
+      "regularity": "Regularity",
+      "regularityAxis": "Weeks with a workout out of the last 8",
+      "runners": "Runners",
+      "users": "Users",
+      "habit": "Habit formation",
+      "habitCaption": "Workouts in 3 of the first 4 weeks",
+      "started": "started running",
+      "formed": "formed a habit",
+      "conversion": "conversion",
+      "firstWorkout": "Time to the first workout",
+      "firstWorkoutMedian": "Median {hours} h after sign-up",
+      "activeDays": "Engagement curve",
+      "activeDaysCaption": "Users by days with a workout in 28 days",
+      "sources": "Where workouts come from",
+      "sourcesCaption": "Completed workouts by week",
+      "cohorts": "Cohort retention",
+      "cohortsCaption": "Share with a workout N weeks after sign-up",
+      "cohortCell": "Week {week}: {share}",
+      "whenTheyRun": "When people run",
+      "heatCell": "{weekday}, {hour}:00 — workouts: {workouts}",
+      "stickiness": "DAU · WAU · MAU",
+      "stickinessNow": "Stickiness now {value}"
+    },
+    "firstWorkoutBuckets": {
+      "day1": "Day 1",
+      "days2_3": "2–3 days",
+      "days4_7": "4–7 days",
+      "days8_14": "8–14 days",
+      "later": "Later",
+      "never": "Not yet"
+    },
+    "sources": {
+      "trefix": "Trefix tracker",
+      "strava": "Strava",
+      "garmin": "Garmin",
+      "apple_health": "Apple Health",
+      "health_connect": "Health Connect",
+      "manual": "Manual",
+      "other": "Other devices"
+    },
+    "plans": {
+      "created": "Plans created",
+      "createdCaption": "Active: {active} · created in the period: {created}",
+      "sources": {
+        "ai": "AI",
+        "manual": "Manual",
+        "rebuild": "Prepared again"
+      },
+      "outcomes": "Plan outcomes",
+      "completed": "completed",
+      "cancelled": "cancelled",
+      "replaced": "replaced",
+      "whereQuit": "Where people quit",
+      "whereQuitCaption": "Cancelled plans by the part completed",
+      "progressBuckets": {
+        "0_25": "0–25%",
+        "25_50": "25–50%",
+        "50_75": "50–75%",
+        "75_100": "75–100%"
+      },
+      "cancelReasons": "Cancel reasons",
+      "reasons": {
+        "user": "User",
+        "admin": "Administrator",
+        "replaced": "Another plan started"
+      },
+      "adherenceByWeek": "Adherence by plan week",
+      "adherenceCaption": "Share of done workouts by week number",
+      "adherence": "Adherence",
+      "weekShort": "Wk {week}",
+      "goalTypes": "Goals by type",
+      "goalTypesCaption": "Active goals",
+      "goals": "Goals",
+      "upcomingRaces": "Upcoming races",
+      "upcomingCaption": "Races in the next 30 days: {total}",
+      "distance": "Distance",
+      "races": "Races",
+      "adaptations": "Plan adaptations",
+      "acceptance": "{value} of suggestions accepted",
+      "proposed": "proposed",
+      "applied": "applied",
+      "dismissed": "dismissed",
+      "noCancelled": "No plans cancelled in the period"
+    },
+    "distances": {
+      "5k": "5 km",
+      "10k": "10 km",
+      "half_marathon": "Half marathon",
+      "marathon": "Marathon",
+      "other": "Other"
+    },
+    "coach": {
+      "messages": "Messages",
+      "messagesCaption": "Coach on for {enabled} · wrote: {users}",
+      "userMessages": "From users",
+      "proactiveMessages": "Proactive",
+      "proactive": "Proactive messages",
+      "replyRate": "{value} answered within a day",
+      "sent": "sent",
+      "replied": "answered in 24 h",
+      "perSession": "messages per chat",
+      "workoutNotes": "Workout comments",
+      "workoutNotesTotal": "Generated in the period: {total}",
+      "notes": "Comments",
+      "effect": "With and without the coach",
+      "effectCaption": "A correlation, not proof of effect",
+      "effects": {
+        "plan_adherence": "Plan adherence",
+        "week4_retention": "Week 4 retention",
+        "goals_achieved": "Goals achieved"
+      },
+      "enabled": "Coach on",
+      "disabled": "Coach off",
+      "cost": "Cost",
+      "costPerUser": "{value} per active user",
+      "total": "cost",
+      "tokens": "tokens",
+      "failed": "failed",
+      "latency": "p95 latency",
+      "costPerDay": "Cost per day",
+      "byFeature": "By feature",
+      "byModel": "By model",
+      "feature": "Feature",
+      "model": "Model",
+      "calls": "Calls",
+      "features": {
+        "coach_reply": "Chat replies",
+        "workout_note": "Workout comments",
+        "other": "Other"
+      }
+    },
+    "audience": {
+      "registrations": "Sign-ups",
+      "totals": "Total {users} · blocked {blocked} · deleted {deleted}",
+      "newUsers": "New users",
+      "providers": {
+        "email": "Email",
+        "google": "Google",
+        "apple": "Apple"
+      },
+      "activation": "Activation",
+      "activationCaption": "{share}% of new users reached the first workout",
+      "platforms": "Platforms and versions",
+      "platformsCaption": "Active in the last 28 days",
+      "platform": "Platform",
+      "version": "Version",
+      "users": "Users",
+      "share": "Share",
+      "platformNames": {
+        "ios": "iOS",
+        "android": "Android",
+        "web": "Web"
+      },
+      "integrations": "Integrations",
+      "integrationsCaption": "{share} of users connected at least one service",
+      "service": "Service",
+      "connected": "Connected",
+      "errors": "With errors",
+      "experience": "Experience",
+      "athletes": "Athletes",
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
+      "languages": "Interface language",
+      "languageNames": {
+        "ru": "Russian",
+        "en": "English",
+        "system": "System"
+      }
+    },
+    "attention": {
+      "all": "All",
+      "types": {
+        "churn_risk": "May leave",
+        "overload_risk": "Overload",
+        "goal_at_risk": "Goal at risk",
+        "integration_error": "Integration",
+        "sync_stale": "Sync",
+        "notification_failed": "Notifications",
+        "export_pending": "Export waiting",
+        "export_failed": "Export failed"
+      },
+      "severity": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "columns": {
+        "user": "User",
+        "problem": "Problem",
+        "severity": "Severity",
+        "since": "Since",
+        "details": "Details"
+      },
+      "details": {
+        "churn_risk": "Days without a workout: {days} · plan \"{plan}\"",
+        "overload_risk": "Load {ratio}× the chronic level",
+        "goal_at_risk": "{goal} · due {date} · progress {progress}",
+        "integration_error": "{provider} · {status}",
+        "sync_stale": "{provider} · no sync for {hours} h",
+        "notification_failed": "Failed deliveries: {failures} · {channels}",
+        "export_pending": "Data export waiting for over an hour",
+        "export_failed": "Data export failed"
+      },
+      "integrationStatus": {
+        "error": "error",
+        "reauthorization_required": "reauthorization required"
+      },
+      "channels": {
+        "push": "push",
+        "email": "email"
+      },
+      "openUser": "Open profile",
+      "openCalendar": "Workout calendar",
+      "openPlans": "Training plans",
+      "openIntegrations": "Integrations",
+      "openNotifications": "Notifications",
+      "openAccount": "Account",
+      "notify": "Send a notification",
+      "emptyTitle": "All good",
+      "emptyDescription": "Nobody needs attention right now"
     }
   }
 }
