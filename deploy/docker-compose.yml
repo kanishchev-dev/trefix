@@ -1,9 +1,9 @@
-# Production stack, built and started on the server by .gitlab-ci.yml (shell runner).
+# Production stack, built and started on the server by .gitlab-ci.yml.
 name: trefix-frontend
 
 services:
   web:
-    image: trefix-web:latest
+    image: trefix-web:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
