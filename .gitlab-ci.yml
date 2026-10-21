@@ -1,0 +1,31 @@
+# Deploy on the server itself: a GitLab Runner there, either the shell executor or
+# the docker executor with /var/run/docker.sock mounted (volumes in config.toml),
+# so jobs drive the Docker of the server. The backend deploys first: it starts the API
+# container on the shared `trefix` network.
+#
+# CI/CD variables (Settings → CI/CD → Variables):
+#   NEXT_PUBLIC_BACKEND_URL  public API URL for the WebSocket, e.g. https://api.trefix.app
+#   AUTH_BACKEND_URL         optional — API URL for the Next server, http://trefix-backend:3000/v1 by default
+#   WEB_PUBLISH              optional — host:port of the site, 127.0.0.1:3001 by default
+
+stages:
+  - deploy
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy:
+  stage: deploy
+  # Used by the docker executor only; the shell executor ignores it.
+  image: docker:28
+  environment:
+    name: production
+  resource_group: production
+  variables:
+    COMPOSE_FILE: deploy/docker-compose.yml
+  script:
+    - docker network inspect trefix >/dev/null 2>&1 || docker network create trefix
+    - docker compose build
+    - docker compose up -d --remove-orphans --wait
+    - docker image prune -f
