@@ -1,5 +1,6 @@
-# Deploy on the server itself: a GitLab Runner with the shell executor runs there,
-# its user is in the docker group. Images are built locally, nothing goes to a registry.
+# Deploy on the server itself: a GitLab Runner there, either the shell executor or
+# the docker executor with /var/run/docker.sock mounted (volumes in config.toml),
+# so jobs drive the Docker of the server. Images are built locally, nothing goes to a registry.
 #
 # CI/CD variables (Settings → CI/CD → Variables):
 #   BACKEND_ENV_FILE  type File — the whole production .env (format of .env.example) pasted as the value
@@ -14,6 +15,8 @@ workflow:
 
 deploy:
   stage: deploy
+  # Used by the docker executor only; the shell executor ignores it.
+  image: docker:28
   environment:
     name: production
   resource_group: production
