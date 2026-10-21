@@ -1,5 +1,6 @@
-# Deploy on the server itself: a GitLab Runner with the shell executor runs there,
-# its user is in the docker group. The backend deploys first: it starts the API
+# Deploy on the server itself: a GitLab Runner there, either the shell executor or
+# the docker executor with /var/run/docker.sock mounted (volumes in config.toml),
+# so jobs drive the Docker of the server. The backend deploys first: it starts the API
 # container on the shared `trefix` network.
 #
 # CI/CD variables (Settings → CI/CD → Variables):
@@ -16,6 +17,8 @@ workflow:
 
 deploy:
   stage: deploy
+  # Used by the docker executor only; the shell executor ignores it.
+  image: docker:28
   environment:
     name: production
   resource_group: production
