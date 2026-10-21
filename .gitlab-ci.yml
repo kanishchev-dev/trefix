@@ -19,6 +19,8 @@ workflow:
 default:
   # Used by the docker executor only; the shell executor ignores it.
   image: docker:28
+  # The runner on the production server.
+  tags: [Trefix, frontend, production]
 
 variables:
   COMPOSE_FILE: deploy/docker-compose.yml
