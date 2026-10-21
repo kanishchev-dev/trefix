@@ -1,9 +1,15 @@
-# Production stack on the server, deployed by .gitlab-ci.yml into $DEPLOY_PATH.
+# Production stack, built and started on the server by .gitlab-ci.yml (shell runner).
 name: trefix-frontend
 
 services:
   web:
-    image: ${WEB_IMAGE}
+    image: trefix-web:latest
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Public API URL for the browser WebSocket, inlined into the bundle at build time.
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-}
     container_name: trefix-web
     environment:
       # Server-side calls go to the backend container over the shared trefix network.
