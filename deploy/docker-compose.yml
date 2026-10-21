@@ -1,6 +1,96 @@
-# Production stack on the server, deployed by .gitlab-ci.yml into $DEPLOY_PATH.
-# The database is external; its connection comes from backend.env (GitLab variable BACKEND_ENV_FILE).
+# Production stack, built and started on the server by .gitlab-ci.yml (shell runner).
+# The database is external. Every variable below is taken from the job environment,
+# i.e. from GitLab CI/CD variables; a variable that is not set there keeps the app default.
 name: trefix-backend
+
+x-app-env: &app-env
+  NODE_ENV: production
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  # Application
+  PORT:
+  LOG_LEVEL:
+  CORS_ORIGINS:
+  SWAGGER_ENABLED:
+  WEB_APP_URL:
+  API_BASE_URL:
+  TRUST_PROXY:
+  THROTTLE_LIMIT:
+  THROTTLE_TTL:
+  # Database
+  DB_HOST:
+  DB_PORT:
+  DB_USERNAME:
+  DB_PASSWORD:
+  DB_DATABASE:
+  DB_SSL:
+  # Mailer
+  MAIL_HOST:
+  MAIL_PORT:
+  MAIL_USER:
+  MAIL_PASSWORD:
+  MAIL_FROM:
+  MAIL_FROM_NAME:
+  MAIL_SECURE:
+  MAIL_ALLOW_FROM_OVERRIDE:
+  MAIL_USE_QUEUE:
+  # Storage
+  S3_ENDPOINT:
+  S3_REGION:
+  S3_BUCKET:
+  S3_ACCESS_KEY:
+  S3_SECRET_KEY:
+  S3_FORCE_PATH_STYLE:
+  STORAGE_MAX_FILE_SIZE:
+  # Security
+  JWT_ACCESS_SECRET:
+  JWT_ACCESS_EXPIRATION:
+  AUTH_ACCESS_TOKEN_SECRET:
+  AUTH_ACCESS_TOKEN_EXPIRES_IN:
+  AUTH_REFRESH_TOKEN_SECRET:
+  AUTH_REFRESH_TOKEN_EXPIRES_IN:
+  AUTH_EMAIL_CODE_EXPIRES_IN:
+  AUTH_EMAIL_CODE_RESEND_COOLDOWN:
+  AUTH_PASSWORD_RESET_EXPIRES_IN:
+  GEOIP_CITY_DB_PATH:
+  # Social auth
+  GOOGLE_OAUTH_CLIENT_ID:
+  GOOGLE_OAUTH_CLIENT_SECRET:
+  APPLE_OAUTH_CLIENT_ID:
+  APPLE_OAUTH_TEAM_ID:
+  APPLE_OAUTH_KEY_ID:
+  APPLE_OAUTH_PRIVATE_KEY:
+  # OpenAI
+  OPENAI_API_KEY:
+  OPENAI_BASE_URL:
+  OPENAI_MODEL:
+  OPENAI_TIMEOUT_MS:
+  OPENAI_MAX_OUTPUT_TOKENS:
+  OPENAI_TEMPERATURE:
+  OPENAI_TRACING_ENABLED:
+  LLM_PRICING:
+  # Analytics and training
+  ANALYTICS_DEFAULT_TIMEZONE:
+  ACTIVITY_RETENTION_DAYS:
+  TRAINING_PLANS_PER_ATHLETE_LIMIT:
+  TRAINING_PLAN_CREATE_RATE_LIMIT:
+  # System seeding
+  AUTO_SEED_SYSTEM_DATA:
+  ADMIN_EMAIL:
+  ADMIN_PASSWORD:
+  # Integrations
+  HEALTH_INTEGRATIONS_ENABLED:
+  STRAVA_CLIENT_ID:
+  STRAVA_CLIENT_SECRET:
+  STRAVA_REDIRECT_URI:
+  STRAVA_WEBHOOK_VERIFY_TOKEN:
+  STRAVA_WEBHOOK_SUBSCRIPTION_ID:
+  STRAVA_API_BASE_URL:
+  STRAVA_OAUTH_BASE_URL:
+  INTEGRATIONS_ENCRYPTION_KEY:
+  # Push notifications
+  EXPO_ACCESS_TOKEN:
+  NOTIFICATIONS_PUSH_ENABLED:
 
 services:
   redis:
@@ -19,24 +109,23 @@ services:
     # No published ports: reachable only from the trefix network.
 
   migrate:
-    image: ${MIGRATE_IMAGE}
-    env_file: ./backend.env
-    environment:
-      NODE_ENV: production
+    image: trefix-backend-migrate:latest
+    build:
+      context: ..
+      target: migrator
+    environment: *app-env
     profiles: ["migrate"]
     restart: "no"
 
   backend:
-    image: ${BACKEND_IMAGE}
+    image: trefix-backend:latest
+    build:
+      context: ..
     container_name: trefix-backend
     depends_on:
       redis:
         condition: service_healthy
-    env_file: ./backend.env
-    environment:
-      NODE_ENV: production
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
+    environment: *app-env
     ports:
       - "${BACKEND_PUBLISH:-127.0.0.1:3000}:3000"
     restart: unless-stopped
