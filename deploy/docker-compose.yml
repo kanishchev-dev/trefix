@@ -1,0 +1,61 @@
+# Production stack on the server, deployed by .gitlab-ci.yml into $DEPLOY_PATH.
+# The database is external; its connection comes from backend.env (GitLab variable BACKEND_ENV_FILE).
+name: trefix-backend
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: trefix-redis
+    # AOF keeps sessions and BullMQ jobs across restarts; BullMQ requires noeviction.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # No published ports: reachable only from the trefix network.
+
+  migrate:
+    image: ${MIGRATE_IMAGE}
+    env_file: ./backend.env
+    environment:
+      NODE_ENV: production
+    profiles: ["migrate"]
+    restart: "no"
+
+  backend:
+    image: ${BACKEND_IMAGE}
+    container_name: trefix-backend
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file: ./backend.env
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports:
+      - "${BACKEND_PUBLISH:-127.0.0.1:3000}:3000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  redis_data:
+
+# Shared with the frontend stack, which calls the API at http://trefix-backend:3000.
+networks:
+  default:
+    name: trefix
+    external: true

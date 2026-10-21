@@ -16,7 +16,8 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
-keys/
+keys/*
+!keys/.gitkeep
 
 # IDEs and editors
 ../.idea/
