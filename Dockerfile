@@ -11,6 +11,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
+# One-shot image for `sequelize-cli db:migrate`: the CLI and ts-node are dev dependencies.
+FROM builder AS migrator
+ENV NODE_ENV=production
+CMD ["npm", "run", "db:migrate"]
+
 FROM node:22-alpine AS runner
 WORKDIR /app
 

@@ -1,0 +1,31 @@
+# Deploy on the server itself: a GitLab Runner there, either the shell executor or
+# the docker executor with /var/run/docker.sock mounted (volumes in config.toml),
+# so jobs drive the Docker of the server. Images are built locally, nothing goes to a registry.
+#
+# CI/CD variables (Settings → CI/CD → Variables):
+#   BACKEND_ENV_FILE  type File — the whole production .env (format of .env.example) pasted as the value
+#   BACKEND_PUBLISH   optional — host:port of the API, 127.0.0.1:3000 by default
+
+stages:
+  - deploy
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy:
+  stage: deploy
+  # Used by the docker executor only; the shell executor ignores it.
+  image: docker:28
+  environment:
+    name: production
+  resource_group: production
+  variables:
+    COMPOSE_FILE: deploy/docker-compose.yml
+  script:
+    - docker network inspect trefix >/dev/null 2>&1 || docker network create trefix
+    - docker compose --profile migrate build
+    - docker compose up -d --wait redis
+    - docker compose run --rm migrate
+    - docker compose up -d --remove-orphans --wait backend
+    - docker image prune -f

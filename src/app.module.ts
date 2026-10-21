@@ -125,6 +125,9 @@ const LOG_REDACTED_PATHS = [
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
+        dialectOptions: configService.get<boolean>('database.ssl')
+          ? { ssl: { require: true, rejectUnauthorized: false } }
+          : {},
         autoLoadModels: true,
         synchronize: configService.get<string>('NODE_ENV') === 'test',
       }),
