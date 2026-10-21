@@ -1,4 +1,4 @@
-# Production stack, built and started on the server by .gitlab-ci.yml (shell runner).
+# Production stack, built and started on the server by .gitlab-ci.yml.
 # The database is external; its connection comes from BACKEND_ENV_FILE.
 name: trefix-backend
 
@@ -29,7 +29,7 @@ services:
     # No published ports: reachable only from the trefix network.
 
   migrate:
-    image: trefix-backend-migrate:latest
+    image: trefix-backend-migrate:${IMAGE_TAG:-latest}
     build:
       context: ..
       target: migrator
@@ -38,7 +38,7 @@ services:
     restart: "no"
 
   backend:
-    image: trefix-backend:latest
+    image: trefix-backend:${IMAGE_TAG:-latest}
     build:
       context: ..
     container_name: trefix-backend
