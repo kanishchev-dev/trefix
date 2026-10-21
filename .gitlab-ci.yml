@@ -1,0 +1,83 @@
+# Build the web image into the GitLab Container Registry, then deploy to the server over SSH.
+# The backend repository deploys first: it creates the shared `trefix` network and the API container.
+#
+# CI/CD variables (Settings → CI/CD → Variables):
+#   SSH_PRIVATE_KEY          Variable, masked/protected — private key of DEPLOY_USER
+#   SSH_KNOWN_HOSTS          Variable — output of `ssh-keyscan -p <port> <host>`
+#   DEPLOY_HOST              Variable — server address
+#   DEPLOY_USER              Variable — user in the docker group
+#   DEPLOY_PORT              Variable, optional — SSH port, 22 by default
+#   DEPLOY_PATH              Variable, optional — /opt/trefix/frontend by default
+#   NEXT_PUBLIC_BACKEND_URL  Variable, optional — public API URL for WebSocket, baked in at build time
+#   AUTH_BACKEND_URL         Variable, optional — API URL for the Next server, http://trefix-backend:3000/v1 by default
+#   WEB_PUBLISH              Variable, optional — host:port of the site, 127.0.0.1:3001 by default
+
+stages:
+  - build
+  - deploy
+
+variables:
+  WEB_IMAGE: $CI_REGISTRY_IMAGE/web:$CI_COMMIT_SHORT_SHA
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:
+  stage: build
+  image: docker:28
+  services:
+    - docker:28-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE/web:latest" || true
+    - >
+      docker build
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      --cache-from "$CI_REGISTRY_IMAGE/web:latest"
+      --build-arg NEXT_PUBLIC_BACKEND_URL="$NEXT_PUBLIC_BACKEND_URL"
+      -f apps/web/Dockerfile
+      -t "$WEB_IMAGE" -t "$CI_REGISTRY_IMAGE/web:latest"
+      .
+    - docker push "$WEB_IMAGE"
+    - docker push "$CI_REGISTRY_IMAGE/web:latest"
+
+deploy:
+  stage: deploy
+  image: alpine:3.20
+  environment:
+    name: production
+  resource_group: production
+  variables:
+    DEPLOY_PATH: /opt/trefix/frontend
+    DEPLOY_PORT: "22"
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval "$(ssh-agent -s)"
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+  script:
+    - SSH="ssh -p $DEPLOY_PORT $DEPLOY_USER@$DEPLOY_HOST"
+    - $SSH "mkdir -p '$DEPLOY_PATH'"
+    - |
+      {
+        echo "WEB_IMAGE=$WEB_IMAGE"
+        echo "WEB_PUBLISH=${WEB_PUBLISH:-127.0.0.1:3001}"
+        echo "AUTH_BACKEND_URL=${AUTH_BACKEND_URL:-http://trefix-backend:3000/v1}"
+      } > compose.env
+    - scp -P "$DEPLOY_PORT" deploy/docker-compose.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/docker-compose.yml"
+    - scp -P "$DEPLOY_PORT" compose.env "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/.env"
+    - |
+      $SSH sh -eu <<EOF
+      cd '$DEPLOY_PATH'
+      echo '$CI_JOB_TOKEN' | docker login -u '$CI_REGISTRY_USER' --password-stdin '$CI_REGISTRY'
+      docker network inspect trefix >/dev/null 2>&1 || docker network create trefix
+      docker compose pull
+      docker logout '$CI_REGISTRY'
+      docker compose up -d --remove-orphans
+      docker image prune -f
+      EOF

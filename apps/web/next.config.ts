@@ -21,6 +21,8 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Self-contained server for the Docker image (apps/web/Dockerfile).
+  output: "standalone",
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

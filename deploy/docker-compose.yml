@@ -1,0 +1,18 @@
+# Production stack on the server, deployed by .gitlab-ci.yml into $DEPLOY_PATH.
+name: trefix-frontend
+
+services:
+  web:
+    image: ${WEB_IMAGE}
+    container_name: trefix-web
+    environment:
+      # Server-side calls go to the backend container over the shared trefix network.
+      AUTH_BACKEND_URL: ${AUTH_BACKEND_URL:-http://trefix-backend:3000/v1}
+    ports:
+      - "${WEB_PUBLISH:-127.0.0.1:3001}:3001"
+    restart: unless-stopped
+
+networks:
+  default:
+    name: trefix
+    external: true
