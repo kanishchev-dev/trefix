@@ -63,7 +63,7 @@ export const HEALTH_ORIGIN_PROVIDER_MAP: Readonly<Record<string, OAuthProviderNa
 };
 
 /** Trefix's own app ids: records written by Trefix are never imported back. */
-export const TREFIX_APP_IDS: readonly string[] = ['Kanishchev.Trefix'];
+export const TREFIX_APP_IDS: readonly string[] = ['app.trefix', 'Kanishchev.Trefix'];
 
 /** Two records are the same run when all three thresholds hold. */
 export const ACTIVITY_DEDUP = {
