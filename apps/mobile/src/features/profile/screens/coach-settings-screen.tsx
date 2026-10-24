@@ -56,7 +56,7 @@ const TONES = ["soft", "neutral", "strict"] as const;
 /** Icons of the "what the coach considers" rows, in their order. */
 const CONSIDER_ICONS = [Activity, Target, History, CalendarDays, Smile];
 const PRIVACY_URL =
-  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy";
+  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.app/privacy";
 
 /** AI coach: on/off, plan adaptation, what it writes on its own, tone, quiet hours and chat history. */
 export function CoachSettingsScreen({ theme, themeMode, copy, onBack }: Props) {

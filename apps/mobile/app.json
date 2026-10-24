@@ -11,11 +11,14 @@
       "supportsTablet": true,
       "userInterfaceStyle": "automatic",
       "usesAppleSignIn": true,
-      "bundleIdentifier": "Kanishchev.Trefix",
+      "bundleIdentifier": "app.trefix",
       "infoPlist": {
         "LSApplicationQueriesSchemes": ["x-apple-health"],
-        "UIBackgroundModes": ["audio"]
-      }
+        "UIBackgroundModes": ["audio"],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "appleTeamId": "KT22FA2C2R",
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +29,7 @@
       },
       "userInterfaceStyle": "automatic",
       "predictiveBackGestureEnabled": false,
-      "package": "Kanishchev.Trefix",
+      "package": "app.trefix",
       "permissions": [
         "android.permission.health.READ_EXERCISE",
         "android.permission.health.READ_DISTANCE",
@@ -46,7 +49,8 @@
         "android.permission.health.WRITE_ELEVATION_GAINED",
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.POST_NOTIFICATIONS"
-      ]
+      ],
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -69,7 +73,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.678050162933-nuf4qfic96t8apc5qbf65udlp4n64582"
+          "iosUrlScheme": "com.googleusercontent.apps.678050162933-rl3b5gls5tk9opveg6qsvd44bihaul0l"
         }
       ],
       "expo-video",

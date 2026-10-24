@@ -59,9 +59,9 @@ type Props = {
 };
 
 const PRIVACY_URL =
-  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy";
+  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.app/privacy";
 const TERMS_URL =
-  process.env.EXPO_PUBLIC_TERMS_URL ?? "https://trefix.run/terms";
+  process.env.EXPO_PUBLIC_TERMS_URL ?? "https://trefix.app/terms";
 const PROVIDER_NAMES: Record<SocialProvider, string> = {
   apple: "Apple",
   google: "Google",

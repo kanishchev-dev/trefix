@@ -34,18 +34,20 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>workspace-mobile</string>
-				<string>Kanishchev.Trefix</string>
+				<string>app.trefix</string>
 			</array>
 		</dict>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.678050162933-nuf4qfic96t8apc5qbf65udlp4n64582</string>
+				<string>com.googleusercontent.apps.678050162933-rl3b5gls5tk9opveg6qsvd44bihaul0l</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>x-apple-health</string>

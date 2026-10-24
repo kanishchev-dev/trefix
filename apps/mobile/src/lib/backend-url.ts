@@ -1,10 +1,18 @@
 import { NativeModules } from "react-native";
 import { logger } from "./logger";
 
+const LOCAL_BACKEND_URL = "http://127.0.0.1:3000/v1";
+const PRODUCTION_BACKEND_URL = "https://api.trefix.app/v1";
+
+/**
+ * Release bundles get `.env.production` (Expo loads it when bundling with
+ * NODE_ENV=production). Without any env the release still targets prod, never
+ * a loopback address that is meaningless on a user's phone.
+ */
 const CONFIGURED_URL =
   process.env.EXPO_PUBLIC_BACKEND_URL ||
   process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ||
-  "http://127.0.0.1:3000/v1";
+  (__DEV__ ? LOCAL_BACKEND_URL : PRODUCTION_BACKEND_URL);
 
 const LOCAL_HOST =
   /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/;

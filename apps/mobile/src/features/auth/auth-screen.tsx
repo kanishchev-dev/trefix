@@ -376,7 +376,7 @@ export function AuthScreen({
                 onPress={() =>
                   Linking.openURL(
                     process.env.EXPO_PUBLIC_TERMS_URL ??
-                      "https://trefix.run/terms",
+                      "https://trefix.app/terms",
                   )
                 }
               >
@@ -388,7 +388,7 @@ export function AuthScreen({
                 onPress={() =>
                   Linking.openURL(
                     process.env.EXPO_PUBLIC_PRIVACY_URL ??
-                      "https://trefix.run/privacy",
+                      "https://trefix.app/privacy",
                   )
                 }
               >

@@ -418,7 +418,7 @@
 				CODE_SIGN_ENTITLEMENTS = Trefix/Trefix.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = KT22FA2C2R;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -439,7 +439,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = Kanishchev.Trefix;
+				PRODUCT_BUNDLE_IDENTIFIER = app.trefix;
 				PRODUCT_NAME = Trefix;
 				SWIFT_OBJC_BRIDGING_HEADER = "Trefix/Trefix-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -458,7 +458,7 @@
 				CODE_SIGN_ENTITLEMENTS = Trefix/Trefix.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = KT22FA2C2R;
 				INFOPLIST_FILE = Trefix/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
@@ -474,7 +474,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = Kanishchev.Trefix;
+				PRODUCT_BUNDLE_IDENTIFIER = app.trefix;
 				PRODUCT_NAME = Trefix;
 				SWIFT_OBJC_BRIDGING_HEADER = "Trefix/Trefix-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

@@ -35,7 +35,7 @@ type Props = {
 };
 
 const PRIVACY_URL =
-  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.run/privacy";
+  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://trefix.app/privacy";
 
 /** H2 — consent to process health data (special category of personal data). Shown once per text version. */
 export function HealthConsentSheet({

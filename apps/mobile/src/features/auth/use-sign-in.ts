@@ -20,7 +20,7 @@ import { getErrorMessage } from "../../shared/lib/error-message";
 /** Public OAuth client id of the app; not a secret. */
 const GOOGLE_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ??
-  "678050162933-nuf4qfic96t8apc5qbf65udlp4n64582.apps.googleusercontent.com";
+  "678050162933-rl3b5gls5tk9opveg6qsvd44bihaul0l.apps.googleusercontent.com";
 
 /** Estimates used when the backend refuses a new code because one was sent recently. */
 const RATE_LIMITED_CHALLENGE = {
