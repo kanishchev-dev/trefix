@@ -7,6 +7,13 @@ export const AUTH_EMAIL_VERIFICATION_MAX_ATTEMPTS = 5;
 export const AUTH_PASSWORD_RESET_CODE_LENGTH = 4;
 export const AUTH_PASSWORD_RESET_MAX_ATTEMPTS = 5;
 export const AUTH_DEFAULT_DISPLAY_NAME = 'User';
+/**
+ * How long the refresh token replaced by a rotation is still honoured. A phone
+ * that loses the refresh response (timeout, app suspended, flaky network) keeps
+ * the old token; without this window its next refresh looks like token theft
+ * and signs the user out on every device.
+ */
+export const AUTH_REFRESH_REUSE_GRACE_MS = 2 * 60 * 1000;
 export const AUTH_EMAIL_VERIFICATION_TEMPLATE = 'auth/verification';
 export const AUTH_PASSWORD_RESET_TEMPLATE = 'auth/password-reset';
 export const AUTH_EMAIL_OTP_TEMPLATE = 'auth/email-otp';

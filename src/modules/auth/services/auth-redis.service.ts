@@ -10,6 +10,7 @@ import {
   AUTH_EMAIL_VERIFICATION_COOLDOWN_REDIS_PREFIX,
   AUTH_EMAIL_VERIFICATION_REDIS_PREFIX,
   AUTH_PASSWORD_RESET_REDIS_PREFIX,
+  AUTH_REFRESH_REUSE_GRACE_MS,
   AUTH_SESSION_IDS_REDIS_PREFIX,
   AUTH_SESSION_REDIS_PREFIX,
   AUTH_SOCIAL_RESULT_REDIS_PREFIX,
@@ -134,11 +135,25 @@ export class AuthRedisService {
           return {'missing'}
         end
 
+        local nowMs = tonumber(ARGV[6])
+        local graceMs = tonumber(ARGV[7])
         local session = cjson.decode(rawSession)
         if session.refreshTokenHash ~= expectedHash then
-          redis.call('DEL', sessionKey)
-          redis.call('SREM', userSessionsKey, session.sessionId)
-          return {'reused', cjson.encode(session)}
+          local previousHash = session.previousRefreshTokenHash
+          local rotatedAtMs = tonumber(session.rotatedAtMs)
+          local isRetry = previousHash ~= nil and previousHash ~= cjson.null
+            and previousHash == expectedHash
+            and rotatedAtMs ~= nil and nowMs - rotatedAtMs <= graceMs
+          if not isRetry then
+            redis.call('DEL', sessionKey)
+            redis.call('SREM', userSessionsKey, session.sessionId)
+            return {'reused', cjson.encode(session)}
+          end
+          -- A retry of the last rotation: the token issued then is replaced and
+          -- the window is not extended, so it cannot be replayed indefinitely.
+        else
+          session.previousRefreshTokenHash = expectedHash
+          session.rotatedAtMs = nowMs
         end
 
         session.refreshTokenHash = nextHash
@@ -156,6 +171,8 @@ export class AuthRedisService {
       ttlMilliseconds,
       new Date().toISOString(),
       new Date(Date.now() + ttlMilliseconds).toISOString(),
+      Date.now(),
+      AUTH_REFRESH_REUSE_GRACE_MS,
     )) as RedisRotationResult | null;
 
     if (!result) {

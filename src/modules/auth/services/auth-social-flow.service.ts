@@ -112,7 +112,15 @@ export class AuthSocialFlowService {
     context: AuthClientContext = {},
   ): Promise<AuthenticatedUserResult> {
     const profile = await this.socialIdentity.resolveAppleNativeProfile(dto.authorizationCode);
-    return this.finalizeSocialSignIn('apple', profile, context);
+    return this.finalizeSocialSignIn(
+      'apple',
+      {
+        ...profile,
+        firstName: profile.firstName || dto.firstName?.trim() || '',
+        lastName: profile.lastName || dto.lastName?.trim() || '',
+      },
+      context,
+    );
   }
 
   async exchangeNativeGoogleCode(

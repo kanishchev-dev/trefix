@@ -4,6 +4,12 @@ export interface AuthSessionRecord {
   email: string;
   emailVerified: boolean;
   refreshTokenHash: string;
+  /**
+   * The refresh token replaced by the last rotation and when that happened
+   * (epoch ms). Presenting it again shortly after is a lost response, not theft.
+   */
+  previousRefreshTokenHash?: string | null;
+  rotatedAtMs?: number | null;
   userAgent: string | null;
   ipAddress: string | null;
   /** Fields below are absent on sessions created before devices were shown to users. */

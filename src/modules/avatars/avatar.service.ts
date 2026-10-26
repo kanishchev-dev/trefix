@@ -174,6 +174,11 @@ export class AvatarService {
       throw new AvatarInvalidFileException();
     }
 
+    // `image/jpg` is not a registered type, but clients derive it from the `.jpg` extension.
+    if (file.mimetype === 'image/jpg') {
+      file.mimetype = 'image/jpeg';
+    }
+
     const isAllowed = (AVATAR_ALLOWED_MIME_TYPES as readonly string[]).includes(file.mimetype);
 
     if (!isAllowed) {

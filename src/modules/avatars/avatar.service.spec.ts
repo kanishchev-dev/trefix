@@ -169,6 +169,17 @@ describe('AvatarService', () => {
       expect(storageService.uploadFile).not.toHaveBeenCalled();
     });
 
+    it('accepts the image/jpg alias as JPEG', async () => {
+      const { service, storageService } = buildService();
+
+      await service.uploadAvatar(USER_ID, buildFile({ mimetype: 'image/jpg' }));
+
+      expect(storageService.uploadFile).toHaveBeenCalledWith(
+        expect.objectContaining({ mimetype: 'image/jpeg' }),
+        expect.anything(),
+      );
+    });
+
     it('rejects an oversized upload', async () => {
       const { service, storageService } = buildService();
 

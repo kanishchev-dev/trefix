@@ -40,20 +40,45 @@ export class UserIdentityService {
         throw error;
       });
       if (owner) {
-        return owner;
+        return this.fillPlaceholderName(owner, profile);
       }
       // The account behind the identity was deleted; the provider account starts over.
       await known.destroy();
     }
     const email = normalizeEmail(profile.email);
-    const user =
-      (await this.usersService.findByEmail(email)) ??
-      (await this.usersService.create({ email, ...resolveRegistrationName(email), emailVerified: true }));
+    const existing = await this.usersService.findByEmail(email);
+    const user = existing
+      ? await this.fillPlaceholderName(existing, profile)
+      : await this.usersService.create({
+          email,
+          ...resolveRegistrationName(email, profile.firstName, profile.lastName),
+          emailVerified: true,
+        });
     const taken = await this.identityModel.findOne({ where: { userId: user.id, provider } });
     if (!taken) {
       await this.identityModel.create({ userId: user.id, provider, subject: profile.providerSubject, email });
     }
     return user;
+  }
+
+  /**
+   * Accounts created before the provider's name was read got a name made from
+   * the email (for Apple's private relay that is a random string). The real
+   * name replaces it once the provider sends one; a name the user set stays.
+   */
+  private async fillPlaceholderName(user: User, profile: SocialProfile): Promise<User> {
+    const firstName = profile.firstName.trim();
+    const lastName = profile.lastName.trim();
+    if (!firstName && !lastName) {
+      return user;
+    }
+    const placeholder = resolveRegistrationName(user.email);
+    const hasPlaceholderName =
+      !user.firstName.trim() || (user.firstName === placeholder.firstName && !user.lastName.trim());
+    if (!hasPlaceholderName) {
+      return user;
+    }
+    return this.usersService.update(user.id, resolveRegistrationName(user.email, firstName, lastName));
   }
 
   async list(userId: string): Promise<AuthIdentityResponseDto[]> {
