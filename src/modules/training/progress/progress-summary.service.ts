@@ -67,7 +67,7 @@ export class ProgressSummaryService {
 
     const [completed, results, plan] = await Promise.all([
       this.workoutModel.findAll({
-        where: { athleteId: athlete.id, status: 'completed', type: { [Op.ne]: 'rest' } },
+        where: { athleteId: athlete.id, status: 'completed', sport: 'run', type: { [Op.ne]: 'rest' } },
         attributes: WORKOUT_ATTRIBUTES,
       }),
       this.resultModel.findAll({ where: { athleteId: athlete.id } }),

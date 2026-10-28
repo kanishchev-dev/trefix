@@ -18,7 +18,12 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { WORKOUT_TYPES, type WorkoutType } from '../../../training/training.constants';
+import {
+  WORKOUT_SPORTS,
+  WORKOUT_TYPES,
+  type WorkoutSport,
+  type WorkoutType,
+} from '../../../training/training.constants';
 import {
   DISTANCE_SOURCES,
   type DistanceSource,
@@ -165,6 +170,15 @@ export class RecordedActivityDto {
   @ApiProperty({ enum: RECORDING_ENVIRONMENTS })
   @IsIn(RECORDING_ENVIRONMENTS)
   environment!: RecordingEnvironment;
+
+  @ApiPropertyOptional({
+    enum: WORKOUT_SPORTS,
+    default: 'run',
+    description: 'What was recorded. A strength session is `indoor` with no distance.',
+  })
+  @IsOptional()
+  @IsIn(WORKOUT_SPORTS)
+  sport?: WorkoutSport;
 
   @ApiProperty({ enum: DISTANCE_SOURCES })
   @IsIn(DISTANCE_SOURCES)
@@ -371,6 +385,7 @@ export class RecordedActivityAcceptedDto {
 export class WorkoutRecordingResponseDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ enum: RECORDING_ENVIRONMENTS }) environment!: RecordingEnvironment;
+  @ApiProperty({ enum: WORKOUT_SPORTS }) sport!: WorkoutSport;
   @ApiProperty({ enum: DISTANCE_SOURCES }) distanceSource!: DistanceSource;
   @ApiProperty() startedAt!: string;
   @ApiProperty() endedAt!: string;

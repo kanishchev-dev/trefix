@@ -21,11 +21,12 @@ import {
   WorkoutAnalysisView,
   WorkoutView,
 } from '../interfaces/training-views.interface';
+import { DEFAULT_WORKOUT_SPORT, DISTANCE_LESS_SPORTS } from '../training.constants';
 import { TrainingEngine } from '../training.engine';
 import { TRAINING_EVENTS } from '../training.events';
 import { toWorkoutAnalysisView, toWorkoutView } from '../training.mappers';
 import { TrainingLookupService } from '../training-lookup.service';
-import { resolveWorkoutGoal } from './workout-goal';
+import { resolveWorkoutGoal, WORKOUT_GOAL_ERROR_CODE } from './workout-goal';
 
 export interface WorkoutCompletionResult {
   workout: WorkoutView;
@@ -136,13 +137,19 @@ export class WorkoutsService {
     }
 
     const workoutType = dto.type || MANUAL_WORKOUT_DEFAULTS.type;
+    const sport = dto.sport ?? DEFAULT_WORKOUT_SPORT;
+    const timeOnly = DISTANCE_LESS_SPORTS.includes(sport);
+    if (timeOnly && (dto.goal === 'distance' || (dto.distanceKm ?? 0) > 0 || (dto.actualDistanceKm ?? 0) > 0)) {
+      throw new DomainBadRequestException(WORKOUT_GOAL_ERROR_CODE, 'A strength workout has no distance');
+    }
     const goal = resolveWorkoutGoal(dto);
     const durationMinutes =
       goal?.durationMinutes ??
       dto.durationMinutes ??
       (dto.actualDurationMinutes || MANUAL_WORKOUT_DEFAULTS.durationMinutes);
-    const distanceKm =
-      goal?.distanceKm ?? dto.distanceKm ?? (dto.actualDistanceKm || MANUAL_WORKOUT_DEFAULTS.distanceKm);
+    const distanceKm = timeOnly
+      ? 0
+      : (goal?.distanceKm ?? dto.distanceKm ?? (dto.actualDistanceKm || MANUAL_WORKOUT_DEFAULTS.distanceKm));
     const source = dto.source || MANUAL_WORKOUT_DEFAULTS.source;
 
     return this.workoutModel.sequelize!.transaction(async (transaction) => {
@@ -154,6 +161,7 @@ export class WorkoutsService {
           weekNumber: 1,
           scheduledAt: scheduledDate,
           type: workoutType,
+          sport,
           phase: 'adhoc',
           status,
           orderInWeek: 1,
@@ -172,6 +180,7 @@ export class WorkoutsService {
           analysis: null,
           completedAt: isCompleted ? new Date() : null,
           sourceProvider: source,
+          excludeFromRecords: sport !== 'run',
         },
         { transaction },
       );

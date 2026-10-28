@@ -13,7 +13,7 @@ import {
   WorkoutAnalysisView,
   WorkoutView,
 } from './interfaces/training-views.interface';
-import { TRAINING_DEFAULT_AVAILABILITY } from './training.constants';
+import { DEFAULT_WORKOUT_SPORT, TRAINING_DEFAULT_AVAILABILITY } from './training.constants';
 import { type TrainingStateComputation } from './training.engine';
 
 /*
@@ -167,6 +167,7 @@ export function toWorkoutView(workout: Workout): WorkoutView {
     weekNumber: workout.weekNumber,
     scheduledAt: workout.scheduledAt,
     type: workout.type,
+    sport: workout.sport ?? DEFAULT_WORKOUT_SPORT,
     phase: workout.phase,
     status: workout.status,
     orderInWeek: workout.orderInWeek,

@@ -28,6 +28,7 @@ const facts = (overrides: Partial<ImportedWorkoutFacts> = {}): ImportedWorkoutFa
   calories: 700,
   elevationGainMeters: 60,
   indoor: false,
+  sport: 'run',
   ...overrides,
 });
 
@@ -178,6 +179,14 @@ describe('WorkoutImportService', () => {
       ]);
       await service.createImportedWorkout('athlete-1', facts({ distanceKm: 16 }));
       expect(workoutModel.create).toHaveBeenCalledWith(expect.objectContaining({ type: 'long_run' }), { transaction });
+    });
+
+    it('stores a long hike as a hike, out of running records', async () => {
+      await service.createImportedWorkout('athlete-1', facts({ distanceKm: 20, sport: 'hike' }));
+      expect(workoutModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'easy', sport: 'hike', excludeFromRecords: true }),
+        { transaction },
+      );
     });
 
     it('uses the recent average when it exceeds the 16 km floor', async () => {

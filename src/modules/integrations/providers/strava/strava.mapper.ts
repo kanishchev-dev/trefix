@@ -1,13 +1,21 @@
 import { RunningActivity, RunningActivityType } from '../../interfaces/running-activity.interface';
 import { StravaActivitySummary } from '../../interfaces/strava-api.interface';
 
-const RUNNING_TYPES = new Set(['Run', 'TrailRun', 'VirtualRun']);
+/** Strava sport types Trefix imports: runs plus the sessions that support the preparation. */
+const ACTIVITY_TYPE_BY_STRAVA: Readonly<Record<string, RunningActivityType>> = {
+  Run: 'run',
+  TrailRun: 'trail_run',
+  VirtualRun: 'virtual_run',
+  Walk: 'walk',
+  Hike: 'hike',
+  WeightTraining: 'strength',
+};
 
 export class StravaMapper {
-  /** Checks if the Strava activity is a supported running activity type. */
-  static isRunningActivity(stravaActivity: StravaActivitySummary): boolean {
+  /** Checks if the Strava activity is of a supported kind (runs, walks, hikes, strength). */
+  static isSupportedActivity(stravaActivity: StravaActivitySummary): boolean {
     const type = stravaActivity.sport_type || stravaActivity.type;
-    return RUNNING_TYPES.has(type);
+    return type in ACTIVITY_TYPE_BY_STRAVA;
   }
 
   /**
@@ -37,12 +45,7 @@ export class StravaMapper {
     const averagePaceSecPerKm = distanceMeters > 0 ? Math.round((movingTimeSec / distanceMeters) * 1000) : undefined;
 
     const rawType = stravaActivity.sport_type || stravaActivity.type;
-    let activityType: RunningActivityType = 'run';
-    if (rawType === 'TrailRun') {
-      activityType = 'trail_run';
-    } else if (rawType === 'VirtualRun') {
-      activityType = 'virtual_run';
-    }
+    const activityType: RunningActivityType = ACTIVITY_TYPE_BY_STRAVA[rawType] ?? 'run';
 
     return {
       id: `strava:${stravaActivity.id}`,

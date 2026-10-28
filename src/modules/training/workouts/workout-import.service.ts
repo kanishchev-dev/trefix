@@ -98,7 +98,7 @@ export class WorkoutImportService {
   /** Creates a completed ad-hoc workout from imported facts. */
   async createImportedWorkout(athleteId: string, facts: ImportedWorkoutFacts): Promise<WorkoutView> {
     const athlete = await this.lookup.athlete(athleteId);
-    const type = await this.resolveType(athlete.id, facts);
+    const type = facts.sport === 'run' ? await this.resolveType(athlete.id, facts) : 'easy';
 
     return this.inTransaction(async (transaction) => {
       const workout = await this.workoutModel.create(
@@ -109,6 +109,7 @@ export class WorkoutImportService {
           weekNumber: 1,
           scheduledAt: facts.startedAt,
           type,
+          sport: facts.sport,
           phase: 'adhoc',
           status: 'completed',
           orderInWeek: 1,
@@ -121,6 +122,8 @@ export class WorkoutImportService {
           completedAt: facts.endedAt,
           sourceProvider: facts.sourceProvider,
           sourceActivityId: facts.sourceActivityId,
+          // Records, VDOT and running totals count only runs.
+          excludeFromRecords: facts.sport !== 'run',
         },
         { transaction },
       );
@@ -160,6 +163,10 @@ export class WorkoutImportService {
         workout.scheduledAt = facts.startedAt;
         workout.durationMinutes = facts.durationMinutes;
         workout.distanceKm = facts.distanceKm;
+        workout.sport = facts.sport;
+        if (facts.sport !== 'run') {
+          workout.excludeFromRecords = true;
+        }
       }
       await workout.save({ transaction });
 
@@ -253,7 +260,12 @@ export class WorkoutImportService {
   private async resolveType(athleteId: string, facts: ImportedWorkoutFacts): Promise<WorkoutType> {
     const windowStart = new Date(facts.startedAt.getTime() - IMPORTED_LONG_RUN_WINDOW_DAYS * DAY_MS);
     const recent = await this.workoutModel.findAll({
-      where: { athleteId, status: 'completed', scheduledAt: { [Op.gte]: windowStart, [Op.lt]: facts.startedAt } },
+      where: {
+        athleteId,
+        status: 'completed',
+        sport: 'run',
+        scheduledAt: { [Op.gte]: windowStart, [Op.lt]: facts.startedAt },
+      },
       attributes: ['distanceKm', 'actual'],
     });
     const distances = recent

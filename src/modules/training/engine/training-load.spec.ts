@@ -32,3 +32,24 @@ describe('analyzeWorkout with a single goal', () => {
     expect(result.analysis.load).toBeGreaterThan(0);
   });
 });
+
+describe('analyzeWorkout for other sports', () => {
+  const ofSport = (sport: WorkoutView['sport']): WorkoutView => ({ ...planned(0, 0), sport }) as WorkoutView;
+
+  it('loads a strength session by its time and its own factor, without pace', () => {
+    const result = analyzeWorkout({
+      plannedWorkout: ofSport('strength'),
+      actualDurationMinutes: 40,
+      actualDistanceKm: 0,
+    });
+    expect(result.intensityFactor).toBe(0.75);
+    expect(result.analysis.load).toBe(30);
+    expect(result.analysis.performanceDelta).toBe(0);
+  });
+
+  it('loads a walk lighter than an easy run of the same time', () => {
+    const walk = analyzeWorkout({ plannedWorkout: ofSport('walk'), actualDurationMinutes: 60, actualDistanceKm: 5 });
+    const run = analyzeWorkout({ plannedWorkout: ofSport('run'), actualDurationMinutes: 60, actualDistanceKm: 10 });
+    expect(walk.analysis.load).toBeLessThan(run.analysis.load);
+  });
+});

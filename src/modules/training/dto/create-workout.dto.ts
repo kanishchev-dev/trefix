@@ -2,7 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDateString, IsEnum, IsIn, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
-import { WORKOUT_GOALS, WORKOUT_TYPES, WorkoutGoal, WorkoutType } from '../training.constants';
+import {
+  WORKOUT_GOALS,
+  WORKOUT_SPORTS,
+  WORKOUT_TYPES,
+  WorkoutGoal,
+  WorkoutSport,
+  WorkoutType,
+} from '../training.constants';
 
 export class CreateWorkoutDto {
   @ApiProperty({ example: '2026-09-23T10:00:00.000Z' })
@@ -13,6 +20,17 @@ export class CreateWorkoutDto {
   @IsEnum(WORKOUT_TYPES)
   @IsOptional()
   type?: WorkoutType;
+
+  @ApiProperty({
+    enum: WORKOUT_SPORTS,
+    required: false,
+    default: 'run',
+    description:
+      'Running, walking, hiking or strength. A strength workout has no distance: only `none` or `duration` goals.',
+  })
+  @IsIn(WORKOUT_SPORTS)
+  @IsOptional()
+  sport?: WorkoutSport;
 
   @ApiProperty({ required: false })
   @IsString()

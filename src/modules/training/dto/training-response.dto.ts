@@ -17,6 +17,7 @@ import {
   HR_ZONES_METHODS,
   TIMES_OF_DAY,
   TRAINING_PLAN_STATUSES,
+  WORKOUT_SPORTS,
   WORKOUT_STATUSES,
   WORKOUT_TYPES,
 } from '../training.constants';
@@ -269,6 +270,9 @@ export class TrainingWorkoutResponseDto implements WorkoutView {
 
   @ApiProperty({ enum: WORKOUT_TYPES })
   type!: WorkoutView['type'];
+
+  @ApiProperty({ enum: WORKOUT_SPORTS, description: 'Running, walking, hiking or strength' })
+  sport!: WorkoutView['sport'];
 
   @ApiProperty()
   phase!: string;

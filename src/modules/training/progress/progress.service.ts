@@ -323,7 +323,7 @@ export class ProgressService {
     }
     const [workouts, loads, results] = await Promise.all([
       this.workoutModel.findAll({
-        where: { athleteId: athlete.id, status: 'completed' },
+        where: { athleteId: athlete.id, status: 'completed', sport: 'run' },
         attributes: [
           'id',
           'type',

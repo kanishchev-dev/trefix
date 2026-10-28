@@ -119,7 +119,7 @@ export class StravaProvider implements IntegrationProvider {
     });
 
     return stravaActivities
-      .filter((act) => StravaMapper.isRunningActivity(act))
+      .filter((act) => StravaMapper.isSupportedActivity(act))
       .map((act) => StravaMapper.toRunningActivity(integration.athleteId, act));
   }
 
@@ -127,7 +127,7 @@ export class StravaProvider implements IntegrationProvider {
     const accessToken = this.getAccessToken(integration);
     const stravaActivity = await this.client.fetchActivity(accessToken, activityId);
 
-    if (!StravaMapper.isRunningActivity(stravaActivity)) {
+    if (!StravaMapper.isSupportedActivity(stravaActivity)) {
       return null;
     }
 

@@ -23,7 +23,7 @@ export class RecordsTimelineService {
   async timelineForAthlete(athleteId: string): Promise<RecordImprovement[]> {
     const [workouts, results] = await Promise.all([
       this.workoutModel.findAll({
-        where: { athleteId, status: 'completed' },
+        where: { athleteId, status: 'completed', sport: 'run' },
         attributes: [
           'id',
           'type',

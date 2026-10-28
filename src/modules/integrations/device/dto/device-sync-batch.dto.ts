@@ -37,7 +37,10 @@ export class DeviceActivityDto {
   @MaxLength(128)
   sourceActivityId!: string;
 
-  @ApiProperty({ example: 'run', description: 'run | trail_run | treadmill; anything else is rejected per item' })
+  @ApiProperty({
+    example: 'run',
+    description: 'run | trail_run | treadmill | walk | hike | strength; anything else is rejected per item',
+  })
   @IsString()
   @MaxLength(32)
   type!: string;

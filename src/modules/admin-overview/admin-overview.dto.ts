@@ -74,6 +74,9 @@ export class OverviewWorkoutDto {
   @ApiProperty({ example: 'easy' })
   type!: string;
 
+  @ApiProperty({ example: 'run', description: 'run | walk | hike | strength' })
+  sport!: string;
+
   @ApiProperty({
     type: String,
     nullable: true,

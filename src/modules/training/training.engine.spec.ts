@@ -78,6 +78,7 @@ describe('TrainingEngine', () => {
 
   it('analyzes a workout deterministically', () => {
     const plannedWorkout: WorkoutView = {
+      sport: 'run',
       id: 'workout-1',
       athleteId: athlete.id,
       goalId: goal.id,
@@ -189,6 +190,7 @@ describe('TrainingEngine', () => {
 
   it('adapts a plan after poor performance', () => {
     const plannedWorkout: WorkoutView = {
+      sport: 'run',
       id: 'workout-2',
       athleteId: athlete.id,
       goalId: goal.id,

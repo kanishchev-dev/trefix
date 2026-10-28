@@ -1,6 +1,7 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
+import { DEFAULT_WORKOUT_SPORT, type WorkoutSport } from '../../training/training.constants';
 import type { DistanceSource, RecordingEnvironment } from '../constants/integrations.constants';
 import type { RecordingOutcome } from './dto/recorded-activity.dto';
 
@@ -66,6 +67,9 @@ export class RecordedActivity extends Model {
 
   @Column({ type: DataType.STRING(16), allowNull: false })
   environment!: RecordingEnvironment;
+
+  @Column({ type: DataType.STRING(16), allowNull: false, defaultValue: DEFAULT_WORKOUT_SPORT })
+  sport!: WorkoutSport;
 
   @Column({ type: DataType.STRING(16), allowNull: false, field: 'distance_source' })
   distanceSource!: DistanceSource;

@@ -144,6 +144,22 @@ describe('RecordingsService', () => {
     expect(workout.excludeFromRecords).toBe(true);
   });
 
+  it('records a strength session indoors, without distance and out of records', async () => {
+    await service.accept(
+      'user-1',
+      summary({ sport: 'strength', environment: 'indoor', distanceSource: 'manual', distanceM: 0 }),
+    );
+    expect(ingestion.ingest.mock.calls[0][0]).toMatchObject({ type: 'strength', distanceMeters: 0 });
+    expect(recordingModel.create).toHaveBeenCalledWith(expect.objectContaining({ sport: 'strength' }));
+    expect(workout.excludeFromRecords).toBe(true);
+  });
+
+  it('accepts a slow walk that would be implausible for a run', async () => {
+    await service.accept('user-1', summary({ sport: 'walk', distanceM: 4000, movingSec: 3000 }));
+    expect(ingestion.ingest.mock.calls[0][0].type).toBe('walk');
+    expect(workout.excludeFromRecords).toBe(true);
+  });
+
   it('closes the chosen planned workout', async () => {
     ingestion.ingest.mockResolvedValue({ outcome: 'matched_planned', workoutId: 'w-plan' });
     const result = await service.accept(
@@ -171,6 +187,9 @@ describe('RecordingsService', () => {
     ['endedAt', summary({ endedAt: '2026-10-10T06:00:00Z' })],
     ['distanceM', summary({ distanceM: 50_000 })],
     ['distanceSource', summary({ environment: 'treadmill', distanceSource: 'gps' })],
+    ['distanceM', summary({ sport: 'strength', environment: 'indoor', distanceSource: 'manual' })],
+    ['environment', summary({ sport: 'strength', distanceM: 0 })],
+    ['environment', summary({ environment: 'indoor', distanceSource: 'manual', distanceM: 0 })],
   ])('rejects an implausible %s', async (field, dto) => {
     await expect(service.accept('user-1', dto)).rejects.toMatchObject({
       code: 'RECORDING_INVALID',

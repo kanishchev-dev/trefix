@@ -192,6 +192,7 @@ export class AdminOverviewService {
       scheduledAt: workout.scheduledAt,
       completedAt: workout.completedAt,
       type: workout.type,
+      sport: workout.sport,
       title: typeof title === 'string' ? title : null,
       status: workout.status,
       distanceKm: workout.distanceKm,

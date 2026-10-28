@@ -309,7 +309,7 @@ export class AthleteProfileService {
     const since = new Date(Date.now() - VOLUME_WINDOW_DAYS * 86_400_000);
     const workouts = await this.workoutModel.findAll({
       attributes: ['actual', 'distanceKm', 'sourceProvider'],
-      where: { athleteId: athlete.id, status: 'completed', completedAt: { [Op.gte]: since } },
+      where: { athleteId: athlete.id, status: 'completed', sport: 'run', completedAt: { [Op.gte]: since } },
     });
     if (workouts.length < MIN_COMPLETED_FOR_VOLUME) {
       return null;

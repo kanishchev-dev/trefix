@@ -3,12 +3,21 @@ import {
   DEVICE_SYNC_HISTORY_MAX_DAYS,
   type DeviceActivityRejectCode,
   type DeviceProviderName,
+  SPORT_BY_ACTIVITY_TYPE,
+  SPORT_PACE_LIMITS,
 } from '../constants/integrations.constants';
 import type { StoredDeviceActivity } from '../entities/device-sync-batch.entity';
 import type { RunningActivity, RunningActivityType } from '../interfaces/running-activity.interface';
 import type { DeviceActivityDto } from './dto/device-sync-batch.dto';
 
-const DEVICE_RUNNING_TYPES: ReadonlySet<string> = new Set<RunningActivityType>(['run', 'trail_run', 'treadmill']);
+const DEVICE_ACTIVITY_TYPES: ReadonlySet<string> = new Set<RunningActivityType>([
+  'run',
+  'trail_run',
+  'treadmill',
+  'walk',
+  'hike',
+  'strength',
+]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type DeviceActivityCheck =
@@ -22,13 +31,14 @@ function withinRange(value: number | undefined, range: { min: number; max: numbe
 }
 
 /**
- * Plausibility of one run from the app. Out-of-range HR and cadence are
- * dropped instead of rejecting the run: the volume is still a valid fact.
+ * Plausibility of one record from the app. Out-of-range HR and cadence are
+ * dropped instead of rejecting the record: the volume is still a valid fact.
  */
 export function checkDeviceActivity(dto: DeviceActivityDto, now: Date): DeviceActivityCheck {
-  if (!DEVICE_RUNNING_TYPES.has(dto.type)) {
+  if (!DEVICE_ACTIVITY_TYPES.has(dto.type)) {
     return { ok: false, code: 'ACTIVITY_NOT_RUNNING' };
   }
+  const sport = SPORT_BY_ACTIVITY_TYPE[dto.type as RunningActivityType];
   const startedAt = new Date(dto.startedAt);
   const endedAt = new Date(dto.endedAt);
   if (endedAt.getTime() <= startedAt.getTime()) {
@@ -43,18 +53,25 @@ export function checkDeviceActivity(dto: DeviceActivityDto, now: Date): DeviceAc
   if (dto.durationSec > DEVICE_ACTIVITY_LIMITS.maxDurationSec) {
     return { ok: false, code: 'ACTIVITY_DURATION_INVALID' };
   }
-  if (
-    dto.distanceMeters < DEVICE_ACTIVITY_LIMITS.minDistanceMeters ||
-    dto.durationSec < DEVICE_ACTIVITY_LIMITS.minDurationSec
-  ) {
-    return { ok: false, code: 'ACTIVITY_TOO_SHORT' };
-  }
-  const paceSecPerKm = (dto.durationSec / dto.distanceMeters) * 1000;
-  if (
-    paceSecPerKm < DEVICE_ACTIVITY_LIMITS.fastestPaceSecPerKm ||
-    paceSecPerKm > DEVICE_ACTIVITY_LIMITS.slowestPaceSecPerKm
-  ) {
-    return { ok: false, code: 'ACTIVITY_PACE_IMPLAUSIBLE' };
+  if (sport === 'strength') {
+    if (dto.durationSec < DEVICE_ACTIVITY_LIMITS.minStrengthDurationSec) {
+      return { ok: false, code: 'ACTIVITY_TOO_SHORT' };
+    }
+  } else {
+    if (
+      dto.distanceMeters < DEVICE_ACTIVITY_LIMITS.minDistanceMeters ||
+      dto.durationSec < DEVICE_ACTIVITY_LIMITS.minDurationSec
+    ) {
+      return { ok: false, code: 'ACTIVITY_TOO_SHORT' };
+    }
+    const paceSecPerKm = (dto.durationSec / dto.distanceMeters) * 1000;
+    const pace =
+      sport === 'run'
+        ? { min: DEVICE_ACTIVITY_LIMITS.fastestPaceSecPerKm, max: DEVICE_ACTIVITY_LIMITS.slowestPaceSecPerKm }
+        : SPORT_PACE_LIMITS[sport];
+    if (paceSecPerKm < pace.min || paceSecPerKm > pace.max) {
+      return { ok: false, code: 'ACTIVITY_PACE_IMPLAUSIBLE' };
+    }
   }
 
   const averageHeartRate = withinRange(dto.averageHeartRate, DEVICE_ACTIVITY_LIMITS.heartRate);
@@ -70,7 +87,7 @@ export function checkDeviceActivity(dto: DeviceActivityDto, now: Date): DeviceAc
       utcOffsetMinutes: dto.utcOffsetMinutes ?? null,
       durationSec: dto.durationSec,
       elapsedTimeSec: dto.elapsedTimeSec ?? null,
-      distanceMeters: Math.round(dto.distanceMeters),
+      distanceMeters: sport === 'strength' ? 0 : Math.round(dto.distanceMeters),
       elevationGainMeters: dto.elevationGainMeters !== undefined ? Math.round(dto.elevationGainMeters) : null,
       averageHeartRate,
       maxHeartRate:

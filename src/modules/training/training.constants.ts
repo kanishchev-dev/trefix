@@ -69,6 +69,22 @@ export const WORKOUT_TYPES = [
   'race',
   'rest',
 ] as const;
+/**
+ * What the athlete does in a workout. Running drives the plan, paces and
+ * records; walking, hiking and strength sessions support the preparation and
+ * count towards load and history only.
+ */
+export const WORKOUT_SPORTS = ['run', 'walk', 'hike', 'strength'] as const;
+export type WorkoutSport = (typeof WORKOUT_SPORTS)[number];
+export const DEFAULT_WORKOUT_SPORT: WorkoutSport = 'run';
+/** Sports measured by time only: no distance, pace or route. */
+export const DISTANCE_LESS_SPORTS: readonly WorkoutSport[] = ['strength'];
+/** Load per minute of a non-running session; running uses the factor of its workout type. */
+export const SPORT_INTENSITY_FACTORS: Record<Exclude<WorkoutSport, 'run'>, number> = {
+  walk: 0.4,
+  hike: 0.65,
+  strength: 0.75,
+};
 export const TRAINING_PHASES = ['base', 'build', 'recovery', 'specific', 'peak', 'taper', 'race'] as const;
 export const ADAPTATION_ACTIONS = [
   'KEEP',

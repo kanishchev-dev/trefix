@@ -40,6 +40,18 @@ describe('checkDeviceActivity', () => {
     }
   });
 
+  it('accepts walks, hikes and strength sessions with their own limits', () => {
+    expect(codeOf({ type: 'walk', distanceMeters: 4000 })).toBeNull();
+    expect(codeOf({ type: 'hike', distanceMeters: 2500 })).toBeNull();
+    const strength = checkDeviceActivity(dto({ type: 'strength', distanceMeters: 0 }), NOW);
+    expect(strength.ok).toBe(true);
+    if (strength.ok) {
+      expect(strength.activity.distanceMeters).toBe(0);
+    }
+    expect(codeOf({ type: 'strength', distanceMeters: 0, durationSec: 120 })).toBe('ACTIVITY_TOO_SHORT');
+    expect(codeOf({ type: 'walk', distanceMeters: 600 })).toBe('ACTIVITY_PACE_IMPLAUSIBLE');
+  });
+
   it.each([
     [{ type: 'cycling' }, 'ACTIVITY_NOT_RUNNING'],
     [{ endedAt: '2026-10-08T04:59:00Z' }, 'ACTIVITY_TIME_RANGE_INVALID'],

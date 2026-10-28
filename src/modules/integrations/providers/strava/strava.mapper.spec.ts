@@ -31,9 +31,20 @@ describe('StravaMapper', () => {
     start_date_local: '2026-09-24T10:00:00',
   };
 
-  it('correctly identifies running activities', () => {
-    expect(StravaMapper.isRunningActivity(sampleRunActivity)).toBe(true);
-    expect(StravaMapper.isRunningActivity(sampleRideActivity)).toBe(false);
+  it('imports runs, walks, hikes and strength sessions, not rides', () => {
+    expect(StravaMapper.isSupportedActivity(sampleRunActivity)).toBe(true);
+    expect(StravaMapper.isSupportedActivity({ ...sampleRunActivity, type: 'Walk' })).toBe(true);
+    expect(StravaMapper.isSupportedActivity({ ...sampleRunActivity, type: 'Hike' })).toBe(true);
+    expect(StravaMapper.isSupportedActivity({ ...sampleRunActivity, type: 'WeightTraining' })).toBe(true);
+    expect(StravaMapper.isSupportedActivity(sampleRideActivity)).toBe(false);
+  });
+
+  it('maps walks, hikes and strength sessions to their own kinds', () => {
+    expect(StravaMapper.toRunningActivity('a', { ...sampleRunActivity, type: 'Walk' }).type).toBe('walk');
+    expect(StravaMapper.toRunningActivity('a', { ...sampleRunActivity, type: 'Hike' }).type).toBe('hike');
+    expect(
+      StravaMapper.toRunningActivity('a', { ...sampleRunActivity, type: 'WeightTraining', distance: 0 }).type,
+    ).toBe('strength');
   });
 
   it('maps Strava activity summary to RunningActivity domain DTO', () => {

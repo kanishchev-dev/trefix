@@ -1,7 +1,7 @@
 import { AthleteView, GoalView, WorkoutAnalysisView, WorkoutView } from '../interfaces/training-views.interface';
 import { TRAINING_DEFAULT_TARGET_CONFIDENCE, TRAINING_STATE_SOURCE } from '../training.constants';
 import { TrainingStateComputation, WorkoutAnalysisInput, WorkoutAnalysisResult } from './engine.types';
-import { clamp, resolveIntensityFactor, sumLoadWithin } from './engine-utils';
+import { clamp, resolveWorkoutIntensityFactor, sumLoadWithin } from './engine-utils';
 import {
   estimateVo2maxFromThresholdPace,
   resolveActualPace,
@@ -58,7 +58,7 @@ export function calculateTrainingLoad(
   workout: WorkoutView,
   actual?: WorkoutAnalysisView,
 ): { load: number; intensityFactor: number } {
-  const intensityFactor = resolveIntensityFactor(workout.type);
+  const intensityFactor = resolveWorkoutIntensityFactor(workout);
   const durationMinutes = actual ? workout.durationMinutes * actual.completion : workout.durationMinutes;
   const completionFactor = actual ? clamp(actual.completion, 0.5, 1.5) : 1;
   const load = Math.round(durationMinutes * intensityFactor * completionFactor);
@@ -79,9 +79,12 @@ export function analyzeWorkout(input: WorkoutAnalysisInput): WorkoutAnalysisResu
   }
   const completion =
     ratios.length > 0 ? clamp(ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length, 0, 1.5) : 1;
-  const paceBaseline = resolveTargetPace(planned);
-  const actualPace =
-    input.actualAveragePaceSecondsPerKm ?? resolveActualPace(input.actualDurationMinutes, input.actualDistanceKm);
+  // Pace says nothing about a walk, a hike or a strength session.
+  const isRun = !planned.sport || planned.sport === 'run';
+  const paceBaseline = isRun ? resolveTargetPace(planned) : null;
+  const actualPace = isRun
+    ? (input.actualAveragePaceSecondsPerKm ?? resolveActualPace(input.actualDurationMinutes, input.actualDistanceKm))
+    : null;
   const performanceDelta = paceBaseline && actualPace ? clamp((paceBaseline - actualPace) / paceBaseline, -1, 1) : 0;
 
   const fatigueImpact = resolveFatigueImpact(completion, performanceDelta, input.rpe);
@@ -106,7 +109,7 @@ export function analyzeWorkout(input: WorkoutAnalysisInput): WorkoutAnalysisResu
     analysis: {
       ...actualView,
       load: loadResult.load,
-      expectedLoad: Math.round(loadBase.durationMinutes * resolveIntensityFactor(planned.type)),
+      expectedLoad: Math.round(loadBase.durationMinutes * resolveWorkoutIntensityFactor(planned)),
     },
     trainingLoad: loadResult.load,
     intensityFactor: loadResult.intensityFactor,

@@ -1,3 +1,6 @@
+import type { WorkoutSport } from '../../training/training.constants';
+import type { RunningActivityType } from '../interfaces/running-activity.interface';
+
 export const OAUTH_PROVIDERS = ['strava', 'garmin'] as const;
 export const DEVICE_PROVIDERS = ['apple_health', 'health_connect'] as const;
 export const INTEGRATION_PROVIDERS = [...OAUTH_PROVIDERS, ...DEVICE_PROVIDERS] as const;
@@ -27,7 +30,8 @@ export const ACTIVITY_SOURCE_PRIORITY: readonly ActivityProviderName[] = [
   TRACKER_PROVIDER,
 ];
 
-export const RECORDING_ENVIRONMENTS = ['outdoor', 'trail', 'treadmill'] as const;
+/** Where the tracker recorded: `indoor` is a strength session (no distance, no route). */
+export const RECORDING_ENVIRONMENTS = ['outdoor', 'trail', 'treadmill', 'indoor'] as const;
 export type RecordingEnvironment = (typeof RECORDING_ENVIRONMENTS)[number];
 /** `mixed` — GPS with stretches counted by the pedometer while the signal was lost. */
 export const DISTANCE_SOURCES = ['gps', 'pedometer', 'manual', 'mixed'] as const;
@@ -38,8 +42,6 @@ export const GPS_DISTANCE_SOURCES: readonly DistanceSource[] = ['gps', 'mixed'];
 export const RECORDING_LIMITS = {
   maxDurationSec: 12 * 60 * 60,
   maxDistanceM: 200_000,
-  minPaceSecPerKm: 150,
-  maxPaceSecPerKm: 1200,
   maxTrackFileBytes: 5 * 1024 * 1024,
   maxRouteLineLength: 20_000,
   maxSplits: 250,
@@ -161,9 +163,29 @@ export const DEVICE_BATCH_RETENTION_DAYS = 30;
 export const DEVICE_SYNC_RATE_LIMIT = { limit: 60, ttl: 60_000 } as const;
 
 /** Plausibility rules for a device run; a record outside them is rejected with a per-item code. */
+/** Sport of a source record, as the training module stores it on the workout. */
+export const SPORT_BY_ACTIVITY_TYPE: Readonly<Record<RunningActivityType, WorkoutSport>> = {
+  run: 'run',
+  trail_run: 'run',
+  virtual_run: 'run',
+  treadmill: 'run',
+  walk: 'walk',
+  hike: 'hike',
+  strength: 'strength',
+};
+
+/** Pace bounds of a plausible record per sport, seconds per km; strength has no distance. */
+export const SPORT_PACE_LIMITS: Readonly<Record<Exclude<WorkoutSport, 'strength'>, { min: number; max: number }>> = {
+  run: { min: 150, max: 1200 },
+  walk: { min: 300, max: 2400 },
+  hike: { min: 300, max: 3600 },
+};
+
 export const DEVICE_ACTIVITY_LIMITS = {
   minDistanceMeters: 500,
   minDurationSec: 180,
+  /** A strength session carries no distance: only its length is checked. */
+  minStrengthDurationSec: 300,
   maxDurationSec: 86_400,
   futureToleranceSec: 300,
   fastestPaceSecPerKm: 150,

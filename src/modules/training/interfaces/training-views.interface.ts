@@ -9,6 +9,7 @@ import type {
   TimeOfDay,
   TrainingPhase,
   TrainingPlanStatus,
+  WorkoutSport,
   WorkoutStatus,
   WorkoutType,
 } from '../training.constants';
@@ -106,6 +107,7 @@ export interface WorkoutView {
   weekNumber: number;
   scheduledAt: Date;
   type: WorkoutType;
+  sport: WorkoutSport;
   phase: TrainingPhase | string;
   status: WorkoutStatus;
   orderInWeek: number;

@@ -1,6 +1,7 @@
 export type ActivitySource = 'strava' | 'garmin' | 'apple_health' | 'health_connect' | 'trefix';
 
-export type RunningActivityType = 'run' | 'trail_run' | 'virtual_run' | 'treadmill';
+/** Kind of a record from a source; besides runs, walks, hikes and strength sessions are imported too. */
+export type RunningActivityType = 'run' | 'trail_run' | 'virtual_run' | 'treadmill' | 'walk' | 'hike' | 'strength';
 
 export type RunningActivityStatus = 'imported' | 'analyzed' | 'failed' | 'deleted' | 'unavailable';
 

@@ -1,7 +1,7 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { uuidv7 } from 'uuidv7';
 
-import { WORKOUT_STATUSES, WORKOUT_TYPES } from '../training.constants';
+import { DEFAULT_WORKOUT_SPORT, WORKOUT_STATUSES, WORKOUT_TYPES, type WorkoutSport } from '../training.constants';
 
 @Table({
   tableName: 'workouts',
@@ -57,6 +57,14 @@ export class Workout extends Model {
     field: 'type',
   })
   type!: (typeof WORKOUT_TYPES)[number];
+
+  /** Running, walking, hiking or strength; the type above is the intensity of a run. */
+  @Column({
+    type: DataType.STRING(16),
+    allowNull: false,
+    defaultValue: DEFAULT_WORKOUT_SPORT,
+  })
+  sport!: WorkoutSport;
 
   @Column({
     type: DataType.STRING,

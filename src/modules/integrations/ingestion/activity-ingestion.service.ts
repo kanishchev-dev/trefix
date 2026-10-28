@@ -21,6 +21,7 @@ import {
   INTEGRATION_STATUSES,
   MANUAL_MATCH_MAX_DISTANCE_DIFF_RATIO,
   RECORDING_LIMITS,
+  SPORT_BY_ACTIVITY_TYPE,
   TREFIX_APP_IDS,
 } from '../constants/integrations.constants';
 import { Integration } from '../entities/integration.entity';
@@ -347,10 +348,13 @@ export class ActivityIngestionService {
     dayRange: { start: Date; endExclusive: Date },
     record: SourceRecord,
   ): Promise<WorkoutView | null> {
-    const planned = await this.workoutLookup.listPlanned(athleteId, {
-      from: dayRange.start,
-      toExclusive: dayRange.endExclusive,
-    });
+    const sport = this.sportOf(record);
+    const planned = (
+      await this.workoutLookup.listPlanned(athleteId, {
+        from: dayRange.start,
+        toExclusive: dayRange.endExclusive,
+      })
+    ).filter((workout) => workout.sport === sport);
     if (planned.length === 0) {
       return null;
     }
@@ -376,8 +380,10 @@ export class ActivityIngestionService {
       { from: dayRange.start, toExclusive: dayRange.endExclusive },
       IMPORTED_ACTIVITY_SOURCES,
     );
+    const sport = this.sportOf(record);
     const distanceKm = record.distanceMeters / 1000;
     const scored = completed
+      .filter((workout) => workout.sport === sport)
       .map((workout) => {
         const manualKm = Number(workout.actual?.actualDistanceKm ?? workout.distanceKm);
         return { workout, diff: Math.abs(manualKm - distanceKm), manualKm };
@@ -456,6 +462,10 @@ export class ActivityIngestionService {
       calories: activity.calories ?? null,
       gearExternalId: activity.gearExternalId ?? null,
     };
+  }
+
+  private sportOf(record: SourceRecord): WorkoutView['sport'] {
+    return SPORT_BY_ACTIVITY_TYPE[record.facts?.type ?? 'run'] ?? 'run';
   }
 
   private toRecord(activity: RunningActivity): SourceRecord {

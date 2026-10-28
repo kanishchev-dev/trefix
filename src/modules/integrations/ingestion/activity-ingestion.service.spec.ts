@@ -248,6 +248,19 @@ describe('ActivityIngestionService', () => {
     expect(eventEmitter.emit).toHaveBeenCalledWith('integrations.activity_imported', expect.any(Object));
   });
 
+  it('does not close a planned run with a walk', async () => {
+    workoutModel.findAll.mockResolvedValueOnce([{ id: 'plan-run', distanceKm: 5, durationMinutes: 50 }]);
+
+    const result = await service.ingest(activity({ type: 'walk', distanceMeters: 5000 }));
+
+    expect(result).toEqual({ outcome: 'created', workoutId: 'w-new' });
+    expect(trainingService.completeWorkoutFromImport).not.toHaveBeenCalled();
+    expect(trainingService.createImportedWorkout).toHaveBeenCalledWith(
+      'athlete-1',
+      expect.objectContaining({ sport: 'walk' }),
+    );
+  });
+
   it('closes the planned workout the run was started from', async () => {
     workoutModel.findOne.mockResolvedValue({ id: 'w-chosen', status: 'planned' });
     workoutModel.findAll.mockResolvedValue([{ id: 'w-closer', distanceKm: 10, durationMinutes: 50 }]);

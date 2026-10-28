@@ -1,3 +1,5 @@
+import type { WorkoutSport } from '../training.constants';
+
 /**
  * Facts of a run reported by an external source (Strava, Apple Health, …),
  * already merged across sources by the integrations module.
@@ -16,4 +18,6 @@ export interface ImportedWorkoutFacts {
   calories: number | null;
   elevationGainMeters: number | null;
   indoor: boolean;
+  /** Sport of the record; a walk or a strength session never completes a planned run. */
+  sport: WorkoutSport;
 }

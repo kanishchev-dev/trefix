@@ -21,7 +21,14 @@ import {
   ADMIN_WORKOUT_FIELD_RANGES,
   AdminWorkoutEditableStatus,
 } from '../admin-calendar.constants';
-import { WORKOUT_STATUSES, WORKOUT_TYPES, WorkoutStatus, WorkoutType } from '../training.constants';
+import {
+  WORKOUT_SPORTS,
+  WORKOUT_STATUSES,
+  WORKOUT_TYPES,
+  WorkoutSport,
+  WorkoutStatus,
+  WorkoutType,
+} from '../training.constants';
 
 /** Calendar day without time, as the admin picks it in the date picker. */
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -72,6 +79,15 @@ export class AdminWorkoutCreateDto {
   @ApiProperty({ enum: WORKOUT_TYPES, example: 'easy' })
   @IsIn(WORKOUT_TYPES)
   type!: WorkoutType;
+
+  @ApiPropertyOptional({
+    enum: WORKOUT_SPORTS,
+    default: 'run',
+    description: 'Running, walking, hiking or strength; a strength workout has no distance',
+  })
+  @IsOptional()
+  @IsIn(WORKOUT_SPORTS)
+  sport?: WorkoutSport;
 
   @ApiPropertyOptional({
     minimum: ADMIN_WORKOUT_FIELD_RANGES.durationMinutes.min,
@@ -185,6 +201,9 @@ export class AdminWorkoutResponseDto {
 
   @ApiProperty({ enum: WORKOUT_TYPES })
   type!: WorkoutType;
+
+  @ApiProperty({ enum: WORKOUT_SPORTS })
+  sport!: WorkoutSport;
 
   @ApiProperty({ example: 'base', description: 'Training phase; `adhoc` for workouts outside of a plan' })
   phase!: string;

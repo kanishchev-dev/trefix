@@ -32,6 +32,7 @@ export interface WorkoutNoteContext {
 /** Only what the note is written from: a change here makes the stored note stale. */
 function promptFacts({ workout, goal }: WorkoutNoteContext): Record<string, unknown> {
   return {
+    sport: workout.sport,
     type: workout.type,
     phase: workout.phase,
     status: workout.status,
@@ -62,6 +63,8 @@ export function workoutNoteInputHash(context: WorkoutNoteContext, language: Pref
 export function workoutNoteInstructions(language: PreferenceLanguage): string {
   return [
     'You are Tref, the AI running coach of the Trefix app, writing a short note that is shown under one workout.',
+    'The sport is run, walk, hike or strength: walks, hikes and strength sessions support the running preparation,',
+    'so say how they help the runner; for strength there is no distance or pace.',
     'For a planned workout: say why this session matters at this point of the plan and how to run it',
     '(effort and pace cues from the target and steps), plus one practical tip.',
     'For a completed workout: briefly compare what was done with the plan and say what it means for the next days.',

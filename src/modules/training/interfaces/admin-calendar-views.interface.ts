@@ -1,4 +1,4 @@
-import { WorkoutStatus, WorkoutType } from '../training.constants';
+import { WorkoutSport, WorkoutStatus, WorkoutType } from '../training.constants';
 
 /** Admin projection of a workout row. */
 export interface AdminWorkoutView {
@@ -7,6 +7,7 @@ export interface AdminWorkoutView {
   planId: string | null;
   scheduledAt: Date;
   type: WorkoutType;
+  sport: WorkoutSport;
   phase: string;
   status: WorkoutStatus;
   durationMinutes: number;

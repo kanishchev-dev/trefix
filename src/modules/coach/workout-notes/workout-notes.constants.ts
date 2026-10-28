@@ -10,7 +10,7 @@ export const COACH_WORKOUT_NOTE_READY_EVENT = 'coach.workout_note.ready';
  * Part of the input hash: bump it when the prompt changes so stored notes are
  * regenerated with the new wording on the next request.
  */
-export const COACH_WORKOUT_NOTE_PROMPT_VERSION = 1;
+export const COACH_WORKOUT_NOTE_PROMPT_VERSION = 2;
 
 /** Notes are short by design: they sit under the workout, not in a chat. */
 export const COACH_WORKOUT_NOTE_MAX_LENGTH = 600;

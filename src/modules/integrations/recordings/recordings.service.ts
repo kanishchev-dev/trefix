@@ -17,10 +17,12 @@ import { StorageUploadedFile } from '../../storage/interfaces/storage-uploaded-f
 import { StorageService } from '../../storage/storage.service';
 import { GearService } from '../../training/gear/gear.service';
 import { GearAssignmentService } from '../../training/gear/gear-assignment.service';
+import { type WorkoutSport } from '../../training/training.constants';
 import {
   GPS_DISTANCE_SOURCES,
   RECORDING_LIMITS,
   type RecordingEnvironment,
+  SPORT_PACE_LIMITS,
   TRACKER_PROVIDER,
 } from '../constants/integrations.constants';
 import { ActivityIngestionService, IngestOutcome } from '../ingestion/activity-ingestion.service';
@@ -33,11 +35,24 @@ import {
 } from './dto/recorded-activity.dto';
 import { RecordedActivity } from './recorded-activity.entity';
 
-const ACTIVITY_TYPE_BY_ENVIRONMENT: Record<RecordingEnvironment, RunningActivityType> = {
+const RUN_TYPE_BY_ENVIRONMENT: Record<Exclude<RecordingEnvironment, 'indoor'>, RunningActivityType> = {
   outdoor: 'run',
   trail: 'trail_run',
   treadmill: 'treadmill',
 };
+
+function sportOf(dto: RecordedActivityDto): WorkoutSport {
+  return dto.sport ?? 'run';
+}
+
+/** Source record kind: a run keeps its surface; other sports are one kind each. */
+function activityTypeOf(dto: RecordedActivityDto): RunningActivityType {
+  const sport = sportOf(dto);
+  if (sport !== 'run') {
+    return sport;
+  }
+  return dto.environment === 'indoor' ? 'treadmill' : RUN_TYPE_BY_ENVIRONMENT[dto.environment];
+}
 
 const OUTCOME_BY_INGEST: Partial<Record<IngestOutcome, RecordingOutcome>> = {
   created: 'created',
@@ -169,9 +184,21 @@ export class RecordingsService {
     if (dto.movingSec > dto.elapsedSec) {
       this.invalid('movingSec', 'Moving time is longer than elapsed time');
     }
-    if (dto.distanceM >= PACE_CHECK_MIN_DISTANCE_M) {
+    const sport = sportOf(dto);
+    if (sport === 'strength') {
+      if (dto.environment !== 'indoor') {
+        this.invalid('environment', 'A strength session is recorded indoors');
+      }
+      if (dto.distanceM > 0) {
+        this.invalid('distanceM', 'A strength session has no distance');
+      }
+    } else if (dto.environment === 'indoor') {
+      this.invalid('environment', 'Only a strength session is recorded as indoor');
+    }
+    if (sport !== 'strength' && dto.distanceM >= PACE_CHECK_MIN_DISTANCE_M) {
+      const limits = SPORT_PACE_LIMITS[sport];
       const pace = (dto.movingSec / dto.distanceM) * 1000;
-      if (pace < RECORDING_LIMITS.minPaceSecPerKm || pace > RECORDING_LIMITS.maxPaceSecPerKm) {
+      if (pace < limits.min || pace > limits.max) {
         this.invalid('distanceM', 'Average pace is out of the plausible range');
       }
     }
@@ -209,7 +236,8 @@ export class RecordingsService {
     await this.workoutImportService.applyTrackerDetails(workoutId, {
       type: outcome === 'created' ? (dto.workoutType ?? undefined) : undefined,
       // Distance records count only runs measured outdoors by satellites.
-      excludeFromRecords: dto.environment !== 'outdoor' || !GPS_DISTANCE_SOURCES.includes(dto.distanceSource),
+      excludeFromRecords:
+        sportOf(dto) !== 'run' || dto.environment !== 'outdoor' || !GPS_DISTANCE_SOURCES.includes(dto.distanceSource),
       rpe: dto.rpe,
       notes: dto.notes,
     });
@@ -232,7 +260,7 @@ export class RecordingsService {
       athleteId,
       source: TRACKER_PROVIDER,
       sourceActivityId: dto.clientSessionId,
-      type: ACTIVITY_TYPE_BY_ENVIRONMENT[dto.environment],
+      type: activityTypeOf(dto),
       startedAt: new Date(dto.startedAt),
       endedAt: new Date(dto.endedAt),
       durationSec: dto.movingSec,
@@ -262,6 +290,7 @@ export class RecordingsService {
       athleteId,
       clientSessionId: dto.clientSessionId,
       environment: dto.environment,
+      sport: sportOf(dto),
       distanceSource: dto.distanceSource,
       plannedWorkoutId: dto.plannedWorkoutId ?? null,
       startedAt: new Date(dto.startedAt),
@@ -332,6 +361,7 @@ export class RecordingsService {
     return {
       id: recording.id,
       environment: recording.environment,
+      sport: recording.sport ?? 'run',
       distanceSource: recording.distanceSource,
       startedAt: recording.startedAt.toISOString(),
       endedAt: recording.endedAt.toISOString(),

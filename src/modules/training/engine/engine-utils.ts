@@ -3,6 +3,7 @@ import {
   ATHLETE_GOAL_DISTANCES,
   MANUAL_PLAN_MAX_WEEKS,
   MANUAL_PLAN_MIN_WEEKS,
+  SPORT_INTENSITY_FACTORS,
   WORKOUT_TYPE_INTENSITY_FACTORS,
 } from '../training.constants';
 import { RelativeWeek } from './engine.types';
@@ -46,6 +47,14 @@ export function resolveDistanceKilometres(distance: string): number {
 
 export function resolveIntensityFactor(workoutType: WorkoutView['type']): number {
   return WORKOUT_TYPE_INTENSITY_FACTORS[workoutType as keyof typeof WORKOUT_TYPE_INTENSITY_FACTORS];
+}
+
+/** Load per minute of a workout: a run by its type, other sports by their own factor. */
+export function resolveWorkoutIntensityFactor(workout: Pick<WorkoutView, 'type' | 'sport'>): number {
+  if (workout.sport && workout.sport !== 'run') {
+    return SPORT_INTENSITY_FACTORS[workout.sport];
+  }
+  return resolveIntensityFactor(workout.type);
 }
 
 export function sumLoadWithin(loads: Array<{ load: number; occurredAt: Date }>, now: Date, days: number): number {

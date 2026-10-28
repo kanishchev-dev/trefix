@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InvariantViolationException } from '@/common/exceptions/invariant-violation.exception';
 
 import type { ImportedWorkoutFacts } from '../../training/interfaces/imported-workout.interface';
-import { ACTIVITY_DEDUP, ACTIVITY_SOURCE_PRIORITY } from '../constants/integrations.constants';
+import { ACTIVITY_DEDUP, ACTIVITY_SOURCE_PRIORITY, SPORT_BY_ACTIVITY_TYPE } from '../constants/integrations.constants';
 import type { WorkoutSourceFacts } from '../entities/workout-source.entity';
 import type { ActivitySource } from '../interfaces/running-activity.interface';
 
@@ -130,7 +130,8 @@ export class ActivityDedupService {
         cadence: pick('cadence'),
         calories: pick('calories'),
         elevationGainMeters: pick('elevationGainMeters'),
-        indoor: type === 'treadmill' || type === 'virtual_run',
+        indoor: type === 'treadmill' || type === 'virtual_run' || type === 'strength',
+        sport: SPORT_BY_ACTIVITY_TYPE[type] ?? 'run',
       },
     };
   }
