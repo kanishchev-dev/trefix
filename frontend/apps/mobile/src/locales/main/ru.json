@@ -1,0 +1,3219 @@
+{
+  "meta": {
+    "language": "ru"
+  },
+  "tabs": {
+    "today": "Сегодня",
+    "plan": "План",
+    "progress": "Прогресс",
+    "profile": "Профиль"
+  },
+  "today": {
+    "title": "Сегодня",
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "noEvents": "Нет запланированных событий",
+    "backToToday": "Сегодня",
+    "addSectionTitle": "Добавить тренировку",
+    "workoutsSectionTitle": "Тренировки",
+    "types": {
+      "easy": "Легкий бег",
+      "tempo": "Темповая",
+      "interval": "Интервалы",
+      "hill": "Горки",
+      "race": "Гонка"
+    },
+    "goalSheet": {
+      "title": "Укажите цель",
+      "pastTitle": "Как прошло",
+      "tabs": {
+        "none": "Без цели",
+        "duration": "Время",
+        "distance": "Дистанция"
+      },
+      "distanceUnit": "км",
+      "durationUnit": "мин",
+      "timeLimit": "Уложиться за",
+      "notSet": "Не задано",
+      "estimateDistance": "≈ {{distance}} в темпе {{pace}}",
+      "estimateDuration": "≈ {{duration}} в темпе {{pace}}",
+      "corridor": "Темп {{pace}} — коридор {{min}}–{{max}}",
+      "noGoalHint": "Запишем время и дистанцию без цели",
+      "startNow": "Начать сейчас",
+      "submit": "Добавить",
+      "save": "Сохранить",
+      "cancel": "Отменить",
+      "done": "Готово",
+      "clear": "Убрать",
+      "fields": {
+        "distance": "Дистанция",
+        "duration": "Время",
+        "heartRate": "Средний пульс",
+        "rpe": "Нагрузка, RPE"
+      },
+      "empty": {
+        "distance": "Не указана",
+        "duration": "Не указано",
+        "heartRate": "Не указан",
+        "rpe": "Не указана"
+      },
+      "timeLabels": {
+        "h": "ч",
+        "min": "мин",
+        "s": "с"
+      },
+      "bpm": "уд/мин",
+      "pastRequired": "Укажите дистанцию и время",
+      "invalidValue": "Укажите значение больше 0",
+      "errorDefault": "Не удалось добавить тренировку. Попробуйте ещё раз."
+    },
+    "eventTypes": {
+      "workout": "Тренировка",
+      "recovery": "Восстановление",
+      "rest": "Отдых",
+      "insight": "Инсайт"
+    },
+    "workout": {
+      "statuses": {
+        "planned": "Запланировано",
+        "completed": "Выполнено",
+        "missed": "Пропущено",
+        "modified": "Изменено Трефиксом"
+      },
+      "intensity": {
+        "1": "низкая интенсивность",
+        "2": "средняя интенсивность",
+        "3": "высокая интенсивность"
+      }
+    },
+    "recovery": {
+      "title": "Восстановление",
+      "description": "Вашему телу нужен отдых"
+    },
+    "addSheet": {
+      "title": "Добавить тренировку",
+      "planTab": "Запланировать",
+      "logTab": "Внести выполненную",
+      "dateLabel": "Дата (ГГГГ-ММ-ДД)",
+      "titleLabel": "Название (опционально)",
+      "titlePlaceholder": "Например: Утренняя тренировка",
+      "typeLabel": "ТИП ТРЕНИРОВКИ",
+      "planDistance": "План км",
+      "planDuration": "План мин",
+      "actualDistance": "Дистанция (км)",
+      "actualDuration": "Время (мин)",
+      "heartRate": "Ср. пульс (уд/мин)",
+      "rpe": "Усилие RPE (1-10)",
+      "notes": "Заметки / Ощущения",
+      "notesPlaceholder": "Хорошее самочувствие, ноги свежие...",
+      "submitPlan": "Запланировать",
+      "submitLog": "Сохранить результат",
+      "cancel": "Отменить",
+      "invalidDistance": "Укажите корректную дистанцию",
+      "invalidDuration": "Укажите корректную продолжительность"
+    },
+    "detailSheet": {
+      "result": "Результат",
+      "actualDistance": "Факт дистанция",
+      "actualDuration": "Факт время",
+      "avgHeartRate": "Средний пульс",
+      "rpeRating": "Оценка усилия RPE",
+      "analysisTitle": "Анализ выполнения",
+      "loadLabel": "Нагрузка",
+      "plannedLoad": "план",
+      "completingHeader": "Введите фактические данные",
+      "saveResultButton": "Сохранить результат"
+    },
+    "details": {
+      "session": "Структура",
+      "description": "Описание",
+      "start": "Начать тренировку",
+      "coachNote": {
+        "author": "Треф",
+        "role": "Ваш тренер",
+        "writing": "Пишет комментарий…"
+      },
+      "markDone": "Отметить выполненной",
+      "planned": "план {{distance}} за {{duration}}",
+      "chartLevels": {
+        "1": "Низкая",
+        "2": "Средняя",
+        "3": "Высокая"
+      },
+      "manual": {
+        "saved": "Тренировка изменена",
+        "removed": "Тренировка удалена",
+        "removeBody": "Тренировка будет удалена безвозвратно. Вы уверены, что хотите её удалить?"
+      },
+      "menu": {
+        "title": "Действия с тренировкой",
+        "moveHint": "Выбрать другой день",
+        "editHint": "Тип, дистанция и время",
+        "removeHint": "Убрать из календаря"
+      },
+      "sheets": {
+        "moveTitle": "Изменение даты тренировки",
+        "editTitle": "Изменение тренировки",
+        "removeTitle": "Удаление тренировки",
+        "removeBody": "Тренировка будет удалена безвозвратно. Вы уверены, что хотите её удалить?"
+      },
+      "moveToToday": "Перенести на сегодня",
+      "moveToTodayFailed": "Не удалось перенести тренировку. Попробуйте ещё раз.",
+      "futureNote": "Начать можно в день тренировки. Чтобы пробежать сегодня — перенесите её.",
+      "missedNote": "Бегали, но не записали? Отметьте выполненной — подставим цель, останется указать время."
+    }
+  },
+  "plan": {
+    "title": "Тренировочный план",
+    "overview": {
+      "weekProgress": "Неделя {{current}} из {{total}}",
+      "daysToRace": "{{days}} дн. до старта",
+      "status": {
+        "notStarted": "Скоро старт",
+        "active": "Активен",
+        "completed": "План завершён"
+      }
+    },
+    "timeline": {
+      "header": "План подготовки",
+      "weekLabel": "НЕДЕЛЯ {{number}}",
+      "currentBadge": "ТЕКУЩАЯ",
+      "completedBadge": "ПРОЙДЕНА",
+      "upcomingBadge": "ПРЕДСТОИТ",
+      "workoutsCount": "{{count}} тренировки",
+      "distanceKm": "{{distance}} км"
+    },
+    "phases": {
+      "BASE": "БАЗА",
+      "BUILD": "РАЗВИТИЕ",
+      "RECOVERY": "ВОССТАНОВЛЕНИЕ",
+      "SPECIFIC": "СПЕЦИАЛЬНАЯ",
+      "PEAK": "ПИК",
+      "TAPER": "ТЕЙПЕР",
+      "RACE": "ЗАБЕГ"
+    },
+    "currentWeekContext": {
+      "sectionTitle": "На этой неделе",
+      "keyFocus": "Главный фокус"
+    },
+    "adaptations": {
+      "sectionTitle": "Последние изменения",
+      "onTrack": "План выполняется по графику",
+      "daysAgo": "{{days}} дн. назад",
+      "hoursAgo": "{{hours}} ч. назад",
+      "justNow": "Только что",
+      "types": {
+        "ADD_RECOVERY": "Добавлено восстановление",
+        "REDUCE_INTENSITY": "Снижена интенсивность",
+        "REDUCE_VOLUME": "Снижен объём",
+        "INCREASE_VOLUME": "Увеличен объём",
+        "INCREASE_INTENSITY": "Добавлена интенсивность",
+        "MOVE": "Тренировка перенесена",
+        "REPLACE": "Тренировка заменена",
+        "REGENERATE_PLAN": "План пересобран",
+        "UPDATE_HEART_RATE": "Пульс обновлён под новые зоны",
+        "default": "План скорректирован"
+      },
+      "reasons": {
+        "high_fatigue": "Накопилась усталость",
+        "poor_performance": "Тренировка далась тяжелее плана",
+        "low_recovery": "Не хватает восстановления",
+        "excellent_performance": "Тренировки идут отлично",
+        "strong_adaptation": "Организм хорошо адаптируется",
+        "workout_replacement": "Тренировку нужно было заменить",
+        "stable_load": "Нагрузка стабильна",
+        "conservative_progression": "Нагрузку повышаем осторожно",
+        "heart_rate_zones_changed": "Изменились пульсовые зоны"
+      }
+    },
+    "weekDetails": {
+      "title": "Детали недели {{number}}",
+      "weeklyFocus": "Фокус недели",
+      "trainingIntent": "Цель этапа",
+      "plannedVolume": "Запланированный объём",
+      "workouts": "тренировок",
+      "distance": "км",
+      "keySessions": "Ключевые тренировки",
+      "changesThisWeek": "Изменения на этой неделе",
+      "close": "Закрыть"
+    },
+    "adaptationDetails": {
+      "title": "Детали изменения",
+      "whatChanged": "Что изменилось",
+      "whyItChanged": "Почему изменилось",
+      "affectedWeek": "Затронутая неделя",
+      "whenItHappened": "Когда произошло",
+      "close": "Закрыть"
+    },
+    "emptyState": {
+      "title": "Твой тренировочный путь начинается здесь",
+      "description": "План, который подходит именно тебе.",
+      "createButton": "Создать план"
+    },
+    "creation": {
+      "selector": {
+        "title": "Создай свой план",
+        "subtitle": "Как хочешь составить тренировочный план?",
+        "aiTitle": "С Трефикс AI",
+        "aiDescription": "Персональный план на основе твоей цели и текущей формы.",
+        "manualTitle": "Создать вручную",
+        "manualDescription": "Сам составь расписание и тренировки.",
+        "cancel": "Отмена"
+      },
+      "common": {
+        "back": "Назад",
+        "close": "Закрыть",
+        "cancel": "Отмена",
+        "continue": "Далее",
+        "buildPlan": "Создать",
+        "distanceUnit": "км"
+      },
+      "discard": {
+        "title": "Отменить план?",
+        "message": "Твои изменения будут потеряны.",
+        "keepEditing": "Продолжить редактирование",
+        "discard": "Отменить"
+      },
+      "steps": {
+        "goal": {
+          "title": "Выбор цели тренировок",
+          "question": ""
+        },
+        "goalType": {
+          "title": "Выбор цели тренировок",
+          "question": ""
+        },
+        "goalSetup": {
+          "title": "Задайте цель тренировок",
+          "question": "Укажите, к какому результату хотите прийти. По этим значениям строится план: объём, интенсивность и длительность тренировок. Текущие показатели и плановую дату можно не указывать, но с ними план точнее подберёт стартовую нагрузку и рассчитает сроки."
+        },
+        "schedule": {
+          "title": "Ваше расписание",
+          "question": "Укажите, в какие дни вам удобно тренироваться и сколько обычно длится тренировка. План распределит нагрузку только по выбранным дням, оставит между тяжёлыми тренировками время на восстановление и поставит длительную тренировку в удобный для вас день."
+        },
+        "structure": {
+          "title": "Структура плана",
+          "question": "Определите, сколько недель займёт подготовка, сколько тренировок будет в неделе и на чём сделать акцент. От этого зависит, как быстро растёт нагрузка и какие тренировки чаще встречаются в плане. Перед созданием вы увидите план целиком и сможете его поправить."
+        }
+      },
+      "categories": {
+        "race_event": "Забеги и соревнования",
+        "performance": "Результативность и скорость",
+        "training_habit": "Привычки и регулярность",
+        "fitness_lifestyle": "Фитнес и здоровье",
+        "challenge": "Челленджи",
+        "flexible": "Своя цель"
+      },
+      "goalTypes": {
+        "prepare_for_race": "Подготовка к забегу",
+        "improve_race_result": "Улучшить результат",
+        "run_new_distance": "Новая дистанция",
+        "trail_preparation": "Трейловый бег",
+        "ultra_preparation": "Ультрамарафон",
+        "backyard_preparation": "Backyard Ultra",
+        "improve_speed": "Развитие скорости",
+        "improve_pace": "Улучшение темпа",
+        "build_endurance": "Развитие выносливости",
+        "improve_aerobic_fitness": "Аэробная база",
+        "improve_hills": "Горки",
+        "start_running": "Начать бегать",
+        "return_to_running": "Возврат к бегу",
+        "build_consistency": "Регулярность бега",
+        "increase_running_volume": "Рост объёма",
+        "run_continuously": "Непрерывный бег",
+        "lose_weight": "Снижение веса",
+        "maintain_fitness": "Поддержание формы",
+        "general_health": "Здоровье и тонус",
+        "complete_challenge": "Челлендж",
+        "custom": "Своя цель"
+      },
+      "goalDescriptions": {
+        "prepare_for_race": "Подготовка к финишу на целевой дистанции с временем или без",
+        "improve_race_result": "Целевое время на выбранной дистанции забега",
+        "run_new_distance": "Подготовка к новой, ранее не преодолевавшейся дистанции",
+        "trail_preparation": "Подготовка к бегу по пересечённой местности с набором высоты",
+        "ultra_preparation": "Подготовка к дистанциям длиннее марафона",
+        "backyard_preparation": "Подготовка к многочасовому круговому формату Backyard",
+        "improve_speed": "Фокус на интервалах и коротких быстрых отрезках",
+        "improve_pace": "Способность удерживать более высокий средний темп",
+        "build_endurance": "Увеличение длительности бега и объёма длинных тренировок",
+        "improve_aerobic_fitness": "Развитие базы, аэробного порога и эффективного пульса",
+        "improve_hills": "Укрепление силы и выносливости при беге в подъёмы",
+        "start_running": "Безопасный старт с чередованием бега и шага",
+        "return_to_running": "Плавный возврат к тренировкам после перерыва",
+        "build_consistency": "Закрепление привычки бегать фиксированное число дней в неделю",
+        "increase_running_volume": "Безопасное увеличение недельного километража или времени",
+        "run_continuously": "Бег без остановок и перехода на шаг на время или дистанцию",
+        "lose_weight": "Беговая программа, согласованная с целью снижения веса",
+        "maintain_fitness": "Сохранение текущего уровня формы в комфортном ритме",
+        "general_health": "Тренировки для тонуса, хорошего самочувствия и энергии",
+        "complete_challenge": "Достижение месячной или индивидуальной беговой цели",
+        "custom": "Свободное описание вашей цели своими словами"
+      },
+      "fields": {
+        "currentSection": "Текущие показатели",
+        "targetSection": "Целевой показатель",
+        "optionalLabel": "Необязательно",
+        "requiredLabel": "Обязательно",
+        "distance": "Дистанция",
+        "targetTime": "Целевое время",
+        "currentResult": "Текущий результат",
+        "currentPace": "Текущий темп",
+        "targetPace": "Целевой темп",
+        "targetWeight": "Целевой вес",
+        "currentWeight": "Текущий вес",
+        "targetRunsPerWeek": "Цель тренировок в неделю",
+        "currentRunsPerWeek": "Текущее кол-во тренировок в неделю",
+        "weeklyVolumeDistance": "Недельный объём",
+        "weeklyVolumeDuration": "Недельная длительность",
+        "continuousDuration": "Время непрерывного бега",
+        "continuousDistance": "Дистанция непрерывного бега",
+        "elevationGain": "Набор высоты",
+        "timeOnFeet": "Время на ногах",
+        "loopsCount": "Количество кругов",
+        "shortDistanceResult": "Результат на короткой дистанции",
+        "benchmarkValue": "Тестовый показатель",
+        "challengeMetric": "Показатель челленджа",
+        "challengeTarget": "Цель челленджа",
+        "challengePeriod": "Период",
+        "challengeProgress": "Текущий прогресс",
+        "customDescriptionLabel": "Опишите, чего вы хотите достичь",
+        "customDescriptionPlaceholder": "Например: хочу комфортно бегать с местным беговым клубом дважды в неделю по часу.",
+        "targetDate": "Целевая дата"
+      },
+      "challengeMetrics": {
+        "total_distance": "Общая дистанция",
+        "total_duration": "Общая длительность",
+        "runs_count": "Количество тренировок",
+        "active_days": "Активные дни"
+      },
+      "challengePeriods": {
+        "this_week": "На этой неделе",
+        "this_month": "В этом месяце",
+        "this_year": "В этом году",
+        "custom": "К определенной дате"
+      },
+      "goalSection": "Дистанция",
+      "targetTimeSection": "Целевое время",
+      "targetTimePlaceholder": "45:00",
+      "targetDateSection": "Целевая дата",
+      "trainingDaysSection": "Укажите дни тренировок",
+      "trainingDaysHint": "Выберите дни, когда вы точно сможете бегать. Остальные дни станут днями отдыха.",
+      "sessionsPerWeekText": "Тренировок в неделю: {{count}}",
+      "longRunSection": "Укажите день длительной",
+      "longRunHint": "Самая продолжительная тренировка недели, обычно её ставят на выходной. Если день не выбран, план определит его сам.",
+      "durationSection": "Укажите длительность тренировки",
+      "durationHint": "Сколько времени вы обычно готовы уделить одной тренировке. Длительная может быть дольше.",
+      "weeksLabel": "Укажите длительность плана",
+      "weeksHint": "Сколько недель займёт подготовка. Чем больше недель, тем плавнее растёт нагрузка.",
+      "weeksSuffix": "недель",
+      "sessionsLabel": "Количество тренировок в неделю",
+      "sessionsHint": "Не больше, чем выбрано дней тренировок. Остальные дни останутся свободными.",
+      "focusSection": "Выберите акценты тренировок",
+      "focusHint": "Какие тренировки будут встречаться в плане чаще. Можно выбрать несколько или не выбирать ни одного.",
+      "goals": {
+        "halfMarathon": "Полумарафон",
+        "marathon": "Марафон",
+        "justRunning": "Просто бегать"
+      },
+      "focusOptions": {
+        "easy": "Лёгкий бег",
+        "long_run": "Длительная",
+        "tempo": "Темповая",
+        "interval": "Интервалы",
+        "hill": "Горки"
+      },
+      "workoutTypes": {
+        "easy": "Лёгкая",
+        "long_run": "Длительная",
+        "tempo": "Темповая",
+        "threshold": "Пороговая",
+        "interval": "Интервалы",
+        "hill": "Горки",
+        "recovery": "Восстановительная"
+      },
+      "preview": {
+        "title": "Проверьте план",
+        "hint": "Так будет выглядеть ваш план. Нажмите на тренировку, чтобы изменить её или убрать. После создания план появится в разделе «План».",
+        "statWeeks": "недель",
+        "statRuns": "трен. в неделю",
+        "statDistance": "км всего",
+        "startsOn": "Старт {{date}}",
+        "weekLabel": "Неделя {{number}}",
+        "weekSummary": "Тренировок: {{workouts}} · {{distance}} км",
+        "edited": "изменено",
+        "createButton": "Создать план",
+        "phases": {
+          "BASE": "база",
+          "BUILD": "развитие",
+          "RECOVERY": "восстановление",
+          "SPECIFIC": "специальная подготовка",
+          "PEAK": "пик",
+          "TAPER": "подводка",
+          "RACE": "забег"
+        },
+        "phaseTitles": {
+          "BASE": "Втягивание и регулярность",
+          "BUILD": "Рост нагрузки",
+          "RECOVERY": "Восстановление",
+          "SPECIFIC": "Специальная работа",
+          "PEAK": "Пиковая подготовка",
+          "TAPER": "Снижение нагрузки перед стартом",
+          "RACE": "Неделя забега"
+        },
+        "phaseIntents": {
+          "BASE": "Наладить регулярный бег и спокойную аэробную базу.",
+          "BUILD": "Развивать аэробную выносливость и восстанавливаться между ключевыми тренировками.",
+          "RECOVERY": "Дать телу усвоить прошлую нагрузку, сохраняя регулярность.",
+          "SPECIFIC": "Привыкнуть к целевому темпу забега и держать ритм.",
+          "PEAK": "Провести последнюю ключевую тренировку-имитацию забега перед снижением объёма.",
+          "TAPER": "Сбросить накопленную усталость и сохранить свежесть.",
+          "RACE": "Отдыхать, пить воду, запастись углеводами и пробежать забег."
+        }
+      },
+      "goalForm": {
+        "goalSection": "Цель",
+        "goalHint": "Чего вы хотите достичь. По этим значениям строится план.",
+        "currentSection": "Текущие показатели",
+        "currentHint": "Ваш уровень на сегодня. Помогает подобрать стартовую нагрузку.",
+        "addCurrent": "Указать текущие показатели",
+        "removeCurrent": "Убрать текущие показатели",
+        "dateSection": "Плановая дата",
+        "dateHint": "Дата забега или срок, к которому нужно достичь цели.",
+        "addDate": "Указать плановую дату",
+        "removeDate": "Убрать дату",
+        "remove": "Убрать",
+        "measureTime": "По времени",
+        "measureDistance": "По дистанции",
+        "raceDistance": "Дистанция забега",
+        "raceDistanceInfo": "Дистанция забега, к которому вы готовитесь.",
+        "trailDistanceInfo": "Протяжённость трассы.",
+        "finishTime": "Целевое время",
+        "addFinishTime": "Указать целевое время",
+        "finishTimeInfo": "Если время не указано, план готовит к уверенному финишу без ориентира на результат.",
+        "bestTime": "Лучший результат",
+        "bestTimeInfo": "Лучшее время на выбранной дистанции.",
+        "longestRun": "Самая длинная тренировка",
+        "longestRunInfo": "Наибольшая дистанция, которую вы пробегали за последние месяцы.",
+        "distance": "Дистанция",
+        "elevation": "Набор высоты",
+        "addElevation": "Указать набор высоты",
+        "trailElevationInfo": "Суммарный набор высоты на трассе.",
+        "hillsElevationInfo": "Набор высоты за одну тренировку.",
+        "weeklyDistance": "Недельный объём",
+        "addWeeklyDistance": "Указать недельный объём",
+        "weeklyDuration": "Время бега в неделю",
+        "addWeeklyDuration": "Указать время бега в неделю",
+        "loops": "Количество кругов",
+        "loopsInfo": "Один круг равен 6,7 км, старт каждый час.",
+        "timeOnFeet": "Максимальное время на ногах",
+        "timeOnFeetInfo": "Самое продолжительное время непрерывного движения.",
+        "pace": "Темп",
+        "paceDistance": "Дистанция",
+        "addPaceDistance": "Указать дистанцию",
+        "paceDistanceInfo": "Дистанция, на которой нужно держать целевой темп.",
+        "continuous": "Непрерывный бег",
+        "addContinuous": "Указать время непрерывного бега",
+        "continuousInfo": "Сколько бежать без остановки: по времени или по дистанции.",
+        "runsPerWeek": "Тренировок в неделю",
+        "addRunsPerWeek": "Указать количество тренировок",
+        "weight": "Вес",
+        "aerobicNote": "Заполнять ничего не нужно: план ориентируется на ваши тренировки и пульс.",
+        "challengeMetric": "Показатель",
+        "challengeTarget": "Целевое значение",
+        "challengePeriod": "Период",
+        "description": "Описание цели",
+        "descriptionPlaceholder": "Например: бегать с беговым клубом дважды в неделю по часу.",
+        "runsUnit": "тренировок",
+        "daysUnit": "дней"
+      },
+      "datePicker": {
+        "noDate": "Без даты",
+        "setDate": "Указать дату",
+        "clearDate": "Убрать дату",
+        "today": "сегодня",
+        "tomorrow": "завтра",
+        "inTime": "через {{value}}",
+        "weeksShort": "{{count}} нед",
+        "daysShort": "{{count}} дн",
+        "outOfPlan": "вне плана {{min}}–{{max}} нед",
+        "weekdays": [
+          "воскресенье",
+          "понедельник",
+          "вторник",
+          "среда",
+          "четверг",
+          "пятница",
+          "суббота"
+        ],
+        "months": [
+          "января",
+          "февраля",
+          "марта",
+          "апреля",
+          "мая",
+          "июня",
+          "июля",
+          "августа",
+          "сентября",
+          "октября",
+          "ноября",
+          "декабря"
+        ]
+      },
+      "units": {
+        "km": "км",
+        "m": "м",
+        "min": "мин",
+        "h": "ч",
+        "kg": "кг"
+      },
+      "workoutEditor": {
+        "title": "Редактировать тренировку",
+        "addButton": "Добавить тренировку",
+        "typeLabel": "Тип тренировки",
+        "dayLabel": "День",
+        "distanceLabel": "Дистанция",
+        "durationLabel": "Длительность",
+        "save": "Сохранить",
+        "addShort": "Добавить",
+        "removeButton": "Удалить"
+      },
+      "errors": {
+        "invalidTargetTime": "Введите время в формате 45:00 или 1:45:00",
+        "invalidTargetDate": "Целевая дата должна быть в будущем",
+        "invalidDistance": "Дистанция должна быть от 1 до 100 км",
+        "invalidDuration": "Длительность должна быть от 10 до 300 минут",
+        "generationFailed": "Не удалось собрать план",
+        "creationFailed": "Не удалось создать план",
+        "tryAgain": "Попробовать снова"
+      },
+      "categoriesAll": "Все"
+    },
+    "notStartedState": {
+      "title": "Ваш план скоро начнётся",
+      "subtitle": "Старт {{date}}",
+      "description": "Готовьтесь к первой неделе. Расписание тренировок откроется автоматически в день старта."
+    },
+    "completedState": {
+      "title": "Цель достигнута!",
+      "description": "Вы успешно прошли все {{total}} недель вашего плана. Отличная работа!",
+      "newGoalButton": "Поставить новую цель"
+    },
+    "errorState": {
+      "title": "Не удалось загрузить план",
+      "description": "Проверьте соединение с сетью и попробуйте снова.",
+      "retryButton": "Попробовать снова"
+    },
+    "screen": {
+      "phaseNames": {
+        "BASE": "База",
+        "BUILD": "Развитие",
+        "RECOVERY": "Восстановление",
+        "SPECIFIC": "Специальная",
+        "PEAK": "Пик",
+        "TAPER": "Тейпер",
+        "RACE": "Забег"
+      },
+      "hero": {
+        "kicker": "Текущий план · неделя {{current}} из {{total}}",
+        "startIn": {
+          "one": "Старт {{date}} · через {{count}} день",
+          "few": "Старт {{date}} · через {{count}} дня",
+          "many": "Старт {{date}} · через {{count}} дней",
+          "other": "Старт {{date}} · через {{count}} дня"
+        },
+        "startToday": "Старт {{date}} · сегодня",
+        "planEnd": "Последняя неделя плана — до {{date}}",
+        "raceOn": "Забег {{date}}"
+      },
+      "thisWeek": {
+        "kicker": "Эта неделя · {{phase}}",
+        "today": "сегодня",
+        "rest": "отдых",
+        "keySessions": "Ключевые: {{list}}",
+        "a11yDay": "{{day}}: {{state}}",
+        "openWeek": "Открыть текущую неделю"
+      },
+      "todayTitle": "Сегодня",
+      "coach": {
+        "weekTitle": "Треф скорректировал неделю {{number}}",
+        "planTitle": "Треф скорректировал план"
+      },
+      "weeks": {
+        "title": "Недели",
+        "phaseRange": "{{phase}} · недели {{from}}–{{to}}",
+        "phaseSingle": "{{phase}} · неделя {{number}}",
+        "weekTitle": "Неделя {{number}} · {{distance}}",
+        "workouts": {
+          "one": "{{count}} тренировка",
+          "few": "{{count}} тренировки",
+          "many": "{{count}} тренировок",
+          "other": "{{count}} тренировки"
+        },
+        "allDone": "всё выполнено",
+        "missed": {
+          "one": "{{count}} пропущена",
+          "few": "{{count}} пропущены",
+          "many": "{{count}} пропущено",
+          "other": "{{count}} пропущено"
+        },
+        "goal": "Цель · {{value}}",
+        "goalFallback": "Цель плана"
+      },
+      "weekSheet": {
+        "kicker": "{{phase}} · неделя {{number}} из {{total}}",
+        "kickerShort": "{{phase}} · неделя {{number}}",
+        "title": "Неделя {{number}}",
+        "volume": "объём",
+        "done": "сделано",
+        "doneValue": "{{done}} из {{total}}",
+        "workouts": "тренировок",
+        "keySessions": "ключевых",
+        "workoutsTitle": "Тренировки",
+        "changesTitle": "Изменения от Трефа",
+        "close": "Закрыть"
+      },
+      "empty": {
+        "title": "Начнём подготовку?",
+        "description": "Выбери, как построить тренировочный план и двигаться к своей цели",
+        "coachTitle": "План с Трефом",
+        "coachHint": "Умный план под твою цель",
+        "manualTitle": "Свой план",
+        "manualHint": "Тренировки по твоим правилам",
+        "howTitle": "Как это работает с AI-тренером",
+        "howCount": "3 шага",
+        "step": "Шаг {{number}}",
+        "steps": [
+          {
+            "title": "Определи цель",
+            "description": "Выбери дистанцию, желаемый результат и дату старта. Треф учтёт их при подготовке плана."
+          },
+          {
+            "title": "Настрой расписание",
+            "description": "Укажи количество тренировок в неделю, удобные дни и желаемый объём."
+          },
+          {
+            "title": "Начни тренироваться",
+            "description": "Треф составит план по неделям, будет анализировать результаты и адаптировать подготовку под твой прогресс."
+          }
+        ],
+        "previewRace": "Полумарафон",
+        "previewTime": "1:45:00",
+        "previewDistance": "21,1 км",
+        "coachBadge": "Треф",
+        "drafts": "Черновики · {{count}}",
+        "start": "Начать",
+        "allPlans": "Все планы и история",
+        "weeksCount": {
+          "one": "{{count}} неделя",
+          "few": "{{count}} недели",
+          "many": "{{count}} недель",
+          "other": "{{count}} недели"
+        },
+        "perWeek": "{{count}} тр./нед"
+      },
+      "details": {
+        "draftKicker": "Черновик · {{weeks}}",
+        "completedKicker": "План завершён",
+        "cancelledKicker": "План отменён",
+        "range": "{{kicker}} · {{range}}",
+        "resultDone": "выполнено",
+        "resultDistance": "пробежано",
+        "resultRate": "выполнение",
+        "resultTime": "результат забега",
+        "longRun": "длительная — {{day}}"
+      }
+    }
+  },
+  "trefix": {
+    "title": "Трефикс",
+    "status": "онлайн",
+    "subtitle": "AI-коуч",
+    "empty": {
+      "title": "AI-коуч всегда рядом.",
+      "body": "Спроси про тренировку, восстановление, питание или прогресс."
+    },
+    "starters": [
+      "Как мне пробежать сегодня?",
+      "Что делать после тяжёлой тренировки?",
+      "Покажи мой прогресс",
+      "Составь план на неделю"
+    ],
+    "composerPlaceholder": "Напишите сообщение...",
+    "errors": {
+      "athleteMissing": "Чтобы поговорить с тренером, заполните профиль спортсмена.",
+      "unavailable": "Тренер сейчас недоступен. Попробуйте ещё раз.",
+      "network": "Нет соединения. Проверьте интернет и попробуйте снова."
+    }
+  },
+  "progress": {
+    "periods": {
+      "4W": "4Н",
+      "8W": "8Н",
+      "3M": "3М",
+      "6M": "6М",
+      "1Y": "1Г"
+    },
+    "askCoach": "Спросить коуча",
+    "sections": {
+      "goal": "Цель",
+      "plan": "План",
+      "forecast": "Прогноз результатов",
+      "formMetrics": "Форма и показатели",
+      "capabilities": "Качества бегуна",
+      "records": "Рекорды",
+      "all": "Все",
+      "dynamics": "Динамика",
+      "achievements": "Достижения"
+    },
+    "goal": {
+      "status": {
+        "achieved": "Достигнута",
+        "on_track": "По графику",
+        "behind": "Отстаёте",
+        "no_data": "Мало данных",
+        "no_forecast": "Без прогноза"
+      },
+      "title": "{{distance}} за {{time}}",
+      "distanceOnly": "{{distance}}",
+      "start": "Старт {{date}}",
+      "weeksLeft": {
+        "one": "через {{count}} неделю",
+        "few": "через {{count}} недели",
+        "many": "через {{count}} недель",
+        "other": "через {{count}} недели"
+      },
+      "forecastNow": "Прогноз сейчас",
+      "remaining": "Осталось сбросить",
+      "ahead": "Запас",
+      "targetLine": "цель {{time}}",
+      "projectionNote": "Пунктир — прогноз при текущем темпе роста",
+      "noDataHint": "Добавьте результат или тренировку дольше 10 минут — появится прогноз"
+    },
+    "forecastCard": {
+      "basis": {
+        "one": "Оценка по {{count}} тренировке",
+        "few": "Оценка по {{count}} тренировкам",
+        "many": "Оценка по {{count}} тренировкам",
+        "other": "Оценка по {{count}} тренировкам"
+      },
+      "setGoal": "Поставить цель",
+      "setGoalDescription": "Коуч соберёт план под неё",
+      "empty": "Нужна хотя бы одна тренировка дольше 10 минут"
+    },
+    "form": {
+      "title": "Набор формы",
+      "fitness": "Фитнес",
+      "fatigue": "Усталость",
+      "form": "Форма",
+      "change": "за {{weeks}} нед.",
+      "thresholdPace": "Порог. темп",
+      "vo2max": "VO₂max",
+      "thresholdHr": "Порог ЧСС",
+      "estimate": "оценка",
+      "fromProfile": "из профиля",
+      "locked": {
+        "one": "Ещё {{count}} тренировка",
+        "few": "Ещё {{count}} тренировки",
+        "many": "Ещё {{count}} тренировок",
+        "other": "Ещё {{count}} тренировки"
+      },
+      "lockedDescription": "Откроются форма, порог и VO₂max"
+    },
+    "capabilities": {
+      "endurance": "Выносливость",
+      "threshold": "Порог",
+      "speed": "Скорость",
+      "recovery": "Восстановление",
+      "consistency": "Регулярность"
+    },
+    "records": {
+      "distances": {
+        "1k": "1 км",
+        "5k": "5 км",
+        "10k": "10 км",
+        "half_marathon": "Полумарафон",
+        "marathon": "Марафон"
+      },
+      "noResult": "Нет результата",
+      "add": "Добавить",
+      "new": "Новый",
+      "sources": {
+        "strava": "из Strava",
+        "workout": "тренировка",
+        "race": "забег",
+        "test": "тест",
+        "manual": "вручную",
+        "health": "из приложения здоровья"
+      },
+      "emptyTitle": "Пока нет результатов",
+      "emptyDescription": "Коуч учтёт их в прогнозах",
+      "addResult": "Добавить результат"
+    },
+    "dynamics": {
+      "metrics": {
+        "distance": "Дистанция",
+        "pace": "Темп",
+        "heartRate": "Пульс",
+        "load": "Нагрузка"
+      },
+      "captions": {
+        "distance": {
+          "week": "в неделю в среднем",
+          "month": "в месяц в среднем"
+        },
+        "pace": "средний темп",
+        "heartRate": "средний пульс",
+        "load": {
+          "week": "нагрузка в неделю",
+          "month": "нагрузка в месяц"
+        }
+      },
+      "profileHint": "Привычный объём в профиле — {{value}}",
+      "update": "Обновить",
+      "noData": "Нет тренировок за период",
+      "bpm": "уд/мин"
+    },
+    "achievements": {
+      "longest_run": "Самая длинная тренировка",
+      "streak": {
+        "one": "{{count}} неделя без пропусков",
+        "few": "{{count}} недели без пропусков",
+        "many": "{{count}} недель без пропусков",
+        "other": "{{count}} недели без пропусков"
+      },
+      "new_record": "Рекорд на {{distance}}",
+      "total_distance": "{{value}} всего",
+      "since": "с {{date}}",
+      "empty": "Появятся по мере тренировок"
+    },
+    "recordsScreen": {
+      "title": "Рекорды",
+      "distance": "Дистанция",
+      "best": "Лучшее",
+      "prediction": "Прогноз",
+      "footnote": "Прогноз — оценка по текущей форме, если бежать на максимум сегодня.",
+      "history": "{{distance}} · история",
+      "excludeFootnote": "Долгое нажатие — исключить ошибочную тренировку или удалить результат.",
+      "exclude": "Исключить из рекордов",
+      "delete": "Удалить результат",
+      "cancel": "Отмена",
+      "noAttempts": "Пока нет попыток на этой дистанции"
+    },
+    "addResult": {
+      "title": "Добавить результат",
+      "distance": "Дистанция",
+      "other": "Другая",
+      "time": "Время",
+      "hours": "ч",
+      "minutes": "мин",
+      "seconds": "с",
+      "pace": "Темп {{pace}}",
+      "where": "Где",
+      "kinds": {
+        "race": "Забег",
+        "workout": "Тренировка",
+        "test": "Тест"
+      },
+      "name": "Название",
+      "namePlaceholder": "Необязательно",
+      "date": "Дата",
+      "note": "Коуч обновит прогнозы",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "saved": "Результат добавлен"
+    },
+    "metric": {
+      "titles": {
+        "threshold_pace": "Пороговый темп",
+        "vo2max": "VO₂max"
+      },
+      "faster": "на {{value}} быстрее",
+      "slower": "на {{value}} медленнее",
+      "higher": "+{{value}}",
+      "lower": "−{{value}}",
+      "unchanged": "без изменений",
+      "forPeriod": "за период",
+      "updated": "обновлён {{ago}}",
+      "howTitle": "Как посчитано",
+      "source": "Источник",
+      "sourceValue": "Лучшие тренировки и результаты за 90 дней",
+      "accuracy": "Точность",
+      "accuracyLevels": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "accuracyCount": {
+        "one": "{{count}} тренировка",
+        "few": "{{count}} тренировки",
+        "many": "{{count}} тренировок",
+        "other": "{{count}} тренировки"
+      },
+      "zones": "Пульсовые зоны",
+      "zonesByMax": "По макс. пульсу {{value}}",
+      "zonesByThreshold": "По порогу {{value}}",
+      "zonesNotSet": "Пульс не указан",
+      "thresholdHint": "Укажите пороговый пульс в профиле — зоны станут точнее",
+      "planTitle": "Что это значит для тренировок",
+      "easy": "Лёгкий бег",
+      "tempo": "Темповые",
+      "interval": "Интервалы",
+      "topTitle": "Повлияли сильнее всего",
+      "noData": "Пока нет данных — нужна тренировка дольше 10 минут"
+    },
+    "errors": {
+      "generic": "Не получилось сохранить. Попробуйте ещё раз",
+      "RESULT_INVALID": "Проверьте дистанцию, время и дату"
+    },
+    "retry": "Повторить",
+    "loadError": "Не удалось загрузить прогресс"
+  },
+  "profile": {
+    "hero": {
+      "name": "Алекс Джонсон",
+      "joined": "Зарегистрирован в сентябре 2026",
+      "edit": "Изм.",
+      "subscription": "Premium",
+      "expires": "Истекает 30 сентября 2026",
+      "inactive": "Подписка не активна",
+      "inactiveHint": "Продлите подписку, чтобы вернуть доступ к Premium",
+      "changePhoto": "Изменить фото",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "save": "Сохранить изменения"
+    },
+    "qr": {
+      "title": "QR-код",
+      "partnerCode": "Код партнёра",
+      "close": "Закрыть"
+    },
+    "referral": {
+      "title": "Реферальный код"
+    },
+    "settings": {
+      "title": "Настройки",
+      "notifications": "Уведомления",
+      "notificationsTitle": "Уведомления",
+      "notificationsWorkout": "Напоминания о тренировках",
+      "notificationsWorkoutDesc": "Пуш-уведомления о предстоящих занятиях",
+      "notificationsWeekly": "Еженедельный отчёт",
+      "notificationsWeeklyDesc": "Сводка результатов и изменения формы за неделю",
+      "notificationsAi": "Обновления от AI-коуча",
+      "notificationsAiDesc": "Инсайты и рекомендации Трефикса по плану",
+      "language": "Язык",
+      "languageTitle": "Язык приложения",
+      "languages": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "theme": "Тема",
+      "themeTitle": "Оформление",
+      "themes": {
+        "system": "Как в системе",
+        "dark": "Тёмная",
+        "light": "Светлая"
+      }
+    },
+    "integrations": {
+      "title": "Интеграции",
+      "subtitle": "Подключённые сервисы",
+      "comingSoon": "Скоро",
+      "strava": {
+        "title": "Strava",
+        "description": "Автоматический импорт тренировок для адаптации вашего тренировочного плана.",
+        "disconnectedStatus": "Не подключено",
+        "connectedStatus": "Подключено",
+        "reauthStatus": "Требуется авторизация",
+        "errorStatus": "Ошибка синхронизации",
+        "connectBtn": "Подключить Strava",
+        "reconnectBtn": "Переподключить Strava",
+        "syncNow": "Синхронизировать сейчас",
+        "disconnect": "Отключить",
+        "connectedStateTitle": "Strava подключена",
+        "connectionExpiredTitle": "Сессия истекла",
+        "reconnectDesc": "Пожалуйста, переподключите ваш аккаунт Strava для продолжения синхронизации.",
+        "lastSyncLabel": "Последняя синхронизация",
+        "activitiesImportedLabel": "Импортировано тренировок",
+        "justNow": "Только что",
+        "importingHistory": "Импорт истории тренировок..."
+      },
+      "health": {
+        "appleTitle": "Apple Health",
+        "connectTitle": "Health Connect",
+        "status": {
+          "disconnected": "Не подключено",
+          "connected": "Подключено",
+          "syncedAgo": "Подключено · синхронизация {{ago}}",
+          "syncing": "Синхронизация…",
+          "noData": "Нужен доступ",
+          "error": "Ошибка синхронизации",
+          "notInstalled": "Не установлено",
+          "updateRequired": "Нужно обновить",
+          "unsupported": "Недоступно на устройстве"
+        },
+        "intro": "Тренировки с часов и телефона будут попадать в Trefix сами — без Strava и ручного ввода.",
+        "whatTitle": "Что получит Trefix",
+        "what": [
+          "Беговые тренировки, в том числе на дорожке",
+          "Пульс, дистанцию и набор высоты",
+          "Вес и пульс покоя для профиля"
+        ],
+        "privacy": "Trefix только читает данные: ничего не записывает и не передаёт третьим лицам.",
+        "stravaNote": "Тренировки, которые Strava сохраняет в {{store}}, не задвоятся.",
+        "connect": "Подключить",
+        "connecting": "Подключение…",
+        "statusTitle": "Синхронизация",
+        "lastSync": "Последняя синхронизация",
+        "never": "Ещё не было",
+        "imported": "Импортировано тренировок",
+        "inProgress": "Загружаем тренировки…",
+        "syncNow": "Синхронизировать сейчас",
+        "settingsTitle": "Настройки",
+        "profileSync": "Обновлять профиль",
+        "profileSyncDescription": "Вес и пульс покоя",
+        "access": "Доступ к данным",
+        "accessDescriptionIos": "Разрешения в Apple Health",
+        "accessDescriptionAndroid": "Разрешения Health Connect",
+        "disconnect": "Отключить",
+        "disconnectTitle": "Отключить {{store}}?",
+        "disconnectBody": "Новые тренировки перестанут приходить. Тренировки, которые уже есть в Trefix, останутся. Доступ к данным можно отозвать в настройках {{store}}.",
+        "disconnectConfirm": "Отключить",
+        "disconnected": "{{store}} отключено",
+        "noWorkoutsTitle": "Тренировок не нашлось",
+        "noWorkoutsBody": "Проверьте, что Trefix разрешено читать «Тренировки» в Apple Health.",
+        "openHealth": "Открыть Apple Health",
+        "historyTitle": "Загружены только последние 30 дней",
+        "historyBody": "Разрешите доступ к истории, чтобы загрузить тренировки за полгода.",
+        "historyAction": "Разрешить доступ к истории",
+        "deniedTitle": "Нет доступа к тренировкам",
+        "deniedBody": "Без доступа к тренировкам синхронизация невозможна. Разрешите его в настройках Health Connect.",
+        "openSettings": "Открыть настройки",
+        "notInstalledTitle": "Нужен Health Connect",
+        "notInstalledBody": "Установите Health Connect из Google Play, чтобы Trefix получал тренировки.",
+        "install": "Установить Health Connect",
+        "updateTitle": "Обновите Health Connect",
+        "updateBody": "Установленная версия Health Connect устарела.",
+        "update": "Обновить",
+        "unsupportedTitle": "Недоступно на этом устройстве",
+        "unsupportedBodyIos": "На этом устройстве нет Apple Health.",
+        "unsupportedBodyAndroid": "Health Connect недоступен на этом устройстве.",
+        "syncFailed": "Не удалось синхронизировать",
+        "synced": "Синхронизировано",
+        "connectFailed": "Не удалось подключить",
+        "consent": {
+          "title": "Данные о здоровье",
+          "body": "Trefix будет получать из {{store}} беговые тренировки, пульс, дистанцию, вес и пульс покоя. Они нужны, чтобы строить план, анализировать тренировки и давать советы AI-коуча. Данные хранятся на серверах Trefix и не передаются третьим лицам. Согласие можно отозвать в любой момент — интеграция отключится.",
+          "checkbox": "Я даю согласие на обработку данных о здоровье",
+          "policy": "Политика конфиденциальности",
+          "continue": "Продолжить",
+          "cancel": "Отмена"
+        },
+        "sourceLabel": "Источник",
+        "sourceMore": "и ещё {{count}}"
+      }
+    },
+    "legal": {
+      "privacy": "Политика конфиденциальности",
+      "terms": "Правила использования"
+    },
+    "danger": {
+      "title": "Удалить аккаунт"
+    },
+    "logout": "Выйти из приложения",
+    "version": "Версия",
+    "sections": {
+      "athlete": "Атлет",
+      "trefix": "Треф",
+      "app": "Приложение",
+      "account": "Аккаунт"
+    },
+    "rows": {
+      "body": "Тело",
+      "heart": "Пульс и зоны",
+      "schedule": "Расписание и объём",
+      "gear": "Снаряжение",
+      "experience": "Опыт и ограничения",
+      "coach": "AI-коуч",
+      "units": "Единицы и формат",
+      "notifications": "Уведомления",
+      "language": "Язык",
+      "theme": "Тема",
+      "integrations": "Интеграции",
+      "signIn": "Вход и email",
+      "privacy": "Данные и приватность",
+      "delete": "Удалить аккаунт",
+      "logout": "Выйти"
+    },
+    "summary": {
+      "notSet": "Не указано",
+      "gearEmpty": "Следите за износом кроссовок",
+      "runningSince": "Бегает с {{year}}",
+      "age": "{{age}}",
+      "heart": "Покой {{rest}} · макс {{max}}",
+      "heartThreshold": "порог {{value}}",
+      "volume": "~{{value}}",
+      "on": "Вкл.",
+      "off": "Выкл.",
+      "replaceSoon": "Скоро замена",
+      "synced": "Синхронизировано {{ago}}",
+      "notConnected": "Не подключено",
+      "years": {
+        "one": "{{count}} год",
+        "few": "{{count}} года",
+        "many": "{{count}} лет",
+        "other": "{{count}} лет"
+      }
+    },
+    "levels": {
+      "beginner": "Новичок",
+      "intermediate": "Средний",
+      "advanced": "Продвинутый"
+    },
+    "completeness": {
+      "title": "Расскажите о себе",
+      "description": "Коуч точнее подберёт нагрузку · {{percent}}%",
+      "action": "Заполнить"
+    },
+    "stravaCard": {
+      "title": "Подключите Strava",
+      "description": "Тренировки, вес и кроссовки подтянутся сами",
+      "action": "Подключить"
+    },
+    "body": {
+      "title": "Тело",
+      "birthDate": "Дата рождения",
+      "sex": "Пол",
+      "height": "Рост",
+      "weight": "Вес",
+      "sexes": {
+        "female": "Женский",
+        "male": "Мужской"
+      },
+      "source": "Источник данных",
+      "stravaSync": "Обновлять из Strava",
+      "stravaSyncDescription": "Подтягивать вес, пол и кроссовки",
+      "allowAccess": "Разрешить доступ к профилю",
+      "allowAccessDescription": "Strava попросит подтвердить",
+      "footnote": "Значок S — значение из Strava. Изменённое вручную поле больше не перезаписывается"
+    },
+    "heart": {
+      "title": "Пульс и зоны",
+      "values": "Ваши значения",
+      "rest": "Пульс покоя",
+      "max": "Максимальный пульс",
+      "threshold": "Пороговый пульс",
+      "notSet": "Не указан",
+      "estimate": "≈ {{value}} по возрасту",
+      "thresholdHint": "Не знаете порог? Укажите позже — зоны посчитаем по максимальному",
+      "zones": "Пульсовые зоны",
+      "methods": {
+        "threshold": "По порогу",
+        "max_hr": "По пульсу",
+        "custom": "Свои"
+      },
+      "unavailable": {
+        "threshold_missing": "Укажите пороговый пульс",
+        "max_missing": "Укажите максимальный пульс",
+        "custom_missing": "Задайте границы зон"
+      },
+      "specify": "Указать",
+      "zoneNames": [
+        "Восстановление",
+        "Аэробная",
+        "Темповая",
+        "Пороговая",
+        "Максимальная"
+      ],
+      "editZones": "Изменить границы",
+      "customTitle": "Границы зон",
+      "zoneUpper": "Верх Z{{zone}}",
+      "planNote": "Коуч предложит обновить пульс в плане"
+    },
+    "schedule": {
+      "title": "Расписание и объём",
+      "days": "Дни тренировок",
+      "time": "Удобное время",
+      "times": {
+        "morning": "Утро",
+        "day": "День",
+        "evening": "Вечер",
+        "any": "Любое"
+      },
+      "perWeek": "Тренировок в неделю",
+      "longRunDay": "День длительной",
+      "usual": "Обычная тренировка",
+      "longRun": "Длительная",
+      "upTo": "до {{value}}",
+      "volume": "Привычный объём",
+      "volumeValue": "~{{value}} в неделю",
+      "suggestion": "По тренировкам в среднем {{value}} в неделю",
+      "suggestionApply": "Поставить",
+      "footnote": "Текущий план не меняется — пересоберите его, чтобы учесть новое расписание"
+    },
+    "experience": {
+      "title": "Опыт и ограничения",
+      "level": "Уровень",
+      "since": "Бегаю с",
+      "limitations": "Травмы и ограничения",
+      "limitationsPlaceholder": "Например, колено после травмы",
+      "none": "Ограничений нет",
+      "noneValue": "Нет",
+      "save": "Сохранить"
+    },
+    "unitsScreen": {
+      "title": "Единицы и формат",
+      "system": "Система",
+      "metric": "Метрические",
+      "imperial": "Имперские",
+      "preview": "Так будут выглядеть данные",
+      "distance": "Расстояние",
+      "pace": "Темп",
+      "weight": "Вес",
+      "height": "Рост",
+      "format": "Формат",
+      "weekStart": "Начало недели",
+      "mon": "Пн",
+      "sun": "Вс",
+      "timeFormat": "Формат времени",
+      "h24": "24 ч",
+      "h12": "12 ч",
+      "measures": "Единицы измерения",
+      "temperature": "Температура",
+      "tabs": {
+        "km": "км",
+        "mi": "мили",
+        "kg": "кг",
+        "lb": "фунты",
+        "cm": "см",
+        "ft": "футы",
+        "c": "°C",
+        "f": "°F"
+      },
+      "distanceExample": "{{distance}} · {{pace}}",
+      "temperatureExample": "{{value}} · погода на тренировках",
+      "formatHint": "Начало недели влияет на календарь, план и недельный объём.",
+      "summary": "{{distance}} · {{weight}}"
+    },
+    "coach": {
+      "title": "AI-коуч",
+      "name": "Коуч",
+      "statusOn": "Включён",
+      "statusOff": "Выключен",
+      "adaptation": "Адаптация плана",
+      "modes": {
+        "auto": {
+          "title": "Автоматически",
+          "description": "Коуч сам меняет план и сообщает"
+        },
+        "confirm": {
+          "title": "С подтверждением",
+          "description": "Изменения применятся после вашего «Да»"
+        },
+        "suggest": {
+          "title": "Только советы",
+          "description": "План не меняется, коуч лишь советует"
+        }
+      },
+      "messages": "Сообщения",
+      "quietHours": "Тихие часы",
+      "quietHoursDescription": "Коуч не пишет в это время",
+      "quietHoursFrom": "Начало",
+      "quietHoursTo": "Конец",
+      "quietHoursDisable": "Выключить тихие часы",
+      "data": "Данные",
+      "clearHistory": "Очистить историю чата",
+      "clearHistoryDescription": "План и тренировки не затронет",
+      "clearTitle": "Очистить историю?",
+      "clearBody": "Сообщения с коучем удалятся. План и тренировки останутся.",
+      "clearConfirm": "Очистить",
+      "cleared": "История очищена",
+      "offTitle": "Без коуча приложение работает так",
+      "off": [
+        "Вкладка «Трефикс» скрыта, чат и подсказки отключены",
+        "План не адаптируется — меняете его сами",
+        "Планы, тренировки, прогресс и Strava работают как раньше",
+        "История чата сохранена — включите в любой момент"
+      ],
+      "enable": "Включить коуча",
+      "modeLabel": {
+        "auto": "Автоматически",
+        "confirm": "С подтверждением",
+        "suggest": "Только советы"
+      }
+    },
+    "gear": {
+      "title": "Снаряжение",
+      "active": "Кроссовки",
+      "archive": "Архив · {{count}}",
+      "empty": "Добавьте кроссовки, чтобы следить за пробегом",
+      "add": "Добавить кроссовки",
+      "importStrava": "Импортировать из Strava",
+      "importing": "Импортируем кроссовки из Strava",
+      "since": "с {{date}}",
+      "stats": "{{distance}} · {{count}} трен.",
+      "limit": "ресурс {{limit}}",
+      "replaceSoon": "Скоро замена",
+      "replaceNotice": "{{name}}: пора подумать о замене",
+      "retire": "В архив",
+      "restore": "Вернуть",
+      "delete": "Удалить",
+      "edit": "Изменить",
+      "deleteTitle": "Удалить кроссовки?",
+      "deleteBody": "Тренировки останутся, но без привязки к паре",
+      "cancel": "Отмена"
+    },
+    "gearEdit": {
+      "newTitle": "Новые кроссовки",
+      "editTitle": "Кроссовки",
+      "model": "Модель",
+      "brand": "Бренд",
+      "modelName": "Модель",
+      "nickname": "Название",
+      "optional": "Необязательно",
+      "resource": "Ресурс",
+      "presets": {
+        "race": "Гоночные",
+        "training": "Тренировочные",
+        "trail": "Трейл"
+      },
+      "mileage": "Пробег",
+      "initial": "Уже пробежали",
+      "start": "Старт",
+      "notSet": "Не указан",
+      "defaults": "По умолчанию для тренировок",
+      "defaultsMoved": "Выбранные типы снимем с других пар",
+      "reminder": "Напомнить о замене",
+      "reminderDescription": "Когда останется 10% ресурса",
+      "add": "Добавить",
+      "save": "Сохранить"
+    },
+    "workoutTypes": {
+      "recovery": "Восстановительная",
+      "easy": "Лёгкая",
+      "long_run": "Длительная",
+      "tempo": "Темповая",
+      "threshold": "Пороговая",
+      "interval": "Интервалы",
+      "hill": "Горки",
+      "race": "Старт"
+    },
+    "weekdays": {
+      "short": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+      "full": [
+        "Понедельник",
+        "Вторник",
+        "Среда",
+        "Четверг",
+        "Пятница",
+        "Суббота",
+        "Воскресенье"
+      ]
+    },
+    "valueSheet": {
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "fromStrava": "Из Strava · {{ago}}",
+      "fromHealth": "Из данных о здоровье · {{ago}}",
+      "afterSave": "После сохранения значение станет ручным",
+      "resetToStrava": "Вернуть значение из Strava",
+      "clear": "Очистить"
+    },
+    "deleteAccount": {
+      "title": "Удалить аккаунт?",
+      "body": "Это навсегда, восстановить не получится",
+      "items": [
+        "Профиль и настройки",
+        "Планы и тренировки",
+        "Снаряжение",
+        "История чата с коучем",
+        "Подключение Strava"
+      ],
+      "confirm": "Удалить навсегда",
+      "cancel": "Отмена",
+      "deleted": "Аккаунт удалён"
+    },
+    "unitLabels": {
+      "km": "км",
+      "mi": "ми",
+      "kg": "кг",
+      "lb": "фнт",
+      "cm": "см",
+      "ft": "фт",
+      "in": "дюйм",
+      "perKm": "/км",
+      "perMi": "/ми",
+      "bpm": "уд/мин",
+      "min": "мин",
+      "h": "ч"
+    },
+    "ago": {
+      "justNow": "только что",
+      "minutes": "{{count}} мин назад",
+      "hours": "{{count}} ч назад",
+      "days": "{{count}} дн. назад"
+    },
+    "errors": {
+      "generic": "Не получилось сохранить. Попробуйте ещё раз",
+      "ATHLETE_FIELD_OUT_OF_RANGE": "Значение вне допустимого диапазона",
+      "ATHLETE_HEART_RATE_INCONSISTENT": "Пульс покоя должен быть ниже порогового, а пороговый — ниже максимального",
+      "ATHLETE_ZONES_INVALID": "Границы зон должны расти от Z1 к Z4",
+      "STRAVA_NOT_CONNECTED": "Сначала подключите Strava",
+      "STRAVA_PROFILE_ACCESS_REQUIRED": "Сначала разрешите доступ к профилю Strava",
+      "ATHLETE_DOUBLES_NOT_ALLOWED": "Две тренировки в день доступны только на продвинутом уровне",
+      "ATHLETE_SESSIONS_EXCEED_DAYS": "Слишком много тренировок для выбранных дней",
+      "AUTH_IDENTITY_IN_USE": "Этот аккаунт уже привязан к другому пользователю",
+      "AUTH_IDENTITY_ALREADY_LINKED": "Сначала отвяжите текущий аккаунт",
+      "AUTH_EMAIL_UNCHANGED": "Это уже ваш email",
+      "AUTH_EMAIL_ALREADY_EXISTS": "Этот email уже занят",
+      "AUTH_VERIFICATION_CODE_INVALID": "Неверный или устаревший код",
+      "AUTH_VERIFICATION_CODE_RATE_LIMITED": "Код уже отправлен, подождите немного",
+      "DATA_EXPORT_RATE_LIMITED": "Архив можно запрашивать раз в сутки",
+      "GEAR_FIELD_NOT_APPLICABLE": "Эти поля не относятся к этому типу снаряжения"
+    },
+    "wizard": {
+      "later": "Позже",
+      "next": "Далее",
+      "done": "Готово",
+      "step": "Шаг {{n}} из 3",
+      "steps": [
+        {
+          "title": "Тело",
+          "subtitle": "Нужно для расчёта нагрузки и калорий"
+        },
+        {
+          "title": "Пороговый пульс",
+          "subtitle": "По нему точнее всего считаются зоны"
+        },
+        {
+          "title": "Травмы и ограничения",
+          "subtitle": "Коуч учтёт их при подборе тренировок"
+        }
+      ],
+      "know": "Знаю значение",
+      "knowDescription": "Из теста или с часов",
+      "dontKnow": "Не знаю",
+      "dontKnowDescription": "Зоны посчитаем по максимальному пульсу",
+      "noLimits": "Ограничений нет",
+      "noLimitsDescription": "Можно изменить в любой момент",
+      "hasLimits": "Есть ограничения",
+      "hasLimitsDescription": "Опишите коротко"
+    },
+    "home": {
+      "editProfile": "Редактировать профиль",
+      "runningProfile": "Мой беговой профиль",
+      "experience": "Опыт",
+      "volume": "Объём/нед.",
+      "threshold": "Порог ЧСС",
+      "fillHint": "Пульс, объём и опыт помогут коучу точнее подобрать нагрузку.",
+      "tref": "Треф",
+      "coach": "AI-коуч",
+      "coachOn": "Включён",
+      "coachOff": "Выключен",
+      "adaptation": "Адаптация плана: {{mode}}",
+      "coachOffHint": "Включите, чтобы план подстраивался под вас",
+      "modes": {
+        "auto": "автоматически",
+        "confirm": "с подтверждением",
+        "suggest": "только советы"
+      },
+      "services": "Подключённые сервисы",
+      "noServices": "Нет подключённых сервисов",
+      "noServicesHint": "Подключите Strava или {{health}} — тренировки, вес и пульс подтянутся сами.",
+      "connectedAgo": "Подключена · {{ago}}",
+      "connected": "Подключено",
+      "appSettings": "Настройки приложения",
+      "units": "Единицы",
+      "account": "Аккаунт и безопасность",
+      "levels": {
+        "beginner": "Новичок",
+        "intermediate": "Средний уровень",
+        "advanced": "Продвинутый уровень"
+      },
+      "years": {
+        "one": "{{count}} год",
+        "few": "{{count}} года",
+        "many": "{{count}} лет",
+        "other": "{{count}} лет"
+      }
+    },
+    "running": {
+      "title": "Беговой профиль",
+      "age": "Возраст",
+      "height": "Рост",
+      "weight": "Вес",
+      "rest": "Покой",
+      "max": "Максимальный",
+      "threshold": "Порог",
+      "zonesBy": {
+        "threshold": "Зоны по порогу",
+        "max_hr": "Зоны по пульсу",
+        "custom": "Свои зоны"
+      },
+      "perWeek": "В неделю",
+      "volume": "Объём",
+      "longRun": "Длительная",
+      "time": "Время",
+      "gearMeta": "{{distance}} из {{limit}} · {{workouts}}",
+      "workouts": {
+        "one": "{{count}} тренировка",
+        "few": "{{count}} тренировки",
+        "many": "{{count}} тренировок",
+        "other": "{{count}} тренировок"
+      },
+      "level": "Уровень",
+      "since": "Бегаю с",
+      "limitations": "Травмы и ограничения",
+      "none": "Нет",
+      "ageUnit": {
+        "one": "год",
+        "few": "года",
+        "many": "лет",
+        "other": "лет"
+      },
+      "footnote": "По этим данным коуч считает нагрузку, темпы и пульсовые зоны. Значок S — значение из Strava."
+    },
+    "bodyScreen": {
+      "footnote": "Возраст, рост и вес нужны для расчёта нагрузки и калорий.",
+      "sexHint": "Нужен для расчёта пульса по возрасту и калорий."
+    },
+    "heartScreen": {
+      "upTo": "до {{value}}",
+      "range": "{{from}}–{{to}}",
+      "above": "{{value}}+",
+      "distribution": "Распределение",
+      "upperBounds": "Верхние границы",
+      "customFootnote": "Нижняя граница каждой зоны — следующее значение после предыдущей. Z5 ограничена максимальным пульсом.",
+      "setEstimate": "Поставить",
+      "planNote": "Коуч предложит обновить пульс в плане, когда значения изменятся."
+    },
+    "scheduleScreen": {
+      "title": "Расписание",
+      "durationVolume": "Длительность и объём",
+      "doubles": "Две тренировки в день",
+      "doublesDescription": "Вторая — лёгкая, только в дни с запасом",
+      "pick": "Коуч выберет {{picked}} из {{days}} отмеченных, остальные — запасные для переносов.",
+      "everyDay": "Тренировки во все отмеченные дни.",
+      "doublesHint": "{{sessions}} за {{days}}: в {{doubles}} будет вторая лёгкая тренировка.",
+      "days": {
+        "one": "{{count}} день",
+        "few": "{{count}} дня",
+        "many": "{{count}} дней",
+        "other": "{{count}} дней"
+      },
+      "sessions": {
+        "one": "{{count}} тренировка",
+        "few": "{{count}} тренировки",
+        "many": "{{count}} тренировок",
+        "other": "{{count}} тренировок"
+      },
+      "lowered": "Тренировок в неделю теперь {{count}} — столько помещается в выбранные дни",
+      "doublesReset": "Две тренировки в день доступны только на продвинутом уровне — отключили",
+      "longRunDayHint": "Доступны только дни тренировок.",
+      "durationHint": "Сколько времени есть на тренировку в будни",
+      "durations": {
+        "30": "До 30 минут",
+        "45": "До 45 минут",
+        "60": "До 1 часа",
+        "90": "До 1,5 часа",
+        "none": "Без ограничений"
+      },
+      "longDurations": {
+        "90": "До 1,5 часа",
+        "120": "До 2 часов",
+        "150": "До 2,5 часа",
+        "180": "До 3 часов",
+        "none": "Без ограничений"
+      },
+      "noLimit": "без ограничений",
+      "volumeUnit": "км/нед",
+      "volumeUnitImperial": "ми/нед"
+    },
+    "experienceScreen": {
+      "title": "Опыт",
+      "levelDescriptions": {
+        "beginner": "Бегаю меньше года или нерегулярно",
+        "intermediate": "Бегаю регулярно, бывали старты",
+        "advanced": "Тренируюсь по плану, есть цели по времени"
+      },
+      "noneDescription": "Коуч не будет учитывать ограничения",
+      "footnote": "Коуч учтёт это при подборе нагрузки и упражнений.",
+      "yearUnit": "год"
+    },
+    "edit": {
+      "title": "Профиль",
+      "save": "Сохранить",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "sex": "Пол",
+      "birthDate": "Дата рождения",
+      "notSet": "Не указана",
+      "about": "О себе",
+      "aboutPlaceholder": "Пара слов о себе и своих целях",
+      "counter": "{{count}}/{{max}}",
+      "photoTitle": "Фото профиля",
+      "takePhoto": "Сделать фото",
+      "pickPhoto": "Выбрать из галереи",
+      "removePhoto": "Удалить фото",
+      "cancel": "Отмена",
+      "done": "Готово",
+      "saved": "Профиль сохранён",
+      "nameRequired": "Укажите имя"
+    },
+    "coachScreen": {
+      "hero": "AI-коуч Треф",
+      "heroOn": "Использует ваши данные, чтобы адаптировать тренировки и давать персональные рекомендации.",
+      "heroOff": "Выключен. Включите, чтобы план подстраивался под вас.",
+      "howTitle": "Как это работает",
+      "how": "Треф анализирует тренировки, форму, цели и предпочтения, подбирает нагрузку, адаптирует план и подсказывает, что делать дальше.",
+      "proactive": "Коуч пишет сам",
+      "topics": {
+        "preWorkout": {
+          "title": "Перед тренировкой",
+          "description": "Напоминание и задача на сегодня"
+        },
+        "workoutReview": {
+          "title": "Разбор тренировки",
+          "description": "Комментарий после каждой тренировки"
+        },
+        "wellbeingCheck": {
+          "title": "Вопрос о самочувствии",
+          "description": "Как прошло, насколько было тяжело"
+        },
+        "weeklySummary": {
+          "title": "Итог недели",
+          "description": "Объём, форма и планы на неделю"
+        },
+        "missedSupport": {
+          "title": "Поддержка при пропусках",
+          "description": "Поможет вернуться в график"
+        }
+      },
+      "tone": "Тон общения",
+      "tones": {
+        "soft": "Мягкий",
+        "neutral": "Нейтральный",
+        "strict": "Строгий"
+      },
+      "toneHints": {
+        "soft": "Подбадривает и объясняет, без давления.",
+        "neutral": "Спокойно и по делу.",
+        "strict": "Прямо говорит об отклонениях от плана."
+      },
+      "considers": "Что учитывает коуч",
+      "considerItems": [
+        {
+          "title": "Форма и нагрузка",
+          "description": "Форма, усталость, восстановление"
+        },
+        {
+          "title": "Цель и план",
+          "description": "Дистанция, целевое время, дата"
+        },
+        {
+          "title": "История тренировок",
+          "description": "Выполненные и пропущенные"
+        },
+        {
+          "title": "Расписание",
+          "description": "Доступные дни и объём"
+        },
+        {
+          "title": "Самочувствие",
+          "description": "Ответы на вопросы и заметки"
+        }
+      ],
+      "quietHoursSheetBody": "Коуч не пишет в это время. Напоминания о тренировках тоже не приходят.",
+      "safetyTitle": "Ваши данные в безопасности",
+      "safety": "Данные используются только для ваших рекомендаций. Подробнее — в",
+      "safetyLink": "политике конфиденциальности"
+    },
+    "languageScreen": {
+      "title": "Язык",
+      "system": "Как в системе",
+      "systemNow": "Сейчас — {{language}}",
+      "native": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "translated": {
+        "ru": "Russian",
+        "en": "Английский"
+      },
+      "hint": "На выбранном языке будут интерфейс, уведомления, названия тренировок и сообщения коуча."
+    },
+    "themeScreen": {
+      "title": "Тема",
+      "appearance": "Оформление",
+      "hint": "«Как в системе» переключает тему вместе с телефоном.",
+      "accent": "Цвет акцента",
+      "accentBw": "Чёрно-белый",
+      "accentDescription": "Кнопки, переключатели, активные табы",
+      "soon": "Скоро"
+    },
+    "notificationsScreen": {
+      "title": "Уведомления",
+      "workouts": "Тренировки",
+      "progress": "Прогресс",
+      "coach": "Коуч",
+      "items": {
+        "workoutReminder": {
+          "title": "Напоминание о тренировке",
+          "description": "В день запланированной тренировки"
+        },
+        "missedWorkout": {
+          "title": "Пропущенная тренировка",
+          "description": "Если не отметили выполнение за 48 ч"
+        },
+        "planChanged": {
+          "title": "Изменения в плане",
+          "description": "Когда коуч или вы меняете план"
+        },
+        "achievements": {
+          "title": "Рекорды и достижения",
+          "description": "Новые личные рекорды после тренировки"
+        },
+        "workoutSynced": {
+          "title": "Новая тренировка загружена",
+          "description": "Из Strava или {{health}}"
+        }
+      },
+      "reminderTime": "Когда напоминать",
+      "reminderOptions": {
+        "morning": "Утром в день тренировки",
+        "2h": "За 2 часа",
+        "1h": "За 1 час",
+        "30m": "За 30 минут"
+      },
+      "reminderValues": {
+        "morning": "Утром",
+        "2h": "За 2 ч до начала",
+        "1h": "За 1 ч до начала",
+        "30m": "За 30 мин до начала"
+      },
+      "morningDescription": "В 08:00",
+      "reminderHint": "Если время тренировки не задано — напомним утром.",
+      "coachMessages": "Сообщения коуча",
+      "coachMessagesDescription": "Напоминания, разборы, итог недели",
+      "coachHint": "Что и когда пишет Треф, настраивается в AI-коуче.",
+      "deniedTitle": "Уведомления выключены",
+      "deniedBody": "Разрешите уведомления в настройках телефона, чтобы получать напоминания и сообщения коуча.",
+      "openSettings": "Открыть настройки"
+    },
+    "account": {
+      "title": "Аккаунт и безопасность",
+      "signIn": "Вход",
+      "email": "Email",
+      "emailDescription": "{{email}} · код для входа",
+      "linked": "Подключён",
+      "connect": "Подключить",
+      "signInHint": "Входите любым из подключённых способов — аккаунт один.",
+      "devices": "Устройства",
+      "thisDevice": "Это устройство",
+      "unknownDevice": "Устройство",
+      "logoutOthers": "Выйти на всех устройствах",
+      "data": "Данные",
+      "export": "Скачать мои данные",
+      "exportDescription": "Архив с профилем, планами и тренировками",
+      "exportPending": "Архив готовится — ссылка придёт на почту",
+      "accountSection": "Аккаунт",
+      "logout": "Выйти",
+      "delete": "Удалить аккаунт",
+      "deleteDescription": "Профиль, планы и тренировки удалятся навсегда",
+      "version": "Версия {{version}}",
+      "identity": {
+        "title": "Вход через {{provider}}",
+        "appleId": "Apple ID",
+        "googleAccount": "Аккаунт Google",
+        "linkedAt": "Подключён",
+        "body": "После отключения войти через {{provider}} не получится. Тренировки и планы останутся.",
+        "unlink": "Отключить {{provider}}",
+        "done": "Готово",
+        "linkedToast": "{{provider}} подключён",
+        "unlinkedToast": "{{provider}} отключён"
+      },
+      "device": {
+        "lastActive": "Последняя активность",
+        "city": "Город",
+        "firstSeen": "Первый вход",
+        "version": "Версия",
+        "end": "Завершить сеанс",
+        "cancel": "Отмена",
+        "ended": "Сеанс завершён"
+      },
+      "logoutOthersSheet": {
+        "title": "Выйти на других устройствах?",
+        "body": "Сеансы на других устройствах завершатся. На этом устройстве вы останетесь в аккаунте.",
+        "confirm": "Выйти на других устройствах",
+        "cancel": "Отмена",
+        "done": "Вышли на других устройствах"
+      },
+      "exportSheet": {
+        "title": "Скачать мои данные",
+        "body": "Соберём архив и пришлём ссылку на {{email}}. Обычно это занимает несколько минут.",
+        "items": [
+          "Профиль и настройки",
+          "Планы и тренировки",
+          "Треки тренировок",
+          "Снаряжение",
+          "История чата с коучем"
+        ],
+        "request": "Запросить архив",
+        "requested": "Готовим архив — ссылка придёт на почту",
+        "nextAt": "Новый архив можно запросить {{date}}"
+      },
+      "logoutSheet": {
+        "title": "Выйти из аккаунта?",
+        "body": "Данные сохранятся — войдите снова в любой момент.",
+        "confirm": "Выйти",
+        "cancel": "Отмена"
+      }
+    },
+    "emailChange": {
+      "title": "Email",
+      "newTitle": "Новый email",
+      "current": "Сейчас вы входите с {{email}}",
+      "label": "Email",
+      "hint": "Отправим код на новый адрес. Пока вы его не подтвердите, вход работает по старому.",
+      "getCode": "Получить код",
+      "codeTitle": "Введите код",
+      "sentTo": "Отправили на {{email}}",
+      "resendIn": "Отправить снова через {{time}}",
+      "resend": "Отправить снова",
+      "confirm": "Подтвердить",
+      "changed": "Email изменён",
+      "invalidEmail": "Проверьте адрес"
+    },
+    "gearScreen": {
+      "shoes": "Кроссовки",
+      "devices": "Часы и датчики",
+      "primary": "Основные",
+      "addGear": "Добавить снаряжение",
+      "shoeMeta": "{{distance}} · {{count}} трен. · ресурс {{limit}}",
+      "deviceSource": "Данные через {{source}}",
+      "deviceWorkouts": "{{count}} трен.",
+      "devicesHint": "Коуч учитывает, с какого устройства пришли пульс и темп: у нагрудного датчика точнее.",
+      "footnote": "Пробег кроссовок считается по тренировкам, к которым привязана пара.",
+      "noShoes": "Добавьте кроссовки, чтобы следить за пробегом",
+      "addSheet": {
+        "title": "Добавить снаряжение",
+        "shoes": {
+          "title": "Кроссовки",
+          "description": "Следим за пробегом и износом"
+        },
+        "watch": {
+          "title": "Часы",
+          "description": "Источник тренировок и пульса"
+        },
+        "sensor": {
+          "title": "Датчик",
+          "description": "Пульсометр, датчик шагов"
+        },
+        "import": {
+          "title": "Импортировать из Strava",
+          "description": "Кроссовки из профиля Strava"
+        }
+      },
+      "edit": {
+        "shoesTitle": "Кроссовки",
+        "watchTitle": "Часы",
+        "sensorTitle": "Датчик",
+        "startedAt": "Начало использования",
+        "resource": "Ресурс",
+        "initial": "Начальный пробег",
+        "initialDescription": "Если пара уже была в носке",
+        "default": "По умолчанию",
+        "defaultDescription": "Привязывать новые тренировки к этой паре",
+        "type": "Тип",
+        "dataSource": "Откуда приходят данные",
+        "noSource": "Не выбрано",
+        "primary": "Основное устройство",
+        "primaryDescription": "Его данные в приоритете при дублях",
+        "model": "Модель",
+        "brand": "Бренд",
+        "add": "Добавить",
+        "save": "Сохранить"
+      },
+      "sources": {
+        "strava": "Strava",
+        "garmin": "Garmin Connect",
+        "apple_health": "Apple Health",
+        "health_connect": "Health Connect"
+      },
+      "detail": {
+        "mileage": "Пробег",
+        "workouts": "Тренировки",
+        "pace": "Средний темп",
+        "wear": "Износ",
+        "wearPercent": "{{percent}}% ресурса",
+        "forecast": "Осталось ~{{distance}} — примерно {{weeks}}",
+        "forecastShort": "Осталось ~{{distance}}",
+        "weeks": {
+          "one": "{{count}} неделя",
+          "few": "{{count}} недели",
+          "many": "{{count}} недель",
+          "other": "{{count}} недель"
+        },
+        "defaultDescription": "Новые тренировки привязываются к этой паре",
+        "primaryDescription": "Его данные в приоритете при дублях",
+        "more": "Ещё"
+      },
+      "menu": {
+        "edit": "Изменить",
+        "retire": "В архив",
+        "retireDescription": "Скроем из выбора для тренировок",
+        "delete": "Удалить",
+        "cancel": "Отмена"
+      },
+      "archive": {
+        "title": "Архив",
+        "meta": "{{distance}} · {{count}} трен. · в архиве с {{date}}",
+        "restore": "Вернуть",
+        "footnote": "Пары из архива не предлагаются для новых тренировок. Статистика сохраняется.",
+        "empty": "В архиве пусто"
+      },
+      "import": {
+        "title": {
+          "one": "Импортировали {{count}} пару",
+          "few": "Импортировали {{count}} пары",
+          "many": "Импортировали {{count}} пар",
+          "other": "Импортировали {{count}} пар"
+        },
+        "nothing": "Новых кроссовок в Strava нет",
+        "body": "Пробег перенесли из Strava. Ресурс по умолчанию — 700 км, его можно поменять в карточке пары.",
+        "done": "Готово"
+      }
+    },
+    "services": {
+      "title": "Сервисы",
+      "connected": "Подключены",
+      "available": "Доступны",
+      "healthDescription": "Пульс, вес и тренировки",
+      "garminDescription": "Тренировки и пульс с часов",
+      "connect": "Подключить",
+      "soon": "Скоро",
+      "syncedAgo": "Синхронизировано {{ago}}",
+      "duplicatesHint": "Если тренировка пришла из нескольких источников, оставим одну — с основного устройства."
+    },
+    "stravaScreen": {
+      "connectedAgo": "Подключена · {{ago}}",
+      "connectedAs": "Подключена · {{name}} · {{ago}}",
+      "sync": "Что синхронизировать",
+      "activities": {
+        "title": "Тренировки",
+        "description": "Загружать новые тренировки"
+      },
+      "profile": {
+        "title": "Вес и пол",
+        "description": "Обновлять профиль атлета"
+      },
+      "gear": {
+        "title": "Кроссовки",
+        "description": "Подтягивать пары и пробег"
+      },
+      "upload": {
+        "title": "Выгружать в Strava",
+        "description": "Тренировки, записанные в Трефиксе"
+      },
+      "syncNow": "Синхронизировать сейчас",
+      "disconnect": "Отключить Strava"
+    },
+    "connect": {
+      "close": "Закрыть",
+      "strava": {
+        "title": "Подключите Strava",
+        "lede": "Тренировки будут появляться в Трефиксе сами, и коуч сразу учтёт их в плане.",
+        "chips": ["Тренировки", "Пульс", "Кроссовки", "Вес"],
+        "benefits": [
+          {
+            "title": "Без ручного ввода",
+            "description": "Каждая тренировка с часов или телефона попадёт в историю"
+          },
+          {
+            "title": "Кроссовки и пробег",
+            "description": "Пары из Strava подтянутся с текущим пробегом"
+          },
+          {
+            "title": "Точнее план",
+            "description": "Коуч видит реальный объём и темп, а не только план"
+          }
+        ],
+        "fine": "Берём только данные о тренировках и профиле. Отключить можно в любой момент."
+      },
+      "garmin": {
+        "title": "Подключите Garmin",
+        "lede": "Данные с часов приходят сразу после синхронизации — без Strava посередине.",
+        "chips": ["Тренировки", "Пульс", "Сон", "HRV"],
+        "benefits": [
+          {
+            "title": "Тренировки с часов",
+            "description": "Темп, пульс и каденс без потерь точности"
+          },
+          {
+            "title": "Восстановление",
+            "description": "Сон, HRV и пульс покоя подскажут коучу, готовы ли вы к нагрузке"
+          },
+          {
+            "title": "Точные зоны",
+            "description": "Пульс с часов и нагрудного датчика для расчёта зон"
+          }
+        ],
+        "cta": "Подключить Garmin Connect",
+        "soon": "Подключение Garmin Connect появится в ближайшем обновлении",
+        "fine": "Откроется вход в Garmin Connect. Отключить можно в любой момент."
+      },
+      "health": {
+        "title": "Подключите {{store}}",
+        "lede": "Трефикс прочитает данные из {{store}} и сохранит туда ваши тренировки.",
+        "chips": ["Пульс", "Вес", "Сон", "Тренировки"],
+        "benefits": [
+          {
+            "title": "Пульс покоя и вес",
+            "description": "Обновятся в профиле сами"
+          },
+          {
+            "title": "Сон и восстановление",
+            "description": "Коуч учтёт, как вы отдохнули перед тренировкой"
+          },
+          {
+            "title": "В обе стороны",
+            "description": "Тренировки из Трефикса появятся в {{store}}"
+          }
+        ],
+        "cta": "Разрешить доступ",
+        "fine": "Вы сами выберете, к каким данным открыть доступ. Данные о здоровье не передаются третьим лицам."
+      }
+    }
+  },
+  "plans": {
+    "title": "Мои планы",
+    "section": {
+      "active": "В работе"
+    },
+    "segment": {
+      "drafts": "Черновики · {{count}}",
+      "history": "История · {{count}}"
+    },
+    "badge": {
+      "ai": "AI",
+      "active": "В работе",
+      "stale": "Метрики устарели"
+    },
+    "card": {
+      "weeks": "{{count}} нед",
+      "perWeek": "{{count}}/нед",
+      "raceOn": "старт {{date}}",
+      "activeProgress": "Неделя {{current}} из {{total}}",
+      "moreActions": "Действия с планом",
+      "a11y": "{{name}}, {{status}}",
+      "progressA11y": "{{percent}} процентов"
+    },
+    "status": {
+      "draft": "Черновик · изменён {{date}}",
+      "completed": "✓ Выполнен {{date}} · {{rate}}%",
+      "cancelled": "Отменён {{date}} · {{rate}}%"
+    },
+    "empty": {
+      "drafts": "Черновиков нет. Сохраните план без запуска, чтобы начать его позже.",
+      "history": "Здесь появятся выполненные и отменённые планы.",
+      "createButton": "Создать план"
+    },
+    "actions": {
+      "title": "План",
+      "start": "Начать",
+      "prepareAgain": "Подготовиться снова",
+      "editWorkouts": "Редактировать тренировки",
+      "editParams": "Изменить параметры",
+      "meta": "Название и заметки",
+      "delete": "Удалить"
+    },
+    "tab": {
+      "openPlans": "Мои планы",
+      "plansButton": "Планы",
+      "noActiveTitle": "Нет плана в работе",
+      "noActiveDescription": "Начните один из черновиков или создайте новый план.",
+      "historyTitle": "Готовитесь к новому старту?",
+      "historyDescription": "Возьмите за основу прошлый план — он будет пересчитан под вашу текущую форму.",
+      "prepareFromHistory": "Подготовиться снова по прошлому плану",
+      "createPlan": "Создать план",
+      "draftsTitle": "Черновики",
+      "cancelledTitle": "План отменён",
+      "cancelledDescription": "План сохранён в истории. Начните черновик, подготовьтесь снова или создайте новый план."
+    },
+    "details": {
+      "goal": "Цель",
+      "structure": "{{weeks}} нед · {{sessions}}/нед",
+      "longRun": "длинная {{day}}",
+      "raceOn": "старт {{date}}",
+      "metrics": "Метрики",
+      "metricsAtStart": "На старте",
+      "capturedAt": "сняты {{date}}",
+      "staleBanner": "Метрики устарели — обновить?",
+      "weeks": "Недели",
+      "notes": "Заметки",
+      "notesEmpty": "Заметок пока нет",
+      "editNotes": "Изменить",
+      "startButton": "Начать план",
+      "prepareAgainButton": "Подготовиться снова",
+      "resultCompleted": "✓ Выполнен",
+      "resultCancelled": "Отменён",
+      "workoutsDone": "{{done}}/{{total}} тренировок",
+      "totalKm": "{{km}} км",
+      "raceResult": "результат {{time}}",
+      "weekWorkouts": "{{count}} трен. · {{km}} км",
+      "plannedActual": "{{planned}} → {{actual}} км"
+    },
+    "menu": {
+      "title": "План в работе",
+      "schedule": "Изменить расписание",
+      "goalDate": "Изменить дату цели",
+      "meta": "Название и заметки",
+      "allPlans": "Все планы",
+      "cancel": "Отменить план"
+    },
+    "start": {
+      "title": "Начать «{{name}}»?",
+      "when": "Когда начинаем?",
+      "today": "Сегодня, {{date}}",
+      "nextMonday": "С понедельника, {{date}}",
+      "raceAligned": "К старту {{race}} (с {{date}})",
+      "custom": "Выбрать дату…",
+      "until": "до {{date}}",
+      "recommended": "рекомендуем",
+      "cta": "Начать план",
+      "ctaReplace": "Отменить текущий и начать",
+      "saveDraft": "Сохранить как черновик",
+      "dontStart": "Не начинать",
+      "raceNotFits": "До старта {{available}} нед., план рассчитан на {{total}}. Начните сейчас или измените дату старта.",
+      "raceDatePassed": "Дата старта уже прошла.",
+      "changeDate": "Изменить дату старта",
+      "raceDateTitle": "Дата старта",
+      "apply": "Применить",
+      "staleMetrics": "Метрики снимались давно — обновить перед стартом?",
+      "dateInvalid": "Эта дата старта больше недоступна. Выберите другую.",
+      "started": "План «{{name}}» начат",
+      "draftSaved": "Черновик сохранён",
+      "loadFailed": "Не удалось загрузить даты старта",
+      "failed": "Не удалось начать план",
+      "titleUnnamed": "Начать план?",
+      "startedUnnamed": "План начат",
+      "nameHint": "Можно оставить пустым — план будет назван по цели"
+    },
+    "warning": {
+      "title": "Сейчас в работе «{{name}}» (неделя {{current}} из {{total}})",
+      "body": "Если начать новый план, текущий будет отменён:",
+      "completedKept": {
+        "one": "{{count}} выполненная тренировка останется в истории",
+        "few": "{{count}} выполненные тренировки останутся в истории",
+        "many": "{{count}} выполненных тренировок останутся в истории",
+        "other": "{{count}} выполненных тренировок останутся в истории"
+      },
+      "plannedRemoved": {
+        "one": "{{count}} запланированная тренировка будет убрана из календаря",
+        "few": "{{count}} запланированные тренировки будут убраны из календаря",
+        "many": "{{count}} запланированных тренировок будут убраны из календаря",
+        "other": "{{count}} запланированных тренировок будут убраны из календаря"
+      }
+    },
+    "cancel": {
+      "title": "Отменить план «{{name}}»?",
+      "progress": "Вы на {{current}}-й неделе из {{total}}.",
+      "body": "План сохранится в истории — по нему можно будет подготовиться снова.",
+      "confirm": "Отменить план",
+      "keep": "Оставить",
+      "done": "План отменён",
+      "failed": "Не удалось отменить план"
+    },
+    "delete": {
+      "title": "Удалить план «{{name}}»?",
+      "body": "Выполненные тренировки останутся в календаре и прогрессе.",
+      "confirm": "Удалить",
+      "keep": "Оставить",
+      "done": "План удалён",
+      "failed": "Не удалось удалить план"
+    },
+    "meta": {
+      "title": "Название и заметки",
+      "name": "Название",
+      "namePlaceholder": "Марафон Москва 2027",
+      "notes": "Заметки",
+      "notesPlaceholder": "Результат, ощущения, что изменить в следующий раз",
+      "counter": "{{count}}/{{max}}",
+      "save": "Сохранить",
+      "nameRequired": "Введите название",
+      "failed": "Не удалось сохранить изменения"
+    },
+    "edit": {
+      "locked": "Прошедшие тренировки не редактируются",
+      "cancelledWorkout": "План отменён — запишите её как отдельную тренировку",
+      "edit": "Изменить",
+      "move": "Перенести",
+      "remove": "Удалить",
+      "addWorkout": "Добавить тренировку",
+      "editTitle": "Изменить тренировку",
+      "moveTitle": "Перенести тренировку",
+      "addTitle": "Новая тренировка",
+      "dateLabel": "Дата",
+      "removeTitle": "Удалить тренировку?",
+      "removeBody": "Она будет убрана из плана и календаря.",
+      "save": "Сохранить",
+      "apply": "Применить",
+      "cancel": "Отмена",
+      "showChanges": "Показать изменения",
+      "applied": "План обновлён",
+      "workoutLocked": "Эта тренировка уже прошла",
+      "failed": "Не удалось изменить план",
+      "invalid": "Эти изменения нельзя применить",
+      "conflict": "План изменился (адаптация или другое устройство)",
+      "refresh": "Обновить",
+      "dateOutOfPlan": "Выберите дату между сегодняшним днём и концом плана"
+    },
+    "schedule": {
+      "title": "Изменить расписание",
+      "from": "С какой недели",
+      "nextWeek": "Со следующей недели",
+      "tomorrow": "С завтрашнего дня"
+    },
+    "goalDate": {
+      "title": "Изменить дату цели",
+      "minHint": "Не раньше чем через 2 недели",
+      "longer": {
+        "one": "План станет длиннее на {{count}} неделю",
+        "few": "План станет длиннее на {{count}} недели",
+        "many": "План станет длиннее на {{count}} недель",
+        "other": "План станет длиннее на {{count}} недель"
+      },
+      "shorter": {
+        "one": "План станет короче на {{count}} неделю",
+        "few": "План станет короче на {{count}} недели",
+        "many": "План станет короче на {{count}} недель",
+        "other": "План станет короче на {{count}} недель"
+      },
+      "same": "Длительность плана не изменится",
+      "tooShort": "Слишком мало времени до старта для этого плана"
+    },
+    "diff": {
+      "title": "Изменения в плане",
+      "rebuildTitle": "Что изменилось относительно прошлого плана",
+      "peakVolume": "Объём на пике: {{before}} → {{after}} км",
+      "longestRun": "Длинная: {{before}} → {{after}} км",
+      "threshold": "ПАНО {{before}} → {{after}} /км",
+      "pacesRecalculated": "темпы пересчитаны",
+      "volumeScale": "Объём ×{{scale}} ({{after}} vs {{before}} км/нед)",
+      "totalWeeks": "План: {{before}} → {{after}} недель",
+      "finish": "финиш {{date}}",
+      "week": "Неделя {{number}}",
+      "added": "+ {{label}}",
+      "removed": "− {{label}}",
+      "modified": "{{label}}: {{changes}}",
+      "showAll": "Показать все ({{count}})",
+      "noChanges": "Ничего не изменится",
+      "regenerated": "План построен заново по новым параметрам",
+      "wasNow": "было {{before}}, стало {{after}}",
+      "addedBadge": "новая",
+      "removedBadge": "убрана",
+      "fields": {
+        "distanceKm": "дистанция",
+        "durationMinutes": "время",
+        "type": "тип",
+        "scheduledAt": "дата",
+        "dayOfWeek": "день"
+      },
+      "adjustment": {
+        "VOLUME_SCALED": "Объём масштабирован под текущую форму",
+        "LONG_RUN_CAPPED": "Длинная ограничена {{km}} км",
+        "WEEKLY_GROWTH_CAPPED": "Рост недельного объёма ограничен для безопасности",
+        "WEEKLY_RAMP_CAPPED": "Рост недельного объёма ограничен для безопасности",
+        "STRUCTURE_REGENERATED": "Структура плана построена заново",
+        "generic": "План скорректирован по правилам безопасности"
+      },
+      "reason": {
+        "NOT_ENOUGH_TRAINING_DAYS": "не хватает дней",
+        "RESIZE_REMOVED": "убрана при изменении длины плана",
+        "generic": "скорректировано по правилам безопасности"
+      },
+      "warning": {
+        "WORKOUTS_REMOVED_NOT_ENOUGH_DAYS": "Часть тренировок убрана: не хватает тренировочных дней",
+        "STRUCTURE_CHANGED_REGENERATED": "Структура изменилась — план построен заново",
+        "generic": "План скорректирован по правилам безопасности"
+      }
+    },
+    "metrics": {
+      "title": "Текущая форма",
+      "question": "Текущая форма задаёт стартовый объём и темпы. Значения подставлены из ваших данных — проверьте и поправьте, если нужно.",
+      "previous": "В прошлый раз",
+      "current": "Сейчас",
+      "threshold": "Темп ПАНО",
+      "thresholdModePace": "Знаю темп ПАНО",
+      "thresholdModeResult": "Укажу результат",
+      "recentResult": "Недавний результат",
+      "resultDistance": "Дистанция",
+      "resultTime": "Время",
+      "resultDate": "Дата",
+      "weeklyKm": "Объём, км/нед",
+      "longestRun": "Самая длинная, км",
+      "hrMax": "Пульс макс",
+      "hrRest": "Пульс покоя",
+      "optional": "необязательно",
+      "source": {
+        "strava": "из Strava",
+        "health": "по тренировкам из приложения здоровья",
+        "manual_workouts": "по отмеченным вами тренировкам",
+        "user_input": "введено вами",
+        "athlete_state": "по данным профиля",
+        "none": "введите вручную",
+        "profile": "из профиля"
+      },
+      "placeholder": "Введите вручную",
+      "connectStrava": "Подключите Strava, чтобы метрики заполнялись автоматически",
+      "skip": "Пропустить",
+      "required": "Нужно для масштабирования плана",
+      "outOfRange": "Допустимо от {{min}} до {{max}}",
+      "invalid": "Проверьте значения",
+      "weeklyShort": "{{km}} км/нед",
+      "longestShort": "длинная {{km}} км",
+      "hrShort": "пульс {{max}} / {{rest}}",
+      "setValue": "Указать",
+      "clearValue": "Убрать",
+      "paceUnit": "/км",
+      "bpm": "уд/мин",
+      "kmUnit": "км",
+      "distances": {
+        "5k": "5 км",
+        "10k": "10 км",
+        "half_marathon": "Полумарафон",
+        "marathon": "Марафон",
+        "custom": "другая дистанция"
+      }
+    },
+    "rebuild": {
+      "cta": "Подготовиться снова",
+      "previousTargetDate": "В прошлый раз: {{date}}",
+      "previousResult": "Ваш результат: {{time}}",
+      "improveGoal": "Цель — улучшить на {{percent}}%",
+      "structureChangedWarning": "Изменение структуры — план будет построен заново, ручные правки прошлого плана не перенесутся.",
+      "saveChanges": "Сохранить изменения",
+      "defaultName": "{{name}} {{year}}",
+      "loadFailed": "Не удалось загрузить параметры плана",
+      "updated": "Черновик обновлён"
+    },
+    "preview": {
+      "saveButton": "Сохранить план",
+      "renameA11y": "Переименовать план",
+      "draftEditTitle": "Редактирование тренировок",
+      "saveChanges": "Сохранить изменения",
+      "changesSaved": "Изменения сохранены",
+      "draftHint": "Нажмите на тренировку, чтобы изменить её или убрать. Даты появятся при запуске плана."
+    },
+    "errors": {
+      "generic": "Что-то пошло не так. Попробуйте ещё раз.",
+      "network": "Нет соединения. Изменения сохранены на экране.",
+      "limit": "Достигнут лимит в {{max}} планов. Удалите старые планы, чтобы создать новые.",
+      "notFound": "План не найден",
+      "invalidStatus": "Статус плана изменился",
+      "retry": "Повторить",
+      "back": "Назад"
+    },
+    "pendingAdaptations": {
+      "proposedTitle": "Коуч предлагает изменить план",
+      "suggestedTitle": "Совет коуча",
+      "apply": "Применить",
+      "dismiss": "Отклонить",
+      "ok": "Понятно",
+      "applied": "План обновлён",
+      "workouts": {
+        "one": "{{count}} тренировка",
+        "few": "{{count}} тренировки",
+        "many": "{{count}} тренировок",
+        "other": "{{count}} тренировки"
+      },
+      "actions": {
+        "REDUCE_VOLUME": "Снизить объём ближайших тренировок",
+        "REDUCE_INTENSITY": "Снизить интенсивность",
+        "INCREASE_VOLUME": "Немного увеличить объём",
+        "INCREASE_INTENSITY": "Добавить интенсивности",
+        "MOVE": "Перенести тренировку",
+        "REPLACE": "Заменить тренировку",
+        "ADD_RECOVERY": "Добавить восстановление",
+        "REGENERATE_PLAN": "Пересобрать план",
+        "UPDATE_HEART_RATE": "Обновить пульс под новые зоны",
+        "default": "Скорректировать план"
+      }
+    },
+    "goalTitle": {
+      "distanceTime": "{{distance}} км · {{time}}",
+      "distance": "{{distance}} км",
+      "runsPerWeek": {
+        "one": "{{count}} тренировка в неделю",
+        "few": "{{count}} тренировки в неделю",
+        "many": "{{count}} тренировок в неделю",
+        "other": "{{count}} тренировки в неделю"
+      },
+      "weight": "Цель {{weight}} кг"
+    },
+    "untitled": "План тренировок"
+  },
+  "tracker": {
+    "record": "Начать тренировку",
+    "setupTitle": "Новая тренировка",
+    "where": "Где бежим",
+    "environments": {
+      "outdoor": "Улица",
+      "trail": "Трейл",
+      "treadmill": "Дорожка"
+    },
+    "measure": "Дистанция",
+    "modes": {
+      "gps": "По GPS",
+      "time": "По времени"
+    },
+    "modeHints": {
+      "gps": "Маршрут и темп по спутникам. Если сигнал пропадёт, дистанцию досчитает шагомер.",
+      "time": "Без геолокации: время и темп по шагомеру, дистанцию можно поправить в конце.",
+      "treadmill": "Дистанция по шагомеру. В конце введите показания дорожки."
+    },
+    "gps": {
+      "searching": "Ищем GPS",
+      "weak": "Слабый сигнал GPS",
+      "good": "GPS готов",
+      "lost": "GPS потерян — считаем по шагам",
+      "off": "Без GPS"
+    },
+    "gpsSlowHint": "GPS не ловит. Можно начать по времени.",
+    "startByTime": "Старт по времени",
+    "autoPause": "Автопауза",
+    "autoPauseHint": "Ставить запись на паузу, когда вы стоите",
+    "type": "Тип тренировки",
+    "typeFree": "Без типа",
+    "start": "Старт",
+    "metrics": {
+      "time": "Время",
+      "distance": "Дистанция",
+      "pace": "Темп",
+      "avgPace": "Средний темп",
+      "elevation": "Набор высоты",
+      "cadence": "Каденс",
+      "spm": "шаг/мин",
+      "metres": "м",
+      "heartRate": "Пульс",
+      "maxHeartRate": "Макс. пульс",
+      "bpm": "уд/мин"
+    },
+    "pause": "Пауза",
+    "resume": "Продолжить",
+    "finish": "Завершить",
+    "holdToFinish": "Удерживайте, чтобы завершить",
+    "lock": "Заблокировать экран",
+    "unlockHint": "Удерживайте, чтобы разблокировать",
+    "paused": "Пауза",
+    "autoPaused": "Автопауза",
+    "summaryTitle": "Итог тренировки",
+    "splits": "Сплиты",
+    "splitKm": "Км",
+    "splitPace": "Темп",
+    "splitElevation": "Высота",
+    "save": "Сохранить",
+    "discard": "Удалить запись",
+    "discardTitle": "Удалить запись?",
+    "discardBody": "Тренировка не сохранится.",
+    "discardConfirm": "Удалить",
+    "cancel": "Отмена",
+    "distanceTreadmill": "Сколько показала дорожка?",
+    "distanceTime": "Дистанция, если знаете точную",
+    "feeling": "Самочувствие",
+    "feelings": ["Плохо", "Так себе", "Нормально", "Хорошо", "Отлично"],
+    "rpe": "Нагрузка, RPE",
+    "notes": "Заметка",
+    "notesPlaceholder": "Как прошла тренировка",
+    "saved": "Тренировка сохранена",
+    "savedOffline": "Сохранили на телефоне — отправим, когда появится сеть",
+    "uploadRejected": "Сервер не принял тренировку: {{message}}",
+    "recoveryTitle": "Незавершённая тренировка",
+    "recoveryBody": "Запись прервалась. Продолжить её или завершить?",
+    "recoveryResume": "Продолжить",
+    "recoveryFinish": "Завершить",
+    "permissions": {
+      "location": "Разрешите доступ к геолокации, чтобы записывать маршрут. Или начните по времени.",
+      "location_services": "Включите службы геолокации в настройках телефона.",
+      "motion": "Разрешите доступ к движению и фитнесу, чтобы считать шаги."
+    },
+    "openSettings": "Открыть настройки",
+    "startFailed": "Не удалось начать запись",
+    "notification": {
+      "title": "Trefix записывает тренировку",
+      "body": "Запись идёт, даже когда экран выключен"
+    },
+    "runMode": {
+      "plan": "По плану",
+      "free": "Свободная"
+    },
+    "planToday": "Тренировка на сегодня",
+    "planLoading": "Загружаем шаги тренировки…",
+    "planUnavailable": "Эту тренировку не получится пройти по шагам. Запишем как свободную.",
+    "stepKinds": {
+      "warmup": "Разминка",
+      "work": "Работа",
+      "recovery": "Отдых",
+      "steady": "Основная часть",
+      "cooldown": "Заминка"
+    },
+    "repeats": "{{count}} × {{work}}, отдых {{rest}}",
+    "units": {
+      "min": "мин",
+      "m": "м",
+      "km": "км",
+      "decimal": ","
+    },
+    "voice": "Голосовые подсказки",
+    "voiceHint": "Дистанция, темп и шаги плана — голосом, даже с выключенным экраном",
+    "voiceInterval": "Как часто сообщать",
+    "voiceIntervals": {
+      "1u": "1 км",
+      "2u": "2 км",
+      "5min": "5 мин",
+      "10min": "10 мин"
+    },
+    "voiceIntervalsImperial": {
+      "1u": "1 миля",
+      "2u": "2 мили"
+    },
+    "step": {
+      "of": "Шаг {{current}} из {{total}}",
+      "repetition": "повтор {{index}} из {{total}}",
+      "remaining": "Осталось",
+      "target": "Цель",
+      "pace": {
+        "in": "В темпе",
+        "fast": "Быстрее плана",
+        "slow": "Медленнее плана"
+      },
+      "next": "Далее: {{step}}",
+      "last": "Последний шаг",
+      "skip": "Следующий шаг",
+      "done": "План выполнен",
+      "doneHint": "Можно завершать или пробежать ещё"
+    },
+    "laps": "План и факт",
+    "lapPlanned": "План",
+    "lapActual": "Факт",
+    "startPlanned": "Начать запись",
+    "showMap": "Показать карту",
+    "showMetrics": "Показать показатели",
+    "centerMap": "Вернуться к моей позиции",
+    "keepAliveHint": "Чтобы подсказки звучали при выключенном экране, приложение попросит доступ к геолокации. Маршрут при этом не записывается.",
+    "healthExport": "Сохранить в {{store}}",
+    "healthExportHint": "Тренировка с маршрутом появится в {{store}}. Доступ на запись спросим один раз.",
+    "healthDenied": "Нет доступа на запись в {{store}}. Разрешите его в настройках {{store}}.",
+    "healthFailed": "Не удалось сохранить тренировку в {{store}}",
+    "recordSection": "Запись",
+    "whereShort": "Где",
+    "goal": "Цель",
+    "goalValue": {
+      "none": "Без цели",
+      "duration": "Время · {{value}}",
+      "distance": "Дистанция · {{value}}",
+      "distanceLimit": "Дистанция · {{value}} за {{limit}}"
+    },
+    "distanceRow": "Дистанция",
+    "pedometer": "Шагомер",
+    "voiceEvery": {
+      "1u": "Каждый 1 км",
+      "2u": "Каждые 2 км",
+      "5min": "Каждые 5 мин",
+      "10min": "Каждые 10 мин"
+    },
+    "voiceEveryImperial": {
+      "1u": "Каждую милю",
+      "2u": "Каждые 2 мили"
+    },
+    "voiceOff": "Выключены",
+    "freeTitle": "Свободная тренировка",
+    "treadmillTitle": "Беговая дорожка",
+    "heroSub": {
+      "ready": "Тип, самочувствие и заметку — после финиша",
+      "searching": "Можно стартовать — точность подтянется за минуту",
+      "treadmill": "Дистанцию считает шагомер, сверим с табло",
+      "goal": "Цель {{goal}} · {{estimate}}"
+    },
+    "gpsPill": {
+      "searching": "Ищем GPS",
+      "searchingAccuracy": "Ищем GPS · ±{{metres}} м",
+      "ready": "GPS готов",
+      "off": "Без GPS"
+    },
+    "noGps": {
+      "title": "Нет доступа к геолокации",
+      "body": "Без него маршрут не запишется. Можно начать по времени — дистанцию посчитает шагомер.",
+      "servicesTitle": "Геолокация выключена",
+      "servicesBody": "Включите службы геолокации в настройках телефона или начните по времени — дистанцию посчитает шагомер."
+    },
+    "kicker": {
+      "today": "Сегодня",
+      "week": "Сегодня · неделя {{number}}",
+      "own": "Сегодня · своя тренировка"
+    },
+    "goalSub": {
+      "duration": "цель по времени",
+      "distance": "цель по дистанции",
+      "limit": "за {{limit}}"
+    },
+    "goalNone": "Без цели",
+    "noCorridor": "без коридора темпа",
+    "corridorRange": "коридор {{min}}–{{max}}",
+    "goalSheetTitle": "Цель",
+    "done": "Готово",
+    "voiceSheet": {
+      "title": "Голосовые подсказки",
+      "toggle": "Подсказки голосом",
+      "howOften": "Как часто",
+      "what": "Что сообщать",
+      "items": {
+        "distance": "Дистанция",
+        "time": "Время",
+        "splitPace": "Темп последнего км",
+        "splitPaceImperial": "Темп последней мили",
+        "avgPace": "Средний темп",
+        "planSteps": "Шаги плана"
+      },
+      "hint": "Звучат и при выключенном экране."
+    },
+    "countdown": {
+      "tap": "Коснитесь экрана, чтобы начать сразу",
+      "firstStep": "Шаг 1 — {{step}}"
+    },
+    "access": {
+      "title": "Доступы",
+      "notNow": "Не сейчас",
+      "location": {
+        "title": "Геопозиция",
+        "subtitle": "Нужна, чтобы записать маршрут, темп и сплиты.",
+        "allow": "Разрешить геопозицию",
+        "rows": [
+          {
+            "title": "Маршрут и точная дистанция",
+            "text": "Без геопозиции запишем только время и шаги"
+          },
+          {
+            "title": "«При использовании» — достаточно",
+            "text": "Запись продолжится и с выключенным экраном"
+          },
+          {
+            "title": "Только во время тренировки",
+            "text": "Геопозицию берём между «Старт» и «Завершить»"
+          }
+        ]
+      },
+      "motion": {
+        "title": "Движение и фитнес",
+        "subtitle": "Нужен датчик движения, чтобы бег считался и без GPS.",
+        "allow": "Разрешить доступ",
+        "rows": [
+          {
+            "title": "Дистанция на дорожке и без GPS",
+            "text": "Считаем по шагам и длине шага"
+          },
+          {
+            "title": "Каденс",
+            "text": "Шагов в минуту — видно в итоге тренировки"
+          },
+          {
+            "title": "Точная автопауза",
+            "text": "Останавливаемся, только когда вы правда стоите"
+          }
+        ]
+      }
+    },
+    "status": {
+      "gps": "GPS",
+      "searching": "Ищем GPS",
+      "noGps": "Нет GPS",
+      "pedometer": "Шагомер",
+      "pausedFor": "Пауза · {{time}}",
+      "auto": "Автопауза"
+    },
+    "gpsLostToast": {
+      "title": "Сигнал GPS потерян",
+      "body": "Считаем по шагомеру, маршрут продолжится"
+    },
+    "autoPauseCaption": "Запись продолжится, когда начнёте бежать",
+    "holdFinishCaption": "Удерживайте «Завершить», чтобы закончить",
+    "pages": {
+      "metrics": "Показатели",
+      "map": "Карта",
+      "steps": "Шаги"
+    },
+    "metricNames": {
+      "time": "Время",
+      "distance": "Дистанция",
+      "pace": "Темп",
+      "splitPace": "Темп последнего км",
+      "splitPaceImperial": "Темп последней мили",
+      "avgPace": "Средний темп",
+      "elevation": "Набор высоты",
+      "cadence": "Каденс"
+    },
+    "distancePedometer": "Дистанция · шагомер",
+    "card": {
+      "left": "осталось",
+      "unitLeft": "{{unit}} осталось",
+      "corridor": "Коридор",
+      "slower": "медленнее",
+      "faster": "быстрее",
+      "next": "Далее: {{step}}",
+      "skip": "Пропустить",
+      "then": "Дальше",
+      "inCorridor": "в коридоре",
+      "stepDone": "Шаг {{current}} из {{total}} выполнен",
+      "own": "{{type}} · своя",
+      "goalTime": "Цель {{value}}",
+      "goalDone": "цель выполнена",
+      "passed": "{{time}} прошло",
+      "distanceIn": "{{distance}} за {{time}}",
+      "toFinish": "К финишу в {{time}}",
+      "ahead": "Опережаете на {{delta}}",
+      "behind": "Отстаёте на {{delta}}",
+      "onTrack": "Идёте в графике",
+      "forecast": "прогноз {{time}}",
+      "covered": "Пройдено {{done}} из {{total}}",
+      "moreSteps": "Ещё {{count}} шагов",
+      "pedometerPace": "Без GPS темп примерный",
+      "pace": "Темп {{pace}}"
+    },
+    "sheets": {
+      "planDone": {
+        "title": "План выполнен",
+        "body": "Все шаги позади. Можно закончить или добежать спокойно — остаток запишется в эту же тренировку."
+      },
+      "goalDone": {
+        "title": "{{goal}} позади",
+        "body": "Цель выполнена. Можно закончить или добежать спокойно — сверх цели тоже запишется."
+      },
+      "short": {
+        "title": "Слишком короткая запись",
+        "body": "Меньше 200 м и 1 минуты — в дневник такое не попадёт. Продолжите бег или удалите запись."
+      },
+      "finishRun": "Завершить тренировку",
+      "continueRun": "Продолжить бег",
+      "deleteRun": "Удалить запись",
+      "laps": "Отрезки",
+      "lapsValue": "{{done}} из {{total}}"
+    },
+    "metricPicker": {
+      "title": "Показатель",
+      "instead": "Вместо «{{metric}}»",
+      "onScreen": "на экране",
+      "hint": "Удерживайте ячейку на экране записи, чтобы заменить её. Набор сохранится для следующих тренировок."
+    },
+    "summary": {
+      "kicker": {
+        "free": "{{date}} · свободная",
+        "own": "{{date}} · своя тренировка",
+        "week": "{{date}} · неделя {{number}}",
+        "treadmill": "{{date}} · дорожка"
+      },
+      "todayAt": "Сегодня, {{time}}",
+      "noPlan": "Без плана",
+      "goalMeta": "цель {{goal}}",
+      "noGpsMeta": "без GPS",
+      "result": "Результат",
+      "how": "Как прошло?",
+      "data": "Данные",
+      "saving": "Сохранение",
+      "tiles": {
+        "pace": "Темп",
+        "avgHeartRate": "Средний пульс",
+        "elevation": "Набор высоты",
+        "cadence": "Каденс",
+        "maxHeartRate": "Макс. пульс"
+      },
+      "planNote": "{{done}} из {{total}} в коридоре",
+      "goalDone": "Цель выполнена",
+      "goalPart": "Цель выполнена на {{percent}}%",
+      "lapPlan": "план {{value}}",
+      "lapGoal": "цель {{value}}",
+      "lapDone": "выполнено",
+      "rest": "Отдых",
+      "restDetail": "{{count}} × {{time}}",
+      "splitNote": {
+        "negative": "Негативный сплит: {{from}} → {{to}}",
+        "fastest": "Быстрый — {{km}} {{unit}}, {{pace}}",
+        "even": "Ровно: {{min}}–{{max}}",
+        "pedometer": "По шагомеру, ±5%"
+      },
+      "rpeLabels": [
+        "Очень легко",
+        "Очень легко",
+        "Легко",
+        "Легко",
+        "Умеренно",
+        "Умеренно",
+        "Тяжело",
+        "Тяжело",
+        "Очень тяжело",
+        "Максимум"
+      ],
+      "type": "Тип",
+      "typeFree": "Без типа",
+      "typePlan": "{{type}} · по плану",
+      "typeOwn": "{{type}} · своя",
+      "distanceSource": {
+        "gps": "По GPS",
+        "pedometer": "Шагомер · уточните",
+        "treadmill": "Шагомер · сверьте",
+        "edited": "Указано вручную"
+      },
+      "link": {
+        "section": "План на сегодня",
+        "title": "Засчитать как «{{title}}»",
+        "hint": "Запись закроет тренировку в календаре вместо отдельной."
+      },
+      "offline": {
+        "title": "Нет интернета",
+        "body": "Сохраним тренировку на телефоне и отправим, когда сеть появится. Разбор Трефа придёт после отправки."
+      },
+      "healthNote": {
+        "routeHr": "С маршрутом и пульсом",
+        "route": "С маршрутом",
+        "hr": "С пульсом",
+        "plain": "Время и дистанция"
+      },
+      "hint": "После сохранения откроется тренировка с разбором от Трефа.",
+      "hintOffline": "Разбор от Трефа появится, когда тренировка отправится.",
+      "saveOffline": "Сохранить на телефоне",
+      "distanceSheet": {
+        "title": "Дистанция",
+        "treadmillBody": "Шагомер насчитал {{distance}}. Укажите, сколько показала дорожка.",
+        "body": "Шагомер насчитал {{distance}}. Если знаете точную дистанцию — укажите её.",
+        "keep": "Оставить {{distance}}"
+      },
+      "more": {
+        "title": "Действия",
+        "share": "Поделиться",
+        "delete": "Удалить запись"
+      },
+      "shareText": "{{title}}: {{distance}} за {{time}}, темп {{pace}}",
+      "deleteSheet": {
+        "title": "Удалить запись?",
+        "body": "Тренировка не сохранится. Это действие нельзя отменить.",
+        "confirm": "Удалить"
+      },
+      "shoes": "Кроссовки"
+    },
+    "restore": {
+      "title": "Запись прервалась",
+      "body": "Приложение закрылось в {{time}}. Всё до этого момента сохранено — продолжите с того же места или закончите.",
+      "resume": "Продолжить запись",
+      "finish": "Завершить и перейти к итогу",
+      "delete": "Удалить запись"
+    },
+    "voiceShort": "Голос",
+    "cellNames": {
+      "splitPace": "Темп за км",
+      "splitPaceImperial": "Темп за милю"
+    }
+  },
+  "errors": {
+    "title": "Ошибка",
+    "fallback": "Что-то пошло не так. Попробуйте ещё раз.",
+    "network": "Нет соединения. Проверьте интернет и попробуйте снова.",
+    "serverUnavailable": "Сервис временно недоступен. Попробуйте позже.",
+    "tooManyRequests": "Слишком много попыток. Подождите немного.",
+    "uploadFailedTitle": "Не удалось загрузить",
+    "uploadFailed": "Не удалось загрузить изображение.",
+    "saveWorkoutFailed": "Не удалось сохранить тренировку.",
+    "completeWorkoutFailed": "Не удалось завершить тренировку.",
+    "photoPermissionTitle": "Нет доступа к фото",
+    "photoPermission": "Разрешите доступ к фото, чтобы сменить аватар."
+  },
+  "progressOverview": {
+    "tabs": {
+      "overview": "Обзор",
+      "analytics": "Аналитика"
+    },
+    "records": "Рекорды",
+    "periods": {
+      "week": "Неделя",
+      "month": "Месяц",
+      "year": "Год",
+      "all": "Всё"
+    },
+    "metrics": {
+      "distance": "Расстояние",
+      "time": "Время",
+      "elevation": "Набор высоты"
+    },
+    "monthsIn": [
+      "январе",
+      "феврале",
+      "марте",
+      "апреле",
+      "мае",
+      "июне",
+      "июле",
+      "августе",
+      "сентябре",
+      "октябре",
+      "ноябре",
+      "декабре"
+    ],
+    "headline": {
+      "week": {
+        "one": "На этой неделе {{count}} тренировка",
+        "few": "На этой неделе {{count}} тренировки",
+        "many": "На этой неделе {{count}} тренировок",
+        "other": "На этой неделе {{count}} тренировки"
+      },
+      "month": {
+        "one": "В {{month}} {{count}} тренировка",
+        "few": "В {{month}} {{count}} тренировки",
+        "many": "В {{month}} {{count}} тренировок",
+        "other": "В {{month}} {{count}} тренировки"
+      },
+      "year": {
+        "one": "В {{year}} году {{count}} тренировка",
+        "few": "В {{year}} году {{count}} тренировки",
+        "many": "В {{year}} году {{count}} тренировок",
+        "other": "В {{year}} году {{count}} тренировки"
+      },
+      "all": {
+        "one": "За всё время {{count}} тренировка",
+        "few": "За всё время {{count}} тренировки",
+        "many": "За всё время {{count}} тренировок",
+        "other": "За всё время {{count}} тренировки"
+      }
+    },
+    "compare": {
+      "distance": {
+        "more": "Вы пробежали на {{value}} больше, чем {{scope}}",
+        "less": "Вы пробежали на {{value}} меньше, чем {{scope}}"
+      },
+      "time": {
+        "more": "Вы бегали на {{value}} дольше, чем {{scope}}",
+        "less": "Вы бегали на {{value}} меньше, чем {{scope}}"
+      },
+      "elevation": {
+        "more": "Вы набрали на {{value}} больше, чем {{scope}}",
+        "less": "Вы набрали на {{value}} меньше, чем {{scope}}"
+      },
+      "scope": {
+        "week": "в те же дни прошлой недели",
+        "month": "за {{range}}",
+        "year": "за то же время {{year}} года"
+      },
+      "since": "Все тренировки с {{date}}",
+      "unavailable": "Сравнение недоступно"
+    },
+    "chart": {
+      "future": "впереди",
+      "noWorkouts": "нет тренировок",
+      "noElevationTitle": "Нет данных о наборе высоты",
+      "noElevationText": "Тренировки записаны без высоты — это не ноль, а отсутствие измерений"
+    },
+    "goal": {
+      "kicker": "Цель",
+      "title": "{{distance}} за {{time}}",
+      "race": {
+        "one": "Забег {{date}} · через {{count}} день",
+        "few": "Забег {{date}} · через {{count}} дня",
+        "many": "Забег {{date}} · через {{count}} дней",
+        "other": "Забег {{date}} · через {{count}} дня"
+      },
+      "best": "Лучший результат",
+      "bestNone": "Пока нет",
+      "bestNoneHint": "Нужен забег или контрольная",
+      "target": "Цель",
+      "remaining": "осталось {{value}}",
+      "achieved": "цель достигнута",
+      "program": "Программа",
+      "programWeek": "Неделя {{current}} из {{total}}",
+      "programNote": "Прохождение программы — не прогноз результата"
+    },
+    "highlights": {
+      "title": {
+        "week": "Главное за неделю",
+        "month": "Главное в {{month}}",
+        "year": "Главное в {{year}} году",
+        "all": "Главное за всё время"
+      },
+      "paceFaster": "Средний темп стал быстрее на {{value}}",
+      "paceSlower": "Средний темп стал медленнее на {{value}}",
+      "volumeMore": "Объём вырос на {{value}}",
+      "volumeLess": "Объём меньше на {{value}}",
+      "volumeTotal": "Столько вы пробежали с {{year}} года",
+      "longest": "Самая длинная",
+      "heartRate": "Средний пульс",
+      "record": "Рекорд {{distance}}",
+      "records": "Рекорды",
+      "recordsSub": "за год",
+      "was": "было {{value}}",
+      "seconds": {
+        "one": "{{count}} секунду",
+        "few": "{{count}} секунды",
+        "many": "{{count}} секунд",
+        "other": "{{count}} секунды"
+      }
+    },
+    "plan": {
+      "title": "Выполнение плана",
+      "scope": {
+        "week": "эта неделя",
+        "month": "{{range}}",
+        "sinceStart": "с начала плана, {{date}}"
+      },
+      "workouts": "тренировок",
+      "nothingDue": "Пока нет прошедших тренировок",
+      "distance": "Километраж",
+      "kmValue": "{{actual}} из {{planned}}",
+      "upcoming": {
+        "one": "впереди ещё {{count}} тренировка",
+        "few": "впереди ещё {{count}} тренировки",
+        "many": "впереди ещё {{count}} тренировок",
+        "other": "впереди ещё {{count}} тренировки"
+      },
+      "missed": {
+        "one": "{{count}} пропущена",
+        "few": "{{count}} пропущены",
+        "many": "{{count}} пропущено",
+        "other": "{{count}} пропущены"
+      },
+      "offPlan": "ещё {{value}} вне плана"
+    },
+    "workouts": {
+      "title": "Тренировки",
+      "missed": "Пропущена · {{distance}} по плану",
+      "offPlan": "Вне плана",
+      "record": "Рекорд {{distance}}",
+      "statusPlan": "По плану",
+      "statusMissed": "Пропущена",
+      "types": {
+        "recovery": "Восстановительный бег",
+        "easy": "Лёгкий бег",
+        "long_run": "Длительная",
+        "tempo": "Темповая",
+        "threshold": "Пороговая",
+        "interval": "Интервалы",
+        "hill": "Горки",
+        "race": "Забег"
+      }
+    },
+    "analytics": {
+      "demo": "Демо-данные",
+      "form": {
+        "title": "Беговая форма",
+        "hint": "контрольные и забеги",
+        "faster": "Быстрее на {{value}} с {{date}}",
+        "slower": "Медленнее на {{value}}, чем {{date}}",
+        "note": "Сравниваем только контрольные тренировки и забеги на одной дистанции. VO₂max не показываем без валидной методики",
+        "empty": "Пока нет контрольных тренировок на этой дистанции"
+      },
+      "pace": {
+        "title": "Темп и скорость",
+        "hint": "по типам тренировок",
+        "types": {
+          "easy": "Лёгкий",
+          "tempo": "Темповый",
+          "interval": "Интервалы"
+        },
+        "faster": "{{type}}: на {{value}} с/км быстрее, чем в {{month}}",
+        "slower": "{{type}}: на {{value}} с/км медленнее, чем в {{month}}",
+        "note": "Разные типы тренировок напрямую не сравниваем. Выше столбик — быстрее темп"
+      },
+      "heartRate": {
+        "title": "Пульс",
+        "avg": "уд/мин в среднем",
+        "zones": "Время в зонах",
+        "note": "Медицинских выводов по пульсу не делаем",
+        "noneTitle": "Нет пульсовых данных",
+        "noneText": "Тренировки записаны без пульса. Подключите датчик или часы — зоны и средний пульс появятся сами"
+      },
+      "load": {
+        "title": "Тренировочная нагрузка",
+        "average": "В среднем {{value}} в неделю",
+        "note": "Текущая неделя не закончена — показана пунктиром"
+      },
+      "regularity": {
+        "title": "Регулярность",
+        "hint": "последние 4 недели",
+        "perWeek": "В неделю",
+        "perWeekValue": "{{value}} трен.",
+        "runDays": "Беговых дней",
+        "ofValue": "{{a}} из {{b}}",
+        "onPlan": "По плану",
+        "weeksValue": "{{a}} из {{b}} нед.",
+        "legendRun": "тренировка",
+        "legendRest": "отдых",
+        "legendMissed": "пропуск",
+        "note": "Дни отдыха — часть подготовки. Серии без отдыха не поощряем"
+      },
+      "planAnalysis": {
+        "title": "Анализ плана",
+        "kicker": "Ключевые тренировки",
+        "planned": "план",
+        "actual": "факт",
+        "missed": "пропуск"
+      },
+      "insights": {
+        "title": "Инсайты тренера",
+        "easy_pace_faster": "Лёгкий бег стал быстрее на {{seconds}} с/км.",
+        "easy_pace_faster_hr": "Лёгкий бег стал быстрее на {{seconds}} с/км при том же пульсе.",
+        "easy_pace_faster_basis": "Основание: {{workouts}} лёгких тренировок за 4 месяца",
+        "volume_steady": "Объём растёт ровно: {{min}}–{{max}}% в неделю, без скачков.",
+        "volume_steady_basis": "Основание: километраж последних {{weeks}} недель"
+      }
+    },
+    "empty": {
+      "title": "Пока нет тренировок",
+      "text": "Здесь появятся километры, время, рекорды и выполнение плана",
+      "record": "Записать первую тренировку",
+      "import": "Загрузить историю"
+    },
+    "units": {
+      "m": "м",
+      "ft": "фт"
+    }
+  },
+  "inbox": {
+    "title": "Уведомления",
+    "bellLabel": "Уведомления",
+    "bellLabelUnread": "Уведомления, непрочитанных: {{count}}",
+    "channelName": "Уведомления",
+    "empty": {
+      "title": "Пока тихо",
+      "body": "Здесь появятся сообщения Трефа и новости Трефикса"
+    },
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "loadMore": "Показать ещё",
+    "error": "Не удалось загрузить уведомления",
+    "retry": "Повторить",
+    "menu": {
+      "title": "Уведомления",
+      "readAll": "Отметить все прочитанными",
+      "settings": "Настройки уведомлений"
+    },
+    "item": {
+      "title": "Уведомление",
+      "open": "Открыть",
+      "delete": "Удалить"
+    },
+    "push": {
+      "offTitle": "Пуш-уведомления выключены",
+      "offBody": "Включите их, чтобы не пропускать сообщения Трефа",
+      "enable": "Включить",
+      "openSettings": "Открыть настройки"
+    },
+    "senders": {
+      "coach": "Треф",
+      "admin": "Трефикс",
+      "workouts": "Тренировки",
+      "plans": "План",
+      "progress": "Прогресс",
+      "account": "Трефикс"
+    },
+    "types": {
+      "coach_message": "Сообщение от Трефа",
+      "admin_message": "Сообщение от Трефикса"
+    }
+  }
+}

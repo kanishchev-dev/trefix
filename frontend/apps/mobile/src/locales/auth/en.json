@@ -1,0 +1,46 @@
+{
+  "socialButtons": {
+    "google": "Continue with Google",
+    "apple": "Continue with Apple",
+    "loading": "Signing in..."
+  },
+  "divider": "or",
+  "email": {
+    "accessibilityLabel": "Email",
+    "placeholder": "Email",
+    "submitAccessibilityLabel": "Continue"
+  },
+  "legal": {
+    "intro": "By tapping “Continue”, you agree to the",
+    "terms": "Terms of Use",
+    "conjunction": "and",
+    "privacy": "Privacy Policy"
+  },
+  "verification": {
+    "subtitlePrefix": "We sent a 4-digit code to",
+    "resendCountdownPrefix": "You can request another code in",
+    "resendPrompt": "Didn't get the code? Check your spam folder or",
+    "resendLink": "resend the code",
+    "resendSuffix": ".",
+    "resendBusy": "sending…",
+    "codeAccessibilityLabel": "Verification code",
+    "resendFailed": "Could not send a new code. Please try again.",
+    "back": "Back"
+  },
+  "status": {
+    "signedIn": "Signed in",
+    "logout": "Log out",
+    "sessionLabel": "Session"
+  },
+  "errors": {
+    "authFailedTitle": "Sign-in failed",
+    "authFailed": "Could not send the code. Please try again.",
+    "verificationFailedTitle": "Verification failed",
+    "verificationFailed": "Could not verify the code. Please try again.",
+    "socialFailedTitle": "Social sign-in failed",
+    "socialFailed": "Could not finish social sign-in. Please try again.",
+    "network": "No connection. Check the internet and try again.",
+    "serverUnavailable": "The service is temporarily unavailable. Please try again later.",
+    "tooManyRequests": "Too many attempts. Please wait a moment."
+  }
+}

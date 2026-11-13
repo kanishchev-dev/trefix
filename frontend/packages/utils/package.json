@@ -1,0 +1,18 @@
+{
+  "name": "@trefix/utils",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@trefix/eslint-config": "workspace:*",
+    "eslint": "9.35.0",
+    "vitest": "3.2.4"
+  }
+}

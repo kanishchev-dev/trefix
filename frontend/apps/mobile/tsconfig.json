@@ -1,0 +1,39 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "customConditions": ["react-native"],
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ESNext"],
+    "module": "preserve",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "paths": {
+      "@trefix/ui": ["../../packages/ui/src/index.ts"],
+      "@trefix/ui/*": ["../../packages/ui/src/*"],
+      "@trefix/api-client": ["../../packages/api-client/src/index.ts"],
+      "@trefix/api-client/*": ["../../packages/api-client/src/*"],
+      "@trefix/config": ["../../packages/config/src/index.ts"],
+      "@trefix/config/*": ["../../packages/config/src/*"],
+      "@trefix/tokens": ["../../packages/tokens/src/index.ts"],
+      "@trefix/tokens/*": ["../../packages/tokens/src/*"],
+      "@trefix/utils": ["../../packages/utils/src/index.ts"],
+      "@trefix/utils/*": ["../../packages/utils/src/*"]
+    }
+  },
+  "include": ["App.tsx", "index.ts", "src/**/*"],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js",
+    "android",
+    "ios"
+  ]
+}

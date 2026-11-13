@@ -1,0 +1,45 @@
+# Deploy on the server itself: a GitLab Runner there, either the shell executor or
+# the docker executor with /var/run/docker.sock mounted (volumes in config.toml),
+# so jobs drive the Docker of the server. The backend deploys first: it starts the API
+# container on the shared `trefix` network.
+#
+# CI/CD variables (Settings → CI/CD → Variables):
+#   NEXT_PUBLIC_BACKEND_URL  public API URL for the WebSocket, e.g. https://api.trefix.app
+#   AUTH_BACKEND_URL         optional — API URL for the Next server, http://trefix-backend:3000/v1 by default
+#   WEB_PUBLISH              optional — host:port of the site, 127.0.0.1:3001 by default
+
+stages:
+  - build
+  - deploy
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+default:
+  # Used by the docker executor only; the shell executor ignores it.
+  image: docker:28
+  # The runner on the production server.
+  tags: [Trefix, frontend, production]
+
+variables:
+  COMPOSE_FILE: deploy/docker-compose.yml
+  # Each pipeline deploys exactly the image it built.
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+build:
+  stage: build
+  script:
+    - docker compose build
+
+deploy:
+  stage: deploy
+  environment:
+    name: production
+  resource_group: production
+  script:
+    - docker network inspect trefix >/dev/null 2>&1 || docker network create trefix
+    - docker compose up -d --no-build --remove-orphans --wait
+    # Drop images of earlier deploys; rollback is a retry of an older pipeline.
+    - docker images --format '{{.Repository}}:{{.Tag}}' trefix-web | grep -v ":$IMAGE_TAG$" | xargs -r docker rmi || true
+    - docker image prune -f

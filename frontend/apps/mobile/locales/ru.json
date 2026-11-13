@@ -1,0 +1,6 @@
+{
+  "NSHealthShareUsageDescription": "Trefix читает ваши беговые тренировки, пульс, вес и пульс покоя, чтобы учитывать их в плане и анализе тренировок.",
+  "NSLocationWhenInUseUsageDescription": "Trefix использует геолокацию, чтобы записать маршрут, дистанцию и темп тренировки.",
+  "NSMotionUsageDescription": "Trefix считает шаги, чтобы измерять дистанцию без GPS и на беговой дорожке.",
+  "NSHealthUpdateUsageDescription": "Trefix сохраняет в Здоровье тренировки, записанные в приложении, вместе с маршрутом."
+}

@@ -1,0 +1,3167 @@
+{
+  "meta": {
+    "language": "en"
+  },
+  "tabs": {
+    "today": "Today",
+    "plan": "Plan",
+    "progress": "Progress",
+    "profile": "Profile"
+  },
+  "today": {
+    "title": "Today",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "noEvents": "No planned events",
+    "backToToday": "Today",
+    "addSectionTitle": "Add workout",
+    "workoutsSectionTitle": "Workouts",
+    "types": {
+      "easy": "Easy Run",
+      "tempo": "Tempo Run",
+      "interval": "Intervals",
+      "hill": "Hills",
+      "race": "Race"
+    },
+    "goalSheet": {
+      "title": "Set a goal",
+      "pastTitle": "How did it go",
+      "tabs": {
+        "none": "No goal",
+        "duration": "Time",
+        "distance": "Distance"
+      },
+      "distanceUnit": "km",
+      "durationUnit": "min",
+      "timeLimit": "Finish within",
+      "notSet": "Not set",
+      "estimateDistance": "≈ {{distance}} at {{pace}}",
+      "estimateDuration": "≈ {{duration}} at {{pace}}",
+      "corridor": "Pace {{pace}} — range {{min}}–{{max}}",
+      "noGoalHint": "Time and distance are recorded without a goal",
+      "startNow": "Start now",
+      "submit": "Add",
+      "save": "Save",
+      "cancel": "Cancel",
+      "done": "Done",
+      "clear": "Remove",
+      "fields": {
+        "distance": "Distance",
+        "duration": "Time",
+        "heartRate": "Average heart rate",
+        "rpe": "Effort, RPE"
+      },
+      "empty": {
+        "distance": "Not set",
+        "duration": "Not set",
+        "heartRate": "Not set",
+        "rpe": "Not set"
+      },
+      "timeLabels": {
+        "h": "h",
+        "min": "min",
+        "s": "s"
+      },
+      "bpm": "bpm",
+      "pastRequired": "Enter the distance and time",
+      "invalidValue": "Enter a value greater than 0",
+      "errorDefault": "Couldn't add the workout. Please try again."
+    },
+    "eventTypes": {
+      "workout": "Workout",
+      "recovery": "Recovery",
+      "rest": "Rest",
+      "insight": "Insight"
+    },
+    "workout": {
+      "statuses": {
+        "planned": "Planned",
+        "completed": "Completed",
+        "missed": "Missed",
+        "modified": "Modified by Trefix"
+      },
+      "intensity": {
+        "1": "low intensity",
+        "2": "moderate intensity",
+        "3": "high intensity"
+      }
+    },
+    "recovery": {
+      "title": "Recovery",
+      "description": "Your body needs rest"
+    },
+    "addSheet": {
+      "title": "Add Workout",
+      "planTab": "Plan Workout",
+      "logTab": "Log Completed",
+      "dateLabel": "Date (YYYY-MM-DD)",
+      "titleLabel": "Title (optional)",
+      "titlePlaceholder": "e.g. Morning Run",
+      "typeLabel": "WORKOUT TYPE",
+      "planDistance": "Target km",
+      "planDuration": "Target min",
+      "actualDistance": "Distance (km)",
+      "actualDuration": "Time (min)",
+      "heartRate": "Avg Heart Rate (bpm)",
+      "rpe": "Effort RPE (1-10)",
+      "notes": "Notes / Reflection",
+      "notesPlaceholder": "Felt good, legs fresh...",
+      "submitPlan": "Schedule Workout",
+      "submitLog": "Save Result",
+      "cancel": "Cancel",
+      "invalidDistance": "Please enter a valid distance",
+      "invalidDuration": "Please enter a valid duration"
+    },
+    "detailSheet": {
+      "result": "Result",
+      "actualDistance": "Actual Distance",
+      "actualDuration": "Actual Time",
+      "avgHeartRate": "Average Heart Rate",
+      "rpeRating": "RPE Rating",
+      "analysisTitle": "Execution Analysis",
+      "loadLabel": "Training Load",
+      "plannedLoad": "planned",
+      "completingHeader": "Enter actual metrics",
+      "saveResultButton": "Save Result"
+    },
+    "details": {
+      "session": "Session",
+      "description": "Description",
+      "start": "Start workout",
+      "coachNote": {
+        "author": "Tref",
+        "role": "Your coach",
+        "writing": "Writing a note…"
+      },
+      "markDone": "Mark as done",
+      "planned": "plan {{distance}} in {{duration}}",
+      "chartLevels": {
+        "1": "Low",
+        "2": "Moderate",
+        "3": "High"
+      },
+      "manual": {
+        "saved": "Workout updated",
+        "removed": "Workout removed",
+        "removeBody": "The workout will be deleted permanently. Are you sure you want to delete it?"
+      },
+      "menu": {
+        "title": "Workout actions",
+        "moveHint": "Pick another day",
+        "editHint": "Type, distance and time",
+        "removeHint": "Take it off your calendar"
+      },
+      "sheets": {
+        "moveTitle": "Change workout date",
+        "editTitle": "Edit workout",
+        "removeTitle": "Delete workout",
+        "removeBody": "The workout will be deleted permanently. Are you sure you want to delete it?"
+      },
+      "moveToToday": "Move to today",
+      "moveToTodayFailed": "Couldn't move the workout. Please try again.",
+      "futureNote": "You can start it on its day. To run it today, move it.",
+      "missedNote": "Ran but didn't record it? Mark it done — the goal is filled in, just add the time."
+    }
+  },
+  "plan": {
+    "title": "Training Plan",
+    "overview": {
+      "weekProgress": "Week {{current}} of {{total}}",
+      "daysToRace": "{{days}} days to race",
+      "status": {
+        "notStarted": "Starts soon",
+        "active": "Active",
+        "completed": "Plan completed"
+      }
+    },
+    "timeline": {
+      "header": "Training plan",
+      "weekLabel": "WEEK {{number}}",
+      "currentBadge": "CURRENT",
+      "completedBadge": "COMPLETED",
+      "upcomingBadge": "UPCOMING",
+      "workoutsCount": "{{count}} workouts",
+      "distanceKm": "{{distance}} km"
+    },
+    "phases": {
+      "BASE": "BASE",
+      "BUILD": "BUILD",
+      "RECOVERY": "RECOVERY",
+      "SPECIFIC": "SPECIFIC",
+      "PEAK": "PEAK",
+      "TAPER": "TAPER",
+      "RACE": "RACE"
+    },
+    "currentWeekContext": {
+      "sectionTitle": "This week",
+      "keyFocus": "Key focus"
+    },
+    "adaptations": {
+      "sectionTitle": "Recent adaptations",
+      "onTrack": "Your plan is on track",
+      "daysAgo": "{{days}}d ago",
+      "hoursAgo": "{{hours}}h ago",
+      "justNow": "Just now",
+      "types": {
+        "ADD_RECOVERY": "Recovery added",
+        "REDUCE_INTENSITY": "Intensity reduced",
+        "REDUCE_VOLUME": "Volume reduced",
+        "INCREASE_VOLUME": "Volume increased",
+        "INCREASE_INTENSITY": "Intensity increased",
+        "MOVE": "Workout moved",
+        "REPLACE": "Workout replaced",
+        "REGENERATE_PLAN": "Plan rebuilt",
+        "UPDATE_HEART_RATE": "Heart rate targets updated",
+        "default": "Plan adjusted"
+      },
+      "reasons": {
+        "high_fatigue": "Fatigue has built up",
+        "poor_performance": "The workout was harder than planned",
+        "low_recovery": "Not enough recovery",
+        "excellent_performance": "Training is going great",
+        "strong_adaptation": "Your body is adapting well",
+        "workout_replacement": "The workout had to be replaced",
+        "stable_load": "The load is stable",
+        "conservative_progression": "Increasing the load carefully",
+        "heart_rate_zones_changed": "Heart rate zones changed"
+      }
+    },
+    "weekDetails": {
+      "title": "Week {{number}} Details",
+      "weeklyFocus": "Weekly focus",
+      "trainingIntent": "Training intent",
+      "plannedVolume": "Planned volume",
+      "workouts": "workouts",
+      "distance": "km",
+      "keySessions": "Key sessions",
+      "changesThisWeek": "Adaptations for this week",
+      "close": "Close"
+    },
+    "adaptationDetails": {
+      "title": "Adaptation Details",
+      "whatChanged": "What changed",
+      "whyItChanged": "Why it changed",
+      "affectedWeek": "Affected week",
+      "whenItHappened": "When it happened",
+      "close": "Close"
+    },
+    "emptyState": {
+      "title": "Your training plan starts here",
+      "description": "Build a plan that fits the way you run.",
+      "createButton": "Create plan"
+    },
+    "creation": {
+      "selector": {
+        "title": "Create your plan",
+        "subtitle": "How would you like to build your training plan?",
+        "aiTitle": "With Trefix AI",
+        "aiDescription": "Get a personalized plan based on your goal and current fitness.",
+        "manualTitle": "Create manually",
+        "manualDescription": "Build your own training schedule and workouts.",
+        "cancel": "Cancel"
+      },
+      "common": {
+        "back": "Back",
+        "close": "Close",
+        "cancel": "Cancel",
+        "continue": "Continue",
+        "buildPlan": "Build plan",
+        "distanceUnit": "km"
+      },
+      "discard": {
+        "title": "Discard plan?",
+        "message": "Your changes will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "steps": {
+        "goal": {
+          "title": "Choose your training goal",
+          "question": ""
+        },
+        "goalType": {
+          "title": "Choose your training goal",
+          "question": ""
+        },
+        "goalSetup": {
+          "title": "Set your training goal",
+          "question": "Tell us what result you want to reach. The plan's volume, intensity and workout length are built from it. Current level and target date are optional, but with them the plan sets the starting load and timeline more precisely."
+        },
+        "schedule": {
+          "title": "Your schedule",
+          "question": "Choose the days you can train and how long a workout usually lasts. The plan spreads the load over the selected days only, leaves recovery time between hard sessions and puts the long run on the day that suits you."
+        },
+        "structure": {
+          "title": "Plan structure",
+          "question": "Set how many weeks the preparation takes, how many workouts a week and what to focus on. This defines how fast the load grows and which workouts appear more often. You will see the whole plan and can adjust it before it is created."
+        }
+      },
+      "categories": {
+        "race_event": "Race & Events",
+        "performance": "Performance",
+        "training_habit": "Training Habit",
+        "fitness_lifestyle": "Fitness & Health",
+        "challenge": "Challenges",
+        "flexible": "Custom Goal"
+      },
+      "goalTypes": {
+        "prepare_for_race": "Race preparation",
+        "improve_race_result": "Improve race time",
+        "run_new_distance": "New distance",
+        "trail_preparation": "Trail running",
+        "ultra_preparation": "Ultra marathon",
+        "backyard_preparation": "Backyard Ultra",
+        "improve_speed": "Improve speed",
+        "improve_pace": "Improve pace",
+        "build_endurance": "Build endurance",
+        "improve_aerobic_fitness": "Aerobic fitness",
+        "improve_hills": "Hill running",
+        "start_running": "Start running",
+        "return_to_running": "Return to running",
+        "build_consistency": "Build consistency",
+        "increase_running_volume": "Increase volume",
+        "run_continuously": "Run continuously",
+        "lose_weight": "Lose weight",
+        "maintain_fitness": "Maintain fitness",
+        "general_health": "General health",
+        "complete_challenge": "Challenge",
+        "custom": "Custom goal"
+      },
+      "goalDescriptions": {
+        "prepare_for_race": "Train for a specific event distance with or without target finish time",
+        "improve_race_result": "Target a specific finish time for a race distance",
+        "run_new_distance": "Step up to a longer distance you haven't run before",
+        "trail_preparation": "Prepare for off-road trail running with elevation gain",
+        "ultra_preparation": "Prepare for distances beyond marathon",
+        "backyard_preparation": "Train for last-one-standing backyard loop challenges",
+        "improve_speed": "Focus on short-distance speed and interval capability",
+        "improve_pace": "Sustain a faster average pace over your target distance",
+        "build_endurance": "Increase continuous duration and long run capability",
+        "improve_aerobic_fitness": "Build base aerobic capacity and heart-rate efficiency",
+        "improve_hills": "Strengthen climbing power and hill endurance",
+        "start_running": "Begin running safely with walk/run intervals and habit building",
+        "return_to_running": "Smoothly rebuild fitness after a break",
+        "build_consistency": "Run regularly a target number of days every week",
+        "increase_running_volume": "Safely build higher weekly mileage or time",
+        "run_continuously": "Run without stopping for a target time or distance",
+        "lose_weight": "Sustainable running plan aligned with weight-loss goals",
+        "maintain_fitness": "Keep current fitness level with comfortable frequency",
+        "general_health": "Run for overall health, energy, and well-being",
+        "complete_challenge": "Achieve a monthly or custom running challenge",
+        "custom": "Describe your goal in your own words"
+      },
+      "fields": {
+        "currentSection": "Current Metrics",
+        "targetSection": "Target Metrics",
+        "optionalLabel": "Optional",
+        "requiredLabel": "Required",
+        "distance": "Distance",
+        "targetTime": "Target Time",
+        "currentResult": "Current Result",
+        "currentPace": "Current Pace",
+        "targetPace": "Target Pace",
+        "targetWeight": "Target Weight",
+        "currentWeight": "Current Weight",
+        "targetRunsPerWeek": "Target Runs / Week",
+        "currentRunsPerWeek": "Current Runs / Week",
+        "weeklyVolumeDistance": "Weekly Volume",
+        "weeklyVolumeDuration": "Weekly Volume",
+        "continuousDuration": "Continuous Time",
+        "continuousDistance": "Continuous Distance",
+        "elevationGain": "Elevation Gain",
+        "timeOnFeet": "Time on Feet",
+        "loopsCount": "Number of Loops",
+        "shortDistanceResult": "Short Distance Result",
+        "benchmarkValue": "Benchmark Value",
+        "challengeMetric": "Challenge Metric",
+        "challengeTarget": "Challenge Target",
+        "challengePeriod": "Challenge Period",
+        "challengeProgress": "Current Progress",
+        "customDescriptionLabel": "Describe what you want to achieve",
+        "customDescriptionPlaceholder": "e.g., I want to comfortably run with my local running club twice a week for an hour.",
+        "targetDate": "Target Date"
+      },
+      "challengeMetrics": {
+        "total_distance": "Total distance",
+        "total_duration": "Total duration",
+        "runs_count": "Number of runs",
+        "active_days": "Active days"
+      },
+      "challengePeriods": {
+        "this_week": "This week",
+        "this_month": "This month",
+        "this_year": "This year",
+        "custom": "Custom deadline"
+      },
+      "goalSection": "Goal distance",
+      "targetTimeSection": "Target time",
+      "targetTimePlaceholder": "45:00",
+      "targetDateSection": "Target date",
+      "trainingDaysSection": "Choose training days",
+      "trainingDaysHint": "Pick the days you can definitely run. The other days become rest days.",
+      "sessionsPerWeekText": "Workouts per week: {{count}}",
+      "longRunSection": "Choose the long run day",
+      "longRunHint": "The longest workout of the week, usually on a weekend. If no day is chosen, the plan picks one.",
+      "durationSection": "Choose workout duration",
+      "durationHint": "How much time you can usually give a single workout. The long run may take longer.",
+      "weeksLabel": "Choose plan length",
+      "weeksHint": "How many weeks the preparation takes. More weeks mean a smoother load increase.",
+      "weeksSuffix": "weeks",
+      "sessionsLabel": "Choose workouts per week",
+      "sessionsHint": "No more than the training days you selected. The other days stay free.",
+      "focusSection": "Choose training focus",
+      "focusHint": "Which workouts appear more often in the plan. Pick several or none.",
+      "goals": {
+        "halfMarathon": "Half Marathon",
+        "marathon": "Marathon",
+        "justRunning": "Just running"
+      },
+      "focusOptions": {
+        "easy": "Easy running",
+        "long_run": "Long run",
+        "tempo": "Tempo",
+        "interval": "Intervals",
+        "hill": "Hills"
+      },
+      "workoutTypes": {
+        "easy": "Easy",
+        "long_run": "Long run",
+        "tempo": "Tempo",
+        "threshold": "Threshold",
+        "interval": "Intervals",
+        "hill": "Hills",
+        "recovery": "Recovery"
+      },
+      "preview": {
+        "title": "Review your plan",
+        "hint": "This is how your plan will look. Tap a workout to change or remove it. Once created, the plan appears in the Plan tab.",
+        "statWeeks": "weeks",
+        "statRuns": "runs per week",
+        "statDistance": "km total",
+        "startsOn": "Starts {{date}}",
+        "weekLabel": "Week {{number}}",
+        "weekSummary": "Workouts: {{workouts}} · {{distance}} km",
+        "edited": "edited",
+        "createButton": "Create plan",
+        "phases": {
+          "BASE": "base",
+          "BUILD": "build",
+          "RECOVERY": "recovery",
+          "SPECIFIC": "specific",
+          "PEAK": "peak",
+          "TAPER": "taper",
+          "RACE": "race"
+        },
+        "phaseTitles": {
+          "BASE": "Building consistency",
+          "BUILD": "Increasing training load",
+          "RECOVERY": "Recovery",
+          "SPECIFIC": "Race-specific work",
+          "PEAK": "Peak preparation",
+          "TAPER": "Reducing load before the race",
+          "RACE": "Race week"
+        },
+        "phaseIntents": {
+          "BASE": "Establish a steady running routine and a comfortable aerobic base.",
+          "BUILD": "Build aerobic strength while recovering between quality sessions.",
+          "RECOVERY": "Let your body adapt to the previous load while keeping the routine.",
+          "SPECIFIC": "Develop target race pace efficiency and rhythm.",
+          "PEAK": "Run the final key race simulation before reducing volume.",
+          "TAPER": "Shed residual fatigue while staying sharp.",
+          "RACE": "Rest, hydrate, carb load and run your goal race."
+        }
+      },
+      "goalForm": {
+        "goalSection": "Goal",
+        "goalHint": "What you want to achieve. The plan is built from these values.",
+        "currentSection": "Current level",
+        "currentHint": "Where you are today. Helps set the right starting load.",
+        "addCurrent": "Add current level",
+        "removeCurrent": "Remove current level",
+        "dateSection": "Target date",
+        "dateHint": "Race day or the deadline for reaching the goal.",
+        "addDate": "Add target date",
+        "removeDate": "Remove date",
+        "remove": "Remove",
+        "measureTime": "By time",
+        "measureDistance": "By distance",
+        "raceDistance": "Race distance",
+        "raceDistanceInfo": "The distance of the race you are preparing for.",
+        "trailDistanceInfo": "Total length of the course.",
+        "finishTime": "Target time",
+        "addFinishTime": "Add target time",
+        "finishTimeInfo": "Without a target time the plan prepares you to finish strong, with no result goal.",
+        "bestTime": "Best result",
+        "bestTimeInfo": "Your best time at the selected distance.",
+        "longestRun": "Longest run",
+        "longestRunInfo": "The longest distance you have run in recent months.",
+        "distance": "Distance",
+        "elevation": "Elevation gain",
+        "addElevation": "Add elevation gain",
+        "trailElevationInfo": "Total elevation gain of the course.",
+        "hillsElevationInfo": "Elevation gain per workout.",
+        "weeklyDistance": "Weekly volume",
+        "addWeeklyDistance": "Add weekly volume",
+        "weeklyDuration": "Running time per week",
+        "addWeeklyDuration": "Add running time per week",
+        "loops": "Number of loops",
+        "loopsInfo": "One loop is 6.7 km, starting every hour.",
+        "timeOnFeet": "Longest time on feet",
+        "timeOnFeetInfo": "Your longest continuous time moving.",
+        "pace": "Pace",
+        "paceDistance": "Distance",
+        "addPaceDistance": "Add distance",
+        "paceDistanceInfo": "The distance over which to hold the target pace.",
+        "continuous": "Continuous running",
+        "addContinuous": "Add continuous running time",
+        "continuousInfo": "How long to run without stopping: by time or by distance.",
+        "runsPerWeek": "Workouts per week",
+        "addRunsPerWeek": "Add number of workouts",
+        "weight": "Weight",
+        "aerobicNote": "Nothing to fill in: the plan follows your workouts and heart rate.",
+        "challengeMetric": "Metric",
+        "challengeTarget": "Target value",
+        "challengePeriod": "Period",
+        "description": "Goal description",
+        "descriptionPlaceholder": "For example: run with a running club twice a week for an hour.",
+        "runsUnit": "workouts",
+        "daysUnit": "days"
+      },
+      "datePicker": {
+        "noDate": "No date",
+        "setDate": "Set date",
+        "clearDate": "Remove date",
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "inTime": "in {{value}}",
+        "weeksShort": "{{count}} wk",
+        "daysShort": "{{count}} d",
+        "outOfPlan": "outside the {{min}}–{{max}} wk plan",
+        "weekdays": [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ],
+        "months": [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December"
+        ]
+      },
+      "units": {
+        "km": "km",
+        "m": "m",
+        "min": "min",
+        "h": "h",
+        "kg": "kg"
+      },
+      "workoutEditor": {
+        "title": "Edit workout",
+        "addButton": "Add workout",
+        "typeLabel": "Workout type",
+        "dayLabel": "Day",
+        "distanceLabel": "Distance",
+        "durationLabel": "Duration",
+        "save": "Save",
+        "addShort": "Add",
+        "removeButton": "Delete"
+      },
+      "errors": {
+        "invalidTargetTime": "Enter a valid time like 45:00 or 1:45:00",
+        "invalidTargetDate": "Target date must be in the future",
+        "invalidDistance": "Distance must be between 1 and 100 km",
+        "invalidDuration": "Duration must be between 10 and 300 minutes",
+        "generationFailed": "We couldn't build your plan",
+        "creationFailed": "We couldn't create your plan",
+        "tryAgain": "Try again"
+      },
+      "categoriesAll": "All"
+    },
+    "notStartedState": {
+      "title": "Your plan starts soon",
+      "subtitle": "Starts {{date}}",
+      "description": "Get ready for Week 1. Your training schedule will unlock automatically on the start date."
+    },
+    "completedState": {
+      "title": "Goal Achieved!",
+      "description": "You completed all {{total}} weeks of your training plan. Great job!",
+      "newGoalButton": "Start a new goal"
+    },
+    "errorState": {
+      "title": "We couldn't load your plan",
+      "description": "Check your connection and try again.",
+      "retryButton": "Try again"
+    },
+    "screen": {
+      "phaseNames": {
+        "BASE": "Base",
+        "BUILD": "Build",
+        "RECOVERY": "Recovery",
+        "SPECIFIC": "Specific",
+        "PEAK": "Peak",
+        "TAPER": "Taper",
+        "RACE": "Race"
+      },
+      "hero": {
+        "kicker": "Current plan · week {{current}} of {{total}}",
+        "startIn": {
+          "one": "Race {{date}} · in {{count}} day",
+          "other": "Race {{date}} · in {{count}} days"
+        },
+        "startToday": "Race {{date}} · today",
+        "planEnd": "Last week of the plan ends {{date}}",
+        "raceOn": "Race {{date}}"
+      },
+      "thisWeek": {
+        "kicker": "This week · {{phase}}",
+        "today": "today",
+        "rest": "rest",
+        "keySessions": "Key sessions: {{list}}",
+        "a11yDay": "{{day}}: {{state}}",
+        "openWeek": "Open the current week"
+      },
+      "todayTitle": "Today",
+      "coach": {
+        "weekTitle": "Tref adjusted week {{number}}",
+        "planTitle": "Tref adjusted the plan"
+      },
+      "weeks": {
+        "title": "Weeks",
+        "phaseRange": "{{phase}} · weeks {{from}}–{{to}}",
+        "phaseSingle": "{{phase}} · week {{number}}",
+        "weekTitle": "Week {{number}} · {{distance}}",
+        "workouts": {
+          "one": "{{count}} workout",
+          "other": "{{count}} workouts"
+        },
+        "allDone": "all done",
+        "missed": {
+          "one": "{{count}} missed",
+          "other": "{{count}} missed"
+        },
+        "goal": "Goal · {{value}}",
+        "goalFallback": "Plan goal"
+      },
+      "weekSheet": {
+        "kicker": "{{phase}} · week {{number}} of {{total}}",
+        "kickerShort": "{{phase}} · week {{number}}",
+        "title": "Week {{number}}",
+        "volume": "volume",
+        "done": "done",
+        "doneValue": "{{done}} of {{total}}",
+        "workouts": "workouts",
+        "keySessions": "key",
+        "workoutsTitle": "Workouts",
+        "changesTitle": "Changes by Tref",
+        "close": "Close"
+      },
+      "empty": {
+        "title": "Ready to start training?",
+        "description": "Choose how to build your training plan and move towards your goal",
+        "coachTitle": "Plan with Tref",
+        "coachHint": "A smart plan for your goal",
+        "manualTitle": "Your own plan",
+        "manualHint": "Workouts on your terms",
+        "howTitle": "How it works with the AI coach",
+        "howCount": "3 steps",
+        "step": "Step {{number}}",
+        "steps": [
+          {
+            "title": "Set your goal",
+            "description": "Choose the distance, the result you want and the race date. Tref takes them into account when building the plan."
+          },
+          {
+            "title": "Set up your schedule",
+            "description": "Pick how many workouts a week, which days suit you and the volume you want."
+          },
+          {
+            "title": "Start training",
+            "description": "Tref builds the plan week by week, analyses your results and adapts the training to your progress."
+          }
+        ],
+        "previewRace": "Half marathon",
+        "previewTime": "1:45:00",
+        "previewDistance": "21.1 km",
+        "coachBadge": "Tref",
+        "drafts": "Drafts · {{count}}",
+        "start": "Start",
+        "allPlans": "All plans and history",
+        "weeksCount": {
+          "one": "{{count}} week",
+          "other": "{{count}} weeks"
+        },
+        "perWeek": "{{count}}/wk"
+      },
+      "details": {
+        "draftKicker": "Draft · {{weeks}}",
+        "completedKicker": "Plan completed",
+        "cancelledKicker": "Plan cancelled",
+        "range": "{{kicker}} · {{range}}",
+        "resultDone": "done",
+        "resultDistance": "run",
+        "resultRate": "completion",
+        "resultTime": "race result",
+        "longRun": "long run on {{day}}"
+      }
+    }
+  },
+  "trefix": {
+    "title": "Trefix",
+    "status": "online",
+    "subtitle": "AI coach",
+    "empty": {
+      "title": "AI coach is always here.",
+      "body": "Ask about training, recovery, nutrition, or your progress."
+    },
+    "starters": [
+      "How should I run today?",
+      "What should I do after a hard workout?",
+      "Show my progress",
+      "Build a plan for the week"
+    ],
+    "composerPlaceholder": "Write a message...",
+    "errors": {
+      "athleteMissing": "Create an athlete profile to talk to the coach.",
+      "unavailable": "The coach is unavailable right now. Please try again.",
+      "network": "No connection. Check the internet and try again."
+    }
+  },
+  "progress": {
+    "periods": {
+      "4W": "4W",
+      "8W": "8W",
+      "3M": "3M",
+      "6M": "6M",
+      "1Y": "1Y"
+    },
+    "askCoach": "Ask the coach",
+    "sections": {
+      "goal": "Goal",
+      "plan": "Plan",
+      "forecast": "Race predictions",
+      "formMetrics": "Form & metrics",
+      "capabilities": "Runner capabilities",
+      "records": "Records",
+      "all": "All",
+      "dynamics": "Trends",
+      "achievements": "Achievements"
+    },
+    "goal": {
+      "status": {
+        "achieved": "Achieved",
+        "on_track": "On track",
+        "behind": "Behind",
+        "no_data": "Not enough data",
+        "no_forecast": "No forecast"
+      },
+      "title": "{{distance}} in {{time}}",
+      "distanceOnly": "{{distance}}",
+      "start": "Race on {{date}}",
+      "weeksLeft": {
+        "one": "in {{count}} week",
+        "few": "in {{count}} weeks",
+        "many": "in {{count}} weeks",
+        "other": "in {{count}} weeks"
+      },
+      "forecastNow": "Forecast now",
+      "remaining": "Still to cut",
+      "ahead": "Ahead by",
+      "targetLine": "goal {{time}}",
+      "projectionNote": "Dashed — forecast at the current rate of progress",
+      "noDataHint": "Add a result or a workout longer than 10 minutes to get a forecast"
+    },
+    "forecastCard": {
+      "basis": {
+        "one": "Based on {{count}} workout",
+        "few": "Based on {{count}} workouts",
+        "many": "Based on {{count}} workouts",
+        "other": "Based on {{count}} workouts"
+      },
+      "setGoal": "Set a goal",
+      "setGoalDescription": "The coach will build a plan for it",
+      "empty": "Needs at least one workout longer than 10 minutes"
+    },
+    "form": {
+      "title": "Fitness build-up",
+      "fitness": "Fitness",
+      "fatigue": "Fatigue",
+      "form": "Form",
+      "change": "in {{weeks}} wk",
+      "thresholdPace": "Threshold pace",
+      "vo2max": "VO₂max",
+      "thresholdHr": "Threshold HR",
+      "estimate": "estimate",
+      "fromProfile": "from profile",
+      "locked": {
+        "one": "{{count}} more workout",
+        "few": "{{count}} more workouts",
+        "many": "{{count}} more workouts",
+        "other": "{{count}} more workouts"
+      },
+      "lockedDescription": "Unlocks form, threshold and VO₂max"
+    },
+    "capabilities": {
+      "endurance": "Endurance",
+      "threshold": "Threshold",
+      "speed": "Speed",
+      "recovery": "Recovery",
+      "consistency": "Consistency"
+    },
+    "records": {
+      "distances": {
+        "1k": "1 km",
+        "5k": "5 km",
+        "10k": "10 km",
+        "half_marathon": "Half marathon",
+        "marathon": "Marathon"
+      },
+      "noResult": "No result",
+      "add": "Add",
+      "new": "New",
+      "sources": {
+        "strava": "from Strava",
+        "workout": "workout",
+        "race": "race",
+        "test": "test",
+        "manual": "manual",
+        "health": "from health data"
+      },
+      "emptyTitle": "No results yet",
+      "emptyDescription": "The coach uses them in predictions",
+      "addResult": "Add a result"
+    },
+    "dynamics": {
+      "metrics": {
+        "distance": "Distance",
+        "pace": "Pace",
+        "heartRate": "Heart rate",
+        "load": "Load"
+      },
+      "captions": {
+        "distance": {
+          "week": "per week on average",
+          "month": "per month on average"
+        },
+        "pace": "average pace",
+        "heartRate": "average heart rate",
+        "load": {
+          "week": "load per week",
+          "month": "load per month"
+        }
+      },
+      "profileHint": "Usual volume in your profile — {{value}}",
+      "update": "Update",
+      "noData": "No workouts in this period",
+      "bpm": "bpm"
+    },
+    "achievements": {
+      "longest_run": "Longest workout",
+      "streak": {
+        "one": "{{count}} week without misses",
+        "few": "{{count}} weeks without misses",
+        "many": "{{count}} weeks without misses",
+        "other": "{{count}} weeks without misses"
+      },
+      "new_record": "Record on {{distance}}",
+      "total_distance": "{{value}} in total",
+      "since": "since {{date}}",
+      "empty": "They will appear as you train"
+    },
+    "recordsScreen": {
+      "title": "Records",
+      "distance": "Distance",
+      "best": "Best",
+      "prediction": "Prediction",
+      "footnote": "Prediction — an estimate of your current form if you ran all-out today.",
+      "history": "{{distance}} · history",
+      "excludeFootnote": "Long press to exclude a broken workout or delete a result.",
+      "exclude": "Exclude from records",
+      "delete": "Delete result",
+      "cancel": "Cancel",
+      "noAttempts": "No attempts on this distance yet"
+    },
+    "addResult": {
+      "title": "Add a result",
+      "distance": "Distance",
+      "other": "Other",
+      "time": "Time",
+      "hours": "h",
+      "minutes": "min",
+      "seconds": "s",
+      "pace": "Pace {{pace}}",
+      "where": "Where",
+      "kinds": {
+        "race": "Race",
+        "workout": "Workout",
+        "test": "Test"
+      },
+      "name": "Name",
+      "namePlaceholder": "Optional",
+      "date": "Date",
+      "note": "The coach will update predictions",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Result added"
+    },
+    "metric": {
+      "titles": {
+        "threshold_pace": "Threshold pace",
+        "vo2max": "VO₂max"
+      },
+      "faster": "{{value}} faster",
+      "slower": "{{value}} slower",
+      "higher": "+{{value}}",
+      "lower": "−{{value}}",
+      "unchanged": "no change",
+      "forPeriod": "over the period",
+      "updated": "updated {{ago}}",
+      "howTitle": "How it's calculated",
+      "source": "Source",
+      "sourceValue": "Best workouts and results of the last 90 days",
+      "accuracy": "Accuracy",
+      "accuracyLevels": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "accuracyCount": {
+        "one": "{{count}} workout",
+        "few": "{{count}} workouts",
+        "many": "{{count}} workouts",
+        "other": "{{count}} workouts"
+      },
+      "zones": "Heart rate zones",
+      "zonesByMax": "By max HR {{value}}",
+      "zonesByThreshold": "By threshold {{value}}",
+      "zonesNotSet": "Heart rate not set",
+      "thresholdHint": "Set your threshold heart rate in the profile for more accurate zones",
+      "planTitle": "What it means for training",
+      "easy": "Easy run",
+      "tempo": "Tempo",
+      "interval": "Intervals",
+      "topTitle": "Influenced it most",
+      "noData": "No data yet — needs a workout longer than 10 minutes"
+    },
+    "errors": {
+      "generic": "Couldn't save. Please try again",
+      "RESULT_INVALID": "Check the distance, time and date"
+    },
+    "retry": "Retry",
+    "loadError": "Couldn't load progress"
+  },
+  "profile": {
+    "hero": {
+      "name": "Alex Johnson",
+      "joined": "Registered Sep 2026",
+      "edit": "Edit",
+      "subscription": "Premium",
+      "expires": "Expires Sep 30, 2026",
+      "inactive": "No active subscription",
+      "inactiveHint": "Renew to restore premium access",
+      "changePhoto": "Change Photo",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "save": "Save Changes"
+    },
+    "qr": {
+      "title": "QR Code",
+      "partnerCode": "Partner Code",
+      "close": "Close"
+    },
+    "referral": {
+      "title": "Referral code"
+    },
+    "settings": {
+      "title": "Settings",
+      "notifications": "Notifications",
+      "notificationsTitle": "Notifications",
+      "notificationsWorkout": "Workout Reminders",
+      "notificationsWorkoutDesc": "Push notifications about upcoming sessions",
+      "notificationsWeekly": "Weekly Digest",
+      "notificationsWeeklyDesc": "Weekly summary of progress and form changes",
+      "notificationsAi": "AI Coach Updates",
+      "notificationsAiDesc": "Insights and adaptations from Trefix",
+      "language": "Language",
+      "languageTitle": "App Language",
+      "languages": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "theme": "Theme",
+      "themeTitle": "Theme",
+      "themes": {
+        "system": "System Default",
+        "dark": "Dark",
+        "light": "Light"
+      }
+    },
+    "integrations": {
+      "title": "Integrations",
+      "subtitle": "Connected services",
+      "comingSoon": "Coming soon",
+      "strava": {
+        "title": "Strava",
+        "description": "Automatically import your runs and let Trefix use them to adapt your training.",
+        "disconnectedStatus": "Not connected",
+        "connectedStatus": "Connected",
+        "reauthStatus": "Reconnect required",
+        "errorStatus": "Sync error",
+        "connectBtn": "Connect with Strava",
+        "reconnectBtn": "Reconnect Strava",
+        "syncNow": "Sync now",
+        "disconnect": "Disconnect",
+        "connectedStateTitle": "Strava Connected",
+        "connectionExpiredTitle": "Connection Expired",
+        "reconnectDesc": "Please reconnect your Strava account to continue syncing your activities.",
+        "lastSyncLabel": "Last synced",
+        "activitiesImportedLabel": "Activities imported",
+        "justNow": "Just now",
+        "importingHistory": "Importing your running history..."
+      },
+      "health": {
+        "appleTitle": "Apple Health",
+        "connectTitle": "Health Connect",
+        "status": {
+          "disconnected": "Not connected",
+          "connected": "Connected",
+          "syncedAgo": "Connected · synced {{ago}}",
+          "syncing": "Syncing…",
+          "noData": "Access needed",
+          "error": "Sync error",
+          "notInstalled": "Not installed",
+          "updateRequired": "Update required",
+          "unsupported": "Not available on this device"
+        },
+        "intro": "Workouts from your watch and phone will reach Trefix on their own — no Strava or manual logging needed.",
+        "whatTitle": "What Trefix gets",
+        "what": [
+          "Running workouts, treadmill included",
+          "Heart rate, distance and elevation gain",
+          "Weight and resting heart rate for your profile"
+        ],
+        "privacy": "Trefix only reads data: it writes nothing and shares nothing with third parties.",
+        "stravaNote": "Workouts Strava saves to {{store}} won't be duplicated.",
+        "connect": "Connect",
+        "connecting": "Connecting…",
+        "statusTitle": "Sync",
+        "lastSync": "Last sync",
+        "never": "Not yet",
+        "imported": "Workouts imported",
+        "inProgress": "Loading workouts…",
+        "syncNow": "Sync now",
+        "settingsTitle": "Settings",
+        "profileSync": "Update profile",
+        "profileSyncDescription": "Weight and resting heart rate",
+        "access": "Data access",
+        "accessDescriptionIos": "Permissions in the Apple Health app",
+        "accessDescriptionAndroid": "Health Connect permissions",
+        "disconnect": "Disconnect",
+        "disconnectTitle": "Disconnect {{store}}?",
+        "disconnectBody": "New workouts will stop arriving. Workouts already in Trefix stay. You can revoke data access in {{store}} settings.",
+        "disconnectConfirm": "Disconnect",
+        "disconnected": "{{store}} disconnected",
+        "noWorkoutsTitle": "No workouts found",
+        "noWorkoutsBody": "Check that Trefix is allowed to read Workouts in the Apple Health app.",
+        "openHealth": "Open Apple Health",
+        "historyTitle": "Only the last 30 days are loaded",
+        "historyBody": "Allow access to history to load workouts from the past six months.",
+        "historyAction": "Allow history access",
+        "deniedTitle": "No access to workouts",
+        "deniedBody": "Sync is impossible without access to workouts. Allow it in Health Connect settings.",
+        "openSettings": "Open settings",
+        "notInstalledTitle": "Health Connect is needed",
+        "notInstalledBody": "Install Health Connect from Google Play so Trefix can receive your workouts.",
+        "install": "Install Health Connect",
+        "updateTitle": "Update Health Connect",
+        "updateBody": "The installed version of Health Connect is outdated.",
+        "update": "Update",
+        "unsupportedTitle": "Not available on this device",
+        "unsupportedBodyIos": "This device has no Apple Health app.",
+        "unsupportedBodyAndroid": "Health Connect is not available on this device.",
+        "syncFailed": "Sync failed",
+        "synced": "Synced",
+        "connectFailed": "Couldn't connect",
+        "consent": {
+          "title": "Health data",
+          "body": "Trefix will receive running workouts, heart rate, distance, weight and resting heart rate from {{store}}. They are used to build your plan, analyse workouts and power AI coach advice. The data is stored on Trefix servers and is not shared with third parties. You can withdraw consent at any time — the integration will be turned off.",
+          "checkbox": "I consent to the processing of my health data",
+          "policy": "Privacy policy",
+          "continue": "Continue",
+          "cancel": "Cancel"
+        },
+        "sourceLabel": "Source",
+        "sourceMore": "and {{count}} more"
+      }
+    },
+    "legal": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use"
+    },
+    "danger": {
+      "title": "Delete account"
+    },
+    "logout": "Exit app",
+    "version": "Version",
+    "sections": {
+      "athlete": "Athlete",
+      "trefix": "Tref",
+      "app": "App",
+      "account": "Account"
+    },
+    "rows": {
+      "body": "Body",
+      "heart": "Heart rate & zones",
+      "schedule": "Schedule & volume",
+      "gear": "Gear",
+      "experience": "Experience & limitations",
+      "coach": "AI coach",
+      "units": "Units & format",
+      "notifications": "Notifications",
+      "language": "Language",
+      "theme": "Theme",
+      "integrations": "Integrations",
+      "signIn": "Sign-in & email",
+      "privacy": "Data & privacy",
+      "delete": "Delete account",
+      "logout": "Log out"
+    },
+    "summary": {
+      "notSet": "Not set",
+      "gearEmpty": "Track the wear of your shoes",
+      "runningSince": "Running since {{year}}",
+      "age": "{{age}}",
+      "heart": "Rest {{rest}} · max {{max}}",
+      "heartThreshold": "threshold {{value}}",
+      "volume": "~{{value}}",
+      "on": "On",
+      "off": "Off",
+      "replaceSoon": "Replace soon",
+      "synced": "Synced {{ago}}",
+      "notConnected": "Not connected",
+      "years": {
+        "one": "{{count}} yr",
+        "few": "{{count}} yrs",
+        "many": "{{count}} yrs",
+        "other": "{{count}} yrs"
+      }
+    },
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "completeness": {
+      "title": "Tell us about yourself",
+      "description": "The coach will tune your load better · {{percent}}%",
+      "action": "Fill in"
+    },
+    "stravaCard": {
+      "title": "Connect Strava",
+      "description": "Workouts, weight and shoes sync on their own",
+      "action": "Connect"
+    },
+    "body": {
+      "title": "Body",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "height": "Height",
+      "weight": "Weight",
+      "sexes": {
+        "female": "Female",
+        "male": "Male"
+      },
+      "source": "Data source",
+      "stravaSync": "Update from Strava",
+      "stravaSyncDescription": "Pull weight, sex and shoes",
+      "allowAccess": "Allow profile access",
+      "allowAccessDescription": "Strava will ask you to confirm",
+      "footnote": "S marks a value from Strava. A field you edit by hand is never overwritten"
+    },
+    "heart": {
+      "title": "Heart rate & zones",
+      "values": "Your values",
+      "rest": "Resting heart rate",
+      "max": "Max heart rate",
+      "threshold": "Threshold heart rate",
+      "notSet": "Not set",
+      "estimate": "≈ {{value}} by age",
+      "thresholdHint": "Don't know your threshold? Zones can use max heart rate for now",
+      "zones": "Heart rate zones",
+      "methods": {
+        "threshold": "Threshold",
+        "max_hr": "Max HR",
+        "custom": "Custom"
+      },
+      "unavailable": {
+        "threshold_missing": "Set your threshold heart rate",
+        "max_missing": "Set your max heart rate",
+        "custom_missing": "Set the zone bounds"
+      },
+      "specify": "Set",
+      "zoneNames": ["Recovery", "Aerobic", "Tempo", "Threshold", "Maximum"],
+      "editZones": "Edit bounds",
+      "customTitle": "Zone bounds",
+      "zoneUpper": "Top of Z{{zone}}",
+      "planNote": "The coach will offer to update heart rate in your plan"
+    },
+    "schedule": {
+      "title": "Schedule & volume",
+      "days": "Training days",
+      "time": "Preferred time",
+      "times": {
+        "morning": "Morning",
+        "day": "Day",
+        "evening": "Evening",
+        "any": "Any"
+      },
+      "perWeek": "Workouts per week",
+      "longRunDay": "Long run day",
+      "usual": "Regular workout",
+      "longRun": "Long run",
+      "upTo": "up to {{value}}",
+      "volume": "Usual volume",
+      "volumeValue": "~{{value}} per week",
+      "suggestion": "Your workouts average {{value}} per week",
+      "suggestionApply": "Use it",
+      "footnote": "Your current plan stays as is — rebuild it to use the new schedule"
+    },
+    "experience": {
+      "title": "Experience & limitations",
+      "level": "Level",
+      "since": "Running since",
+      "limitations": "Injuries & limitations",
+      "limitationsPlaceholder": "E.g. knee after an injury",
+      "none": "No limitations",
+      "noneValue": "None",
+      "save": "Save"
+    },
+    "unitsScreen": {
+      "title": "Units and format",
+      "system": "System",
+      "metric": "Metric",
+      "imperial": "Imperial",
+      "preview": "This is how your data will look",
+      "distance": "Distance",
+      "pace": "Pace",
+      "weight": "Weight",
+      "height": "Height",
+      "format": "Format",
+      "weekStart": "Week starts on",
+      "mon": "Mon",
+      "sun": "Sun",
+      "timeFormat": "Time format",
+      "h24": "24 h",
+      "h12": "12 h",
+      "measures": "Units",
+      "temperature": "Temperature",
+      "tabs": {
+        "km": "km",
+        "mi": "miles",
+        "kg": "kg",
+        "lb": "lb",
+        "cm": "cm",
+        "ft": "ft",
+        "c": "°C",
+        "f": "°F"
+      },
+      "distanceExample": "{{distance}} · {{pace}}",
+      "temperatureExample": "{{value}} · weather on workouts",
+      "formatHint": "The week start affects the calendar, the plan and weekly volume.",
+      "summary": "{{distance}} · {{weight}}"
+    },
+    "coach": {
+      "title": "AI coach",
+      "name": "Coach",
+      "statusOn": "On",
+      "statusOff": "Off",
+      "adaptation": "Plan adaptation",
+      "modes": {
+        "auto": {
+          "title": "Automatic",
+          "description": "The coach changes the plan and lets you know"
+        },
+        "confirm": {
+          "title": "With confirmation",
+          "description": "Changes apply after you say yes"
+        },
+        "suggest": {
+          "title": "Advice only",
+          "description": "The plan stays, the coach only advises"
+        }
+      },
+      "messages": "Messages",
+      "quietHours": "Quiet hours",
+      "quietHoursDescription": "The coach doesn't write at this time",
+      "quietHoursFrom": "From",
+      "quietHoursTo": "To",
+      "quietHoursDisable": "Turn off quiet hours",
+      "data": "Data",
+      "clearHistory": "Clear chat history",
+      "clearHistoryDescription": "Plans and workouts are not affected",
+      "clearTitle": "Clear the history?",
+      "clearBody": "Messages with the coach will be deleted. Plans and workouts stay.",
+      "clearConfirm": "Clear",
+      "cleared": "History cleared",
+      "offTitle": "Without the coach the app works like this",
+      "off": [
+        "The Trefix tab is hidden, chat and tips are off",
+        "The plan doesn't adapt — you change it yourself",
+        "Plans, workouts, progress and Strava work as before",
+        "Chat history is kept — turn the coach on any time"
+      ],
+      "enable": "Turn the coach on",
+      "modeLabel": {
+        "auto": "Automatic",
+        "confirm": "With confirmation",
+        "suggest": "Advice only"
+      }
+    },
+    "gear": {
+      "title": "Gear",
+      "active": "Shoes",
+      "archive": "Archive · {{count}}",
+      "empty": "Add your shoes to track their mileage",
+      "add": "Add shoes",
+      "importStrava": "Import from Strava",
+      "importing": "Importing shoes from Strava",
+      "since": "since {{date}}",
+      "stats": "{{distance}} · {{count}} workouts",
+      "limit": "limit {{limit}}",
+      "replaceSoon": "Replace soon",
+      "replaceNotice": "{{name}}: time to think about a new pair",
+      "retire": "Archive",
+      "restore": "Restore",
+      "delete": "Delete",
+      "edit": "Edit",
+      "deleteTitle": "Delete the shoes?",
+      "deleteBody": "Workouts stay, just without this pair",
+      "cancel": "Cancel"
+    },
+    "gearEdit": {
+      "newTitle": "New shoes",
+      "editTitle": "Shoes",
+      "model": "Model",
+      "brand": "Brand",
+      "modelName": "Model",
+      "nickname": "Name",
+      "optional": "Optional",
+      "resource": "Lifespan",
+      "presets": {
+        "race": "Racing",
+        "training": "Training",
+        "trail": "Trail"
+      },
+      "mileage": "Mileage",
+      "initial": "Already run",
+      "start": "Start",
+      "notSet": "Not set",
+      "defaults": "Default for workouts",
+      "defaultsMoved": "Selected types move from other pairs",
+      "reminder": "Replacement reminder",
+      "reminderDescription": "When 10% of the lifespan is left",
+      "add": "Add",
+      "save": "Save"
+    },
+    "workoutTypes": {
+      "recovery": "Recovery",
+      "easy": "Easy",
+      "long_run": "Long run",
+      "tempo": "Tempo",
+      "threshold": "Threshold",
+      "interval": "Intervals",
+      "hill": "Hills",
+      "race": "Race"
+    },
+    "weekdays": {
+      "short": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+      "full": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    "valueSheet": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "fromStrava": "From Strava · {{ago}}",
+      "fromHealth": "From Health · {{ago}}",
+      "afterSave": "After saving, the value becomes manual",
+      "resetToStrava": "Use the value from Strava",
+      "clear": "Clear"
+    },
+    "deleteAccount": {
+      "title": "Delete the account?",
+      "body": "This is permanent and can't be undone",
+      "items": [
+        "Profile and settings",
+        "Plans and workouts",
+        "Gear",
+        "Chat history with the coach",
+        "Strava connection"
+      ],
+      "confirm": "Delete forever",
+      "cancel": "Cancel",
+      "deleted": "Account deleted"
+    },
+    "unitLabels": {
+      "km": "km",
+      "mi": "mi",
+      "kg": "kg",
+      "lb": "lb",
+      "cm": "cm",
+      "ft": "ft",
+      "in": "in",
+      "perKm": "/km",
+      "perMi": "/mi",
+      "bpm": "bpm",
+      "min": "min",
+      "h": "h"
+    },
+    "ago": {
+      "justNow": "just now",
+      "minutes": "{{count}} min ago",
+      "hours": "{{count}} h ago",
+      "days": "{{count}} d ago"
+    },
+    "errors": {
+      "generic": "Couldn't save. Please try again",
+      "ATHLETE_FIELD_OUT_OF_RANGE": "The value is outside the accepted range",
+      "ATHLETE_HEART_RATE_INCONSISTENT": "Resting heart rate must be below threshold, and threshold below max",
+      "ATHLETE_ZONES_INVALID": "Zone bounds must grow from Z1 to Z4",
+      "STRAVA_NOT_CONNECTED": "Connect Strava first",
+      "STRAVA_PROFILE_ACCESS_REQUIRED": "Allow Strava profile access first",
+      "ATHLETE_DOUBLES_NOT_ALLOWED": "Two workouts a day are only available at the advanced level",
+      "ATHLETE_SESSIONS_EXCEED_DAYS": "Too many workouts for the selected days",
+      "AUTH_IDENTITY_IN_USE": "This account is already linked to another user",
+      "AUTH_IDENTITY_ALREADY_LINKED": "Unlink the current account first",
+      "AUTH_EMAIL_UNCHANGED": "This is already your email",
+      "AUTH_EMAIL_ALREADY_EXISTS": "This email is already taken",
+      "AUTH_VERIFICATION_CODE_INVALID": "The code is wrong or expired",
+      "AUTH_VERIFICATION_CODE_RATE_LIMITED": "A code was already sent, wait a little",
+      "DATA_EXPORT_RATE_LIMITED": "An archive can be requested once a day",
+      "GEAR_FIELD_NOT_APPLICABLE": "These fields don't apply to this gear type"
+    },
+    "wizard": {
+      "later": "Later",
+      "next": "Next",
+      "done": "Done",
+      "step": "Step {{n}} of 3",
+      "steps": [
+        {
+          "title": "Body",
+          "subtitle": "Needed to calculate load and calories"
+        },
+        {
+          "title": "Threshold heart rate",
+          "subtitle": "The most accurate basis for your zones"
+        },
+        {
+          "title": "Injuries & limitations",
+          "subtitle": "The coach takes them into account"
+        }
+      ],
+      "know": "I know it",
+      "knowDescription": "From a test or your watch",
+      "dontKnow": "I don't know",
+      "dontKnowDescription": "Zones will use max heart rate",
+      "noLimits": "No limitations",
+      "noLimitsDescription": "You can change it any time",
+      "hasLimits": "I have limitations",
+      "hasLimitsDescription": "Describe them briefly"
+    },
+    "home": {
+      "editProfile": "Edit profile",
+      "runningProfile": "My running profile",
+      "experience": "Experience",
+      "volume": "Volume/wk",
+      "threshold": "Threshold HR",
+      "fillHint": "Heart rate, volume and experience help the coach pick the right load.",
+      "tref": "Tref",
+      "coach": "AI coach",
+      "coachOn": "On",
+      "coachOff": "Off",
+      "adaptation": "Plan adaptation: {{mode}}",
+      "coachOffHint": "Turn it on to let the plan adapt to you",
+      "modes": {
+        "auto": "automatic",
+        "confirm": "with confirmation",
+        "suggest": "advice only"
+      },
+      "services": "Connected services",
+      "noServices": "No connected services",
+      "noServicesHint": "Connect Strava or {{health}} — workouts, weight and heart rate will come in on their own.",
+      "connectedAgo": "Connected · {{ago}}",
+      "connected": "Connected",
+      "appSettings": "App settings",
+      "units": "Units",
+      "account": "Account and security",
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate level",
+        "advanced": "Advanced level"
+      },
+      "years": {
+        "one": "{{count}} year",
+        "other": "{{count}} years"
+      }
+    },
+    "running": {
+      "title": "Running profile",
+      "age": "Age",
+      "height": "Height",
+      "weight": "Weight",
+      "rest": "Resting",
+      "max": "Max",
+      "threshold": "Threshold",
+      "zonesBy": {
+        "threshold": "Zones by threshold",
+        "max_hr": "Zones by max HR",
+        "custom": "Custom zones"
+      },
+      "perWeek": "Per week",
+      "volume": "Volume",
+      "longRun": "Long run",
+      "time": "Time",
+      "gearMeta": "{{distance}} of {{limit}} · {{workouts}}",
+      "workouts": {
+        "one": "{{count}} workout",
+        "other": "{{count}} workouts"
+      },
+      "level": "Level",
+      "since": "Running since",
+      "limitations": "Injuries and limitations",
+      "none": "None",
+      "ageUnit": {
+        "one": "yr",
+        "other": "yrs"
+      },
+      "footnote": "The coach uses this to calculate load, paces and heart-rate zones. S marks a value from Strava."
+    },
+    "bodyScreen": {
+      "footnote": "Age, height and weight are needed to calculate load and calories.",
+      "sexHint": "Used for the age-based heart rate and calories."
+    },
+    "heartScreen": {
+      "upTo": "up to {{value}}",
+      "range": "{{from}}–{{to}}",
+      "above": "{{value}}+",
+      "distribution": "Distribution",
+      "upperBounds": "Upper bounds",
+      "customFootnote": "Each zone starts right after the previous one. Z5 is capped by your max heart rate.",
+      "setEstimate": "Use",
+      "planNote": "The coach will offer to update heart rate targets in your plan when these change."
+    },
+    "scheduleScreen": {
+      "title": "Schedule",
+      "durationVolume": "Duration and volume",
+      "doubles": "Two workouts a day",
+      "doublesDescription": "The second one is easy, only on days with room",
+      "pick": "The coach will pick {{picked}} of the {{days}} selected; the rest are spare for moving workouts.",
+      "everyDay": "Workouts on every selected day.",
+      "doublesHint": "{{sessions}} over {{days}}: {{doubles}} will get a second easy workout.",
+      "days": {
+        "one": "{{count}} day",
+        "other": "{{count}} days"
+      },
+      "sessions": {
+        "one": "{{count}} workout",
+        "other": "{{count}} workouts"
+      },
+      "lowered": "Workouts per week lowered to {{count}} to fit the selected days",
+      "doublesReset": "Two workouts a day are only for the advanced level, so it was turned off",
+      "longRunDayHint": "Only training days are available.",
+      "durationHint": "How much time you have for a weekday workout",
+      "durations": {
+        "30": "Up to 30 minutes",
+        "45": "Up to 45 minutes",
+        "60": "Up to 1 hour",
+        "90": "Up to 1.5 hours",
+        "none": "No limit"
+      },
+      "longDurations": {
+        "90": "Up to 1.5 hours",
+        "120": "Up to 2 hours",
+        "150": "Up to 2.5 hours",
+        "180": "Up to 3 hours",
+        "none": "No limit"
+      },
+      "noLimit": "no limit",
+      "volumeUnit": "km/wk",
+      "volumeUnitImperial": "mi/wk"
+    },
+    "experienceScreen": {
+      "title": "Experience",
+      "levelDescriptions": {
+        "beginner": "Running for less than a year or irregularly",
+        "intermediate": "Running regularly, have done some races",
+        "advanced": "Training to a plan with time goals"
+      },
+      "noneDescription": "The coach won't take limitations into account",
+      "footnote": "The coach will consider this when choosing load and exercises.",
+      "yearUnit": "year"
+    },
+    "edit": {
+      "title": "Profile",
+      "save": "Save",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "sex": "Sex",
+      "birthDate": "Date of birth",
+      "notSet": "Not set",
+      "about": "About",
+      "aboutPlaceholder": "A few words about you and your goals",
+      "counter": "{{count}}/{{max}}",
+      "photoTitle": "Profile photo",
+      "takePhoto": "Take a photo",
+      "pickPhoto": "Choose from library",
+      "removePhoto": "Remove photo",
+      "cancel": "Cancel",
+      "done": "Done",
+      "saved": "Profile saved",
+      "nameRequired": "Enter your first name"
+    },
+    "coachScreen": {
+      "hero": "AI coach Tref",
+      "heroOn": "Uses your data to adapt workouts and give personal recommendations.",
+      "heroOff": "Off. Turn it on to let the plan adapt to you.",
+      "howTitle": "How it works",
+      "how": "Tref analyses your workouts, form, goals and preferences, picks the load, adapts the plan and suggests what to do next.",
+      "proactive": "The coach writes first",
+      "topics": {
+        "preWorkout": {
+          "title": "Before a workout",
+          "description": "A reminder and today's task"
+        },
+        "workoutReview": {
+          "title": "Workout review",
+          "description": "A comment after every workout"
+        },
+        "wellbeingCheck": {
+          "title": "How it felt",
+          "description": "How it went and how hard it was"
+        },
+        "weeklySummary": {
+          "title": "Week summary",
+          "description": "Volume, form and plans for the week"
+        },
+        "missedSupport": {
+          "title": "Support after missed workouts",
+          "description": "Helps you get back on schedule"
+        }
+      },
+      "tone": "Tone",
+      "tones": {
+        "soft": "Gentle",
+        "neutral": "Neutral",
+        "strict": "Strict"
+      },
+      "toneHints": {
+        "soft": "Encourages and explains, no pressure.",
+        "neutral": "Calm and to the point.",
+        "strict": "Calls out deviations from the plan directly."
+      },
+      "considers": "What the coach considers",
+      "considerItems": [
+        {
+          "title": "Form and load",
+          "description": "Form, fatigue, recovery"
+        },
+        {
+          "title": "Goal and plan",
+          "description": "Distance, target time, date"
+        },
+        {
+          "title": "Workout history",
+          "description": "Completed and missed"
+        },
+        {
+          "title": "Schedule",
+          "description": "Available days and volume"
+        },
+        {
+          "title": "How you feel",
+          "description": "Answers and notes"
+        }
+      ],
+      "quietHoursSheetBody": "The coach won't write during this time. Workout reminders won't come either.",
+      "safetyTitle": "Your data is safe",
+      "safety": "Data is used only for your recommendations. Learn more in the",
+      "safetyLink": "privacy policy"
+    },
+    "languageScreen": {
+      "title": "Language",
+      "system": "System",
+      "systemNow": "Now — {{language}}",
+      "native": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "translated": {
+        "ru": "Russian",
+        "en": "English"
+      },
+      "hint": "The interface, notifications, workout names and coach messages will be in the selected language."
+    },
+    "themeScreen": {
+      "title": "Theme",
+      "appearance": "Appearance",
+      "hint": "System switches the theme together with your phone.",
+      "accent": "Accent colour",
+      "accentBw": "Black and white",
+      "accentDescription": "Buttons, switches, active tabs",
+      "soon": "Soon"
+    },
+    "notificationsScreen": {
+      "title": "Notifications",
+      "workouts": "Workouts",
+      "progress": "Progress",
+      "coach": "Coach",
+      "items": {
+        "workoutReminder": {
+          "title": "Workout reminder",
+          "description": "On the day of a planned workout"
+        },
+        "missedWorkout": {
+          "title": "Missed workout",
+          "description": "If not marked as done within 48 h"
+        },
+        "planChanged": {
+          "title": "Plan changes",
+          "description": "When you or the coach change the plan"
+        },
+        "achievements": {
+          "title": "Records and achievements",
+          "description": "New personal records after a workout"
+        },
+        "workoutSynced": {
+          "title": "New workout imported",
+          "description": "From Strava or {{health}}"
+        }
+      },
+      "reminderTime": "When to remind",
+      "reminderOptions": {
+        "morning": "In the morning of the day",
+        "2h": "2 hours before",
+        "1h": "1 hour before",
+        "30m": "30 minutes before"
+      },
+      "reminderValues": {
+        "morning": "In the morning",
+        "2h": "2 h before",
+        "1h": "1 h before",
+        "30m": "30 min before"
+      },
+      "morningDescription": "At 08:00",
+      "reminderHint": "If the workout has no time set, we'll remind you in the morning.",
+      "coachMessages": "Coach messages",
+      "coachMessagesDescription": "Reminders, reviews, week summary",
+      "coachHint": "What and when Tref writes is set up in the AI coach.",
+      "deniedTitle": "Notifications are off",
+      "deniedBody": "Allow notifications in your phone settings to get reminders and coach messages.",
+      "openSettings": "Open settings"
+    },
+    "account": {
+      "title": "Account and security",
+      "signIn": "Sign-in",
+      "email": "Email",
+      "emailDescription": "{{email}} · sign-in code",
+      "linked": "Connected",
+      "connect": "Connect",
+      "signInHint": "Sign in with any connected method — it's one account.",
+      "devices": "Devices",
+      "thisDevice": "This device",
+      "unknownDevice": "Device",
+      "logoutOthers": "Sign out on all devices",
+      "data": "Data",
+      "export": "Download my data",
+      "exportDescription": "An archive with profile, plans and workouts",
+      "exportPending": "The archive is being prepared — the link will come by email",
+      "accountSection": "Account",
+      "logout": "Sign out",
+      "delete": "Delete account",
+      "deleteDescription": "Profile, plans and workouts will be deleted forever",
+      "version": "Version {{version}}",
+      "identity": {
+        "title": "Sign in with {{provider}}",
+        "appleId": "Apple ID",
+        "googleAccount": "Google account",
+        "linkedAt": "Connected",
+        "body": "After unlinking you won't be able to sign in with {{provider}}. Workouts and plans stay.",
+        "unlink": "Unlink {{provider}}",
+        "done": "Done",
+        "linkedToast": "{{provider}} connected",
+        "unlinkedToast": "{{provider}} unlinked"
+      },
+      "device": {
+        "lastActive": "Last active",
+        "city": "City",
+        "firstSeen": "First sign-in",
+        "version": "Version",
+        "end": "End session",
+        "cancel": "Cancel",
+        "ended": "Session ended"
+      },
+      "logoutOthersSheet": {
+        "title": "Sign out on other devices?",
+        "body": "Sessions on other devices will end. You'll stay signed in on this device.",
+        "confirm": "Sign out on other devices",
+        "cancel": "Cancel",
+        "done": "Signed out on other devices"
+      },
+      "exportSheet": {
+        "title": "Download my data",
+        "body": "We'll put together an archive and send a link to {{email}}. It usually takes a few minutes.",
+        "items": [
+          "Profile and settings",
+          "Plans and workouts",
+          "Workout tracks",
+          "Gear",
+          "Coach chat history"
+        ],
+        "request": "Request archive",
+        "requested": "Preparing the archive — the link will come by email",
+        "nextAt": "A new archive can be requested {{date}}"
+      },
+      "logoutSheet": {
+        "title": "Sign out?",
+        "body": "Your data stays — sign in again any time.",
+        "confirm": "Sign out",
+        "cancel": "Cancel"
+      }
+    },
+    "emailChange": {
+      "title": "Email",
+      "newTitle": "New email",
+      "current": "You now sign in with {{email}}",
+      "label": "Email",
+      "hint": "We'll send a code to the new address. Until you confirm it, the old one keeps working.",
+      "getCode": "Get code",
+      "codeTitle": "Enter the code",
+      "sentTo": "Sent to {{email}}",
+      "resendIn": "Resend in {{time}}",
+      "resend": "Resend",
+      "confirm": "Confirm",
+      "changed": "Email changed",
+      "invalidEmail": "Check the address"
+    },
+    "gearScreen": {
+      "shoes": "Shoes",
+      "devices": "Watches and sensors",
+      "primary": "Primary",
+      "addGear": "Add gear",
+      "shoeMeta": "{{distance}} · {{count}} wkts · life {{limit}}",
+      "deviceSource": "Data via {{source}}",
+      "deviceWorkouts": "{{count}} wkts",
+      "devicesHint": "The coach knows which device heart rate and pace came from: a chest strap is more accurate.",
+      "footnote": "Shoe mileage is counted from the workouts linked to the pair.",
+      "noShoes": "Add shoes to track their mileage",
+      "addSheet": {
+        "title": "Add gear",
+        "shoes": {
+          "title": "Shoes",
+          "description": "We track mileage and wear"
+        },
+        "watch": {
+          "title": "Watch",
+          "description": "Source of workouts and heart rate"
+        },
+        "sensor": {
+          "title": "Sensor",
+          "description": "Heart rate strap, foot pod"
+        },
+        "import": {
+          "title": "Import from Strava",
+          "description": "Shoes from your Strava profile"
+        }
+      },
+      "edit": {
+        "shoesTitle": "Shoes",
+        "watchTitle": "Watch",
+        "sensorTitle": "Sensor",
+        "startedAt": "In use since",
+        "resource": "Lifespan",
+        "initial": "Starting mileage",
+        "initialDescription": "If the pair has already been worn",
+        "default": "Default",
+        "defaultDescription": "Link new workouts to this pair",
+        "type": "Type",
+        "dataSource": "Where data comes from",
+        "noSource": "Not selected",
+        "primary": "Primary device",
+        "primaryDescription": "Its data wins over duplicates",
+        "model": "Model",
+        "brand": "Brand",
+        "add": "Add",
+        "save": "Save"
+      },
+      "sources": {
+        "strava": "Strava",
+        "garmin": "Garmin Connect",
+        "apple_health": "Apple Health",
+        "health_connect": "Health Connect"
+      },
+      "detail": {
+        "mileage": "Mileage",
+        "workouts": "Workouts",
+        "pace": "Avg pace",
+        "wear": "Wear",
+        "wearPercent": "{{percent}}% of lifespan",
+        "forecast": "About {{distance}} left — roughly {{weeks}}",
+        "forecastShort": "About {{distance}} left",
+        "weeks": {
+          "one": "{{count}} week",
+          "other": "{{count}} weeks"
+        },
+        "defaultDescription": "New workouts are linked to this pair",
+        "primaryDescription": "Its data wins over duplicates",
+        "more": "More"
+      },
+      "menu": {
+        "edit": "Edit",
+        "retire": "Archive",
+        "retireDescription": "Hide from the choice for workouts",
+        "delete": "Delete",
+        "cancel": "Cancel"
+      },
+      "archive": {
+        "title": "Archive",
+        "meta": "{{distance}} · {{count}} wkts · archived since {{date}}",
+        "restore": "Restore",
+        "footnote": "Archived pairs aren't offered for new workouts. Their stats stay.",
+        "empty": "The archive is empty"
+      },
+      "import": {
+        "title": {
+          "one": "Imported {{count}} pair",
+          "other": "Imported {{count}} pairs"
+        },
+        "nothing": "No new shoes in Strava",
+        "body": "Mileage came from Strava. Default lifespan is 700 km — change it on the pair's card.",
+        "done": "Done"
+      }
+    },
+    "services": {
+      "title": "Services",
+      "connected": "Connected",
+      "available": "Available",
+      "healthDescription": "Heart rate, weight and workouts",
+      "garminDescription": "Workouts and heart rate from the watch",
+      "connect": "Connect",
+      "soon": "Soon",
+      "syncedAgo": "Synced {{ago}}",
+      "duplicatesHint": "If a workout comes from several sources, we keep one — from the primary device."
+    },
+    "stravaScreen": {
+      "connectedAgo": "Connected · {{ago}}",
+      "connectedAs": "Connected · {{name}} · {{ago}}",
+      "sync": "What to sync",
+      "activities": {
+        "title": "Workouts",
+        "description": "Import new workouts"
+      },
+      "profile": {
+        "title": "Weight and sex",
+        "description": "Update the athlete profile"
+      },
+      "gear": {
+        "title": "Shoes",
+        "description": "Pull pairs and mileage"
+      },
+      "upload": {
+        "title": "Upload to Strava",
+        "description": "Workouts recorded in Trefix"
+      },
+      "syncNow": "Sync now",
+      "disconnect": "Disconnect Strava"
+    },
+    "connect": {
+      "close": "Close",
+      "strava": {
+        "title": "Connect Strava",
+        "lede": "Workouts will appear in Trefix on their own, and the coach will take them into account right away.",
+        "chips": ["Workouts", "Heart rate", "Shoes", "Weight"],
+        "benefits": [
+          {
+            "title": "No manual entry",
+            "description": "Every workout from your watch or phone lands in your history"
+          },
+          {
+            "title": "Shoes and mileage",
+            "description": "Pairs from Strava come in with their current mileage"
+          },
+          {
+            "title": "A more accurate plan",
+            "description": "The coach sees real volume and pace, not just the plan"
+          }
+        ],
+        "fine": "We only take workout and profile data. You can disconnect at any time."
+      },
+      "garmin": {
+        "title": "Connect Garmin",
+        "lede": "Data from your watch arrives right after a sync — no Strava in between.",
+        "chips": ["Workouts", "Heart rate", "Sleep", "HRV"],
+        "benefits": [
+          {
+            "title": "Workouts from the watch",
+            "description": "Pace, heart rate and cadence without loss of precision"
+          },
+          {
+            "title": "Recovery",
+            "description": "Sleep, HRV and resting heart rate tell the coach whether you're ready for load"
+          },
+          {
+            "title": "Accurate zones",
+            "description": "Heart rate from the watch and chest strap to calculate zones"
+          }
+        ],
+        "cta": "Connect Garmin Connect",
+        "soon": "Garmin Connect is coming in an upcoming update",
+        "fine": "Garmin Connect sign-in will open. You can disconnect at any time."
+      },
+      "health": {
+        "title": "Connect {{store}}",
+        "lede": "Trefix will read data from {{store}} and save your workouts there.",
+        "chips": ["Heart rate", "Weight", "Sleep", "Workouts"],
+        "benefits": [
+          {
+            "title": "Resting heart rate and weight",
+            "description": "Updated in your profile automatically"
+          },
+          {
+            "title": "Sleep and recovery",
+            "description": "The coach takes into account how rested you are"
+          },
+          {
+            "title": "Both ways",
+            "description": "Workouts from Trefix appear in {{store}}"
+          }
+        ],
+        "cta": "Allow access",
+        "fine": "You choose which data to share. Health data is never shared with third parties."
+      }
+    }
+  },
+  "plans": {
+    "title": "My plans",
+    "section": {
+      "active": "In progress"
+    },
+    "segment": {
+      "drafts": "Drafts · {{count}}",
+      "history": "History · {{count}}"
+    },
+    "badge": {
+      "ai": "AI",
+      "active": "In progress",
+      "stale": "Metrics outdated"
+    },
+    "card": {
+      "weeks": "{{count}} wk",
+      "perWeek": "{{count}}/wk",
+      "raceOn": "race {{date}}",
+      "activeProgress": "Week {{current}} of {{total}}",
+      "moreActions": "Plan actions",
+      "a11y": "{{name}}, {{status}}",
+      "progressA11y": "{{percent}} percent"
+    },
+    "status": {
+      "draft": "Draft · edited {{date}}",
+      "completed": "✓ Completed {{date}} · {{rate}}%",
+      "cancelled": "Cancelled {{date}} · {{rate}}%"
+    },
+    "empty": {
+      "drafts": "No drafts. Save a plan without starting it to begin later.",
+      "history": "Completed and cancelled plans will appear here.",
+      "createButton": "Create plan"
+    },
+    "actions": {
+      "title": "Plan",
+      "start": "Start",
+      "prepareAgain": "Prepare again",
+      "editWorkouts": "Edit workouts",
+      "editParams": "Change parameters",
+      "meta": "Name and notes",
+      "delete": "Delete"
+    },
+    "tab": {
+      "openPlans": "My plans",
+      "plansButton": "Plans",
+      "noActiveTitle": "No plan in progress",
+      "noActiveDescription": "Start one of your drafts or create a new plan.",
+      "historyTitle": "Getting ready for a new race?",
+      "historyDescription": "Take a past plan as the base — it will be recalculated for your current form.",
+      "prepareFromHistory": "Prepare again from a past plan",
+      "createPlan": "Create plan",
+      "draftsTitle": "Drafts",
+      "cancelledTitle": "Plan cancelled",
+      "cancelledDescription": "The plan is in history. Start a draft, prepare again or create a new plan."
+    },
+    "details": {
+      "goal": "Goal",
+      "structure": "{{weeks}} wk · {{sessions}}/wk",
+      "longRun": "long run {{day}}",
+      "raceOn": "race {{date}}",
+      "metrics": "Metrics",
+      "metricsAtStart": "At the start",
+      "capturedAt": "captured {{date}}",
+      "staleBanner": "Metrics are outdated — update them?",
+      "weeks": "Weeks",
+      "notes": "Notes",
+      "notesEmpty": "No notes yet",
+      "editNotes": "Edit",
+      "startButton": "Start plan",
+      "prepareAgainButton": "Prepare again",
+      "resultCompleted": "✓ Completed",
+      "resultCancelled": "Cancelled",
+      "workoutsDone": "{{done}}/{{total}} workouts",
+      "totalKm": "{{km}} km",
+      "raceResult": "result {{time}}",
+      "weekWorkouts": "{{count}} workouts · {{km}} km",
+      "plannedActual": "{{planned}} → {{actual}} km"
+    },
+    "menu": {
+      "title": "Plan in progress",
+      "schedule": "Change schedule",
+      "goalDate": "Change goal date",
+      "meta": "Name and notes",
+      "allPlans": "All plans",
+      "cancel": "Cancel plan"
+    },
+    "start": {
+      "title": "Start “{{name}}”?",
+      "when": "When do we start?",
+      "today": "Today, {{date}}",
+      "nextMonday": "From Monday, {{date}}",
+      "raceAligned": "For the race on {{race}} (from {{date}})",
+      "custom": "Pick a date…",
+      "until": "until {{date}}",
+      "recommended": "recommended",
+      "cta": "Start plan",
+      "ctaReplace": "Cancel current and start",
+      "saveDraft": "Save as draft",
+      "dontStart": "Don't start",
+      "raceNotFits": "Only {{available}} weeks to the race, the plan needs {{total}}. Start now or change the race date.",
+      "raceDatePassed": "The race date has already passed.",
+      "changeDate": "Change race date",
+      "raceDateTitle": "Race date",
+      "apply": "Apply",
+      "staleMetrics": "Metrics were captured a while ago — update them before starting?",
+      "dateInvalid": "This start date is no longer available. Pick another one.",
+      "started": "Plan “{{name}}” started",
+      "draftSaved": "Draft saved",
+      "loadFailed": "Couldn't load start dates",
+      "failed": "Couldn't start the plan",
+      "titleUnnamed": "Start the plan?",
+      "startedUnnamed": "Plan started",
+      "nameHint": "You can leave it empty — the plan is named after its goal"
+    },
+    "warning": {
+      "title": "“{{name}}” is in progress (week {{current}} of {{total}})",
+      "body": "If you start a new plan, the current one will be cancelled:",
+      "completedKept": {
+        "one": "{{count}} completed workout stays in history",
+        "other": "{{count}} completed workouts stay in history"
+      },
+      "plannedRemoved": {
+        "one": "{{count}} planned workout will be removed from the calendar",
+        "other": "{{count}} planned workouts will be removed from the calendar"
+      }
+    },
+    "cancel": {
+      "title": "Cancel “{{name}}”?",
+      "progress": "You're in week {{current}} of {{total}}.",
+      "body": "The plan stays in history — you can prepare again from it.",
+      "confirm": "Cancel plan",
+      "keep": "Keep",
+      "done": "Plan cancelled",
+      "failed": "Couldn't cancel the plan"
+    },
+    "delete": {
+      "title": "Delete “{{name}}”?",
+      "body": "Completed workouts stay in your calendar and progress.",
+      "confirm": "Delete",
+      "keep": "Keep",
+      "done": "Plan deleted",
+      "failed": "Couldn't delete the plan"
+    },
+    "meta": {
+      "title": "Name and notes",
+      "name": "Name",
+      "namePlaceholder": "Moscow Marathon 2027",
+      "notes": "Notes",
+      "notesPlaceholder": "Race result, how it went, what to change next time",
+      "counter": "{{count}}/{{max}}",
+      "save": "Save",
+      "nameRequired": "Enter a name",
+      "failed": "Couldn't save the changes"
+    },
+    "edit": {
+      "locked": "Past workouts can't be edited",
+      "cancelledWorkout": "Plan cancelled — log the run as a separate workout",
+      "edit": "Edit",
+      "move": "Move",
+      "remove": "Delete",
+      "addWorkout": "Add workout",
+      "editTitle": "Edit workout",
+      "moveTitle": "Move workout",
+      "addTitle": "New workout",
+      "dateLabel": "Date",
+      "removeTitle": "Delete this workout?",
+      "removeBody": "It will be removed from the plan and the calendar.",
+      "save": "Save",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "showChanges": "Show changes",
+      "applied": "Plan updated",
+      "workoutLocked": "This workout has already passed",
+      "failed": "Couldn't change the plan",
+      "invalid": "These changes can't be applied",
+      "conflict": "The plan has changed (adaptation or another device)",
+      "refresh": "Refresh",
+      "dateOutOfPlan": "Pick a date between today and the end of the plan"
+    },
+    "schedule": {
+      "title": "Change schedule",
+      "from": "Apply from",
+      "nextWeek": "Next week",
+      "tomorrow": "Tomorrow"
+    },
+    "goalDate": {
+      "title": "Change goal date",
+      "minHint": "At least 2 weeks from today",
+      "longer": {
+        "one": "The plan gets {{count}} week longer",
+        "other": "The plan gets {{count}} weeks longer"
+      },
+      "shorter": {
+        "one": "The plan gets {{count}} week shorter",
+        "other": "The plan gets {{count}} weeks shorter"
+      },
+      "same": "The plan length stays the same",
+      "tooShort": "Too little time to the race for this plan"
+    },
+    "diff": {
+      "title": "Plan changes",
+      "rebuildTitle": "What changed vs the previous plan",
+      "peakVolume": "Peak volume: {{before}} → {{after}} km",
+      "longestRun": "Long run: {{before}} → {{after}} km",
+      "threshold": "Threshold pace {{before}} → {{after}} /km",
+      "pacesRecalculated": "paces recalculated",
+      "volumeScale": "Volume ×{{scale}} ({{after}} vs {{before}} km/wk)",
+      "totalWeeks": "Plan: {{before}} → {{after}} weeks",
+      "finish": "finish {{date}}",
+      "week": "Week {{number}}",
+      "added": "+ {{label}}",
+      "removed": "− {{label}}",
+      "modified": "{{label}}: {{changes}}",
+      "showAll": "Show all ({{count}})",
+      "noChanges": "Nothing changes",
+      "regenerated": "The plan was rebuilt from the new parameters",
+      "wasNow": "was {{before}}, now {{after}}",
+      "addedBadge": "new",
+      "removedBadge": "removed",
+      "fields": {
+        "distanceKm": "distance",
+        "durationMinutes": "duration",
+        "type": "type",
+        "scheduledAt": "date",
+        "dayOfWeek": "day"
+      },
+      "adjustment": {
+        "VOLUME_SCALED": "Volume scaled to your current form",
+        "LONG_RUN_CAPPED": "Long run capped at {{km}} km",
+        "WEEKLY_GROWTH_CAPPED": "Weekly volume growth capped for safety",
+        "WEEKLY_RAMP_CAPPED": "Weekly volume growth capped for safety",
+        "STRUCTURE_REGENERATED": "Plan structure rebuilt",
+        "generic": "The plan was adjusted by safety rules"
+      },
+      "reason": {
+        "NOT_ENOUGH_TRAINING_DAYS": "not enough training days",
+        "RESIZE_REMOVED": "removed when the plan was resized",
+        "generic": "adjusted by safety rules"
+      },
+      "warning": {
+        "WORKOUTS_REMOVED_NOT_ENOUGH_DAYS": "Some workouts were removed: not enough training days",
+        "STRUCTURE_CHANGED_REGENERATED": "The structure changed — the plan was rebuilt",
+        "generic": "The plan was adjusted by safety rules"
+      }
+    },
+    "metrics": {
+      "title": "Current form",
+      "question": "Your current form sets the starting volume and paces. Values are filled in from your data — check and correct them if needed.",
+      "previous": "Last time",
+      "current": "Now",
+      "threshold": "Threshold pace",
+      "thresholdModePace": "I know my pace",
+      "thresholdModeResult": "I'll enter a result",
+      "recentResult": "Recent result",
+      "resultDistance": "Distance",
+      "resultTime": "Time",
+      "resultDate": "Date",
+      "weeklyKm": "Weekly volume, km",
+      "longestRun": "Longest run, km",
+      "hrMax": "Max HR",
+      "hrRest": "Resting HR",
+      "optional": "optional",
+      "source": {
+        "strava": "from Strava",
+        "health": "from your health app workouts",
+        "manual_workouts": "from the workouts you logged",
+        "user_input": "entered by you",
+        "athlete_state": "from your profile",
+        "none": "enter manually",
+        "profile": "from your profile"
+      },
+      "placeholder": "Enter manually",
+      "connectStrava": "Connect Strava to fill metrics automatically",
+      "skip": "Skip",
+      "required": "Required for scaling the plan",
+      "outOfRange": "Must be between {{min}} and {{max}}",
+      "invalid": "Check the values",
+      "weeklyShort": "{{km}} km/wk",
+      "longestShort": "long run {{km}} km",
+      "hrShort": "HR {{max}} / {{rest}}",
+      "setValue": "Set value",
+      "clearValue": "Clear",
+      "paceUnit": "/km",
+      "bpm": "bpm",
+      "kmUnit": "km",
+      "distances": {
+        "5k": "5K",
+        "10k": "10K",
+        "half_marathon": "Half",
+        "marathon": "Marathon",
+        "custom": "other distance"
+      }
+    },
+    "rebuild": {
+      "cta": "Prepare again",
+      "previousTargetDate": "Last time: {{date}}",
+      "previousResult": "Your result: {{time}}",
+      "improveGoal": "Goal: {{percent}}% faster",
+      "structureChangedWarning": "Changing the structure rebuilds the plan from scratch — manual edits of the previous plan won't carry over.",
+      "saveChanges": "Save changes",
+      "defaultName": "{{name}} {{year}}",
+      "loadFailed": "Couldn't load the plan parameters",
+      "updated": "Draft updated"
+    },
+    "preview": {
+      "saveButton": "Save plan",
+      "renameA11y": "Rename the plan",
+      "draftEditTitle": "Edit workouts",
+      "saveChanges": "Save changes",
+      "changesSaved": "Changes saved",
+      "draftHint": "Tap a workout to change or remove it. Dates are set when the plan starts."
+    },
+    "errors": {
+      "generic": "Something went wrong. Try again.",
+      "network": "No connection. Your changes are kept.",
+      "limit": "You've reached the limit of {{max}} plans. Delete old plans to create new ones.",
+      "notFound": "Plan not found",
+      "invalidStatus": "The plan status has changed",
+      "retry": "Try again",
+      "back": "Back"
+    },
+    "pendingAdaptations": {
+      "proposedTitle": "The coach suggests changing the plan",
+      "suggestedTitle": "Coach's advice",
+      "apply": "Apply",
+      "dismiss": "Dismiss",
+      "ok": "Got it",
+      "applied": "Plan updated",
+      "workouts": {
+        "one": "{{count}} workout",
+        "few": "{{count}} workouts",
+        "many": "{{count}} workouts",
+        "other": "{{count}} workouts"
+      },
+      "actions": {
+        "REDUCE_VOLUME": "Reduce volume of the next workouts",
+        "REDUCE_INTENSITY": "Reduce intensity",
+        "INCREASE_VOLUME": "Add a bit of volume",
+        "INCREASE_INTENSITY": "Add intensity",
+        "MOVE": "Move a workout",
+        "REPLACE": "Replace a workout",
+        "ADD_RECOVERY": "Add recovery",
+        "REGENERATE_PLAN": "Rebuild the plan",
+        "UPDATE_HEART_RATE": "Update heart rate to the new zones",
+        "default": "Adjust the plan"
+      }
+    },
+    "goalTitle": {
+      "distanceTime": "{{distance}} km · {{time}}",
+      "distance": "{{distance}} km",
+      "runsPerWeek": {
+        "one": "{{count}} run a week",
+        "few": "{{count}} runs a week",
+        "many": "{{count}} runs a week",
+        "other": "{{count}} runs a week"
+      },
+      "weight": "Target {{weight}} kg"
+    },
+    "untitled": "Training plan"
+  },
+  "tracker": {
+    "record": "Start workout",
+    "setupTitle": "New workout",
+    "where": "Where you run",
+    "environments": {
+      "outdoor": "Outdoor",
+      "trail": "Trail",
+      "treadmill": "Treadmill"
+    },
+    "measure": "Distance",
+    "modes": {
+      "gps": "GPS",
+      "time": "By time"
+    },
+    "modeHints": {
+      "gps": "Route and pace from satellites. If the signal drops, the pedometer keeps counting.",
+      "time": "No location: time and pace from the pedometer; you can correct the distance at the end.",
+      "treadmill": "Distance from the pedometer. Enter the treadmill reading at the end."
+    },
+    "gps": {
+      "searching": "Looking for GPS",
+      "weak": "Weak GPS signal",
+      "good": "GPS ready",
+      "lost": "GPS lost — counting steps",
+      "off": "No GPS"
+    },
+    "gpsSlowHint": "No GPS fix yet. You can start by time.",
+    "startByTime": "Start by time",
+    "autoPause": "Auto-pause",
+    "autoPauseHint": "Pause the recording while you stand still",
+    "type": "Workout type",
+    "typeFree": "No type",
+    "start": "Start",
+    "metrics": {
+      "time": "Time",
+      "distance": "Distance",
+      "pace": "Pace",
+      "avgPace": "Avg pace",
+      "elevation": "Elevation gain",
+      "cadence": "Cadence",
+      "spm": "spm",
+      "metres": "m",
+      "heartRate": "Heart rate",
+      "maxHeartRate": "Max heart rate",
+      "bpm": "bpm"
+    },
+    "pause": "Pause",
+    "resume": "Resume",
+    "finish": "Finish",
+    "holdToFinish": "Hold to finish",
+    "lock": "Lock screen",
+    "unlockHint": "Hold to unlock",
+    "paused": "Paused",
+    "autoPaused": "Auto-paused",
+    "summaryTitle": "Workout summary",
+    "splits": "Splits",
+    "splitKm": "Km",
+    "splitPace": "Pace",
+    "splitElevation": "Elev.",
+    "save": "Save",
+    "discard": "Delete recording",
+    "discardTitle": "Delete the recording?",
+    "discardBody": "The workout will not be saved.",
+    "discardConfirm": "Delete",
+    "cancel": "Cancel",
+    "distanceTreadmill": "What did the treadmill show?",
+    "distanceTime": "Distance, if you know it exactly",
+    "feeling": "How you felt",
+    "feelings": ["Bad", "So-so", "Okay", "Good", "Great"],
+    "rpe": "Effort, RPE",
+    "notes": "Note",
+    "notesPlaceholder": "How did it go",
+    "saved": "Workout saved",
+    "savedOffline": "Saved on the phone — will upload when online",
+    "uploadRejected": "The server rejected the workout: {{message}}",
+    "recoveryTitle": "Unfinished workout",
+    "recoveryBody": "The recording was interrupted. Resume or finish it?",
+    "recoveryResume": "Resume",
+    "recoveryFinish": "Finish",
+    "permissions": {
+      "location": "Allow location access to record the route, or start by time.",
+      "location_services": "Turn on location services in the phone settings.",
+      "motion": "Allow Motion & Fitness access to count steps."
+    },
+    "openSettings": "Open settings",
+    "startFailed": "Could not start recording",
+    "notification": {
+      "title": "Trefix is recording a workout",
+      "body": "Recording continues with the screen off"
+    },
+    "runMode": {
+      "plan": "Planned",
+      "free": "Free run"
+    },
+    "planToday": "Today's workout",
+    "planLoading": "Loading the workout steps…",
+    "planUnavailable": "This workout can't be run step by step. It will be recorded as a free run.",
+    "stepKinds": {
+      "warmup": "Warm-up",
+      "work": "Work",
+      "recovery": "Rest",
+      "steady": "Main set",
+      "cooldown": "Cool-down"
+    },
+    "repeats": "{{count}} × {{work}}, rest {{rest}}",
+    "units": {
+      "min": "min",
+      "m": "m",
+      "km": "km",
+      "decimal": "."
+    },
+    "voice": "Voice cues",
+    "voiceHint": "Distance, pace and plan steps read aloud, even with the screen off",
+    "voiceInterval": "Report every",
+    "voiceIntervals": {
+      "1u": "1 km",
+      "2u": "2 km",
+      "5min": "5 min",
+      "10min": "10 min"
+    },
+    "voiceIntervalsImperial": {
+      "1u": "1 mile",
+      "2u": "2 miles"
+    },
+    "step": {
+      "of": "Step {{current}} of {{total}}",
+      "repetition": "repeat {{index}} of {{total}}",
+      "remaining": "Remaining",
+      "target": "Target",
+      "pace": {
+        "in": "On pace",
+        "fast": "Faster than planned",
+        "slow": "Slower than planned"
+      },
+      "next": "Next: {{step}}",
+      "last": "Last step",
+      "skip": "Next step",
+      "done": "Plan complete",
+      "doneHint": "Finish now or keep running"
+    },
+    "laps": "Plan vs actual",
+    "lapPlanned": "Plan",
+    "lapActual": "Actual",
+    "startPlanned": "Start recording",
+    "showMap": "Show map",
+    "showMetrics": "Show metrics",
+    "centerMap": "Back to my position",
+    "keepAliveHint": "To speak with the screen off, the app will ask for location access. The route is not recorded.",
+    "healthExport": "Save to {{store}}",
+    "healthExportHint": "The workout and its route will appear in {{store}}. Write access is asked once.",
+    "healthDenied": "No write access to {{store}}. Allow it in {{store}} settings.",
+    "healthFailed": "Couldn't save the workout to {{store}}",
+    "recordSection": "Recording",
+    "whereShort": "Where",
+    "goal": "Goal",
+    "goalValue": {
+      "none": "No goal",
+      "duration": "Time · {{value}}",
+      "distance": "Distance · {{value}}",
+      "distanceLimit": "Distance · {{value}} in {{limit}}"
+    },
+    "distanceRow": "Distance",
+    "pedometer": "Pedometer",
+    "voiceEvery": {
+      "1u": "Every 1 km",
+      "2u": "Every 2 km",
+      "5min": "Every 5 min",
+      "10min": "Every 10 min"
+    },
+    "voiceEveryImperial": {
+      "1u": "Every mile",
+      "2u": "Every 2 miles"
+    },
+    "voiceOff": "Off",
+    "freeTitle": "Free workout",
+    "treadmillTitle": "Treadmill",
+    "heroSub": {
+      "ready": "Type, feeling and a note — after the finish",
+      "searching": "You can start — accuracy improves shortly",
+      "treadmill": "Pedometer distance — compare with the console",
+      "goal": "Goal {{goal}} · {{estimate}}"
+    },
+    "gpsPill": {
+      "searching": "Searching for GPS",
+      "searchingAccuracy": "Searching for GPS · ±{{metres}} m",
+      "ready": "GPS ready",
+      "off": "No GPS"
+    },
+    "noGps": {
+      "title": "No location access",
+      "body": "The route won't be recorded without it. You can start by time — the pedometer will count the distance.",
+      "servicesTitle": "Location is off",
+      "servicesBody": "Turn on location services in the phone settings or start by time — the pedometer will count the distance."
+    },
+    "kicker": {
+      "today": "Today",
+      "week": "Today · week {{number}}",
+      "own": "Today · your workout"
+    },
+    "goalSub": {
+      "duration": "time goal",
+      "distance": "distance goal",
+      "limit": "in {{limit}}"
+    },
+    "goalNone": "No goal",
+    "noCorridor": "no pace range",
+    "corridorRange": "range {{min}}–{{max}}",
+    "goalSheetTitle": "Goal",
+    "done": "Done",
+    "voiceSheet": {
+      "title": "Voice cues",
+      "toggle": "Voice cues",
+      "howOften": "How often",
+      "what": "What to tell",
+      "items": {
+        "distance": "Distance",
+        "time": "Time",
+        "splitPace": "Last km pace",
+        "splitPaceImperial": "Last mile pace",
+        "avgPace": "Average pace",
+        "planSteps": "Plan steps"
+      },
+      "hint": "They play with the screen off too."
+    },
+    "countdown": {
+      "tap": "Tap the screen to start right away",
+      "firstStep": "Step 1 — {{step}}"
+    },
+    "access": {
+      "title": "Access",
+      "notNow": "Not now",
+      "location": {
+        "title": "Location",
+        "subtitle": "Needed to record the route, pace and splits.",
+        "allow": "Allow location",
+        "rows": [
+          {
+            "title": "Route and exact distance",
+            "text": "Without location only time and steps are recorded"
+          },
+          {
+            "title": "“While using” is enough",
+            "text": "Recording goes on with the screen off"
+          },
+          {
+            "title": "Only during a workout",
+            "text": "Location is used between “Start” and “Finish”"
+          }
+        ]
+      },
+      "motion": {
+        "title": "Motion & fitness",
+        "subtitle": "The motion sensor counts the run without GPS.",
+        "allow": "Allow access",
+        "rows": [
+          {
+            "title": "Distance on a treadmill and without GPS",
+            "text": "Counted from steps and stride length"
+          },
+          {
+            "title": "Cadence",
+            "text": "Steps per minute — shown in the summary"
+          },
+          {
+            "title": "Accurate auto-pause",
+            "text": "Pauses only when you really stop"
+          }
+        ]
+      }
+    },
+    "status": {
+      "gps": "GPS",
+      "searching": "Searching for GPS",
+      "noGps": "No GPS",
+      "pedometer": "Pedometer",
+      "pausedFor": "Paused · {{time}}",
+      "auto": "Auto-pause"
+    },
+    "gpsLostToast": {
+      "title": "GPS signal lost",
+      "body": "Counting with the pedometer, the route continues"
+    },
+    "autoPauseCaption": "Recording resumes when you start running",
+    "holdFinishCaption": "Hold “Finish” to end the workout",
+    "pages": {
+      "metrics": "Metrics",
+      "map": "Map",
+      "steps": "Steps"
+    },
+    "metricNames": {
+      "time": "Time",
+      "distance": "Distance",
+      "pace": "Pace",
+      "splitPace": "Last km pace",
+      "splitPaceImperial": "Last mile pace",
+      "avgPace": "Average pace",
+      "elevation": "Elevation gain",
+      "cadence": "Cadence"
+    },
+    "distancePedometer": "Distance · pedometer",
+    "card": {
+      "left": "left",
+      "unitLeft": "{{unit}} left",
+      "corridor": "Range",
+      "slower": "slower",
+      "faster": "faster",
+      "next": "Next: {{step}}",
+      "skip": "Skip",
+      "then": "Next",
+      "inCorridor": "in range",
+      "stepDone": "Step {{current}} of {{total}} done",
+      "own": "{{type}} · yours",
+      "goalTime": "Goal {{value}}",
+      "goalDone": "goal reached",
+      "passed": "{{time}} done",
+      "distanceIn": "{{distance}} in {{time}}",
+      "toFinish": "Finish in {{time}}",
+      "ahead": "Ahead by {{delta}}",
+      "behind": "Behind by {{delta}}",
+      "onTrack": "On schedule",
+      "forecast": "forecast {{time}}",
+      "covered": "{{done}} of {{total}} done",
+      "moreSteps": "{{count}} more steps",
+      "pedometerPace": "Pace is approximate without GPS",
+      "pace": "Pace {{pace}}"
+    },
+    "sheets": {
+      "planDone": {
+        "title": "Plan done",
+        "body": "All steps are behind you. Finish now or run easy — the rest goes into this workout."
+      },
+      "goalDone": {
+        "title": "{{goal}} done",
+        "body": "Goal reached. Finish now or run easy — the extra is recorded too."
+      },
+      "short": {
+        "title": "Recording too short",
+        "body": "Under 200 m and 1 minute — it won't go into your log. Keep running or delete the recording."
+      },
+      "finishRun": "Finish workout",
+      "continueRun": "Keep running",
+      "deleteRun": "Delete recording",
+      "laps": "Segments",
+      "lapsValue": "{{done}} of {{total}}"
+    },
+    "metricPicker": {
+      "title": "Metric",
+      "instead": "Instead of “{{metric}}”",
+      "onScreen": "on screen",
+      "hint": "Hold a cell on the recording screen to replace it. The set is kept for your next workouts."
+    },
+    "summary": {
+      "kicker": {
+        "free": "{{date}} · free",
+        "own": "{{date}} · your workout",
+        "week": "{{date}} · week {{number}}",
+        "treadmill": "{{date}} · treadmill"
+      },
+      "todayAt": "Today, {{time}}",
+      "noPlan": "No plan",
+      "goalMeta": "goal {{goal}}",
+      "noGpsMeta": "no GPS",
+      "result": "Result",
+      "how": "How did it go?",
+      "data": "Details",
+      "saving": "Saving",
+      "tiles": {
+        "pace": "Pace",
+        "avgHeartRate": "Average heart rate",
+        "elevation": "Elevation gain",
+        "cadence": "Cadence",
+        "maxHeartRate": "Max heart rate"
+      },
+      "planNote": "{{done}} of {{total}} in range",
+      "goalDone": "Goal reached",
+      "goalPart": "Goal {{percent}}% done",
+      "lapPlan": "plan {{value}}",
+      "lapGoal": "goal {{value}}",
+      "lapDone": "done",
+      "rest": "Rest",
+      "restDetail": "{{count}} × {{time}}",
+      "splitNote": {
+        "negative": "Negative split: {{from}} → {{to}}",
+        "fastest": "Fastest — {{km}} {{unit}}, {{pace}}",
+        "even": "Even: {{min}}–{{max}}",
+        "pedometer": "By pedometer, ±5%"
+      },
+      "rpeLabels": [
+        "Very easy",
+        "Very easy",
+        "Easy",
+        "Easy",
+        "Moderate",
+        "Moderate",
+        "Hard",
+        "Hard",
+        "Very hard",
+        "Max"
+      ],
+      "type": "Type",
+      "typeFree": "No type",
+      "typePlan": "{{type}} · plan",
+      "typeOwn": "{{type}} · yours",
+      "distanceSource": {
+        "gps": "By GPS",
+        "pedometer": "Pedometer · check it",
+        "treadmill": "Pedometer · compare",
+        "edited": "Entered by hand"
+      },
+      "link": {
+        "section": "Today's plan",
+        "title": "Count as “{{title}}”",
+        "hint": "The recording closes the calendar workout instead of a separate one."
+      },
+      "offline": {
+        "title": "No internet",
+        "body": "The workout is kept on the phone and sent when you're online. Tref's review comes after that."
+      },
+      "healthNote": {
+        "routeHr": "With route and heart rate",
+        "route": "With route",
+        "hr": "With heart rate",
+        "plain": "Time and distance"
+      },
+      "hint": "After saving, the workout opens with Tref's review.",
+      "hintOffline": "Tref's review appears once the workout is sent.",
+      "saveOffline": "Save on the phone",
+      "distanceSheet": {
+        "title": "Distance",
+        "treadmillBody": "The pedometer counted {{distance}}. Enter what the treadmill showed.",
+        "body": "The pedometer counted {{distance}}. Enter the exact distance if you know it.",
+        "keep": "Keep {{distance}}"
+      },
+      "more": {
+        "title": "Actions",
+        "share": "Share",
+        "delete": "Delete recording"
+      },
+      "shareText": "{{title}}: {{distance}} in {{time}}, pace {{pace}}",
+      "deleteSheet": {
+        "title": "Delete the recording?",
+        "body": "The workout won't be saved. This can't be undone.",
+        "confirm": "Delete"
+      },
+      "shoes": "Shoes"
+    },
+    "restore": {
+      "title": "Recording interrupted",
+      "body": "The app closed at {{time}}. Everything up to then is saved — continue from there or finish.",
+      "resume": "Continue recording",
+      "finish": "Finish and see the summary",
+      "delete": "Delete recording"
+    },
+    "voiceShort": "Voice",
+    "cellNames": {
+      "splitPace": "Km pace",
+      "splitPaceImperial": "Mile pace"
+    }
+  },
+  "errors": {
+    "title": "Error",
+    "fallback": "Something went wrong. Please try again.",
+    "network": "No connection. Check the internet and try again.",
+    "serverUnavailable": "The service is temporarily unavailable. Please try again later.",
+    "tooManyRequests": "Too many attempts. Please wait a moment.",
+    "uploadFailedTitle": "Upload failed",
+    "uploadFailed": "Could not upload the image.",
+    "saveWorkoutFailed": "Could not save the workout.",
+    "completeWorkoutFailed": "Could not complete the workout.",
+    "photoPermissionTitle": "No access to photos",
+    "photoPermission": "Allow access to photos to change your avatar."
+  },
+  "progressOverview": {
+    "tabs": {
+      "overview": "Overview",
+      "analytics": "Analytics"
+    },
+    "records": "Records",
+    "periods": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "all": "All"
+    },
+    "metrics": {
+      "distance": "Distance",
+      "time": "Time",
+      "elevation": "Elevation"
+    },
+    "monthsIn": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "headline": {
+      "week": {
+        "one": "{{count}} workout this week",
+        "other": "{{count}} workouts this week"
+      },
+      "month": {
+        "one": "{{count}} workout in {{month}}",
+        "other": "{{count}} workouts in {{month}}"
+      },
+      "year": {
+        "one": "{{count}} workout in {{year}}",
+        "other": "{{count}} workouts in {{year}}"
+      },
+      "all": {
+        "one": "{{count}} workout in total",
+        "other": "{{count}} workouts in total"
+      }
+    },
+    "compare": {
+      "distance": {
+        "more": "You ran {{value}} more than {{scope}}",
+        "less": "You ran {{value}} less than {{scope}}"
+      },
+      "time": {
+        "more": "You ran {{value}} longer than {{scope}}",
+        "less": "You ran {{value}} less than {{scope}}"
+      },
+      "elevation": {
+        "more": "You climbed {{value}} more than {{scope}}",
+        "less": "You climbed {{value}} less than {{scope}}"
+      },
+      "scope": {
+        "week": "on the same days last week",
+        "month": "on {{range}}",
+        "year": "by this time in {{year}}"
+      },
+      "since": "All workouts since {{date}}",
+      "unavailable": "No comparison available"
+    },
+    "chart": {
+      "future": "ahead",
+      "noWorkouts": "no workouts",
+      "noElevationTitle": "No elevation data",
+      "noElevationText": "Workouts were recorded without elevation — that's missing data, not zero"
+    },
+    "goal": {
+      "kicker": "Goal",
+      "title": "{{distance}} in {{time}}",
+      "race": {
+        "one": "Race on {{date}} · in {{count}} day",
+        "other": "Race on {{date}} · in {{count}} days"
+      },
+      "best": "Best result",
+      "bestNone": "None yet",
+      "bestNoneHint": "Needs a race or a time trial",
+      "target": "Goal",
+      "remaining": "{{value}} to go",
+      "achieved": "goal reached",
+      "program": "Programme",
+      "programWeek": "Week {{current}} of {{total}}",
+      "programNote": "Programme progress is not a result forecast"
+    },
+    "highlights": {
+      "title": {
+        "week": "This week's highlight",
+        "month": "Highlight of {{month}}",
+        "year": "Highlight of {{year}}",
+        "all": "All-time highlight"
+      },
+      "paceFaster": "Average pace is {{value}} faster",
+      "paceSlower": "Average pace is {{value}} slower",
+      "volumeMore": "Volume is up by {{value}}",
+      "volumeLess": "Volume is down by {{value}}",
+      "volumeTotal": "That's how far you've run since {{year}}",
+      "longest": "Longest run",
+      "heartRate": "Average HR",
+      "record": "{{distance}} record",
+      "records": "Records",
+      "recordsSub": "this year",
+      "was": "was {{value}}",
+      "seconds": {
+        "one": "{{count}} second",
+        "other": "{{count}} seconds"
+      }
+    },
+    "plan": {
+      "title": "Plan completion",
+      "scope": {
+        "week": "this week",
+        "month": "{{range}}",
+        "sinceStart": "since the plan start, {{date}}"
+      },
+      "workouts": "workouts",
+      "nothingDue": "No past workouts yet",
+      "distance": "Distance",
+      "kmValue": "{{actual}} of {{planned}}",
+      "upcoming": {
+        "one": "{{count}} more workout ahead",
+        "other": "{{count}} more workouts ahead"
+      },
+      "missed": {
+        "one": "{{count}} missed",
+        "other": "{{count}} missed"
+      },
+      "offPlan": "plus {{value}} off plan"
+    },
+    "workouts": {
+      "title": "Workouts",
+      "missed": "Missed · {{distance}} planned",
+      "offPlan": "Off plan",
+      "record": "{{distance}} record",
+      "statusPlan": "As planned",
+      "statusMissed": "Missed",
+      "types": {
+        "recovery": "Recovery run",
+        "easy": "Easy run",
+        "long_run": "Long run",
+        "tempo": "Tempo",
+        "threshold": "Threshold",
+        "interval": "Intervals",
+        "hill": "Hills",
+        "race": "Race"
+      }
+    },
+    "analytics": {
+      "demo": "Demo data",
+      "form": {
+        "title": "Running form",
+        "hint": "time trials and races",
+        "faster": "{{value}} faster since {{date}}",
+        "slower": "{{value}} slower than on {{date}}",
+        "note": "Only time trials and races on the same distance are compared. No VO₂max without a valid method",
+        "empty": "No time trials on this distance yet"
+      },
+      "pace": {
+        "title": "Pace and speed",
+        "hint": "by workout type",
+        "types": {
+          "easy": "Easy",
+          "tempo": "Tempo",
+          "interval": "Intervals"
+        },
+        "faster": "{{type}}: {{value}} s/km faster than in {{month}}",
+        "slower": "{{type}}: {{value}} s/km slower than in {{month}}",
+        "note": "Different workout types are not compared directly. A taller bar means a faster pace"
+      },
+      "heartRate": {
+        "title": "Heart rate",
+        "avg": "bpm on average",
+        "zones": "Time in zones",
+        "note": "No medical conclusions are drawn from heart rate",
+        "noneTitle": "No heart rate data",
+        "noneText": "Workouts were recorded without heart rate. Connect a sensor or a watch and zones will appear"
+      },
+      "load": {
+        "title": "Training load",
+        "average": "{{value}} a week on average",
+        "note": "The current week isn't over — it's dashed"
+      },
+      "regularity": {
+        "title": "Consistency",
+        "hint": "last 4 weeks",
+        "perWeek": "Per week",
+        "perWeekValue": "{{value}} runs",
+        "runDays": "Run days",
+        "ofValue": "{{a}} of {{b}}",
+        "onPlan": "On plan",
+        "weeksValue": "{{a}} of {{b}} wk",
+        "legendRun": "workout",
+        "legendRest": "rest",
+        "legendMissed": "missed",
+        "note": "Rest days are part of training. Streaks without rest are not rewarded"
+      },
+      "planAnalysis": {
+        "title": "Plan analysis",
+        "kicker": "Key workouts",
+        "planned": "plan",
+        "actual": "actual",
+        "missed": "missed"
+      },
+      "insights": {
+        "title": "Coach insights",
+        "easy_pace_faster": "Easy runs got {{seconds}} s/km faster.",
+        "easy_pace_faster_hr": "Easy runs got {{seconds}} s/km faster at the same heart rate.",
+        "easy_pace_faster_basis": "Based on {{workouts}} easy workouts over 4 months",
+        "volume_steady": "Volume grows steadily: {{min}}–{{max}}% a week, no jumps.",
+        "volume_steady_basis": "Based on the last {{weeks}} weeks of distance"
+      }
+    },
+    "empty": {
+      "title": "No workouts yet",
+      "text": "Distance, time, records and plan completion will show up here",
+      "record": "Record your first workout",
+      "import": "Import history"
+    },
+    "units": {
+      "m": "m",
+      "ft": "ft"
+    }
+  },
+  "inbox": {
+    "title": "Notifications",
+    "bellLabel": "Notifications",
+    "bellLabelUnread": "Notifications, unread: {{count}}",
+    "channelName": "Notifications",
+    "empty": {
+      "title": "All quiet",
+      "body": "Messages from Tref and Trefix news will appear here"
+    },
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loadMore": "Show more",
+    "error": "Could not load notifications",
+    "retry": "Try again",
+    "menu": {
+      "title": "Notifications",
+      "readAll": "Mark all as read",
+      "settings": "Notification settings"
+    },
+    "item": {
+      "title": "Notification",
+      "open": "Open",
+      "delete": "Delete"
+    },
+    "push": {
+      "offTitle": "Push notifications are off",
+      "offBody": "Turn them on so you don't miss messages from Tref",
+      "enable": "Turn on",
+      "openSettings": "Open settings"
+    },
+    "senders": {
+      "coach": "Tref",
+      "admin": "Trefix",
+      "workouts": "Workouts",
+      "plans": "Plan",
+      "progress": "Progress",
+      "account": "Trefix"
+    },
+    "types": {
+      "coach_message": "Message from Tref",
+      "admin_message": "Message from Trefix"
+    }
+  }
+}

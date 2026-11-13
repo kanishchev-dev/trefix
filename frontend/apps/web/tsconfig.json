@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@trefix/ui": ["../../packages/ui/src/index.ts"],
+      "@trefix/ui/*": ["../../packages/ui/src/*"],
+      "@trefix/api-client": ["../../packages/api-client/src/index.ts"],
+      "@trefix/api-client/*": ["../../packages/api-client/src/*"],
+      "@trefix/config": ["../../packages/config/src/index.ts"],
+      "@trefix/config/*": ["../../packages/config/src/*"],
+      "@trefix/tokens": ["../../packages/tokens/src/index.ts"],
+      "@trefix/tokens/*": ["../../packages/tokens/src/*"],
+      "@trefix/utils": ["../../packages/utils/src/index.ts"],
+      "@trefix/utils/*": ["../../packages/utils/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "app/**/*", "src/**/*"],
+  "exclude": ["node_modules"]
+}

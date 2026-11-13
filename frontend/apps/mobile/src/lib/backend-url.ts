@@ -1,0 +1,82 @@
+import { NativeModules } from "react-native";
+import { logger } from "./logger";
+
+const LOCAL_BACKEND_URL = "http://127.0.0.1:3000/v1";
+const PRODUCTION_BACKEND_URL = "https://api.trefix.app/v1";
+
+/**
+ * Release bundles get `.env.production` (Expo loads it when bundling with
+ * NODE_ENV=production). Without any env the release still targets prod, never
+ * a loopback address that is meaningless on a user's phone.
+ */
+const CONFIGURED_URL =
+  process.env.EXPO_PUBLIC_BACKEND_URL ||
+  process.env.EXPO_PUBLIC_AUTH_BACKEND_URL ||
+  (__DEV__ ? LOCAL_BACKEND_URL : PRODUCTION_BACKEND_URL);
+
+const LOCAL_HOST =
+  /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/;
+
+/** Host the JS bundle was loaded from (the Metro dev server). */
+function devServerHost(): string | null {
+  try {
+    const sourceCode = NativeModules.SourceCode as
+      | { getConstants?: () => { scriptURL?: string }; scriptURL?: string }
+      | undefined;
+    const scriptUrl =
+      sourceCode?.getConstants?.().scriptURL ?? sourceCode?.scriptURL;
+    const match =
+      typeof scriptUrl === "string"
+        ? /^https?:\/\/([^/:]+)/.exec(scriptUrl)
+        : null;
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Backend base URL. In development a local backend URL follows the dev
+ * server's host: the device already reaches Metro there, so the API on the same
+ * machine is reachable too, even after the Mac's LAN IP changes.
+ */
+function resolveBackendUrl(): string {
+  if (!__DEV__) return CONFIGURED_URL;
+  const configuredHost =
+    /^https?:\/\/([^/:]+)/.exec(CONFIGURED_URL)?.[1] ?? null;
+  const host = devServerHost();
+  if (
+    !host ||
+    !configuredHost ||
+    !LOCAL_HOST.test(configuredHost) ||
+    !LOCAL_HOST.test(host)
+  ) {
+    return CONFIGURED_URL;
+  }
+  return CONFIGURED_URL.replace(/^(https?:\/\/)[^/:]+/, `$1${host}`);
+}
+
+export const BACKEND_BASE_URL = resolveBackendUrl();
+
+if (__DEV__ && BACKEND_BASE_URL !== CONFIGURED_URL) {
+  logger.debug(
+    `[API] Backend URL follows the dev server: ${BACKEND_BASE_URL} (configured ${CONFIGURED_URL})`,
+  );
+}
+
+const BACKEND_ORIGIN = /^https?:\/\/[^/]+/.exec(BACKEND_BASE_URL)?.[0] ?? null;
+
+/**
+ * Media URL the device can load. The backend builds absolute links from its own
+ * configured base URL (often `http://localhost:3000` in development), which on a
+ * phone points at the phone itself: such local links are moved to the host the
+ * app actually talks to.
+ */
+export function resolveBackendMediaUrl(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null;
+  const match = /^(https?:\/\/)([^/:]+)(:\d+)?/.exec(url);
+  if (!match || !BACKEND_ORIGIN || !LOCAL_HOST.test(match[2])) return url;
+  return BACKEND_ORIGIN + url.slice(match[0].length);
+}

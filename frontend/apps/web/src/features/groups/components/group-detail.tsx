@@ -1,0 +1,263 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, type ReactElement } from "react";
+
+import { Badge } from "@trefix/ui/components/badge";
+import { Button } from "@trefix/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@trefix/ui/components/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@trefix/ui/components/tabs";
+import { InfoIcon, PencilIcon, Trash2Icon } from "lucide-react";
+
+import type { Permission, PermissionGroup } from "@trefix/api-client";
+
+import { useAuth } from "@/components/auth-provider";
+import { getFriendlyApiMessage } from "@/lib/errors";
+import { notifyError, notifySuccess } from "@/lib/notifications";
+import { formatDate, useI18n } from "@/shared/i18n";
+import { PermissionCatalogTable } from "@/features/permissions/components/permission-catalog-table";
+import {
+  useAssignPermissionToGroup,
+  useDeleteGroup,
+  useRevokePermissionFromGroup,
+} from "@/features/permissions/hooks/use-permissions";
+import { ConfirmDialog } from "@/widgets/confirm-dialog";
+
+export function GroupDetail({
+  group,
+}: {
+  group: PermissionGroup;
+}): ReactElement {
+  const { t, locale } = useI18n();
+  const router = useRouter();
+  const { hasPermission } = useAuth();
+
+  const assignPermission = useAssignPermissionToGroup();
+  const revokePermission = useRevokePermissionFromGroup();
+  const deleteGroup = useDeleteGroup();
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingPermissionId, setPendingPermissionId] = useState<string | null>(
+    null,
+  );
+
+  const groupPermissionIds = new Set(
+    (group.permissions ?? []).map((permission) => permission.id),
+  );
+
+  const canManage = hasPermission("permissions.manage");
+
+  const togglePermission = (permission: Permission, granted: boolean) => {
+    setPendingPermissionId(permission.id);
+
+    const onSettled = () => setPendingPermissionId(null);
+    const onError = (error: unknown) =>
+      notifyError(t("common.states.error"), getFriendlyApiMessage(error, t));
+
+    if (granted) {
+      assignPermission.mutate(
+        { groupId: group.id, permissionId: permission.id },
+        {
+          onSuccess: () => notifySuccess(t("groups.toasts.permissionAdded")),
+          onError,
+          onSettled,
+        },
+      );
+    } else {
+      revokePermission.mutate(
+        { groupId: group.id, permissionId: permission.id },
+        {
+          onSuccess: () => notifySuccess(t("groups.toasts.permissionRemoved")),
+          onError,
+          onSettled,
+        },
+      );
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {group.name}
+            </h1>
+            {group.isSystem ? (
+              <Badge variant="outline">{t("common.system")}</Badge>
+            ) : null}
+          </div>
+          {group.description ? (
+            <p className="text-sm text-muted-foreground">{group.description}</p>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          {canManage && !group.isSystem ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/users/groups/${group.id}/edit`)}
+            >
+              <PencilIcon />
+              {t("common.actions.edit")}
+            </Button>
+          ) : null}
+          {canManage && !group.isSystem ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2Icon />
+              {t("common.actions.delete")}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      {group.isSystem ? (
+        <p className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+          <InfoIcon className="size-4" />
+          {t("groups.system")}
+        </p>
+      ) : null}
+
+      <Tabs defaultValue="permissions">
+        <TabsList>
+          <TabsTrigger value="permissions">
+            {t("groups.tabs.permissions")} ({group.permissions?.length ?? 0})
+          </TabsTrigger>
+          <TabsTrigger value="members">
+            {t("groups.tabs.members")} ({group.users?.length ?? 0})
+          </TabsTrigger>
+          <TabsTrigger value="info">{t("groups.tabs.info")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="permissions" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("groups.tabs.permissions")}</CardTitle>
+              <CardDescription>{t("groups.permissions.hint")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PermissionCatalogTable
+                grantedPermissionIds={groupPermissionIds}
+                onTogglePermission={togglePermission}
+                pendingPermissionId={pendingPermissionId}
+                disabled={!canManage}
+                idPrefix={`group-${group.id}`}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="members" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("groups.tabs.members")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!group.users || group.users.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("groups.members.empty")}
+                </p>
+              ) : (
+                <ul className="flex flex-col divide-y">
+                  {group.users.map((member) => (
+                    <li
+                      key={member.id}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <Link
+                        href={`/users/${member.id}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {[member.firstName, member.lastName]
+                          .filter(Boolean)
+                          .join(" ") || member.email}
+                      </Link>
+                      <span className="text-sm text-muted-foreground">
+                        {member.email}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="info" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("groups.tabs.info")}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-x-8 md:grid-cols-2">
+              <div className="flex flex-col gap-1 py-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("groups.fields.systemKey")}
+                </span>
+                <span className="text-sm font-medium">
+                  {group.systemKey ?? "—"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 py-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("groups.fields.createdAt")}
+                </span>
+                <span className="text-sm font-medium">
+                  {formatDate(group.createdAt, locale)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 py-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("groups.fields.updatedAt")}
+                </span>
+                <span className="text-sm font-medium">
+                  {formatDate(group.updatedAt, locale)}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={t("groups.confirmDelete.title")}
+        description={t("groups.confirmDelete.description", {
+          name: group.name,
+        })}
+        confirmLabel={t("common.actions.delete")}
+        isPending={deleteGroup.isPending}
+        onConfirm={() =>
+          deleteGroup.mutate(group.id, {
+            onSuccess: () => {
+              setDeleteOpen(false);
+              notifySuccess(t("groups.toasts.deleted"));
+              router.push("/users/groups");
+            },
+            onError: (error) =>
+              notifyError(
+                t("common.states.error"),
+                getFriendlyApiMessage(error, t),
+              ),
+          })
+        }
+      />
+    </div>
+  );
+}

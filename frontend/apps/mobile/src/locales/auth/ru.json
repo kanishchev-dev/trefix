@@ -1,0 +1,46 @@
+{
+  "socialButtons": {
+    "google": "Продолжить с Google",
+    "apple": "Продолжить с Apple",
+    "loading": "Входим..."
+  },
+  "divider": "или",
+  "email": {
+    "accessibilityLabel": "Электронная почта",
+    "placeholder": "Электронная почта",
+    "submitAccessibilityLabel": "Продолжить"
+  },
+  "legal": {
+    "intro": "Нажимая «Продолжить», вы соглашаетесь с",
+    "terms": "Условиями использования",
+    "conjunction": "и",
+    "privacy": "Политикой конфиденциальности"
+  },
+  "verification": {
+    "subtitlePrefix": "Мы отправили четырёхзначный код на",
+    "resendCountdownPrefix": "Отправить код повторно можно через",
+    "resendPrompt": "Код не пришёл? Проверьте папку «Спам» или",
+    "resendLink": "отправьте код повторно",
+    "resendSuffix": ".",
+    "resendBusy": "отправляем…",
+    "codeAccessibilityLabel": "Код подтверждения",
+    "resendFailed": "Не удалось отправить новый код. Попробуйте еще раз.",
+    "back": "Назад"
+  },
+  "status": {
+    "signedIn": "Вы вошли",
+    "logout": "Выйти",
+    "sessionLabel": "Сессия"
+  },
+  "errors": {
+    "authFailedTitle": "Не удалось войти",
+    "authFailed": "Не удалось отправить код. Попробуйте еще раз.",
+    "verificationFailedTitle": "Не удалось подтвердить вход",
+    "verificationFailed": "Не удалось проверить код. Попробуйте еще раз.",
+    "socialFailedTitle": "Не удалось войти через соцсеть",
+    "socialFailed": "Не удалось завершить вход через соцсеть. Попробуйте еще раз.",
+    "network": "Нет соединения. Проверьте интернет и попробуйте снова.",
+    "serverUnavailable": "Сервис временно недоступен. Попробуйте позже.",
+    "tooManyRequests": "Слишком много попыток. Подождите немного."
+  }
+}

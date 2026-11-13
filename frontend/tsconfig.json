@@ -1,0 +1,30 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/mobile"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/api-client"
+    },
+    {
+      "path": "./packages/config"
+    },
+    {
+      "path": "./packages/tokens"
+    },
+    {
+      "path": "./packages/utils"
+    },
+    {
+      "path": "./packages/ui-native"
+    }
+  ],
+  "extends": "./tsconfig.base.json"
+}

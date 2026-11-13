@@ -1,0 +1,27 @@
+{
+  "name": "@trefix/ui-native",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@trefix/tokens": "workspace:*",
+    "expo-haptics": "57.0.3",
+    "lucide-react-native": "1.47.0",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "2.32.0",
+    "react-native-reanimated": "4.5.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "typescript": "6.0.3",
+    "@trefix/eslint-config": "workspace:*",
+    "eslint": "9.35.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint ."
+  }
+}

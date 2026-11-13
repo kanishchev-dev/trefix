@@ -1,0 +1,60 @@
+diff --git a/apple/Package.swift b/apple/Package.swift
+index 77b0525..9065433 100644
+--- a/apple/Package.swift
++++ b/apple/Package.swift
+@@ -92,6 +92,23 @@ let package = Package(
+         // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md
+         .enableUpcomingFeature("InferIsolatedConformances"),
+ 
++        // Patched: Swift 5 mode + all Swift 6 upcoming features, so strict-concurrency
++        // diagnostics stay warnings on Xcode 26.2 (expo/expo#50067).
++        .enableUpcomingFeature("ConciseMagicFile"),
++        .enableUpcomingFeature("ForwardTrailingClosures"),
++        .enableUpcomingFeature("BareSlashRegexLiterals"),
++        .enableUpcomingFeature("DeprecateApplicationMain"),
++        .enableUpcomingFeature("ImportObjcForwardDeclarations"),
++        .enableUpcomingFeature("DisableOutwardActorInference"),
++        .enableUpcomingFeature("IsolatedDefaultValues"),
++        .enableUpcomingFeature("GlobalConcurrency"),
++        .enableUpcomingFeature("InferSendableFromCaptures"),
++        .enableUpcomingFeature("GlobalActorIsolatedTypesUsability"),
++        .enableUpcomingFeature("DynamicActorIsolation"),
++        .enableUpcomingFeature("NonfrozenEnumExhaustivity"),
++        .enableUpcomingFeature("RegionBasedIsolation"),
++        .enableUpcomingFeature("StrictConcurrency"),
++
+         .unsafeFlags([
+           "-enable-library-evolution",
+           "-emit-module-interface",
+@@ -150,7 +167,8 @@ let package = Package(
+       path: "Benchmarks",
+     ),
+   ] + testFrameworks.binaryTargets,
+-  swiftLanguageModes: [.v6],
++  // Patched: older Swift 6.2 (Xcode 26.2) rejects nonisolated(unsafe) captures as data races (expo/expo#50067).
++  swiftLanguageModes: [.v5],
+   cxxLanguageStandard: .cxx20
+ )
+ 
+diff --git a/apple/Sources/ExpoModulesJSI-Cxx/include/RuntimeScheduler.h b/apple/Sources/ExpoModulesJSI-Cxx/include/RuntimeScheduler.h
+index 6115e87..957527c 100644
+--- a/apple/Sources/ExpoModulesJSI-Cxx/include/RuntimeScheduler.h
++++ b/apple/Sources/ExpoModulesJSI-Cxx/include/RuntimeScheduler.h
+@@ -50,7 +50,7 @@ public:
+    `scheduleTask` dispatches through `fn`, which the host implements against
+    the real react::RuntimeScheduler.
+    */
+-  SWIFT_RETURNS_RETAINED RuntimeScheduler(void *scheduler, ScheduleFn fn) noexcept
++  RuntimeScheduler(void *scheduler, ScheduleFn fn) noexcept
+       : nativeScheduler(scheduler), scheduleFn(fn) {}
+ 
+   /**
+@@ -58,7 +58,7 @@ public:
+    caller's thread — intended for standalone runtimes (e.g. tests) that have
+    no React scheduler.
+    */
+-  SWIFT_RETURNS_RETAINED RuntimeScheduler() {}
++  RuntimeScheduler() {}
+ 
+   RuntimeScheduler(const RuntimeScheduler &) = delete;
+ 

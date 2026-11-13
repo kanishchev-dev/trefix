@@ -1,0 +1,129 @@
+{
+  "expo": {
+    "name": "Trefix",
+    "slug": "workspace-mobile",
+    "scheme": "workspace-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "userInterfaceStyle": "automatic",
+      "usesAppleSignIn": true,
+      "bundleIdentifier": "app.trefix",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["x-apple-health"],
+        "UIBackgroundModes": ["audio"],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "appleTeamId": "KT22FA2C2R",
+      "buildNumber": "2"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "userInterfaceStyle": "automatic",
+      "predictiveBackGestureEnabled": false,
+      "package": "app.trefix",
+      "permissions": [
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_ELEVATION_GAINED",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_WEIGHT",
+        "android.permission.health.READ_HEIGHT",
+        "android.permission.health.READ_RESTING_HEART_RATE",
+        "android.permission.health.READ_HEALTH_DATA_HISTORY",
+        "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND",
+        "android.permission.health.WRITE_EXERCISE",
+        "android.permission.health.WRITE_EXERCISE_ROUTE",
+        "android.permission.health.WRITE_DISTANCE",
+        "android.permission.health.WRITE_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.WRITE_ELEVATION_GAINED",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/trefix-logo-dark.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#09090b",
+            "image": "./assets/trefix-logo-light.png"
+          }
+        }
+      ],
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.678050162933-rl3b5gls5tk9opveg6qsvd44bihaul0l"
+        }
+      ],
+      "expo-video",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Trefix reads your running workouts, heart rate, weight and resting heart rate to use them in your plan and workout analysis.",
+          "NSHealthUpdateUsageDescription": "Trefix saves workouts recorded in the app to Health, with their route.",
+          "background": true
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      "expo-background-task",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Trefix uses your location to record the route, distance and pace of your run.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Trefix counts your steps to measure distance when GPS is unavailable and on a treadmill."
+        }
+      ],
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#18181b"
+        }
+      ],
+      "@rnmapbox/maps"
+    ],
+    "locales": {
+      "ru": "./locales/ru.json",
+      "en": "./locales/en.json"
+    }
+  }
+}
